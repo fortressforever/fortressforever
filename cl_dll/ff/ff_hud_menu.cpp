@@ -38,11 +38,13 @@ CHudContextMenu *g_pHudContextMenu = NULL;
 extern ConVar sensitivity;
 extern ConVar ffdev_spy_scloak_minstartvelocity;
 
-ConVar cm_capturemouse("cl_cmcapture", "1", 0, "Context menu captures mouse");
-ConVar cm_showmouse("cl_cmshowmouse", "0", FCVAR_ARCHIVE, "Show mouse position");
-ConVar cm_size("cl_cmsize", "120", 0, "Size of context radial menu");
-ConVar cm_progresstime("cl_cmprogresstime", "0.3", 0, "Time to wait for menu progress");
-ConVar cm_squash("cl_cmsquash", "0.6", 0, "");
+ConVar cm_capturemouse("cl_cmcapture", "1", FCVAR_ARCHIVE, "Context menu captures mouse");
+ConVar cm_showmouse("cl_cmshowmouse", "1", FCVAR_ARCHIVE, "Show mouse position");
+ConVar cm_size("cl_cmsize", "120", FCVAR_ARCHIVE, "Size of context radial menu");
+ConVar cm_bounds("cl_cmbounds", "120", FCVAR_ARCHIVE, "Bounds of the context radial menu");
+ConVar cm_progresstime("cl_cmprogresstime", "0.3", FCVAR_ARCHIVE, "Time to wait for menu progress");
+ConVar cm_squash("cl_cmsquash", "0.7", FCVAR_ARCHIVE, "");
+ConVar cm_highlightdistance("cl_cmhighlightdistance", "50", FCVAR_ARCHIVE, "Distance for an option to highlight");
 
 ConVar cm_aimsentry( "cl_noradialaimsentry", "0", 0, "0 - Aim sentry when selecting option in context menu or 1 - aiming AFTER selecting option in context menu" );
 
@@ -109,8 +111,9 @@ inline int CheckDisguiseClass( int iClass )
 		return MENU_DIM;
 
 	// Check the class limit for the disguise team
+	// Mirv: Hide rather than dim
 	if( pGr->GetTeamClassLimits( iDisguiseTeam, iClass ) == -1 )
-		return MENU_DIM;
+		return MENU_HIDE;
 
 	return MENU_SHOW;
 }
@@ -119,7 +122,7 @@ inline int CheckDisguiseClass( int iClass )
 /************************************************************************/
 /* These are all possible menu options                                  */
 /************************************************************************/
-ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
+ADD_MENU_OPTION(builddispenser, L"Build Dispenser", 'G', "builddispensers")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -137,7 +140,7 @@ ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
+ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", 'G', "detdispenser")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -155,7 +158,7 @@ ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", "dismantledispenser")
+ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", 'G', "dismantledispenser")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -173,7 +176,7 @@ ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", "dismantledispenser"
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
+ADD_MENU_OPTION(buildsentry, L"Build Sentry", 'G', "buildsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -191,7 +194,7 @@ ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(detsentry, L"Detonate Sentry", "detsentry")
+ADD_MENU_OPTION(detsentry, L"Detonate Sentry", 'G', "detsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -209,7 +212,7 @@ ADD_MENU_OPTION(detsentry, L"Detonate Sentry", "detsentry")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
+ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", 'G', "dismantlesentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -227,7 +230,7 @@ ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(aimsentry, L"Aim Sentry", "aimsentry")
+ADD_MENU_OPTION(aimsentry, L"Aim Sentry", 'G', "aimsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -246,7 +249,7 @@ ADD_MENU_OPTION(aimsentry, L"Aim Sentry", "aimsentry")
 }
 
 // These act as intermediate menus
-ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", "disguise friendly ", SpyClassDisguise)
+ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", 'G', "disguise friendly ", SpyClassDisguise)
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -258,7 +261,7 @@ ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", "disguise friendly ", Spy
 	return MENU_SHOW;
 }
 
-ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", "disguise enemy ", SpyClassDisguise)
+ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", 'G', "disguise enemy ", SpyClassDisguise)
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -270,7 +273,7 @@ ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", "disguise enemy ", SpyClass
 	return MENU_SHOW;
 }
 
-ADD_MENU_BRANCH(disguisered, L"Disguise as red", "disguise red ", SpyClassDisguise)
+ADD_MENU_BRANCH(disguisered, L"Disguise as red", 'G', "disguise red ", SpyClassDisguise)
 {
 	IGameResources *pGr = GameResources();
 	if( !pGr )
@@ -289,7 +292,7 @@ ADD_MENU_BRANCH(disguisered, L"Disguise as red", "disguise red ", SpyClassDisgui
 	return MENU_DIM;
 }
 
-ADD_MENU_BRANCH(disguiseblue, L"Disguise as blue", "disguise blue ", SpyClassDisguise)
+ADD_MENU_BRANCH(disguiseblue, L"Disguise as blue", 'G', "disguise blue ", SpyClassDisguise)
 {
 	IGameResources *pGr = GameResources();
 	if( !pGr )
@@ -309,7 +312,7 @@ ADD_MENU_BRANCH(disguiseblue, L"Disguise as blue", "disguise blue ", SpyClassDis
 
 }
 
-ADD_MENU_BRANCH(disguiseyellow, L"Disguise as yellow", "disguise yellow ", SpyClassDisguise)
+ADD_MENU_BRANCH(disguiseyellow, L"Disguise as yellow", 'G', "disguise yellow ", SpyClassDisguise)
 {
 	IGameResources *pGr = GameResources();
 	if( !pGr )
@@ -329,7 +332,7 @@ ADD_MENU_BRANCH(disguiseyellow, L"Disguise as yellow", "disguise yellow ", SpyCl
 
 }
 
-ADD_MENU_BRANCH(disguisegreen, L"Disguise as green", "disguise green ", SpyClassDisguise)
+ADD_MENU_BRANCH(disguisegreen, L"Disguise as green", 'G', "disguise green ", SpyClassDisguise)
 {
 	IGameResources *pGr = GameResources();
 	if( !pGr )
@@ -349,52 +352,52 @@ ADD_MENU_BRANCH(disguisegreen, L"Disguise as green", "disguise green ", SpyClass
 
 }
 
-ADD_MENU_OPTION(disguisescout, L"Disguise as scout", "scout")
+ADD_MENU_OPTION(disguisescout, L"Disguise as scout", '!', "scout")
 {
 	return CheckDisguiseClass( CLASS_SCOUT );
 }
 
-ADD_MENU_OPTION(disguisesniper, L"Disguise as sniper", "sniper")
+ADD_MENU_OPTION(disguisesniper, L"Disguise as sniper", '@', "sniper")
 {
 	return CheckDisguiseClass( CLASS_SNIPER );
 }
 
-ADD_MENU_OPTION(disguisesoldier, L"Disguise as soldier", "soldier")
+ADD_MENU_OPTION(disguisesoldier, L"Disguise as soldier", '#', "soldier")
 {
 	return CheckDisguiseClass( CLASS_SOLDIER );
 }
 
-ADD_MENU_OPTION(disguisedemoman, L"Disguise as demoman", "demoman")
+ADD_MENU_OPTION(disguisedemoman, L"Disguise as demoman", '$', "demoman")
 {
 	return CheckDisguiseClass( CLASS_DEMOMAN );
 }
 
-ADD_MENU_OPTION(disguisemedic, L"Disguise as medic", "medic")
+ADD_MENU_OPTION(disguisemedic, L"Disguise as medic", '%', "medic")
 {
 	return CheckDisguiseClass( CLASS_MEDIC );
 }
 
-ADD_MENU_OPTION(disguisehwguy, L"Disguise as hwguy", "hwguy")
+ADD_MENU_OPTION(disguisehwguy, L"Disguise as hwguy", '^', "hwguy")
 {
 	return CheckDisguiseClass( CLASS_HWGUY );
 }
 
-ADD_MENU_OPTION(disguisespy, L"Disguise as spy", "spy")
+ADD_MENU_OPTION(disguisespy, L"Disguise as spy", '*', "spy")
 {
 	return CheckDisguiseClass( CLASS_SPY );
 }
 
-ADD_MENU_OPTION(disguisepyro, L"Disguise as pyro", "pyro")
+ADD_MENU_OPTION(disguisepyro, L"Disguise as pyro", '?', "pyro")
 {
 	return CheckDisguiseClass( CLASS_PYRO );
 }
 
-ADD_MENU_OPTION(disguiseengineer, L"Disguise as engineer", "engineer")
+ADD_MENU_OPTION(disguiseengineer, L"Disguise as engineer", '(', "engineer")
 {
 	return CheckDisguiseClass( CLASS_ENGINEER );
 }
 
-ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", "civilian")
+ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", ')', "civilian")
 {
 	return CheckDisguiseClass( CLASS_CIVILIAN );
 }
@@ -402,22 +405,22 @@ ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", "civilian")
 //-----------------------------------------------------------------------------
 // Detpack menu options
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( det5, L"5", "detpack 5" )
+ADD_MENU_OPTION( det5, L"5", NULL, "detpack 5" )
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( det10, L"10", "detpack 10" )
+ADD_MENU_OPTION( det10, L"10", NULL, "detpack 10" )
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( det20, L"20", "detpack 20" )
+ADD_MENU_OPTION( det20, L"20", NULL, "detpack 20" )
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( det50, L"50", "detpack 50" )
+ADD_MENU_OPTION( det50, L"50", NULL, "detpack 50" )
 {
 	return MENU_SHOW;
 }
@@ -425,7 +428,7 @@ ADD_MENU_OPTION( det50, L"50", "detpack 50" )
 //-----------------------------------------------------------------------------
 // Cloak options
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( cloak, L"Cloak", "cloak" )
+ADD_MENU_OPTION( cloak, L"Cloak", 'G', "cloak" )
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -446,7 +449,7 @@ ADD_MENU_OPTION( cloak, L"Cloak", "cloak" )
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
+ADD_MENU_OPTION( scloak, L"Silent Cloak", 'G', "scloak" )
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -475,7 +478,7 @@ ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
 // Sentry Sabotage
 //-----------------------------------------------------------------------------
 
-ADD_MENU_OPTION( sentrysabotage, L"Sabotage Sentry", "sentrysabotage" )
+ADD_MENU_OPTION( sentrysabotage, L"Sabotage Sentry", 'G', "sentrysabotage" )
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -674,7 +677,7 @@ void CHudContextMenu::Paint()
 		}
 	}*/
 
-	float halfbuttonX = scheme()->GetProportionalScaledValue(40.0f);
+/*	float halfbuttonX = scheme()->GetProportionalScaledValue(40.0f);
 	float halfbuttonY = scheme()->GetProportionalScaledValue(20.0f);
 
 	// Button boxes
@@ -683,11 +686,7 @@ void CHudContextMenu::Paint()
 
 	// Draw boxes
 	for (int i = 0; i < m_nOptions; i++)
-		surface()->DrawTexturedRect(m_flPositions[i][0] - halfbuttonX, m_flPositions[i][1] - halfbuttonY, m_flPositions[i][0] + halfbuttonX, m_flPositions[i][1] + halfbuttonY);
-
-	// Set and get height of font
-	surface()->DrawSetTextFont(m_hTextFont);
-	int offsetY = 0.5f * surface()->GetFontTall(m_hTextFont);
+		surface()->DrawTexturedRect(m_flPositions[i][0] - halfbuttonX, m_flPositions[i][1] - halfbuttonY, m_flPositions[i][0] + halfbuttonX, m_flPositions[i][1] + halfbuttonY);*/
 
 	// Colours we need later on
 	Color highlighted(255, 0, 0, 255);
@@ -695,41 +694,75 @@ void CHudContextMenu::Paint()
 
 	float dx = m_flPosX - scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
 	float dy = m_flPosY - scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
+	float py = scheme()->GetProportionalScaledValue(10.0f);
 
 	int newSelection = -1;
 
-	// If we're not in the middle then get the right button
-	if ((dx * dx) + (dy * dy) > 2500)
+	// Check to see if we're far enough from the middle to be highlighting a button
+	float flDistance = FastSqrt(dx * dx + dy * dy);
+
+	if (flDistance > 0.0f)
 	{
-		const float pi_2 = M_PI * 2.0f;
+		float flHighlightBoundary = scheme()->GetProportionalScaledValue(cm_highlightdistance.GetFloat());
+		float s = fabs(dy) / flDistance;
+		flHighlightBoundary = (1.0f - s) * flHighlightBoundary + s * (flHighlightBoundary * cm_squash.GetFloat());
 
-		float angle_per_button = pi_2 / m_nOptions;
-		float angle = atan2f(dx, -dy) + angle_per_button * 0.5f;
+		// Outside the inside boundary, therefore work out which button to highlight
+		if (flDistance > flHighlightBoundary)
+		{
+			const float pi_2 = M_PI * 2.0f;
 
-		if (angle < 0)
-			angle += pi_2;
-		if (angle > pi_2)
-			angle -= pi_2;
+			float angle_per_button = pi_2 / m_nOptions;
+			float angle = atan2f(dx, -dy) + angle_per_button * 0.5f;
 
-		newSelection = angle / angle_per_button;
+			if (angle < 0)
+				angle += pi_2;
+			if (angle > pi_2)
+				angle -= pi_2;
+
+			newSelection = angle / angle_per_button;
+		}
 	}
 
 	// Draw text for each box
 	for (int i = 0; i < m_nOptions; i++)
 	{
-		surface()->DrawSetTextColor(GetFgColor());
-
-		// Dimmed out
+		//
+		// COLOR
+		//
 		if (m_pMenu[i].conditionfunc() != MENU_SHOW)
 			surface()->DrawSetTextColor(dimmed);
-
-		// Highlighted
 		else if (newSelection == i)
 			surface()->DrawSetTextColor(highlighted);
+		else
+			surface()->DrawSetTextColor(GetFgColor());
+
+		//
+		// DRAW ICON
+		//
+		char character = m_pMenu[i].chIcon;
+
+		//surface()->DrawSetTextColor(Color(100, 100, 100, 100));
+		surface()->DrawSetTextFont(m_hMenuIcon);
+
+		int charOffsetX = surface()->GetCharacterWidth(m_hMenuIcon, character) / 2;
+		int charOffsetY = surface()->GetFontTall(m_hMenuIcon) / 2;
+
+		wchar_t unicode[2];
+		swprintf(unicode, L"%c", character);
+
+		surface()->DrawSetTextPos(m_flPositions[i][0] - charOffsetX, m_flPositions[i][1] - charOffsetY);
+		surface()->DrawUnicodeChar(unicode[0]);
+
+		//
+		// DRAW TEXT
+		//
+
+		surface()->DrawSetTextFont(m_hTextFont);
 
 		// Work out centering and position & draw text
 		int offsetX = 0.5f * UTIL_ComputeStringWidth(m_hTextFont, m_pMenu[i].szName);
-		surface()->DrawSetTextPos(m_flPositions[i][0] - offsetX, m_flPositions[i][1] - offsetY);
+		surface()->DrawSetTextPos(m_flPositions[i][0] - offsetX, m_flPositions[i][1] + charOffsetY + py);
 		
 		for (const wchar_t *wch = m_pMenu[i].szName; *wch != 0; wch++)
 			surface()->DrawUnicodeChar(*wch);
@@ -761,12 +794,17 @@ void CHudContextMenu::Paint()
 		}
 	}
 
-	// Show actual mouse location for debuggin
+	// Show actual mouse location, just manually drawing a crosshair for now
 	if (cm_showmouse.GetBool())
 	{
-		surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-		surface()->DrawSetColor(255, 255, 255, 255);
-		surface()->DrawTexturedRect(m_flPosX - 5, m_flPosY - 5, m_flPosX + 5, m_flPosY + 5);
+		float ch_short = scheme()->GetProportionalScaledValue(1.0f);
+		float ch_long = ch_short * 6.0f;
+
+		surface()->DrawSetTexture(NULL);
+		surface()->DrawSetColor(GetFgColor());
+		//surface()->DrawTexturedRect(m_flPosX - 5, m_flPosY - 5, m_flPosX + 5, m_flPosY + 5);
+		surface()->DrawTexturedRect(m_flPosX - ch_short, m_flPosY - ch_long, m_flPosX + ch_short, m_flPosY + ch_long);
+		surface()->DrawTexturedRect(m_flPosX - ch_long, m_flPosY - ch_short, m_flPosX + ch_long, m_flPosY + ch_short);
 	}
 }
 
@@ -779,7 +817,7 @@ void CHudContextMenu::MouseMove(float *x, float *y)
 
 	float midx = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
 	float midy = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
-	float dist = scheme()->GetProportionalScaledValue(cm_size.GetInt());
+	float dist = scheme()->GetProportionalScaledValue(cm_bounds.GetInt());
 
 	// UNDONE: Now capturing within a sphere, not within a box
 	//m_flPosX = clamp(m_flPosX + (*x * sensitivity_factor), midx - dist, midx + dist);

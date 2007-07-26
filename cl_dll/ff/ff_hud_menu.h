@@ -25,26 +25,28 @@ typedef struct menuoption_s
 	const wchar_t	*szName;
 	const char		*szCommand;
 	menuoption_s	*pNextMenu;
+	char			chIcon;
 
 	int (*conditionfunc)();
 
-	menuoption_s(const wchar_t *name, const char *command, int (*cfnc)(), menuoption_s *nextmenu)
+	menuoption_s(const wchar_t *name, char icon, const char *command, int (*cfnc)(), menuoption_s *nextmenu)
 	{
 		szName			= name;
 		szCommand		= command;
 		conditionfunc	= cfnc;
 		pNextMenu		= nextmenu;
+		chIcon			= icon;
 	}
 } menuoption_t;
 
-#define ADD_MENU_OPTION(id, name, command) \
+#define ADD_MENU_OPTION(id, name, icon, command) \
 	int MenuOption##id##();	\
-	menuoption_t id##(name, command, &MenuOption##id##, NULL);	\
+	menuoption_t id##(name, icon, command, &MenuOption##id##, NULL);	\
 	int MenuOption##id##()
 
-#define ADD_MENU_BRANCH(id, name, command, nextmenu) \
+#define ADD_MENU_BRANCH(id, name, icon, command, nextmenu) \
 	int MenuOption##id##();	\
-	menuoption_t id##(name, command, &MenuOption##id##, nextmenu);	\
+	menuoption_t id##(name, icon, command, &MenuOption##id##, nextmenu);	\
 	int MenuOption##id##()
 
 class CHudContextMenu : public CHudElement, public vgui::Panel
@@ -72,6 +74,7 @@ private:
 
 	// Stuff we need to know
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Default");
+	CPanelAnimationVar(vgui::HFont, m_hMenuIcon, "DisguiseFont", "ClassGlyphs");
 
 	CPanelAnimationVarAliasType(float, text_xpos, "text_xpos", "8", "proportional_float");
 	CPanelAnimationVarAliasType(float, text_ypos, "text_ypos", "20", "proportional_float");
