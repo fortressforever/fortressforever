@@ -42,7 +42,7 @@ ConVar cm_capturemouse("cl_cmcapture", "1", FCVAR_ARCHIVE, "Context menu capture
 ConVar cm_showmouse("cl_cmshowmouse", "1", FCVAR_ARCHIVE, "Show mouse position");
 ConVar cm_size("cl_cmsize", "120", FCVAR_ARCHIVE, "Size of context radial menu");
 ConVar cm_bounds("cl_cmbounds", "120", FCVAR_ARCHIVE, "Bounds of the context radial menu");
-ConVar cm_progresstime("cl_cmprogresstime", "0.3", FCVAR_ARCHIVE, "Time to wait for menu progress");
+ConVar cm_progresstime("cl_cmprogresstime", "0.7", FCVAR_ARCHIVE, "Time to wait for menu progress");
 ConVar cm_squash("cl_cmsquash", "0.7", FCVAR_ARCHIVE, "");
 ConVar cm_highlightdistance("cl_cmhighlightdistance", "50", FCVAR_ARCHIVE, "Distance for an option to highlight");
 
