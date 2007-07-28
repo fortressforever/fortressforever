@@ -41,6 +41,9 @@ static ConVar ffdev_flame_fadeout_time(	"ffdev_flame_fadeout_time", 	"0.2", 		0,
 static ConVar ffdev_flame_dietime_min(		"ffdev_flame_dietime_min", 		/*"0.3"*/ "0.36", 	0, 	"Lifespan of the flames in seconds");
 static ConVar ffdev_flame_dietime_max(		"ffdev_flame_dietime_max", 		/*"0.4"*/ "0.48", 	0, 	"Lifespan of the flames in seconds");
 
+// -> Defrag
+static ConVar ffdev_flame_eye_angle_bias( "ffdev_flame_eye_angle_bias", "0.5", 0, "Lerp factor for blending between eye & muzzle angles. 0.0 = Use muzzle angles as velocity. 1.0 = Use eye angles.", true, 0.0f, true, 1.0f );
+
 ConVar ffdev_flame_dlight_color_r( "ffdev_flame_dlight_color_r", "255" );
 ConVar ffdev_flame_dlight_color_g( "ffdev_flame_dlight_color_g", "144" );
 ConVar ffdev_flame_dlight_color_b( "ffdev_flame_dlight_color_b", "64" );
@@ -243,7 +246,21 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	if (pWeapon)
 	{
 		int iAttachment = pWeapon->LookupAttachment("1");
-		pWeapon->GetAttachment(iAttachment, vecStart, angAngles);
+
+		// #0001537: Flamethrower does not indicate vertical aiming properly.	-> Defrag
+		// Changed this so that the angles returned by the GetAttachment function are no longer used to set the flame velocity.
+		// Instead, we now lerp between the eye & weapon muzzle angles to get the velocity direction vector
+		QAngle angWeapon;
+		pWeapon->GetAttachment(iAttachment, vecStart, angWeapon);
+		
+		// factor by which we bias towards eye angles
+		const float fEyeAngleBias = ffdev_flame_eye_angle_bias.GetFloat();		
+		
+		// lerp between pitch of eye and weapon angles.  The bigger the eye angle bias, the more the flamethrower jet's
+		// velocity heads out along the eye angles.  Set it to 1.0f to make it use the eye angles.  Set it to 0 to use model angles.
+		// I reckon something along the lines of 0.75 to 0.8 would be good.
+        float fBlendedPitch = angAngles.x * fEyeAngleBias + angWeapon.x * ( 1.0f - fEyeAngleBias );
+		angAngles.x = fBlendedPitch;
 	}
 
 	// Removing the forward thing as when you're up against a wall you see no flames now
