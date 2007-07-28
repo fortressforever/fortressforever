@@ -39,6 +39,8 @@ ConVar ffdev_ac_rof_min("ffdev_ac_rof_min", "0.06", FCVAR_REPLICATED, "Assault C
 ConVar ffdev_ac_rof_loopshotsound_max("ffdev_ac_rof_loopshotsound_max", "0.12", FCVAR_REPLICATED, "Assault Cannon loop shot sound's maximum rate of fire");
 ConVar ffdev_ac_rof_loopshotsound_min("ffdev_ac_rof_loopshotsound_min", "0.06", FCVAR_REPLICATED, "Assault Cannon loop shot sound's minimum rate of fire");
 
+ConVar ffdev_ac_bulletpush( "ffdev_ac_bulletpush", "1.0", FCVAR_REPLICATED, "Assault Cannon bullet push force");
+
 #define FF_AC_LOOPSHOTSOUND_VOLUME_HIGH		1.0f
 #define FF_AC_LOOPSHOTSOUND_VOLUME_LOW		0.4f
 #define FF_AC_LOOPSHOTSOUND_PITCH_HIGH		160.0f
@@ -318,6 +320,9 @@ void CFFWeaponAssaultCannon::Fire()
 	FireBulletsInfo_t info(pWeaponInfo.m_iBullets, pPlayer->Weapon_ShootPosition(), vecForward, GetFireSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
 	info.m_iDamage = pWeaponInfo.m_iDamage;
+
+	// AC Push.  May not function because the CFFPlayer::Fire() function (line 944 ff_player_shared) is scaling push by 0.01f -> Defrag
+	info.m_flDamageForceScale = ffdev_ac_bulletpush.GetFloat();
 
 	Vector vecTest = info.m_vecSrc;
 
