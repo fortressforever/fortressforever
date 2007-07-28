@@ -348,26 +348,31 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		}
 		else
 		{
+			// #0001434: Railgun beams get stuck in 3D sky -> Defrag
+			// Changed the if statement below to include the inclusion of decals only.  
+			// The actual railgun logic now runs regardless of whether the sky or an ordinary brush was hit.
+
 			// Put a mark unless we've hit the sky
 			if( ( tr.surface.flags & SURF_SKY ) == false ) 
 			{
 				UTIL_ImpactTrace( &tr, DMG_BULLET );
-				
-				// 0001267: Added explosion effect if charged
-				// only detonate anywhere if it's a fully charged rail
-				if ( m_iMaxBounces == 2 )
-				{
-					// full charge explosion damage
-					m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
-
-					// for each bounce, multiply by specified bounce damage factor
-					for (int i = 0; i < m_iNumBounces; i++)
-						m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
-
-					Detonate();
-				}
-				SetupEnd(tr.endpos);
 			}
+
+			// 0001267: Added explosion effect if charged
+			// only detonate anywhere if it's a fully charged rail
+			if ( m_iMaxBounces == 2 )
+			{
+				// full charge explosion damage
+				m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
+
+				// for each bounce, multiply by specified bounce damage factor
+				for (int i = 0; i < m_iNumBounces; i++)
+					m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
+
+				Detonate();
+			}
+			SetupEnd(tr.endpos);
+
 		}
 	}
 }
