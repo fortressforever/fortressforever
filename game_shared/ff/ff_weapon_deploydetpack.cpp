@@ -224,19 +224,20 @@ bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 bool CFFWeaponDeployDetpack::CanDeploy( void )
 {
-	/*
+	
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( !pPlayer )
 		return false;
-
+	
 	if( pPlayer->GetDetpack() )
 	{
 #ifdef CLIENT_DLL
-		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYBUILT" );
+		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYSET" );
 #endif
 		return false;
 	}
+	/*
 	else if( pPlayer->IsBuilding() )
 	{
 #ifdef CLIENT_DLL
