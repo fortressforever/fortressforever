@@ -6215,7 +6215,7 @@ bool CFFPlayer::IsInNoBuild() const
 //-----------------------------------------------------------------------------
 // Purpose: Is the flashlight on or off, taken from HL2MP
 //-----------------------------------------------------------------------------
-int CFFPlayer::FlashlightIsOn() const
+int CFFPlayer::FlashlightIsOn()
 {
 	return IsEffectActive(EF_DIMLIGHT);
 }
