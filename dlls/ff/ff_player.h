@@ -813,7 +813,7 @@ public:
 	void FinishDisguise();
 	void ResetDisguise();
 
-	int		FlashlightIsOn( void ) const;
+	int		FlashlightIsOn( void );
 	void	FlashlightTurnOn( void );
 	void	FlashlightTurnOff( void );
 
