@@ -777,7 +777,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 	if( pOwner && pOwner->IsBot() )
 	{
-		Omnibot::Notify_BuildableDamaged( pOwner, Classify(), edict() );
+		Omnibot::Notify_BuildableDamaged( pOwner, Classify(), this );
 		SendStatsToBot();
 	}
 

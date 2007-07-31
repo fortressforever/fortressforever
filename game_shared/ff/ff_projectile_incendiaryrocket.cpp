@@ -20,7 +20,6 @@
 #ifdef GAME_DLL
 	#include "smoke_trail.h"
 	#include "ff_buildableobjects_shared.h"
-	#include "omnibot_interface.h"
 	#include "soundent.h"
 #endif
 
@@ -248,14 +247,6 @@ CFFProjectileIncendiaryRocket * CFFProjectileIncendiaryRocket::CreateRocket(cons
 
 	pRocket->m_flDamage = iDamage;
 	pRocket->m_DmgRadius = pRocket->m_flDamage * 2.0f;
-
-#ifdef GAME_DLL
-	{
-		CBasePlayer *pPlayer = ToBasePlayer(pentOwner);
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShootProjectile(pPlayer, pRocket->edict());
-	}
-#endif
 
 	return pRocket; 
 }

@@ -21,6 +21,7 @@
 	#include "ff_utils.h"
 	#include "soundenvelope.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 #endif
 
@@ -333,6 +334,12 @@ void CFFWeaponAssaultCannon::Fire()
 
 	pPlayer->FireBullets(info);
 
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_MINIGUN, 0);
+	}
+#endif
 }
 
 void CFFWeaponAssaultCannon::UpdateChargeTime()

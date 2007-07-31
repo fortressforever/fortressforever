@@ -81,7 +81,7 @@ public:
 	// calls out to a script function. if pEntity is NULL, the szFunctionName
 	// will be interpreted as a global function. returns true if the
 	// script call was successful; otherwise, it returns false
-	bool CallFunction(CBaseEntity* pEntity, const char* szFunctionName);
+	bool CallFunction(CBaseEntity* pEntity, const char* szFunctionName, const char *szTargetEntName = 0);
 
 	// calls a global function
 	bool CallFunction(const char* szFunctionName);

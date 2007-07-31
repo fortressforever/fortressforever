@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-10-28 22:15:24 -0700 (Sat, 28 Oct 2006) $
-// $LastChangedRevision: 1311 $
+// $LastChangedDate: 2007-07-23 20:42:20 -0700 (Mon, 23 Jul 2007) $
+// $LastChangedRevision: 2119 $
 //
 // Title: TF Message Structure Definitions
 //
@@ -18,81 +18,74 @@
 
 //////////////////////////////////////////////////////////////////////////
 
-// struct: TF_WeaponCharging
-//		m_IsCharging - true if the weapon is charging.
-typedef struct 
-{
-	obBool		m_IsCharging;
-} TF_WeaponCharging;
-
 // struct: TF_BuildInfo
 //		m_Sentry - Sentry Entity.
 //		m_Dispenser - Dispenser Entity.
 //		m_Detpack - Detpack Entity.
-typedef struct 
+struct TF_BuildInfo
 {
 	GameEntity			m_Sentry;
 	GameEntity			m_Dispenser;
 	GameEntity			m_Detpack;
-} TF_BuildInfo;
+};
 
 // struct: TF_PlayerPipeCount
 //		m_NumPipes - Current number of player pipes.
 //		m_MaxPipes - Max player pipes.
-typedef struct 
+struct TF_PlayerPipeCount
 {
 	obint32		m_NumPipes;
 	obint32		m_MaxPipes;
-} TF_PlayerPipeCount;
+};
 
 // struct: TF_TeamPipeInfo
 //		m_NumTeamPipes - Current number of team pipes.
 //		m_NumTeamPipers - Current number of team pipers(demo-men).
 //		m_MaxPipesPerPiper - Max pipes per piper
-typedef struct  
+struct TF_TeamPipeInfo
 {
 	obint32		m_NumTeamPipes;
 	obint32		m_NumTeamPipers;
 	obint32		m_MaxPipesPerPiper;
-} TF_TeamPipeInfo;
+};
 
 // struct: TF_DisguiseOptions
 //		m_CheckTeam - team to check class disguises with.
 //		m_Team - true/false if each team is available to be disguised as.
 //		m_DisguiseClass - true/false if each class is available to be disguised as.
-typedef struct  
+struct TF_DisguiseOptions
 {
 	int			m_CheckTeam;
 	obBool		m_Team[TF_TEAM_MAX];
 	obBool		m_Class[TF_CLASS_MAX];
-} TF_DisguiseOptions;
+};
 
 // struct: TF_Disguise
 //		m_DisguiseTeam - Team disguised as.
 //		m_DisguiseClass - Class disguised as.
-typedef struct  
+struct TF_Disguise
 {
 	obint32		m_DisguiseTeam;
 	obint32		m_DisguiseClass;
-} TF_Disguise;
+};
 
 // struct: TF_FeignDeath
 //		m_SilentFeign - Silent feign or not.
-typedef struct  
+struct TF_FeignDeath
 {
 	obBool		m_Silent;
-} TF_FeignDeath;
+};
 
 // struct: TF_HudHint
 //		m_TargetPlayer - Target player entity for the hint.
 //		m_Id - Id for the hint.
 //		m_Message[1024] - Hint message.
-typedef struct  
+struct TF_HudHint
 {
-	GameId		m_TargetPlayer;
+	GameEntity	m_TargetPlayer;
 	obint32		m_Id;
 	char		m_Message[1024];
-} TF_HudHint;
+};
 
 // struct: TF_HudMenu
 //		m_TargetPlayer - Target player entity for the hint.
@@ -105,7 +98,7 @@ typedef struct
 //		m_Level - Menu level.
 //		m_TimeOut - Duration of the menu.
 //		m_Color - Text color.
-typedef struct  
+struct TF_HudMenu
 {
 	enum GuiType
 	{
@@ -113,7 +106,7 @@ typedef struct
 		GuiMenu,
 		GuiTextBox,
 	};
-	GameId		m_TargetPlayer;
+	GameEntity	m_TargetPlayer;
 	GuiType		m_MenuType;
 	char		m_Title[32];
 	char		m_Caption[32];
@@ -123,35 +116,162 @@ typedef struct
 	int			m_Level;
 	float		m_TimeOut;
 	obColor		m_Color;
-} TF_HudMenu;
+};
 
 // struct: TF_HudText
 //		m_TargetPlayer - Target player entity for the message.
 //		m_Message - Text to display.
-typedef struct  
+struct TF_HudText
 {
 	enum MsgType
 	{
 		MsgConsole,
 		MsgHudCenter,
 	};
-	GameId		m_TargetPlayer;
+	GameEntity	m_TargetPlayer;
 	MsgType		m_MessageType;
 	char		m_Message[512];
-} TF_HudText;
+};
 
 // struct: TF_LockPosition
 //		m_TargetPlayer - Target player entity for the hint.
 //		m_Lock - Lock the player or not.
 //		m_Succeeded - Status result.
-typedef struct  
+struct TF_LockPosition
 {
 	GameEntity	m_TargetPlayer;
 	obBool		m_Lock;
 	obBool		m_Succeeded;
-} TF_LockPosition;
+};
 
 //////////////////////////////////////////////////////////////////////////
+
+struct Event_RadioTagUpdate_TF
+{
+	GameEntity	m_Detected;
+};
+
+struct Event_RadarUpdate_TF
+{
+	GameEntity	m_Detected;
+};
+
+struct Event_CantDisguiseTeam_TF
+{
+	int			m_TeamId;
+};
+
+struct Event_CantDisguiseClass_TF
+{
+	int			m_ClassId;
+};
+
+struct Event_Disguise_TF
+{
+	int			m_TeamId;
+	int			m_ClassId;
+};
+
+struct Event_SentryBuilding_TF
+{
+	GameEntity	m_Sentry;
+};
+
+struct Event_SentryBuilt_TF
+{
+	GameEntity	m_Sentry;
+};
+
+struct Event_SentryAimed_TF
+{
+	GameEntity	m_Sentry;
+	float		m_Direction[3];
+};
+
+struct Event_SentrySpotEnemy_TF
+{
+	GameEntity	m_SpottedEnemy;
+};
+
+struct Event_SentryTakeDamage_TF
+{
+	GameEntity	m_Inflictor;
+};
+
+struct Event_SentryUpgraded_TF
+{
+	int				m_Level;
+};
+
+struct Event_SentryStatus_TF
+{
+	GameEntity		m_Entity;
+	float			m_Position[3];
+	float			m_Facing[3];
+	int				m_Level;
+	int				m_Health;
+	int				m_MaxHealth;
+	int				m_Shells[2];
+	int				m_Rockets[2];
+};
+
+struct Event_DispenserStatus_TF
+{
+	GameEntity		m_Entity;
+	float			m_Position[3];
+	float			m_Facing[3];
+	int				m_Health;
+	int				m_Cells;
+	int				m_Nails;
+	int				m_Rockets;
+	int				m_Shells;
+	int				m_Armor;
+};
+
+struct Event_DispenserBuilding_TF
+{
+	GameEntity	m_Dispenser;
+};
+
+struct Event_DispenserBuilt_TF
+{
+	GameEntity	m_Dispenser;
+};
+
+struct Event_DispenserEnemyUsed_TF
+{
+	GameEntity	m_Enemy;
+};
+
+struct Event_DispenserTakeDamage_TF
+{
+	GameEntity	m_Inflictor;
+};
+
+struct Event_DetpackBuilding_TF
+{
+	GameEntity	m_Detpack;
+};
+
+struct Event_DetpackBuilt_TF
+{
+	GameEntity	m_Detpack;
+};
+
+struct Event_BuildableDamaged_TF
+{
+	GameEntity	m_Buildable;
+};
+
+struct Event_BuildableDestroyed_TF
+{
+	GameEntity	m_WhoDoneIt;
+};
+
+struct Event_BuildableSabotaged_TF
+{
+	GameEntity	m_WhoDoneIt;
+};
 
 #pragma pack(pop)
 

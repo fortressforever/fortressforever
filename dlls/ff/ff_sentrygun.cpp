@@ -1132,10 +1132,10 @@ void CFFSentryGun::SetFocusPoint( Vector &origin )
 	//	NDebugOverlay::Line( EyePosition(), origin, 255, 0, 255, false, 5.0f );
 #endif
 
-	CFFPlayer *pOwner = static_cast<CFFPlayer *>( m_hOwner.Get() );
+	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
 	if(pOwner && pOwner->IsBot())
 	{
-		Omnibot::Notify_SentryAimed(pOwner);
+		Omnibot::Notify_SentryAimed(pOwner, this, dir);
 	}
 }
 
@@ -1152,31 +1152,6 @@ int CFFSentryGun::TakeEmp( void )
 	ammodmg += m_iRockets * 1.3f;
 
 	return ammodmg;
-}
-
-void CFFSentryGun::SendStatsToBot( void ) 
-{
-	VPROF_BUDGET( "CFFSentryGun::SendStatsTobot", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	CFFPlayer *pOwner = static_cast<CFFPlayer *>( m_hOwner.Get() );
-	if (pOwner && pOwner->IsBot()) 
-	{
-		Omnibot::BotUserData bud;
-		bud.DataType = Omnibot::BotUserData::dt6_2byteFlags;
-		bud.udata.m_2ByteFlags[0] = m_iHealth;
-		bud.udata.m_2ByteFlags[1] = m_iMaxHealth;
-
-		bud.udata.m_2ByteFlags[2] = m_iShells;
-		bud.udata.m_2ByteFlags[3] = m_iMaxShells;
-
-		bud.udata.m_2ByteFlags[4] = m_iRockets | (m_iMaxRockets << 16);
-		bud.udata.m_2ByteFlags[5] = m_iLevel;
-
-		int iGameId = pOwner->entindex() -1;
-		Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-			Omnibot::TF_MSG_SENTRY_STATS, 
-			iGameId, 0, 0, &bud);
-	}
 }
 
 //-----------------------------------------------------------------------------

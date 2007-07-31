@@ -20,6 +20,7 @@
 	#define CFFWeaponRPG C_FFWeaponRPG
 	#include "c_ff_player.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 #endif
 
@@ -90,7 +91,15 @@ void CFFWeaponRPG::Fire()
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileRocket *pRocket = CFFProjectileRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	pRocket;
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_ROCKET_LAUNCHER, pRocket);
+	}
+#endif
 }
 
 //----------------------------------------------------------------------------

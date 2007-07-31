@@ -498,31 +498,6 @@ void CFFDispenser::UpdateAmmoPercentage( void )
 	m_iAmmoPercent = ( ( flAmmo / flMaxAmmo ) * 100 );
 }
 
-void CFFDispenser::SendStatsToBot()
-{
-	VPROF_BUDGET( "CFFDispenser::SendStatsToBot", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
-	if(pOwner && pOwner->IsBot())
-	{
-		Omnibot::BotUserData bud;
-		bud.DataType = Omnibot::BotUserData::dt6_2byteFlags;
-		bud.udata.m_2ByteFlags[0] = m_iHealth;
-		bud.udata.m_2ByteFlags[1] = m_iShells;
-		bud.udata.m_2ByteFlags[2] = m_iNails;
-		bud.udata.m_2ByteFlags[3] = m_iRockets;
-		bud.udata.m_2ByteFlags[4] = m_iCells;
-		bud.udata.m_2ByteFlags[5] = m_iArmor;
-
-		// TODO: Add in radio tag?
-
-		int iGameId = pOwner->entindex()-1;
-		Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-			Omnibot::TF_MSG_DISPENSER_STATS,
-			iGameId, 0, 0, &bud);
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: If already sabotaged then don't try and sabotage again
 //-----------------------------------------------------------------------------

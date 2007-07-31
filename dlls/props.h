@@ -151,7 +151,10 @@ public:
 protected:
 
 	bool			UpdateHealth( int iNewHealth, CBaseEntity *pActivator );
-	virtual void	OnBreak( const Vector &vecVelocity, const AngularImpulse &angVel, CBaseEntity *pBreaker ) {}
+	virtual void	OnBreak( const Vector &vecVelocity, const AngularImpulse &angVel, CBaseEntity *pBreaker )
+	{
+
+	}
 
 protected:
 

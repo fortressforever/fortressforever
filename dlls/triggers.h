@@ -161,7 +161,7 @@ class CFuncFFScript : public CTriggerMultiple
 	enum { GS_INACTIVE = 0, GS_ACTIVE = 1, GS_REMOVED = -1 };
 
 public:
-	CFuncFFScript( void ) { m_iGoalState = GS_INACTIVE; }
+	CFuncFFScript() ;
 
 	virtual bool	IsActive( void ) const		{ return m_iGoalState == GS_ACTIVE; }
 	virtual bool	IsInactive( void ) const	{ return m_iGoalState == GS_INACTIVE; }
@@ -181,9 +181,16 @@ public:
 	virtual void	SetRemoved( void );
 	virtual void	SetRestored( void );
 
+	// bot info accessors
+	int GetBotTeamFlags() const { return m_BotTeamFlags; }
+	int GetBotGoalType() const { return m_BotGoalType; }
 protected:
 	int	m_iGoalState;
 	int m_iClipMask;
+
+	// cached information for bot use
+	int		m_BotTeamFlags;
+	int		m_BotGoalType;
 };
 
 #endif // TRIGGERS_H

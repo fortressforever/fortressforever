@@ -1,162 +1,121 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="7.10"
 	Name="mathlib"
 	ProjectGUID="{E1DA9FB8-FB4C-4B14-91A6-98BCED6B9720}"
-	Keyword="Win32Proj"
-	>
+	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
-			Name="Win32"
-		/>
+			Name="Win32"/>
 	</Platforms>
-	<ToolFiles>
-	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				ImproveFloatingPointConsistency="TRUE"
+				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="..\common,..\public,..\public\mathlib"
 				PreprocessorDefinitions="_WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
-				ExceptionHandling="1"
+				MinimalRebuild="TRUE"
+				ExceptionHandling="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				BufferSecurityCheck="true"
-				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="true"
+				BufferSecurityCheck="TRUE"
+				ForceConformanceInForLoopScope="TRUE"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)/"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="4"
-			/>
+				Detect64BitPortabilityProblems="FALSE"
+				DebugInformationFormat="4"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-				CommandLine="if exist ..\lib\public\mathlib.lib attrib -r ..\lib\public\mathlib.lib&#x0D;&#x0A;if exist ..\lib\public\mathlib.pdb attrib -r ..\lib\public\mathlib.pdb&#x0D;&#x0A;"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\lib\public\mathlib.lib"
-			/>
+				OutputFile="..\lib-vc7\public\mathlib.lib"/>
 			<Tool
-				Name="VCALinkTool"
-			/>
+				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCXDCMakeTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCBscMakeTool"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCFxCopTool"
-			/>
+				Name="VCPreLinkEventTool"
+				CommandLine="if exist ..\lib\public\mathlib.lib attrib -r ..\lib\public\mathlib.lib
+if exist ..\lib\public\mathlib.pdb attrib -r ..\lib\public\mathlib.pdb
+"/>
 			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				Name="VCResourceCompilerTool"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
+				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="true"
+				EnableIntrinsicFunctions="TRUE"
+				ImproveFloatingPointConsistency="FALSE"
 				FavorSizeOrSpeed="1"
+				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="..\common,..\public,..\public\mathlib"
 				PreprocessorDefinitions="_WIN32;NDEBUG;_LIB"
-				StringPooling="true"
-				ExceptionHandling="1"
+				StringPooling="TRUE"
+				ExceptionHandling="TRUE"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="true"
+				EnableFunctionLevelLinking="TRUE"
+				ForceConformanceInForLoopScope="TRUE"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)/"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="1"
-			/>
+				Detect64BitPortabilityProblems="FALSE"
+				DebugInformationFormat="2"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-				CommandLine="if exist ..\lib\public\mathlib.lib attrib -r ..\lib\public\mathlib.lib&#x0D;&#x0A;if exist ..\lib\public\mathlib.pdb attrib -r ..\lib\public\mathlib.pdb&#x0D;&#x0A;"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\lib\public\mathlib.lib"
-			/>
+				OutputFile="..\lib-vc7\public\mathlib.lib"/>
 			<Tool
-				Name="VCALinkTool"
-			/>
+				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCXDCMakeTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCBscMakeTool"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCFxCopTool"
-			/>
+				Name="VCPreLinkEventTool"
+				CommandLine="if exist ..\lib\public\mathlib.lib attrib -r ..\lib\public\mathlib.lib
+if exist ..\lib\public\mathlib.pdb attrib -r ..\lib\public\mathlib.pdb
+"/>
 			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				Name="VCResourceCompilerTool"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -165,37 +124,29 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4F4837F1-C7A5-4276-A066-2A32D752A2FF}"
-			>
+			UniqueIdentifier="{4F4837F1-C7A5-4276-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\halton.cpp"
-				>
+				RelativePath=".\halton.cpp">
 			</File>
 			<File
-				RelativePath=".\lightdesc.cpp"
-				>
+				RelativePath=".\lightdesc.cpp">
 			</File>
 			<File
-				RelativePath=".\mathlib_base.cpp"
-				>
+				RelativePath=".\mathlib_base.cpp">
 			</File>
 			<File
-				RelativePath=".\powsse.cpp"
-				>
+				RelativePath=".\powsse.cpp">
 			</File>
 			<File
-				RelativePath=".\sseconst.cpp"
-				>
+				RelativePath=".\sseconst.cpp">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93795370-89BD-4b04-88EB-625FBE52EBFB}"
-			>
+			UniqueIdentifier="{93795370-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath="..\public\mathlib\math_base.h"
-				>
+				RelativePath="..\public\mathlib\math_base.h">
 			</File>
 		</Filter>
 	</Files>

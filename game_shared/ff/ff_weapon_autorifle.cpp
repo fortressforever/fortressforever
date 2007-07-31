@@ -20,6 +20,7 @@
 	#define CFFWeaponAutoRifle C_FFWeaponAutoRifle
 	#include "c_ff_player.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 	#include "ff_statslog.h"
 #endif
@@ -163,4 +164,10 @@ void CFFWeaponAutoRifle::Fire()
 
 	pPlayer->FireBullets(info);
 
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_AUTORIFLE, 0);
+	}
+#endif
 }

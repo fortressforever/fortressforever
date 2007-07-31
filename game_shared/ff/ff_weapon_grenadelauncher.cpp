@@ -21,6 +21,7 @@
 	#include "c_ff_player.h"
 	#include "ff_utils.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 #endif
 
@@ -105,7 +106,15 @@ void CFFWeaponGrenadeLauncher::Fire()
 	else if( tr.fraction != 1.0f )
 		vecSrc += ( vForward * -24.0f );
 
-	CFFProjectileGrenade::CreateGrenade(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileGrenade *pGrenade = CFFProjectileGrenade::CreateGrenade(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	pGrenade;
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_GRENADE_LAUNCHER, pGrenade);
+	}
+#endif
 
 	// Synchronise with pipelauncher
 	Synchronise();

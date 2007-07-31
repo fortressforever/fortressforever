@@ -1,6 +1,8 @@
 #ifndef __OMNIBOT_INTERFACE_H__
 #define __OMNIBOT_INTERFACE_H__
 
+class CFFInfoScript;
+
 namespace Omnibot
 {
 	#include "Omni-Bot.h"
@@ -13,12 +15,10 @@ namespace Omnibot
 		static void OnDLLInit();
 		static void OnDLLShutdown();
 
+		static void LevelInit();
 		static bool InitBotInterface();
 		static void ShutdownBotInterface();
 		static void UpdateBotInterface();
-		static void Bot_SendSoundEvent(int _client, int _sndtype, Omnibot::GameEntity _source);
-		static void Bot_Interface_SendEvent(int _eid, int _dest, int _source, int _msdelay, BotUserData * _data);
-		static void Bot_Interface_SendGlobalEvent(int _eid, int _source, int _msdelay, BotUserData * _data);
 		static void Bot_SendTrigger(TriggerInfo *_triggerInfo);
 		static void OmnibotCommand();
 
@@ -42,17 +42,16 @@ namespace Omnibot
 	void Notify_TeamChatMsg(CBasePlayer *_player, const char *_msg);
 	void Notify_Spectated(CBasePlayer *_player, CBasePlayer *_spectated);
 
-	void Notify_ClientConnected(CBasePlayer *_player, bool _isbot);
+	void Notify_ClientConnected(CBasePlayer *_player, bool _isbot, int _team = RANDOM_TEAM_IF_NO_TEAM, int _class = RANDOM_CLASS_IF_NO_CLASS);
 	void Notify_ClientDisConnected(CBasePlayer *_player);
 
 	void Notify_AddWeapon(CBasePlayer *_player, const char *_item);
 	void Notify_RemoveWeapon(CBasePlayer *_player, const char *_item);
 	void Notify_RemoveAllItems(CBasePlayer *_player);	
 
-	void Notify_Spawned(CBasePlayer *_player);
-	void Notify_Hurt(CBasePlayer *_player, edict_t *_attacker);
-	void Notify_Death(CBasePlayer *_player, edict_t *_attacker, const char *_weapon);
-	void Notify_KilledSomeone(CBasePlayer *_player, edict_t *_victim, const char *_weapon);
+	void Notify_Hurt(CBasePlayer *_player, CBaseEntity *_attacker);
+	void Notify_Death(CBasePlayer *_player, CBaseEntity *_attacker, const char *_weapon);
+	void Notify_KilledSomeone(CBasePlayer *_player, CBaseEntity *_victim, const char *_weapon);
 
 	void Notify_ChangedTeam(CBasePlayer *_player, int _newteam);
 	void Notify_ChangedClass(CBasePlayer *_player, int _oldclass, int _newclass);
@@ -61,6 +60,7 @@ namespace Omnibot
 	void Notify_Build_CantBuild(CBasePlayer *_player, int _buildable);
 	void Notify_Build_AlreadyBuilt(CBasePlayer *_player, int _buildable);
 	void Notify_Build_NotEnoughAmmo(CBasePlayer *_player, int _buildable);
+	void Notify_Build_BuildCancelled(CBasePlayer *_player, int _buildable);
 
 	void Notify_CantDisguiseAsTeam(CBasePlayer *_player, int _disguiseTeam);
 	void Notify_CantDisguiseAsClass(CBasePlayer *_player, int _disguiseClass);
@@ -71,35 +71,36 @@ namespace Omnibot
 	void Notify_CantCloak(CBasePlayer *_player);
 	void Notify_Cloaked(CBasePlayer *_player);
 	
-	void Notify_RadarDetectedEnemy(CBasePlayer *_player, edict_t *_ent);
-	void Notify_RadioTagUpdate(CBasePlayer *_player, edict_t *_ent);
-	void Notify_BuildableDamaged(CBasePlayer *_player, int _type, edict_t *_buildableEnt);
+	void Notify_RadarDetectedEnemy(CBasePlayer *_player, CBaseEntity *_ent);
+	void Notify_RadioTagUpdate(CBasePlayer *_player, CBaseEntity *_ent);
+	void Notify_BuildableDamaged(CBasePlayer *_player, int _type, CBaseEntity *_buildableEnt);
 
-	void Notify_DispenserBuilding(CBasePlayer *_player, edict_t *_buildEnt);
-	void Notify_DispenserBuilt(CBasePlayer *_player, edict_t *_buildEnt);
-	void Notify_DispenserEnemyUsed(CBasePlayer *_player, edict_t *_enemyUser);
-	void Notify_DispenserDestroyed(CBasePlayer *_player, edict_t *_attacker);
+	void Notify_DispenserBuilding(CBasePlayer *_player, CBaseEntity *_buildEnt);
+	void Notify_DispenserBuilt(CBasePlayer *_player, CBaseEntity *_buildEnt);
+	void Notify_DispenserEnemyUsed(CBasePlayer *_player, CBaseEntity *_enemyUser);
+	void Notify_DispenserDestroyed(CBasePlayer *_player, CBaseEntity *_attacker);
 	void Notify_DispenserDetonated(CBasePlayer *_player);
 	void Notify_DispenserDismantled(CBasePlayer *_player);
 
 	void Notify_SentryUpgraded(CBasePlayer *_player, int _level);
-	void Notify_SentryBuilding(CBasePlayer *_player, edict_t *_buildEnt);
-	void Notify_SentryBuilt(CBasePlayer *_player, edict_t *_buildEnt);
-	void Notify_SentryDestroyed(CBasePlayer *_player, edict_t *_attacker);
+	void Notify_SentryBuilding(CBasePlayer *_player, CBaseEntity *_buildEnt);
+	void Notify_SentryBuilt(CBasePlayer *_player, CBaseEntity *_buildEnt);
+	void Notify_SentryDestroyed(CBasePlayer *_player, CBaseEntity *_attacker);
+	void Notify_SentryBuildCancel(CBasePlayer *_player);
 	void Notify_SentryDetonated(CBasePlayer *_player);
 	void Notify_SentryDismantled(CBasePlayer *_player);
 	void Notify_SentrySpottedEnemy(CBasePlayer *_player);
-	void Notify_SentryAimed(CBasePlayer *_player);
+	void Notify_SentryAimed(CBasePlayer *_player, CBaseEntity *_buildEnt, const Vector &_dir);
 
-	void Notify_DetpackBuilding(CBasePlayer *_player, edict_t *_buildEnt);
-	void Notify_DetpackBuilt(CBasePlayer *_player, edict_t *_buildEnt);
+	void Notify_DetpackBuilding(CBasePlayer *_player, CBaseEntity *_buildEnt);
+	void Notify_DetpackBuilt(CBasePlayer *_player, CBaseEntity *_buildEnt);
+	void Notify_DispenserBuildCancel(CBasePlayer *_player);
 	void Notify_DetpackDetonated(CBasePlayer *_player);
 
-	void Notify_DispenserSabotaged(CBasePlayer *_player, edict_t *_saboteur);
-	void Notify_SentrySabotaged(CBasePlayer *_player, edict_t *_saboteur);	
+	void Notify_DispenserSabotaged(CBasePlayer *_player, CBaseEntity *_saboteur);
+	void Notify_SentrySabotaged(CBasePlayer *_player, CBaseEntity *_saboteur);	
 
-	void Notify_PlayerShoot(CBasePlayer *_player, int _weapon);
-	void Notify_PlayerShootProjectile(CBasePlayer *_player, edict_t *_projectile);
+	void Notify_PlayerShoot(CBasePlayer *_player, int _weapon, CBaseEntity *_projectile);
 	void Notify_PlayerUsed(CBasePlayer *_player, CBaseEntity *_entityUsed);
 
 	// Goal Stuff
@@ -111,7 +112,8 @@ namespace Omnibot
 		kBackPack_Health,
 		kBackPack_Grenades,
 		kFlag,
-		kFlagCap
+		kFlagCap,
+		kTrainerSpawn
 	};
 	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _teamflags);
 
@@ -125,6 +127,8 @@ namespace Omnibot
 	void Notify_FireOutput(const char *_entityname, const char *_output);
 
 	void BotSendTriggerEx(const char *_entityname, const char *_action);
+	void SpawnBotAsync(const char *_name, int _team, int _class, CFFInfoScript *_spawnpoint = 0);
+	void SpawnBot(const char *_name, int _team, int _class, CFFInfoScript *_spawnpoint = 0);
 };
 
 #endif

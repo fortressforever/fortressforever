@@ -119,14 +119,6 @@ CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, co
 
 	pRail->m_flDamage = iDamage;
 
-#ifdef GAME_DLL
-	/*
-	CBasePlayer *pPlayer = ToBasePlayer(pentOwner);
-	if(pPlayer && pPlayer->IsBot())
-	Omnibot::Notify_PlayerShootProjectile(pPlayer, pRail->edict());
-	*/
-#endif
-
 	return pRail;
 }
 
