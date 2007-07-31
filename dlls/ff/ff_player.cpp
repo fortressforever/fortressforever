@@ -487,6 +487,7 @@ CFFPlayer::CFFPlayer()
 
 	m_fl_LuaSet_PlayerRespawnDelay = 0.0f;
 
+	m_SpawnPointOverride = 0;
 
 #endif // FF_BETA_TEST_COMPILE
 }
@@ -909,6 +910,12 @@ ReturnSpot:
 #ifdef _DEBUG
 	Warning( "[EntSelectSpawnPoint] Looking for a spawn point!\n" );
 #endif
+
+	//////////////////////////////////////////////////////////////////////////
+	// Shortcut for spawning bots where we want them.
+	if(m_SpawnPointOverride)
+		return m_SpawnPointOverride;
+	//////////////////////////////////////////////////////////////////////////
 
 	CBaseEntity *pSpot = NULL, *pGibSpot = NULL;
 
@@ -2727,7 +2734,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		// Omni-bot: Notify the bot he has detected someone.
 		if(IsBot())
 		{
-			Omnibot::Notify_RadioTagUpdate(this, pPlayer->edict());							
+			Omnibot::Notify_RadioTagUpdate(this, pPlayer);							
 		}
 	}
 }
@@ -2862,7 +2869,7 @@ void CFFPlayer::Command_Radar( void )
 						// Omni-bot: Notify the bot he has detected someone.
 						if(IsBot())
 						{
-							Omnibot::Notify_RadarDetectedEnemy(this, pPlayer->edict());							
+							Omnibot::Notify_RadarDetectedEnemy(this, pPlayer);							
 						}
 					}
 				}
@@ -3118,7 +3125,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					if(IsBot())
 					{
-						Omnibot::Notify_DispenserBuilding(this, pDispenser->edict());
+						Omnibot::Notify_DispenserBuilding(this, pDispenser);
 					}
 				}
 				break;
@@ -3163,7 +3170,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					if(IsBot())
 					{
-						Omnibot::Notify_SentryBuilding(this, pSentryGun->edict());
+						Omnibot::Notify_SentryBuilding(this, pSentryGun);
 					}
 				}
 				break;
@@ -3188,7 +3195,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					if(IsBot())
 					{
-						Omnibot::Notify_DetpackBuilding(this, pDetpack->edict());
+						Omnibot::Notify_DetpackBuilding(this, pDetpack);
 					}
 				}
 				break;
@@ -3221,6 +3228,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 		if( m_iCurBuild == m_iWantBuild )
 		{
 			// DevMsg( "[Building] You're currently building this item so cancel the build.\n" );
+
+			if(IsBot())
+			{
+				Omnibot::Notify_Build_BuildCancelled(this,m_iCurBuild);				
+			}			
 
 			CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
 			if( pBuildable )
@@ -4802,7 +4814,12 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 #ifdef GAME_DLL
 		{
 			if(IsBot())
-				Omnibot::Notify_PlayerShootProjectile(this, pGrenade->edict());
+			{
+				if(m_iGrenadeState == FF_GREN_PRIMEONE)
+					Omnibot::Notify_PlayerShoot(this, Omnibot::TF_WP_GRENADE1, pGrenade);
+				else if(m_iGrenadeState == FF_GREN_PRIMETWO)
+					Omnibot::Notify_PlayerShoot(this, Omnibot::TF_WP_GRENADE2, pGrenade);
+			}
 		}
 #endif
 	}
@@ -6029,6 +6046,53 @@ void CFFPlayer::LuaRemoveAmmo( int iAmmoType, int iAmount )
 			AddSecondaryGrenades( -iAmount );
 			break;
 	}
+
+	/*useful here too?
+	if(bClipToo)
+	{
+		for (int i = 0; i < MAX_WEAPONS; i++)
+		{
+			if(m_hMyWeapons[i] && m_hMyWeapons[i]->m_iClip1 != -1)
+				m_hMyWeapons[i]->m_iClip1 = 0;
+			if(m_hMyWeapons[i] && m_hMyWeapons[i]->m_iClip2 != -1)
+				m_hMyWeapons[i]->m_iClip2 = 0;
+		}
+		SwitchToNextBestWeapon(GetActiveWeapon());
+	}*/
+}
+
+void CFFPlayer::LuaRemoveAllAmmo(bool bClipToo)
+{
+	BaseClass::RemoveAllAmmo();
+	AddSecondaryGrenades(-4);
+	AddPrimaryGrenades(-4);
+
+	if(bClipToo)
+	{
+		for (int i = 0; i < MAX_WEAPONS; i++)
+		{
+			if(m_hMyWeapons[i] && m_hMyWeapons[i]->m_iClip1 != -1)
+				m_hMyWeapons[i]->m_iClip1 = 0;
+			if(m_hMyWeapons[i] && m_hMyWeapons[i]->m_iClip2 != -1)
+				m_hMyWeapons[i]->m_iClip2 = 0;
+		}
+		SwitchToNextBestWeapon(GetActiveWeapon());
+	}
+}
+
+bool CFFPlayer::LuaOwnsWeaponType(const char *_name)
+{
+	return Weapon_OwnsThisType(_name, 0) != NULL;
+}
+
+bool CFFPlayer::LuaGiveWeapon(const char *_name)
+{
+	return GiveNamedItem(_name, 0) != NULL;
+}
+
+void CFFPlayer::LuaRemoveAllWeapons()
+{
+	RemoveAllItems(false);
 }
 
 //-----------------------------------------------------------------------------

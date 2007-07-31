@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-04-14 21:53:05 -0400 (Fri, 14 Apr 2006) $
-// $LastChangedRevision: 1171 $
+// $LastChangedDate: 2007-03-07 08:28:59 -0800 (Wed, 07 Mar 2007) $
+// $LastChangedRevision: 1697 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,12 +38,12 @@ public:
 		return static_cast<Type*>(m_pVoid);
 	}
 
-	/*template<class Type>
-	const Type *Get() const
+	template<class Type>
+	void Get2(Type *&_p) const
 	{
-		assert(sizeof(Type) <= m_BlockSize && "Memory Block Too Small!");
-		return static_cast<const Type*>(m_pVoid);
-	}*/
+		assert(sizeof(Type) == m_BlockSize && "Memory Block Doesn't match!");
+		_p = static_cast<Type*>(m_pVoid);
+	}
 
 	int GetMessageId() const { return m_MessageId; }
 
@@ -52,7 +52,7 @@ public:
 		return (m_MessageId != 0);
 	}
 	
-	MessageHelper(int _msgId, void *_void, obuint32 _size) :
+	MessageHelper(int _msgId, void *_void = 0, obuint32 _size = 0) :
 		m_MessageId	(_msgId),
 		m_pVoid		(_void),
 		m_BlockSize	(_size)

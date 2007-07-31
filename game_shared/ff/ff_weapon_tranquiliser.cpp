@@ -22,6 +22,7 @@
 	#include "c_ff_player.h"
 	#include "ff_utils.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 #endif
 
@@ -105,5 +106,12 @@ void CFFWeaponTranquiliser::Fire()
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileDart::CreateDart(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileDart *pDart = CFFProjectileDart::CreateDart(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	pDart;
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_DARTGUN, pDart);
+	}
+#endif
 }

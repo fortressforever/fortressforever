@@ -21,6 +21,7 @@
 	#include "c_ff_player.h"
 	#include "ff_utils.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 #endif
 
@@ -110,7 +111,15 @@ void CFFWeaponIC::Fire()
 
 	// 0000936 - added cvar for testing. Keep line below commented out.
 	//CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
-	CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, ffdev_ic_damage.GetFloat(), pWeaponInfo.m_iSpeed);
+	CFFProjectileIncendiaryRocket *pRocket = CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, ffdev_ic_damage.GetFloat(), pWeaponInfo.m_iSpeed);
+	pRocket;
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_NAPALMCANNON, pRocket);
+	}
+#endif
 
 	// Push player but don't add to upwards force
 	// 0000936 - reduce the blast push

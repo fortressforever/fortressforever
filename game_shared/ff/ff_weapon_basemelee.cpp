@@ -15,9 +15,10 @@
 #include "ff_weapon_basemelee.h"
 
 #ifdef CLIENT_DLL
-#include "c_ff_player.h"
+	#include "c_ff_player.h"
 #else
-#include "ilagcompensationmanager.h"
+	#include "omnibot_interface.h"
+	#include "ilagcompensationmanager.h"
 #endif
 
 #define MELEE_HULL_DIM		16
@@ -367,5 +368,12 @@ void CFFWeaponMeleeBase::Swing()
 
 #ifdef GAME_DLL
 	lagcompensation->FinishLagCompensation(pOwner);
+#endif
+
+#ifdef GAME_DLL
+	{		
+		if(pOwner->IsBot())
+			Omnibot::Notify_PlayerShoot(pOwner, Omnibot::obUtilGetBotWeaponFromGameWeapon(GetWeaponID()), 0);
+	}
 #endif
 }

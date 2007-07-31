@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-10-09 21:51:59 -0700 (Mon, 09 Oct 2006) $
-// $LastChangedRevision: 1304 $
+// $LastChangedDate: 2007-07-15 13:06:41 -0700 (Sun, 15 Jul 2007) $
+// $LastChangedRevision: 2094 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,10 +52,21 @@ public:
 		bf &= rhs;
 		return bf;
 	}
+	bool operator<(obint32 _rhs) const
+	{
+		return m_Flags < _rhs;
+	}
+	bool operator==(const BitFlag32& r) const
+	{
+		return m_Flags==r.m_Flags;
+	}
+	bool operator!=(const BitFlag32& r) const
+	{
+		return m_Flags!=r.m_Flags;
+	}
 	explicit BitFlag32(obint32 flgs = 0) : m_Flags(flgs) {}
 private:
 	obint32	m_Flags;
-	//obint32	m_Persistant;
 };
 
 class BitFlag64
@@ -100,10 +111,32 @@ public:
 		bf &= rhs;
 		return bf;
 	}
+	BitFlag64& operator|=(const BitFlag64& rhs)
+	{
+		m_Flags |= rhs.m_Flags;
+		return *this;
+	}
+	BitFlag64 operator|(const BitFlag64& rhs) const
+	{
+		BitFlag64 bf(*this);
+		bf |= rhs;
+		return bf;
+	}
+	bool operator<(obint64 _rhs) const
+	{
+		return m_Flags < _rhs;
+	}
+	bool operator==(const BitFlag64& r) const
+	{
+		return m_Flags==r.m_Flags;
+	}
+	bool operator!=(const BitFlag64& r) const
+	{
+		return m_Flags!=r.m_Flags;
+	}
 	explicit BitFlag64(obint64 flgs = 0) : m_Flags(flgs) {}
 private:
 	obint64	m_Flags;
-	//obint64	m_Persistant;
 };
 
 

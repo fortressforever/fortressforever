@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-11 09:08:58 -0700 (Fri, 11 Aug 2006) $
-// $LastChangedRevision: 1243 $
+// $LastChangedDate: 2007-01-06 17:41:11 -0800 (Sat, 06 Jan 2007) $
+// $LastChangedRevision: 1491 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +24,7 @@ public:
 		cdata.m_RGBA[2] = 255;
 		cdata.m_RGBA[3] = 255; // 255 is opaque, 0 is transparent
 	}
-	obColor(unsigned int _color)
+	obColor(obint32 _color)
 	{
 		cdata.m_RGBAi = _color;
 	}

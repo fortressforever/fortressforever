@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-11-08 09:31:09 -0800 (Wed, 08 Nov 2006) $
-// $LastChangedRevision: 1316 $
+// $LastChangedDate: 2007-07-23 20:42:20 -0700 (Mon, 23 Jul 2007) $
+// $LastChangedRevision: 2119 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,6 +26,7 @@ typedef enum eomnibot_error
 	BOT_ERROR_CANTINITBOT,
 	BOT_ERROR_BAD_INTERFACE,
 	BOT_ERROR_WRONGVERSION,
+	BOT_ERROR_FILESYSTEM,
 
 	// THIS MUST STAY LAST
 	BOT_NUM_ERRORS
@@ -42,7 +43,51 @@ typedef enum eMessageType
 
 // typedef: GameEntity
 //		Represents an entity to the bot for every game.
-typedef obvoidp GameEntity;
+class GameEntity
+{
+public:
+	obint16 GetIndex() const { return udata.m_Short[0]; }
+	obint16 GetSerial() const { return udata.m_Short[1]; }
+
+	obint32 AsInt() const { return udata.m_Int; }
+	void FromInt(obint32 _n) { udata.m_Int = _n; }
+
+	void Reset()
+	{
+		*this = GameEntity();
+	}
+
+	bool IsValid() const
+	{
+		return udata.m_Short[0] >= 0;
+	}
+
+	bool operator!=(const GameEntity& _2) const
+	{
+		return udata.m_Int != _2.udata.m_Int;
+	}
+	bool operator==(const GameEntity& _2) const
+	{
+		return udata.m_Int == _2.udata.m_Int;
+	}
+
+	explicit GameEntity(obint16 _index, obint16 _serial)
+	{
+		udata.m_Short[0] = _index;
+		udata.m_Short[1] = _serial;
+	}
+	GameEntity()
+	{
+		udata.m_Short[0] = -1;
+		udata.m_Short[1] = 0;
+	}
+private:
+	union udatatype
+	{
+		obint32			m_Int;
+		obint16			m_Short[2];
+	} udata;
+};
 
 // typedef: GameId
 //		A numeric value for an entities game id. Usually an array index of some sort.
@@ -82,7 +127,8 @@ typedef enum eobResult
 	OutOfPVS,
 	UnableToAddBot,
 	InvalidEntity,
-	InvalidParameter
+	InvalidParameter,
+	UnknownMessageType,
 } obResult;
 
 #ifdef __cplusplus
@@ -112,38 +158,34 @@ typedef enum eFireMode
 	InvalidFireMode
 } FireMode;
 
+// enumerations: WeaponType
+//		INVALID_WEAPON - Used for invalid weapon id.
+typedef enum eWeaponType
+{
+	INVALID_WEAPON = 0,
+} WeaponType;
 
-// enumerations: Q4_AmmoType
-//		Q4_AMMO_ROCKETS - Rockets for RPG
+// enumerations: AmmoType
+//		INVALID_AMMO - Used for invalid ammo types.
 typedef enum eAmmoType
 {
-	AMMO_NONE = -1,
+	INVALID_AMMO = 0,
 } AmmoType;
 
 // enumerations: BotDebugFlag
 //		BOT_DEBUG_LOG - Debug log for this bot.
 //		BOT_DEBUG_MOVEVEC - Draw the move vector.
-//		BOT_DEBUG_AIMPOINT - Draw a line to the aim point.
-//		BOT_DEBUG_GOALS - Output info about the bot goals.
-//		BOT_DEBUG_SENSORY - Draw lines to sensed entities.
-//		BOT_DEBUG_BRAIN - Output info from the bot brain.
-//		BOT_DEBUG_WEAPON - Output info about weapon system.
 //		BOT_DEBUG_SCRIPT - Output info about bot script events/signals.
-//		BOT_DEBUG_EVENTS - Output Event info.
 //		BOT_DEBUG_FPINFO - Output first person info.
+//		BOT_DEBUG_EVENTS - Print out events bot recieves.
 typedef enum eBotDebugFlag
 {
 	BOT_DEBUG_LOG = 0,
 	BOT_DEBUG_MOVEVEC,
-	BOT_DEBUG_AIMPOINT,
-	BOT_DEBUG_GOALS,
-	BOT_DEBUG_SENSORY,
-	BOT_DEBUG_BRAIN,
-	BOT_DEBUG_WEAPON,
 	BOT_DEBUG_SCRIPT,
-	BOT_DEBUG_EVENTS,
 	BOT_DEBUG_FPINFO,
 	BOT_DEBUG_PLANNER,
+	BOT_DEBUG_EVENTS,
 
 	// THIS MUST STAY LAST
 	NUM_BOT_DEBUG_FLAGS = 16,
@@ -161,23 +203,6 @@ typedef enum eHelpers
 	RANDOM_TEAM					= -1,
 	RANDOM_TEAM_IF_NO_TEAM		= -2,
 } Helpers;
-
-// enumerations: obLineTypes
-//		LINE_NONE - Null line
-//		LINE_NORMAL - Normal line.
-//		LINE_WAYPOINT - Waypoint line.
-//		LINE_PATH - Path line.
-//		LINE_BLOCKABLE - Blockable line.
-//		LINE_FACING - The facing of a waypoint.
-typedef enum eLineType
-{
-	LINE_NONE,
-	LINE_NORMAL,
-    LINE_WAYPOINT,
-	LINE_PATH,
-	LINE_BLOCKABLE,
-	LINE_FACING,
-} LineType;
 
 // typedef: AABB
 //		Represents the axis aligned bounding box of an object
@@ -199,6 +224,17 @@ typedef struct AABB_t
 		DIR_ALL,
 	};
 
+	bool IsZero() const
+	{
+		for(int i = 0; i < 3; ++i)
+		{
+			if(m_Mins[i] != 0.f || 
+				m_Maxs[i] != 0.f)
+				return false;
+		}
+		return true;
+	}
+
 	void Set(const float _pt[3])
 	{
 		for(int i = 0; i < 3; ++i)
@@ -211,8 +247,10 @@ typedef struct AABB_t
 	{
 		for(int i = 0; i < 3; ++i)
 		{
-			m_Mins[i] = _min[i];
-			m_Maxs[i] = _max[i];
+			m_Mins[i] = _min[i] < _max[i] ? _min[i] : _max[i];
+			m_Maxs[i] = _min[i] > _max[i] ? _min[i] : _max[i];
+			/*m_Mins[i] = _min[i];
+			m_Maxs[i] = _max[i];*/
 		}
 	}
 	void CenterPoint(float _out[3]) const
@@ -252,7 +290,6 @@ typedef struct AABB_t
 				m_Maxs[i] = _pt[i];
 		}
 	}
-
 	bool Intersects(const AABB_t &_bbox) const
 	{
 		for (int i = 0; i < 3; i++)
@@ -262,8 +299,7 @@ typedef struct AABB_t
 		}
 		return true;
 	}
-
-	bool Intersects(const float _pt[3]) const
+	bool Contains(const float _pt[3]) const
 	{
 		for (int i = 0; i < 3; i++)
 		{
@@ -272,7 +308,6 @@ typedef struct AABB_t
 		}
 		return true;
 	}
-
 	bool FindIntersection(const AABB_t &_bbox, AABB_t& _overlap) const
 	{
 		if(Intersects(_bbox))
@@ -293,12 +328,22 @@ typedef struct AABB_t
 		}
 		return false;
 	}
-
 	float GetAxisLength(int _axis) const
 	{
 		return m_Maxs[_axis] - m_Mins[_axis];
 	}
-
+	float GetArea() const
+	{
+		return GetAxisLength(0) * GetAxisLength(1) * GetAxisLength(2);
+	}
+	float DistanceFromBottom(const float _pt[3]) const
+	{
+		return -(m_Mins[2] - _pt[2]);
+	}
+	float DistanceFromTop(const float _pt[3]) const
+	{
+		return (m_Maxs[2] - _pt[2]);
+	}
 	void Scale(float _scale)
 	{
 		for(int i = 0; i < 3; ++i)
@@ -307,26 +352,46 @@ typedef struct AABB_t
 			m_Maxs[i] *= _scale;
 		}
 	}
-
+	void Expand(float _expand)
+	{
+		for(int i = 0; i < 3; ++i)
+		{
+			m_Mins[i] -= _expand;
+			m_Maxs[i] += _expand;
+		}
+	}
+	void ExpandAxis(int _axis, float _expand)
+	{
+		m_Mins[_axis] -= _expand;
+		m_Maxs[_axis] += _expand;
+	}
+	void FlipHorizontalAxis()
+	{
+		for(int i = 0; i < 2; ++i)
+		{
+			float tmp = m_Mins[i];
+			m_Mins[i] = m_Maxs[i];
+			m_Maxs[i] = tmp;
+		}
+	}
 	void GetBottomCorners(float _bl[3], float _tl[3], float _tr[3], float _br[3])
 	{
 		_bl[0] = m_Mins[0];
 		_bl[1] = m_Mins[1];
-		_bl[2] = m_Mins[2];
+		_bl[2] = m_Mins[0];
 
 		_tl[0] = m_Mins[0];
 		_tl[1] = m_Maxs[1];
-		_tl[2] = m_Mins[2];
+		_tl[2] = m_Mins[0];
 
 		_tr[0] = m_Maxs[0];
 		_tr[1] = m_Maxs[1];
-		_tr[2] = m_Mins[2];
+		_tr[2] = m_Mins[0];
 
 		_br[0] = m_Maxs[0];
 		_br[1] = m_Mins[1];
-		_br[2] = m_Mins[2];
+		_br[2] = m_Mins[0];
 	}
-
 	void GetTopCorners(float _bl[3], float _tl[3], float _tr[3], float _br[3])
 	{
 		GetBottomCorners(_bl, _tl, _tr, _br);
@@ -335,7 +400,6 @@ typedef struct AABB_t
 		_tr[2] = m_Maxs[2];
 		_br[2] = m_Maxs[2];
 	}
-
 	void Translate(const float _pos[3])
 	{
 		for(int i = 0; i < 3; ++i)
@@ -344,7 +408,14 @@ typedef struct AABB_t
 			m_Maxs[i] += _pos[i];
 		}
 	}
-
+	void UnTranslate(const float _pos[3])
+	{
+		for(int i = 0; i < 3; ++i)
+		{
+			m_Mins[i] -= _pos[i];
+			m_Maxs[i] -= _pos[i];
+		}
+	}
 	AABB_t TranslateCopy(const float _pos[3]) const
 	{
 		AABB_t aabb = *this;
@@ -355,7 +426,6 @@ typedef struct AABB_t
 		}
 		return aabb;
 	}
-
 	AABB_t(const float _mins[3], const float _maxs[3])
 	{
 		Set(_mins, _maxs);
@@ -366,6 +436,11 @@ typedef struct AABB_t
 	}
 	AABB_t()
 	{
+		for(int i = 0; i < 3; ++i)
+		{
+			m_Mins[i] = 0.f;
+			m_Maxs[i] = 0.f;
+		}
 	}
 #endif
 } AABB;
@@ -388,6 +463,7 @@ typedef struct AABB_t
 //		BOT_BUTTON_LEANLEFT - If the bot wants to lean left.
 //		BOT_BUTTON_LEANRIGHT - If the bot wants to lean right.
 //		BOT_BUTTON_AIM - If the bot wants to drop current item.
+//		BOT_BUTTON_RESPAWN - Bot wants to respawn.
 typedef enum eButtonFlags
 {	
 	BOT_BUTTON_ATTACK1 = 0,
@@ -407,6 +483,7 @@ typedef enum eButtonFlags
 	BOT_BUTTON_LEANLEFT,
 	BOT_BUTTON_LEANRIGHT,
 	BOT_BUTTON_AIM,
+	BOT_BUTTON_RESPAWN,
 
 	// THIS MUST BE LAST
 	BOT_BUTTUN_FIRSTUSER
@@ -421,9 +498,10 @@ typedef enum eButtonFlags
 //		GOAL_ATTACK - The bot should just go to this goal and hunt for targets.
 //		GOAL_SNIPE - The bot should snipe from this point.
 //		GOAL_CTF_FLAG - The bot should attempt to grab this flag and return it to a capture point.
-//		GOAL_CTF_RETURN_FLAG - The bot should attempt to touch this flag to 'return' it.
 //		GOAL_CTF_FLAGCAP - The bot should take GOAL_CTF_FLAG to this point.
+//		GOAL_CTF_RETURN_FLAG - The bot should attempt to touch this flag to 'return' it.
 //		GOAL_SCRIPT - A script should be ran for this goal.
+//		GOAL_ROUTEPT - A start region for a route point.
 typedef enum eGoalType
 {
 	GOAL_NONE = 0,
@@ -435,9 +513,12 @@ typedef enum eGoalType
 	GOAL_ATTACK,
 	GOAL_SNIPE,
 	GOAL_CTF_FLAG,
-	GOAL_CTF_RETURN_FLAG,
 	GOAL_CTF_FLAGCAP,
+	GOAL_CTF_HOLDCAP,
+	GOAL_CTF_RETURN_FLAG,
 	GOAL_SCRIPT,
+	GOAL_ROUTEPT,
+	GOAL_TRAININGSPAWN,
 
 	// THIS MUST BE LAST
 	BASE_GOAL_NUM = 1000
@@ -465,7 +546,6 @@ typedef enum eBasicGoals
 	goal_defend,
 	goal_attack,
 	goal_ride_movable,
-	
 	goal_hunt_target,
 	/*goal_think,
 	goal_explore,
@@ -494,6 +574,7 @@ typedef enum eBasicGoals
 //		ENT_FLAG_TEAM2 - This entity is only available/visible for team 2
 //		ENT_FLAG_TEAM3 - This entity is only available/visible for team 3
 //		ENT_FLAG_TEAM4 - This entity is only available/visible for team 4
+//		ENT_FLAG_VISTEST - The entity should be vis tested. Otherwise uses disabled flag.
 //		ENT_FLAG_DISABLED - Entity is disabled
 //		ENT_FLAG_PRONED - This entity is prone
 //		ENT_FLAG_CROUCHED - This entity is crouched
@@ -505,13 +586,16 @@ typedef enum eBasicGoals
 //		ENT_FLAG_ONLADDER - This entity is on a ladder.
 //		ENT_FLAG_ONGROUND - Entity is standing on the ground
 //		ENT_FLAG_RELOADING - Entity is currently reloading
+//		ENT_FLAG_ON_ICE - Entity on slippery surface.
+//		ENT_FLAG_HUMANCONTROLLED - Human player controls this entity.
 typedef enum eEntityFlag
 {
 	ENT_FLAG_TEAM1,
 	ENT_FLAG_TEAM2,
 	ENT_FLAG_TEAM3,
 	ENT_FLAG_TEAM4,	
-	ENT_FLAG_DISABLED,	
+	ENT_FLAG_VISTEST,
+	ENT_FLAG_DISABLED,
 	ENT_FLAG_PRONED,	
 	ENT_FLAG_CROUCHED,	
     ENT_FLAG_CARRYABLE,	
@@ -522,6 +606,8 @@ typedef enum eEntityFlag
 	ENT_FLAG_ONLADDER,
 	ENT_FLAG_ONGROUND,
 	ENT_FLAG_RELOADING,
+	ENT_FLAG_ON_ICE,
+	ENT_FLAG_HUMANCONTROLLED,
 
 	// THIS MUST BE LAST
 	ENT_FLAG_FIRST_USER	= 32
@@ -540,6 +626,7 @@ typedef enum ePowerups
 
 // enumerations: EntityCategory
 //		ENT_CAT_PLAYER - This entity is a player of some sort.
+//		ENT_CAT_VEHICLE - Vehicle entity.
 //		ENT_CAT_PROJECTILE - This entity is a projectile of some sort.
 //		ENT_CAT_SHOOTABLE - This entity is shootable.
 //		ENT_CAT_PICKUP - This entity is a pickup/powerup of some sort.
@@ -552,6 +639,7 @@ typedef enum ePowerups
 typedef enum eEntityCategory
 {
 	ENT_CAT_PLAYER,
+	ENT_CAT_VEHICLE,
 	ENT_CAT_PROJECTILE,
 	ENT_CAT_SHOOTABLE,
 	ENT_CAT_PICKUP,
@@ -571,16 +659,26 @@ typedef enum eEntityCategory
 //		Class values for generic entities.
 typedef enum eEntityClassGeneric
 {
-	ENT_CLASS_GENERIC_START = 10000,
+	ENT_CLASS_GENERIC_SPECTATOR = 10000,
+	ENT_CLASS_GENERIC_START,
 	ENT_CLASS_GENERIC_PLAYERSTART,
+	ENT_CLASS_GENERIC_PLAYERSTART_TEAM1,
+	ENT_CLASS_GENERIC_PLAYERSTART_TEAM2,
+	ENT_CLASS_GENERIC_PLAYERSTART_TEAM3,
+	ENT_CLASS_GENERIC_PLAYERSTART_TEAM4,
 	ENT_CLASS_GENERIC_BUTTON,
 	ENT_CLASS_GENERIC_HEALTH,
 	ENT_CLASS_GENERIC_AMMO,
 	ENT_CLASS_GENERIC_ARMOR,
 	ENT_CLASS_GENERIC_LADDER,
+	ENT_CLASS_GENERIC_FLAG,
+	ENT_CLASS_GENERIC_FLAGCAPPOINT,
 	ENT_CLASS_GENERIC_TELEPORTER,
 	ENT_CLASS_GENERIC_LIFT,
 	ENT_CLASS_GENERIC_MOVER,
+	ENT_CLASS_GENERIC_JUMPPAD,
+	ENT_CLASS_GENERIC_JUMPPAD_TARGET,
+	ENT_CLASS_EXPLODING_BARREL,
 } EntityClassGeneric;
 
 // enumerations: SoundType
@@ -642,6 +740,15 @@ typedef enum eContents
 	CONT_START_USER = (1<<24)
 } Contents;
 
+// enumerations: SurfaceFlags
+//		SURFACE_SLICK - Low friction surface.
+typedef enum eSurfaceFlags
+{
+	SURFACE_SLICK	= (1<<0),
+
+	// THIS MUST BE LAST
+	SURFACE_START_USER = (1<<24)
+} SurfaceFlags;
 // enumerations: SkeletonBone
 //		BONE_TORSO - Torso bone
 //		BONE_PELVIS - Pelvis bone
@@ -713,7 +820,7 @@ typedef enum eTraceMasks
 // struct: BotUserData
 //		Generic data structure that uses a union to hold various types
 //		of information.
-typedef struct BotUserData_t
+typedef struct obUserData_t
 {
 	// enum: DataType
 	//		This allows a small level of type safety with the messages
@@ -730,38 +837,38 @@ typedef struct BotUserData_t
 		const char *	m_String;
 		int				m_Int;
 		float			m_Float;
-		GameEntity		m_Entity;
+		int				m_Entity;
 		int				m_4ByteFlags[3];
 		short			m_2ByteFlags[6];
 		char			m_1ByteFlags[12];
 	} udata;
 	// Easy Constructors for C++
 #ifdef __cplusplus
-	BotUserData_t() : DataType(dtNone) {};
-	BotUserData_t(const char * _str) : DataType(dtString) { udata.m_String = _str; };
-	BotUserData_t(int _int) : DataType(dtInt) { udata.m_Int = _int; };
-	BotUserData_t(float _float) : DataType(dtFloat) { udata.m_Float = _float; };
-	BotUserData_t(const GameEntity &_ent) : DataType(dtEntity) { udata.m_Entity = _ent; };
-	BotUserData_t(float _x, float _y, float _z) : 
+	obUserData_t() : DataType(dtNone) {};
+	obUserData_t(const char * _str) : DataType(dtString) { udata.m_String = _str; };
+	obUserData_t(int _int) : DataType(dtInt) { udata.m_Int = _int; };
+	obUserData_t(float _float) : DataType(dtFloat) { udata.m_Float = _float; };
+	obUserData_t(const GameEntity &_ent) : DataType(dtEntity) { udata.m_Entity = _ent.AsInt(); };
+	obUserData_t(float _x, float _y, float _z) : 
 		DataType(dtVector) 
 	{
 		udata.m_Vector[0] = _x; 
 		udata.m_Vector[1] = _y; 
 		udata.m_Vector[2] = _z;
 	};
-	BotUserData_t(int _0, int _1, int _2) : DataType(dt3_4byteFlags)
+	obUserData_t(int _0, int _1, int _2) : DataType(dt3_4byteFlags)
 	{
 		udata.m_4ByteFlags[0] = _0; 
 		udata.m_4ByteFlags[1] = _1; 
 		udata.m_4ByteFlags[2] = _2;
 	};
-	BotUserData_t(char *_0, char *_1, char *_2) : DataType(dt3_Strings)
+	obUserData_t(char *_0, char *_1, char *_2) : DataType(dt3_Strings)
 	{
 		udata.m_CharPtrs[0] = _0; 
 		udata.m_CharPtrs[1] = _1; 
 		udata.m_CharPtrs[2] = _2;
 	};
-	BotUserData_t(short _0, short _1, short _2, short _3, short _4, short _5) : 
+	obUserData_t(short _0, short _1, short _2, short _3, short _4, short _5) : 
 		DataType(dt6_2byteFlags)
 	{
 		udata.m_2ByteFlags[0] = _0; 
@@ -771,7 +878,7 @@ typedef struct BotUserData_t
 		udata.m_2ByteFlags[4] = _4; 
 		udata.m_2ByteFlags[5] = _5;
 	};
-	BotUserData_t(char _0, char _1, char _2, char _3, char _4, char _5, char _6, char _7, char _8, char _9, char _10, char _11) : 
+	obUserData_t(char _0, char _1, char _2, char _3, char _4, char _5, char _6, char _7, char _8, char _9, char _10, char _11) : 
 		DataType(dt12_1byteFlags)
 	{
 		udata.m_1ByteFlags[0] = _0; 
@@ -824,7 +931,7 @@ typedef struct BotUserData_t
 	inline const char *GetString() const { return udata.m_String; };
 	inline int GetInt() const { return udata.m_Int; };
 	inline float GetFloat() const { return udata.m_Float; };
-	inline GameEntity GetEntity() const { return udata.m_Entity; };
+	inline GameEntity GetEntity() const { GameEntity e; e.FromInt(udata.m_Entity); return e; };
 	inline const char *GetStrings(int _index) const { return udata.m_CharPtrs[_index]; };
 	inline const float *GetVector() const { return udata.m_Vector; };
 	inline const int *Get4ByteFlags() const { return udata.m_4ByteFlags; };
@@ -849,32 +956,58 @@ typedef struct BotUserData_t
 
 	
 #endif
-} BotUserData;
+} obUserData;
 
 // struct: TriggerInfo
+enum { TriggerBufferSize = 72 };
 typedef struct TriggerInfo_t
 {
 	// ptr: m_TagName
 	//		The tagname of this trigger, usually a name given by the mapper.
-	const char *m_TagName;
+	char m_TagName[TriggerBufferSize];
 	// ptr: m_Action
 	//		The name of the action this trigger is performing, mod specific
-	const char *m_Action;
+	char m_Action[TriggerBufferSize];
 	// ptr: m_Entity
 	//		The entity of this trigger, if available
-	GameEntity	m_Entity;
+	GameEntity m_Entity;
 	// ptr: m_Activator
 	//		The entity that activated this trigger
-	GameEntity	m_Activator;
-	// ptr: m_UserData
-	//		Extra info.
-	BotUserData	m_UserData;
+	GameEntity m_Activator;
 #ifdef __cplusplus
-	TriggerInfo_t() : m_TagName(0), m_Action(0), m_Entity(0), m_Activator(0) {}
-	TriggerInfo_t(const char *_name, const char *_action, GameEntity _ent, GameEntity _activator) : 
-		m_TagName(_name), m_Action(_action), m_Entity(_ent), m_Activator(_activator) {}
+	TriggerInfo_t()
+	{
+		for(int i = 0; i < TriggerBufferSize; ++i)
+			m_TagName[i] = m_Action[i] = 0;
+	}
+	TriggerInfo_t(TriggerInfo_t *_ti)
+	{
+		m_Entity = _ti->m_Entity;
+		m_Activator = _ti->m_Activator;
+		for(int i = 0; i < TriggerBufferSize; ++i)
+		{
+			m_TagName[i] = _ti->m_TagName[i];
+			m_Action[i] = _ti->m_Action[i];
+		}
+	}
+	TriggerInfo_t(GameEntity _ent, GameEntity _activator) : 
+		m_Entity(_ent), m_Activator(_activator) 
+	{
+		m_TagName[0] = m_Action[0] = 0;
+	}
 #endif
 } TriggerInfo;
+
+typedef struct AutoNavFeature_t
+{
+	int			m_Type;
+	float		m_Position[3];
+	float		m_Facing[3];
+	float		m_TargetPosition[3];
+	AABB		m_TargetBounds;
+	float		m_TravelTime;
+	AABB		m_Bounds;
+} AutoNavFeature;
 
 // Generic Enumerations
 
@@ -918,15 +1051,65 @@ typedef enum eFlagState
 //		GAME_STATE_INTERMISSION - Game is currently in intermission, between rounds.
 //		GAME_STATE_WAITINGFORPLAYERS - Game is awaiting more players before starting.
 //		GAME_STATE_PAUSED - Game is currently paused.
+//		GAME_STATE_SUDDENDEATH - Sudden Death Overtime.
+//		GAME_STATE_SCOREBOARD - Game finished, looking at scoreboard.
 typedef enum eGameState
 {
 	GAME_STATE_INVALID = 0,
-	GAME_STATE_PLAYING,
-	GAME_STATE_WARMUP,
-	GAME_STATE_WARMUP_COUNTDOWN,
 	GAME_STATE_INTERMISSION,
 	GAME_STATE_WAITINGFORPLAYERS,
+	GAME_STATE_WARMUP,
+	GAME_STATE_WARMUP_COUNTDOWN,
+	GAME_STATE_PLAYING,
+	GAME_STATE_SUDDENDEATH,
+	GAME_STATE_SCOREBOARD,
 	GAME_STATE_PAUSED,
 } GameState;
+
+//////////////////////////////////////////////////////////////////////////
+typedef enum
+{
+	DRAW_LINE,
+	DRAW_RADIUS,
+	DRAW_BOUNDS,
+} DebugMsgType;
+
+typedef float vector_t;
+typedef vector_t vector3_t[3];
+
+typedef struct
+{
+	vector3_t		m_Start, m_End;	
+	int				m_Color;
+} IPC_DebugLineMessage;
+
+typedef struct
+{
+	vector3_t		m_Pos;
+	float			m_Radius;
+	int				m_Color;
+} IPC_DebugRadiusMessage;
+
+typedef struct
+{
+	vector3_t		m_Mins, m_Maxs;	
+	int				m_Color;
+	int				m_Sides;
+} IPC_DebugAABBMessage;
+
+typedef struct
+{
+	union
+	{
+		IPC_DebugLineMessage	m_Line;
+		IPC_DebugRadiusMessage	m_Radius;
+		IPC_DebugAABBMessage	m_AABB;
+	} data;
+
+	int				m_Duration;
+	DebugMsgType	m_Debugtype;
+	
+} IPC_DebugDrawMsg;
+//////////////////////////////////////////////////////////////////////////
 
 #endif

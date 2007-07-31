@@ -22,6 +22,7 @@
 	#include "ff_utils.h"
 	#include "c_ff_hint_timers.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 #endif
 
@@ -127,7 +128,15 @@ void CFFWeaponPipeLauncher::Fire()
 	else if( tr.fraction != 1.0f )
 		vecSrc += ( vForward * -24.0f );
 
-	CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectilePipebomb *pPipe = CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	pPipe;
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_PIPELAUNCHER, pPipe);
+	}
+#endif
 
 #ifdef CLIENT_DLL
 	// This is so we know how many pipebombs we have out at a time

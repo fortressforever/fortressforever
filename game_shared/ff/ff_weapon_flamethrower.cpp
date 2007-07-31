@@ -25,6 +25,7 @@
 
 	#include "ff_utils.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 	#include "ff_env_flamejet.h"
 
@@ -257,6 +258,13 @@ void CFFWeaponFlamethrower::Fire()
 	}
 
 	lagcompensation->FinishLagCompensation(pPlayer);
+#endif
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_FLAMETHROWER, 0);
+	}
 #endif
 }
 

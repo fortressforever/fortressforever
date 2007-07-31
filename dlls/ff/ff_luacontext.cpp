@@ -136,7 +136,7 @@ void CFFLuaSC::Push(CTakeDamageInfo* pInfo) { m_params.AddToTail(SETOBJECT(pInfo
 void CFFLuaSC::PushRef(CTakeDamageInfo& info) { m_params.AddToTail(SETOBJECTREF(info)); }
 
 //---------------------------------------------------------------------------
-bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
+bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName, const char *szTargetEntName)
 {
 	VPROF_BUDGET( "CFFLuaSC::CallFunction", VPROF_BUDGETGROUP_FF_LUA );
 
@@ -152,7 +152,10 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 	luabind::object globals = luabind::globals(L);
 	try
 	{
-		globals["entity"] = luabind::object(L, pEntity);
+		if(pEntity)
+			globals["entity"] = luabind::object(L, pEntity);
+		else
+			globals["entity"] = luabind::adl::object();
 	}
 	catch(...)
 	{
@@ -201,6 +204,34 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 				   STRING(pEntity->GetEntityName()),
 				   szFunctionName);		
 	}
+	else if(szTargetEntName)
+	{
+		luabind::adl::object func;
+		luabind::adl::object tableObject;
+		if(_scriptman.GetObject(szTargetEntName, tableObject) &&
+			_scriptman.GetFunction(tableObject, szFunctionName, func))
+		{
+			// push the function onto stack ( entname:addname )
+			lua_getglobal( L, szTargetEntName );
+			if (lua_isnil(L, -1))
+			{
+				lua_pop(L, 1);
+				return false;
+			}
+			lua_pushstring(L, szFunctionName);
+			lua_gettable(L, -2);
+			lua_insert(L, -2);
+
+			// store the name of the entity and function for debugging purposes
+			Q_snprintf(m_szFunction,
+				sizeof(m_szFunction),
+				"%s:%s()",
+				szTargetEntName,
+				szFunctionName);	
+		}
+		else
+			return false;
+	}
 	else
 	{
 		// get the function
@@ -221,7 +252,7 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 		(*m_params[iParam]).push(L);
 
 	// call out to the script
-	if(lua_pcall(L, pEntity ? nParams + 1 : nParams, 1, 0) != 0)
+	if(lua_pcall(L, pEntity||szTargetEntName ? nParams + 1 : nParams, 1, 0) != 0)
 	{
 		const char* szErrorMsg = lua_tostring(L, -1);
 		Msg("[SCRIPT] Error calling %s (%s) ent: %s\n",

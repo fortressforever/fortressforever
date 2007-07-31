@@ -51,7 +51,8 @@ void CFFLuaLib::InitOmnibot(lua_State* L)
 				value("kBackPack_Health",	Omnibot::kBackPack_Health),
 				value("kBackPack_Grenades",	Omnibot::kBackPack_Grenades),
 				value("kFlag",				Omnibot::kFlag),
-				value("kFlagCap",			Omnibot::kFlagCap)
+				value("kFlagCap",			Omnibot::kFlagCap),
+				value("kTrainerSpawn",		Omnibot::kTrainerSpawn)
 			]
 	];
 };

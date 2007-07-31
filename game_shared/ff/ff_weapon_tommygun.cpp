@@ -21,6 +21,7 @@
 	#define CFFWeaponTommygun C_FFWeaponTommygun
 	#include "c_ff_player.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 #endif
 
@@ -102,4 +103,11 @@ void CFFWeaponTommygun::Fire()
 	info.m_iDamage = pWeaponInfo.m_iDamage;
 
 	pPlayer->FireBullets(info);
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_TOMMYGUN, 0);
+	}
+#endif
 }

@@ -18,7 +18,6 @@
 
 #ifdef GAME_DLL
 	#include "smoke_trail.h"
-	#include "omnibot_interface.h"
 
 //=============================================================================
 // CFFProjectileGrenade tables
@@ -281,14 +280,6 @@ CFFProjectileGrenade * CFFProjectileGrenade::CreateGrenade(const CBaseEntity *pS
 	pGrenade->SetGravity(GetGrenadeGravity());
 
 	pGrenade->SetLocalAngularVelocity(RandomAngle(-400, 400));
-
-#ifdef GAME_DLL	
-	{
-		CBasePlayer *pPlayer = ToBasePlayer(pentOwner);
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShootProjectile(pPlayer, pGrenade->edict());
-	}
-#endif
 
 	return pGrenade; 
 }

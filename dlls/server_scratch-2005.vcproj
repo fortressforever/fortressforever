@@ -29,8 +29,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
-				CommandLine="if exist &quot;e:\steam\steamapps\SourceMods\modupdate\bin\server.dll&quot; attrib -r &quot;e:\steam\steamapps\SourceMods\modupdate\bin\server.dll&quot;&#x0D;&#x0A;if exist &quot;$(TargetDir)&quot;server.dll copy &quot;$(TargetDir)&quot;server.dll &quot;e:\steam\steamapps\SourceMods\modupdate\bin\server.dll&quot;&#x0D;&#x0A;if exist &quot;e:\steam\steamapps\SourceMods\modupdate\bin\server.pdb&quot; attrib -r &quot;e:\steam\steamapps\SourceMods\modupdate\bin\server.pdb&quot;&#x0D;&#x0A;if exist &quot;$(TargetDir)&quot;server.pdb copy &quot;$(TargetDir)&quot;server.pdb &quot;e:\steam\steamapps\SourceMods\modupdate\bin&quot;&#x0D;&#x0A;"
-				Outputs="e:\steam\steamapps\SourceMods\modupdate\bin\server.dll"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;"
+				Outputs="%FortressForeverBin%\server.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -53,8 +53,8 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="../game_shared/ff;./;../Public/tier1;../Public;../game_shared;../utils/common;../dlls;../dlls/ff"
-				PreprocessorDefinitions="NDEBUG;BOTS;FF_DLL;USES_SAVERESTORE;GAME_DLL;sprintf=use_Q_snprintf_instead_of_sprintf;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
+				AdditionalIncludeDirectories="../game_shared/hl2;./;../Public;../Public/tier1;../game_shared;../utils/common;../dlls;../../dlls;../dlls/hl2_dll;./episodic;..\stats;../game_shared/ff;..\dlls\ff;..\omnibot;..\external\luabind\include;..\external\boost\include;..\external\lua\include"
+				PreprocessorDefinitions="NDEBUG;BOTS;FF_DLL;USES_SAVERESTORE;GAME_DLL;sprintf=use_Q_snprintf_instead_of_sprintf;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -89,12 +89,12 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="winmm.lib"
+				AdditionalDependencies="winmm.lib luabind80.lib lua80.lib"
 				OutputFile="$(IntDir)/server.dll"
-				LinkIncremental="1"
+				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\lib\public"
-				IgnoreDefaultLibraryNames="LIBC,LIBCD"
+				AdditionalLibraryDirectories="..\lib\public;..\external\lua\lib;..\external\luabind\lib"
+				IgnoreDefaultLibraryNames="LIBC,LIBCD,LIBCMT"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(IntDir)/server.pdb"
 				GenerateMapFile="true"
@@ -144,8 +144,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
-				CommandLine="if exist &quot;e:\steam\steamapps\SourceMods\modupdate\bin\server.dll&quot; attrib -r &quot;e:\steam\steamapps\SourceMods\modupdate\bin\server.dll&quot;&#x0D;&#x0A;if exist &quot;$(TargetDir)&quot;server.dll copy &quot;$(TargetDir)&quot;server.dll &quot;e:\steam\steamapps\SourceMods\modupdate\bin\server.dll&quot;&#x0D;&#x0A;"
-				Outputs="e:\steam\steamapps\SourceMods\modupdate\bin\server.dll"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;"
+				Outputs="server.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -165,8 +165,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../Public/tier1;../game_shared/ff;./;../Public;../game_shared;../utils/common;../dlls;../dlls/ff"
-				PreprocessorDefinitions="_DEBUG;fopen=dont_use_fopen;BOTS;FF_DLL;USES_SAVERESTORE;GAME_DLL;sprintf=use_Q_snprintf_instead_of_sprintf;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
+				AdditionalIncludeDirectories="../Public/tier1;../game_shared/ff;./;../Public;../game_shared;../utils/common;../dlls;../dlls/ff;../game_shared/hl2;../stats;..\omnibot;..\external\luabind\include;..\external\boost\include;..\external\lua\include"
+				PreprocessorDefinitions="_DEBUG;fopen=dont_use_fopen;BOTS;FF_DLL;USES_SAVERESTORE;GAME_DLL;sprintf=use_Q_snprintf_instead_of_sprintf;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE;_CRT_SECURE_NO_DEPRECATE"
 				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				ForceConformanceInForLoopScope="true"
@@ -199,11 +199,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="winmm.lib"
+				AdditionalDependencies="winmm.lib lua80D.lib luabind80D.lib"
 				OutputFile="$(IntDir)/server.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\lib\public"
+				AdditionalLibraryDirectories="..\lib\public;..\external\lua\lib;..\external\luabind\lib"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(IntDir)/server.pdb"
@@ -2042,26 +2042,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\tier0\memoverride.cpp"
-				>
-				<FileConfiguration
-					Name="Release FF|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\tier1\mempool.cpp"
 				>
 				<FileConfiguration
@@ -3564,348 +3544,6 @@
 				</Filter>
 			</Filter>
 			<Filter
-				Name="FF"
-				>
-				<File
-					RelativePath="..\game_shared\ff\ff_basegrenade_projectile.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_basegrenade_projectile.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\ff\ff_bot_temp.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ff\ff_brushentity.cpp"
-					>
-				</File>
-				<File
-					RelativePath="ff\ff_client.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ff\ff_env_message.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ff\ff_env_sparkler.cpp"
-					>
-				</File>
-				<File
-					RelativePath="ff\ff_eventlog.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_fx_shared.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_fx_shared.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="ff\ff_gameinterface.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_gamemovement.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_gamerules.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_gamerules.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\ff\ff_logicalentity.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ff\ff_modelentity.cpp"
-					>
-				</File>
-				<File
-					RelativePath="ff\ff_player.cpp"
-					>
-				</File>
-				<File
-					RelativePath="ff\ff_player.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_player_shared.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_playeranimstate.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_playeranimstate.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="ff\ff_playermove.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_shareddefs.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="ff\ff_team.cpp"
-					>
-				</File>
-				<File
-					RelativePath="ff\ff_team.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_usermessages.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ff\ff_vehicle_jeep.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_weapon_parse.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_weapon_parse.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\ff\te_firebullets.cpp"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\ff\te_firebullets.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\weapon_baseffgrenade.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\weapon_baseffgrenade.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\weapon_grenade.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\weapon_mp5.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\weapon_ffbase.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\weapon_ffbase.h"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\weapon_shotgun.cpp"
-					>
-					<FileConfiguration
-						Name="Release FF|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)/$(InputName)1.obj"
-						/>
-					</FileConfiguration>
-				</File>
-			</Filter>
-			<Filter
 				Name="HL2MP"
 				>
 			</Filter>
@@ -4763,6 +4401,802 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="FF Source"
+			>
+			<File
+				RelativePath=".\ff\ff_betalist.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_betalist.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_bot_temp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_bot_temp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_brushentity.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_buildableobject.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_buildableobject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_caltrop.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_caltrop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_client.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_detpack.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_dispenser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_entity_system.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_entity_system.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_env_flamejet.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_env_flamejet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_env_message.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_env_sparkler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_eventlog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_gameinterface.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_goal.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_goal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_grenade_napalmlet.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_grenade_napalmlet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_item_backpack.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_item_backpack.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_item_flag.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_item_flag.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_logicalentity.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_luacontext.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_luacontext.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_base.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_buildables.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_constants.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_constants.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_globals.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_math.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_misc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_omnibot.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_team.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_lualib_weapons.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_mapfilter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_mapfilter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_minecart.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_minecart.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_modelentity.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_player.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_playermove.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_scheduleman.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_scheduleman.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_scriptman.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_scriptman.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_sentrygun.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_sentrygun.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_sevtest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_team.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_team.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_vehicle_jeep.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ffentityinfomanager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ffentityinfomanager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\te_firebullets.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\te_firebullets.h"
+				>
+			</File>
+			<Filter
+				Name="FF Stats Source"
+				>
+				<File
+					RelativePath="..\stats\ff_socks.cpp"
+					>
+					<FileConfiguration
+						Name="Debug FF|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\stats\ff_socks.h"
+					>
+				</File>
+				<File
+					RelativePath="..\stats\ff_statdefs.h"
+					>
+				</File>
+				<File
+					RelativePath="..\stats\ff_statslog.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\stats\ff_statslog.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="FF Shared Source"
+			>
+			<File
+				RelativePath="..\game_shared\ff\ff_buildableobjects_shared.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_buildableobjects_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_esp_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_fx_shared.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_fx_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_gamemovement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_gamerules.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_gamerules.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_base.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_base.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_caltrop.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_concussion.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_emp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_emp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_gas.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_mirv.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_mirvlet.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_nail.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_napalm.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_normal.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_parse.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_parse.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_info_script.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_info_script.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_mapguide.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_mapguide.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_miniturret.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_miniturret.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_modelglyph.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_modelglyph.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_player_shared.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_playeranimstate.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_playeranimstate.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_playerclass_parse.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_playerclass_parse.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_playercommand.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_playercommand.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_base.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_base.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_dart.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_dart.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_grenade.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_grenade.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_incendiaryrocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_incendiaryrocket.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_nail.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_nail.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_pipebomb.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_pipebomb.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_rail.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_rail.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_rocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_rocket.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_radiotagdata.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_radiotagdata.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_shareddefs.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_string.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_string.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_timers_shared.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_timers_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_triggerclip.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_triggerclip.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_usermessages.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_utils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_assaultcannon.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_autorifle.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_base.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_base.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_baseclip.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_baseclip.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_basemelee.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_basemelee.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_crowbar.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_deploydetpack.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_deploydispenser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_deploysentrygun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_flag.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_flamethrower.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_grenadelauncher.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_ic.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_knife.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_medkit.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_nailgun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_parse.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_parse.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_pipelauncher.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_railgun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_rpg.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_shotgun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_sniperrifle.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_sniperrifle.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_spanner.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_supernailgun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_supershotgun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_tommygun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_tranquiliser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_umbrella.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Omnibot Source"
+			>
+			<File
+				RelativePath="..\omnibot\Base_Messages.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\BotExports.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\BotLoadLibrary.cpp"
+				>
+				<FileConfiguration
+					Name="Release FF|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug FF|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\omnibot\FF_Config.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\Functions_Bot.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\IEngineInterface.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\MessageHelper.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\Omni-Bot.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\Omni-Bot_BasicTypes.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\Omni-Bot_BitFlags.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\Omni-Bot_Color.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\Omni-Bot_Events.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\Omni-Bot_Types.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\omnibot_eventhandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\omnibot_eventhandler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\omnibot_interface.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\omnibot_interface.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\TF_Config.h"
+				>
+			</File>
+			<File
+				RelativePath="..\omnibot\TF_Messages.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\lib\public\choreoobjects.lib"
 			>
@@ -4774,24 +5208,6 @@
 		<File
 			RelativePath="..\lib\public\tier0.lib"
 			>
-			<FileConfiguration
-				Name="Release FF|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=" "
-					CommandLine="&#x0D;&#x0A;"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug FF|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=" "
-					CommandLine="&#x0D;&#x0A;"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="..\lib\public\tier1.lib"
@@ -4804,24 +5220,6 @@
 		<File
 			RelativePath="..\lib\public\vstdlib.lib"
 			>
-			<FileConfiguration
-				Name="Release FF|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=" "
-					CommandLine="&#x0D;&#x0A;"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug FF|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=" "
-					CommandLine="&#x0D;&#x0A;"
-				/>
-			</FileConfiguration>
 		</File>
 	</Files>
 	<Globals>

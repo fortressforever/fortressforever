@@ -809,6 +809,8 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	_scheduleman.Init();
 	_scriptman.LevelInit(pMapName);
 
+	Omnibot::omnibot_interface::LevelInit();
+
 	// IGameSystem::LevelInitPreEntityAllSystems() is called when the world is precached
 	// That happens either in LoadGameState() or in MapEntity_ParseAllEntities()
 	if ( loadGame )

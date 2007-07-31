@@ -17,6 +17,8 @@ static int g_iBeam, g_iHalo;
 
 #ifdef CLIENT_DLL
 	ConVar laser_beam_angle("ffdev_laserbeamangle", "0.01");
+#else
+	#include "omnibot_interface.h"
 #endif
 
 ConVar sniperrifle_laserdot_scale("ffdev_sniperrifle_laserdot_scale", "0.15", FCVAR_REPLICATED, "Scale of the sniper rifle laser dot");
@@ -471,6 +473,13 @@ void CFFWeaponSniperRifle::Fire()
 	// TODO: Maybe FX_FireBullets is not a good idea
 
 	//WeaponSound(SINGLE);
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_SNIPER_RIFLE, 0);
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

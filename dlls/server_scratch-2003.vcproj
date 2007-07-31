@@ -3865,13 +3865,28 @@
 				RelativePath="..\omnibot\BotExports.h">
 			</File>
 			<File
+				RelativePath="..\omnibot\BotLoadLibrary.cpp">
+				<FileConfiguration
+					Name="Release FF|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug FF|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\omnibot\FF_Config.h">
 			</File>
 			<File
 				RelativePath="..\omnibot\Functions_Bot.h">
 			</File>
 			<File
-				RelativePath="..\omnibot\Functions_Engine.h">
+				RelativePath="..\omnibot\IEngineInterface.h">
 			</File>
 			<File
 				RelativePath="..\omnibot\MessageHelper.h">

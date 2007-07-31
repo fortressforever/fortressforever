@@ -118,6 +118,10 @@ CFFInfoScript::CFFInfoScript( void )
 	m_iPosState = PS_RETURNED;
 
 	m_allowTouchFlags = 0;
+
+	// bot info
+	m_BotTeamFlags = 0;
+	m_BotGoalType = Omnibot::kNone;
 }
 
 //-----------------------------------------------------------------------------
@@ -937,16 +941,22 @@ void CFFInfoScript::RemoveThink( void )
 //-----------------------------------------------------------------------------
 void CFFInfoScript::SetBotGoalInfo(int _type)
 {
-	int iTeamFlags = 0;
+	m_BotGoalType = _type;
+	m_BotTeamFlags = 0;
 	if(m_allowTouchFlags & kAllowBlueTeam)
-		iTeamFlags |= (1<<Omnibot::TF_TEAM_BLUE);
+		m_BotTeamFlags |= (1<<Omnibot::TF_TEAM_BLUE);
 	if(m_allowTouchFlags & kAllowRedTeam)
-		iTeamFlags |= (1<<Omnibot::TF_TEAM_RED);
+		m_BotTeamFlags |= (1<<Omnibot::TF_TEAM_RED);
 	if(m_allowTouchFlags & kAllowYellowTeam)
-		iTeamFlags |= (1<<Omnibot::TF_TEAM_YELLOW);
+		m_BotTeamFlags |= (1<<Omnibot::TF_TEAM_YELLOW);
 	if(m_allowTouchFlags & kAllowGreenTeam)
-		iTeamFlags |= (1<<Omnibot::TF_TEAM_GREEN);
-	Omnibot::Notify_GoalInfo(this, _type, iTeamFlags);
+		m_BotTeamFlags |= (1<<Omnibot::TF_TEAM_GREEN);
+	Omnibot::Notify_GoalInfo(this, m_BotGoalType, m_BotTeamFlags);
+}
+
+void CFFInfoScript::SpawnBot(const char *_name, int _team, int _class)
+{
+	Omnibot::SpawnBotAsync(_name, _team, _class, this);
 }
 
 //-----------------------------------------------------------------------------

@@ -487,7 +487,7 @@ public:
 	void Infect( CFFPlayer *pPlayer );
 	void Cure( CFFPlayer *pPlayer );
 	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, float flIconDuration = 10.0f, eBurnType BurnType = BURNTYPE_NONE);
-	bool IsBurning( void ) const;
+	bool IsBurning( void ) const { return m_bBurnFlagNG|m_bBurnFlagFT|m_bBurnFlagIC; }
 
 	void Gas( float flDuration, float flIconDuration, CFFPlayer *pGasser);
 	bool IsGassed( void ) const { return m_bGassed; }
@@ -723,6 +723,10 @@ public:
 public:
 	int LuaAddAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAmmo( int iAmmoType, int iAmount );
+	void LuaRemoveAllAmmo(bool bClipToo);
+	bool LuaOwnsWeaponType(const char *_name);
+	bool LuaGiveWeapon(const char *_name);
+	void LuaRemoveAllWeapons();
 
 	virtual int GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
 	int	GiveAmmo(int iCount, const char *szName, bool bSuppressSound = false);
@@ -867,6 +871,7 @@ public:
 	int			m_iStatCritHeals;
 	int			m_iStatInfectCures;
 
+	CBaseEntity	*m_SpawnPointOverride;
 public:
 	// Run "effects" and "speed effects" through here first
 	// before giving the player the actual effect.

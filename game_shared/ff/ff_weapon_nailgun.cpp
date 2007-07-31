@@ -21,6 +21,7 @@
 	#define CFFWeaponNailgun C_FFWeaponNailgun
 	#include "c_ff_player.h"
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 #endif
 
@@ -90,5 +91,14 @@ void CFFWeaponNailgun::Fire()
 	//QAngle angAiming;
 	//VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileNail::CreateNail(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	pNail;
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_NAILGUN, pNail);
+	}
+#endif
+
 }

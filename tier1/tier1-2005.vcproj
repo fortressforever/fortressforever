@@ -1,162 +1,121 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
-	Name="tier1-2005"
+	Version="7.10"
+	Name="tier1"
 	ProjectGUID="{E1DA8DB8-FB4C-4B14-91A6-98BCED6B9720}"
-	Keyword="Win32Proj"
-	>
+	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
-			Name="Win32"
-		/>
+			Name="Win32"/>
 	</Platforms>
-	<ToolFiles>
-	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				ImproveFloatingPointConsistency="TRUE"
+				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="..\common,..\public,..\public\tier1"
 				PreprocessorDefinitions="_WIN32;_DEBUG;_LIB;TIER1_STATIC_LIB"
-				MinimalRebuild="true"
-				ExceptionHandling="1"
+				MinimalRebuild="TRUE"
+				ExceptionHandling="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				BufferSecurityCheck="true"
-				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="true"
+				BufferSecurityCheck="TRUE"
+				ForceConformanceInForLoopScope="TRUE"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)/"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="4"
-			/>
+				Detect64BitPortabilityProblems="FALSE"
+				DebugInformationFormat="4"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-				CommandLine="if exist ..\lib\public\tier1.lib attrib -r ..\lib\public\tier1.lib&#x0D;&#x0A;if exist ..\lib\public\tier1.pdb attrib -r ..\lib\public\tier1.pdb&#x0D;&#x0A;"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\lib\public\tier1.lib"
-			/>
+				OutputFile="..\lib-vc7\public\tier1.lib"/>
 			<Tool
-				Name="VCALinkTool"
-			/>
+				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCXDCMakeTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCBscMakeTool"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCFxCopTool"
-			/>
+				Name="VCPreLinkEventTool"
+				CommandLine="if exist ..\lib-vc7\public\tier1.lib attrib -r ..\lib-vc7\public\tier1.lib
+if exist ..\lib-vc7\public\tier1.pdb attrib -r ..\lib-vc7\public\tier1.pdb
+"/>
 			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				Name="VCResourceCompilerTool"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
+				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="true"
+				EnableIntrinsicFunctions="TRUE"
+				ImproveFloatingPointConsistency="FALSE"
 				FavorSizeOrSpeed="1"
+				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="..\common,..\public,..\public\tier1"
-				PreprocessorDefinitions="_WIN32;NDEBUG;_LIB;TIER1_STATIC_LIB;_SECURE_SCL=0 "
-				StringPooling="true"
-				ExceptionHandling="1"
+				PreprocessorDefinitions="_WIN32;NDEBUG;_LIB;TIER1_STATIC_LIB"
+				StringPooling="TRUE"
+				ExceptionHandling="TRUE"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="true"
+				EnableFunctionLevelLinking="TRUE"
+				ForceConformanceInForLoopScope="TRUE"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)/"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="1"
-			/>
+				Detect64BitPortabilityProblems="FALSE"
+				DebugInformationFormat="2"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-				CommandLine="if exist ..\lib\public\tier1.lib attrib -r ..\lib\public\tier1.lib&#x0D;&#x0A;if exist ..\lib\public\tier1.pdb attrib -r ..\lib\public\tier1.pdb&#x0D;&#x0A;"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\lib\public\tier1.lib"
-			/>
+				OutputFile="..\lib-vc7\public\tier1.lib"/>
 			<Tool
-				Name="VCALinkTool"
-			/>
+				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCXDCMakeTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCBscMakeTool"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCFxCopTool"
-			/>
+				Name="VCPreLinkEventTool"
+				CommandLine="if exist ..\lib-vc7\public\tier1.lib attrib -r ..\lib-vc7\public\tier1.lib
+if exist ..\lib-vc7\public\tier1.pdb attrib -r ..\lib-vc7\public\tier1.pdb
+"/>
 			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				Name="VCResourceCompilerTool"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -165,313 +124,236 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-			>
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\bitbuf.cpp"
-				>
+				RelativePath=".\bitbuf.cpp">
 			</File>
 			<File
-				RelativePath=".\byteswap.cpp"
-				>
+				RelativePath=".\byteswap.cpp">
 			</File>
 			<File
-				RelativePath=".\characterset.cpp"
-				>
+				RelativePath=".\characterset.cpp">
 			</File>
 			<File
-				RelativePath=".\checksum_crc.cpp"
-				>
+				RelativePath=".\checksum_crc.cpp">
 			</File>
 			<File
-				RelativePath=".\checksum_md5.cpp"
-				>
+				RelativePath=".\checksum_md5.cpp">
 			</File>
 			<File
-				RelativePath=".\convar.cpp"
-				>
+				RelativePath=".\convar.cpp">
 			</File>
 			<File
-				RelativePath=".\datamanager.cpp"
-				>
+				RelativePath=".\datamanager.cpp">
 			</File>
 			<File
-				RelativePath=".\diff.cpp"
-				>
+				RelativePath=".\diff.cpp">
 			</File>
 			<File
-				RelativePath=".\generichash.cpp"
-				>
+				RelativePath=".\generichash.cpp">
 			</File>
 			<File
-				RelativePath=".\interface.cpp"
-				>
+				RelativePath=".\interface.cpp">
 			</File>
 			<File
-				RelativePath=".\jobthread.cpp"
-				>
+				RelativePath=".\jobthread.cpp">
 			</File>
 			<File
-				RelativePath=".\KeyValues.cpp"
-				>
+				RelativePath=".\KeyValues.cpp">
 			</File>
 			<File
-				RelativePath=".\mempool.cpp"
-				>
+				RelativePath=".\mempool.cpp">
 			</File>
 			<File
-				RelativePath=".\memstack.cpp"
-				>
+				RelativePath=".\memstack.cpp">
 			</File>
 			<File
-				RelativePath=".\NetAdr.cpp"
-				>
+				RelativePath=".\NetAdr.cpp">
 			</File>
 			<File
-				RelativePath=".\processor_detect.cpp"
-				>
+				RelativePath=".\processor_detect.cpp">
 			</File>
 			<File
-				RelativePath=".\processor_detect_linux.cpp"
-				>
+				RelativePath=".\processor_detect_linux.cpp">
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
+					ExcludedFromBuild="TRUE">
 					<Tool
-						Name="VCCLCompilerTool"
-					/>
+						Name="VCCLCompilerTool"/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
+					ExcludedFromBuild="TRUE">
 					<Tool
-						Name="VCCLCompilerTool"
-					/>
+						Name="VCCLCompilerTool"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\rangecheckedvar.cpp"
-				>
+				RelativePath=".\rangecheckedvar.cpp">
 			</File>
 			<File
-				RelativePath=".\stringpool.cpp"
-				>
+				RelativePath=".\stringpool.cpp">
 			</File>
 			<File
-				RelativePath=".\strtools.cpp"
-				>
+				RelativePath=".\strtools.cpp">
 			</File>
 			<File
-				RelativePath=".\tier1.cpp"
-				>
+				RelativePath=".\tier1.cpp">
 			</File>
 			<File
-				RelativePath=".\tokenreader.cpp"
-				>
+				RelativePath=".\tokenreader.cpp">
 			</File>
 			<File
-				RelativePath=".\utlbuffer.cpp"
-				>
+				RelativePath=".\utlbuffer.cpp">
 			</File>
 			<File
-				RelativePath=".\utlstring.cpp"
-				>
+				RelativePath=".\utlstring.cpp">
 			</File>
 			<File
-				RelativePath=".\utlsymbol.cpp"
-				>
+				RelativePath=".\utlsymbol.cpp">
 			</File>
 			<File
-				RelativePath=".\xboxstubs.cpp"
-				>
+				RelativePath=".\xboxstubs.cpp">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath="..\public\tier1\bitbuf.h"
-				>
+				RelativePath="..\public\tier1\bitbuf.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\characterset.h"
-				>
+				RelativePath="..\public\tier1\characterset.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\checksum_crc.h"
-				>
+				RelativePath="..\public\tier1\checksum_crc.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\checksum_md5.h"
-				>
+				RelativePath="..\public\tier1\checksum_md5.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\convar.h"
-				>
+				RelativePath="..\public\tier1\convar.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\datamanager.h"
-				>
+				RelativePath="..\public\tier1\datamanager.h">
 			</File>
 			<File
-				RelativePath="..\public\datamap.h"
-				>
+				RelativePath="..\public\datamap.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\diff.h"
-				>
+				RelativePath="..\public\tier1\diff.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\fmtstr.h"
-				>
+				RelativePath="..\public\tier1\fmtstr.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\generichash.h"
-				>
+				RelativePath="..\public\tier1\generichash.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\interface.h"
-				>
+				RelativePath="..\public\tier1\interface.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\jobthread.h"
-				>
+				RelativePath="..\public\tier1\jobthread.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\KeyValues.h"
-				>
+				RelativePath="..\public\tier1\KeyValues.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\mempool.h"
-				>
+				RelativePath="..\public\tier1\mempool.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\memstack.h"
-				>
+				RelativePath="..\public\tier1\memstack.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\netadr.h"
-				>
+				RelativePath="..\public\tier1\netadr.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\processor_detect.h"
-				>
+				RelativePath="..\public\tier1\processor_detect.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\rangecheckedvar.h"
-				>
+				RelativePath="..\public\tier1\rangecheckedvar.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\refcount.h"
-				>
+				RelativePath="..\public\tier1\refcount.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\smartptr.h"
-				>
+				RelativePath="..\public\tier1\smartptr.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\stringpool.h"
-				>
+				RelativePath="..\public\tier1\stringpool.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\strtools.h"
-				>
+				RelativePath="..\public\tier1\strtools.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\tier1.h"
-				>
+				RelativePath="..\public\tier1\tier1.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\tokenreader.h"
-				>
+				RelativePath="..\public\tier1\tokenreader.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlbidirectionalset.h"
-				>
+				RelativePath="..\public\tier1\utlbidirectionalset.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlbuffer.h"
-				>
+				RelativePath="..\public\tier1\utlbuffer.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utldict.h"
-				>
+				RelativePath="..\public\tier1\utldict.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlfixedlinkedlist.h"
-				>
+				RelativePath="..\public\tier1\utlfixedlinkedlist.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlfixedmemory.h"
-				>
+				RelativePath="..\public\tier1\utlfixedmemory.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlhandletable.h"
-				>
+				RelativePath="..\public\tier1\utlhandletable.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlhash.h"
-				>
+				RelativePath="..\public\tier1\utlhash.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utllinkedlist.h"
-				>
+				RelativePath="..\public\tier1\utllinkedlist.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlmap.h"
-				>
+				RelativePath="..\public\tier1\utlmap.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlmemory.h"
-				>
+				RelativePath="..\public\tier1\utlmemory.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlmultilist.h"
-				>
+				RelativePath="..\public\tier1\utlmultilist.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlpriorityqueue.h"
-				>
+				RelativePath="..\public\tier1\utlpriorityqueue.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlqueue.h"
-				>
+				RelativePath="..\public\tier1\utlqueue.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlrbtree.h"
-				>
+				RelativePath="..\public\tier1\utlrbtree.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\UtlSortVector.h"
-				>
+				RelativePath="..\public\tier1\UtlSortVector.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlstack.h"
-				>
+				RelativePath="..\public\tier1\utlstack.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlstring.h"
-				>
+				RelativePath="..\public\tier1\utlstring.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\UtlStringMap.h"
-				>
+				RelativePath="..\public\tier1\UtlStringMap.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlsymbol.h"
-				>
+				RelativePath="..\public\tier1\utlsymbol.h">
 			</File>
 			<File
-				RelativePath="..\public\tier1\utlvector.h"
-				>
+				RelativePath="..\public\tier1\utlvector.h">
 			</File>
 			<File
-				RelativePath="..\common\xbox\xboxstubs.h"
-				>
+				RelativePath="..\common\xbox\xboxstubs.h">
 			</File>
 		</Filter>
 	</Files>

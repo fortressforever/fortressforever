@@ -30,6 +30,7 @@
 	extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
 	//extern void DrawHalo(IMaterial* pMaterial, const Vector &source, float scale, float const *color, float flHDRColorScale);
 #else
+	#include "omnibot_interface.h"
 	#include "ff_player.h"
 	#include "te_effect_dispatch.h"
 #endif
@@ -282,7 +283,15 @@ void CFFWeaponRailgun::Fire( void )
 	// Now determine damage the same way
 	float flDamage = ffdev_rail_damage_min.GetFloat() + ( (ffdev_rail_damage_max.GetFloat() - ffdev_rail_damage_min.GetFloat()) * flPercent );
 
-	CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, flDamage, flSpeed, m_flClampedChargeTime );	
+	CFFProjectileRail *pRail = CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, flDamage, flSpeed, m_flClampedChargeTime );	
+	pRail;
+
+#ifdef GAME_DLL
+	{
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_RAILGUN, pRail);
+	}
+#endif
 
 	// play a different sound for a fully charged shot
 	if ( m_flClampedChargeTime < ffdev_railgun_maxchargetime.GetFloat() )

@@ -131,6 +131,7 @@ public:
 	virtual Class_T	Classify( void ) { return CLASS_INFOSCRIPT; }
 
 	void SetBotGoalInfo(int _type);
+	void SpawnBot(const char *_name, int _team, int _class);
 
 	// returns the criteria necessary for another entity to "touch" this entity
 	int GetTouchFlags( void ) const { return m_allowTouchFlags; }
@@ -143,6 +144,9 @@ public:
 
 	virtual void	ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
 
+	// bot info accessors
+	int GetBotTeamFlags() const { return m_BotTeamFlags; }
+	int GetBotGoalType() const { return m_BotGoalType; }
 protected:
 	// Do not expose these to LUA!
 	virtual void	SetActive( void );
@@ -190,6 +194,10 @@ protected:
 	// indicates some criteria limiting what will
 	// be allowed to "touch" this entity
 	int		m_allowTouchFlags;
+
+	// cached information for bot use
+	int		m_BotTeamFlags;
+	int		m_BotGoalType;
 };
 
 /////////////////////////////////////////////////////////////////////////////

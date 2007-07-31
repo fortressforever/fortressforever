@@ -100,6 +100,7 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("GetAngles",			&CFFInfoScript::LUA_GetAngles)
 			.def("SetAngles",			&CFFInfoScript::LUA_SetAngles)
 			.def("SetBotGoalInfo",		&CFFInfoScript::SetBotGoalInfo)
+			.def("SpawnBot",			&CFFInfoScript::SpawnBot)
 			.def("SetModel",			&CFFInfoScript::LUA_SetModel) // Leave this!
 			.def("SetStartOrigin",		&CFFInfoScript::LUA_SetStartOrigin)
 			.def("SetStartAngles",		&CFFInfoScript::LUA_SetStartAngles)
