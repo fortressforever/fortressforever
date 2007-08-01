@@ -3123,6 +3123,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Set the time it takes to build
 					m_flBuildTime = gpGlobals->curtime + 2.0f;
 
+					// Bug #0001558: exploit to get instant lvl2 SG
+					// Moved code to remove cells from CFFDispenser::GoLive() to here.  
+					// Leaving the remove armour code in that function as you can't fiddle with armour vals via this exploit -> Defrag
+					RemoveAmmo( 100, AMMO_CELLS );
+
 					if(IsBot())
 					{
 						Omnibot::Notify_DispenserBuilding(this, pDispenser);
@@ -3167,6 +3172,10 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					// Set the time it takes to build
 					m_flBuildTime = gpGlobals->curtime + 5.0f;	// |-- Mirv: Bug #0000127: when building a sentry gun the build finishes before the sound
+
+					// Bug #0001558: exploit to get instant lvl2 SG
+					// Moved code to remove cells from CFFSentryGun::GoLive() to here -> Defrag
+					RemoveAmmo( 130, AMMO_CELLS );
 
 					if(IsBot())
 					{
@@ -3235,8 +3244,23 @@ void CFFPlayer::PreBuildGenericThink( void )
 			}			
 
 			CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
+			
 			if( pBuildable )
+			{
+				switch( m_iCurBuild )
+				{
+				case FF_BUILD_DISPENSER:
+					GiveAmmo( 100, AMMO_CELLS, true );
+					break;
+				case FF_BUILD_SENTRYGUN:
+					GiveAmmo( 130, AMMO_CELLS, true );
+					break;
+				default:
+					break;
+				}
+
 				pBuildable->Cancel();
+			}
 
 			// Unlock the player
 			UnlockPlayer();			

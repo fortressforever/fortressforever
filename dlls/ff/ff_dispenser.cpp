@@ -179,7 +179,10 @@ void CFFDispenser::GoLive( void )
 	// Temp value of 100 for now
 	if (pOwner)
 	{
-		pOwner->RemoveAmmo(100, AMMO_CELLS);
+		// Bug #0001558: exploit to get instant lvl2 SG (applies to dispenser, too -- you can discard and get a 'free' buildable)
+		// due to the cells being removed at the end of the build cycle.  Moved RemoveAmmo call to CFFPlayer::PreBuildGenericThink()
+
+		//pOwner->RemoveAmmo(100, AMMO_CELLS);
 
 		int iArmor = min( min( 40, pOwner->GetArmor() ), NeedsArmor() );
 		AddAmmo( iArmor, 0, 0, 0, 0 );

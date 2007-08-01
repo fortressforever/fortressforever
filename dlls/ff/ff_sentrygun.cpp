@@ -247,11 +247,15 @@ void CFFSentryGun::GoLive( void )
 	// Stagger our starting times
 	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
 
-	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	// CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 	
 	// Bug #0000244: Building L1 sg doesn't take away cells
-	if( pOwner ) 
-		pOwner->RemoveAmmo( 130, AMMO_CELLS );
+	
+	// Bug #0001558: exploit to get instant lvl2 SG.
+	// Cells are now taken when build starts and returned if build is cancelled -> Defrag
+	
+	//if( pOwner ) 
+	//	pOwner->RemoveAmmo( 130, AMMO_CELLS );
 
 	// Create our flickerer
 	m_pFlickerer = ( CFFBuildableFlickerer * )CreateEntityByName( "ff_buildable_flickerer" );
