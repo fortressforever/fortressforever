@@ -377,6 +377,8 @@ void ClientModeShared::ProcessInput(bool bActive)
 	gHUD.ProcessInput( bActive );
 }
 
+extern int HudContextMenuInput(int down, int keynum, const char *pszCurrentBinding); // |-- Mirv: For context menu
+
 //-----------------------------------------------------------------------------
 // Purpose: We've received a keypress from the engine. Return 1 if the engine is allowed to handle it.
 //-----------------------------------------------------------------------------
@@ -434,6 +436,11 @@ int	ClientModeShared::KeyInput( int down, int keynum, const char *pszCurrentBind
 			return 0;
 		}
 	}
+
+	// --> Mirv: Check keypresses for the context menu
+	if (!HudContextMenuInput(down, keynum, pszCurrentBinding))
+		return 0;
+	// <-- Mirv
 
 	if ( m_pWeaponSelection )
 	{

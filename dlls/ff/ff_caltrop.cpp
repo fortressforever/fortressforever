@@ -47,7 +47,7 @@ void CFFCaltropGib::Spawn( void )
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	SetSolid( SOLID_BBOX );
 	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
-	SetSize( Vector ( -3, -3, -3 ), Vector ( 3, 3, 3 ) );
+	SetSize( Vector ( -3.5f, -3.5f, -3.5f ), Vector ( 3.5f, 3.5f, 3.5f ) );	// Boosted up a bit from 3.0f
 	SetEffects(EF_NOSHADOW);
 
 	SetThink( &CBaseAnimating::SUB_Remove );
@@ -96,7 +96,7 @@ void CFFCaltropGib::ResolveFlyCollisionCustom( trace_t& trace, Vector& vecVeloci
 
 	if (breakthrough)
 	{
-		CTakeDamageInfo info( this, this, 10, DMG_CLUB );
+		CTakeDamageInfo info( this, this, 15, DMG_CLUB );
 		trace.m_pEnt->DispatchTraceAttack( info, GetAbsVelocity(), &trace );
 
 		ApplyMultiDamage();

@@ -24,12 +24,12 @@ typedef struct menuoption_s
 {
 	const wchar_t	*szName;
 	const char		*szCommand;
-	menuoption_s	*pNextMenu;
+	void			*pNextMenu;
 	char			chIcon;
 
 	int (*conditionfunc)();
 
-	menuoption_s(const wchar_t *name, char icon, const char *command, int (*cfnc)(), menuoption_s *nextmenu)
+	menuoption_s(const wchar_t *name, char icon, const char *command, int (*cfnc)(), void *nextmenu)
 	{
 		szName			= name;
 		szCommand		= command;
@@ -38,6 +38,13 @@ typedef struct menuoption_s
 		chIcon			= icon;
 	}
 } menuoption_t;
+
+// Information about a menu
+typedef struct menu_s {
+	int size;
+	menuoption_t *options;
+	const char *default_cmd;
+} menu_t;
 
 #define ADD_MENU_OPTION(id, name, icon, command) \
 	int MenuOption##id##();	\
@@ -56,40 +63,21 @@ private:
 
 	// Progress
 	float	m_flSelectStart;
-	float	m_flDuration;
-
-	// Remember old choice in menu
-//	int		m_iPreviousSelection;
-	const char	*m_pszPreviousCmd;
+	float	m_flMenuStart;
 
 	bool	m_fVisible;
 
-	// Which menu to show
-	menuoption_t *m_pMenu;
+	menu_t	*m_pMenu;
 
 	int		m_nOptions;
 	float	m_flPositions[25][2];
+	int		m_nLayer;
 
 	int		m_iSelected;
 
 	// Stuff we need to know
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Default");
 	CPanelAnimationVar(vgui::HFont, m_hMenuIcon, "DisguiseFont", "ClassGlyphs");
-
-	CPanelAnimationVarAliasType(float, text_xpos, "text_xpos", "8", "proportional_float");
-	CPanelAnimationVarAliasType(float, text_ypos, "text_ypos", "20", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_xpos, "icon_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_ypos, "icon_ypos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_width, "icon_width", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_height, "icon_height", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, bar_xpos, "bar_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, bar_ypos, "bar_ypos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, bar_width, "bar_width", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, bar_height, "bar_height", "1", "proportional_float");
-
-	CHudTexture	*m_pHudElementTexture;
-	CHudTexture *m_pHudBuildIcons[4];
-	char *m_pszBuildLabels[4];
 
 public:
 	CHudContextMenu(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudRadialMenu") 
@@ -100,13 +88,9 @@ public:
 
 	~CHudContextMenu();
 
-	const char *GetPrevCmd( void ) { return m_pszPreviousCmd; }
-
 	void	Init();
 	void	VidInit();
 	void	Paint();
-
-	void	SetBuildTimer(int type, float duration);
 
 	void	MouseMove(float *x, float *y);
 
@@ -114,10 +98,16 @@ public:
 	void	SetMenu();
 	void	DoCommand(const char *cmd);
 
-	int		m_iIcon;
+	int		KeyEvent(int down, int keynum, const char *pszCurrentBinding);
 
 	float	m_flPosX;
 	float	m_flPosY;
+
+	int		GetLayerNumber() const { return m_nLayer; }
+
+private:
+	void ProgressToNextMenu(int iOption);
+
 
 	//CUtlLinkedList
 };
