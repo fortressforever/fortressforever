@@ -1504,6 +1504,14 @@ bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 	}
 
+	// #0001026: backpacks & flags can be discarded through doors
+	// Modified this as per Mirv's suggestion.  If a trigger only object flies into a regular object, they collide -> Defrag
+	if( collisionGroup0 == COLLISION_GROUP_TRIGGERONLY &&
+		collisionGroup1 == COLLISION_GROUP_NONE )
+	{
+		return true;
+	}
+
 	if ( collisionGroup0 > collisionGroup1 )
 	{
 		// swap so that lowest is always first
