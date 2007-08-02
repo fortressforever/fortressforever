@@ -195,7 +195,6 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kYellow",		kAllowYellowTeam),
 				value("kGreen",			kAllowGreenTeam)
 			],
-
 		class_<CFFEntity_ClipFlags>("ClipFlags")
 			.enum_("ClipFlags")
 			[
@@ -206,6 +205,16 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kClipTeamGreen",		LUA_CLIP_FLAG_TEAMGREEN),
 				value("kClipGrenades",		LUA_CLIP_FLAG_GRENADES),
 				value("kClipProjectiles",	LUA_CLIP_FLAG_PROJECTILES)
+			],
+		class_<CFFEntity_SpecMode>("SpecMode")
+			.enum_("SpecMode")
+			[
+				value("kNone",		OBS_MODE_NONE),
+				value("kDeathCam",	OBS_MODE_DEATHCAM),
+				value("kFixed",		OBS_MODE_FIXED),				
+				value("kInEye",		OBS_MODE_IN_EYE),
+				value("kChase",		OBS_MODE_CHASE),
+				value("kRoaming",	OBS_MODE_ROAMING)
 			]
 	];
 };
