@@ -10,6 +10,12 @@
 	purpose:	
 *********************************************************************/
 
+//
+// WARNING: A LOT OF THIS IS PROTOTYPICAL CODE I.E. VERY ROUGH AND NOT
+//			OPTIMISED (OR EVEN SENSIBLE) IN ANY WAY SHAPE OR FORM.
+//
+
+
 #include "cbase.h"
 #include "ff_hud_hint.h"
 #include "hudelement.h"
@@ -25,6 +31,7 @@
 
 #include "c_ff_player.h"
 #include "c_ff_hint_timers.h"  // For the disguise hint timer
+#include "ff_gamerules.h"
 
 #include <vgui/ILocalize.h>
 
@@ -45,6 +52,8 @@ ConVar cm_bounds("cl_cmbounds", "120", FCVAR_ARCHIVE, "Bounds of the context rad
 ConVar cm_progresstime("cl_cmprogresstime", "0.7", FCVAR_ARCHIVE, "Time to wait for menu progress");
 ConVar cm_squash("cl_cmsquash", "0.7", FCVAR_ARCHIVE, "");
 ConVar cm_highlightdistance("cl_cmhighlightdistance", "50", FCVAR_ARCHIVE, "Distance for an option to highlight");
+ConVar cm_waitforrelease("cl_cmwaitforrelease", "0", FCVAR_ARCHIVE, "Menu waits for mouse release before selection");
+ConVar cm_defaultactiontime("cl_cmdefaultactiontime", "0.5", FCVAR_ARCHIVE, "Default action takes place if menu closed within this amount of time");
 
 ConVar cm_aimsentry( "cl_noradialaimsentry", "0", 0, "0 - Aim sentry when selecting option in context menu or 1 - aiming AFTER selecting option in context menu" );
 
@@ -54,21 +63,31 @@ ConVar cm_aimsentry( "cl_noradialaimsentry", "0", 0, "0 - Aim sentry when select
 #define SCREEN_MAX_X	640
 #define SCREEN_MAX_Y	480
 
+#define MAX_CMD_LEN		64
+
 DECLARE_HUDELEMENT(CHudContextMenu);
 
 // Forward declarations for a menu
-extern menuoption_t SpyClassDisguise[];
+extern menu_t ClassDMenu;
+extern menu_t FriendlyDMenu;
+extern menu_t EnemyDMenu;
 
-inline int CheckDisguiseClass( int iClass )
+// We buffer our commands onto here sequentially.
+char szCmdBuffer[MAX_CMD_LEN];
+
+
+int CheckDisguiseClass( int iClass )
 {
 	IGameResources *pGr = GameResources();
 
-	if( !g_pHudContextMenu || !pGr || !g_pHudContextMenu->GetPrevCmd() )
+	if( !g_pHudContextMenu || !pGr )
 		return MENU_DIM;
+
+	assert(g_pHudContextMenu->GetLayerNumber() == 2);
 
 	// This is like "disguise friendly", or "disguise red" so
 	// grab the part after "disguise"
-	const char *pszTeam = g_pHudContextMenu->GetPrevCmd() + 9;
+	const char *pszTeam = szCmdBuffer + 9;
 
 	Assert( pszTeam );
 
@@ -118,9 +137,10 @@ inline int CheckDisguiseClass( int iClass )
 }
 
 
-/************************************************************************/
-/* These are all possible menu options                                  */
-/************************************************************************/
+//-----------------------------------------------------------------------------
+// Engineer menu options
+//-----------------------------------------------------------------------------
+
 ADD_MENU_OPTION(builddispenser, L"Build Dispenser", 'G', "builddispensers")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
@@ -247,8 +267,11 @@ ADD_MENU_OPTION(aimsentry, L"Aim Sentry", 'G', "aimsentry")
 	return MENU_SHOW;
 }
 
-// These act as intermediate menus
-ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", 'G', "disguise friendly ", SpyClassDisguise)
+//-----------------------------------------------------------------------------
+// Disguise menu options
+//-----------------------------------------------------------------------------
+
+ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", 'G', "", &FriendlyDMenu)
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -260,7 +283,7 @@ ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", 'G', "disguise friendly "
 	return MENU_SHOW;
 }
 
-ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", 'G', "disguise enemy ", SpyClassDisguise)
+ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", 'G', "", &EnemyDMenu)
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -272,162 +295,62 @@ ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", 'G', "disguise enemy ", Spy
 	return MENU_SHOW;
 }
 
-ADD_MENU_BRANCH(disguisered, L"Disguise as red", 'G', "disguise red ", SpyClassDisguise)
+enum AvailableAs_t { ENEMY, FRIENDLY };
+
+int TeamAvailableForDisguise(int iTeam, AvailableAs_t as)
 {
 	IGameResources *pGr = GameResources();
-	if( !pGr )
-		return MENU_DIM;
-
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
+
+	if (!pGr || !pPlayer)
 		return MENU_DIM;
 
-	if( !pPlayer->IsDisguisable() )
+	if (!pPlayer->IsDisguisable())
 		return MENU_DIM;
 
-	if (pGr->GetTeamLimits(TEAM_RED) >= 0)
-		return MENU_SHOW;
-
-	return MENU_DIM;
-}
-
-ADD_MENU_BRANCH(disguiseblue, L"Disguise as blue", 'G', "disguise blue ", SpyClassDisguise)
-{
-	IGameResources *pGr = GameResources();
-	if( !pGr )
+	if (pGr->GetTeamLimits(iTeam) < 0)
 		return MENU_DIM;
 
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
-		return MENU_DIM;
+	bool bAllied = FFGameRules()->IsTeam1AlliedToTeam2(pPlayer->GetTeamNumber(), iTeam);
 
-	if( !pPlayer->IsDisguisable() )
-		return MENU_DIM;
-
-	if (pGr->GetTeamLimits(TEAM_BLUE) >= 0)
-		return MENU_SHOW;
-
-	return MENU_DIM;
-
+	return ((bAllied == (as == FRIENDLY)) ? MENU_SHOW : MENU_DIM);
 }
 
-ADD_MENU_BRANCH(disguiseyellow, L"Disguise as yellow", 'G', "disguise yellow ", SpyClassDisguise)
-{
-	IGameResources *pGr = GameResources();
-	if( !pGr )
-		return MENU_DIM;
+ADD_MENU_BRANCH(disguise_blue_friendly, L"Disguise as blue", 'G', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_red_friendly, L"Disguise as red", 'G', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_yellow_friendly, L"Disguise as yellow", 'G', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_green_friendly, L"Disguise as green", 'G', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_blue_enemy, L"Disguise as blue", 'G', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, ENEMY); }
+ADD_MENU_BRANCH(disguise_red_enemy, L"Disguise as red", 'G', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, ENEMY); }
+ADD_MENU_BRANCH(disguise_yellow_enemy, L"Disguise as yellow", 'G', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, ENEMY); }
+ADD_MENU_BRANCH(disguise_green_enemy, L"Disguise as green", 'G', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, ENEMY); }
 
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
-		return MENU_DIM;
+ADD_MENU_OPTION(disguisescout, L"Disguise as scout", '!', "scout") { return CheckDisguiseClass( CLASS_SCOUT ); }
+ADD_MENU_OPTION(disguisesniper, L"Disguise as sniper", '@', "sniper") {	return CheckDisguiseClass( CLASS_SNIPER ); }
+ADD_MENU_OPTION(disguisesoldier, L"Disguise as soldier", '#', "soldier") { return CheckDisguiseClass( CLASS_SOLDIER ); }
+ADD_MENU_OPTION(disguisedemoman, L"Disguise as demoman", '$', "demoman") { return CheckDisguiseClass( CLASS_DEMOMAN ); }
+ADD_MENU_OPTION(disguisemedic, L"Disguise as medic", '%', "medic") { return CheckDisguiseClass( CLASS_MEDIC ); }
+ADD_MENU_OPTION(disguisehwguy, L"Disguise as hwguy", '^', "hwguy") { return CheckDisguiseClass( CLASS_HWGUY ); }
+ADD_MENU_OPTION(disguisespy, L"Disguise as spy", '*', "spy") { return CheckDisguiseClass( CLASS_SPY ); }
+ADD_MENU_OPTION(disguisepyro, L"Disguise as pyro", '?', "pyro") { return CheckDisguiseClass( CLASS_PYRO ); }
+ADD_MENU_OPTION(disguiseengineer, L"Disguise as engineer", '(', "engineer") { return CheckDisguiseClass( CLASS_ENGINEER ); }
+ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", ')', "civilian") { return CheckDisguiseClass( CLASS_CIVILIAN ); }
 
-	if( !pPlayer->IsDisguisable() )
-		return MENU_DIM;
+ADD_MENU_OPTION(lastdisguise, L"Last disguise", 'G', "disguise last") { return MENU_DIM; }
 
-	if (pGr->GetTeamLimits(TEAM_YELLOW) >= 0)
-		return MENU_SHOW;
-
-	return MENU_DIM;
-
-}
-
-ADD_MENU_BRANCH(disguisegreen, L"Disguise as green", 'G', "disguise green ", SpyClassDisguise)
-{
-	IGameResources *pGr = GameResources();
-	if( !pGr )
-		return MENU_DIM;
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
-		return MENU_DIM;
-
-	if( !pPlayer->IsDisguisable() )
-		return MENU_DIM;
-
-	if (pGr->GetTeamLimits(TEAM_GREEN) >= 0)
-		return MENU_SHOW;
-
-	return MENU_DIM;
-
-}
-
-ADD_MENU_OPTION(disguisescout, L"Disguise as scout", '!', "scout")
-{
-	return CheckDisguiseClass( CLASS_SCOUT );
-}
-
-ADD_MENU_OPTION(disguisesniper, L"Disguise as sniper", '@', "sniper")
-{
-	return CheckDisguiseClass( CLASS_SNIPER );
-}
-
-ADD_MENU_OPTION(disguisesoldier, L"Disguise as soldier", '#', "soldier")
-{
-	return CheckDisguiseClass( CLASS_SOLDIER );
-}
-
-ADD_MENU_OPTION(disguisedemoman, L"Disguise as demoman", '$', "demoman")
-{
-	return CheckDisguiseClass( CLASS_DEMOMAN );
-}
-
-ADD_MENU_OPTION(disguisemedic, L"Disguise as medic", '%', "medic")
-{
-	return CheckDisguiseClass( CLASS_MEDIC );
-}
-
-ADD_MENU_OPTION(disguisehwguy, L"Disguise as hwguy", '^', "hwguy")
-{
-	return CheckDisguiseClass( CLASS_HWGUY );
-}
-
-ADD_MENU_OPTION(disguisespy, L"Disguise as spy", '*', "spy")
-{
-	return CheckDisguiseClass( CLASS_SPY );
-}
-
-ADD_MENU_OPTION(disguisepyro, L"Disguise as pyro", '?', "pyro")
-{
-	return CheckDisguiseClass( CLASS_PYRO );
-}
-
-ADD_MENU_OPTION(disguiseengineer, L"Disguise as engineer", '(', "engineer")
-{
-	return CheckDisguiseClass( CLASS_ENGINEER );
-}
-
-ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", ')', "civilian")
-{
-	return CheckDisguiseClass( CLASS_CIVILIAN );
-}
 
 //-----------------------------------------------------------------------------
 // Detpack menu options
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( det5, L"5", NULL, "detpack 5" )
-{
-	return MENU_SHOW;
-}
-
-ADD_MENU_OPTION( det10, L"10", NULL, "detpack 10" )
-{
-	return MENU_SHOW;
-}
-
-ADD_MENU_OPTION( det20, L"20", NULL, "detpack 20" )
-{
-	return MENU_SHOW;
-}
-
-ADD_MENU_OPTION( det50, L"50", NULL, "detpack 50" )
-{
-	return MENU_SHOW;
-}
+ADD_MENU_OPTION( det5, L"5", 'G', "detpack 5" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det10, L"10", 'G', "detpack 10" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det20, L"20", 'G', "detpack 20" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det50, L"50", 'G', "detpack 50" ) { return MENU_SHOW; }
 
 //-----------------------------------------------------------------------------
 // Cloak options
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( cloak, L"Cloak", 'G', "cloak" )
+int CanCloak()
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -448,30 +371,9 @@ ADD_MENU_OPTION( cloak, L"Cloak", 'G', "cloak" )
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( scloak, L"Silent Cloak", 'G', "scloak" )
-{
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
-		return MENU_DIM;
+ADD_MENU_OPTION( cloak, L"Cloak", 'G', "cloak" ) { return CanCloak(); }
+ADD_MENU_OPTION( scloak, L"Silent Cloak", 'G', "scloak" ) { return CanCloak(); }
 
-	// Jon: always allow uncloaking if already cloaked
-	if (pPlayer->IsCloaked())
-		return MENU_SHOW;
-
-	if( !pPlayer->IsCloakable() )
-		return MENU_DIM;
-
-	// 0001379: Must be on the ground to cloak
-	// added: or also not swimming
-	if ( !(pPlayer->GetFlags() & FL_ONGROUND || pPlayer->GetWaterLevel() > WL_NotInWater) )
-		return MENU_DIM;
-
-	// Jon: adding in minimum allowed speed cvar
-	if( pPlayer->GetCloakSpeed() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
-		return MENU_DIM;
-
-	return MENU_SHOW;
-}
 
 //-----------------------------------------------------------------------------
 // Sentry Sabotage
@@ -483,19 +385,51 @@ ADD_MENU_OPTION( sentrysabotage, L"Sabotage Sentry", 'G', "sentrysabotage" )
 	if( !pPlayer )
 		return MENU_DIM;
 
-	if ( pPlayer->AnyActiveSGSabotages() )
+	if ( pPlayer->AnyActiveSentrySabotages() )
 		return MENU_SHOW;
 	else return MENU_DIM;
 }
 
-/************************************************************************/
-/* And these are the actual menus themselves                            */
-/************************************************************************/
-menuoption_t BuildMenu[]		= { aimsentry, detdispenser, dismantledispenser, dismantlesentry, detsentry };
-menuoption_t SpyTeamDisguise2[] = { sentrysabotage, cloak, disguiseteam, disguiseenemy, scloak };
-menuoption_t SpyTeamDisguise4[] = { sentrysabotage, cloak, disguisegreen, disguiseyellow, disguisered, disguiseblue, scloak };
-menuoption_t SpyClassDisguise[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
-menuoption_t DemoDetpackMenu[]	= { det5, det10, det20, det50 };
+ADD_MENU_OPTION(dispensersabotage, L"Sabotage Dispenser", 'G', "dispensersabotage")
+{
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if (!pPlayer || !pPlayer->AnyActiveDispenserSabotages())
+		return MENU_DIM;
+
+	return MENU_SHOW;
+}
+
+
+//-----------------------------------------------------------------------------
+// Medic/Engineer stuff
+//-----------------------------------------------------------------------------
+ADD_MENU_OPTION( need_armor, L"Armor!", '(', "engyme" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( need_medic, L"Medic!", '%', "saveme" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( need_ammo, L"Ammo!", '^', "ammome" ) { return MENU_SHOW; }
+
+
+//-----------------------------------------------------------------------------
+// Menu option lists
+//-----------------------------------------------------------------------------
+menuoption_t EngineerOptionList[] = { aimsentry, detdispenser, dismantledispenser, dismantlesentry, detsentry };
+menuoption_t DemomanOptionList[] = { det5, det10, det20, det50 };
+menuoption_t SpyOptionList[] = { lastdisguise, disguiseenemy, scloak, sentrysabotage, dispensersabotage, cloak, disguiseteam };
+menuoption_t ClassDOptionList[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
+menuoption_t FriendlyDOptionList[] = { disguise_blue_friendly, disguise_red_friendly, disguise_yellow_friendly, disguise_green_friendly };
+menuoption_t EnemyDOptionList[] = { disguise_blue_enemy, disguise_red_enemy, disguise_yellow_enemy, disguise_green_enemy };
+menuoption_t CallOptionList[] = { need_armor, need_medic, need_ammo };
+
+//-----------------------------------------------------------------------------
+// Menus themselves
+//-----------------------------------------------------------------------------
+menu_t EngineerMenu = { ARRAYSIZE(EngineerOptionList), EngineerOptionList, "aimsentry" };
+menu_t DemomanMenu = { ARRAYSIZE(DemomanOptionList), DemomanOptionList, "detpack 5" };
+menu_t SpyMenu = { ARRAYSIZE(SpyOptionList), SpyOptionList, "scloak" };
+menu_t ClassDMenu = { ARRAYSIZE(ClassDOptionList), ClassDOptionList, NULL };
+menu_t FriendlyDMenu = { ARRAYSIZE(FriendlyDOptionList), FriendlyDOptionList, NULL };
+menu_t EnemyDMenu = { ARRAYSIZE(EnemyDOptionList), EnemyDOptionList, NULL };
+menu_t CallMenu = { ARRAYSIZE(CallOptionList), CallOptionList, "saveme" };
 
 
 CHudContextMenu::~CHudContextMenu() 
@@ -505,16 +439,8 @@ CHudContextMenu::~CHudContextMenu()
 void CHudContextMenu::VidInit() 
 {
 	m_fVisible = false;
-
 	g_pHudContextMenu = this;
-
 	SetPaintBackgroundEnabled(false);
-	m_iIcon = 0;
-
-	// Precache the background texture
-	m_pHudElementTexture = new CHudTexture();
-	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_button", true, false);
 }
 
 void CHudContextMenu::Init() 
@@ -523,7 +449,7 @@ void CHudContextMenu::Init()
 
 void CHudContextMenu::DoCommand(const char *cmd)
 {
-	if (!m_pszPreviousCmd)
+	if (m_nLayer == 0)	// Is this check really needed anyway?
 	{
 		if( cm_aimsentry.GetBool() && ( strcmp( cmd, "aimsentry" ) == 0 ) )
 		{
@@ -540,15 +466,11 @@ void CHudContextMenu::DoCommand(const char *cmd)
 			engine->ClientCmd(cmd);
 	}
 
-	// Currently this only supports has 2 levels of menu
-	// If we need more, change m_pszPreviousCmd to a character array
-	// and concatonate on each menu item's command each time 
-	// we progress to next menu
+	// Add on the command to the command buffer then execute
 	else
 	{
-		char buf[256];
-		Q_snprintf(buf, 255, "%s%s", m_pszPreviousCmd, cmd);
-		engine->ClientCmd(buf);
+		Q_strcat(szCmdBuffer, cmd, MAX_CMD_LEN);
+		engine->ClientCmd(szCmdBuffer);
 
 		//  Jiggles: The player used the menu to disguise!  Good for him/her!
 		//				Note: This logic assumes there is only disguise functionality in our 2nd menu level				
@@ -568,19 +490,21 @@ void CHudContextMenu::Display(bool state)
 		if (m_iSelected >= 0)
 		{
 			// Make sure this is a valid button (i.e. not disabled)
-			if (m_pMenu[m_iSelected].conditionfunc() == MENU_SHOW)
+			if (m_pMenu->options[m_iSelected].conditionfunc() == MENU_SHOW)
 			{
 				pPlayer->EmitSound("ContextMenu.Select");
-				DoCommand(m_pMenu[m_iSelected].szCommand);
+				DoCommand(m_pMenu->options[m_iSelected].szCommand);
 			}
 		}
-		else if ( pPlayer->GetClassSlot() == CLASS_DEMOMAN ) // So the demoman can set a det by just clicking
-			engine->ClientCmd("detpack 5");
+		// If this menu has a default command and the user exited within the default action time then run the command
+		else if (m_flMenuStart + cm_defaultactiontime.GetFloat() > gpGlobals->curtime && m_pMenu->default_cmd)
+			engine->ClientCmd(m_pMenu->default_cmd);
 
 		else
 			pPlayer->EmitSound("ContextMenu.Close");
 
 		m_fVisible = state;
+		m_pMenu = NULL;
 		return;
 	}
 
@@ -588,48 +512,19 @@ void CHudContextMenu::Display(bool state)
 		pPlayer->EmitSound("ContextMenu.Open");
 
 	m_fVisible = state;
+	m_nLayer = 0;
+	szCmdBuffer[0] = 0;
+	m_flMenuStart = gpGlobals->curtime;
 
-	// Clear any previous commands
-	m_pszPreviousCmd = NULL;
-
-	// Decide which menu is to be shown
-	if (pPlayer->GetClassSlot() == CLASS_ENGINEER)
+	if (m_pMenu == NULL)
 	{
-		m_pMenu = &BuildMenu[0];
-		m_nOptions = sizeof(BuildMenu) / sizeof(BuildMenu[0]);
-	}
-	else if (pPlayer->GetClassSlot() == CLASS_SPY)
-	{
-		int nTeams = 0;
-		IGameResources *pGr = GameResources();
-
-		if (!pGr)
+		switch (pPlayer->GetClassSlot())
 		{
-			AssertMsg(0, "Can't get GameResources");
-			return;
+		case CLASS_ENGINEER: m_pMenu = &EngineerMenu; break;
+		case CLASS_SPY: m_pMenu = &SpyMenu; break;
+		case CLASS_DEMOMAN: m_pMenu = &DemomanMenu; break;
+		default: m_pMenu = &CallMenu;
 		}
-
-		for (int iTeam = TEAM_BLUE; iTeam <= TEAM_GREEN; iTeam++)
-		{
-			if (pGr->GetTeamLimits(iTeam) < 0)
-				nTeams++;
-		}
-
-		if (nTeams == 2)
-		{
-			m_pMenu = &SpyTeamDisguise2[0];
-			m_nOptions = sizeof(SpyTeamDisguise2) / sizeof(SpyTeamDisguise2[0]);
-		}
-		else
-		{
-			m_pMenu = &SpyTeamDisguise4[0];
-			m_nOptions = sizeof(SpyTeamDisguise4) / sizeof(SpyTeamDisguise4[0]);
-		}
-	}
-	else if( pPlayer->GetClassSlot() == CLASS_DEMOMAN )
-	{
-		m_pMenu = &DemoDetpackMenu[ 0 ];
-		m_nOptions = sizeof( DemoDetpackMenu ) / sizeof( DemoDetpackMenu[ 0 ] );
 	}
 
 	SetMenu();
@@ -646,6 +541,11 @@ void CHudContextMenu::SetMenu()
 	m_flPosX = midx;
 	m_flPosY = midy;
 
+	m_nOptions = m_pMenu->size;
+
+	int iFirstOpt = 0;
+	int nAvailableOptions = 0;
+
 	// Get positions for buttons
 	for (int i = 0; i < m_nOptions; i++)
 	{
@@ -653,6 +553,20 @@ void CHudContextMenu::SetMenu()
 
 		m_flPositions[i][0] = midx + dist * sin(increments);
 		m_flPositions[i][1] = midy - dist * cos(increments) * cm_squash.GetFloat();
+
+		// Count number of available options
+		if (m_pMenu->options[i].conditionfunc() == MENU_SHOW)
+		{
+			iFirstOpt = i;
+			nAvailableOptions++;
+		}
+	}
+
+	// Only one available option, go straight into it if it is a branch
+	if (nAvailableOptions == 1 && m_pMenu->options[iFirstOpt].pNextMenu)
+	{
+		ProgressToNextMenu(iFirstOpt);
+		return;
 	}
 
 	// Big enough to fit whole circle
@@ -668,34 +582,7 @@ void CHudContextMenu::Paint()
 	if (!m_fVisible) 
 		return;
 
-	if (m_flDuration == 0) 
-		m_flDuration = 0.001f;
-
-	/*if (gpGlobals->curtime > m_flStartTime + m_flDuration + 1.5f) 
-	{
-		// Begin to fade
-		if (m_fVisible) 
-		{
-			m_fVisible = false;
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("FadeOutBuildTimer");
-		}
-		// Fading time is over
-		else if (gpGlobals->curtime > m_flStartTime + m_flDuration + 1.7f) 
-		{
-			return;
-		}
-	}*/
-
-/*	float halfbuttonX = scheme()->GetProportionalScaledValue(40.0f);
-	float halfbuttonY = scheme()->GetProportionalScaledValue(20.0f);
-
-	// Button boxes
-	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-	surface()->DrawSetColor(255, 255, 255, 255);
-
-	// Draw boxes
-	for (int i = 0; i < m_nOptions; i++)
-		surface()->DrawTexturedRect(m_flPositions[i][0] - halfbuttonX, m_flPositions[i][1] - halfbuttonY, m_flPositions[i][0] + halfbuttonX, m_flPositions[i][1] + halfbuttonY);*/
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	// Colours we need later on
 	Color highlighted(255, 0, 0, 255);
@@ -703,7 +590,7 @@ void CHudContextMenu::Paint()
 
 	float dx = m_flPosX - scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
 	float dy = m_flPosY - scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
-	float py = scheme()->GetProportionalScaledValue(10.0f);
+	float py = scheme()->GetProportionalScaledValue(2.0f);
 
 	int newSelection = -1;
 
@@ -739,7 +626,7 @@ void CHudContextMenu::Paint()
 		//
 		// COLOR
 		//
-		if (m_pMenu[i].conditionfunc() != MENU_SHOW)
+		if (m_pMenu->options[i].conditionfunc() != MENU_SHOW)
 			surface()->DrawSetTextColor(dimmed);
 		else if (newSelection == i)
 			surface()->DrawSetTextColor(highlighted);
@@ -749,18 +636,18 @@ void CHudContextMenu::Paint()
 		//
 		// DRAW ICON
 		//
-		char character = m_pMenu[i].chIcon;
+		char character = m_pMenu->options[i].chIcon;
 
 		//surface()->DrawSetTextColor(Color(100, 100, 100, 100));
 		surface()->DrawSetTextFont(m_hMenuIcon);
 
-		int charOffsetX = surface()->GetCharacterWidth(m_hMenuIcon, character) / 2;
-		int charOffsetY = surface()->GetFontTall(m_hMenuIcon) / 2;
+		int iconOffsetX = surface()->GetCharacterWidth(m_hMenuIcon, character) / 2;
+		int iconOffsetY = surface()->GetFontTall(m_hMenuIcon) / 2;
 
 		wchar_t unicode[2];
 		swprintf(unicode, L"%c", character);
 
-		surface()->DrawSetTextPos(m_flPositions[i][0] - charOffsetX, m_flPositions[i][1] - charOffsetY);
+		surface()->DrawSetTextPos(m_flPositions[i][0] - iconOffsetX, m_flPositions[i][1] - iconOffsetY);
 		surface()->DrawUnicodeChar(unicode[0]);
 
 		//
@@ -770,40 +657,53 @@ void CHudContextMenu::Paint()
 		surface()->DrawSetTextFont(m_hTextFont);
 
 		// Work out centering and position & draw text
-		int offsetX = 0.5f * UTIL_ComputeStringWidth(m_hTextFont, m_pMenu[i].szName);
-		surface()->DrawSetTextPos(m_flPositions[i][0] - offsetX, m_flPositions[i][1] + charOffsetY + py);
+		int textOffsetX = 0.5f * UTIL_ComputeStringWidth(m_hTextFont, m_pMenu->options[i].szName);
+		surface()->DrawSetTextPos(m_flPositions[i][0] - textOffsetX, m_flPositions[i][1] + iconOffsetY + py);
 		
-		for (const wchar_t *wch = m_pMenu[i].szName; *wch != 0; wch++)
+		for (const wchar_t *wch = m_pMenu->options[i].szName; *wch != 0; wch++)
 			surface()->DrawUnicodeChar(*wch);
+
+		//
+		// DRAW SHORTCUT NUMBER
+		//
+
+		char chDisplay = (i == 9 ? '0' : '1' + i);
+
+		int numberOffsetX = surface()->GetCharacterWidth(m_hTextFont, chDisplay) / 2;
+		int textHeightX = surface()->GetFontTall(m_hTextFont);
+		surface()->DrawSetTextPos(m_flPositions[i][0] - numberOffsetX, m_flPositions[i][1] + iconOffsetY + py + textHeightX);
+
+		swprintf(unicode, L"%c", chDisplay);
+		surface()->DrawUnicodeChar(unicode[0]);
 	}
 
-	// Restart timer if a new selection
+	// Restart timer & play sound if a new selection
 	if (newSelection != m_iSelected)
+	{
 		m_flSelectStart = gpGlobals->curtime;
+		m_iSelected = newSelection;
 
-	m_iSelected = newSelection;
+		pPlayer->EmitSound("ContextMenu.MouseOver");
+	}
 
-	// Progress to next menu if needed
+
+	// Progress to next menu if needed OR select the select thing
 	// TODO: A cleaner way of doing this
 	if (m_iSelected > -1 && gpGlobals->curtime > m_flSelectStart + cm_progresstime.GetFloat())
 	{
 		// There is a next menu for this option
 		// ADDED: added check for conditionfunc to be true because
 		// dimmed out "branches" could still be selected.
-		if (m_pMenu[m_iSelected].pNextMenu && ( m_pMenu[m_iSelected].conditionfunc() == MENU_SHOW ) )
+		if (m_pMenu->options[m_iSelected].pNextMenu && ( m_pMenu->options[m_iSelected].conditionfunc() == MENU_SHOW ) )
 		{
-			m_pszPreviousCmd = m_pMenu[m_iSelected].szCommand;
-			m_pMenu = &SpyClassDisguise[0];
-			m_nOptions = sizeof(SpyClassDisguise) / sizeof(SpyClassDisguise[0]);
-
-			m_iSelected = -1;
-			m_flSelectStart = gpGlobals->curtime;
-
-			SetMenu();
-
-			C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-			if (pPlayer)
-				pPlayer->EmitSound("ContextMenu.NextMenu");
+			ProgressToNextMenu(m_iSelected);
+			pPlayer->EmitSound("ContextMenu.NextMenu");
+		}
+		// Timed out on a valid option, so escape menu (selecting whatever option it was)
+		else if (cm_waitforrelease.GetBool() == false && m_pMenu->options[m_iSelected].conditionfunc() == MENU_SHOW)
+		{
+			Display(false);
+			return;
 		}
 	}
 
@@ -815,10 +715,23 @@ void CHudContextMenu::Paint()
 
 		surface()->DrawSetTexture(NULL);
 		surface()->DrawSetColor(GetFgColor());
-		//surface()->DrawTexturedRect(m_flPosX - 5, m_flPosY - 5, m_flPosX + 5, m_flPosY + 5);
 		surface()->DrawTexturedRect(m_flPosX - ch_short, m_flPosY - ch_long, m_flPosX + ch_short, m_flPosY + ch_long);
 		surface()->DrawTexturedRect(m_flPosX - ch_long, m_flPosY - ch_short, m_flPosX + ch_long, m_flPosY + ch_short);
 	}
+}
+
+void CHudContextMenu::ProgressToNextMenu(int iOption)
+{
+	Q_strcat(szCmdBuffer, m_pMenu->options[iOption].szCommand, MAX_CMD_LEN);
+
+	m_pMenu = (menu_t *) m_pMenu->options[iOption].pNextMenu;
+	m_nOptions = m_pMenu->size;
+
+	m_iSelected = -1;
+	m_flSelectStart = gpGlobals->curtime;
+	m_nLayer++;
+
+	SetMenu();
 }
 
 void CHudContextMenu::MouseMove(float *x, float *y) 
@@ -871,6 +784,40 @@ void CHudContextMenu::MouseMove(float *x, float *y)
 	}
 }
 
+int CHudContextMenu::KeyEvent(int down, int keynum, const char *pszCurrentBinding)
+{
+	if (!m_fVisible || !down) 
+		return 1;
+
+	if (keynum < '0' || keynum > '9')
+		return 1;
+
+	int iMenuOption = (keynum == '0' ? 9 : keynum - '1');
+
+	if (iMenuOption >= m_nOptions)
+		return 1;
+
+	// They've selected this, so we place the mouse cursor over the box
+	// and pretend its been there a while (so menus will automatically swap)
+	// TODO: Maybe we should use mousemove for this so that we stay within bounds
+	m_flPosX = m_flPositions[iMenuOption][0];
+	m_flPosY = m_flPositions[iMenuOption][1];
+
+	// Give it a couple of fractions of a second to draw before swapping
+	m_iSelected = iMenuOption;
+	m_flSelectStart = gpGlobals->curtime - cm_progresstime.GetFloat() - 0.1f;
+
+	// Squelch this key
+	return 0;
+}
+
+int HudContextMenuInput(int down, int keynum, const char *pszCurrentBinding)
+{
+	if (g_pHudContextMenu)
+		return g_pHudContextMenu->KeyEvent(down, keynum, pszCurrentBinding);
+	return 1;
+}
+
 void HudContextMenuInput(float *x, float *y) 
 {
 	if (g_pHudContextMenu) 
@@ -879,6 +826,32 @@ void HudContextMenuInput(float *x, float *y)
 
 void HudContextShow(bool visible) 
 {
-	if (g_pHudContextMenu) 
-		g_pHudContextMenu->Display(visible);
+	if (!g_pHudContextMenu) 
+		return;
+
+	if (visible)
+		g_pHudContextMenu->m_pMenu = NULL;
+
+	g_pHudContextMenu->Display(visible);
+}
+
+void HudContextShowCalls(bool visible)
+{
+	if (!g_pHudContextMenu) 
+		return;
+
+	if (visible)
+		g_pHudContextMenu->m_pMenu = &CallMenu;
+
+	g_pHudContextMenu->Display(visible);
+}
+
+void HudContextForceClose()
+{
+	if (!g_pHudContextMenu)
+		return;
+
+	g_pHudContextMenu->m_pMenu = NULL;
+	g_pHudContextMenu->Display(false);
+
 }

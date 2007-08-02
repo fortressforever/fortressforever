@@ -176,7 +176,9 @@ protected:
 	CNetworkVar( int, m_iCurBuild );
 
 public:
-	bool AnyActiveSGSabotages( void ) { return m_bActiveSGSabotages; }  // Jiggles: Used for enabling/disabling the SG sabotage option in the hud menu
+	bool AnyActiveDispenserSabotages() { return (m_iActiveSabotages & 1); }
+	bool AnyActiveSentrySabotages() { return (m_iActiveSabotages & 2); }
+
 	bool IsBuilding( void ) const;
 	int GetCurBuild( void ) const;
 	C_FFDetpack *GetDetpack( void ) const;
@@ -196,7 +198,7 @@ public:
 private:
 	unsigned int m_bInfected;
 	unsigned int m_bImmune;
-	bool m_bActiveSGSabotages;
+	int m_iActiveSabotages;
 
 // Called by shared code.
 public:

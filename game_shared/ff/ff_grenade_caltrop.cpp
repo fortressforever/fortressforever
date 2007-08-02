@@ -37,7 +37,7 @@
 	ConVar caltrop_ang_z_min("ffdev_caltrop_ang_z_min","0",0,"Minimum z spawn angle for caltroplets");
 	ConVar caltrop_ang_z_max("ffdev_caltrop_ang_z_max","0",0,"Maximum z spawn angle for caltroplets");
 
-	ConVar caltrop_number("ffdef_caltrop_number", "12");
+	ConVar caltrop_number("ffdef_caltrop_number", "6");
 #endif
 
 class CFFGrenadeCaltrop : public CFFGrenadeBase

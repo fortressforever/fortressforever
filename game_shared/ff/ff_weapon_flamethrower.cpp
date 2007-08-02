@@ -35,6 +35,7 @@
 ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_REPLICATED, "Flame bbox");
 ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "50.0", FCVAR_REPLICATED, "Force of backwards push when shooting while off ground");
 ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "40.0", FCVAR_REPLICATED, "Force of upwards push when shooting while off ground");
+ConVar ffdev_flame_boostcap("ffdev_flame_boostcap", "550.0", FCVAR_REPLICATED, "Speed at which the flamethrower will stop boosting you");
 
 #ifdef GAME_DLL
 	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_NONE, "Show flame trace");
@@ -157,8 +158,10 @@ void CFFWeaponFlamethrower::Fire()
 	// Normalize, or we get that weird epsilon assert
 	VectorNormalizeFast( vecForward );
 
+	float flCapSqr = ffdev_flame_boostcap.GetFloat() * ffdev_flame_boostcap.GetFloat();
+
 	// Push them backwards if in air
-	if (!pPlayer->GetGroundEntity())
+	if (!pPlayer->GetGroundEntity() && pPlayer->GetAbsVelocity().LengthSqr() < flCapSqr)
 	{
 		pPlayer->ApplyAbsVelocityImpulse(vecForward * -ffdev_flame_pushforce.GetFloat());
 		pPlayer->ApplyAbsVelocityImpulse(vecForward * Vector(1,1, -ffdev_flame_uppushforce.GetFloat()) );

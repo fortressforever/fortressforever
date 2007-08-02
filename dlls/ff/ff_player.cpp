@@ -355,7 +355,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_flCloakSpeed ) ),	// Hate to do this, but for spy cloak mat proxy we need to know everyone's speed :X
-	SendPropBool( SENDINFO( m_bActiveSGSabotages ) ),
+	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
@@ -458,7 +458,7 @@ CFFPlayer::CFFPlayer()
 	m_iInfectedTeam = TEAM_UNASSIGNED;
 	m_flImmuneTime = 0.0f;
 	m_flLastOverHealthTick = 0.0f;
-	m_bActiveSGSabotages = false;
+	m_iActiveSabotages = 0;
 
 	// Map guide stuff
 	m_hNextMapGuide = NULL;
@@ -1175,7 +1175,7 @@ void CFFPlayer::Spawn( void )
 	m_flSpeedModifierOld		= 1.0f;
 	m_flSpeedModifierChangeTime	= 0;
 
-	m_bActiveSGSabotages = false;
+	m_iActiveSabotages = 0;
 
 	// If we get spawned, kill any primed grenades!
 	m_flServerPrimeTime = 0.0f;
@@ -1757,7 +1757,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Stop infection
 	m_bInfected = 0;
 
-	m_bActiveSGSabotages = false;
+	m_iActiveSabotages = 0;
 
 	//stop gas
 	m_bGassed = false;
@@ -6662,10 +6662,13 @@ void CFFPlayer::SpySabotageThink()
 			if(m_hSabotaging->Classify() == CLASS_SENTRYGUN)
 			{
 				pEvent = gameeventmanager->CreateEvent("sentry_sabotaged");
-				m_bActiveSGSabotages = true;
+				m_iActiveSabotages |= 2;	// Magic numbers, I know!
 			}
 			else if(m_hSabotaging->Classify() == CLASS_DISPENSER)
+			{
 				pEvent = gameeventmanager->CreateEvent("dispenser_sabotaged");
+				m_iActiveSabotages |= 1;
+			}
 			if(pEvent)
 			{
 				CFFPlayer *pOwner = NULL;
@@ -6760,12 +6763,12 @@ void CFFPlayer::Command_SabotageSentry()
 
 	ClientPrint(this, HUD_PRINTCONSOLE, "> Send spike... ... ... ... ... ...Spike sent.\n");
 
-	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
+	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassT(pSentry, CLASS_SENTRYGUN)) != NULL) //FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
 	{
 		if (pSentry->IsSabotaged() && pSentry->m_hSaboteur == this) 
 			pSentry->MaliciousSabotage(this);
 	}
-	m_bActiveSGSabotages = false;
+	m_iActiveSabotages &= ~2;
 }
 
 //-----------------------------------------------------------------------------
@@ -6776,11 +6779,12 @@ void CFFPlayer::Command_SabotageDispenser()
 {
 	CFFDispenser *pDispenser = NULL; 
 
-	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
+	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassT(pDispenser, CLASS_DISPENSER)) != NULL) //FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
 	{
 		if (pDispenser->IsSabotaged() && pDispenser->m_hSaboteur == this) 
 			pDispenser->MaliciousSabotage(this);
 	}
+	m_iActiveSabotages &= ~1;
 }
 
 //-----------------------------------------------------------------------------

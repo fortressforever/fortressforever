@@ -551,17 +551,23 @@ void IN_ChangeClass( void )
 }
 // END: Added by Mulchman for team change & class change
 
+extern void HudContextShowCalls(bool visible);
+
 // BEG: Mulch: For medic & engy hud radial style menu
 void IN_MedEngyMenuDown( void )
 {
-	if( g_pMedEngyHudMenu )
-		g_pMedEngyHudMenu->KeyDown();
+	//if( g_pMedEngyHudMenu )
+	//	g_pMedEngyHudMenu->KeyDown();
+
+	HudContextShowCalls(true);
 }
 
 void IN_MedEngyMenuUp( void )
 {
-	if( g_pMedEngyHudMenu )
-		g_pMedEngyHudMenu->KeyUp();
+	//if( g_pMedEngyHudMenu )
+	//	g_pMedEngyHudMenu->KeyUp();
+
+	HudContextShowCalls(false);
 }
 // END: Mulch: For medic & engy hud radial style menu
 
@@ -579,6 +585,8 @@ void IN_HintCenterUp( void )
 		g_pHintCenter->KeyUp();
 }
 // END: Jiggles: For displaying the Hint Center
+
+extern int HudContextMenuInput(int down, int keynum, const char *pszCurrentBinding);
 
 /*
 ============
