@@ -111,9 +111,8 @@ inline int CheckDisguiseClass( int iClass )
 		return MENU_DIM;
 
 	// Check the class limit for the disguise team
-	// Mirv: Hide rather than dim
 	if( pGr->GetTeamClassLimits( iDisguiseTeam, iClass ) == -1 )
-		return MENU_HIDE;
+		return MENU_DIM;
 
 	return MENU_SHOW;
 }
@@ -492,9 +491,9 @@ ADD_MENU_OPTION( sentrysabotage, L"Sabotage Sentry", 'G', "sentrysabotage" )
 /************************************************************************/
 /* And these are the actual menus themselves                            */
 /************************************************************************/
-menuoption_t BuildMenu[]		= { detdispenser, dismantledispenser, detsentry, dismantlesentry, aimsentry };
-menuoption_t SpyTeamDisguise2[] = { disguiseenemy, disguiseteam, scloak, cloak, sentrysabotage };
-menuoption_t SpyTeamDisguise4[] = { disguiseblue, disguisered, disguiseyellow, disguisegreen, scloak, cloak, sentrysabotage };
+menuoption_t BuildMenu[]		= { aimsentry, detdispenser, dismantledispenser, dismantlesentry, detsentry };
+menuoption_t SpyTeamDisguise2[] = { sentrysabotage, cloak, disguiseteam, disguiseenemy, scloak };
+menuoption_t SpyTeamDisguise4[] = { sentrysabotage, cloak, disguisegreen, disguiseyellow, disguisered, disguiseblue, scloak };
 menuoption_t SpyClassDisguise[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
 menuoption_t DemoDetpackMenu[]	= { det5, det10, det20, det50 };
 
