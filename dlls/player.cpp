@@ -2241,7 +2241,7 @@ bool CBasePlayer::StartObserverMode(int mode)
 	return true;
 }
 
-bool CBasePlayer::SetObserverMode(int mode )
+bool CBasePlayer::SetObserverMode(int mode)
 {
 	if ( mode < OBS_MODE_NONE || mode > OBS_MODE_ROAMING )
 		return false;
@@ -2289,7 +2289,14 @@ bool CBasePlayer::SetObserverMode(int mode )
 			SetViewOffset( vec3_origin );
 			SetMoveType( MOVETYPE_OBSERVER );
 			break;
+	}
 
+	// Recenter the eye angles.
+	if(mode != OBS_MODE_DEATHCAM)
+	{
+		QAngle eyeAngles = EyeAngles();
+		eyeAngles.z = 0.f;
+		SnapEyeAngles(eyeAngles);
 	}
 
 	CheckObserverSettings();

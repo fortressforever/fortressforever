@@ -723,6 +723,12 @@ namespace FFLib
 		return GetPlayer( pEntity );
 	}
 
+	CFFPlayer *GetPlayerByName( const char *_name )
+	{
+		CBaseEntity *pEntity = UTIL_PlayerByName( _name );
+		return GetPlayer( pEntity );
+	}
+
 	void SetPlayerLimits(CPlayerLimits& limits)
 	{
 		CFFTeam* pTeam = GetTeam(TEAM_BLUE);
@@ -1267,6 +1273,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("GetPing",					&FFLib::GetPing),
 		def("GetPlayer",				&FFLib::GetPlayer),
 		def("GetPlayerByID",			&FFLib::GetPlayerByID),	// TEMPORARY
+		def("GetPlayerByName",			&FFLib::GetPlayerByName),		
 		def("GetServerTime",			&FFLib::GetServerTime),
 		def("GetSteamID",				&FFLib::GetSteamID),
 		def("GetTeam",					&FFLib::GetTeam),
