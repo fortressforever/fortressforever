@@ -28,6 +28,13 @@ extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index f
 extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
 extern ConVar    sk_plr_dmg_grenade;
 
+// --> Mirv: Gren optimisation
+class CRecvProxyData;
+extern void RecvProxy_LocalVelocityX(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern void RecvProxy_LocalVelocityY(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern void RecvProxy_LocalVelocityZ(const CRecvProxyData *pData, void *pStruct, void *pOut);
+// <--
+
 // Forward declare
 class CFFGrenadeBase;
 
@@ -73,7 +80,20 @@ BEGIN_NETWORK_TABLE( CBaseGrenade, DT_BaseGrenade )
 //	SendPropTime( SENDINFO( m_flDetonateTime ) ),
 	SendPropEHandle( SENDINFO( m_hThrower ) ),
 
-	SendPropVector( SENDINFO( m_vecVelocity ), 0, SPROP_NOSCALE ), 
+	// --> Mirv: Gren optimisation
+	//SendPropVector( SENDINFO( m_vecVelocity ), 0, SPROP_NOSCALE ), 
+
+	SendPropExclude("DT_BaseEntity", "m_angRotation"),
+
+	SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 0), 13, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -1024.0f, 1024.0f ),
+	SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 1), 13, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -1024.0f, 1024.0f ),
+	SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 2), 14, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -3072.0f, 1024.0f ),
+
+	SendPropFloat		( SENDINFO_VECTORELEM(m_angRotation, 0), 9, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, 0.0f, 360.0f, SendProxy_AngleToFloat ),
+	SendPropFloat		( SENDINFO_VECTORELEM(m_angRotation, 1), 9, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, 0.0f, 360.0f, SendProxy_AngleToFloat ),
+	SendPropFloat		( SENDINFO_VECTORELEM(m_angRotation, 2), 9, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, 0.0f, 360.0f, SendProxy_AngleToFloat ),
+	// <-- Mirv
+
 	// HACK: Use same flag bits as player for now
 	SendPropInt			( SENDINFO(m_fFlags), PLAYER_FLAG_BITS, SPROP_UNSIGNED, SendProxy_CropFlagsToPlayerFlagBitsLength ),
 #else
@@ -84,8 +104,17 @@ BEGIN_NETWORK_TABLE( CBaseGrenade, DT_BaseGrenade )
 	RecvPropEHandle( RECVINFO( m_hThrower ) ),
 
 	// Need velocity from grenades to make animation system work correctly when running
-	RecvPropVector( RECVINFO(m_vecVelocity), 0, RecvProxy_LocalVelocity ),
+	// --> Mirv: Gren optimisation
+	//RecvPropVector( RECVINFO(m_vecVelocity), 0, RecvProxy_LocalVelocity ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[0]), 0, RecvProxy_LocalVelocityX ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[1]), 0, RecvProxy_LocalVelocityY ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[2]), 0, RecvProxy_LocalVelocityZ ),
 
+	RecvPropFloat		( RECVINFO_NAME(m_angNetworkAngles[0], m_angRotation[0]), 0 ),
+	RecvPropFloat		( RECVINFO_NAME(m_angNetworkAngles[1], m_angRotation[1]), 0 ),
+	RecvPropFloat		( RECVINFO_NAME(m_angNetworkAngles[2], m_angRotation[2]), 0 ),
+
+	// <-- Mirv
 	RecvPropInt( RECVINFO( m_fFlags ) ),
 #endif
 END_NETWORK_TABLE()

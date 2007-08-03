@@ -45,6 +45,8 @@ public:
 
 	virtual bool CanClipOwnerEntity() const { return m_bNailGrenadeNail; }
 
+	int UpdateTransmitState() { return FL_EDICT_DONTSEND; }
+
 #ifdef CLIENT_DLL
 	CFFProjectileNail() {}
 	CFFProjectileNail(const CFFProjectileNail&) {}
