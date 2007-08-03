@@ -139,7 +139,7 @@ bool CFFScheduleCallback::Update()
 #ifdef FF_BETA_TEST_COMPILE
 	CBaseEntity *p = NULL;
 	p->Activate();
-	return FF_BASTARD_HACKERS;
+	return true;
 #else
 	m_timeLeft -= gpGlobals->frametime;
 
