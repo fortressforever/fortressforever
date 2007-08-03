@@ -18,6 +18,11 @@
 #include "IEffects.h"
 #include "iefx.h"
 
+class CRecvProxyData;
+extern void RecvProxy_LocalVelocityX(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern void RecvProxy_LocalVelocityY(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern void RecvProxy_LocalVelocityZ(const CRecvProxyData *pData, void *pStruct, void *pOut);
+
 #define RAIL_MODEL "models/crossbow_bolt.mdl"
 
 IMPLEMENT_NETWORKCLASS_ALIASED( FFProjectileRail, DT_FFProjectileRail )
@@ -25,7 +30,18 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFProjectileRail, DT_FFProjectileRail )
 BEGIN_NETWORK_TABLE( CFFProjectileRail, DT_FFProjectileRail )
 #ifdef CLIENT_DLL
 	RecvPropInt( RECVINFO(m_iNumBounces) ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[0]), 0, RecvProxy_LocalVelocityX ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[1]), 0, RecvProxy_LocalVelocityY ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[2]), 0, RecvProxy_LocalVelocityZ ),
 #else
+	// Increased range for this because it goes at a mad speed
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[0]"),
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[1]"),
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[2]"),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 0), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 1), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+
 	SendPropInt( SENDINFO(m_iNumBounces), 8, SPROP_UNSIGNED ), // | SPROP_CHANGES_OFTEN ),
 #endif
 END_NETWORK_TABLE()
