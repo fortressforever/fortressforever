@@ -29,7 +29,7 @@
 class CTakeDamageInfo;
 
 #if !defined( CLIENT_DLL )
-class CBaseGrenade : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
+class CBaseGrenade : public CBaseAnimating //, public CDefaultPlayerPickupVPhysics
 #else
 class CBaseGrenade : public CBaseAnimating
 #endif
