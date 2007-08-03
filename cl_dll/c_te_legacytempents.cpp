@@ -3397,6 +3397,7 @@ void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocit
 	{
 	default:
 	case FF_PROJECTILE_NAIL:
+	case FF_PROJECTILE_NAIL_NG:
 		//hitsound = BOUNCE_METAL;
 		pModel = m_pFF_Nail;
 		break;
@@ -3440,6 +3441,10 @@ void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocit
 	pTemp->clientIndex = entIndex;
 
 	if (!AllowEffects(entIndex, 0.3f))
+		pTemp->flags |= FTENT_FFOPTEFFECT;
+
+	// Really reduce the number of effects for nailgren spam
+	if (projectileType == FF_PROJECTILE_NAIL_NG && random->RandomInt(0, 30))
 		pTemp->flags |= FTENT_FFOPTEFFECT;
 }
 // <-- Mirv
