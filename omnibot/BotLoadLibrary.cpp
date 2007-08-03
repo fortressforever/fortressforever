@@ -312,7 +312,7 @@ eomnibot_error Omnibot_LoadLibrary(int version, const char *lib, const char *pat
 			if(r == BOT_ERROR_NONE)
 			{
 				Omnibot_Load_PrintMsg("Omni-bot Loaded Successfully");
-				r = g_BotFunctions.pfnBotInitialise(&g_InterfaceFunctions, version);
+				r = g_BotFunctions.pfnBotInitialise(g_InterfaceFunctions, version);
 				g_IsOmnibotLoaded = (r == BOT_ERROR_NONE);
 			}
 		}
