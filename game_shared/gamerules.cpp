@@ -115,7 +115,9 @@ ConVar	old_radius_damage( "old_radiusdamage", "0.0", FCVAR_REPLICATED );
 CGameRules::CGameRules() : CAutoGameSystemPerFrame( "CGameRules" )
 {
 	Assert( !g_pGameRules );
+#ifndef FF_BETA_TEST_COMPILE
 	g_pGameRules = this;
+#endif
 }	
 
 #else //}{
