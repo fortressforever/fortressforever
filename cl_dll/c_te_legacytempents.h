@@ -32,7 +32,8 @@ enum
 
 	// --> Mirv: FF Projectiles
 	FF_PROJECTILE_NAIL,
-	FF_PROJECTILE_DART
+	FF_PROJECTILE_DART,
+	FF_PROJECTILE_NAIL_NG
 	// <-- Mirv
 };
 #endif

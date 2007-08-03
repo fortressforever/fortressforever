@@ -56,11 +56,11 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_nail);
 	void CFFProjectileNail::Spawn() 
 	{
 		// Setup
-		SetModel(NAIL_MODEL);
-		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
+		//SetModel(NAIL_MODEL);
+		SetMoveType(/*MOVETYPE_FLYGRAVITY*/ MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 		SetSize(-Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat(), Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat());
 		SetSolid(SOLID_BBOX);
-		SetGravity(0.01f);
+		//SetGravity(0.01f);
 		SetEffects(EF_NODRAW);
 		
 		// Set the correct think & touch for the nail
@@ -102,6 +102,10 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 	// The projectile has not hit anything valid so far
 	if (!pOther->IsSolid() || pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS) || !g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup())) 
 		return;
+
+//#ifdef GAME_DLL
+//	NDebugOverlay::EntityBounds(this, 0, 0, 255, 100, 5.0f);
+//#endif
 
 	trace_t	tr;
 	tr = BaseClass::GetTouchTrace();
@@ -151,15 +155,15 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 //----------------------------------------------------------------------------
 void CFFProjectileNail::BubbleThink() 
 {
+	if (GetWaterLevel() == 0) 
+		return;
+
 	QAngle angNewAngles;
 
 	VectorAngles(GetAbsVelocity(), angNewAngles);
 	SetAbsAngles(angNewAngles);
 
 	SetNextThink(gpGlobals->curtime + 5.0f);
-
-	if (GetWaterLevel() == 0) 
-		return;
 
 #ifdef GAME_DLL
 	
@@ -174,7 +178,7 @@ void CFFProjectileNail::BubbleThink()
 //----------------------------------------------------------------------------
 // Purpose: Create a new nail
 //----------------------------------------------------------------------------
-CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed, bool bNotClientSide) 
 {
 	CFFProjectileNail *pNail = (CFFProjectileNail *) CreateEntityByName("ff_projectile_nail");
 
@@ -192,17 +196,20 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, con
 	// Set the speed and the initial transmitted velocity
 	pNail->SetAbsVelocity(vecForward);
 
-	CEffectData data;
-	data.m_vOrigin = vecOrigin;
-	data.m_vAngles = angAngles;
+	if (!bNotClientSide)
+	{
+		CEffectData data;
+		data.m_vOrigin = vecOrigin;
+		data.m_vAngles = angAngles;
 
-#ifdef GAME_DLL
-	data.m_nEntIndex = pentOwner->entindex();
-#else
-	data.m_hEntity = pentOwner;
-#endif
+	#ifdef GAME_DLL
+		data.m_nEntIndex = pentOwner->entindex();
+	#else
+		data.m_hEntity = pentOwner;
+	#endif
 
-	DispatchEffect("Projectile_Nail", data);
+		DispatchEffect("Projectile_Nail", data);
+	}
 
 #ifdef GAME_DLL
 	pNail->SetupInitialTransmittedVelocity(vecForward);

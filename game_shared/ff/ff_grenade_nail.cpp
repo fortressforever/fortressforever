@@ -18,9 +18,14 @@
 #include "ff_grenade_base.h"
 #include "ff_utils.h"
 #include "ff_projectile_nail.h"
+#include "effect_dispatch_data.h"
+#include "IEffects.h"
 
 #ifdef GAME_DLL
 	#include "ff_entity_system.h"
+	#include "te_effect_dispatch.h"
+#else
+	#include "c_te_effect_dispatch.h"
 #endif
 
 #define NAILGRENADE_MODEL "models/grenades/nailgren/nailgren.mdl"
@@ -49,7 +54,7 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 
 private:
-	void ShootNail( const Vector& vecOrigin, const QAngle& vecAngles, bool bPlaySound );
+	void ShootNail( const Vector& vecOrigin, const QAngle& vecAngles );
 
 protected:
 	float	m_flNailSpit;
@@ -69,12 +74,14 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 #ifndef CLIENT_DLL
 	ConVar nailspeed("ffdev_nailspeed", "800");
 	ConVar naildamage("ffdev_naildamage", "8");
-	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.1" );
+	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.3" );
 	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0" );
 	//ConVar nailspread( "ffdev_nailgren_spread", "5.0" );
-	ConVar nailstreams( "ffdev_nailgren_streams", "8" );
+	ConVar nailstreams( "ffdev_nailgren_streams", "4" );
+	ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100");
 #endif
 
+	extern ConVar ffdev_nail_bbox;
 
 //-----------------------------------------------------------------------------
 // Purpose: Various precache things
@@ -105,15 +112,20 @@ void CFFGrenadeNail::Precache()
 	//-----------------------------------------------------------------------------
 	// Purpose: Shoot a nail out
 	//-----------------------------------------------------------------------------
-	void CFFGrenadeNail::ShootNail( const Vector& vecOrigin, const QAngle& vecAngles, bool bPlaySound )
+	void CFFGrenadeNail::ShootNail( const Vector& vecOrigin, const QAngle& vecAngles )
 	{
 		// Create the nail and tell it it's a nail grenade nail
-		CFFProjectileNail *pNail = CFFProjectileNail::CreateNail( this, vecOrigin, vecAngles, GetOwnerEntity(), naildamage.GetInt(), nailspeed.GetInt() );
-		if( pNail )
-			pNail->m_bNailGrenadeNail = true;
+		// We don't do a clientside nail with this because that is being done itself
+		CFFProjectileNail *pNail = CFFProjectileNail::CreateNail( this, vecOrigin, vecAngles, GetOwnerEntity(), naildamage.GetInt(), nailspeed.GetInt(), true );
 
-		if( bPlaySound )
-			EmitSound( "NailGrenade.shoot" );
+		if (!pNail)
+			return;
+
+		pNail->m_bNailGrenadeNail = true;
+
+		float flFlatten = ffdev_nailgren_flatten.GetFloat();
+		Vector vecFlattened = Vector(flFlatten, flFlatten, 1.0f);
+		pNail->SetSize(-vecFlattened, vecFlattened);
 	}
 
 	//-----------------------------------------------------------------------------
@@ -159,13 +171,44 @@ void CFFGrenadeNail::Precache()
 		SetAbsVelocity(Vector(0, 0, flRisingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, 15, 0));
 
+		Vector vecOrigin = GetAbsOrigin();
+
 		// Time to spit out nails again?
 		if( m_flNailSpit < gpGlobals->curtime )
 		{
 			int iStreams = nailstreams.GetInt();
+			float flSize = ffdev_nailgren_flatten.GetFloat();
+
+			float flDeltaAngle = 360.0f / iStreams;
+			QAngle angRadial = QAngle(0.0f, random->RandomFloat(0.0f, flDeltaAngle), 0.0f);
+			
+			Vector vecDirection;
+
+			while (iStreams-- > 0)
+			{
+				AngleVectors(angRadial, &vecDirection);
+				VectorNormalizeFast(vecDirection);
+
+				ShootNail(vecOrigin + vecDirection * flSize, angRadial);
+				angRadial.y += flDeltaAngle;
+			}
+
+			EmitSound("NailGrenade.shoot");
+			
+			CEffectData data;
+			data.m_vOrigin = vecOrigin;
+			data.m_vAngles = QAngle(0, 0, 0);
+
+#ifdef GAME_DLL
+			data.m_nEntIndex = entindex();
+#else
+			data.m_hEntity = this;
+#endif
+
+			DispatchEffect("Projectile_Nail_Radial", data);
 
 			// Default to 45 degrees
-			int iNailSpreadInterval = 360 / ((iStreams == 0) ? 45 : iStreams);
+/*			int iNailSpreadInterval = 360 / ((iStreams == 0) ? 45 : iStreams);
 
 			// Start position (0 to (360 - iNailSpreadInterval))
 			int iNailStartPos = (rand() % iStreams) * iNailSpreadInterval;
@@ -184,7 +227,7 @@ void CFFGrenadeNail::Precache()
 
 				// Update next position
 				vecAngles.y += (iNailSpreadInterval + iNailOffset);
-			}
+			}*/
 
 			// Set up next nail spit time
 			m_flNailSpit = gpGlobals->curtime + nailgren_spittime.GetFloat();

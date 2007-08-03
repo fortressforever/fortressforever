@@ -52,8 +52,32 @@ void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
 		);
 }
 
+static ConVar ffdev_nailradial_number("ffdev_nailradial_number", "8");
+
+void FF_FX_Projectile_Nail_Radial_Callback(const CEffectData &data)
+{
+	int nNails = ffdev_nailradial_number.GetInt();
+
+	float flDeltaAngle = 360.0f / nNails;
+	QAngle angRadial = QAngle(0.0f, random->RandomFloat(0.0f, flDeltaAngle), 0.0f);
+	
+	while (nNails-- > 0)
+	{
+		tempents->FFProjectile(data.m_vOrigin, angRadial, ffdev_nail_speed.GetFloat(), FF_PROJECTILE_NAIL_NG, 
+#ifdef GAME_DLL
+			data.m_nEntIndex
+#else
+			data.m_hEntity.GetEntryIndex()
+#endif
+			);
+		angRadial.y += flDeltaAngle;
+	}
+
+}
+
 DECLARE_CLIENT_EFFECT( "EjectBrass_9mm", FF_FX_EjectBrass_9mm_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_12Gauge",FF_FX_EjectBrass_12Gauge_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_40mm",FF_FX_EjectBrass_40mm_Callback );
 
 DECLARE_CLIENT_EFFECT("Projectile_Nail", FF_FX_Projectile_Nail_Callback);
+DECLARE_CLIENT_EFFECT("Projectile_Nail_Radial", FF_FX_Projectile_Nail_Radial_Callback);
