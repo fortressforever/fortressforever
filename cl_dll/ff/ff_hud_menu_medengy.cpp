@@ -31,7 +31,7 @@ using namespace vgui;
 
 extern ConVar sensitivity;
 extern ConVar cm_capturemouse;
-extern ConVar cm_showmouse;
+extern ConVar cm_hidecursor;
 
 #define MENU_PROGRESS_TIME	0.3f
 
@@ -214,7 +214,7 @@ void CHudContextMenu_MedEngy::Paint( void )
 	m_iSelected = newSelection;
 
 	// Show actual mouse location for debugging
-	if( cm_showmouse.GetBool() )
+	if( !cm_hidecursor.GetBool() )
 	{
 		surface()->DrawSetTexture( m_pHudElementTexture->textureId );
 		surface()->DrawSetColor( 255, 255, 255, 255 );

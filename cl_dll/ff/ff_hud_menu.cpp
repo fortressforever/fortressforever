@@ -45,8 +45,9 @@ CHudContextMenu *g_pHudContextMenu = NULL;
 extern ConVar sensitivity;
 extern ConVar ffdev_spy_scloak_minstartvelocity;
 
+ConVar cm_usemouse("cl_cmusemouse", "1", FCVAR_ARCHIVE, "Use the mouse for the context menu");
 ConVar cm_capturemouse("cl_cmcapture", "1", FCVAR_ARCHIVE, "Context menu captures mouse");
-ConVar cm_showmouse("cl_cmshowmouse", "1", FCVAR_ARCHIVE, "Show mouse position");
+ConVar cm_hidecursor("cl_cmhidecursor", "0", FCVAR_ARCHIVE, "Show mouse cursor");
 ConVar cm_size("cl_cmsize", "120", FCVAR_ARCHIVE, "Size of context radial menu");
 ConVar cm_bounds("cl_cmbounds", "120", FCVAR_ARCHIVE, "Bounds of the context radial menu");
 ConVar cm_progresstime("cl_cmprogresstime", "0.7", FCVAR_ARCHIVE, "Time to wait for menu progress");
@@ -83,7 +84,7 @@ int CheckDisguiseClass( int iClass )
 	if( !g_pHudContextMenu || !pGr )
 		return MENU_DIM;
 
-	assert(g_pHudContextMenu->GetLayerNumber() == 2);
+	Assert(g_pHudContextMenu->GetLayerNumber() == 2);
 
 	// This is like "disguise friendly", or "disguise red" so
 	// grab the part after "disguise"
@@ -708,7 +709,7 @@ void CHudContextMenu::Paint()
 	}
 
 	// Show actual mouse location, just manually drawing a crosshair for now
-	if (cm_showmouse.GetBool())
+	if (cm_usemouse.GetBool() && !cm_hidecursor.GetBool())
 	{
 		float ch_short = scheme()->GetProportionalScaledValue(1.0f);
 		float ch_long = ch_short * 6.0f;
@@ -736,7 +737,7 @@ void CHudContextMenu::ProgressToNextMenu(int iOption)
 
 void CHudContextMenu::MouseMove(float *x, float *y) 
 {
-	if (!m_fVisible)
+	if (!m_fVisible || !cm_usemouse.GetBool())
 		return;
 
 	float sensitivity_factor = 1.0f / (sensitivity.GetFloat() == 0 ? 0.001f : sensitivity.GetFloat());
