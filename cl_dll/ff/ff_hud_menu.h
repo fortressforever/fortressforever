@@ -20,40 +20,50 @@
 #define MENU_HIDE	2
 
 // Menu option with pointer
-typedef struct menuoption_s
+class MenuOption
 {
-	const wchar_t	*szName;
+public:
+	const char		*szName;
+	wchar_t			*wszText;
 	const char		*szCommand;
 	void			*pNextMenu;
 	char			chIcon;
 
 	int (*conditionfunc)();
 
-	menuoption_s(const wchar_t *name, char icon, const char *command, int (*cfnc)(), void *nextmenu)
+public:
+	MenuOption(const char *name, char icon, const char *command, int (*cfnc)(), void *nextmenu)
 	{
 		szName			= name;
 		szCommand		= command;
 		conditionfunc	= cfnc;
 		pNextMenu		= nextmenu;
 		chIcon			= icon;
+		wszText			= NULL;
 	}
-} menuoption_t;
+
+	~MenuOption()
+	{
+		if (wszText)
+			delete wszText;
+	}
+};
 
 // Information about a menu
 typedef struct menu_s {
 	int size;
-	menuoption_t *options;
+	MenuOption *options;
 	const char *default_cmd;
 } menu_t;
 
 #define ADD_MENU_OPTION(id, name, icon, command) \
 	int MenuOption##id##();	\
-	menuoption_t id##(name, icon, command, &MenuOption##id##, NULL);	\
+	MenuOption id##(name, icon, command, &MenuOption##id##, NULL);	\
 	int MenuOption##id##()
 
 #define ADD_MENU_BRANCH(id, name, icon, command, nextmenu) \
 	int MenuOption##id##();	\
-	menuoption_t id##(name, icon, command, &MenuOption##id##, nextmenu);	\
+	MenuOption id##(name, icon, command, &MenuOption##id##, nextmenu);	\
 	int MenuOption##id##()
 
 class CHudContextMenu : public CHudElement, public vgui::Panel

@@ -142,7 +142,7 @@ int CheckDisguiseClass( int iClass )
 // Engineer menu options
 //-----------------------------------------------------------------------------
 
-ADD_MENU_OPTION(builddispenser, L"Build Dispenser", 'G', "builddispensers")
+ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDSENTRY", 'G', "builddispensers")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -160,7 +160,7 @@ ADD_MENU_OPTION(builddispenser, L"Build Dispenser", 'G', "builddispensers")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", 'G', "detdispenser")
+ADD_MENU_OPTION(detdispenser, "#FF_CM_DETDISPENSER", 'G', "detdispenser")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -178,7 +178,7 @@ ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", 'G', "detdispenser")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", 'G', "dismantledispenser")
+ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'G', "dismantledispenser")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -196,7 +196,7 @@ ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", 'G', "dismantledispe
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(buildsentry, L"Build Sentry", 'G', "buildsentry")
+ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'G', "buildsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -214,7 +214,7 @@ ADD_MENU_OPTION(buildsentry, L"Build Sentry", 'G', "buildsentry")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(detsentry, L"Detonate Sentry", 'G', "detsentry")
+ADD_MENU_OPTION(detsentry, "#FF_CM_DETSENTRY", 'G', "detsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -232,7 +232,7 @@ ADD_MENU_OPTION(detsentry, L"Detonate Sentry", 'G', "detsentry")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", 'G', "dismantlesentry")
+ADD_MENU_OPTION(dismantlesentry, "#FF_CM_DISMANTLESENTRY", 'G', "dismantlesentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -250,7 +250,7 @@ ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", 'G', "dismantlesentry")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(aimsentry, L"Aim Sentry", 'G', "aimsentry")
+ADD_MENU_OPTION(aimsentry, "#FF_CM_AIMSENTRY", 'G', "aimsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -272,7 +272,7 @@ ADD_MENU_OPTION(aimsentry, L"Aim Sentry", 'G', "aimsentry")
 // Disguise menu options
 //-----------------------------------------------------------------------------
 
-ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", 'G', "", &FriendlyDMenu)
+ADD_MENU_BRANCH(disguiseteam, "#FF_CM_DISGUISEFRIENDLY", 'G', "", &FriendlyDMenu)
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -284,7 +284,7 @@ ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", 'G', "", &FriendlyDMenu)
 	return MENU_SHOW;
 }
 
-ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", 'G', "", &EnemyDMenu)
+ADD_MENU_BRANCH(disguiseenemy, "#FF_CM_DISGUISEENEMY", 'G', "", &EnemyDMenu)
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -317,36 +317,36 @@ int TeamAvailableForDisguise(int iTeam, AvailableAs_t as)
 	return ((bAllied == (as == FRIENDLY)) ? MENU_SHOW : MENU_DIM);
 }
 
-ADD_MENU_BRANCH(disguise_blue_friendly, L"Disguise as blue", 'G', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, FRIENDLY); }
-ADD_MENU_BRANCH(disguise_red_friendly, L"Disguise as red", 'G', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, FRIENDLY); }
-ADD_MENU_BRANCH(disguise_yellow_friendly, L"Disguise as yellow", 'G', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, FRIENDLY); }
-ADD_MENU_BRANCH(disguise_green_friendly, L"Disguise as green", 'G', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, FRIENDLY); }
-ADD_MENU_BRANCH(disguise_blue_enemy, L"Disguise as blue", 'G', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, ENEMY); }
-ADD_MENU_BRANCH(disguise_red_enemy, L"Disguise as red", 'G', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, ENEMY); }
-ADD_MENU_BRANCH(disguise_yellow_enemy, L"Disguise as yellow", 'G', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, ENEMY); }
-ADD_MENU_BRANCH(disguise_green_enemy, L"Disguise as green", 'G', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, ENEMY); }
+ADD_MENU_BRANCH(disguise_blue_friendly, "#FF_CM_DISGUISEBLUE", 'G', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_red_friendly, "#FF_CM_DISGUISERED", 'G', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_yellow_friendly, "#FF_CM_DISGUISEYELLOW", 'G', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_green_friendly, "#FF_CM_DISGUISEGREEN", 'G', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_blue_enemy, "#FF_CM_DISGUISEBLUE", 'G', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, ENEMY); }
+ADD_MENU_BRANCH(disguise_red_enemy, "#FF_CM_DISGUISERED", 'G', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, ENEMY); }
+ADD_MENU_BRANCH(disguise_yellow_enemy, "#FF_CM_DISGUISEYELLOW", 'G', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, ENEMY); }
+ADD_MENU_BRANCH(disguise_green_enemy, "#FF_CM_DISGUISEGREEN", 'G', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, ENEMY); }
 
-ADD_MENU_OPTION(disguisescout, L"Disguise as scout", '!', "scout") { return CheckDisguiseClass( CLASS_SCOUT ); }
-ADD_MENU_OPTION(disguisesniper, L"Disguise as sniper", '@', "sniper") {	return CheckDisguiseClass( CLASS_SNIPER ); }
-ADD_MENU_OPTION(disguisesoldier, L"Disguise as soldier", '#', "soldier") { return CheckDisguiseClass( CLASS_SOLDIER ); }
-ADD_MENU_OPTION(disguisedemoman, L"Disguise as demoman", '$', "demoman") { return CheckDisguiseClass( CLASS_DEMOMAN ); }
-ADD_MENU_OPTION(disguisemedic, L"Disguise as medic", '%', "medic") { return CheckDisguiseClass( CLASS_MEDIC ); }
-ADD_MENU_OPTION(disguisehwguy, L"Disguise as hwguy", '^', "hwguy") { return CheckDisguiseClass( CLASS_HWGUY ); }
-ADD_MENU_OPTION(disguisespy, L"Disguise as spy", '*', "spy") { return CheckDisguiseClass( CLASS_SPY ); }
-ADD_MENU_OPTION(disguisepyro, L"Disguise as pyro", '?', "pyro") { return CheckDisguiseClass( CLASS_PYRO ); }
-ADD_MENU_OPTION(disguiseengineer, L"Disguise as engineer", '(', "engineer") { return CheckDisguiseClass( CLASS_ENGINEER ); }
-ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", ')', "civilian") { return CheckDisguiseClass( CLASS_CIVILIAN ); }
+ADD_MENU_OPTION(disguisescout, "#FF_CM_DISGUISESCOUT", '!', "scout") { return CheckDisguiseClass( CLASS_SCOUT ); }
+ADD_MENU_OPTION(disguisesniper, "#FF_CM_DISGUISESNIPER", '@', "sniper") {	return CheckDisguiseClass( CLASS_SNIPER ); }
+ADD_MENU_OPTION(disguisesoldier, "#FF_CM_DISGUISESOLDIER", '#', "soldier") { return CheckDisguiseClass( CLASS_SOLDIER ); }
+ADD_MENU_OPTION(disguisedemoman, "#FF_CM_DISGUISEDEMOMAN", '$', "demoman") { return CheckDisguiseClass( CLASS_DEMOMAN ); }
+ADD_MENU_OPTION(disguisemedic, "#FF_CM_DISGUISEMEDIC", '%', "medic") { return CheckDisguiseClass( CLASS_MEDIC ); }
+ADD_MENU_OPTION(disguisehwguy, "#FF_CM_DISGUISEHWGUY", '^', "hwguy") { return CheckDisguiseClass( CLASS_HWGUY ); }
+ADD_MENU_OPTION(disguisespy, "#FF_CM_DISGUISESPY", '*', "spy") { return CheckDisguiseClass( CLASS_SPY ); }
+ADD_MENU_OPTION(disguisepyro, "#FF_CM_DISGUISEPYRO", '?', "pyro") { return CheckDisguiseClass( CLASS_PYRO ); }
+ADD_MENU_OPTION(disguiseengineer, "#FF_CM_DISGUISEENGINEER", '(', "engineer") { return CheckDisguiseClass( CLASS_ENGINEER ); }
+ADD_MENU_OPTION(disguisecivilian, "#FF_CM_DISGUISECIVILIAN", ')', "civilian") { return CheckDisguiseClass( CLASS_CIVILIAN ); }
 
-ADD_MENU_OPTION(lastdisguise, L"Last disguise", 'G', "disguise last") { return MENU_DIM; }
+ADD_MENU_OPTION(lastdisguise, "#FF_CM_DISGUISELAST", 'G', "disguise last") { return MENU_DIM; }
 
 
 //-----------------------------------------------------------------------------
 // Detpack menu options
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( det5, L"5", 'G', "detpack 5" ) { return MENU_SHOW; }
-ADD_MENU_OPTION( det10, L"10", 'G', "detpack 10" ) { return MENU_SHOW; }
-ADD_MENU_OPTION( det20, L"20", 'G', "detpack 20" ) { return MENU_SHOW; }
-ADD_MENU_OPTION( det50, L"50", 'G', "detpack 50" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det5, "5", 'G', "detpack 5" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det10, "10", 'G', "detpack 10" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det20, "20", 'G', "detpack 20" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det50, "50", 'G', "detpack 50" ) { return MENU_SHOW; }
 
 //-----------------------------------------------------------------------------
 // Cloak options
@@ -372,15 +372,15 @@ int CanCloak()
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( cloak, L"Cloak", 'G', "cloak" ) { return CanCloak(); }
-ADD_MENU_OPTION( scloak, L"Silent Cloak", 'G', "scloak" ) { return CanCloak(); }
+ADD_MENU_OPTION( cloak, "#FF_CM_CLOAK", 'G', "cloak" ) { return CanCloak(); }
+ADD_MENU_OPTION( scloak, "#FF_CM_SCLOAK", 'G', "scloak" ) { return CanCloak(); }
 
 
 //-----------------------------------------------------------------------------
 // Sentry Sabotage
 //-----------------------------------------------------------------------------
 
-ADD_MENU_OPTION( sentrysabotage, L"Sabotage Sentry", 'G', "sentrysabotage" )
+ADD_MENU_OPTION( sentrysabotage, "#FF_CM_SABOTAGESENTRY", 'G', "sentrysabotage" )
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -391,7 +391,7 @@ ADD_MENU_OPTION( sentrysabotage, L"Sabotage Sentry", 'G', "sentrysabotage" )
 	else return MENU_DIM;
 }
 
-ADD_MENU_OPTION(dispensersabotage, L"Sabotage Dispenser", 'G', "dispensersabotage")
+ADD_MENU_OPTION(dispensersabotage, "#FF_CM_SABOTAGEDISPENSER", 'G', "dispensersabotage")
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
@@ -405,21 +405,21 @@ ADD_MENU_OPTION(dispensersabotage, L"Sabotage Dispenser", 'G', "dispensersabotag
 //-----------------------------------------------------------------------------
 // Medic/Engineer stuff
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( need_armor, L"Armor!", '(', "engyme" ) { return MENU_SHOW; }
-ADD_MENU_OPTION( need_medic, L"Medic!", '%', "saveme" ) { return MENU_SHOW; }
-ADD_MENU_OPTION( need_ammo, L"Ammo!", '^', "ammome" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( need_armor, "#FF_CM_CALLARMOR", '(', "engyme" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( need_medic, "#FF_CM_CALLMEDIC", '%', "saveme" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( need_ammo, "#FF_CM_CALLAMMO", '^', "ammome" ) { return MENU_SHOW; }
 
 
 //-----------------------------------------------------------------------------
 // Menu option lists
 //-----------------------------------------------------------------------------
-menuoption_t EngineerOptionList[] = { aimsentry, detdispenser, dismantledispenser, dismantlesentry, detsentry };
-menuoption_t DemomanOptionList[] = { det5, det10, det20, det50 };
-menuoption_t SpyOptionList[] = { lastdisguise, disguiseenemy, scloak, sentrysabotage, dispensersabotage, cloak, disguiseteam };
-menuoption_t ClassDOptionList[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
-menuoption_t FriendlyDOptionList[] = { disguise_blue_friendly, disguise_red_friendly, disguise_yellow_friendly, disguise_green_friendly };
-menuoption_t EnemyDOptionList[] = { disguise_blue_enemy, disguise_red_enemy, disguise_yellow_enemy, disguise_green_enemy };
-menuoption_t CallOptionList[] = { need_armor, need_medic, need_ammo };
+MenuOption EngineerOptionList[] = { aimsentry, detdispenser, dismantledispenser, dismantlesentry, detsentry };
+MenuOption DemomanOptionList[] = { det5, det10, det20, det50 };
+MenuOption SpyOptionList[] = { lastdisguise, disguiseenemy, scloak, sentrysabotage, dispensersabotage, cloak, disguiseteam };
+MenuOption ClassDOptionList[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
+MenuOption FriendlyDOptionList[] = { disguise_blue_friendly, disguise_red_friendly, disguise_yellow_friendly, disguise_green_friendly };
+MenuOption EnemyDOptionList[] = { disguise_blue_enemy, disguise_red_enemy, disguise_yellow_enemy, disguise_green_enemy };
+MenuOption CallOptionList[] = { need_armor, need_medic, need_ammo };
 
 //-----------------------------------------------------------------------------
 // Menus themselves
@@ -432,6 +432,7 @@ menu_t FriendlyDMenu = { ARRAYSIZE(FriendlyDOptionList), FriendlyDOptionList, NU
 menu_t EnemyDMenu = { ARRAYSIZE(EnemyDOptionList), EnemyDOptionList, NULL };
 menu_t CallMenu = { ARRAYSIZE(CallOptionList), CallOptionList, "saveme" };
 
+menu_t Menus[] = { EngineerMenu, DemomanMenu, SpyMenu, ClassDMenu, FriendlyDMenu, EnemyDMenu, CallMenu };
 
 CHudContextMenu::~CHudContextMenu() 
 {
@@ -442,6 +443,29 @@ void CHudContextMenu::VidInit()
 	m_fVisible = false;
 	g_pHudContextMenu = this;
 	SetPaintBackgroundEnabled(false);
+
+	// Set up localisation
+	for (int iMenu = 0; iMenu < ARRAYSIZE(Menus); iMenu++)
+	{
+		for (int iOption = 0; iOption < Menus[iMenu].size; iOption++)
+		{
+			// It might be safe to just point to the string in the table, but maybe not.
+			MenuOption *pOption = &Menus[iMenu].options[iOption];
+			wchar_t *localised = localize()->Find(pOption->szName);
+			if (localised)
+			{
+				int len = Q_wcslen(localised) + 1;
+				pOption->wszText = new wchar_t [len];
+				Q_wcsncpy(pOption->wszText, localised, len * 2);	// Takes length in bytes
+			}
+			else
+			{
+				int len = strlen(pOption->szName) + 1;
+				pOption->wszText = new wchar_t [len * 2];
+				localize()->ConvertANSIToUnicode(pOption->szName, pOption->wszText, len * 2);	// Takes length in bytes
+			}
+		}
+	}
 }
 
 void CHudContextMenu::Init() 
@@ -658,10 +682,10 @@ void CHudContextMenu::Paint()
 		surface()->DrawSetTextFont(m_hTextFont);
 
 		// Work out centering and position & draw text
-		int textOffsetX = 0.5f * UTIL_ComputeStringWidth(m_hTextFont, m_pMenu->options[i].szName);
+		int textOffsetX = 0.5f * UTIL_ComputeStringWidth(m_hTextFont, m_pMenu->options[i].wszText);
 		surface()->DrawSetTextPos(m_flPositions[i][0] - textOffsetX, m_flPositions[i][1] + iconOffsetY + py);
 		
-		for (const wchar_t *wch = m_pMenu->options[i].szName; *wch != 0; wch++)
+		for (const wchar_t *wch = m_pMenu->options[i].wszText; *wch != 0; wch++)
 			surface()->DrawUnicodeChar(*wch);
 
 		//

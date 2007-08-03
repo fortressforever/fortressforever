@@ -60,7 +60,7 @@ protected:
 	//const char		*m_pszPreviousCmd;
 
 	// Which menu to show
-	menuoption_t *m_pMenu;
+	MenuOption *m_pMenu;
 
 	// Progress
 	float			m_flSelectStart;
