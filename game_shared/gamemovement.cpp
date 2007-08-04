@@ -899,7 +899,10 @@ void CGameMovement::CheckWaterJump( void )
 			VectorCopy( vecEnd, vecStart );
 			vecEnd.z -= 1024.0f;
 			TracePlayerBBox( vecStart, vecEnd, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, tr );
-			if ( ( tr.fraction < 1.0f ) && ( tr.plane.normal.z >= 0.7 ) )
+			if ( ( tr.fraction < 1.0f ) && ( tr.plane.normal.z >= 1.0 ) )  // Jiggles: Was "tr.plain.normal.z >= 0.7"
+																		   //		    I changed it to 1.0 to try and prevent the water jump
+																		   //			from triggering when the player was merely walking out 
+																		   //			of the water on a slope (see Mantis issue 1164)
 			{
 				mv->m_vecVelocity[2] = 256.0f;			// Push up
 				mv->m_nOldButtons |= IN_JUMP;		// Don't jump again until released
