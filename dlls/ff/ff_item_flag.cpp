@@ -623,7 +623,10 @@ void CFFInfoScript::Drop( float delay, Vector pos, Vector velocity )
 	{	
 		// Resize - only do for non physics though!
 		//CollisionProp()->SetCollisionBounds( Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
-		UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 1 ) );
+
+		// #0001026: backpacks & flags can be discarded through doors
+		// When the bounding box was getting reset after coming to a rest, it was getting stuck in various surfaces -> Defrag
+		UTIL_SetSize( this, Vector( m_vecMins.x, m_vecMins.y, 0 ), Vector( m_vecMaxs.x, m_vecMaxs.y, 1 ) );
 
 		SetAbsOrigin( pos ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
 
@@ -1086,6 +1089,13 @@ void CFFInfoScript::ResolveFlyCollisionCustom( trace_t& trace, Vector& vecVeloci
 	if( vecVelocity.IsZero() || GetAbsVelocity().IsZero() )
 	{
 		UTIL_SetSize( this, m_vecMins, m_vecMaxs );
-		SetMoveType( MOVETYPE_NONE );
+		
+		// This causes problems!
+		// #0001624: Flags, when dropped, do not respond to moving entities etc.  Temp solution = remove MOVETYPE_NONE call.
+		// I don't think this will be too performance-heavy as backpacks already respond to these kinds of situation correctly
+		// Note, this causes a "interpenetrating entities" message in the console when the flag is on a lift
+		// but there is no visual discontinuity or performance hit so I think it's OK -> Defrag
+		
+		// SetMoveType( MOVETYPE_NONE );
 	}
 }
