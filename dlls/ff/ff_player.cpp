@@ -39,6 +39,11 @@
 #include "omnibot_interface.h"
 #include "te_effect_dispatch.h"
 
+// added these so I could cast to check for grenades that are not derived from projectile base
+// Could probably do it more cleanly but I just went with what was already in place.  -> Defrag
+#include "ff_grenade_napalmlet.h"
+#include "ff_caltrop.h"
+
 extern int gEvilImpulse101;
 #define FF_PLAYER_MODEL "models/player/demoman/demoman.mdl"
 
@@ -2573,10 +2578,25 @@ void CFFPlayer::RemoveProjectiles( void )
 			UTIL_Remove(pEnt);
 			pEnt = pTemp;
 		}
+		// #0001536: napalm and caltrops become hostile after changeteam
+		// Begin changes by Defrag.  Probably could use some kind of RTTI for this instead of casting (should be cheaper)
+		// but I just went with what was currently used, instead.  This isn't called too often anyway.
+		else if(dynamic_cast<CFFCaltrop *>( pEnt ) != NULL )
+		{
+			pTemp = gEntList.FindEntityByOwner( pEnt, this );
+			UTIL_Remove(pEnt);
+			pEnt = pTemp;			
+		}	
+		else if(dynamic_cast<CFFGrenadeNapalmlet *>( pEnt ) != NULL )
+		{
+			pTemp = gEntList.FindEntityByOwner( pEnt, this );
+			UTIL_Remove(pEnt);
+			pEnt = pTemp;			
+		}	// End changes by Defrag		
 		else
 		{
 			pEnt = gEntList.FindEntityByOwner(pEnt, this);
-		}		
+		}
 	}
 }
 
