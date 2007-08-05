@@ -50,6 +50,9 @@ public:
 #define CHASE_CAM_DISTANCE		96.0f
 #define WALL_OFFSET				6.0f
 
+// Moved here from .cpp -> Defrag
+#define FLASHLIGHT_DISTANCE		1000
+
 //-----------------------------------------------------------------------------
 // Purpose: Base Player class
 //-----------------------------------------------------------------------------
@@ -153,7 +156,7 @@ public:
 
 	// Flashlight
 	void	Flashlight( void );
-	void	UpdateFlashlight( void );
+	virtual void	UpdateFlashlight( void );
 
 	// Weapon selection code
 	virtual bool				IsAllowedToSwitchWeapons( void ) { return !IsObserver(); }
@@ -408,8 +411,10 @@ private:
 	EHANDLE			m_pCurrentVguiScreen;
 
 	// Player flashlight dynamic light pointers
+protected:
 	CFlashlightEffect *m_pFlashlight;
 
+private:
 	typedef CHandle<C_BaseCombatWeapon> CBaseCombatWeaponHandle;
 	CNetworkVar( CBaseCombatWeaponHandle, m_hLastWeapon );
 

@@ -51,7 +51,7 @@ int g_nUsedPrediction = 1;
 
 extern ConVar mp_forcecamera; // in gamevars_shared.h
 
-#define FLASHLIGHT_DISTANCE		1000
+//#define FLASHLIGHT_DISTANCE		1000	// Moved to header file -> Defrag
 #define MAX_VGUI_INPUT_MODE_SPEED 30
 #define MAX_VGUI_INPUT_MODE_SPEED_SQ (MAX_VGUI_INPUT_MODE_SPEED*MAX_VGUI_INPUT_MODE_SPEED)
 
