@@ -38,6 +38,8 @@
 #include "c_fire_smoke.h"
 #include "c_playerresource.h"
 
+#include "flashlighteffect.h"
+
 #include "model_types.h"
 
 #include "ff_hud_chat.h"
@@ -2311,6 +2313,48 @@ void C_FFPlayer::ReleaseFlashlight()
 		m_pFlashlightBeam->die = gpGlobals->curtime - 1;
 
 		m_pFlashlightBeam = NULL;
+	}
+}
+
+// Copied base class method and added code to take into account conc effect.
+// Not ideal, but it's not conducive to calling baseclass method then this one (would be wasteful) |--- Defrag
+
+void C_FFPlayer::UpdateFlashlight()
+{
+	// The dim light is the flashlight.
+	if ( IsEffectActive( EF_DIMLIGHT ) )
+	{
+		if (!m_pFlashlight)
+		{
+			// Turned on the headlight; create it.
+			m_pFlashlight = new CFlashlightEffect(index);
+
+			if (!m_pFlashlight)
+				return;
+
+			m_pFlashlight->TurnOn();
+		}
+
+		// get the unperturbed eye angles, then alter them using the conc effect. 
+		QAngle angUnperturbedEye = EyeAngles();
+		QAngle angFinal = angUnperturbedEye;
+
+		if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() == 0)
+		{
+			angFinal = angUnperturbedEye + m_angConced;
+		}
+
+		Vector vecForward, vecRight, vecUp;
+		AngleVectors( angFinal, &vecForward, &vecRight, &vecUp );		
+
+		// Update the light with the new position and direction that includes conc effect
+		m_pFlashlight->UpdateLight( EyePosition(), vecForward, vecRight, vecUp, FLASHLIGHT_DISTANCE );
+	}
+	else if (m_pFlashlight)
+	{
+		// Turned off the flashlight; delete it.
+		delete m_pFlashlight;
+		m_pFlashlight = NULL;
 	}
 }
 

@@ -407,6 +407,9 @@ public:
 	int			m_iHallucinationIndex;
 	float		m_flHallucinationFinish;
 
+	// Defrag -> Needed to stop flashlight conc-hax!
+	void	UpdateFlashlight( void );
+
 	// ----------------------------------
 public:
 	Color GetTeamColor( void ) const { return m_clrTeamColor; }
