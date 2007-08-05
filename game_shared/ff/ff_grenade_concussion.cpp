@@ -31,6 +31,12 @@
 	ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", 0, "Conc glow size(0.0-10.0");
 #endif
 
+// #0001629: Request: Dev variables for HH conc strength |-- Defrag
+#ifdef GAME_DLL
+	static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", 0, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
+	static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", 0, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
+#endif
+
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
 ConVar conc_ragdoll_push("conc_ragdoll_push","600",0,"How much to push ragdolls");
 
@@ -241,7 +247,12 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
 
 				// These values are close (~within 0.01) of TFC
-				pPlayer->SetAbsVelocity(Vector(vecVelocity.x * 2.74, vecVelocity.y * 2.74, vecVelocity.z * 4.10));
+
+				// #0001629: Request: Dev variables for HH conc strength.  Default = 2.74f and 4.10f respectively ---> Defrag
+				float fLateral = ffdev_conc_lateral_power.GetFloat();
+				float fVertical = ffdev_conc_vertical_power.GetFloat();
+
+				pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
 			}
 			else
 			{
