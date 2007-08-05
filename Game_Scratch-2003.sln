@@ -9,14 +9,21 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server_ff", "dlls\server_sc
 EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
+		Beta FF = Beta FF
 		Debug FF = Debug FF
 		Release FF = Release FF
 	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
+		{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}.Beta FF.ActiveCfg = Beta FF|Win32
+		{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}.Beta FF.Build.0 = Beta FF|Win32
 		{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}.Debug FF.ActiveCfg = Debug FF|Win32
 		{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}.Debug FF.Build.0 = Debug FF|Win32
 		{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}.Release FF.ActiveCfg = Release FF|Win32
 		{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}.Release FF.Build.0 = Release FF|Win32
+		{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}.Beta FF.ActiveCfg = Beta FF|Win32
+		{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}.Beta FF.Build.0 = Beta FF|Win32
 		{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}.Debug FF.ActiveCfg = Debug FF|Win32
 		{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}.Debug FF.Build.0 = Debug FF|Win32
 		{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}.Release FF.ActiveCfg = Release FF|Win32

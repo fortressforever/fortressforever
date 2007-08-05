@@ -209,12 +209,12 @@ void CFFLuaLib::InitConstants(lua_State* L)
 		class_<CFFEntity_SpecMode>("SpecMode")
 			.enum_("SpecMode")
 			[
-				value("kNone",		OBS_MODE_NONE),
-				value("kDeathCam",	OBS_MODE_DEATHCAM),
-				value("kFixed",		OBS_MODE_FIXED),				
-				value("kInEye",		OBS_MODE_IN_EYE),
-				value("kChase",		OBS_MODE_CHASE),
-				value("kRoaming",	OBS_MODE_ROAMING)
+				value("kNone",		(int) OBS_MODE_NONE),
+				value("kDeathCam",	(int) OBS_MODE_DEATHCAM),
+				value("kFixed",		(int) OBS_MODE_FIXED),				
+				value("kInEye",		(int) OBS_MODE_IN_EYE),
+				value("kChase",		(int) OBS_MODE_CHASE),
+				value("kRoaming",	(int) OBS_MODE_ROAMING)
 			]
 	];
 };
