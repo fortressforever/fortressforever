@@ -115,10 +115,7 @@ void CFFWeaponIC::Fire()
 	pRocket;
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_NAPALMCANNON, pRocket);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_NAPALMCANNON, pRocket);
 #endif
 
 	// Push player but don't add to upwards force

@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "ff_lualib.h"
 
+
 // Lua includes
 extern "C"
 {
@@ -17,12 +18,20 @@ extern "C"
 }
 
 #include "luabind/luabind.hpp"
+#include "luabind/operator.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 //---------------------------------------------------------------------------
 using namespace luabind;
+
+// Valve, you fucking suck
+//std::ostream& operator<<(std::ostream&s, const Vector&v)
+//{
+//	s << v.x << " " << v.y << " " << v.z;
+//	return s;
+//}
 
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitMath(lua_State* L)
@@ -32,6 +41,7 @@ void CFFLuaLib::InitMath(lua_State* L)
 	module(L)
 	[
 		class_<Vector>("Vector")
+			//.def(tostring(const_self))
 			.def(constructor<>())
 			.def(constructor<float, float, float>())
 			.def_readwrite("x",			&Vector::x)

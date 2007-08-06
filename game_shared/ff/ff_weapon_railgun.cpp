@@ -287,10 +287,7 @@ void CFFWeaponRailgun::Fire( void )
 	pRail;
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_RAILGUN, pRail);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_RAILGUN, pRail);
 #endif
 
 	// play a different sound for a fully charged shot

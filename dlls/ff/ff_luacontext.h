@@ -52,6 +52,7 @@ public:
 	void Push(float value);
 	void Push(int value);
 	void Push(bool value);
+	void Push(const char *value);
 	void Push(luabind::adl::object& luabindObject);
 	void Push(CBaseEntity* pEntity);
 	void Push(CFFBuildableObject* pEntity);
@@ -67,7 +68,7 @@ public:
 	void Push(CBeam* pEntity);
 	void Push(Vector vector);
 	void Push(QAngle angle);
-	void Push(CTakeDamageInfo* pInfo);
+	void Push(const CTakeDamageInfo* pInfo);
 
 	// pushes a parameter by reference in preparation for a function call
 	void PushRef(CTakeDamageInfo& info);

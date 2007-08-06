@@ -296,7 +296,7 @@ void CFFBuildableInfo::GetBuildError( void )
 #ifdef GAME_DLL
 		ClientPrint( m_pPlayer, HUD_PRINTCENTER, szError );
 
-		if(m_pPlayer && m_pPlayer->IsBot())
+		if(m_pPlayer)
 		{
 			Omnibot::Notify_Build_CantBuild(m_pPlayer, m_pPlayer->GetWantBuild());
 		}

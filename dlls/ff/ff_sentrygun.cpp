@@ -1137,7 +1137,7 @@ void CFFSentryGun::SetFocusPoint( Vector &origin )
 #endif
 
 	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
-	if(pOwner && pOwner->IsBot())
+	if(pOwner)
 	{
 		Omnibot::Notify_SentryAimed(pOwner, this, dir);
 	}

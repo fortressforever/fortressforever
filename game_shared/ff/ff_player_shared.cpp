@@ -1115,10 +1115,7 @@ void CFFPlayer::Command_SpyCloak( void )
 	if( !IsCloakable() )
 	{		
 #ifdef GAME_DLL
-		if(IsBot())
-		{
-			Omnibot::Notify_CantCloak(this);
-		}
+		Omnibot::Notify_CantCloak(this);
 #endif
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
 		return;
@@ -1174,10 +1171,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	if( !IsCloakable() )
 	{
 #ifdef GAME_DLL
-		if(IsBot())
-		{
-			Omnibot::Notify_CantCloak(this);
-		}
+		Omnibot::Notify_CantCloak(this);
 #endif
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
 		return;

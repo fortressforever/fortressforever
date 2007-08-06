@@ -35,6 +35,8 @@
 	#include "ff_buildableobjects_shared.h"
 	// END: Added by Mulchman for Buildable Objects
 	
+	#include "omnibot_interface.h"
+
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -710,6 +712,8 @@ bool CMultiplayRules::IsMultiplayer( void )
 			
 			gameeventmanager->FireEvent( event );
 		}
+
+		Omnibot::Notify_Death(pVictim, pKiller, killer_weapon_name);
 	}
 
 	//=========================================================

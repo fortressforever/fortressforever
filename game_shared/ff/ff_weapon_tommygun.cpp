@@ -105,9 +105,6 @@ void CFFWeaponTommygun::Fire()
 	pPlayer->FireBullets(info);
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_TOMMYGUN, 0);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_TOMMYGUN, 0);
 #endif
 }

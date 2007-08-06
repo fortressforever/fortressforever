@@ -103,6 +103,13 @@ namespace Omnibot
 	void Notify_PlayerShoot(CBasePlayer *_player, int _weapon, CBaseEntity *_projectile);
 	void Notify_PlayerUsed(CBasePlayer *_player, CBaseEntity *_entityUsed);
 
+	void Notify_GotSpannerArmor(CBasePlayer *_target, CBasePlayer *_engy, int _before, int _after);
+	void Notify_GaveSpannerArmor(CBasePlayer *_engy, CBasePlayer *_target, int _before, int _after);
+	void Notify_GotMedicHealth(CBasePlayer *_target, CBasePlayer *_medic, int _before, int _after);
+	void Notify_GaveMedicHealth(CBasePlayer *_medic, CBasePlayer *_target, int _before, int _after);
+
+	void Notify_GotDispenserAmmo(CBasePlayer *_player);
+
 	// Goal Stuff
 	enum BotGoalTypes
 	{

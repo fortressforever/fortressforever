@@ -88,9 +88,6 @@ void CFFWeaponSuperShotgun::Fire()
 	pPlayer->FireBullets(info);
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_SUPERSHOTGUN, 0);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_SUPERSHOTGUN, 0);
 #endif
 }

@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-07-23 20:42:20 -0700 (Mon, 23 Jul 2007) $
-// $LastChangedRevision: 2119 $
+// $LastChangedDate: 2007-07-30 07:26:44 -0700 (Mon, 30 Jul 2007) $
+// $LastChangedRevision: 2122 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -21,8 +21,17 @@ struct Msg_Addbot
 	int			m_Team;
 	int			m_Class;
 	char		m_Name[64];
-	int			m_ModelId;
-	int			m_SkinId;
+	char		m_Model[64];
+	char		m_Skin[64];
+	char		m_SpawnPointName[64];
+	char		m_Profile[64];
+
+	Msg_Addbot()
+		: m_Team(RANDOM_TEAM_IF_NO_TEAM)
+		, m_Class(RANDOM_CLASS_IF_NO_CLASS)
+	{
+		m_Name[0] = m_Model[0] = m_Skin[0] = m_SpawnPointName[0] = m_Profile[0] = 0;
+	}
 };
 
 struct Msg_PlayerChooseEquipment
@@ -89,11 +98,11 @@ struct Msg_FlagState
 	GameEntity	m_Owner;
 };
 
-typedef struct 
+struct Msg_GameState
 {
 	GameState	m_GameState;
 	float		m_TimeLeft;
-} Msg_GameState;
+};
 
 struct Msg_EntityStat
 {
@@ -168,6 +177,25 @@ struct WeaponLimits
 struct Msg_KillEntity
 {
 	GameEntity	m_WhoToKill;
+};
+
+struct Event_PlaySound
+{
+	char		m_SoundName[128];
+};
+
+struct Event_StopSound
+{
+	char		m_SoundName[128];
+};
+
+struct Event_ScriptEvent
+{
+	char		m_FunctionName[64];
+	char		m_EntityName[64];
+	char		m_Param1[64];
+	char		m_Param2[64];
+	char		m_Param3[64];
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -333,6 +361,14 @@ struct Event_EntitySensed
 {
 	int			m_EntityClass;
 	GameEntity	m_Entity;
+};
+
+struct Event_ScriptMessage
+{
+	char		m_MessageName[64];
+	char		m_MessageData1[64];
+	char		m_MessageData2[64];
+	char		m_MessageData3[64];
 };
 
 #pragma pack(pop)

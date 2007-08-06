@@ -110,10 +110,7 @@ void CFFWeaponGrenadeLauncher::Fire()
 	pGrenade;
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_GRENADE_LAUNCHER, pGrenade);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_GRENADE_LAUNCHER, pGrenade);
 #endif
 
 	// Synchronise with pipelauncher

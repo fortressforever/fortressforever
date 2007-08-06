@@ -2109,7 +2109,9 @@ int CBaseCombatCharacter::OnTakeDamage( const CTakeDamageInfo &info )
 				// -------------------------------------------------------------------
 				// TODO: Change killer to an object
 				//_scriptman.SetVar( "killer", ENTINDEX( info.GetAttacker() ) );
-				CFFLuaSC hPlayerKilled( 1, ToFFPlayer( this ) );
+				CFFLuaSC hPlayerKilled;
+				hPlayerKilled.Push(ToFFPlayer(this));
+				hPlayerKilled.Push(&info);
 				_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 			}			
 

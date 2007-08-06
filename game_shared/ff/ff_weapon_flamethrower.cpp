@@ -264,10 +264,7 @@ void CFFWeaponFlamethrower::Fire()
 #endif
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_FLAMETHROWER, 0);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_FLAMETHROWER, 0);
 #endif
 }
 

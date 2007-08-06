@@ -52,7 +52,7 @@
 				Description="Copying to destination folder"
 				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
 "
-				Outputs="%FortressForeverBin%\server.dll"/>
+				Outputs="server.dll"/>
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="TRUE"
@@ -222,7 +222,7 @@
 				Description="Copying to destination folder"
 				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
 "
-				Outputs="%FortressForeverBin%\server.dll"/>
+				Outputs="server.dll"/>
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="TRUE"

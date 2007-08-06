@@ -2751,11 +2751,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 
 		m_hRadioTagData->Set( pPlayer->entindex(), true, pPlayer->GetClassSlot(), pPlayer->GetTeamNumber(), ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false, vecPlayerOrigin );
 
-		// Omni-bot: Notify the bot he has detected someone.
-		if(IsBot())
-		{
-			Omnibot::Notify_RadioTagUpdate(this, pPlayer);							
-		}
+		Omnibot::Notify_RadioTagUpdate(this, pPlayer);	
 	}
 }
 
@@ -2886,11 +2882,7 @@ void CFFPlayer::Command_Radar( void )
 						ScoutRadar_s hInfo( iInfo, ( pPlayer->GetFlags() & FL_DUCKING ) ? ( byte )1 : ( byte )0, vecPlayerOrigin );
 						hRadarInfo.AddToTail( hInfo );
 
-						// Omni-bot: Notify the bot he has detected someone.
-						if(IsBot())
-						{
-							Omnibot::Notify_RadarDetectedEnemy(this, pPlayer);							
-						}
+						Omnibot::Notify_RadarDetectedEnemy(this, pPlayer);
 					}
 				}
 			}
@@ -3010,11 +3002,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		// See if player is in a no build area first
 		if( !FFScriptRunPredicates( this, "onbuild", true ) && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
 		{
-			// Notify the bot: convert this to an event?
-			if(IsBot())
-			{
-				Omnibot::Notify_Build_CantBuild(this, m_iWantBuild);
-			}
+			Omnibot::Notify_Build_CantBuild(this, m_iWantBuild);
 
 			// Re-initialize
 			m_iCurBuild = FF_BUILD_NONE;
@@ -3041,11 +3029,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && GetSentryGun() ) ||
 			( ( m_iWantBuild == FF_BUILD_DETPACK ) && GetDetpack() ) )
 		{
-			// Notify the bot: convert this to an event?
-			if(IsBot())
-			{
-				Omnibot::Notify_Build_AlreadyBuilt(this, m_iWantBuild);
-			}
+			Omnibot::Notify_Build_AlreadyBuilt(this, m_iWantBuild);
 
 			switch( m_iWantBuild )
 			{
@@ -3067,11 +3051,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && ( GetAmmoCount( AMMO_CELLS ) < 130 ) ) ||
 			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( GetAmmoCount( AMMO_DETPACK ) < 1 ) ) )
 		{
-			// Notify the bot: convert this to an event?
-			if(IsBot())
-			{
-				Omnibot::Notify_Build_NotEnoughAmmo(this, m_iWantBuild);
-			}
+			Omnibot::Notify_Build_NotEnoughAmmo(this, m_iWantBuild);
 
 			switch( m_iWantBuild )
 			{
@@ -3091,11 +3071,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		// See if on ground...
 		if( !FBitSet( GetFlags(), FL_ONGROUND ) )
 		{
-			// Notify the bot: convert this to an event?
-			if(IsBot())
-			{
-				Omnibot::Notify_Build_MustBeOnGround(this, m_iWantBuild);				
-			}
+			Omnibot::Notify_Build_MustBeOnGround(this, m_iWantBuild);
 
 			ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MUSTBEONGROUND" );
 
@@ -3148,10 +3124,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Leaving the remove armour code in that function as you can't fiddle with armour vals via this exploit -> Defrag
 					RemoveAmmo( 100, AMMO_CELLS );
 
-					if(IsBot())
-					{
-						Omnibot::Notify_DispenserBuilding(this, pDispenser);
-					}
+					Omnibot::Notify_DispenserBuilding(this, pDispenser);
 				}
 				break;
 
@@ -3197,10 +3170,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Moved code to remove cells from CFFSentryGun::GoLive() to here -> Defrag
 					RemoveAmmo( 130, AMMO_CELLS );
 
-					if(IsBot())
-					{
-						Omnibot::Notify_SentryBuilding(this, pSentryGun);
-					}
+					Omnibot::Notify_SentryBuilding(this, pSentryGun);
 				}
 				break;
 
@@ -3222,10 +3192,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Set time it takes to build
 					m_flBuildTime = gpGlobals->curtime + 3.0f; // mulch: bug 0000337: build time 3 seconds for detpack
 
-					if(IsBot())
-					{
-						Omnibot::Notify_DetpackBuilding(this, pDetpack);
-					}
+					Omnibot::Notify_DetpackBuilding(this, pDetpack);
 				}
 				break;
 			}
@@ -3257,11 +3224,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		if( m_iCurBuild == m_iWantBuild )
 		{
 			// DevMsg( "[Building] You're currently building this item so cancel the build.\n" );
-
-			if(IsBot())
-			{
-				Omnibot::Notify_Build_BuildCancelled(this,m_iCurBuild);				
-			}			
+			Omnibot::Notify_Build_BuildCancelled(this,m_iCurBuild);
 
 			CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
 			
@@ -4856,15 +4819,10 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 			pGrenade->m_fIsHandheld = false;
 
 #ifdef GAME_DLL
-		{
-			if(IsBot())
-			{
-				if(m_iGrenadeState == FF_GREN_PRIMEONE)
-					Omnibot::Notify_PlayerShoot(this, Omnibot::TF_WP_GRENADE1, pGrenade);
-				else if(m_iGrenadeState == FF_GREN_PRIMETWO)
-					Omnibot::Notify_PlayerShoot(this, Omnibot::TF_WP_GRENADE2, pGrenade);
-			}
-		}
+		if(m_iGrenadeState == FF_GREN_PRIMEONE)
+			Omnibot::Notify_PlayerShoot(this, Omnibot::TF_WP_GRENADE1, pGrenade);
+		else if(m_iGrenadeState == FF_GREN_PRIMETWO)
+			Omnibot::Notify_PlayerShoot(this, Omnibot::TF_WP_GRENADE2, pGrenade);
 #endif
 	}
 }
@@ -5276,6 +5234,8 @@ int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 
 		gameeventmanager->FireEvent(pEvent, true);
 	}
+
+	Omnibot::Notify_Hurt(this, attacker);
 
 	return 1;
 }
@@ -5901,13 +5861,9 @@ void CFFPlayer::Command_Disguise()
 
 	ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_DISGUISING" );
 
-	// Notify the bot: convert this to an event?
-	if(IsBot())
-	{
-		// TODO: This should probably pass in iTeam & iClass as
-		// these two functions won't have the right shit yet?
-		Omnibot::Notify_Disguising(this, GetNewDisguisedTeam(), GetNewDisguisedClass());
-	}
+	// TODO: This should probably pass in iTeam & iClass as
+	// these two functions won't have the right shit yet?
+	Omnibot::Notify_Disguising(this, GetNewDisguisedTeam(), GetNewDisguisedClass());
 }
 
 // Server only
@@ -5958,11 +5914,7 @@ void CFFPlayer::ResetDisguise()
 	m_iNewSpyDisguise = 0;
 	m_iSpyDisguise = 0;
 
-	// Notify the bot: convert this to an event?
-	if(IsBot())
-	{
-		Omnibot::Notify_DisguiseLost(this);
-	}
+	Omnibot::Notify_DisguiseLost(this);
 }
 
 //-----------------------------------------------------------------------------

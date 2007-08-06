@@ -115,6 +115,7 @@ CFFLuaSC::~CFFLuaSC()
 void CFFLuaSC::Push(float value) { m_params.AddToTail(SETOBJECT(value)); }
 void CFFLuaSC::Push(int value) { m_params.AddToTail(SETOBJECT(value)); }
 void CFFLuaSC::Push(bool value) { m_params.AddToTail(SETOBJECT(value)); }
+void CFFLuaSC::Push(const char *value) { m_params.AddToTail(SETOBJECT(value)); }
 void CFFLuaSC::Push(luabind::adl::object& luabindObject) { m_params.AddToTail(SETOBJECT(luabindObject)); }
 void CFFLuaSC::Push(CBaseEntity* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
 void CFFLuaSC::Push(CFFBuildableObject* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
@@ -130,7 +131,7 @@ void CFFLuaSC::Push(CFFInfoScript* pEntity) { m_params.AddToTail(SETOBJECT(pEnti
 void CFFLuaSC::Push(CBeam* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
 void CFFLuaSC::Push(Vector vector) { m_params.AddToTail(SETOBJECT(vector)); }
 void CFFLuaSC::Push(QAngle angle) { m_params.AddToTail(SETOBJECT(angle)); }
-void CFFLuaSC::Push(CTakeDamageInfo* pInfo) { m_params.AddToTail(SETOBJECT(pInfo)); }
+void CFFLuaSC::Push(const CTakeDamageInfo* pInfo) { m_params.AddToTail(SETOBJECT(pInfo)); }
 
 //---------------------------------------------------------------------------
 void CFFLuaSC::PushRef(CTakeDamageInfo& info) { m_params.AddToTail(SETOBJECTREF(info)); }

@@ -106,6 +106,10 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("GetPacketloss",		&CFFPlayer::GetPacketloss)
 			.def("IsAlive",				&CFFPlayer::IsAlive)
 			.def("Spectate",			&CFFPlayer::StartObserverMode)
+			.def("SendBotMessage",		(void(CFFPlayer::*)(const char*))&CFFPlayer::SendBotMessage)
+			.def("SendBotMessage",		(void(CFFPlayer::*)(const char*,const char*))&CFFPlayer::SendBotMessage)
+			.def("SendBotMessage",		(void(CFFPlayer::*)(const char*,const char*,const char*))&CFFPlayer::SendBotMessage)
+			.def("SendBotMessage",		(void(CFFPlayer::*)(const char*,const char*,const char*,const char*))&CFFPlayer::SendBotMessage)
 
 			.enum_("ClassId")
 			[

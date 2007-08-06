@@ -95,10 +95,7 @@ void CFFWeaponNailgun::Fire()
 	pNail;
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_NAILGUN, pNail);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_NAILGUN, pNail);
 #endif
 
 }

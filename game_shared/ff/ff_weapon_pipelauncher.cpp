@@ -132,10 +132,7 @@ void CFFWeaponPipeLauncher::Fire()
 	pPipe;
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_PIPELAUNCHER, pPipe);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_PIPELAUNCHER, pPipe);
 #endif
 
 #ifdef CLIENT_DLL

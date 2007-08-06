@@ -856,6 +856,7 @@ inline bool FF_IsDetpack( CBaseEntity *pEntity )
 // Purpose: Try and convert entity to a buildable
 //-----------------------------------------------------------------------------
 inline CFFBuildableObject *FF_ToBuildableObject( CBaseEntity *pEntity )
+
 {
 	if( !pEntity || !FF_IsBuildableObject( pEntity ) )
 		return NULL;

@@ -432,6 +432,8 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 	// We can call this over and over, it will only ever reduce one level
 	if (IsSabotaged())
 		pPlayer->ReduceArmorClass();
+
+	Omnibot::Notify_GotDispenserAmmo(pPlayer);
 }
 
 //

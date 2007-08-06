@@ -95,10 +95,7 @@ void CFFWeaponRPG::Fire()
 	pRocket;
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_ROCKET_LAUNCHER, pRocket);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_ROCKET_LAUNCHER, pRocket);
 #endif
 }
 

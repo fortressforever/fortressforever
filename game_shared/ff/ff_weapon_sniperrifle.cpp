@@ -475,10 +475,7 @@ void CFFWeaponSniperRifle::Fire()
 	//WeaponSound(SINGLE);
 
 #ifdef GAME_DLL
-	{
-		if(pPlayer->IsBot())
-			Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_SNIPER_RIFLE, 0);
-	}
+	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_SNIPER_RIFLE, 0);
 #endif
 }
 

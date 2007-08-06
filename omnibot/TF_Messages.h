@@ -273,6 +273,34 @@ struct Event_BuildableSabotaged_TF
 	GameEntity	m_WhoDoneIt;
 };
 
+struct Event_GotMedicHealth
+{
+	GameEntity	m_FromWho;
+	int			m_BeforeValue;
+	int			m_AfterValue;
+};
+
+struct Event_GaveMedicHealth
+{
+	GameEntity	m_ToWho;
+	int			m_BeforeValue;
+	int			m_AfterValue;
+};
+
+struct Event_GotEngyArmor
+{
+	GameEntity	m_FromWho;
+	int			m_BeforeValue;
+	int			m_AfterValue;
+};
+
+struct Event_GaveEngyArmor
+{
+	GameEntity	m_ToWho;
+	int			m_BeforeValue;
+	int			m_AfterValue;
+};
+
 #pragma pack(pop)
 
 #endif

@@ -13,6 +13,8 @@
 #include "nav.h"
 #include "nav_ladder.h"
 
+#include "ff_scriptman.h"
+#include "ff_luacontext.h"
 #include "ff_utils.h"
 #include "ff_gamerules.h"
 extern ConVar mp_prematch;
@@ -534,7 +536,7 @@ namespace Omnibot
 	public:
 		int AddBot(const MessageHelper &_data)
 		{
-			Msg_Addbot *pMsg = _data.Get<Msg_Addbot>();
+			const Msg_Addbot *pMsg = _data.Get<Msg_Addbot>();
 			int iClientNum = -1;
 
 			edict_t *pEdict = engine->CreateFakeClient( pMsg->m_Name );
@@ -546,6 +548,16 @@ namespace Omnibot
 
 			// Allocate a player entity for the bot, and call spawn
 			CBasePlayer *pPlayer = ((CBasePlayer*)CBaseEntity::Instance( pEdict ));
+			
+			CFFPlayer *pFFPlayer = ToFFPlayer(pPlayer);
+			if(pFFPlayer && pMsg->m_SpawnPointName[0])
+			{
+				CBaseEntity *pSpawnPt = gEntList.FindEntityByName(NULL, pMsg->m_SpawnPointName);
+				if(pSpawnPt)
+					pFFPlayer->m_SpawnPointOverride = pSpawnPt;
+				else
+					Warning("Bot Spawn Point Not Found: %s", pMsg->m_SpawnPointName);
+			}
 
 			pPlayer->ClearFlags();
 			pPlayer->AddFlag( FL_CLIENT | FL_FAKECLIENT );
@@ -1244,14 +1256,34 @@ namespace Omnibot
 					}
 					//////////////////////////////////////////////////////////////////////////
 				case CLASS_DISPENSER:
-					_flags.SetFlag(ENT_FLAG_VISTEST);
-					break;
+					{
+						CFFDispenser *pBuildable = static_cast<CFFDispenser*>(pEntity);
+						if(!pBuildable->IsBuilt())
+							_flags.SetFlag(TF_ENT_FLAG_BUILDINPROGRESS);
+
+						_flags.SetFlag(ENT_FLAG_VISTEST);
+						break;
+					}
 				case CLASS_SENTRYGUN:
-					_flags.SetFlag(ENT_FLAG_VISTEST);
-					break;
+					{
+						CFFSentryGun *pBuildable = static_cast<CFFSentryGun*>(pEntity);
+						if(!pBuildable->IsBuilt())
+							_flags.SetFlag(TF_ENT_FLAG_BUILDINPROGRESS);
+						if(pBuildable->GetLevel()==2)
+							_flags.SetFlag(TF_ENT_FLAG_LEVEL2);
+						else if(pBuildable->GetLevel()==3)
+							_flags.SetFlag(TF_ENT_FLAG_LEVEL3);
+						_flags.SetFlag(ENT_FLAG_VISTEST);
+						break;
+					}
 				case CLASS_DETPACK:
-					_flags.SetFlag(ENT_FLAG_VISTEST);
-					break;
+					{
+						_flags.SetFlag(ENT_FLAG_VISTEST);
+						CFFDetpack *pBuildable = static_cast<CFFDetpack*>(pEntity);
+						if(!pBuildable->IsBuilt())
+							_flags.SetFlag(TF_ENT_FLAG_BUILDINPROGRESS);
+						break;
+					}
 				case CLASS_GREN:
 				case CLASS_GREN_EMP:
 				case CLASS_GREN_NAIL:
@@ -1530,19 +1562,38 @@ namespace Omnibot
 				_aabb.m_Maxs[2] = vMaxs.z;
 				return Success;
 			}
-
 			return InvalidEntity;
 		}
 
-		int GetEntityOwner(const GameEntity _ent)
+		GameEntity GetEntityOwner(const GameEntity _ent)
 		{
+			GameEntity owner;
+
 			CBaseEntity *pEntity = EntityFromHandle(_ent);
 			if(pEntity)
 			{
-				CBaseEntity *pOwner = pEntity->GetOwnerEntity();
-				return pOwner ? pOwner->entindex() : -1;
+				switch(pEntity->Classify())
+				{
+				case CLASS_DISPENSER:
+				case CLASS_SENTRYGUN:
+				case CLASS_DETPACK:
+					{
+						CFFBuildableObject *pBuildable = static_cast<CFFBuildableObject*>(pEntity);
+						CFFPlayer *pOwner = pBuildable->GetOwnerPlayer();
+						if(pOwner)
+							owner = HandleFromEntity(pOwner);
+						break;
+					}
+				default:
+					{
+						CBaseEntity *pOwner = pEntity->GetOwnerEntity();
+						if(pOwner)
+							owner = HandleFromEntity(pOwner);
+						break;
+					}
+				}
 			}
-			return -1;
+			return owner;
 		}
 
 		int GetEntityTeam(const GameEntity _ent)
@@ -1719,7 +1770,7 @@ namespace Omnibot
 					{
 						CBaseEntity *pEntOther = EntityFromHandle(pMsg->m_TargetEntity);
 						if(pEnt && pEntOther)
-						{						
+						{
 							pMsg->m_IsAllied = g_pGameRules->PlayerRelationship(pEnt, pEntOther) != GR_NOTTEAMMATE ? True : False;
 						}
 					}
@@ -1867,6 +1918,53 @@ namespace Omnibot
 							pWp->GetHeatLevel(pMsg->m_FireMode, pMsg->m_CurrentHeat, pMsg->m_MaxHeat);
 						}
 					}
+					break;
+				}
+			case GEN_MSG_ENTITYKILL:
+				{
+					break;
+				}
+			case GEN_MSG_SERVERCOMMAND:
+				{
+					break;
+				}
+			case GEN_MSG_PLAYSOUND:
+				{
+					struct LastSound { char m_SoundName[64]; };
+					static LastSound m_LastPlayerSound[MAX_PLAYERS] = {};
+					
+					GETMSG(Event_PlaySound);
+					if(pPlayer)
+						pPlayer->EmitSound(pMsg->m_SoundName);
+					/*else
+						FFLib::BroadcastSound(pMsg->m_SoundName);*/
+					break;
+				}
+			case GEN_MSG_STOPSOUND:
+				{
+					GETMSG(Event_StopSound);
+					if(pPlayer)
+						pPlayer->StopSound(pMsg->m_SoundName);
+					/*else
+					FFLib::BroadcastSound(pMsg->m_SoundName);*/
+					break;
+				}
+			case GEN_MSG_SCRIPTEVENT:
+				{
+					GETMSG(Event_ScriptEvent);
+					
+					CFFLuaSC hEvent;
+					if(pMsg->m_Param1[0])
+						hEvent.Push(pMsg->m_Param1);
+					if(pMsg->m_Param2[0])
+						hEvent.Push(pMsg->m_Param2);
+					if(pMsg->m_Param3[0])
+						hEvent.Push(pMsg->m_Param3);
+					
+					CBaseEntity *pEnt = NULL;
+					if(pMsg->m_EntityName[0])
+						pEnt = gEntList.FindEntityByName(NULL, pMsg->m_EntityName);
+					_scriptman.RunPredicates_LUA(pEnt, &hEvent, pMsg->m_FunctionName);
 					break;
 				}
 				//////////////////////////////////
@@ -2201,6 +2299,12 @@ namespace Omnibot
 			return HandleFromEntity(pEnt);
 		}
 
+		GameEntity EntityByName(const char *_name)
+		{
+			CBaseEntity *pEnt = _name ? gEntList.FindEntityByName(NULL, _name, NULL) : NULL;
+			return HandleFromEntity(pEnt);
+		}
+		
 		int IDFromEntity(const GameEntity _ent)
 		{
 			CBaseEntity *pEnt = EntityFromHandle(_ent);
@@ -2589,6 +2693,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		Event_ChatMessage d;
 		d.m_WhoSaidIt = HandleFromEntity(_player);
@@ -2600,6 +2706,8 @@ namespace Omnibot
 	void Notify_TeamChatMsg(CBasePlayer *_player, const char *_msg)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -2625,6 +2733,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		if(_spectated && _spectated->IsBot())
 		{
@@ -2637,6 +2747,8 @@ namespace Omnibot
 	void Notify_AddWeapon(CBasePlayer *_player, const char *_item)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2657,6 +2769,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		int iWeaponId = obUtilGetWeaponId(_item);		
@@ -2674,6 +2788,8 @@ namespace Omnibot
 	void Notify_RemoveAllItems(CBasePlayer *_player)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2710,6 +2826,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_TakeDamage d = { HandleFromEntity(_attacker) };
@@ -2719,6 +2837,8 @@ namespace Omnibot
 	void Notify_Death(CBasePlayer *_player, CBaseEntity *_attacker, const char *_weapon)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2733,6 +2853,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_KilledSomeone d;
@@ -2746,6 +2868,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_ChangeTeam d = { _newteam };
@@ -2756,6 +2880,8 @@ namespace Omnibot
 	void Notify_ChangedClass(CBasePlayer *_player, int _oldclass, int _newclass)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2768,6 +2894,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_BUILD_MUSTBEONGROUND));
@@ -2777,6 +2905,8 @@ namespace Omnibot
 	void Notify_Build_CantBuild(CBasePlayer *_player, int _buildable)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2804,6 +2934,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		int iMsg = 0;
@@ -2830,6 +2962,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		int iMsg = 0;
@@ -2854,6 +2988,8 @@ namespace Omnibot
 	void Notify_Build_BuildCancelled(CBasePlayer *_player, int _buildable)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2880,6 +3016,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_CantDisguiseTeam_TF d = { obUtilGetBotTeamFromGameTeam(_disguiseTeam) };
@@ -2890,6 +3028,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_CantDisguiseClass_TF d = { obUtilGetBotClassFromGameClass(_disguiseClass) };
@@ -2899,6 +3039,8 @@ namespace Omnibot
 	void Notify_Disguising(CBasePlayer *_player, int _disguiseTeam, int _disguiseClass)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2912,6 +3054,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_Disguise_TF d;
@@ -2924,6 +3068,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_DISGUISE_LOST));
@@ -2932,6 +3078,8 @@ namespace Omnibot
 	void Notify_UnCloaked(CBasePlayer *_player)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2942,6 +3090,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_CANT_CLOAK));
@@ -2951,6 +3101,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_CLOAKED));
@@ -2959,6 +3111,8 @@ namespace Omnibot
 	void Notify_RadarDetectedEnemy(CBasePlayer *_player, CBaseEntity *_ent)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -2970,6 +3124,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_RadarUpdate_TF d = { HandleFromEntity(_ent) };
@@ -2979,6 +3135,8 @@ namespace Omnibot
 	void Notify_BuildableDamaged(CBasePlayer *_player, int _type, CBaseEntity *_buildEnt)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iMsg = 0;
@@ -3006,6 +3164,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_DispenserBuilding_TF d = { HandleFromEntity(_buildEnt) };
@@ -3015,6 +3175,8 @@ namespace Omnibot
 	void Notify_DispenserBuilt(CBasePlayer *_player, CBaseEntity *_buildEnt)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3026,6 +3188,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_DispenserEnemyUsed_TF d = { HandleFromEntity(_enemyUser) };
@@ -3035,6 +3199,8 @@ namespace Omnibot
 	void Notify_DispenserDestroyed(CBasePlayer *_player, CBaseEntity *_attacker)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3046,6 +3212,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_SentryUpgraded_TF d = { _level };
@@ -3055,6 +3223,8 @@ namespace Omnibot
 	void Notify_SentryBuilding(CBasePlayer *_player, CBaseEntity *_buildEnt)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3066,6 +3236,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_SentryBuilt_TF d = { HandleFromEntity(_buildEnt) };
@@ -3075,6 +3247,8 @@ namespace Omnibot
 	void Notify_SentryDestroyed(CBasePlayer *_player, CBaseEntity *_attacker)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3086,6 +3260,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_SentrySpotEnemy_TF d = { GameEntity() }; // TODO
@@ -3095,6 +3271,8 @@ namespace Omnibot
 	void Notify_SentryAimed(CBasePlayer *_player, CBaseEntity *_buildEnt, const Vector &_dir)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3110,6 +3288,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_DetpackBuilding_TF d = { HandleFromEntity(_buildEnt) };
@@ -3119,6 +3299,8 @@ namespace Omnibot
 	void Notify_DetpackBuilt(CBasePlayer *_player, CBaseEntity *_buildEnt)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3130,6 +3312,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_DETPACK_DETONATED));
@@ -3138,6 +3322,8 @@ namespace Omnibot
 	void Notify_DispenserSabotaged(CBasePlayer *_player, CBaseEntity *_saboteur)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3149,6 +3335,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		Event_BuildableSabotaged_TF d = { HandleFromEntity(_saboteur) };
@@ -3159,6 +3347,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_DISPENSER_DETONATED));
@@ -3167,6 +3357,8 @@ namespace Omnibot
 	void Notify_DispenserDismantled(CBasePlayer *_player)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3177,6 +3369,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_SENTRY_DETONATED));
@@ -3186,6 +3380,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_SENTRY_DISMANTLED));
@@ -3194,6 +3390,8 @@ namespace Omnibot
 	void Notify_PlayerShoot(CBasePlayer *_player, int _weaponId, CBaseEntity *_projectile)
 	{
 		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
 			return;
 
 		int iGameId = _player->entindex();
@@ -3208,6 +3406,8 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
+		if(!_player->IsBot())
+			return;
 
 		CBasePlayer *pUsedPlayer = ToBasePlayer(_entityUsed);
 		if(pUsedPlayer && pUsedPlayer->IsBot())
@@ -3215,6 +3415,80 @@ namespace Omnibot
 			int iGameId = pUsedPlayer->entindex();
 			Event_PlayerUsed d = { HandleFromEntity(_player) };
 			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(PERCEPT_FEEL_PLAYER_USE, &d, sizeof(d)));
+		}
+	}
+
+	void Notify_GotSpannerArmor(CBasePlayer *_target, CBasePlayer *_engy, int _before, int _after)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+		if(!_target->IsBot())
+			return;
+
+		if(_target && _target->IsBot())
+		{
+			int iGameId = _target->entindex();
+			Event_GotEngyArmor d = { HandleFromEntity(_engy), _before, _after };
+			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_GOT_ENGY_ARMOR, &d, sizeof(d)));
+		}
+	}
+
+	void Notify_GaveSpannerArmor(CBasePlayer *_engy, CBasePlayer *_target, int _before, int _after)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+		if(!_engy->IsBot())
+			return;
+
+		if(_engy && _engy->IsBot())
+		{
+			int iGameId = _target->entindex();
+			Event_GaveEngyArmor d = { HandleFromEntity(_target), _before, _after };
+			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_GAVE_ENGY_ARMOR, &d, sizeof(d)));
+		}
+	}
+
+	void Notify_GotMedicHealth(CBasePlayer *_target, CBasePlayer *_medic, int _before, int _after)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+		if(!_target->IsBot())
+			return;
+
+		if(_target && _target->IsBot())
+		{
+			int iGameId = _target->entindex();
+			Event_GotMedicHealth d = { HandleFromEntity(_medic), _before, _after };
+			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_GOT_MEDIC_HEALTH, &d, sizeof(d)));
+		}
+	}
+
+	void Notify_GaveMedicHealth(CBasePlayer *_medic, CBasePlayer *_target, int _before, int _after)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+		if(!_medic->IsBot())
+			return;
+
+		if(_medic && _medic->IsBot())
+		{
+			int iGameId = _target->entindex();
+			Event_GaveMedicHealth d = { HandleFromEntity(_target), _before, _after };
+			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_GAVE_MEDIC_HEALTH, &d, sizeof(d)));
+		}
+	}
+
+	void Notify_GotDispenserAmmo(CBasePlayer *_player)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+		if(!_player->IsBot())
+			return;
+
+		if(_player)
+		{
+			int iGameId = _player->entindex();
+			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_GOT_DISPENSER_AMMO));
 		}
 	}
 
@@ -3483,6 +3757,20 @@ namespace Omnibot
 	}
 
 };
+
+void CFFPlayer::SendBotMessage(const char *_msg, const char *_d1, const char *_d2, const char *_d3)
+{
+	if(!IsBot() || !IsOmnibotLoaded())
+		return;
+
+	Omnibot::Event_ScriptMessage d;
+	memset(&d, 0, sizeof(d));
+	Q_strncpy(d.m_MessageName, _msg, sizeof(d.m_MessageName));
+	if(_d1) Q_strncpy(d.m_MessageData1, _d1, sizeof(d.m_MessageData1));
+	if(_d2) Q_strncpy(d.m_MessageData2, _d2, sizeof(d.m_MessageData2));
+	if(_d3) Q_strncpy(d.m_MessageData3, _d3, sizeof(d.m_MessageData3));
+	g_BotFunctions.pfnBotSendEvent(entindex(), MessageHelper(MESSAGE_SCRIPTMSG, &d, sizeof(d)));
+}
 
 void CFFSentryGun::SendStatsToBot( void ) 
 {
