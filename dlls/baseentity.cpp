@@ -6214,6 +6214,14 @@ QAngle CBaseEntity::GetStepAngles( void ) const
 	return GetLocalAngles();
 }
 
+Vector CBaseEntity::GetAbsFacing() const
+{
+	QAngle angles = GetAbsAngles();
+	Vector fwd;
+	AngleVectors(angles, &fwd);
+	return fwd;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: For each client who appears to be a valid recipient, checks the client has disabled CC and if so, removes them from 
 //  the recipient list.

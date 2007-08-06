@@ -23,6 +23,7 @@
 	#include "ff_utils.h"
 #else
 	#include "ff_buildableobjects_shared.h"
+	#include "omnibot_interface.h"
 #endif
 
 //=============================================================================
@@ -134,11 +135,17 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				WeaponSoundLocal( SPECIAL3 );
 
 #ifdef GAME_DLL
+				const int iBeforeArmor = pHitPlayer->GetArmor();
+
 				pHitPlayer->AddArmor( iArmorGiven );
 				pPlayer->RemoveAmmo( iArmorGiven / 5, AMMO_CELLS );
 				// AfterShock - scoring system: Repair x armor +.5*armor_given (only if last damage from enemy) 
 				// Leaving the 'last damage from enemy' part out until discussion has finished about it.
 				pPlayer->AddFortPoints( ( iArmorGiven*0.5 ), "#FF_FORTPOINTS_GIVEARMOR");
+
+				const int iAfterArmor = pHitPlayer->GetArmor();
+				Omnibot::Notify_GotSpannerArmor(pHitPlayer,pPlayer,iBeforeArmor,iAfterArmor);
+				Omnibot::Notify_GaveSpannerArmor(pPlayer,pHitPlayer,iBeforeArmor,iAfterArmor);
 #endif
 			}
 

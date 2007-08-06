@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-07-16 08:13:17 -0700 (Mon, 16 Jul 2007) $
-// $LastChangedRevision: 2099 $
+// $LastChangedDate: 2007-07-30 07:26:44 -0700 (Mon, 30 Jul 2007) $
+// $LastChangedRevision: 2122 $
 //
 // about: Generic Bot Events
 //
@@ -69,8 +69,9 @@ typedef enum
 			MESSAGE_REMOVEWEAPON,	// remove a weapon from the bots inventory
 			MESSAGE_RESETWEAPONS,	// tells the bot to clear out all the weapons
 			MESSAGE_REFRESHWEAPONPTRS,
-			MESSAGE_SPECTATED,			
+			MESSAGE_SPECTATED,
 			MESSAGE_AIMCOMPLETED,
+			MESSAGE_SCRIPTMSG,
 		MESSAGE_ID_LAST,
 
 		// Percepts  (senses: feel, see, hear, smell, )
@@ -140,6 +141,9 @@ typedef enum
 
 	GEN_MSG_ENTITYKILL,
 	GEN_MSG_SERVERCOMMAND,
+	GEN_MSG_PLAYSOUND,
+	GEN_MSG_STOPSOUND,
+	GEN_MSG_SCRIPTEVENT,
 
 	// This must stay last.
 	GEN_MSG_END

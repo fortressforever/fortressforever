@@ -371,9 +371,6 @@ void CFFWeaponMeleeBase::Swing()
 #endif
 
 #ifdef GAME_DLL
-	{		
-		if(pOwner->IsBot())
-			Omnibot::Notify_PlayerShoot(pOwner, Omnibot::obUtilGetBotWeaponFromGameWeapon(GetWeaponID()), 0);
-	}
+	Omnibot::Notify_PlayerShoot(pOwner, Omnibot::obUtilGetBotWeaponFromGameWeapon(GetWeaponID()), 0);
 #endif
 }

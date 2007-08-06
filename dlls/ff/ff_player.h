@@ -238,6 +238,10 @@ public:
 	int GetArmorPercentage( void ) const;
 	// <--
 
+	void SendBotMessage(const char *_msg) { SendBotMessage(_msg,0,0,0); }
+	void SendBotMessage(const char *_msg, const char *_d1) { SendBotMessage(_msg,_d1,0,0); }
+	void SendBotMessage(const char *_msg, const char *_d1, const char *_d2) { SendBotMessage(_msg,_d1,_d2,0); }
+	void SendBotMessage(const char *_msg, const char *_d1, const char *_d2, const char *_d3);
 private:
 
 	void CreateRagdollEntity(const CTakeDamageInfo *info = NULL);

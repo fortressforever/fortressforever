@@ -179,6 +179,7 @@ typedef enum eTF_EntityClass
 //		TF_ENT_FLAG_BUILDING_SG - Entity is building a sentry.
 //		TF_ENT_FLAG_BUILDING_DISP - Entity is building a dispenser.
 //		TF_ENT_FLAG_BUILDING_DETP - Entity is building a detpack.
+//		TF_ENT_FLAG_BUILDINPROGRESS - Entity is currently being built.
 typedef enum eTF_EntityFlags
 {
 	TF_ENT_FLAG_SAVEME = ENT_FLAG_FIRST_USER,	
@@ -198,6 +199,9 @@ typedef enum eTF_EntityFlags
 	TF_ENT_FLAG_BUILDING_SG,
 	TF_ENT_FLAG_BUILDING_DISP,
 	TF_ENT_FLAG_BUILDING_DETP,
+	TF_ENT_FLAG_BUILDINPROGRESS,
+	TF_ENT_FLAG_LEVEL2,
+	TF_ENT_FLAG_LEVEL3,
 } TF_EntityFlags;
 
 // enumerations: TF_Powerups
@@ -378,6 +382,13 @@ typedef enum eTF_Events
 	TF_MSG_CLASS_NOTAVAILABLE, // todo: implement this
 	TF_MSG_CLASS_CHANGELATER, // todo: implement this
 	TF_MSG_BUILD_MUSTBEONGROUND,
+
+	TF_MSG_GOT_ENGY_ARMOR,
+	TF_MSG_GAVE_ENGY_ARMOR,
+	TF_MSG_GOT_MEDIC_HEALTH,
+	TF_MSG_GAVE_MEDIC_HEALTH,
+
+	TF_MSG_GOT_DISPENSER_AMMO,
 
 	// Scout
 	TF_MSG_SCOUT_START,

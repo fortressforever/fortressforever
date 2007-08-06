@@ -30,7 +30,7 @@
 	#include "ff_scheduleman.h"
 	#include "ff_betalist.h"
 	#include "ff_utils.h"
-
+	#include "ff_buildableobjects_shared.h"
 #endif
 
 
@@ -1723,8 +1723,20 @@ int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget
 		if( pPlayerTeam->GetAllies() & ( 1 << pTarget->GetTeamNumber() ) )
 			return GR_TEAMMATE;		// Do you want them identified as an ally or a tm?
 		// <-- Mirv: Allies
-
 	}
+
+#ifdef GAME_DLL
+	CFFBuildableObject *pBuildable = FF_ToBuildableObject(pTarget);
+	if( pPlayer->IsPlayer() && pBuildable )
+	{
+		// --> Mirv: Allies
+		CFFTeam *pPlayerTeam = ( CFFTeam * )GetGlobalTeam( pPlayer->GetTeamNumber() );
+
+		if( pPlayerTeam->GetAllies() & ( 1 << pBuildable->GetOwnerPlayer()->GetTeamNumber() ) )
+			return GR_TEAMMATE;		// Do you want them identified as an ally or a tm?
+		// <-- Mirv: Allies
+	}
+#endif
 
 	return GR_NOTTEAMMATE;
 }

@@ -188,7 +188,7 @@ public:
 
 	// Function: GetEntityOwner
 	//		This function should return the <GameID> of a client that owns this item
-	virtual int GetEntityOwner(const GameEntity _ent) = 0;
+	virtual GameEntity GetEntityOwner(const GameEntity _ent) = 0;
 
 	// Function: GetEntityTeam
 	//		This function should return the bot team of the entity.
@@ -262,6 +262,10 @@ public:
 	// Function: EntityFromID
 	//		This function should return the <GameEntity> that matches the provided Id
 	virtual GameEntity EntityFromID(const int _gameId) = 0;
+
+	// Function: EntityByName
+	//		This function should return the <GameEntity> that matches a name
+	virtual GameEntity EntityByName(const char *_name) = 0;
 
 	// Function: IDFromEntity
 	//		This function should return the Id that matches the provided <GameEntity>

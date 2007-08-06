@@ -432,6 +432,7 @@ public:
 	bool					IsCurrentlyTouching( void ) const;
 	const Vector&			GetAbsOrigin( void ) const;
 	const QAngle&			GetAbsAngles( void ) const;
+	Vector					GetAbsFacing() const;
 
 	SolidType_t				GetSolid() const;
 	int			 			GetSolidFlags( void ) const;
@@ -2044,8 +2045,6 @@ inline const QAngle& CBaseEntity::GetAbsAngles( void ) const
 	}
 	return m_angAbsRotation;
 }
-
-
 
 //-----------------------------------------------------------------------------
 // Returns the entity-to-world transform
