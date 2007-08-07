@@ -361,96 +361,75 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 {
 	VPROF_BUDGET( "CFFStatsLog::Serialise", VPROF_BUDGETGROUP_FF_STATS );
 
-	//DevMsg("[STATS] Generating Serialized stats log\n");
+	DevMsg("[STATS] Generating Serialized stats log\n");
 
-	//CFFString hBuffer;
+	// build the auth string here
+	const char *pszLogin = "ff-test";
+	const char *pszSecret = "sharedsecret123";
+	const char *pszDate = GetTimestampString(); // abuse staticness of return here
+	char preAuthString[80];
+	Q_snprintf( preAuthString, 80, "%s%s%s", pszLogin, pszSecret, pszDate );
+	DevMsg( "[STATS] preAuthString: [%s]\n", preAuthString );
 
-	//// build the auth string here
-	//const char *pszLogin = "ff-test";
-	//const char *pszSecret = "sharedsecret123";
-	//const char *pszDate = GetTimestampString(); // abuse staticness of return here
-	//char preAuthString[80];
-	//Q_snprintf( preAuthString, 80, "%s%s%s", pszLogin, pszSecret, pszDate );
-	//DevMsg( "[STATS] preAuthString: [%s]\n", preAuthString );
+	int i, j, offset = 0;
 
-	//// Simple hash used here
-	//unsigned long hash = 0;
-	//for( int i = 0; i < (int)strlen( preAuthString ); i++ )
-	//{
-	//	hash = (hash<<7) | (hash>>31);
-	//	hash ^= preAuthString[i];
-	//}
+	// Simple hash used here
+	unsigned long hash = 0;
+	for(i = 0; i < (int)strlen( preAuthString ); i++)
+	{
+		hash = (hash<<7) | (hash>>31);
+		hash ^= preAuthString[i];
+	}
 
-	//// Basic header information
-	//hBuffer += "login ";
-	//hBuffer += pszLogin;
-	//hBuffer += "\nauth ";
-	//hBuffer += (int)hash;
-	//hBuffer += "\ndate ";
-	//hBuffer += pszDate;
-	//hBuffer += "\nduration ";
-	//hBuffer += 1800;
-	//hBuffer += "\nmap ";
-	//hBuffer += "ff_dev_ctf";
-	//hBuffer += "\nbluescore ";
-	//hBuffer += 0;
-	//hBuffer += "\nredscore ";
-	//hBuffer += 0;
-	//hBuffer += "\nyellowscore ";
-	//hBuffer += 0;
-	//hBuffer += "\ngreenscore ";
-	//hBuffer += 0;
+	// Basic header information
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "login %s\n", pszLogin);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "auth %08X\n", hash);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "date %s\n", pszDate);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "duration %d\n", 1800);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "map %s\n", "ff_dev_ctf");
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "bluescore %d\n", 0);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "redscore %d\n", 0);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "yellowscore %d\n", 0);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "greenscore %d\n", 0);
+	
+	// add the players section
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "players\n");
+	for (i=0; i<(int)m_vPlayers.size(); i++) {
+		offset += Q_snprintf(buffer+offset, buffer_size-offset, "%s %s %d %d\n",
+			m_vPlayers[i].m_sSteamID.GetString(),
+			m_vPlayers[i].m_sName.GetString(),
+			m_vPlayers[i].m_iTeam,
+			m_vPlayers[i].m_iClass);
+	}
 
+	// add the actions section
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "actions\n");
+	for (i=0; i<(int)m_vPlayers.size(); i++) {
+		for (j=0; j<(int)m_vPlayers[i].m_vActions.size(); j++) {
+	//for (std::vector<CFFPlayerStats>::const_iterator it = m_vPlayers.begin(); it!=m_vPlayers.end(); it++) {
+	//	for (std::vector<CFFAction>::const_iterator jt = (*it).m_vActions.begin(); jt!=(*it).m_vActions.end(); jt++) {
+			offset += Q_snprintf(buffer+offset, buffer_size-offset, "%d %d %s %.0f %s %s %s\n",
+				i,
+				m_vPlayers[i].m_vActions[j].targetid,
+				m_vActions[m_vPlayers[i].m_vActions[j].actionid].m_sName.GetString(),
+				m_vPlayers[i].m_vActions[j].time,
+				m_vPlayers[i].m_vActions[j].param.GetString(),
+				"",
+				m_vPlayers[i].m_vActions[j].location.GetString());
+		}
+	}
 
-	//// Basic header information
-	//buf.Add("login %s\n", login);
-	//buf.Add("auth %08X\n", hash);
-	//buf.Add("date %s\n", date);
-	//buf.Add("duration %d\n", 1800);
-	//buf.Add("map %s\n", "ff_dev_ctf");
-	//buf.Add("bluescore %d\n", 0);
-	//buf.Add("redscore %d\n", 0);
-	//buf.Add("yellowscore %d\n", 0);
-	//buf.Add("greenscore %d\n", 0);
-	//
-	//// add the players section
-	//buf.Add("players\n");
-	//for (i=0; i<(int)m_vPlayers.size(); i++) {
-	//	buf.Add("%s %s %d %d\n",
-	//		m_vPlayers[i].m_sSteamID.GetString(),
-	//		m_vPlayers[i].m_sName.GetString(),
-	//		m_vPlayers[i].m_iTeam,
-	//		m_vPlayers[i].m_iClass);
-	//}
-
-	//// add the actions section
-	//buf.Add("actions\n");
-	//for (i=0; i<(int)m_vPlayers.size(); i++) {
-	//	for (j=0; j<(int)m_vPlayers[i].m_vActions.size(); j++) {
-	////for (std::vector<CFFPlayerStats>::const_iterator it = m_vPlayers.begin(); it!=m_vPlayers.end(); it++) {
-	////	for (std::vector<CFFAction>::const_iterator jt = (*it).m_vActions.begin(); jt!=(*it).m_vActions.end(); jt++) {
-	//		buf.Add("%d %d %s %.0f %s %s %s\n",
-	//			i,
-	//			m_vPlayers[i].m_vActions[j].targetid,
-	//			m_vActions[m_vPlayers[i].m_vActions[j].actionid].m_sName.GetString(),
-	//			m_vPlayers[i].m_vActions[j].time,
-	//			m_vPlayers[i].m_vActions[j].param.GetString(),
-	//			"",
-	//			m_vPlayers[i].m_vActions[j].location.GetString());
-	//	}
-	//}
-
-	//// add the stats section
-	//buf.Add("stats\n");
-	//for (i=0; i<(int)m_vPlayers.size(); i++) {
-	//	for (j=0; j<(int)m_vPlayers[i].m_vStats.size(); j++) {
-	//		if (m_vPlayers[i].m_vStats[j] == 0.0) continue; // skip unset stats
-	//		buf.Add("%d %s %f\n",
-	//			i,
-	//			m_vStats[j].m_sName.GetString(),
-	//			m_vPlayers[i].m_vStats[j]);
-	//	}
-	//}
+	// add the stats section
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "stats\n");
+	for (i=0; i<(int)m_vPlayers.size(); i++) {
+		for (j=0; j<(int)m_vPlayers[i].m_vStats.size(); j++) {
+			if (m_vPlayers[i].m_vStats[j] == 0.0) continue; // skip unset stats
+			offset += Q_snprintf(buffer+offset, buffer_size-offset, "%d %s %f\n",
+				i,
+				m_vStats[j].m_sName.GetString(),
+				m_vPlayers[i].m_vStats[j]);
+		}
+	}
 }
 
 #define STATS_HOST "ponza.homeip.net"
@@ -461,45 +440,45 @@ void SendStats()
 	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
 
 	// stop crashing server!
-	return;
+	//return;
 
 	// Aegeus crashed on line 450 (which is below the return ^^). How did
 	// this happen?
-	UTIL_LogPrintf( "[STATS] SOMEHOW I GOT HERE AND I SHOULDNT HAVE!\n" );
+	//UTIL_LogPrintf( "[STATS] SOMEHOW I GOT HERE AND I SHOULDNT HAVE!\n" );
 
-	//// this is kind of wasteful :(
-	//char buf[100000], buf2[120000];
+	// this is kind of wasteful :(
+	char buf[100000], buf2[120000];
 
-	//DevMsg("[STATS] Sending stats...\n");
+	DevMsg("[STATS] Sending stats...\n");
 
-	///*g_StatsLog*/ g_StatsLogSingleton.Serialise(buf, sizeof(buf));
-	//DevMsg(buf);
-	//DevMsg("------\n\n");
+	g_StatsLogSingleton.Serialise(buf, sizeof(buf));
+	DevMsg(buf);
+	DevMsg("------\n\n");
 
-	//// generate post-data first (size is used in the part below)
-	//Q_snprintf(buf2, sizeof(buf2),
-	//	"--" STATS_BOUNDARY "\r\n"
- //       "Content-Disposition: form-data; name=\"data\"\r\n"
- //       "\r\n%s\r\n"
- //       "--" STATS_BOUNDARY "\r\n",
+	// generate post-data first (size is used in the part below)
+	Q_snprintf(buf2, sizeof(buf2),
+		"--" STATS_BOUNDARY "\r\n"
+        "Content-Disposition: form-data; name=\"data\"\r\n"
+        "\r\n%s\r\n"
+        "--" STATS_BOUNDARY "\r\n",
 
-	//	buf);
+		buf);
 
-	//// generate http request
- //   Q_snprintf(buf, sizeof(buf),
-	//	"POST %s HTTP/1.1\r\n"
-	//	"Host: %s\r\n"
-	//	"Connection: close\r\n"
-	//	"Content-type: multipart/form-data, boundary=" STATS_BOUNDARY "\r\n"
-	//	"Content-length: %d\r\n\r\n"
-	//	"%s",
-	//	
-	//	STATS_URL,
-	//	STATS_HOST,
-	//	strlen(buf2),
-	//	buf2);
+	// generate http request
+    Q_snprintf(buf, sizeof(buf),
+		"POST %s HTTP/1.1\r\n"
+		"Host: %s\r\n"
+		"Connection: close\r\n"
+		"Content-type: multipart/form-data, boundary=" STATS_BOUNDARY "\r\n"
+		"Content-length: %d\r\n\r\n"
+		"%s",
+		
+		STATS_URL,
+		STATS_HOST,
+		strlen(buf2),
+		buf2);
 
-	//DevMsg(buf);
+	DevMsg(buf);
 
 	//Socks sock;
 
