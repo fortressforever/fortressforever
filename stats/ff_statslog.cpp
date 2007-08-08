@@ -432,19 +432,19 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	}
 }
 
-#define STATS_HOST "ponza.homeip.net"
-#define STATS_URL "/ff/index.php?a=parserequest"
+#define STATS_HOST "www.burntpopcorn.net"
+#define STATS_URL "/ff/storestats.php"
 #define STATS_BOUNDARY "STATSBOUNDSzx9n12"
 void SendStats() 
 {
 	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
 
 	// stop crashing server!
-	//return;
+	return;
 
 	// Aegeus crashed on line 450 (which is below the return ^^). How did
 	// this happen?
-	//UTIL_LogPrintf( "[STATS] SOMEHOW I GOT HERE AND I SHOULDNT HAVE!\n" );
+	UTIL_LogPrintf( "[STATS] SOMEHOW I GOT HERE AND I SHOULDNT HAVE!\n" );
 
 	// this is kind of wasteful :(
 	char buf[100000], buf2[120000];
