@@ -66,12 +66,17 @@
 
 // Debug visualization
 ConVar	sg_debug( "ffdev_sg_debug", "1" );
+
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
 ConVar  sg_range( "ffdev_sg_range", "1050.0" );
 
 ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "24.0", FCVAR_REPLICATED, "SG bullet push force");
+ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED, "SG bullet damage");
+ConVar ffdev_sg_rof_lvl1("ffdev_sg_rof_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG rate of fire");
+ConVar ffdev_sg_rof_lvl2("ffdev_sg_rof_lvl2", "0.1", FCVAR_REPLICATED, "Level 2 SG rate of fire");
+ConVar ffdev_sg_rof_lvl3("ffdev_sg_rof_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG rate of fire");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -150,7 +155,7 @@ CFFSentryGun::CFFSentryGun()
 	m_iMaxShells = 200; // TODO: Get Number
 	m_iMaxRockets = 0;
 	m_iRockets = 0;
-	m_iShellDamage = 8;
+	m_iShellDamage = 15;
 	m_bLeftBarrel = true;
 	m_bRocketLeftBarrel = true;
 
@@ -303,6 +308,8 @@ void CFFSentryGun::OnObjectThink( void )
 		// AfterShock - Explode SG on sabotage finish
 		// TODO: create custom death message for it
 		// commented out until we find the cause for the crash / why this doesnt work
+		//	Jiggles: It crashes b/c m_hSaboteur is set to NULL by the sabotage release function
+		//			 when the Spy dies.
 		//TakeDamage( CTakeDamageInfo( m_hSaboteur, m_hSaboteur, 10000, DMG_GENERIC ) );
 	}
 
@@ -987,9 +994,10 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxShells = 100;
 			m_iMaxRockets = 0;
-			m_iShellDamage = 15;
+			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
 
-			m_flShellCycleTime = 0.2f;
+			//m_flShellCycleTime = 0.2f;
+			m_flShellCycleTime = ffdev_sg_rof_lvl1.GetFloat();
 
 			m_iMaxHealth = SG_HEALTH_LEVEL1;
 			m_iHealth = SG_HEALTH_LEVEL1;
@@ -1007,9 +1015,10 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxShells = 125;
 			m_iMaxRockets = 0;
-			m_iShellDamage = 15;
+			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
 
-			m_flShellCycleTime = 0.1f;
+			//m_flShellCycleTime = 0.1f;
+			m_flShellCycleTime = ffdev_sg_rof_lvl2.GetFloat();
 
 			m_iMaxHealth = SG_HEALTH_LEVEL2;
 			m_iHealth = SG_HEALTH_LEVEL2;
@@ -1031,9 +1040,10 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxShells = 150;
 			m_iMaxRockets = 20;
-			m_iShellDamage = 15;
+			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
 
-			m_flShellCycleTime = 0.1f;
+			//m_flShellCycleTime = 0.1f;
+			m_flShellCycleTime = ffdev_sg_rof_lvl3.GetFloat();
 			m_flRocketCycleTime = 3.0f;
 
 			m_iMaxHealth = SG_HEALTH_LEVEL3;
