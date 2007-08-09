@@ -25,7 +25,7 @@
 	#include "ff_player.h"
 #endif
 
-ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "100", FCVAR_REPLICATED);
+ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "0", FCVAR_REPLICATED);
 ConVar ffdev_ic_damage("ffdev_ic_damage", "60", FCVAR_REPLICATED);
 
 //=============================================================================
