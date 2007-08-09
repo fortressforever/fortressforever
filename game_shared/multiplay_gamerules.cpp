@@ -709,6 +709,16 @@ bool CMultiplayRules::IsMultiplayer( void )
 			event->SetInt("attacker", killer_ID );
 			event->SetString("weapon", killer_weapon_name);
 			event->SetInt("priority", 10 );
+
+			// #0001568: Falling into pitt damage shows electrocution icon, instead of falling damage icon
+			// Added damagetype field to the player_death message.  This field records the type of damage dealt by a trigger_hurt
+			// so, further down the road, we can determine which death icon to use (e.g. fall, drown, shock) instead of generic -> Defrag
+
+			// if a trigger hurt is causing the damage, add its damage type to the event.  Otherwise, use DMG_GENERIC 
+			if( Q_stricmp( killer_weapon_name, "trigger_hurt" ) == 0 )
+				event->SetInt("damagetype", info.GetDamageType() );
+			else
+				event->SetInt("damagetype", DMG_GENERIC );			
 			
 			gameeventmanager->FireEvent( event );
 		}

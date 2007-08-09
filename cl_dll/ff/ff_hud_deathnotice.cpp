@@ -323,10 +323,47 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	// Stuffs for handling buildable deaths
 	bool bBuildableKilled = false;
 
+	// trigger hurt death
+	bool bTriggerHurt = false;
+	char tempTriggerHurtString[128];
 	char fullkilledwith[128];
+
 	if ( killedwith && *killedwith )
 	{
-		Q_snprintf( fullkilledwith, sizeof(fullkilledwith), "death_%s", killedwith );
+		// #0001568: Falling into pitt damage shows electrocution icon, instead of falling damage icon.  Until now there was no way
+		// to identify different types of trigger_hurt deaths, so I added a "damagetype" field to the player_death event.
+		// if a trigger_hurt is the killer, check the damage type and append it to the killer's name in a temp string (post-fix append)
+		// e.g. if it's DMG_FALL, it's falling damage, so the complete string becomes death_trigger_hurt_fall.  
+		// Match up the corresponding icons in scripts/ff_hud_textures.txt		-> Defrag
+
+		if( Q_stricmp( "trigger_hurt", killedwith ) == 0 )
+		{
+			bTriggerHurt = true;
+
+			switch( event->GetInt( "damagetype" ))
+			{
+			case DMG_FALL:
+				Q_snprintf( tempTriggerHurtString, sizeof(tempTriggerHurtString), "%s_fall", killedwith );
+				break;
+
+			case DMG_DROWN:
+				Q_snprintf( tempTriggerHurtString, sizeof(tempTriggerHurtString), "%s_drown", killedwith );
+				break;
+
+			default:
+				Q_strncpy( tempTriggerHurtString, killedwith, sizeof(tempTriggerHurtString));
+				break;
+			}
+		}	
+
+		if( bTriggerHurt )	// copy different string if it's a trigger_hurt death (see above)
+		{
+			Q_snprintf( fullkilledwith, sizeof(fullkilledwith), "death_%s", tempTriggerHurtString );
+		}
+		else
+		{
+			Q_snprintf( fullkilledwith, sizeof(fullkilledwith), "death_%s", killedwith );
+		}		
 	}
 	else
 	{
@@ -392,7 +429,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	}
 	else
 		deathMsg.iconBuildable = NULL;
-
+	
 	deathMsg.iSuicide = ( !killer || ( ( killer == victim ) && ( !bBuildableKilled ) ) );
 
 	// 0000336: If we have a Detpack...
