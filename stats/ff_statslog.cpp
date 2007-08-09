@@ -440,7 +440,7 @@ void SendStats()
 	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
 
 	// stop crashing server!
-	return;
+	//return;
 
 	// Aegeus crashed on line 450 (which is below the return ^^). How did
 	// this happen?
