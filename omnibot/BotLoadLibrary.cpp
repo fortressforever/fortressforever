@@ -118,10 +118,10 @@ const char *Omnibot_FixPath(const char *_path)
 
 const char *OB_VA(const char* _msg, ...)
 {
-	static char buffer[1024] = {0};
+	static char buffer[8192] = {0};
 	va_list list;
 	va_start(list, _msg);
-	_vsnprintf(buffer, 8192, _msg, list);	
+	_vsnprintf(buffer, sizeof(buffer), _msg, list);	
 	va_end(list);
 	return buffer;
 }
