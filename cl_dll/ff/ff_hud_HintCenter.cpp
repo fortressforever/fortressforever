@@ -10,6 +10,8 @@
 //	---------
 //	2/08/2007, Jiggles:
 //		First created - based significantly off of Mulch's ff_hud_hint.
+//	8/11/2007, Jiggles:
+//		Maaaany changes
 
 #include "cbase.h"
 #include "ff_hud_HintCenter.h"
@@ -157,12 +159,13 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 		vgui::localize()->ConvertANSIToUnicode( pszMessage, szUnlocalizedStr, 512 );
 		pszTemp = szUnlocalizedStr;
 	}
-	//m_pRichText->SetText( "" );
-	//TranslateKeyCommand( pszTemp );
-	//m_pRichText->InsertString( "\n\n" );
-	//m_pRichText->InsertString( oldHintString );
+	m_pRichText->SetText( "" );
+	TranslateKeyCommand( pszTemp );
+
 	m_HintStringsVector.AddToTail( pszTemp );
-	m_pRichText->SetText( pszTemp );
+	if ( m_HintStringsVector.Count() > HINT_HISTORY ) 
+		m_HintStringsVector.Remove( 0 );  // Remove the oldest hint
+
 	m_iCurrentHintIndex = m_HintStringsVector.Count() - 1;
 
 	if (  foundIndex < 0 || m_bHintKeyHeld )  // Hint hasn't been shown yet or user is holding down the hint key
@@ -409,7 +412,7 @@ void CHudHintCenter::VidInit( void )
 		m_pPreviousHintButton->SetSize( B_wide, B_tall );
 		m_pPreviousHintButton->SetPaintBorderEnabled( false );
 	}
-	m_iCurrentHintIndex = -1;
+
 	m_flLastHintDuration = 0.0f;
 	m_iLastHintPriority = 0;
 }
@@ -585,7 +588,8 @@ void CHudHintCenter::OnCommand( const char *command )
 			if ( m_iCurrentHintIndex < ( m_HintStringsVector.Count() - 1 ) )
 			{
 				m_iCurrentHintIndex++;
-				m_pRichText->SetText( m_HintStringsVector[m_iCurrentHintIndex] );
+				m_pRichText->SetText( "" );
+				TranslateKeyCommand( m_HintStringsVector[m_iCurrentHintIndex] );
 			}
 		}
 	}
@@ -597,7 +601,8 @@ void CHudHintCenter::OnCommand( const char *command )
 			if ( m_iCurrentHintIndex > 0 )
 			{
 				m_iCurrentHintIndex--;
-				m_pRichText->SetText( m_HintStringsVector[m_iCurrentHintIndex] );
+				m_pRichText->SetText( "" );
+				TranslateKeyCommand( m_HintStringsVector[m_iCurrentHintIndex] );
 			}
 		}
 	}
