@@ -361,7 +361,7 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 {
 	VPROF_BUDGET( "CFFStatsLog::Serialise", VPROF_BUDGETGROUP_FF_STATS );
 
-	DevMsg("[STATS] Generating Serialized stats log\n");
+	Msg("[STATS] Generating Serialized stats log\n");
 
 	// build the auth string here
 	const char *pszLogin = "ff-test";
@@ -369,7 +369,7 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	const char *pszDate = GetTimestampString(); // abuse staticness of return here
 	char preAuthString[80];
 	Q_snprintf( preAuthString, 80, "%s%s%s", pszLogin, pszSecret, pszDate );
-	DevMsg( "[STATS] preAuthString: [%s]\n", preAuthString );
+	//DevMsg( "[STATS] preAuthString: [%s]\n", preAuthString );
 
 	int i, j, offset = 0;
 
@@ -449,11 +449,11 @@ void SendStats()
 	// this is kind of wasteful :(
 	char buf[100000], buf2[120000];
 
-	DevMsg("[STATS] Sending stats...\n");
+	Msg("[STATS] Sending stats...\n");
 
 	g_StatsLogSingleton.Serialise(buf, sizeof(buf));
-	DevMsg(buf);
-	DevMsg("------\n\n");
+	//Msg(buf);
+	//Msg("------\n\n");
 
 	// generate post-data first (size is used in the part below)
 	Q_snprintf(buf2, sizeof(buf2),
@@ -478,29 +478,29 @@ void SendStats()
 		strlen(buf2),
 		buf2);
 
-	DevMsg(buf);
-	UTIL_LogPrintf(buf);
+	Msg(buf);
+	//UTIL_LogPrintf(buf);
 
 	Socks sock;
 
 	// Open up a socket
 	if (!sock.Open(/*SOCK_STREAM */ 1, 0)) 
 	{
-		DevWarning("[STATS] Could not open socket\n");
+		Warning("[STATS] Could not open socket\n");
 		return;
 	}
 
 	// Connect to remote host
 	if (!sock.Connect(STATS_HOST, 80)) 
 	{
-		DevWarning("[STATS] Could not connect to remote host\n");
+		Warning("[STATS] Could not connect to remote host\n");
 		return;
 	}
 
 	// Send data
 	if (!sock.Send(buf)) 
 	{
-		DevWarning("[STATS] Could not send data to remote host\n");
+		Warning("[STATS] Could not send data to remote host\n");
 		sock.Close();
 		return;
 	}
@@ -508,7 +508,7 @@ void SendStats()
 	// Send data
 	if (!sock.Send(buf)) 
 	{
-		DevWarning("[STATS] Could not send data to remote host\n");
+		Warning("[STATS] Could not send data to remote host\n");
 		sock.Close();
 		return;
 	}
@@ -518,14 +518,14 @@ void SendStats()
 	// Send data
 	if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
 	{
-		DevWarning("[STATS] Did not get response from stats server\n");
+		Warning("[STATS] Did not get response from stats server\n");
 		sock.Close();
 		return;
 	}
 
 	buf[a] = '\0';
 
-	DevMsg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
+	Msg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
 
 	// Close socket
 	sock.Close();
