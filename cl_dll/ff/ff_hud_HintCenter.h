@@ -10,6 +10,8 @@
 //	---------
 //	2/08/2007, Jiggles:
 //		First created - based significantly off of Mulch's ff_hud_hint.
+//	8/11/2007, Jiggles:
+//		Maaaany changes
 
 #ifndef FF_HUD_HINTCENTER_H
 #define FF_HUD_HINTCENTER_H
@@ -17,11 +19,9 @@
 #include "hudelement.h"
 #include "iclientmode.h"
 
-//#include "ff_panel.h"
 
 using namespace vgui;
 
-//#include <vgui_controls/Panel.h>
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/AnimationController.h>
 #include "ff_hud_menu.h"
@@ -29,7 +29,7 @@ using namespace vgui;
 
 #define SELECTION_TIMEOUT_THRESHOLD		10.0f	// Seconds
 #define SELECTION_FADEOUT_TIME			1.5f
-#define HINT_HISTORY					512		// Size of old hint buffer
+#define HINT_HISTORY					100		// Number of hint strings to remember
 
 class CHudHintCenter : public CHudElement, public vgui::Frame
 {
@@ -44,10 +44,6 @@ public:
 	void	KeyDown( void );
 	void	KeyUp( void );
 
-
-	//void	MouseMove( float *x, float *y );
-	//void	SetMenu( void );
-	//void	DoCommand( const char *pszCmd );
 
 	// Stuff we need to know
 	CPanelAnimationVar( vgui::HFont, m_hIconFont, "IconFont", "HudHintCenterIcon" );
@@ -99,14 +95,12 @@ private:
 
 	void PerformLayout(); // Resizes text box if user changes resolution
 
-	//MESSAGE_FUNC_PARAMS( OnButtonCommand, "Command", data );
-	virtual void OnCommand(const char *command);
+	virtual void OnCommand(const char *command); // Catches button presses
 
 	bool			m_bHintCenterVisible;
 	CHudTexture		*m_pHudIcon;
 	CHudTexture		*m_pHudIconGlow;
 
-	//float		m_flStartTime;	// When the message was recevied
 	float		m_flLastHintDuration;	// Duration of the hint
 	short		m_iLastHintPriority;		// How important was the last hint?
 
@@ -117,18 +111,10 @@ private:
 	CUtlVector< struct HintInfo > m_HintVector;  // Stores whether a hint has been shown yet
 
 	CUtlVector< wchar_t * > m_HintStringsVector;   // Stores old hint strings
-	int			m_iCurrentHintIndex;		   // Which hint is being shown right now?
+	int			m_iCurrentHintIndex;			   // Which hint is being shown right now?
 
 	//CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont", "HudSelectionNumbers" );
 	//CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudSelectionText" );
-
-	//CPanelAnimationVarAliasType( float, m_flSmallBoxSize, "SmallBoxSize", "32", "proportional_float" );
-	//CPanelAnimationVarAliasType( float, m_flLargeBoxWide, "LargeBoxWide", "108", "proportional_float" );
-	//CPanelAnimationVarAliasType( float, m_flLargeBoxTall, "LargeBoxTall", "72", "proportional_float" );
-	//CPanelAnimationVarAliasType( float, m_flBoxGap, "BoxGap", "12", "proportional_float" );
-
-	//CPanelAnimationVarAliasType( float, m_flSelectionNumberXPos, "SelectionNumberXPos", "4", "proportional_float" );
-	//CPanelAnimationVarAliasType( float, m_flSelectionNumberYPos, "SelectionNumberYPos", "4", "proportional_float" );
 
 	CPanelAnimationVarAliasType( float, m_flTextYPos, "TextYPos", "54", "proportional_float" );
 
@@ -136,9 +122,7 @@ private:
 	CPanelAnimationVar( float, m_flSelectionAlphaOverride, "SelectionAlpha", "255" );
 
 	CPanelAnimationVar( Color, m_TextColor, "TextColor", "SelectionTextFg" );
-	//CPanelAnimationVar( Color, m_NumberColor, "NumberColor", "SelectionNumberFg" );
-	//CPanelAnimationVar( Color, m_EmptyBoxColor, "EmptyBoxColor", "SelectionEmptyBoxBg" );
-	//CPanelAnimationVar( Color, m_BoxColor, "BoxColor", "SelectionBoxBg" );
+
 	CPanelAnimationVar( Color, m_BGBoxColor, "BGBoxColor", "Dark" );
 
 	CPanelAnimationVar( float, m_flWeaponPickupGrowTime, "SelectionGrowTime", "0.1" );
