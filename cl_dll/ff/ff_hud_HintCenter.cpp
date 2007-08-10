@@ -18,11 +18,12 @@
 #include "hud_macros.h"
 #include "mathlib.h"
 
-#include <KeyValues.h>
+#include "KeyValues.h"
 #include <vgui/ISurface.h>
 #include <vgui/ISystem.h>
 
 #include <vgui_controls/RichText.h>
+#include <vgui_controls/Button.h>
 
 #include "c_ff_player.h"
 #include "ff_utils.h"
@@ -34,11 +35,6 @@ extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 using namespace vgui;
 
-//extern ConVar sensitivity;
-//extern ConVar cm_capturemouse;
-//extern ConVar cm_showmouse;
-
-//#define MENU_PROGRESS_TIME	0.3f
 
 // Global
 CHudHintCenter *g_pHintCenter = NULL;
@@ -50,6 +46,34 @@ ConVar hudhints( "cl_hudhints", "1", FCVAR_ARCHIVE, "Display hints" );
 
 DECLARE_HUDELEMENT( CHudHintCenter );
 DECLARE_HUD_MESSAGE( CHudHintCenter, FF_SendHint );
+
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+CHudHintCenter::CHudHintCenter( const char *pElementName ) : CHudElement( pElementName ), vgui::Frame( NULL, "HudHintCenter" ) 
+{
+	SetParent( g_pClientMode->GetViewport() );
+	// Hide when player is dead
+	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	
+	m_pRichText = NULL;
+
+	// initialize dialog
+	SetProportional(true);
+	SetKeyBoardInputEnabled(false);
+	SetMouseInputEnabled(true);
+	SetSizeable(false);
+	SetMoveable(false);
+	// hide the system buttons
+	SetTitleBarVisible( false );
+
+	m_iCurrentHintIndex = -1;
+
+
+}
+
 
 
 //-----------------------------------------------------------------------------
@@ -67,6 +91,18 @@ CHudHintCenter::~CHudHintCenter( void )
 		delete m_pHudIconGlow;
 		m_pHudIconGlow = NULL;
 	}
+
+	if( m_pNextHintButton )
+	{
+		delete m_pNextHintButton;
+		m_pNextHintButton = NULL;
+	}
+	if( m_pPreviousHintButton )
+	{
+		delete m_pPreviousHintButton;
+		m_pPreviousHintButton = NULL;
+	}
+
 	g_pHintHelper = NULL;
 }
 
@@ -80,67 +116,14 @@ void CHudHintCenter::Init( void )
 
 
 
+//-----------------------------------------------------------------------------
+// Purpose: Adds a hint to the hint box
+//-----------------------------------------------------------------------------
 void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hintPriority, const char *pszMessage )
 {
-	// First off, we're now ignoring hints which are triggered while a hint is
-	// playing. We don't queue them up because they'll probably have lost relevancy
-	// by the time they are played.
-	//if (gpGlobals->curtime < m_flNextHint && m_bActive)
-	//{
-		//DevMsg("[Hud Hint] Hint ignored (%s)\n", pszMessage);
-	//	return;
-	//}
-
-	//DevMsg( "[Hud Hint] AddHudHint: %s\n", pszMessage );
-
-	// When adding a hud hint we need to do a couple of things
-	// Firstly, check to see if it's a new hint (ie. a hint
-	// that the user hasn't seen before)
-	//HintVector *sHint = NULL;
-
-	//if (bType == HINT_GENERAL)
-	//	sHint = &sGeneralHints;
-	//else
-	//	sHint = &sMapHints;
-
-	//// Already in list of shown hints, so not active by default
-	//m_bActive = sHint->HasElement(wID);
-
-	// Secondly, if it's a new hint, add it to our log file
-	// thing
-	//if (m_bActive)
-	//	sHint->AddToTail(wID);
-
-	// Thirdly, display the new hint
-	// Fourthly, if it's not a new hint we simply show
-	// an icon on the screen that tells the user they can
-	// hit their "show hint" key to view the old hint
-
-
-	// TODO: TODO: TODO:
-	// Do this here for now in case the dev team
-	// is testing different durations and/or trying
-	// to find the duration they want. Hard code it
-	// later in VidInit or Init. This just lets it
-	// get updated everytime we get a new hud hint.
-	//m_flDuration = hint_duration.GetInt();
-	//m_flStarted = gpGlobals->curtime;
-	//m_flNextHint = m_flStarted + m_flDuration + 2.0f;
-
-
 	// Hints are off -- ignore the hint
 	if( !hudhints.GetBool() )
 		return;
-	
-	//int foundIndex = -1;
-	//for ( int i = 0; i < m_HintVector.Count(); ++i )
-	//{
-	//	if ( m_HintVector(i).HintIndex == hintID )
-	//	{
-	//		foundIndex = i;
-	//		break;
-	//	}
-	//}
 
 	// Ignore hints that are less important than the one currently showing
 	if ( ( hintPriority < m_iLastHintPriority ) && ( gpGlobals->curtime < m_flLastHintDuration ) )
@@ -165,8 +148,8 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 	m_flLastHintDuration = gpGlobals->curtime + SELECTION_TIMEOUT_THRESHOLD + SELECTION_FADEOUT_TIME;
 	
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
-	char oldHintString[HINT_HISTORY];
-	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) ); 
+	//char oldHintString[HINT_HISTORY];
+	//m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) ); 
 	wchar_t *pszTemp = vgui::localize()->Find( pszMessage );
 	wchar_t szUnlocalizedStr[4096];
 	if( !pszTemp )
@@ -174,11 +157,13 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 		vgui::localize()->ConvertANSIToUnicode( pszMessage, szUnlocalizedStr, 512 );
 		pszTemp = szUnlocalizedStr;
 	}
-	m_pRichText->SetText( "" );
-	TranslateKeyCommand( pszTemp );
-	m_pRichText->InsertString( "\n\n" );
-	m_pRichText->InsertString( oldHintString );
-	
+	//m_pRichText->SetText( "" );
+	//TranslateKeyCommand( pszTemp );
+	//m_pRichText->InsertString( "\n\n" );
+	//m_pRichText->InsertString( oldHintString );
+	m_HintStringsVector.AddToTail( pszTemp );
+	m_pRichText->SetText( pszTemp );
+	m_iCurrentHintIndex = m_HintStringsVector.Count() - 1;
 
 	if (  foundIndex < 0 || m_bHintKeyHeld )  // Hint hasn't been shown yet or user is holding down the hint key
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
@@ -213,7 +198,9 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 }
 
 
-
+//-----------------------------------------------------------------------------
+// Purpose: Receives a server-side hint
+//-----------------------------------------------------------------------------
 void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 {
 
@@ -221,7 +208,6 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	if( !hudhints.GetBool() )
 		return;
 
-	//Msg("HINT MESSAGE RECEIVED!!!\n");
 	// Buffer
 	char szString[ 4096 ];
 	//char szSound[ 4096 ];
@@ -255,39 +241,6 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	
 	AddHudHint( wID, NumToShow, HintImportance, szString );
 
-	// Save some of the old hints -- note that this will cut them off at an arbitrary point
-	//char oldHintString[HINT_HISTORY];
-	//m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) );
-	//wchar_t *pszTemp = vgui::localize()->Find( szString );
-	//wchar_t szUnlocalizedStr[4096];
-	//if( !pszTemp )
-	//{
-	//	vgui::localize()->ConvertANSIToUnicode( szString, szUnlocalizedStr, 512 );
-	//	pszTemp = szUnlocalizedStr;
-	//}
-	//m_pRichText->SetText( "" );
-	//TranslateKeyCommand( pszTemp );
-	////m_pRichText->SetText( szString );
-	//m_pRichText->InsertString( "\n\n" );
-	//m_pRichText->InsertString( oldHintString );
-
-	//int foundIndex = m_HintVector.Find( wID );
-	//if (  foundIndex < 0 )  // Hint not shown yet
-	//{
-	//	m_HintVector.AddToTail( wID );
-	//	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
-	//}
-	//else if ( m_bHintKeyHeld )
-	//	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
-	//else
-	//	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenterIcon" );
-	//
-	//m_bFadingOut = false;
-	//m_bHintCenterVisible = true;
-	//m_flSelectionTime = gpGlobals->curtime;
-
-	//Activate();
-	//SetMouseInputEnabled(false);
 }
 
 
@@ -301,7 +254,7 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 //			 hint string into SHIFT.
 //-------------------------------------------------------------------------------
 bool CHudHintCenter::TranslateKeyCommand( wchar_t *psHintMessage )
-{
+{	// NOTE: DON'T USE THIS FUNCTION!  IT NEEDS RE-WRITING!
 	if ( !psHintMessage )
 	{
 		Warning( "Error: Received a hint message that was formatted incorrectly!\n" );
@@ -359,7 +312,7 @@ bool CHudHintCenter::TranslateKeyCommand( wchar_t *psHintMessage )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Resizes the text box if the user changes resolutions
+// Purpose: Resizes the text box and buttons if the user changes resolutions
 //-----------------------------------------------------------------------------
 void CHudHintCenter::PerformLayout()
 {
@@ -368,8 +321,19 @@ void CHudHintCenter::PerformLayout()
 	if ( m_pRichText )
 	{
 		m_pRichText->SetPos( text1_xpos, text1_ypos );
-		m_pRichText->SetWide( text1_wide );
-		m_pRichText->SetTall( text1_tall );
+		m_pRichText->SetSize( text1_wide, text1_tall );
+	}
+
+	if( m_pNextHintButton )
+	{
+		m_pNextHintButton->SetPos( NextB_xpos, NextB_ypos );
+		m_pNextHintButton->SetSize( B_wide, B_tall );
+	}
+
+	if( m_pPreviousHintButton )
+	{
+		m_pPreviousHintButton->SetPos( PrevB_xpos, PrevB_ypos );
+		m_pPreviousHintButton->SetSize( B_wide, B_tall );
 	}
 }
 
@@ -417,10 +381,9 @@ void CHudHintCenter::VidInit( void )
 	if (!m_pRichText)
 	{
 		m_pRichText = new RichText(this, "HudHintText");
-		m_pRichText->SetVerticalScrollbar( true );
+		m_pRichText->SetVerticalScrollbar( false );
 		m_pRichText->SetPos( text1_xpos, text1_ypos );
-		m_pRichText->SetWide( text1_wide );
-		m_pRichText->SetTall( text1_tall );
+		m_pRichText->SetSize( text1_wide, text1_tall );
 
 		//m_pRichText->SetBorder( NULL );
 		//m_pRichText->InsertColorChange( m_TextColor );
@@ -431,6 +394,22 @@ void CHudHintCenter::VidInit( void )
 	
 	}
 
+	// Set up the next/previous hint buttons
+	if( !m_pNextHintButton )
+	{
+		m_pNextHintButton = new Button(this, "NextButton", ">>", this, "Next");
+		m_pNextHintButton->SetPos( NextB_xpos, NextB_ypos );
+		m_pNextHintButton->SetSize( B_wide, B_tall );
+		m_pNextHintButton->SetPaintBorderEnabled( false );
+	}
+	if( !m_pPreviousHintButton )
+	{
+		m_pPreviousHintButton = new Button(this, "PrevButton", "<<", this, "Prev");
+		m_pPreviousHintButton->SetPos( PrevB_xpos, PrevB_ypos );
+		m_pPreviousHintButton->SetSize( B_wide, B_tall );
+		m_pPreviousHintButton->SetPaintBorderEnabled( false );
+	}
+	m_iCurrentHintIndex = -1;
 	m_flLastHintDuration = 0.0f;
 	m_iLastHintPriority = 0;
 }
@@ -558,7 +537,7 @@ void CHudHintCenter::Paint( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: User is pressing their menu key
+// Purpose: User is pressing the hint key
 //-----------------------------------------------------------------------------
 void CHudHintCenter::KeyDown( void )
 {
@@ -577,7 +556,7 @@ void CHudHintCenter::KeyDown( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: User let go of menu key
+// Purpose: User let go of the hint key
 //-----------------------------------------------------------------------------
 void CHudHintCenter::KeyUp( void )
 {
@@ -594,31 +573,33 @@ void CHudHintCenter::KeyUp( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Catch the next/previous hint buttons. 
 //-----------------------------------------------------------------------------
-//void CHudHintCenter::MouseMove( float *x, float *y ) 
-//{
-//	float sensitivity_factor = 1.0f / ( sensitivity.GetFloat() == 0 ? 0.001f : sensitivity.GetFloat() );
-//
-//	float midx = scheme()->GetProportionalScaledValue( 320 );
-//	float midy = scheme()->GetProportionalScaledValue( 240 );
-//	float dist = scheme()->GetProportionalScaledValue( 120 );
-//
-//	m_flPosX = clamp( m_flPosX + ( *x * sensitivity_factor ), midx - dist, midx + dist );
-//	m_flPosY = clamp( m_flPosY + ( *y * sensitivity_factor ), midy - dist, midy + dist );
-//
-//	if( m_bHintCenterVisible && cm_capturemouse.GetBool() )
-//	{
-//		*x = 0;
-//		*y = 0;
-//	}
-//}
+void CHudHintCenter::OnCommand( const char *command )
+{
+	// The Next Hint button was pressed
+	if ( Q_strcmp( command, "Next" ) == 0 )
+	{
+		if ( m_pRichText )
+		{	// Don't fall off the end!
+			if ( m_iCurrentHintIndex < ( m_HintStringsVector.Count() - 1 ) )
+			{
+				m_iCurrentHintIndex++;
+				m_pRichText->SetText( m_HintStringsVector[m_iCurrentHintIndex] );
+			}
+		}
+	}
+	// The Previous Hint button was pressed
+	else if ( Q_strcmp( command, "Prev" ) == 0 )
+	{
+		if ( m_pRichText )
+		{	// Don't fall off the beginning!
+			if ( m_iCurrentHintIndex > 0 )
+			{
+				m_iCurrentHintIndex--;
+				m_pRichText->SetText( m_HintStringsVector[m_iCurrentHintIndex] );
+			}
+		}
+	}
+}
 
-//-----------------------------------------------------------------------------
-// Purpose: Send mouse to the menu
-//-----------------------------------------------------------------------------
-//void HudHintCenterInput( float *x, float *y ) 
-//{
-//	if( g_pHintCenter )
-//		g_pHintCenter->MouseMove( x, y );
-//}
