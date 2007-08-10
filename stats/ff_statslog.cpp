@@ -479,53 +479,54 @@ void SendStats()
 		buf2);
 
 	DevMsg(buf);
+	UTIL_LogPrintf(buf);
 
-	//Socks sock;
+	Socks sock;
 
-	//// Open up a socket
-	//if (!sock.Open(/*SOCK_STREAM */ 1, 0)) 
-	//{
-	//	DevWarning("[STATS] Could not open socket\n");
-	//	return;
-	//}
+	// Open up a socket
+	if (!sock.Open(/*SOCK_STREAM */ 1, 0)) 
+	{
+		DevWarning("[STATS] Could not open socket\n");
+		return;
+	}
 
-	//// Connect to remote host
-	//if (!sock.Connect(STATS_HOST, 80)) 
-	//{
-	//	DevWarning("[STATS] Could not connect to remote host\n");
-	//	return;
-	//}
+	// Connect to remote host
+	if (!sock.Connect(STATS_HOST, 80)) 
+	{
+		DevWarning("[STATS] Could not connect to remote host\n");
+		return;
+	}
 
-	//// Send data
-	//if (!sock.Send(buf)) 
-	//{
-	//	DevWarning("[STATS] Could not send data to remote host\n");
-	//	sock.Close();
-	//	return;
-	//}
+	// Send data
+	if (!sock.Send(buf)) 
+	{
+		DevWarning("[STATS] Could not send data to remote host\n");
+		sock.Close();
+		return;
+	}
 
-	//// Send data
-	//if (!sock.Send(buf)) 
-	//{
-	//	DevWarning("[STATS] Could not send data to remote host\n");
-	//	sock.Close();
-	//	return;
-	//}
+	// Send data
+	if (!sock.Send(buf)) 
+	{
+		DevWarning("[STATS] Could not send data to remote host\n");
+		sock.Close();
+		return;
+	}
 
-	//int a;
+	int a;
 
-	//// Send data
-	//if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
-	//{
-	//	DevWarning("[STATS] Did not get response from stats server\n");
-	//	sock.Close();
-	//	return;
-	//}
+	// Send data
+	if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
+	{
+		DevWarning("[STATS] Did not get response from stats server\n");
+		sock.Close();
+		return;
+	}
 
-	//buf[a] = '\0';
+	buf[a] = '\0';
 
-	//DevMsg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
+	DevMsg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
 
-	//// Close socket
-	//sock.Close();
+	// Close socket
+	sock.Close();
 }
