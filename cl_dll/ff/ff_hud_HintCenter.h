@@ -37,24 +37,7 @@ private:
 	DECLARE_CLASS_SIMPLE( CHudHintCenter, vgui::Frame );
 
 public:
-	CHudHintCenter( const char *pElementName ) : CHudElement( pElementName ), vgui::Frame( NULL, "HudHintCenter" ) 
-	{
-		SetParent( g_pClientMode->GetViewport() );
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
-		
-		m_pRichText = NULL;
-
-		// initialize dialog
-		SetProportional(true);
-		SetKeyBoardInputEnabled(false);
-		SetMouseInputEnabled(true);
-		SetSizeable(false);
-		SetMoveable(false);
-		// hide the system buttons
-		SetTitleBarVisible( false );
-	}
-
+	CHudHintCenter( const char *pElementName );
 	~CHudHintCenter( void );	
 
 public:
@@ -78,6 +61,17 @@ public:
 
 	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "2", "proportional_float" );
 	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "4", "proportional_float" );
+
+	// The Next/Previous Hint button positions/sizes
+	CPanelAnimationVarAliasType( float, NextB_xpos, "NextB_xpos", "235", "proportional_float" );
+	CPanelAnimationVarAliasType( float, NextB_ypos, "NextB_ypos", "55", "proportional_float" );
+	CPanelAnimationVarAliasType( float, B_wide, "B_wide", "20", "proportional_float" );
+	CPanelAnimationVarAliasType( float, B_tall, "B_tall", "10", "proportional_float" );
+
+	CPanelAnimationVarAliasType( float, PrevB_xpos, "PrevB_xpos", "5", "proportional_float" );
+	CPanelAnimationVarAliasType( float, PrevB_ypos, "PrevB_ypos", "55", "proportional_float" );
+
+
 
 public:
 	virtual void Init( void );
@@ -105,6 +99,8 @@ private:
 
 	void PerformLayout(); // Resizes text box if user changes resolution
 
+	//MESSAGE_FUNC_PARAMS( OnButtonCommand, "Command", data );
+	virtual void OnCommand(const char *command);
 
 	bool			m_bHintCenterVisible;
 	CHudTexture		*m_pHudIcon;
@@ -114,9 +110,14 @@ private:
 	float		m_flLastHintDuration;	// Duration of the hint
 	short		m_iLastHintPriority;		// How important was the last hint?
 
-	RichText	*m_pRichText;	// Stores the hint text for display
+	RichText	*m_pRichText;				// Stores the hint text for display
+	Button		*m_pNextHintButton;			// Click to display the next hint
+	Button		*m_pPreviousHintButton;		// Click to display the previous hint
 
-	CUtlVector<struct HintInfo> m_HintVector;  // Stores whether a hint has been shown yet
+	CUtlVector< struct HintInfo > m_HintVector;  // Stores whether a hint has been shown yet
+
+	CUtlVector< wchar_t * > m_HintStringsVector;   // Stores old hint strings
+	int			m_iCurrentHintIndex;		   // Which hint is being shown right now?
 
 	//CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont", "HudSelectionNumbers" );
 	//CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudSelectionText" );
