@@ -67,6 +67,10 @@ public:
 	CPanelAnimationVarAliasType( float, PrevB_xpos, "PrevB_xpos", "5", "proportional_float" );
 	CPanelAnimationVarAliasType( float, PrevB_ypos, "PrevB_ypos", "55", "proportional_float" );
 
+	// Where to put the hint index thingy
+	CPanelAnimationVarAliasType( float, index_xpos, "index_xpos", "9", "proportional_float" );
+	CPanelAnimationVarAliasType( float, index_ypos, "index_ypos", "45", "proportional_float" );
+
 
 
 public:
@@ -112,6 +116,8 @@ private:
 
 	CUtlVector< wchar_t * > m_HintStringsVector;   // Stores old hint strings
 	int			m_iCurrentHintIndex;			   // Which hint is being shown right now?
+
+	wchar_t m_szHintCounter[10];				   // Stores current hint number in format: current # / total hint #
 
 	//CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont", "HudSelectionNumbers" );
 	//CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudSelectionText" );
