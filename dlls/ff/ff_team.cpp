@@ -70,17 +70,13 @@ void CFFTeam::SetEasyAllies( int iTeam )
 	CBaseEntity *p = NULL;
 	p->Activate();
 #else
-	int iAllies = 0;
-	switch( iTeam )
-	{
-		case TEAM_BLUE:		iAllies = 4; break;
-		case TEAM_RED:		iAllies = 8; break;
-		case TEAM_YELLOW:	iAllies = 16; break;
-		case TEAM_GREEN:	iAllies = 32; break;
-	}
-
-	m_iAllies += iAllies;
+	m_iAllies |= (1<<iTeam);
 #endif // FF_BETA_TEST_COMPILE
+}
+
+void CFFTeam::ClearAllies()
+{
+	m_iAllies = 0;
 }
 
 int CFFTeam::GetAllies( void )

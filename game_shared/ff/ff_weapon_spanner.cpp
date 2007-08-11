@@ -175,6 +175,10 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			// If the dispenser is mine, a team mates, or an allies, don't hurt it, ever
 			if( bMine || bFriendly ) 
 			{
+				// DrEvil: Added IsBuilt check to fix upgrading when build in progress
+				if(!pDispenser->IsBuilt())
+					return;
+
 				// If it's damaged, restore it's health on the first clang
 				if( pDispenser->NeedsHealth() ) 
 				{
@@ -233,6 +237,10 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			// If the sentrygun is mine, a team mates, or an allies, don't hurt it, ever
 			if( bMine || bFriendly ) 
 			{
+				// DrEvil: Added IsBuilt check to fix upgrading when build in progress
+				if(!pSentryGun->IsBuilt())
+					return;
+
 				// Try to upgrade first
 				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= 130)) 
 				{

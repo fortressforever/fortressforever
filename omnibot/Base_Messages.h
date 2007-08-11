@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-07-30 07:26:44 -0700 (Mon, 30 Jul 2007) $
-// $LastChangedRevision: 2122 $
+// $LastChangedDate: 2007-08-10 21:14:25 -0700 (Fri, 10 Aug 2007) $
+// $LastChangedRevision: 2123 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -141,6 +141,17 @@ struct WeaponHeatLevel
 	FireMode	m_FireMode;
 	float		m_CurrentHeat;
 	float		m_MaxHeat;
+};
+
+struct TurretProperties
+{
+	float		m_DefaultAimVector[3];
+	float		m_CurrentAimVector[3];
+	float		m_MinYaw;
+	float		m_MaxYaw;
+	float		m_MinPitch;
+	float		m_MaxPitch;
+	int			m_WeaponId;
 };
 
 struct ControllingTeam
@@ -369,6 +380,11 @@ struct Event_ScriptMessage
 	char		m_MessageData1[64];
 	char		m_MessageData2[64];
 	char		m_MessageData3[64];
+};
+
+struct Event_ScriptSignal
+{
+	char		m_SignalName[64];
 };
 
 #pragma pack(pop)

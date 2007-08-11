@@ -6800,6 +6800,7 @@ Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 	{
 		return GetVehicle()->GetVehicleEnt()->BodyTarget(posSrc, bNoisy);
 	}
+
 	if (bNoisy)
 	{
 		return GetLegacyAbsOrigin() + (Vector(0, 0, 28) * random->RandomFloat(0.5f, 1.1f));

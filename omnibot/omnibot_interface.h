@@ -134,6 +134,8 @@ namespace Omnibot
 	void Notify_FireOutput(const char *_entityname, const char *_output);
 
 	void BotSendTriggerEx(const char *_entityname, const char *_action);
+	void SendBotSignal(const char *_signal);
+
 	void SpawnBotAsync(const char *_name, int _team, int _class, CFFInfoScript *_spawnpoint = 0);
 	void SpawnBot(const char *_name, int _team, int _class, CFFInfoScript *_spawnpoint = 0);
 };

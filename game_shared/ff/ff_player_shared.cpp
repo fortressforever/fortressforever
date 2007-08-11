@@ -632,8 +632,7 @@ Vector CFFPlayer::GetWaistOrigin( void )
 //-----------------------------------------------------------------------------
 int CFFPlayer::GetHealthPercentage( void ) const
 {
-	float flPerc;
-	flPerc = ((float) GetHealth() / (float) GetMaxHealth()) * 100.0f;
+	float flPerc = ((float) GetHealth() / (float) GetMaxHealth()) * 100.0f;
 	return (int) flPerc;
 }
 
@@ -642,8 +641,7 @@ int CFFPlayer::GetHealthPercentage( void ) const
 //-----------------------------------------------------------------------------
 int CFFPlayer::GetArmorPercentage( void ) const
 {
-	float flPerc;
-	flPerc = ((float) GetArmor() / (float) GetMaxArmor()) * 100.0f;
+	float flPerc = ((float) GetArmor() / (float) GetMaxArmor()) * 100.0f;
 	return (int) flPerc;
 }
 
