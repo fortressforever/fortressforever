@@ -761,9 +761,13 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	// Depending on the teamplay value, take damage
-	//if( !g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), adjustedDamage.GetAttacker() ) )
-	if( ( FFGameRules()->PlayerRelationship( ToFFPlayer( m_hOwner.Get() ), adjustedDamage.GetAttacker() ) == GR_TEAMMATE ) && ( friendlyfire.GetInt() == 0 ) )
+	if( !FFGameRules()->FPlayerCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), adjustedDamage.GetAttacker() ) )
 		return 0;
+
+	// DrEvil: The following is fucking wrong, don't add it back.
+	// It's not as simple as checking player relationship. FPlayerCanTakeDamage compensates for sabotage and shit.
+	/*if( ( FFGameRules()->PlayerRelationship( ToFFPlayer( m_hOwner.Get() ), adjustedDamage.GetAttacker() ) == GR_TEAMMATE ) && ( friendlyfire.GetInt() == 0 ) )
+		return 0;*/
 
 	// If we haven't taken any damage, no need to flicker or report to bots
 	if( adjustedDamage.GetDamage() <= 0 )

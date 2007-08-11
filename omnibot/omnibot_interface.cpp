@@ -22,7 +22,7 @@ extern ConVar mp_prematch;
 // Mirv: Just added this to stop all the redefinition warnings whenever i do a full recompile
 #pragma warning(disable: 4005)
 
-#pragma optimize("", off)
+//#pragma optimize("", off)
 
 #include "BotExports.h"
 
@@ -750,8 +750,6 @@ namespace Omnibot
 					serverpluginhelpers->ClientCommand(pEdict, "saveme");
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_CALLFORENGY))
 					serverpluginhelpers->ClientCommand(pEdict, "engyme");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DISCARD))
-					serverpluginhelpers->ClientCommand(pEdict, "discard");
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_SABOTAGE_SENTRY))
 					serverpluginhelpers->ClientCommand(pEdict, "sentrysabotage");
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_SABOTAGE_DISPENSER))
@@ -1772,6 +1770,12 @@ namespace Omnibot
 						if(pEnt && pEntOther)
 						{
 							pMsg->m_IsAllied = g_pGameRules->PlayerRelationship(pEnt, pEntOther) != GR_NOTTEAMMATE ? True : False;
+							if(pMsg->m_IsAllied && pEntOther->Classify() == CLASS_SENTRYGUN)
+							{
+								CFFSentryGun *pSentry = static_cast<CFFSentryGun*>(pEntOther);
+								if(pSentry->IsShootingTeammates())
+									pMsg->m_IsAllied = False;
+							}
 						}
 					}
 					break;
@@ -2595,7 +2599,7 @@ namespace Omnibot
 			if(serverGravity != sv_gravity.GetFloat())
 			{
 				Event_SystemGravity d = { -sv_gravity.GetFloat() };
-				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ID_GRAVITY, &d, sizeof(d)));
+				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_GRAVITY, &d, sizeof(d)));
 				serverGravity = sv_gravity.GetFloat();
 			}
 
@@ -2676,7 +2680,7 @@ namespace Omnibot
 		if(!IsOmnibotLoaded())
 			return;
 
-		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ID_STARTGAME));
+		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_STARTGAME));
 		g_ReadyForGoals = true;		
 	}
 
@@ -2685,15 +2689,13 @@ namespace Omnibot
 		if(!IsOmnibotLoaded())
 			return;
 
-		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ID_ENDGAME));
+		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ENDGAME));
 		g_ReadyForGoals = false;
 	}
 
 	void Notify_ChatMsg(CBasePlayer *_player, const char *_msg)
 	{
 		if(!IsOmnibotLoaded())
-			return;
-		if(!_player->IsBot())
 			return;
 
 		Event_ChatMessage d;
@@ -2707,8 +2709,11 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
-		if(!_player->IsBot())
-			return;
+
+		Event_ChatMessage d;
+		d.m_WhoSaidIt = HandleFromEntity(_player);
+		Q_strncpy(d.m_Message, _msg ? _msg : "<unknown>",
+			sizeof(d.m_Message) / sizeof(d.m_Message[0]));
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
@@ -2717,14 +2722,8 @@ namespace Omnibot
 			// Check player classes on this player's team
 			if (pPlayer && pPlayer->GetTeamNumber() == _player->GetTeamNumber())
 			{
-				if(IsOmnibotLoaded())
-				{
-					Event_ChatMessage d;
-					d.m_WhoSaidIt = HandleFromEntity(_player);
-					Q_strncpy(d.m_Message, _msg ? _msg : "<unknown>",
-						sizeof(d.m_Message) / sizeof(d.m_Message[0]));
-					g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(PERCEPT_HEAR_TEAMCHATMSG, &d, sizeof(d)));
-				}
+				g_BotFunctions.pfnBotSendEvent(pPlayer->entindex(), 
+					MessageHelper(PERCEPT_HEAR_TEAMCHATMSG, &d, sizeof(d)));
 			}
 		}
 	}
@@ -2808,7 +2807,7 @@ namespace Omnibot
 		d.m_DesiredTeam = _team;
 		d.m_DesiredClass = _class;
 		
-		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ID_CLIENTCONNECTED, &d, sizeof(d)));
+		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_CLIENTCONNECTED, &d, sizeof(d)));
 	}
 
 	void Notify_ClientDisConnected(CBasePlayer *_player)
@@ -2818,7 +2817,7 @@ namespace Omnibot
 
 		int iGameId = _player->entindex();
 		Event_SystemClientDisConnected d = { iGameId };
-		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ID_CLIENTDISCONNECTED, &d, sizeof(d)));
+		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_CLIENTDISCONNECTED, &d, sizeof(d)));
 
 	}
 
@@ -3666,6 +3665,16 @@ namespace Omnibot
 		ti.m_Activator = GameEntity();
 		omnibot_interface::Bot_SendTrigger(&ti);
 	}
+	void SendBotSignal(const char *_signal)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+
+		Event_ScriptSignal d;
+		memset(&d, 0, sizeof(d));
+		Q_strncpy(d.m_SignalName, _signal, sizeof(d.m_SignalName));
+		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_SCRIPTSIGNAL, &d, sizeof(d)));
+	}
 
 	void SpawnBotAsync(const char *_name, int _team, int _class, CFFInfoScript *_spawnpoint)
 	{
@@ -3735,7 +3744,7 @@ namespace Omnibot
 
 				d.m_EntityClass = iClass;
 				g_InterfaceFunctions->GetEntityCategory(ent, d.m_EntityCategory);
-				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ID_ENTITYCREATED, &d, sizeof(d)));
+				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ENTITYCREATED, &d, sizeof(d)));
 				m_EntityHandles[index].m_Used = true;
 			}
 		}
@@ -3749,7 +3758,7 @@ namespace Omnibot
 
 			int index = ENTINDEX(pEnt);
 			d.m_Entity = GameEntity(index, m_EntityHandles[index].m_HandleSerial);
-			g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ID_ENTITYDELETED, &d, sizeof(d)));
+			g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ENTITYDELETED, &d, sizeof(d)));
 			m_EntityHandles[index].m_Used = false;
 			m_EntityHandles[index].m_NewEntity = false;
 			while(++m_EntityHandles[index].m_HandleSerial==0) {}

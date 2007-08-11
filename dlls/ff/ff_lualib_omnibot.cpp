@@ -40,7 +40,8 @@ void CFFLuaLib::InitOmnibot(lua_State* L)
 	ASSERT(L);
 	module(L)
 	[
-		def("SendBotTrigger", &Omnibot::BotSendTriggerEx),
+		def("SendBotTrigger",		&Omnibot::BotSendTriggerEx),
+		def("SendBotSignal",		(void(*)(const char*))&Omnibot::SendBotSignal),
 
 		class_<Omnibot_GoalTypes>("Bot")
 			.enum_("GoalType")

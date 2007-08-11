@@ -66,7 +66,7 @@
 
 // Debug visualization
 ConVar	sg_debug( "ffdev_sg_debug", "1" );
-
+ConVar	sg_usepvs( "ffdev_sg_usepvs", "0" );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
 ConVar  sg_range( "ffdev_sg_range", "1050.0" );
@@ -416,13 +416,23 @@ void CFFSentryGun::OnActiveThink( void )
 	// Update our goal directions
 	Vector vecDirToEnemy = vecMidEnemy - vecMid;
 
+	/*if ( sg_debug.GetBool() )
+	{
+		debugoverlay->AddLineOverlay(vecMid, vecMidEnemy, 255, 0, 255, false, 0.1f);
+	}*/
+
 	// Actually we're pretty close, and we'll wobble unless we use something a 
 	//bit more static as the source
-	if (vecDirToEnemy.LengthSqr() < 10000)
+	/*if (vecDirToEnemy.LengthSqr() < 10000)
 	{
 		vecMid = GetAbsOrigin() + Vector(0, 0, 40.0f);
 		vecDirToEnemy = vecMidEnemy - vecMid;
 	}
+
+	if ( sg_debug.GetBool() )
+	{
+		debugoverlay->AddLineOverlay(vecMid, vecMidEnemy, 255, 255, 0, false, 0.1f);
+	}*/
 
 	VectorNormalize( vecDirToEnemy );
 	VectorAngles( vecDirToEnemy, m_angGoal );
@@ -646,12 +656,35 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget ) const
 	if( vecOrigin.DistTo( vecTarget ) > sg_range.GetFloat() )
 		return false;
 
+	// Check PVS for early out
+	if(sg_usepvs.GetBool())
+	{
+		byte pvs[ MAX_MAP_CLUSTERS/8 ];
+		int iPVSCluster = engine->GetClusterForOrigin(vecOrigin);
+		int iPVSLength = engine->GetPVSForCluster(iPVSCluster, sizeof(pvs), pvs);
+		if(!engine->CheckOriginInPVS(vecTarget, pvs, iPVSLength))
+			return false;
+	}
+
 	// Can we trace to the target?
 	trace_t tr;
 	UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
 
+	/*if ( sg_debug.GetBool() )
+	{
+		int r = 0, g = 0, b = 0;
+		if(tr.fraction < 1.f)
+			r = 255;
+		else
+			g = 255;
+		debugoverlay->AddLineOverlay(vecOrigin, vecTarget, r, g, b, false, 0.1f);
+	}*/
+
 	// What did our trace hit?
-	if( tr.startsolid || ( tr.fraction == 1.0f ) || !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
+	if( tr.startsolid || /*( tr.fraction != 1.0f ) ||*/ !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
+		return false;
+
+	if(tr.m_pEnt != pTarget)
 		return false;
 
 	// Is the trace hit entity a valid sg target
@@ -722,6 +755,11 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	if (IsSabotaged()&& !IsShootingTeammates())
 		info.m_vecSpread = VECTOR_CONE_10DEGREES;
 
+	/*if ( sg_debug.GetBool() )
+	{
+		debugoverlay->AddLineOverlay(vecSrc, vecSrc+vecDir*1024.f, 0, 255, 0, false, 0.2f);
+	}*/
+
 	FireBullets( info );
 	EmitSound( "Sentry.Fire" );
 
@@ -757,6 +795,11 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 
 	QAngle vecAngles;
 	VectorAngles( vecDir, vecAngles );
+
+	/*if ( sg_debug.GetBool() )
+	{
+		debugoverlay->AddLineOverlay(vecSrc, vecSrc+vecDir*1024.f, 0, 255, 0, false, 0.2f);
+	}*/
 
 	CFFProjectileRocket::CreateRocket( this, vecSrc, vecAngles, this, 102, 900.0f );
 
@@ -969,12 +1012,14 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 	VPROF_BUDGET( "CFFSentryGun::Update", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	// Returns true if we upgrade a level
+	bool bUpgraded = false;
 	bool bRetval = false;
 
 	if( bUpgradeLevel ) 
 	{
 		if( m_iLevel < 3 ) 
 		{
+			bUpgraded = true;
 			bRetval = true;
 			m_iLevel++;
 		}
@@ -1082,17 +1127,20 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 	SendStatsToBot();
 
-	IGameEvent *pEvent = gameeventmanager->CreateEvent( "sentrygun_upgraded" );
-	if( pEvent )
+	if(bUpgraded)
 	{
-		CFFPlayer *pOwner = static_cast<CFFPlayer*>( m_hOwner.Get() );
-		pEvent->SetInt( "userid", pOwner->GetUserID() );
-		pEvent->SetInt( "level", m_iLevel );
-		gameeventmanager->FireEvent( pEvent, true );
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "sentrygun_upgraded" );
+		if( pEvent )
+		{
+			CFFPlayer *pOwner = static_cast<CFFPlayer*>( m_hOwner.Get() );
+			pEvent->SetInt( "userid", pOwner->GetUserID() );
+			pEvent->SetInt( "level", m_iLevel );
+			gameeventmanager->FireEvent( pEvent, true );
+		}
 	}
 
 	// Recalculate ammo percentage, 7 bits for shells + 1 bit for no rockets
-	m_iAmmoPercent = 100.0f * (float) m_iShells / m_iMaxShells;
+	m_iAmmoPercent = 100.0f * (float)m_iShells / (float)m_iMaxShells;
 	if( m_iMaxRockets && !m_iRockets ) 
 		m_iAmmoPercent += 128;
 

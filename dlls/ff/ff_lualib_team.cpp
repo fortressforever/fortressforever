@@ -43,6 +43,7 @@ void CFFLuaLib::InitTeam(lua_State* L)
 		// CFFTeam
 		class_<CFFTeam, CTeam>("Team")
 			.def("SetAllies",			&CFFTeam::SetEasyAllies)
+			.def("ClearAllies",			&CFFTeam::ClearAllies)
 			.def("SetClassLimit",		&CFFTeam::SetClassLimit)
 			.def("SetPlayerLimit",		&CFFTeam::SetTeamLimits)
 			.enum_("TeamId")

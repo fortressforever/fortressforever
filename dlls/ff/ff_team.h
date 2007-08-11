@@ -49,6 +49,7 @@ public:
 
 	void SetAllies( int );
 	void SetEasyAllies( int );
+	void ClearAllies();
 	int GetAllies( void );
 
 	void UpdateLimits( void );

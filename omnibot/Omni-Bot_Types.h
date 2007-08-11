@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-07-30 07:26:44 -0700 (Mon, 30 Jul 2007) $
-// $LastChangedRevision: 2122 $
+// $LastChangedDate: 2007-08-10 21:14:25 -0700 (Fri, 10 Aug 2007) $
+// $LastChangedRevision: 2123 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -486,7 +486,7 @@ typedef enum eButtonFlags
 	BOT_BUTTON_RESPAWN,
 
 	// THIS MUST BE LAST
-	BOT_BUTTUN_FIRSTUSER
+	BOT_BUTTON_FIRSTUSER
 } ButtonFlags;
 
 // enumerations: GoalType

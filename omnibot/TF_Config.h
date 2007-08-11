@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-07-14 16:27:55 -0700 (Sat, 14 Jul 2007) $
-// $LastChangedRevision: 2089 $
+// $LastChangedDate: 2007-08-10 21:14:25 -0700 (Fri, 10 Aug 2007) $
+// $LastChangedRevision: 2123 $
 //
 // Title: TF Config
 //
@@ -52,7 +52,7 @@
 //		TF_BOT_BUTTON_SABOTAGE_DISPENSER - Detonate enemy dispenser.
 typedef enum eTF_ButtonFlags
 {	
-	TF_BOT_BUTTON_GREN1 = BOT_BUTTUN_FIRSTUSER,
+	TF_BOT_BUTTON_GREN1 = BOT_BUTTON_FIRSTUSER,
 	TF_BOT_BUTTON_GREN2,
 	TF_BOT_BUTTON_GREN_THROW,
 	TF_BOT_BUTTON_DROPITEM,
@@ -69,14 +69,13 @@ typedef enum eTF_ButtonFlags
 	TF_BOT_BUTTON_DETPIPES,
 	TF_BOT_BUTTON_CALLFORMEDIC,
 	TF_BOT_BUTTON_CALLFORENGY,
-	TF_BOT_BUTTON_DISCARD,
 	TF_BOT_BUTTON_SABOTAGE_SENTRY,
 	TF_BOT_BUTTON_SABOTAGE_DISPENSER,
 	TF_BOT_BUTTON_CLOAK,
 	TF_BOT_BUTTON_SILENT_CLOAK,
 
 	// THIS MUST BE LAST
-	TF_BOT_BUTTUN_FIRSTUSER
+	TF_BOT_BUTTON_FIRSTUSER
 } TF_ButtonFlags;
 
 // enumerations: TF_EntityCategory
