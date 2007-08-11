@@ -168,6 +168,12 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 
 	m_iCurrentHintIndex = m_HintStringsVector.Count() - 1;
 
+	// There's probably a better way to do this
+	// Create the "current # / total #" string, then convert it to Unicode so Surface() can have its way with it :)
+	char szHintCtr[10];
+	Q_snprintf( szHintCtr, sizeof( szHintCtr ), "%i/%i", m_iCurrentHintIndex + 1, m_HintStringsVector.Count() );
+	vgui::localize()->ConvertANSIToUnicode( szHintCtr, m_szHintCounter, sizeof(m_szHintCounter) );
+
 	if (  foundIndex < 0 || m_bHintKeyHeld )  // Hint hasn't been shown yet or user is holding down the hint key
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
 	else  // Just show the hint icon
@@ -257,7 +263,7 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 //			 hint string into SHIFT.
 //-------------------------------------------------------------------------------
 bool CHudHintCenter::TranslateKeyCommand( wchar_t *psHintMessage )
-{	// NOTE: DON'T USE THIS FUNCTION!  IT NEEDS RE-WRITING!
+{
 	if ( !psHintMessage )
 	{
 		Warning( "Error: Received a hint message that was formatted incorrectly!\n" );
@@ -505,14 +511,9 @@ bool CHudHintCenter::ShouldDraw( void )
 void CHudHintCenter::Paint( void )
 {
 
-	//if (!ShouldDraw())
-	//	return;
-
 	// Draw!
 	if( m_pHudIcon && m_pHudIconGlow )
 	{
-		// Paint foreground/background stuff
-		//BaseClass::PaintBackground();
 		
 		DrawBox( 0, 0, GetWide(), GetTall(), m_BGBoxColor, m_flSelectionAlphaOverride / 255.0f );
 		DrawHollowBox( 0, 0, GetWide(), GetTall(), m_TextColor, m_flSelectionAlphaOverride / 255.0f );
@@ -528,13 +529,11 @@ void CHudHintCenter::Paint( void )
 		//Look up the resource string
 		//wchar_t *pszText = vgui::localize()->Find( Class_IntToResourceString( pPlayer->GetDisguisedClass() ) );
 
-		// Draw text
-		//surface()->DrawSetTextFont( m_hTextFont );
-		//surface()->DrawSetTextColor( m_TextColor );
-		//surface()->DrawSetTextPos( text1_xpos, text1_ypos );
-		//surface()->DrawUnicodeString( szText );
-		//surface()->DrawUnicodeString( m_pText );
-		
+		// Draw hint counter
+		surface()->DrawSetTextFont( m_hTextFont );
+		surface()->DrawSetTextColor( m_TextColor );
+		surface()->DrawSetTextPos( index_xpos, index_ypos );
+		surface()->DrawUnicodeString( m_szHintCounter );
 	}
 
 }
@@ -590,6 +589,11 @@ void CHudHintCenter::OnCommand( const char *command )
 				m_iCurrentHintIndex++;
 				m_pRichText->SetText( "" );
 				TranslateKeyCommand( m_HintStringsVector[m_iCurrentHintIndex] );
+				// There's probably a better way to do this
+				// Create the "current # / total #" string, then convert it to Unicode so Surface() can have its way with it :)
+				char szHintCtr[10];
+				Q_snprintf( szHintCtr, sizeof( szHintCtr ), "%i/%i", m_iCurrentHintIndex + 1, m_HintStringsVector.Count() );
+				vgui::localize()->ConvertANSIToUnicode( szHintCtr, m_szHintCounter, sizeof(m_szHintCounter) );
 			}
 		}
 	}
@@ -603,6 +607,11 @@ void CHudHintCenter::OnCommand( const char *command )
 				m_iCurrentHintIndex--;
 				m_pRichText->SetText( "" );
 				TranslateKeyCommand( m_HintStringsVector[m_iCurrentHintIndex] );
+				// There's probably a better way to do this
+				// Create the "current # / total #" string, then convert it to Unicode so Surface() can have its way with it :)
+				char szHintCtr[10];
+				Q_snprintf( szHintCtr, sizeof( szHintCtr ), "%i/%i", m_iCurrentHintIndex + 1, m_HintStringsVector.Count() );
+				vgui::localize()->ConvertANSIToUnicode( szHintCtr, m_szHintCounter, sizeof(m_szHintCounter) );
 			}
 		}
 	}
