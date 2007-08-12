@@ -201,7 +201,9 @@ void CC_Player_Kill( void )
 
 		// Call lua player_killed on suicides
 		//_scriptman.SetVar( "killer", ENTINDEX( pPlayer ) );
-		CFFLuaSC hPlayerKilled( 1, pPlayer );
+		CFFLuaSC hPlayerKilled;
+		hPlayerKilled.Push(pPlayer);
+		hPlayerKilled.Push(pPlayer);
 		_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 	}
 }
@@ -1346,10 +1348,9 @@ void CFFPlayer::Spawn( void )
 	CFFLuaSC hPlayerSpawn( 1, this );
 	_scriptman.RunPredicates_LUA( NULL, &hPlayerSpawn, "player_spawn" );
 
-			//AfterShock - flaginfo on spawn (connect doesnt work)
-		// Call lua player_connected on suicides
-		//_scriptman.SetVar( "killer", ENTINDEX( pPlayer ) );
-	CFFLuaSC hFlagInfo( 1, this );
+	//AfterShock - flaginfo on spawn (connect doesnt work)
+	CFFLuaSC hFlagInfo;
+	hFlagInfo.Push(this);
 	_scriptman.RunPredicates_LUA(NULL, &hFlagInfo, "flaginfo");
 
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)

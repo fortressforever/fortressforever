@@ -118,12 +118,24 @@ const char *Omnibot_FixPath(const char *_path)
 
 const char *OB_VA(const char* _msg, ...)
 {
-	static char buffer[2048] = {0};
+	static int iCurrentBuffer = 0;
+	const int iNumBuffers = 3;
+	const int BUF_SIZE = 1024;
+	struct BufferInstance
+	{
+		char buffer[BUF_SIZE];
+	};
+	static BufferInstance buffers[iNumBuffers];
+	
+	char *pNextBuffer = buffers[iCurrentBuffer].buffer;
+
 	va_list list;
 	va_start(list, _msg);
-	_vsnprintf(buffer, sizeof(buffer), _msg, list);	
+	_vsnprintf(pNextBuffer, sizeof(buffers[iCurrentBuffer].buffer), _msg, list);	
 	va_end(list);
-	return buffer;
+
+	iCurrentBuffer = (iCurrentBuffer+1)%iNumBuffers;
+	return pNextBuffer;
 }
 
 //////////////////////////////////////////////////////////////////////////	
@@ -237,12 +249,24 @@ void Omnibot_FreeLibrary()
 
 const char *OB_VA(const char* _msg, ...)
 {
-	static char buffer[2048] = {0};
+	static int iCurrentBuffer = 0;
+	const int iNumBuffers = 3;
+	const int BUF_SIZE = 1024;
+	struct BufferInstance
+	{
+		char buffer[BUF_SIZE];
+	};
+	static BufferInstance buffers[iNumBuffers];
+
+	char *pNextBuffer = buffers[iCurrentBuffer].buffer;
+
 	va_list list;
 	va_start(list, _msg);
-	vsnprintf(buffer, sizeof(buffer), _msg, list);	
+	vsnprintf(pNextBuffer, sizeof(buffers[iCurrentBuffer].buffer), _msg, list);	
 	va_end(list);
-	return buffer;
+
+	iCurrentBuffer = (iCurrentBuffer+1)%iNumBuffers;
+	return pNextBuffer;
 }
 
 #include <dlfcn.h>
