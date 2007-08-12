@@ -898,7 +898,7 @@ void CGameMovement::CheckWaterJump( void )
 			// Now trace down to see if we would actually land on a standable surface.
 			VectorCopy( vecEnd, vecStart );
 			vecEnd.z -= 1024.0f;
-			TracePlayerBBox( vecStart, vecEnd, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+			TracePlayerBBox( vecStart, vecEnd, PlayerSolidMask(true), COLLISION_GROUP_PLAYER_MOVEMENT, tr );
 			if ( ( tr.fraction < 1.0f ) && ( tr.plane.normal.z >= 1.0 ) )  // Jiggles: Was "tr.plain.normal.z >= 0.7"
 																		   //		    I changed it to 1.0 to try and prevent the water jump
 																		   //			from triggering when the player was merely walking out 
