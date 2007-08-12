@@ -370,8 +370,12 @@ bool CFFWeaponSniperRifle::Deploy()
 
 bool CFFWeaponSniperRifle::Holster(CBaseCombatWeapon *pSwitchingTo) 
 {
-	m_bZoomed = false;
-	m_bInFire = false;
+	// 0001569: Sniper rifle charge/Quickswap
+	// Commented out these two lines.  If these are set to false when the function starts, then the holstering logic
+	// is never run later on.  Not sure about discrepancies between client/server?  I'll lob 'em in at end of function instead ---> Defrag
+	
+	//m_bZoomed = false;
+	//m_bInFire = false;
 
 #ifdef CLIENT_DLL
 	m_flNextZoomTime = m_flZoomTime = 0;
@@ -403,6 +407,9 @@ bool CFFWeaponSniperRifle::Holster(CBaseCombatWeapon *pSwitchingTo)
 	if (m_bZoomed) 
 		ToggleZoom();
 #endif
+
+	m_bZoomed = false;
+	m_bInFire = false;
 
 	return BaseClass::Holster(pSwitchingTo);
 }
