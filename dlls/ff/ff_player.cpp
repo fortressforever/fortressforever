@@ -2258,7 +2258,6 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 
 	bool fInstantSwitch = strcmp(engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_classautokill"), "0") != 0;
 
-
 	// They are picking the randompc slot
 	if( FStrEq( szNewClassName, "randompc" ) )
 	{
@@ -2267,12 +2266,21 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		// #0001554: Random player class doesn't work unless you've already spawned as a 'normal' class -> Defrag
 		// Moved KillAndRemoveItems() outside the if( fInstantSwitch ) as this was causing the player to be unable to spawn
 		// unless either A: autokill was on B: the player had already played a different class 
-		KillAndRemoveItems();
 
+		// Edited again because it was killing you instantly even if autokill was off and you chose random PC
+		bool bAlive = IsAlive();			
+
+		// This one handles spectators joining a new team
+		if( ! bAlive )
+		{
+			// Need to run KillAndRemoveItems() to set the DeathThink properly so you can actually spawn
+            KillAndRemoveItems();
+			return;
+		}
+		
 		if( fInstantSwitch )
 		{
-			bool bAlive = IsAlive();			
-
+			KillAndRemoveItems();
 			if( bAlive && (GetClassSlot() != 0) )
 			{
 				CFFLuaSC hPlayerKilled( 1, this );
