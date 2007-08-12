@@ -90,12 +90,12 @@ BotEntity		m_EntityHandles[MAX_ENTITIES] = {DefaultBotEntity()};
 
 void Omnibot_Load_PrintMsg(const char *_msg)
 {
-	Msg("Omni-bot Loading: %s%s\n", _msg);
+	Msg("Omni-bot Loading: %s\n", _msg);
 }
 
 void Omnibot_Load_PrintErr(const char *_msg)
 {
-	Warning("Omni-bot Loading: %s%s\n", _msg);
+	Warning("Omni-bot Loading: %s\n", _msg);
 }
 
 //////////////////////////////////////////////////////////////////////////
