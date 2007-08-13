@@ -474,7 +474,7 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 
 	EmitSound_t ep;
 	ep.m_nChannel = CHAN_BODY;
-	ep.m_pSoundName = "Player.fall"; //params.soundname;
+	ep.m_pSoundName = "Player.FallDamage"; //params.soundname;
 	ep.m_flVolume = fvol;
 	ep.m_SoundLevel = SNDLVL_70dB; // params.soundlevel;
 	ep.m_nFlags = 0;
