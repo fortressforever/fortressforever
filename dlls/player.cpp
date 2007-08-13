@@ -2589,9 +2589,13 @@ bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 	if ( player->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
 		return false;
 
-	if ( player->m_lifeState == LIFE_RESPAWNABLE ) // target is dead, waiting for respawn
-		return false;
-
+	// 0001670: Player you are spectating changes when they die
+	// Commenting out the death check as dead players are actually valid targets (since they respawn almost instantly anyway...)
+	// Might want to alter this to be controllable by lua in future as certain game types may not allow respawning  -> Defrag
+	
+	//if ( player->m_lifeState == LIFE_RESPAWNABLE ) // target is dead, waiting for respawn
+	//	return false;
+	
 	if ( player->m_lifeState == LIFE_DEAD || player->m_lifeState == LIFE_DYING )
 	{
 		if ( (player->m_flDeathTime + DEATH_ANIMATION_TIME ) < gpGlobals->curtime )
