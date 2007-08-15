@@ -47,6 +47,8 @@ enum CollectionFilter
 	CF_NONE = 0,
 
 	CF_PLAYERS,
+	CF_HUMAN_PLAYERS,
+	CF_BOT_PLAYERS,
 	CF_PLAYER_SCOUT,
 	CF_PLAYER_SNIPER,
 	CF_PLAYER_SOLDIER,
@@ -126,12 +128,18 @@ bool CollectionFilterParseFlags( const luabind::adl::object& table, bool *pbFlag
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool PassesCollectionFilter_Players( CBaseEntity *pEntity )
+bool PassesCollectionFilter_Players( CBaseEntity *pEntity, bool _nobots, bool _nohumans )
 {
 	if( !pEntity )
 		return false;
 
 	if( !pEntity->IsPlayer() )
+		return false;
+
+	if(_nobots && ToBasePlayer(pEntity)->IsBot())
+		return false;
+
+	if(_nohumans && !ToBasePlayer(pEntity)->IsBot())
 		return false;
 
 	return true;
@@ -188,7 +196,17 @@ bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags )
 
 	if( pbFlags[ CF_PLAYERS ] )
 	{
-		if( !PassesCollectionFilter_Players( pEntity ) )
+		if( !PassesCollectionFilter_Players( pEntity, false, true ) )
+			return false;
+	}
+	else if( pbFlags[ CF_HUMAN_PLAYERS ] )
+	{
+		if( !PassesCollectionFilter_Players( pEntity, true, false ) )
+			return false;
+	} 
+	else if( pbFlags[ CF_BOT_PLAYERS ] )
+	{
+		if( !PassesCollectionFilter_Players( pEntity, false, true ) )
 			return false;
 	}
 
@@ -940,6 +958,8 @@ void CFFLuaLib::InitUtil(lua_State* L)
 				value("kNone",				CF_NONE),
 
 				value("kPlayers",			CF_PLAYERS),
+				value("kHumanPlayers",		CF_HUMAN_PLAYERS),
+				value("kBotPlayers",		CF_BOT_PLAYERS),
 				value("kPlayerScout",		CF_PLAYER_SCOUT),
 				value("kPlayerSniper",		CF_PLAYER_SNIPER),
 				value("kPlayerSoldier",		CF_PLAYER_SOLDIER),

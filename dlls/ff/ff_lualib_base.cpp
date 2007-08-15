@@ -77,6 +77,11 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("SetGravity",			&CBaseEntity::SetGravity)
 			.def("SetRenderColor",		(void(CBaseEntity::*)(byte,byte,byte))&CBaseEntity::SetRenderColor)
 			.def("SetRenderMode",		&CBaseEntity::SetRenderMode)
+
+			.def("SetRenderFx",			&CBaseEntity::SetRenderFx)
+			.def("GetRenderFx",			&CBaseEntity::GetRenderFx)
+			.def("ClearRenderFx",		&CBaseEntity::ClearRenderFx)
+
 			.def("GetFriction",			&CBaseEntity::GetFriction)
 			.def("SetFriction",			&CBaseEntity::GetFriction),
 
@@ -106,8 +111,9 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("SetModel",			&CFFInfoScript::LUA_SetModel) // Leave this!
 			.def("SetStartOrigin",		&CFFInfoScript::LUA_SetStartOrigin)
 			.def("SetStartAngles",		&CFFInfoScript::LUA_SetStartAngles)
-			.def("SetTouchFlags",		&CFFInfoScript::SetTouchFlags),
-
+			.def("SetTouchFlags",		&CFFInfoScript::SetTouchFlags)
+			.def("GetAngularVelocity",	&CFFInfoScript::GetLocalAngularVelocity)
+			.def("SetAngularVelocity",	&CFFInfoScript::SetLocalAngularVelocity),
 
 		// CFuncFFScript - trigger_ff_script
 		class_<CFuncFFScript>("TriggerScript")
