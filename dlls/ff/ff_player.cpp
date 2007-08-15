@@ -1699,7 +1699,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
 
 		if (info.GetInflictor() && info.GetInflictor()->edict() && dynamic_cast<CFFWeaponBase*>(info.GetInflictor()))
-			g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, gpGlobals->curtime, "", GetAbsOrigin(), GetLocation());
+			g_StatsLog->AddAction(pKiller->m_iStatsID,m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, "", GetAbsOrigin(), GetLocation());
 	}
 
 	// Added to send hint on EMP death
@@ -4338,7 +4338,7 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 
 		EmitSound( "Player.cough" );	// |-- Mirv: [TODO] Change to something more suitable
 
-		//g_StatsLog->AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
+		g_StatsLog->AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
 
 		// And now.. an effect
 		CSingleUserRecipientFilter user(this);
@@ -7069,4 +7069,24 @@ void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime)
 		// Take effect immediately
 		pFlame->FlameThink();
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: A function to allow lua to add stats for a player (ctf_flag_caps, for instance)
+//-----------------------------------------------------------------------------
+void CFFPlayer::AddStat(const char *stat, double value)
+{
+	int statId = g_StatsLog->GetStatID(stat);
+	g_StatsLog->AddStat(m_iStatsID, statId, value);
+}
+void CFFPlayer::AddAction(CFFPlayer *target, const char *action, const char *param)
+{
+	int actionId = g_StatsLog->GetActionID(action);
+	g_StatsLog->AddAction(m_iStatsID, target!=NULL ? target->m_iStatsID : -1, actionId, param, GetAbsOrigin(), GetLocation());
+}
+void CFFPlayer::AddAction(CFFPlayer *target, const char *action, const char *param, Vector &origin, const char *location)
+{
+	int actionId = g_StatsLog->GetActionID(action);
+	g_StatsLog->AddAction(m_iStatsID, target!=NULL ? target->m_iStatsID : -1, actionId, param, origin, location);
 }

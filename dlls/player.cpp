@@ -66,6 +66,8 @@
 
 // For the upcast in CommitSuicide
 #include "ff_player.h"
+#include "ff_statslog.h"
+
 // Forward declare
 class CFFPlayer;
 
@@ -2886,6 +2888,13 @@ void CBasePlayer::AddFortPoints( int iFortpoints, const char *szDescription )
 	//pl.fortpoints = m_iFortPoints;
 	//ClientPrint( this, HUD_PRINTTALK, ("You scored " + (char *) fortpoints + " points!")  );
 	//ClientPrint( this, HUD_PRINTTALK, "#FF_SCOREPOINTS", fortpoints );
+
+	CFFPlayer *ffplayer = (CFFPlayer *)this;
+	if (ffplayer != NULL)
+	{
+		int statsID = g_StatsLog->GetStatID("ffp");
+		g_StatsLog->AddStat(ffplayer->m_iStatsID, statsID, iFortpoints);
+	}
 
 
 	CSingleUserRecipientFilter filter( this );

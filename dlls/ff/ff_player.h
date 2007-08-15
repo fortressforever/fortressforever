@@ -446,6 +446,8 @@ public:
 private:
 	float m_fl_LuaSet_PlayerRespawnDelay;
 
+
+
 	//-- Added by L0ki -------------------------------------------------------
 	// Grenade related
 public:
@@ -475,6 +477,11 @@ public:
 
 
 public:
+	// lua code for handling stats for a player
+	void AddStat(const char *stat, double value);
+	void AddAction(CFFPlayer *target, const char *action, const char *param);
+	void AddAction(CFFPlayer *target, const char *action, const char *param, Vector &origin, const char *location);
+
 	// These 3 handle lua settings speed effects and other effects
 	void LuaAddEffect( int iEffect, float flEffectDuration = 0.0f, float flIconDuration = 0.0f, float flSpeed = 0.0f );
 	bool LuaIsEffectActive( int iEffect );
