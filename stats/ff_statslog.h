@@ -92,7 +92,7 @@ public:
 public:
 	int actionid;
 	int targetid;
-	int time;
+	float time;
 	CFFString param;
 	Vector coords;
 	CFFString location;
@@ -106,9 +106,9 @@ public:
 	virtual int GetStatID(const char *statname, stattype_t type = STAT_ADD) = 0;
 	virtual int GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name) = 0;
 	virtual void AddStat(int playerid, int statid, double value) = 0;
-	virtual void AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location) = 0;
-	//virtual void StartTimer(int playerid, int statid) = 0;
-	//virtual void StopTimer(int playerid, int statid, bool apply = true) = 0;
+	virtual void AddAction(int playerid, int targetid, int actionid, const char *param, Vector coords, const char *location) = 0;
+	virtual void StartTimer(int playerid, int statid) = 0;
+	virtual void StopTimer(int playerid, int statid, bool apply = true) = 0;
 	virtual void ResetStats() = 0;
 	virtual void Serialise(char *buffer, int buffer_size) = 0;
 };

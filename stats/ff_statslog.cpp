@@ -23,9 +23,7 @@
 #include "ff_player.h"
 #include "ff_string.h"
 
-#ifdef _WIN32
-	#include <time.h>
-#endif
+#include <time.h>
 
 //#include <list>
 //#include <algorithm>
@@ -92,7 +90,7 @@ public:
 	int GetStatID(const char *statname, stattype_t type = STAT_ADD);
 	int GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name);
 	void AddStat(int playerid, int statid, double value);
-	void AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location);
+	void AddAction(int playerid, int targetid, int actionid, const char *param, Vector coords, const char *location);
 	void StartTimer(int playerid, int statid);
 	void StopTimer(int playerid, int statid, bool apply = true);
 	void ResetStats();
@@ -246,16 +244,18 @@ void CFFStatsLog::AddStat(int playerid, int statid, double value)
 Add an action to the action list.
 	playerid: playerid for the player that performed the action (retreived from GetPlayerID())
 	targetid: playerid for the target (if applicable), otherwise -1
-	time: number of seconds since the beginning of the round
+	actionid: action to log action as (retreived from GetActionID())
 	param: a string that is context sensitive towards the action (for example "red_flag")
 	coords: coordinates that this action happened at
 	location: string representation of the player's location
 */
-void CFFStatsLog::AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location)
+void CFFStatsLog::AddAction(int playerid, int targetid, int actionid, const char *param, Vector coords, const char *location)
 {
 	VPROF_BUDGET( "CFFStatsLog::AddAction", VPROF_BUDGETGROUP_FF_STATS );
 
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
+	
+	float time = gpGlobals->curtime;
 
 	DevMsg("[STATS] adding action %d[%s] to %d (at (%.2f, %.2f, %.2f) aka '%s')\n", actionid, param, playerid, coords.x, coords.y, coords.z, location);
 
@@ -342,17 +342,22 @@ const char *CFFStatsLog::GetAuthString() const
 */
 const char *CFFStatsLog::GetTimestampString() const
 {
-	/* note I don't know if this compiles on unix, so i put it in the win32 only stuffs */
-#ifdef _WIN32
 	// should be enough, and this is single-use so redoing it shouldn't be a problem.
-	static char ret[20], dateStr[9], timeStr[9];
+	static char ret[20];
+	struct tm timeinfo;
+
+	VCRHook_LocalTime(&timeinfo);
+
+	strftime(ret, 20, "%m/%d/%y %H:%M:%S", &timeinfo);
+
+	/*  	
+	static char dateStr[9], timeStr[9];
 	_strdate(dateStr);
 	_strtime(timeStr);
 	Q_snprintf(ret, 19, "%s %s", dateStr, timeStr);
+	*/
+	
 	return ret;
-#else
-	return "9/9/06 12:20:30";
-#endif
 }
 /**
 Serialise the stored data for sending
@@ -372,6 +377,7 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	//DevMsg( "[STATS] preAuthString: [%s]\n", preAuthString );
 
 	int i, j, offset = 0;
+	CTeam *pTeam;
 
 	// Simple hash used here
 	unsigned long hash = 0;
@@ -386,10 +392,14 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "auth %08X\n", hash);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "date %s\n", pszDate);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "duration %d\n", 1800);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "map %s\n", "ff_dev_ctf");
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "bluescore %d\n", 0);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "map %s\n", gpGlobals->mapname.ToCStr());
+	pTeam = GetGlobalTeam(TEAM_BLUE);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "bluescore %d\n", pTeam ? pTeam->GetScore() : 0);
+	pTeam = GetGlobalTeam(TEAM_RED);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "redscore %d\n", 0);
+	pTeam = GetGlobalTeam(TEAM_YELLOW);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "yellowscore %d\n", 0);
+	pTeam = GetGlobalTeam(TEAM_GREEN);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "greenscore %d\n", 0);
 	
 	// add the players section
