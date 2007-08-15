@@ -777,6 +777,11 @@ public:
 
 	void				SetRenderMode( RenderMode_t nRenderMode );
 	RenderMode_t		GetRenderMode() const;
+	
+	// for lua
+	void				SetRenderFx(int _fx) { m_nRenderFX = _fx; }
+	int					GetRenderFx() { return m_nRenderFX; }
+	void				ClearRenderFx() { m_nRenderFX = kRenderFxNone; }
 
 	// members
 	string_t m_iClassname;  // identifier for entity creation and save/restore

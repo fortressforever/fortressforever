@@ -215,6 +215,28 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kInEye",		(int) OBS_MODE_IN_EYE),
 				value("kChase",		(int) OBS_MODE_CHASE),
 				value("kRoaming",	(int) OBS_MODE_ROAMING)
-			]
+			],
+			class_<CFFRenderFX>("RenderFx")
+				.enum_("RenderFx")
+				[
+					value("kPulseSlow",		(int) kRenderFxPulseSlow),
+					value("kPulseFast",		(int) kRenderFxPulseFast),
+					value("kPulseSlowWide",	(int) kRenderFxPulseSlowWide),				
+					value("kPulseFastWide",	(int) kRenderFxPulseFastWide),
+					value("kFadeSlow",		(int) kRenderFxFadeSlow),
+					value("kFadeFast",		(int) kRenderFxFadeFast),
+					value("kSolidSlow",		(int) kRenderFxSolidSlow),
+					value("kSolidFast",		(int) kRenderFxSolidFast),
+					value("kStrobeSlow",	(int) kRenderFxStrobeSlow),				
+					value("kStrobeFast",	(int) kRenderFxStrobeFast),
+					value("kStrobeFaster",	(int) kRenderFxStrobeFaster),
+					value("kFlickerSlow",	(int) kRenderFxFlickerSlow),
+					value("kFlickerFast",	(int) kRenderFxFlickerFast),
+					value("kNoDissipation",	(int) kRenderFxNoDissipation),
+					value("kDistort",		(int) kRenderFxDistort),				
+					value("kHologram",		(int) kRenderFxHologram),
+					value("kExplode",		(int) kRenderFxExplode),
+					value("kGlowShell",		(int) kRenderFxGlowShell)
+				]
 	];
 };
