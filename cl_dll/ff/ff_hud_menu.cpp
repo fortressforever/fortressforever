@@ -53,7 +53,7 @@ ConVar cm_bounds("cl_cmbounds", "120", FCVAR_ARCHIVE, "Bounds of the context rad
 ConVar cm_progresstime("cl_cmprogresstime", "0.7", FCVAR_ARCHIVE, "Time to wait for menu progress");
 ConVar cm_squash("cl_cmsquash", "0.7", FCVAR_ARCHIVE, "");
 ConVar cm_highlightdistance("cl_cmhighlightdistance", "50", FCVAR_ARCHIVE, "Distance for an option to highlight");
-ConVar cm_waitforrelease("cl_cmwaitforrelease", "0", FCVAR_ARCHIVE, "Menu waits for mouse release before selection");
+ConVar cm_waitforrelease("cl_cmwaitforrelease", "1", FCVAR_ARCHIVE, "Menu waits for mouse release before selection");
 ConVar cm_defaultactiontime("cl_cmdefaultactiontime", "0.5", FCVAR_ARCHIVE, "Default action takes place if menu closed within this amount of time");
 
 ConVar cm_aimsentry( "cl_noradialaimsentry", "0", 0, "0 - Aim sentry when selecting option in context menu or 1 - aiming AFTER selecting option in context menu" );
@@ -142,7 +142,7 @@ int CheckDisguiseClass( int iClass )
 // Engineer menu options
 //-----------------------------------------------------------------------------
 
-ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDSENTRY", 'G', "builddispensers")
+/*ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDSENTRY", 'G', "builddispensers")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -158,9 +158,9 @@ ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDSENTRY", 'G', "builddispensers")
 		return MENU_DIM;
 
 	return MENU_SHOW;
-}
+}*/
 
-ADD_MENU_OPTION(detdispenser, "#FF_CM_DETDISPENSER", 'G', "detdispenser")
+ADD_MENU_OPTION(detdispenser, "#FF_CM_DETDISPENSER", 'P', "detdispenser")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -178,7 +178,7 @@ ADD_MENU_OPTION(detdispenser, "#FF_CM_DETDISPENSER", 'G', "detdispenser")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'G', "dismantledispenser")
+ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'Q', "dismantledispenser")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -196,7 +196,7 @@ ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'G', "dismantle
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'G', "buildsentry")
+/*ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'G', "buildsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -212,9 +212,9 @@ ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'G', "buildsentry")
 		return MENU_DIM;
 
 	return MENU_SHOW;
-}
+}*/
 
-ADD_MENU_OPTION(detsentry, "#FF_CM_DETSENTRY", 'G', "detsentry")
+ADD_MENU_OPTION(detsentry, "#FF_CM_DETSENTRY", 'R', "detsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -232,7 +232,7 @@ ADD_MENU_OPTION(detsentry, "#FF_CM_DETSENTRY", 'G', "detsentry")
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(dismantlesentry, "#FF_CM_DISMANTLESENTRY", 'G', "dismantlesentry")
+ADD_MENU_OPTION(dismantlesentry, "#FF_CM_DISMANTLESENTRY", 'S', "dismantlesentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -250,7 +250,7 @@ ADD_MENU_OPTION(dismantlesentry, "#FF_CM_DISMANTLESENTRY", 'G', "dismantlesentry
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(aimsentry, "#FF_CM_AIMSENTRY", 'G', "aimsentry")
+ADD_MENU_OPTION(aimsentry, "#FF_CM_AIMSENTRY", 'O', "aimsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -272,7 +272,7 @@ ADD_MENU_OPTION(aimsentry, "#FF_CM_AIMSENTRY", 'G', "aimsentry")
 // Disguise menu options
 //-----------------------------------------------------------------------------
 
-ADD_MENU_BRANCH(disguiseteam, "#FF_CM_DISGUISEFRIENDLY", 'G', "", &FriendlyDMenu)
+ADD_MENU_BRANCH(disguiseteam, "#FF_CM_DISGUISEFRIENDLY", 'M', "", &FriendlyDMenu)
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -284,7 +284,7 @@ ADD_MENU_BRANCH(disguiseteam, "#FF_CM_DISGUISEFRIENDLY", 'G', "", &FriendlyDMenu
 	return MENU_SHOW;
 }
 
-ADD_MENU_BRANCH(disguiseenemy, "#FF_CM_DISGUISEENEMY", 'G', "", &EnemyDMenu)
+ADD_MENU_BRANCH(disguiseenemy, "#FF_CM_DISGUISEENEMY", 'N', "", &EnemyDMenu)
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -317,14 +317,14 @@ int TeamAvailableForDisguise(int iTeam, AvailableAs_t as)
 	return ((bAllied == (as == FRIENDLY)) ? MENU_SHOW : MENU_DIM);
 }
 
-ADD_MENU_BRANCH(disguise_blue_friendly, "#FF_CM_DISGUISEBLUE", 'G', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, FRIENDLY); }
-ADD_MENU_BRANCH(disguise_red_friendly, "#FF_CM_DISGUISERED", 'G', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, FRIENDLY); }
-ADD_MENU_BRANCH(disguise_yellow_friendly, "#FF_CM_DISGUISEYELLOW", 'G', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, FRIENDLY); }
-ADD_MENU_BRANCH(disguise_green_friendly, "#FF_CM_DISGUISEGREEN", 'G', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, FRIENDLY); }
-ADD_MENU_BRANCH(disguise_blue_enemy, "#FF_CM_DISGUISEBLUE", 'G', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, ENEMY); }
-ADD_MENU_BRANCH(disguise_red_enemy, "#FF_CM_DISGUISERED", 'G', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, ENEMY); }
-ADD_MENU_BRANCH(disguise_yellow_enemy, "#FF_CM_DISGUISEYELLOW", 'G', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, ENEMY); }
-ADD_MENU_BRANCH(disguise_green_enemy, "#FF_CM_DISGUISEGREEN", 'G', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, ENEMY); }
+ADD_MENU_BRANCH(disguise_blue_friendly, "#FF_CM_DISGUISEBLUE", 'T', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_red_friendly, "#FF_CM_DISGUISERED", 'U', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_yellow_friendly, "#FF_CM_DISGUISEYELLOW", 'V', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_green_friendly, "#FF_CM_DISGUISEGREEN", 'W', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, FRIENDLY); }
+ADD_MENU_BRANCH(disguise_blue_enemy, "#FF_CM_DISGUISEBLUE", 'T', "disguise blue ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_BLUE, ENEMY); }
+ADD_MENU_BRANCH(disguise_red_enemy, "#FF_CM_DISGUISERED", 'U', "disguise red ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_RED, ENEMY); }
+ADD_MENU_BRANCH(disguise_yellow_enemy, "#FF_CM_DISGUISEYELLOW", 'V', "disguise yellow ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_YELLOW, ENEMY); }
+ADD_MENU_BRANCH(disguise_green_enemy, "#FF_CM_DISGUISEGREEN", 'W', "disguise green ", &ClassDMenu) { return TeamAvailableForDisguise(TEAM_GREEN, ENEMY); }
 
 ADD_MENU_OPTION(disguisescout, "#FF_CM_DISGUISESCOUT", '!', "scout") { return CheckDisguiseClass( CLASS_SCOUT ); }
 ADD_MENU_OPTION(disguisesniper, "#FF_CM_DISGUISESNIPER", '@', "sniper") {	return CheckDisguiseClass( CLASS_SNIPER ); }
@@ -337,16 +337,16 @@ ADD_MENU_OPTION(disguisepyro, "#FF_CM_DISGUISEPYRO", '?', "pyro") { return Check
 ADD_MENU_OPTION(disguiseengineer, "#FF_CM_DISGUISEENGINEER", '(', "engineer") { return CheckDisguiseClass( CLASS_ENGINEER ); }
 ADD_MENU_OPTION(disguisecivilian, "#FF_CM_DISGUISECIVILIAN", ')', "civilian") { return CheckDisguiseClass( CLASS_CIVILIAN ); }
 
-ADD_MENU_OPTION(lastdisguise, "#FF_CM_DISGUISELAST", 'G', "disguise last") { return MENU_DIM; }
+ADD_MENU_OPTION(lastdisguise, "#FF_CM_DISGUISELAST", 'J', "disguise last") { return MENU_DIM; }
 
 
 //-----------------------------------------------------------------------------
 // Detpack menu options
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( det5, "5", 'G', "detpack 5" ) { return MENU_SHOW; }
-ADD_MENU_OPTION( det10, "10", 'G', "detpack 10" ) { return MENU_SHOW; }
-ADD_MENU_OPTION( det20, "20", 'G', "detpack 20" ) { return MENU_SHOW; }
-ADD_MENU_OPTION( det50, "50", 'G', "detpack 50" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det5, "#FF_CM_DETPACK5", 'C', "detpack 5" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det10, "#FF_CM_DETPACK10", 'D', "detpack 10" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det20, "#FF_CM_DETPACK20", 'E', "detpack 20" ) { return MENU_SHOW; }
+ADD_MENU_OPTION( det50, "#FF_CM_DETPACK50", 'F', "detpack 50" ) { return MENU_SHOW; }
 
 //-----------------------------------------------------------------------------
 // Cloak options
@@ -372,15 +372,15 @@ int CanCloak()
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( cloak, "#FF_CM_CLOAK", 'G', "cloak" ) { return CanCloak(); }
-ADD_MENU_OPTION( scloak, "#FF_CM_SCLOAK", 'G', "scloak" ) { return CanCloak(); }
+ADD_MENU_OPTION( cloak, "#FF_CM_CLOAK", 'A', "cloak" ) { return CanCloak(); }
+ADD_MENU_OPTION( scloak, "#FF_CM_SCLOAK", 'B', "scloak" ) { return CanCloak(); }
 
 
 //-----------------------------------------------------------------------------
 // Sentry Sabotage
 //-----------------------------------------------------------------------------
 
-ADD_MENU_OPTION( sentrysabotage, "#FF_CM_SABOTAGESENTRY", 'G', "sentrysabotage" )
+ADD_MENU_OPTION( sentrysabotage, "#FF_CM_SABOTAGESENTRY", 'H', "sentrysabotage" )
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
@@ -391,7 +391,7 @@ ADD_MENU_OPTION( sentrysabotage, "#FF_CM_SABOTAGESENTRY", 'G', "sentrysabotage" 
 	else return MENU_DIM;
 }
 
-ADD_MENU_OPTION(dispensersabotage, "#FF_CM_SABOTAGEDISPENSER", 'G', "dispensersabotage")
+ADD_MENU_OPTION(dispensersabotage, "#FF_CM_SABOTAGEDISPENSER", 'I', "dispensersabotage")
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
