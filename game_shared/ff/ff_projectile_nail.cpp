@@ -57,7 +57,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_nail);
 	{
 		// Setup
 		//SetModel(NAIL_MODEL);
-		SetMoveType(/*MOVETYPE_FLYGRAVITY*/ MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
+		SetMoveType(/*MOVETYPE_FLYGRAVITY*/ MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
 		SetSize(-Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat(), Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat());
 		SetSolid(SOLID_BBOX);
 		//SetGravity(0.01f);
