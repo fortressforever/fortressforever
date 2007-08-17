@@ -3445,6 +3445,14 @@ ConVar ent_messages_draw( "ent_messages_draw", "0", FCVAR_CHEAT, "Visualizes all
 //-----------------------------------------------------------------------------
 bool CBaseEntity::AcceptInput( const char *szInputName, CBaseEntity *pActivator, CBaseEntity *pCaller, variant_t Value, int outputID )
 {
+	// pass the event to script
+	CFFLuaSC sc;
+	if(pActivator) // just in case
+		sc.Push(pActivator);
+	if(pCaller) // just in case
+		sc.Push(pCaller);
+	sc.CallFunction(this, szInputName);
+
 	if ( ent_messages_draw.GetBool() )
 	{
 		if ( pCaller != NULL )
@@ -3518,11 +3526,11 @@ bool CBaseEntity::AcceptInput( const char *szInputName, CBaseEntity *pActivator,
 
 						(this->*pfnInput)( data );
 
-						// pass the event to script
-						CFFLuaSC sc;
-						sc.Push(pActivator);
-						sc.Push(pCaller);
-						sc.CallFunction(this, szInputName);
+						//// pass the event to script
+						//CFFLuaSC sc;
+						//sc.Push(pActivator);
+						//sc.Push(pCaller);
+						//sc.CallFunction(this, szInputName);
 					}
 					else if ( dmap->dataDesc[i].flags & FTYPEDESC_KEY )
 					{
@@ -3545,10 +3553,10 @@ bool CBaseEntity::AcceptInput( const char *szInputName, CBaseEntity *pActivator,
 			else if ( dmap->dataDesc[i].flags & FTYPEDESC_OUTPUT )
 			{
 				// pass the event to script
-				CFFLuaSC sc;
+				/*CFFLuaSC sc;
 				sc.Push(pActivator);
 				sc.Push(pCaller);
-				sc.CallFunction(this, szInputName);
+				sc.CallFunction(this, szInputName);*/
 			}
 		}
 	}
