@@ -1703,13 +1703,12 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	// Added to send hint on EMP death
-#ifndef CLIENT_DLL
+
 	if ( info.GetInflictor() && ( info.GetInflictor()->Classify() == CLASS_GREN_EMP ) )
 	{
 		
 		FF_SendHint( this, GLOBAL_EMPDEATH, -1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_EMPDEATH" );
 	}
-#endif
 
 	// Drop any grenades
 	if (m_iGrenadeState != FF_GREN_NONE)
@@ -2839,10 +2838,9 @@ void CFFPlayer::Command_Radar( void )
 	{
 		// See if the player has enough ammo
 		if( GetAmmoCount( AMMO_CELLS ) >= radar_num_cells.GetInt() )
-		{
-#ifndef CLIENT_DLL					
+		{				
 					FF_SendHint( this, SCOUT_RADAR, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_RADAR" );
-#endif
+
 			// Bug #0000531: Everyone hears radar
 			//CPASAttenuationFilter sndFilter;
 			//sndFilter.RemoveAllRecipients();
@@ -3307,10 +3305,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 						pEvent->SetInt( "userid", GetUserID() );
 						gameeventmanager->FireEvent( pEvent, true );
 					}	
-#ifndef CLIENT_DLL
 					
 					FF_SendHint( this, ENGY_BUILTDISP, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILTDISP" );
-#endif
+
 
 				}
 			}
@@ -3329,10 +3326,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 						pEvent->SetInt( "userid", GetUserID() );
 						gameeventmanager->FireEvent( pEvent, true );
 					}
-#ifndef CLIENT_DLL
 					
 					FF_SendHint( this, ENGY_BUILTSG, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILTSG" );
-#endif
+
 				}
 			}
 			break;
@@ -4349,10 +4345,10 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		WRITE_FLOAT(999.0f);
 		MessageEnd();
 	}
-#ifndef CLIENT_DLL
+
 	else if ( !IsInfected() ) // they aren't infected, but they are immune
 		FF_SendHint( pInfector, MEDIC_NOINFECT, -1, PRIORITY_NORMAL, "#FF_HINT_MEDIC_NOINFECT" );
-#endif	
+	
 }
 void CFFPlayer::Cure( CFFPlayer *pCurer )
 {
@@ -6777,22 +6773,51 @@ void CFFPlayer::Command_SabotageDispenser()
 //-----------------------------------------------------------------------------
 void CFFPlayer::SpySabotageRelease()
 {
-	CFFDispenser *pDispenser = NULL; 
+	//CFFDispenser *pDispenser = NULL; 
 
-	// Release any sentryguns
-	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
+	//// Release any sentryguns
+	//while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
+	//{
+	//	if (pDispenser->m_hSaboteur == this) 
+	//	{
+	//		pDispenser->m_hSaboteur = NULL;
+	//		pDispenser->m_flSabotageTime = 0;
+	//	}
+	//}
+
+	// Jiggles: Let's try it without Strings
+	CFFDispenser *pDispenser = (CFFDispenser*)gEntList.FindEntityByClassT( NULL, CLASS_DISPENSER );
+	// Release any dispensers
+	while( pDispenser != NULL )
 	{
 		if (pDispenser->m_hSaboteur == this) 
 		{
 			pDispenser->m_hSaboteur = NULL;
 			pDispenser->m_flSabotageTime = 0;
 		}
+		// Next!
+		pDispenser = (CFFDispenser*)gEntList.FindEntityByClassT( pDispenser, CLASS_DISPENSER );
 	}
 
-	CFFSentryGun *pSentry = NULL; 
 
-	// Release any dispensers
-	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
+	//CFFSentryGun *pSentry = NULL; 
+
+	//// Release any dispensers
+	//while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
+	//{
+	//	// Jiggles: Don't remove the Saboteur if he's already triggered Malicious Sabotage mode!
+	//	//          The SG will die after the "shooting teammates" period ends anyway.
+	//	if ( (pSentry->m_hSaboteur == this) && !pSentry->m_bShootingTeammates ) 
+	//	{
+	//		pSentry->m_hSaboteur = NULL;
+	//		pSentry->m_flSabotageTime = 0;
+	//	}
+	//}
+
+	// Jiggles: Again, let's try it without Strings
+	CFFSentryGun *pSentry = (CFFSentryGun*)gEntList.FindEntityByClassT( NULL, CLASS_SENTRYGUN );
+	// Release any sentry guns
+	while( pSentry != NULL )
 	{
 		// Jiggles: Don't remove the Saboteur if he's already triggered Malicious Sabotage mode!
 		//          The SG will die after the "shooting teammates" period ends anyway.
@@ -6801,7 +6826,10 @@ void CFFPlayer::SpySabotageRelease()
 			pSentry->m_hSaboteur = NULL;
 			pSentry->m_flSabotageTime = 0;
 		}
+		// Next!
+		pSentry = (CFFSentryGun*)gEntList.FindEntityByClassT( pSentry, CLASS_SENTRYGUN );
 	}
+
 }
 
 //-----------------------------------------------------------------------------
