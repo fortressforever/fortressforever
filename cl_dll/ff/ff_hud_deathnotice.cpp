@@ -350,6 +350,10 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 				Q_snprintf( tempTriggerHurtString, sizeof(tempTriggerHurtString), "%s_drown", killedwith );
 				break;
 
+			case DMG_SHOCK:
+				Q_snprintf( tempTriggerHurtString, sizeof(tempTriggerHurtString), "%s_shock", killedwith );
+				break;
+
 			default:
 				Q_strncpy( tempTriggerHurtString, killedwith, sizeof(tempTriggerHurtString));
 				break;
