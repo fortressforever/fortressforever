@@ -303,14 +303,19 @@ void CFFSentryGun::OnObjectThink( void )
 	// We've just finished being maliciously sabotaged, so remove enemy here
 	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)
 	{
-		EmitSound( "Sentry.SabotageFinish" );
+		// Jiggles: No real point in playing this since we're blowing up the sg now
+		//EmitSound( "Sentry.SabotageFinish" );
 
-		// AfterShock - Explode SG on sabotage finish
+		// Explode SG on sabotage finish
 		// TODO: create custom death message for it
-		// commented out until we find the cause for the crash / why this doesnt work
-		//	Jiggles: It crashes b/c m_hSaboteur is set to NULL by the sabotage release function
-		//			 when the Spy dies.
-		//TakeDamage( CTakeDamageInfo( m_hSaboteur, m_hSaboteur, 10000, DMG_GENERIC ) );
+		if ( m_hSaboteur )
+			TakeDamage( CTakeDamageInfo( this, m_hSaboteur, 10000, DMG_GENERIC ) );
+		else	// Jiggles: I'm not sure what would happen if the Saboteur leaves the server before this
+		{
+			CFFPlayer *pOwner = ToFFPlayer( m_hOwner.Get() );
+			if ( pOwner )
+				TakeDamage( CTakeDamageInfo( this, pOwner, 10000, DMG_GENERIC ) );
+		}
 	}
 
 	// Run base class thinking

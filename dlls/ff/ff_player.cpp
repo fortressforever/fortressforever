@@ -6794,7 +6794,9 @@ void CFFPlayer::SpySabotageRelease()
 	// Release any dispensers
 	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
 	{
-		if (pSentry->m_hSaboteur == this) 
+		// Jiggles: Don't remove the Saboteur if he's already triggered Malicious Sabotage mode!
+		//          The SG will die after the "shooting teammates" period ends anyway.
+		if ( (pSentry->m_hSaboteur == this) && !pSentry->m_bShootingTeammates ) 
 		{
 			pSentry->m_hSaboteur = NULL;
 			pSentry->m_flSabotageTime = 0;
