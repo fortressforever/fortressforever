@@ -306,6 +306,8 @@ bool CFFWeaponAssaultCannon::Deploy()
 	return BaseClass::Deploy();
 }
 
+// Jiggles: the below function doesn't actually get called anymore...
+
 //----------------------------------------------------------------------------
 // Purpose: Fires bullets
 //----------------------------------------------------------------------------
@@ -681,10 +683,10 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 
 	Vector vecTest = info.m_vecSrc;
 
-#ifdef CLIENT_DLL
-	QAngle tmpAngle;
-	pPlayer->GetViewModel()->GetAttachment(1, info.m_vecSrc, tmpAngle);
-#endif
+//#ifdef CLIENT_DLL
+//	QAngle tmpAngle;
+//	pPlayer->GetViewModel()->GetAttachment(1, info.m_vecSrc, tmpAngle);
+//#endif
 
 	pPlayer->FireBullets(info);
 
