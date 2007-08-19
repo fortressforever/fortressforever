@@ -1196,7 +1196,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	// Silent cloak must be done while not moving! But if we're
 	// already cloaked we'll allow it so the player can uncloak
 	// Jon: adding in minimum allowed speed cvar
-	if( GetCloakSpeed() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
+	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
 	{
 		// Reset next cloak time since player technically didn't cloak yet
 		m_flNextCloak = gpGlobals->curtime;

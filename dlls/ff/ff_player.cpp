@@ -361,7 +361,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
-	SendPropFloat( SENDINFO( m_flCloakSpeed ) ),	// Hate to do this, but for spy cloak mat proxy we need to know everyone's speed :X
+	//SendPropFloat( SENDINFO( m_flCloakSpeed ) ),	// Hate to do this, but for spy cloak mat proxy we need to know everyone's speed :X
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
@@ -558,10 +558,10 @@ void CFFPlayer::PreThink(void)
 	m_fBodygroupState = 0;
 
 	// Update networked current-speed-var for spy cloak mat proxy (sent to all players! :X)
-	Vector vecCloakVelocity = GetLocalVelocity();
-	m_flCloakSpeed = FastSqrt( ( vecCloakVelocity.x * vecCloakVelocity.x ) + 
-		( vecCloakVelocity.y * vecCloakVelocity.y ) + 
-		( ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) * ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) ) );
+	//Vector vecCloakVelocity = GetLocalVelocity();
+	//m_flCloakSpeed = FastSqrt( ( vecCloakVelocity.x * vecCloakVelocity.x ) + 
+	//	( vecCloakVelocity.y * vecCloakVelocity.y ) + 
+	//	( ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) * ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) ) );
 
 	// Has our radio tag expired?
 	if( m_bRadioTagged && ( ( m_flRadioTaggedStartTime + m_flRadioTaggedDuration ) < gpGlobals->curtime ) )
@@ -626,7 +626,13 @@ void CFFPlayer::PreThink(void)
 		// Get horizontal + forward velocity (no vertical velocity)
 		//Vector vecVelocity = GetLocalVelocity();
 		//float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
-		float flSpeed = m_flCloakSpeed;
+		//float flSpeed = m_flCloakSpeed;
+
+		// Jiggles: Nope, let's try it this way instead
+		Vector vecCloakVelocity = GetLocalVelocity();
+		float flSpeed = FastSqrt( ( vecCloakVelocity.x * vecCloakVelocity.x ) + 
+		  ( vecCloakVelocity.y * vecCloakVelocity.y ) + 
+		  ( ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) * ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) ) );
 
 		// If going faster than spies walk speed, reset
 		if( IsCloaked() && ( flSpeed > ffdev_spy_maxcloakspeed.GetFloat() ) )
@@ -1702,13 +1708,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			g_StatsLog->AddAction(pKiller->m_iStatsID,m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, "", GetAbsOrigin(), GetLocation());
 	}
 
-	// Added to send hint on EMP death
-
+	// Sends a hint to a player killed by an EMP
 	if ( info.GetInflictor() && ( info.GetInflictor()->Classify() == CLASS_GREN_EMP ) )
-	{
-		
 		FF_SendHint( this, GLOBAL_EMPDEATH, -1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_EMPDEATH" );
-	}
 
 	// Drop any grenades
 	if (m_iGrenadeState != FF_GREN_NONE)

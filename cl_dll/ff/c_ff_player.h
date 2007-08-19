@@ -308,11 +308,11 @@ private:
 	int m_iLocalSkiState;
 	// ---> end
 
-private:
+//private:
 	// This isn't velocity.Length() so only use it for cloak stuffs
-	float m_flCloakSpeed;
-public:
-	float GetCloakSpeed( void ) const { return m_flCloakSpeed; }
+	//float m_flCloakSpeed;
+//public:
+	//float GetCloakSpeed( void ) const { return m_flCloakSpeed; }
 
 	// Beg: Added by L0ki for grenade stuff
 public:
