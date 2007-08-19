@@ -129,7 +129,7 @@ public:
 		Assert(iTeamID >= TEAM_BLUE && iTeamID <= TEAM_GREEN);
 		m_iTeamID = iTeamID;
 
-		const char *pszInsignias[] = { "hud_flag_blue", "hud_flag_red", "hud_flag_yellow", "hud_flag_green" };
+		const char *pszInsignias[] = { "hud_team_blue", "hud_team_red", "hud_team_yellow", "hud_team_green" };
 		m_pTeamInsignia->SetShouldScaleImage(true);
 		m_pTeamInsignia->SetImage(pszInsignias[m_iTeamID - TEAM_BLUE]);
 	}
