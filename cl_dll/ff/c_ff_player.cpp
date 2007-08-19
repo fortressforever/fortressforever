@@ -627,7 +627,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
-	RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
+	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
 	RecvPropInt( RECVINFO( m_iActiveSabotages ) ),
 END_RECV_TABLE( )
 

@@ -330,10 +330,10 @@ private:
 	int m_iLocalSkiState;
 	// ---> end
 
-private:
-	CNetworkVar( float, m_flCloakSpeed );
-public:
-	float GetCloakSpeed( void ) const { return m_flCloakSpeed; }
+//private:
+	//CNetworkVar( float, m_flCloakSpeed );
+//public:
+	//float GetCloakSpeed( void ) const { return m_flCloakSpeed; }
 
 public:
 	// ---> FF server-side player command handlers

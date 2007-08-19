@@ -512,6 +512,14 @@ bool CMultiplayRules::IsMultiplayer( void )
 		// Find the killer & the scorer
 		CBaseEntity *pInflictor = info.GetInflictor();
 		CBaseEntity *pKiller = info.GetAttacker();
+
+		// Jiggles: Maybe not the best spot to put this, but...
+		// If the gun killed someone while in malicious sabotage mode
+		// we want to give credit to the Spy who did it
+		CFFSentryGun *pSentryGun = FF_ToSentrygun( info.GetInflictor() );
+		if ( pSentryGun && pSentryGun->IsShootingTeammates() )
+			pKiller = pSentryGun->m_hSaboteur;
+
 		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
 		
 		pVictim->IncrementDeathCount( 1 );
@@ -576,6 +584,13 @@ bool CMultiplayRules::IsMultiplayer( void )
 		// Hack for sg rockets (might break other stuff?)
 		//if( pKiller->Classify() == CLASS_SENTRYGUN )
 		//	pInflictor = pKiller;
+
+		// Jiggles: Maybe not the best spot to put this, but...
+		// If the gun killed someone while in malicious sabotage mode
+		// we want to give credit to the Spy who did it
+		CFFSentryGun *pSentryGun = FF_ToSentrygun( info.GetInflictor() );
+		if ( pSentryGun && pSentryGun->IsShootingTeammates() )
+			pKiller = pSentryGun->m_hSaboteur;
 
 		/*
 		// HACK: Check for special infection deaths
