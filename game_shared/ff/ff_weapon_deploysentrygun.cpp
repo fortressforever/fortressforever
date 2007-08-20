@@ -286,14 +286,25 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		if (!pPlayer) 
 			return;
 
+		if( ! pPlayer->IsAlive() )
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTAIMSENTRYWHENDEAD" );
+			return;
+		}
 		// Bug #0000333: Buildable Behavior (non build slot) while building
 		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTAIMSENTRYWHENBUILDINGIT");
 			return;
+		}
 
 		CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 
 		if (!pSentry) 
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NOSENTRY");
 			return;
+		}
 
 		if (pSentry->IsSabotaged())
 		{
@@ -317,14 +328,26 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		if (!pPlayer) 
 			return;
 
+		if( ! pPlayer->IsAlive() )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEWHENDEAD" );
+			return;
+		}
+
 		// Bug #0000333: Buildable Behavior (non build slot) while building
 		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD" );
 			return;
+		}
 
 		CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 
 		if (!pSentry) 
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NOSENTRYTODISMANTLE" );
 			return;
+		}
 
 		if (pSentry->IsSabotaged())
 		{
@@ -362,14 +385,26 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		if (!pPlayer) 
 			return;
 
+		if( ! pPlayer->IsAlive() )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDETWHENDEAD" );
+			return;
+		}
+
 		// Bug #0000333: Buildable Behavior (non build slot) while building
 		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDETMIDBUILD" );
 			return;
+		}
 
 		CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 
 		if (!pSentry) 
+		{
+            ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NOSENTRYTODET");
 			return;
+		}
 
 		if (pSentry->IsSabotaged())
 		{
@@ -387,14 +422,26 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		if (!pPlayer) 
 			return;
 
+		if( ! pPlayer->IsAlive() )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEORDETWHENDEAD" );
+			return;
+		}
+
 		// Bug #0000333: Buildable Behavior (non build slot) while building
 		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDETMIDBUILD" );
 			return;
+		}
 
 		CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 
 		if (!pSentry) 
+		{
+            ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NOSENTRY" );
 			return;
+		}
 
 		if (pSentry->IsSabotaged())
 		{
