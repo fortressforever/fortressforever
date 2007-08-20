@@ -22,7 +22,7 @@ extern ConVar mp_prematch;
 // Mirv: Just added this to stop all the redefinition warnings whenever i do a full recompile
 #pragma warning(disable: 4005)
 
-//#pragma optimize("", off)
+#pragma optimize("", off)
 
 #include "BotExports.h"
 
@@ -54,7 +54,7 @@ struct BotGoalInfo
 const int		MAX_DEFERRED_GOALS = 64;
 int				g_DeferredGoalIndex = 0;
 BotGoalInfo		g_DeferredGoals[MAX_DEFERRED_GOALS] = {};
-bool			g_ReadyForGoals = false;
+bool			g_Started = false;
 
 struct BotSpawnInfo
 {
@@ -2484,10 +2484,12 @@ namespace Omnibot
 	{
 		if(IsOmnibotLoaded())
 		{
-			if(engine->Cmd_Args())
+			Arguments args;
+			for(int i = 0; i < engine->Cmd_Argc(); ++i)
 			{
-				g_BotFunctions.pfnBotConsoleCommand(engine->Cmd_Args(), strlen(engine->Cmd_Args()));
+				Q_strncpy(args.m_Args[args.m_NumArgs++], engine->Cmd_Argv(i), Arguments::MaxArgLength);
 			}
+			g_BotFunctions.pfnBotConsoleCommand(args);
 		}
 		else
 			Warning("Omni-bot Not Loaded\n");
@@ -2495,7 +2497,7 @@ namespace Omnibot
 
 	void omnibot_interface::Bot_SendTrigger(TriggerInfo *_triggerInfo)
 	{
-		//if( gameLocal.isServer )
+		if(IsOmnibotLoaded())
 		{
 			if(g_BotFunctions.pfnBotSendTrigger)
 			{
@@ -2563,7 +2565,7 @@ namespace Omnibot
 		eomnibot_error err = Omnibot_LoadLibrary(FF_VERSION_LATEST, "omnibot_ff", Omnibot_FixPath(botPath));
 		if(err == BOT_ERROR_NONE)
 		{
-			g_ReadyForGoals = false;
+			g_Started = false;
 			gEntList.RemoveListenerEntity(&gBotEntityListener);
 			gEntList.AddListenerEntity(&gBotEntityListener);
 		}
@@ -2594,7 +2596,7 @@ namespace Omnibot
 		VPROF_BUDGET( "Omni-bot::Update", _T("Omni-bot") );
 
 		if(IsOmnibotLoaded())
-		{		
+		{
 			static float serverGravity = 0.0f;
 			if(serverGravity != sv_gravity.GetFloat())
 			{
@@ -2624,7 +2626,13 @@ namespace Omnibot
 			}
 			//////////////////////////////////////////////////////////////////////////
 
-			if(g_ReadyForGoals)
+			if(!g_Started)
+			{
+				Omnibot::Notify_GameStarted();
+				g_Started = true;
+			}
+			
+			if(g_DeferredGoalIndex > 0)
 			{
 				for(int i = 0; i < g_DeferredGoalIndex; ++i)
 				{
@@ -2681,7 +2689,6 @@ namespace Omnibot
 			return;
 
 		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_STARTGAME));
-		g_ReadyForGoals = true;		
 	}
 
 	void Notify_GameEnded(int _winningteam)
@@ -2690,7 +2697,6 @@ namespace Omnibot
 			return;
 
 		g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ENDGAME));
-		g_ReadyForGoals = false;
 	}
 
 	void Notify_ChatMsg(CBasePlayer *_player, const char *_msg)

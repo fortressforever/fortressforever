@@ -1067,6 +1067,24 @@ typedef enum eGameState
 } GameState;
 
 //////////////////////////////////////////////////////////////////////////
+
+class Arguments
+{
+public:
+	enum { MaxArgs = 64, MaxArgLength = 128, };
+	
+	Arguments() : m_NumArgs(0) 
+	{
+		for(int i = 0; i < MaxArgs; ++i)
+			m_Args[i][0] = 0;
+	}
+
+	char	m_Args[MaxArgs][MaxArgLength];
+	int		m_NumArgs;
+};
+
+//////////////////////////////////////////////////////////////////////////
+
 typedef enum
 {
 	DRAW_LINE,

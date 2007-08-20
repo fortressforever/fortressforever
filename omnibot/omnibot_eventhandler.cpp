@@ -94,7 +94,7 @@ const EventCallback EVENT_CALLBACKS[] =
 	{ "player_use", event_GamePlayerUse },
 	{ "player_changename", event_GamePlayerChangeName },
 	{ "game_newmap", event_GameNewMap },
-	{ "game_start", event_GameStart },
+	//{ "game_start", event_GameStart },
 	{ "game_end", event_GameEnd },
 	{ "round_start", event_RoundStart },
 	{ "round_end", event_RoundEnd },
