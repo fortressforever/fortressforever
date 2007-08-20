@@ -558,7 +558,11 @@ void CFFPlayer::ClassSpecificSkill()
 
 		case CLASS_ENGINEER:
 		case CLASS_SPY:
-			HudContextShow(true);
+			// Bug #0001683: Can use engineer radial menu when dead.  This seems to put an end to it -> Defrag
+			if( IsAlive()  )
+			{
+				HudContextShow(true);
+			}			
 			break;
 
 		case CLASS_SCOUT:
