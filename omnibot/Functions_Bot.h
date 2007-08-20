@@ -26,7 +26,7 @@ typedef struct
 	omnibot_error (*pfnBotInitialise)(IEngineInterface *_pEngineFuncs, int _version);
 	void (*pfnBotUpdate)();
 	void (*pfnBotShutdown)();
-	int (*pfnBotConsoleCommand)(const char *_cmd, int _size);
+	void (*pfnBotConsoleCommand)(const Arguments &_args);
 	void (*pfnBotAddGoal)(const GameEntity _ent, int _goaltype, int _team, const char *_tag, obUserData *_bud);
 	void (*pfnBotSendTrigger)(TriggerInfo *_triggerInfo);
 	void (*pfnBotAddBBRecord)(BlackBoard_Key _type, int _posterID, int _targetID, obUserData *_data);

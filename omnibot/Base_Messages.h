@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-08-10 21:14:25 -0700 (Fri, 10 Aug 2007) $
-// $LastChangedRevision: 2123 $
+// $LastChangedDate: 2007-08-15 20:45:52 -0700 (Wed, 15 Aug 2007) $
+// $LastChangedRevision: 2132 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,6 +32,11 @@ struct Msg_Addbot
 	{
 		m_Name[0] = m_Model[0] = m_Skin[0] = m_SpawnPointName[0] = m_Profile[0] = 0;
 	}
+};
+
+struct Msg_ChangeName
+{
+	char	m_NewName[64];
 };
 
 struct Msg_PlayerChooseEquipment
@@ -69,11 +74,6 @@ struct Msg_IsOutside
 {
 	float		m_Position[3];
 	obBool		m_IsOutside;
-};
-
-struct Msg_ChangeName
-{
-	char	m_NewName[32];
 };
 
 struct Msg_PointContents

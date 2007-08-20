@@ -32,7 +32,7 @@ void BotUpdate();
 // function: BotConsoleCommand
 //		Any time commands from the game are executed, this will get called
 //		to allow the bot to process it and perform any necessary actions.
-int BotConsoleCommand(const char *_cmd, int _size);
+void BotConsoleCommand(const Arguments &_args);
 // function: BotAddGoal
 //		Allows the game to register a goal with the bot that the bots can use
 void BotAddGoal(const GameEntity _ent, int _goaltype, int _team, const char *_tag, obUserData *_bud);
