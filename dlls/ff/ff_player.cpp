@@ -2521,7 +2521,7 @@ void CFFPlayer::Command_Team( void )
 
 	// Bug #0001686: Possible to spectate outside of spectator mode
 	// If our previous team was spectator, then stop observer mode.
-	if( iOldTeam = FF_TEAM_SPEC )
+	if( iOldTeam == FF_TEAM_SPEC )
 	{
 		StopObserverMode();
 	}
@@ -3469,42 +3469,60 @@ void CFFPlayer::Command_DropItems( void )
 /**
 	Discard
 */
+
+// 2007/08/20
+// Tidied up this function, fixed cells bug and also renamed a few variables to make things clearer.
+// Removed ubiquitous i counters for more descriptive names.  Old variable name for "bKeepAmmo" was "iDiscardable" which was 
+// ... backwards (since we only discarded it if iDiscardable evaluated to false).  Made my head hurt a bit! |---> Defrag
+
 void CFFPlayer::Command_Discard( void )
 {
+	
 	CFFItemBackpack *pBackpack = NULL;
 
-	int iDroppableAmmo[MAX_AMMO_TYPES] = {0};
+	// if any of these are flagged as true, then we have a weapon that uses this ammo type and thus retain it (no discard allowed).  
+	bool bKeepAmmo[MAX_AMMO_TYPES] = { false };
 
 	// Check we have the ammo to discard first
-		if (GetClassSlot() != CLASS_ENGINEER)
+	if ( GetClassSlot() != CLASS_ENGINEER )
 	{
 		// get ammo used by our weapons
-		for (int i = 0; i < MAX_WEAPON_SLOTS; i++)
+		for( int iWeaponNum = 0; iWeaponNum < MAX_WEAPON_SLOTS; iWeaponNum++ )
 		{
-			if (GetWeapon(i))
+			if( GetWeapon( iWeaponNum ) )
 			{
-				int ammoid = GetWeapon(i)->GetPrimaryAmmoType();
+				int ammoid = GetWeapon( iWeaponNum )->GetPrimaryAmmoType();
 
 				if (ammoid > -1)
 				{
-					iDroppableAmmo[ammoid] = 1;
+					// We need this ammo.  Keep it.
+					bKeepAmmo[ammoid] = 1;					
 				}
 			}
 		}
 
-		// Add ammo if they have any
-		for (int i = 0; i < MAX_AMMO_TYPES; i++)
+		// Bug #0001682: Scout discard drops cells
+		// Scout has no weapon that uses cells, but the radar needs them.  Add explicit check -> Defrag
+		if( GetClassSlot() == CLASS_SCOUT )
 		{
-			if (!iDroppableAmmo[i] && GetAmmoCount(i) > 0)
+			// Keep our cells if we're scout, bitches.  4 = AMMO_CELLS (pain in balls)
+			bKeepAmmo[ 4 ] = true;
+		}
+
+		// Add ammo if they have any
+		for( int iAmmoNum = 0; iAmmoNum < MAX_AMMO_TYPES; iAmmoNum++ )
+		{
+			// Only discard ammo that we do not want to keep.  I.e. discard = ! keep
+			if ( ! bKeepAmmo[iAmmoNum] && GetAmmoCount( iAmmoNum ) > 0)
 			{
-				if (!pBackpack)
-					pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
+				if ( ! pBackpack )
+					pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", GetAbsOrigin(), GetAbsAngles() );
 
 				// Check again in case we failed to make one
-				if (pBackpack)
+				if( pBackpack )
 				{
-					pBackpack->SetAmmoCount(i, GetAmmoCount(i));
-					RemoveAmmo(GetAmmoCount(i), i);
+					pBackpack->SetAmmoCount( iAmmoNum, GetAmmoCount( iAmmoNum ));
+					RemoveAmmo( GetAmmoCount( iAmmoNum), iAmmoNum );
 				}
 			}
 		}
