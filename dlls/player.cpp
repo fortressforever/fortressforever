@@ -2091,15 +2091,19 @@ void CBasePlayer::PlayerDeathThink(void)
 	}
 
 	// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
-	if( ( ( m_flDeathTime + m_flNextSpawnDelay ) - gpGlobals->curtime ) >= 0 )
+	float fTimeDelta = m_flDeathTime + m_flNextSpawnDelay - gpGlobals->curtime;
+
+	// I changed this so that we can display messages to the player when they're dead
+	// the old version just spammed an empty message at the player when it was time to spawn. -> Defrag
+	if( fTimeDelta >= 0 )
 	{
 		char szSpawnTime[ 256 ];
 		Q_snprintf( szSpawnTime, sizeof( szSpawnTime ), "Can't spawn for %i seconds.", ( int )( ( m_flDeathTime + m_flNextSpawnDelay + 1 ) - gpGlobals->curtime ) );
 		ClientPrint( this, HUD_PRINTCENTER, szSpawnTime );
 	}
-	else
+	else if( fTimeDelta > -2.0f ) // display the ready to spawn message for two seconds after the respawn timer has expired
 	{
-		ClientPrint( this, HUD_PRINTCENTER, "" );
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_READYTOSPAWN" );
 	}
 
 	// Can't respawn if there's a spawn delay

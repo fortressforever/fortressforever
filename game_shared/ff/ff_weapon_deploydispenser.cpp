@@ -284,14 +284,27 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		if (!pPlayer)
 			return;
 
+		if( ! pPlayer->IsAlive() )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEWHENDEAD" );
+			return;
+		}
+
 		// Bug #0000333: Buildable Behavior (non build slot) while building
 		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD");			
 			return;
+		}
 
 		CFFDispenser *pDispenser = pPlayer->GetDispenser();
 
+		// can't dismantle what doesn't exist
 		if (!pDispenser)
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NODISPENSERTODISMANTLE");	
 			return;
+		}
 
 		if (pDispenser->IsSabotaged())
 		{
@@ -323,14 +336,27 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		if (!pPlayer)
 			return;
 
+		if( ! pPlayer->IsAlive() )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDETWHENDEAD" );
+			return;
+		}
+
 		// Bug #0000333: Buildable Behavior (non build slot) while building
 		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDETMIDBUILD" );
 			return;
+		}
 
 		CFFDispenser *pDispenser = pPlayer->GetDispenser();
 
+		// can't detonate what we don't have
 		if (!pDispenser)
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NODISPENSERTODET");
 			return;
+		}			
 		
 		if (pDispenser->IsSabotaged())
 		{
@@ -348,14 +374,27 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		if (!pPlayer)
 			return;
 
+		if( ! pPlayer->IsAlive() )
+		{
+			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEORDETWHENDEAD" );
+			return;
+		}
+
 		// Bug #0000333: Buildable Behavior (non build slot) while building
 		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
+		{
+            ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD" );
 			return;
+		}
 
 		CFFDispenser *pDispenser = pPlayer->GetDispenser();
 
+		// can't do owt to it 'cause it doesn't exist!
 		if (!pDispenser)
+		{
+            ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NODISPENSER");
 			return;
+		}
 
 		if (pDispenser->IsSabotaged())
 		{

@@ -2404,6 +2404,8 @@ void CFFPlayer::Command_Class(void)
 
 void CFFPlayer::Command_Team( void )
 {
+	int iOldTeam = GetTeamNumber();
+
 	if( engine->Cmd_Argc( ) < 1 )
 	{
 		// no team specified
@@ -2516,6 +2518,13 @@ void CFFPlayer::Command_Team( void )
 	}
 	
 	ChangeTeam(iTeam);
+
+	// Bug #0001686: Possible to spectate outside of spectator mode
+	// If our previous team was spectator, then stop observer mode.
+	if( iOldTeam = FF_TEAM_SPEC )
+	{
+		StopObserverMode();
+	}
 	
 	// Make sure they don't think they're meant to be spawning as a new class
 	m_iNextClass = 0;
