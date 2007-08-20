@@ -35,6 +35,10 @@
 
 #include "tier0/memdbgon.h"
 
+ConVar stats_enable("ff_stats_enable", "1", FCVAR_NOTIFY|FCVAR_ARCHIVE, "Enable uploading of stats to the Fortress Forever stats database.");
+ConVar stats_login("ff_stats_login", "unset", FCVAR_PROTECTED, "Fortress Forever Stats login information for this server");
+ConVar stats_secret("ff_stats_pass", "unset", FCVAR_PROTECTED, "Fortress Forever Stats shared secret for this server's login information");
+
 class CFFPlayerStats 
 {
 public:
@@ -369,8 +373,8 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	Msg("[STATS] Generating Serialized stats log\n");
 
 	// build the auth string here
-	const char *pszLogin = "ff-test";
-	const char *pszSecret = "sharedsecret123";
+	const char *pszLogin = stats_login.GetString();
+	const char *pszSecret = stats_secret.GetString();
 	const char *pszDate = GetTimestampString(); // abuse staticness of return here
 	char preAuthString[80];
 	Q_snprintf( preAuthString, 80, "%s%s%s", pszLogin, pszSecret, pszDate );
@@ -388,6 +392,8 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	}
 
 	// Basic header information
+	ConVar *hostname = cvar->FindVar("hostname");
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "hostname %s\n", hostname->GetString());
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "login %s\n", pszLogin);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "auth %08X\n", hash);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "date %s\n", pszDate);
@@ -396,11 +402,11 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	pTeam = GetGlobalTeam(TEAM_BLUE);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "bluescore %d\n", pTeam ? pTeam->GetScore() : 0);
 	pTeam = GetGlobalTeam(TEAM_RED);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "redscore %d\n", 0);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "redscore %d\n", pTeam ? pTeam->GetScore() : 0);
 	pTeam = GetGlobalTeam(TEAM_YELLOW);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "yellowscore %d\n", 0);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "yellowscore %d\n", pTeam ? pTeam->GetScore() : 0);
 	pTeam = GetGlobalTeam(TEAM_GREEN);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "greenscore %d\n", 0);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "greenscore %d\n", pTeam ? pTeam->GetScore() : 0);
 	
 	// add the players section
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "players\n");
@@ -434,7 +440,7 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	for (i=0; i<(int)m_vPlayers.size(); i++) {
 		for (j=0; j<(int)m_vPlayers[i].m_vStats.size(); j++) {
 			if (m_vPlayers[i].m_vStats[j] == 0.0) continue; // skip unset stats
-			offset += Q_snprintf(buffer+offset, buffer_size-offset, "%d %s %f\n",
+			offset += Q_snprintf(buffer+offset, buffer_size-offset, "%d %s %.0f\n",
 				i,
 				m_vStats[j].m_sName.GetString(),
 				m_vPlayers[i].m_vStats[j]);
@@ -449,12 +455,8 @@ void SendStats()
 {
 	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
 
-	// stop crashing server!
-	//return;
-
-	// Aegeus crashed on line 450 (which is below the return ^^). How did
-	// this happen?
-	UTIL_LogPrintf( "[STATS] SOMEHOW I GOT HERE AND I SHOULDNT HAVE!\n" );
+	if (!stats_enable.GetBool())
+		return;
 
 	// this is kind of wasteful :(
 	char buf[100000], buf2[120000];
