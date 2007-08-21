@@ -26,16 +26,22 @@ public:
 
 private:
 
-	char m_szLevelName[256];
 	IMaterialVar *m_pResult;
+	char m_szLevelName[256];
+	char m_szMaterialPath[1024];
 };
 
 bool CProxyMapTexture::Init(IMaterial *pMaterial, KeyValues *pKeyValues)
 {
 	m_szLevelName[0] = 0;
+	m_szMaterialPath[0] = 0;
+
 	bool foundVar;
-	const char *pResult = pKeyValues->GetString("resultVar");
-	m_pResult = pMaterial->FindVar(pResult, &foundVar, true);
+	m_pResult = pMaterial->FindVar("$baseTexture", &foundVar, true);
+
+	const char *pszPath = pKeyValues->GetString("path");
+	Q_strncpy(m_szMaterialPath, pszPath ? pszPath : "", 1023);
+
 	return true;
 }
 
@@ -51,16 +57,17 @@ void CProxyMapTexture::OnBind(void *pC_BaseEntity)
 	if (i < 3)
 		return;
 
-	char szMaterialPath[128];
-	Q_snprintf(szMaterialPath, 127, "vgui/loadingscreens/%s", m_szLevelName + 5);
-	szMaterialPath[20 + i - 5 - 4] = 0;
+	char szMaterial[1024];
+	Q_snprintf(szMaterial, 1023, "%s/%s", m_szMaterialPath, m_szLevelName + 5);
+	szMaterial[strlen(m_szMaterialPath) + i - 5 - 4 + 1] = 0;
 
 	bool foundVar;
-	IMaterial *m = materials->FindMaterial(szMaterialPath, TEXTURE_GROUP_VGUI);
+	IMaterial *m = materials->FindMaterial(szMaterial, TEXTURE_GROUP_VGUI);
 
-	if (!m)
+	if (!m || m->IsErrorMaterial())
 	{
-		m = materials->FindMaterial("vgui/loadingscreens/default", TEXTURE_GROUP_VGUI);
+		Q_snprintf(szMaterial, 1023, "%s/default", m_szMaterialPath);
+		m = materials->FindMaterial(szMaterial, TEXTURE_GROUP_VGUI);
 	}
 
 	IMaterialVar *mv = m->FindVar("$baseTexture", &foundVar, true);
