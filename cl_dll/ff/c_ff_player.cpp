@@ -84,6 +84,9 @@ ConVar cl_timerwav("cl_grenadetimer", "default", FCVAR_ARCHIVE, "Timer file to u
 // Get around the ambiguous symbol problem
 extern IFileSystem **pFilesystem;
 
+// Need this to remove the HUD context menus on spawn
+extern void HudContextForceClose();
+
 // #0000331: impulse 81 not working (weapon_cubemap)
 #include "../c_weapon__stubs.h"
 #include "ff_weapon_base.h"
@@ -1264,6 +1267,9 @@ void C_FFPlayer::Spawn( void )
 	}
 
 	m_flNextCloak = 0.0f;
+
+	// Bug #0001448: Spy menu stuck on screen.  |----> Defrag
+	HudContextForceClose();
 
 	// Reset this on spawn
 	SetStealMouseForAimSentry( false );
