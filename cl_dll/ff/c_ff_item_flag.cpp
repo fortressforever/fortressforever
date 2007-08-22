@@ -114,6 +114,19 @@ int C_FFInfoScript::DrawModel( int flags )
 	if (GetFollowedEntity() == CBasePlayer::GetLocalPlayer()) 
 		return 0;
 
+	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
+
+	// Bug #0001660: Flag visible in first-person spectator mode
+	// Don't draw the FFInfoScript if we're in-eye spectating the same player the flag is hitched to |---> Defrag
+	if( pLocalPlayer )
+	{
+        if( pLocalPlayer->IsObserver() && ( pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE ))		
+		{
+			if( pLocalPlayer->GetObserverTarget() == GetFollowedEntity() )
+				return 0;
+		}
+	}
+
 	// Temporary fix until we sort out the interpolation business
 	if (m_flThrowTime + 0.2f > gpGlobals->curtime) 
 		return 0;
