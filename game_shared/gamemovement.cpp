@@ -3397,7 +3397,13 @@ void CGameMovement::CategorizePosition( void )
 void CGameMovement::CheckFalling( void )
 {
 	CFFPlayer *pPlayer = ToFFPlayer(player);
-	pPlayer->m_bCanDoubleJump = true;
+
+	// Jiggles: To stop players from double jumping off other players
+	if ( player->GetGroundEntity() && player->GetGroundEntity()->IsPlayer() )
+		pPlayer->m_bCanDoubleJump = false;
+	else
+		pPlayer->m_bCanDoubleJump = true;
+
 
 	if ( player->GetGroundEntity() != NULL &&
 		 !IsDead() &&
