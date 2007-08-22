@@ -206,6 +206,15 @@ void CFFGrenadeNapalmlet::FlameThink()
 			UTIL_Remove(this);
 			return;
 		}
+
+		// Bug #0001664: Pyro napalm flames in water shouldnt exist
+		// Ideally add some fancy smouldering effect for when they are extinguished, but this will do for now |---> Defrag		
+		if( GetWaterLevel() != 0  )
+		{
+			UTIL_Remove(this);
+			return;
+		}
+
 		// Jiggles: We stopped moving; let's switch to a standing flame
 		// Nevermind, this doesn't work.
 		//if( m_bFlameSwitch && GetAbsVelocity() == vec3_origin )
