@@ -496,11 +496,18 @@ CFFPlayer::CFFPlayer()
 
 	m_SpawnPointOverride = 0;
 
+	m_iStatsID = -1;
+
 #endif // FF_BETA_TEST_COMPILE
 }
 
 CFFPlayer::~CFFPlayer()
 {
+	if (m_iStatsID != -1)
+	{
+		g_StatsLog->StopTimer(m_iStatsID, m_iPlayTime, true);
+	}
+
 	m_PlayerAnimState->Release();
 }
 
@@ -1384,6 +1391,12 @@ void CFFPlayer::Spawn( void )
 	// Increment the spawn counter
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 
+	// if they change class, we need to stop their timer (it gets started back up after reacquiring our id)
+	if (m_iStatsID != -1)
+	{
+		g_StatsLog->StopTimer(m_iStatsID, m_iPlayTime, true);
+	}
+	
 	// get our stats id, just in case.
 	m_iStatsID = g_StatsLog->GetPlayerID(
 		engine->GetPlayerNetworkIDString(this->edict()),
@@ -1391,6 +1404,9 @@ void CFFPlayer::Spawn( void )
 		GetTeamNumber(),
 		engine->GetPlayerUserId(this->edict()),
 		GetPlayerName());
+		
+	g_StatsLog->StartTimer(m_iStatsID, m_iPlayTime);
+	
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1506,6 +1522,7 @@ void CFFPlayer::InitialSpawn( void )
 	m_iStatHealHP = g_StatsLog->GetStatID("healhp");
 	m_iStatCritHeals = g_StatsLog->GetStatID("critheals");
 	m_iStatInfectCures = g_StatsLog->GetStatID("infectcures");
+	m_iPlayTime = g_StatsLog->GetStatID("time_played");
 
 	m_hRadioTagData = ( CFFRadioTagData * )CreateEntityByName( "ff_radiotagdata" );
 	Assert( m_hRadioTagData );
@@ -1694,7 +1711,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	g_StatsLog->AddStat(m_iStatsID, m_iStatDeath, 1);
 
 	// TODO: Take SGs into account here?
-	CFFPlayer *pKiller = dynamic_cast<CFFPlayer *> (info.GetAttacker());
+	CFFPlayer *pKiller = dynamic_cast<CFFPlayer *>(dynamic_cast<CMultiplayRules *>(g_pGameRules)->GetDeathScorer( info.GetAttacker(), info.GetInflictor() ));
 	
 	// Log the correct stat for the killer
 	if (pKiller)
@@ -1705,7 +1722,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
 
 		if (info.GetInflictor() && info.GetInflictor()->edict() && dynamic_cast<CFFWeaponBase*>(info.GetInflictor()))
-			g_StatsLog->AddAction(pKiller->m_iStatsID,m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, "", GetAbsOrigin(), GetLocation());
+			g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, "", GetAbsOrigin(), GetLocation());
 	}
 
 	// Sends a hint to a player killed by an EMP

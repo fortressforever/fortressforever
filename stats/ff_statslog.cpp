@@ -287,7 +287,7 @@ void CFFStatsLog::StartTimer(int playerid, int statid)
 		m_vPlayers[playerid].m_vStartTimes.resize(m_vStats.size(), 0.0);
 
 	// make sure it's stopped
-	if (m_vPlayers[playerid].m_vStartTimes[statid] < 0.0001)
+	if (m_vPlayers[playerid].m_vStartTimes[statid] > 0.0001)
 	{
 		DevWarning("Starting timer for stat %d without stopping it first\n", statid);
 		StopTimer(playerid, statid, true);
@@ -315,10 +315,10 @@ void CFFStatsLog::StopTimer(int playerid, int statid, bool apply)
 	if (m_vPlayers[playerid].m_vStartTimes.size() < m_vStats.size())
 		m_vPlayers[playerid].m_vStartTimes.resize(m_vStats.size(), 0.0);
 
-	if (apply)
+	if (apply && m_vPlayers[playerid].m_vStartTimes[statid] > 0.0f)
 		AddStat(playerid, statid, gpGlobals->curtime - m_vPlayers[playerid].m_vStartTimes[statid]);
 
-	m_vPlayers[playerid].m_vStartTimes[statid] = 0;
+	m_vPlayers[playerid].m_vStartTimes[statid] = 0.0f;
 }
 
 /**
@@ -381,7 +381,7 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	//DevMsg( "[STATS] preAuthString: [%s]\n", preAuthString );
 
 	int i, j, offset = 0;
-	CTeam *pTeam;
+	CFFTeam *pTeam;
 
 	// Simple hash used here
 	unsigned long hash = 0;
@@ -397,16 +397,16 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "login %s\n", pszLogin);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "auth %08X\n", hash);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "date %s\n", pszDate);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "duration %d\n", 1800);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "duration %d\n", (int)gpGlobals->curtime);
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "map %s\n", gpGlobals->mapname.ToCStr());
-	pTeam = GetGlobalTeam(TEAM_BLUE);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "bluescore %d\n", pTeam ? pTeam->GetScore() : 0);
-	pTeam = GetGlobalTeam(TEAM_RED);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "redscore %d\n", pTeam ? pTeam->GetScore() : 0);
-	pTeam = GetGlobalTeam(TEAM_YELLOW);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "yellowscore %d\n", pTeam ? pTeam->GetScore() : 0);
-	pTeam = GetGlobalTeam(TEAM_GREEN);
-	offset += Q_snprintf(buffer+offset, buffer_size-offset, "greenscore %d\n", pTeam ? pTeam->GetScore() : 0);
+	pTeam = GetGlobalFFTeam(TEAM_BLUE);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "bluescore %d\n", pTeam ? pTeam->GetScore() : -1);
+	pTeam = GetGlobalFFTeam(TEAM_RED);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "redscore %d\n", pTeam ? pTeam->GetScore() : -1);
+	pTeam = GetGlobalFFTeam(TEAM_YELLOW);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "yellowscore %d\n", pTeam ? pTeam->GetScore() : -1);
+	pTeam = GetGlobalFFTeam(TEAM_GREEN);
+	offset += Q_snprintf(buffer+offset, buffer_size-offset, "greenscore %d\n", pTeam ? pTeam->GetScore() : -1);
 	
 	// add the players section
 	offset += Q_snprintf(buffer+offset, buffer_size-offset, "players\n");
@@ -424,13 +424,15 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 		for (j=0; j<(int)m_vPlayers[i].m_vActions.size(); j++) {
 	//for (std::vector<CFFPlayerStats>::const_iterator it = m_vPlayers.begin(); it!=m_vPlayers.end(); it++) {
 	//	for (std::vector<CFFAction>::const_iterator jt = (*it).m_vActions.begin(); jt!=(*it).m_vActions.end(); jt++) {
-			offset += Q_snprintf(buffer+offset, buffer_size-offset, "%d %d %s %.0f %s %s %s\n",
+			offset += Q_snprintf(buffer+offset, buffer_size-offset, "%d %d %s %.0f %s %.0f,%.0f,%.0f %s\n",
 				i,
 				m_vPlayers[i].m_vActions[j].targetid,
 				m_vActions[m_vPlayers[i].m_vActions[j].actionid].m_sName.GetString(),
 				m_vPlayers[i].m_vActions[j].time,
 				m_vPlayers[i].m_vActions[j].param.GetString(),
-				"",
+				m_vPlayers[i].m_vActions[j].coords.x,
+				m_vPlayers[i].m_vActions[j].coords.y,
+				m_vPlayers[i].m_vActions[j].coords.z,
 				m_vPlayers[i].m_vActions[j].location.GetString());
 		}
 	}
@@ -457,7 +459,7 @@ void SendStats()
 
 	if (!stats_enable.GetBool())
 		return;
-
+		
 	// this is kind of wasteful :(
 	char buf[100000], buf2[120000];
 
