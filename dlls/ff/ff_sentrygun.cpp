@@ -561,7 +561,8 @@ void CFFSentryGun::HackFindEnemy( void )
 			continue;
 
 		// Spy check - but don't let valid radio tagged targets sneak by!
-		if( pPlayer->IsDisguised() )
+		//  Shoot cloaked players regardless of disguise
+		if( pPlayer->IsDisguised() && !pPlayer->IsCloaked() )
 		{
 			// Spy disguised as owners team
 			if( ( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() ) && ( !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) ) )
