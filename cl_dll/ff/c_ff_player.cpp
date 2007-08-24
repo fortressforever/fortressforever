@@ -186,6 +186,12 @@ void OnLastInvHintTimerExpired( C_FFHintTimer *pHintTimer )
 	FF_SendHint( GLOBAL_NOLASTINV, 5, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_NOLASTINV" );
 }
 
+void OnIntroHintTimerExpired( C_FFHintTimer *pHintTimer )
+{
+	FF_SendHint( INTRO_HINT, 1, PRIORITY_HIGH, "#FF_HINT_INTRO_HINT" );
+}
+
+
 
 // --> Mirv: Toggle grenades (requested by defrag)
 void CC_ToggleOne()
@@ -1321,6 +1327,17 @@ void C_FFPlayer::Spawn( void )
 				pHintTimer->StartTimer();
 			}
 		}
+
+		// Intro to the Hint Center -- display on first spawn (delayed 2 seconds for the hint sound to play properly)
+		if ( g_FFHintTimers.FindTimer( "intro" ) == NULL ) // Setup timer
+		{	
+			C_FFHintTimer *pIntroHintTimer = g_FFHintTimers.Create( "intro", 2.0f );
+			if ( pIntroHintTimer )
+			{
+				pIntroHintTimer->SetHintExpiredCallback( OnIntroHintTimerExpired, false );
+				pIntroHintTimer->StartTimer();
+			}
+		}
 	}
 
 	// Rocket Jump hint -- triggered after player has logged 10 minutes (total) as a Soldier
@@ -1395,11 +1412,6 @@ void C_FFPlayer::Spawn( void )
 		pLastInvHintTimer->Unpause();
 	else
 		pLastInvHintTimer->Pause();
-
-
-	// Intro to the Hint Center -- display on first spawn
-	if ( GetClassSlot() > 0 )
-		FF_SendHint( INTRO_HINT, 1, PRIORITY_HIGH, "#FF_HINT_INTRO_HINT" );
 
 	// End hint code
 

@@ -175,7 +175,13 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 	vgui::localize()->ConvertANSIToUnicode( szHintCtr, m_szHintCounter, sizeof(m_szHintCounter) );
 
 	if (  foundIndex < 0 || m_bHintKeyHeld )  // Hint hasn't been shown yet or user is holding down the hint key
+	{
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
+
+		// Play the hint sound
+		CLocalPlayerFilter filter;
+		C_BaseEntity::EmitSound( filter, -1, "Player.Hint" );
+	}
 	else  // Just show the hint icon
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenterIcon" );
 	
@@ -185,25 +191,6 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 
 	Activate();
 	SetMouseInputEnabled(false);
-
-	// And play a sound, if there's one
-	//if (pszSound)
-	//{
-	//	CBasePlayer *pLocal = CBasePlayer::GetLocalPlayer();
-
-	//	if (!pLocal)
-	//		return;
-
-	//	CPASAttenuationFilter filter(pLocal, pszSound);
-
-	//	EmitSound_t params;
-	//	params.m_pSoundName = pszSound;
-	//	params.m_flSoundTime = 0.0f;
-	//	params.m_pflSoundDuration = NULL;
-	//	params.m_bWarnOnDirectWaveReference = false;
-
-	//	pLocal->EmitSound(filter, pLocal->entindex(), params);
-	//}
 }
 
 
