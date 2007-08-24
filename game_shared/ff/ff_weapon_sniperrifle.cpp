@@ -362,7 +362,7 @@ bool CFFWeaponSniperRifle::Deploy()
 
 #ifdef CLIENT_DLL
 	m_flNextZoomTime = m_flZoomTime = 0;
-	FF_SendHint( SNIPER_SR, 3, PRIORITY_LOW, "#FF_HINT_SNIPER_SR" );
+	FF_SendHint( SNIPER_SR, 1, PRIORITY_LOW, "#FF_HINT_SNIPER_SR" );
 #endif
 
 	return BaseClass::Deploy();

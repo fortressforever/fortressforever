@@ -78,7 +78,7 @@ bool CFFWeaponKnife::Deploy()
 	//FF_HudHint(HINT_GENERAL, 54, "Hi there. You seem to have drawn a knife. The knife can backstab and stuff like that - it's awesome!");
 	//Msg( "hudhints sayz: %d\n", hudhints.GetInt() );
 	
-	FF_SendHint( SPY_KNIFE, 3, PRIORITY_LOW, "#FF_HINT_SPY_KNIFE" );
+	FF_SendHint( SPY_KNIFE, 1, PRIORITY_LOW, "#FF_HINT_SPY_KNIFE" );
 #endif
 	
 	return BaseClass::Deploy();

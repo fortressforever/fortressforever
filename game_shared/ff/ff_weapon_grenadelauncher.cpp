@@ -222,7 +222,7 @@ bool CFFWeaponGrenadeLauncher::Deploy()
 {
 
 #ifdef CLIENT_DLL	
-	FF_SendHint( DEMOMAN_GL, 3, PRIORITY_LOW, "#FF_HINT_DEMOMAN_GL" );
+	FF_SendHint( DEMOMAN_GL, 1, PRIORITY_LOW, "#FF_HINT_DEMOMAN_GL" );
 #endif
 	
 	return BaseClass::Deploy();
