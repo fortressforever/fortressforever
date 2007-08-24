@@ -314,7 +314,7 @@ bool CFFWeaponFlamethrower::Deploy()
 #endif
 
 #ifdef CLIENT_DLL
-	FF_SendHint( PYRO_FLAMER, 3, PRIORITY_LOW, "#FF_HINT_PYRO_FLAMER" );
+	FF_SendHint( PYRO_FLAMER, 1, PRIORITY_LOW, "#FF_HINT_PYRO_FLAMER" );
 #endif
 	
 	return BaseClass::Deploy();

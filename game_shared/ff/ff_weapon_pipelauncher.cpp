@@ -266,7 +266,7 @@ bool CFFWeaponPipeLauncher::Deploy()
 {
 
 #ifdef CLIENT_DLL	
-	FF_SendHint( DEMOMAN_PL, 3, PRIORITY_LOW, "#FF_HINT_DEMOMAN_PL" );
+	FF_SendHint( DEMOMAN_PL, 1, PRIORITY_LOW, "#FF_HINT_DEMOMAN_PL" );
 #endif
 	
 	return BaseClass::Deploy();

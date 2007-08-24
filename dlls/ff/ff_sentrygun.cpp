@@ -393,7 +393,7 @@ void CFFSentryGun::OnActiveThink( void )
 	CFFPlayer *pFFPlayer = ToFFPlayer( enemy );
  	if( m_bSendNailGrenHint && pFFPlayer && ( pFFPlayer->GetClassSlot() == CLASS_SOLDIER ) )
 	{
-		FF_SendHint( pFFPlayer, SOLDIER_SENTRY, 5, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_SENTRY" );
+		FF_SendHint( pFFPlayer, SOLDIER_SENTRY, 3, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_SENTRY" );
 		m_bSendNailGrenHint = false;
 	}
 	// End hint code

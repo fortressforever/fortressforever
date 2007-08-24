@@ -264,7 +264,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 
 #ifdef CLIENT_DLL
 					if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) < 130))
-						FF_SendHint( ENGY_NOUPGRADE, 5, PRIORITY_NORMAL, "#FF_HINT_ENGY_NOUPGRADE" );
+						FF_SendHint( ENGY_NOUPGRADE, 1, PRIORITY_NORMAL, "#FF_HINT_ENGY_NOUPGRADE" );
 #endif
 
 					// Calculate if it needs anything...
