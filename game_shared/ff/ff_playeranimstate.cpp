@@ -290,8 +290,9 @@ int CFFPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequen
 			case ACT_RUN_CROUCH: // Jiggles: We need this case for proper blending to crouch-idle instead of standing-idle
 				return CalcSequenceIndex( "%s%s", DEFAULT_CROUCH_IDLE_NAME, pSuffix );
 			case ACT_HOVER:
-			case ACT_SWIM:
 				return CalcSequenceIndex( "%s%s", DEFAULT_SWIM_IDLE_NAME, pSuffix );
+			case ACT_SWIM:
+				return CalcSequenceIndex( "%s%s", DEFAULT_SWIM_NAME, pSuffix );
 			default:
 				return CalcSequenceIndex( "%s%s", DEFAULT_IDLE_NAME, pSuffix );
 		}
