@@ -4390,6 +4390,8 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		WRITE_BYTE(FF_VIEWEFFECT_INFECTED);
 		WRITE_FLOAT(999.0f);
 		MessageEnd();
+
+		Omnibot::Notify_Infected(this, pInfector);
 	}
 
 	else if ( !IsInfected() ) // they aren't infected, but they are immune
@@ -4423,6 +4425,8 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 		// Log this in the stats
 		if (pCurer)
 			g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatInfectCures, 1);
+
+		Omnibot::Notify_Cured(this, pCurer);
 	}
 
 	// Hack-ish - removing infection effect
@@ -4486,6 +4490,9 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	if (m_bBurnFlagIC == true) 
 		++newburnlevel;
 	
+	if(oldburnlevel != newburnlevel)
+		Omnibot::Notify_BurnLevel(this, hIgniter, newburnlevel);
+
 	// each weapons burn damage can only stack once. (else you set them on 999 fire with the FT)
 	/** Uncomment this to use different burn damages depending on the weapon - AfterShock
 	m_flBurningDamage = 0;
@@ -6136,9 +6143,18 @@ bool CFFPlayer::LuaOwnsWeaponType(const char *_name)
 	return Weapon_OwnsThisType(_name, 0) != NULL;
 }
 
-bool CFFPlayer::LuaGiveWeapon(const char *_name)
+bool CFFPlayer::LuaGiveWeapon(const char *_name, bool _autoselect)
 {
-	return GiveNamedItem(_name, 0) != NULL;
+	CBaseEntity *pEnt = GiveNamedItem(_name, 0);
+	if(pEnt)
+	{
+		if(_autoselect)
+		{
+			SelectItem(_name, 0);
+		}
+		return true;
+	}
+	return false;
 }
 
 void CFFPlayer::LuaRemoveAllWeapons()

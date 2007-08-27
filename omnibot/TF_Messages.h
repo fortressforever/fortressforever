@@ -301,6 +301,22 @@ struct Event_GaveEngyArmor
 	int			m_AfterValue;
 };
 
+struct Event_Infected
+{
+	GameEntity	m_FromWho;
+};
+
+struct Event_Cured
+{
+	GameEntity	m_ByWho;
+};
+
+struct Event_Burn
+{
+	GameEntity	m_ByWho;
+	int			m_BurnLevel;
+};
+
 #pragma pack(pop)
 
 #endif
