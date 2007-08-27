@@ -690,9 +690,10 @@ namespace Omnibot
 		{
 			edict_t *pEdict = INDEXENT(_client);
 			CBaseEntity *pEntity = pEdict && !FNullEnt(pEdict) ? CBaseEntity::Instance(pEdict) : 0;
-			CBasePlayer *pPlayer = pEntity ? pEntity->MyCharacterPointer() : 0;
+			CFFPlayer *pPlayer = pEntity ? ToFFPlayer(pEntity) : 0;
 			if(pPlayer && pPlayer->IsBot())
 			{
+				
 				CBotCmd cmd;
 				//CUserCmd cmd;
 
@@ -716,11 +717,13 @@ namespace Omnibot
 
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN1))
 					serverpluginhelpers->ClientCommand(pEdict, "primeone");
+				else if(pPlayer->IsGrenadePrimed())
+					serverpluginhelpers->ClientCommand(pEdict, "throwgren");
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN2))
 					serverpluginhelpers->ClientCommand(pEdict, "primetwo");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN_THROW))
+				else if(pPlayer->IsGrenadePrimed())
 					serverpluginhelpers->ClientCommand(pEdict, "throwgren");
-
+                
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DROPITEM))
 					serverpluginhelpers->ClientCommand(pEdict, "dropitems");
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DROPAMMO))
@@ -758,6 +761,8 @@ namespace Omnibot
 					serverpluginhelpers->ClientCommand(pEdict, "cloak");
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_SILENT_CLOAK))
 					serverpluginhelpers->ClientCommand(pEdict, "scloak");
+				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_RADAR))
+					serverpluginhelpers->ClientCommand(pEdict, "radar");
 
 				// Store the facing.
 				Vector vFacing(_input.m_Facing[0], _input.m_Facing[1], _input.m_Facing[2]);
@@ -3480,6 +3485,51 @@ namespace Omnibot
 			int iGameId = _target->entindex();
 			Event_GaveMedicHealth d = { HandleFromEntity(_target), _before, _after };
 			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_GAVE_MEDIC_HEALTH, &d, sizeof(d)));
+		}
+	}
+
+	void Notify_Infected(CBasePlayer *_target, CBasePlayer *_infector)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+		if(!_target->IsBot())
+			return;
+
+		if(_target && _target->IsBot())
+		{
+			int iGameId = _target->entindex();
+			Event_Infected d = { HandleFromEntity(_infector) };
+			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_INFECTED, &d, sizeof(d)));
+		}
+	}
+
+	void Notify_Cured(CBasePlayer *_curee, CBasePlayer *_curer)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+		if(!_curee->IsBot())
+			return;
+
+		if(_curee && _curee->IsBot())
+		{
+			int iGameId = _curee->entindex();
+			Event_Cured d = { HandleFromEntity(_curer) };
+			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_CURED, &d, sizeof(d)));
+		}
+	}
+
+	void Notify_BurnLevel(CBasePlayer *_target, CBasePlayer *_burner, int _burnlevel)
+	{
+		if(!IsOmnibotLoaded())
+			return;
+		if(!_target->IsBot())
+			return;
+
+		if(_target && _target->IsBot())
+		{
+			int iGameId = _target->entindex();
+			Event_Burn d = { HandleFromEntity(_burner), _burnlevel };
+			g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_BURNLEVEL, &d, sizeof(d)));
 		}
 	}
 

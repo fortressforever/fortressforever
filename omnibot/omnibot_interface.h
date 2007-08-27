@@ -53,6 +53,10 @@ namespace Omnibot
 	void Notify_Death(CBasePlayer *_player, CBaseEntity *_attacker, const char *_weapon);
 	void Notify_KilledSomeone(CBasePlayer *_player, CBaseEntity *_victim, const char *_weapon);
 
+	void Notify_Infected(CBasePlayer *_target, CBasePlayer *_infector);
+	void Notify_Cured(CBasePlayer *_target, CBasePlayer *_infector);
+	void Notify_BurnLevel(CBasePlayer *_target, CBasePlayer *_burner, int _burnlevel);
+
 	void Notify_ChangedTeam(CBasePlayer *_player, int _newteam);
 	void Notify_ChangedClass(CBasePlayer *_player, int _oldclass, int _newclass);
 

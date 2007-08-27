@@ -457,8 +457,9 @@ public:
 	void SetSecondaryGrenades( int iNewCount );
 	int AddPrimaryGrenades( int iNewCount );
 	int AddSecondaryGrenades( int iNewCount );
-private:
+
 	bool IsGrenadePrimed(void);
+private:	
 	void GrenadeThink(void);
 	void ThrowGrenade(float fTimer, float speed = 630.0f);		// |-- Mirv: So we can drop grens
 public:
@@ -738,7 +739,7 @@ public:
 	void LuaRemoveAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAllAmmo(bool bClipToo);
 	bool LuaOwnsWeaponType(const char *_name);
-	bool LuaGiveWeapon(const char *_name);
+	bool LuaGiveWeapon(const char *_name, bool _autoselect);
 	void LuaRemoveAllWeapons();
 
 	virtual int GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
