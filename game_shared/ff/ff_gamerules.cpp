@@ -581,7 +581,7 @@ ConVar mp_prematch( "mp_prematch",
 					if( iChangeClassValidClasses.Count() > 0 )
 					{
 						// Pick a class from the range available
-						pPlayer->InstaSwitch( random->RandomInt( 0, iChangeClassValidClasses.Count() - 1 ) );
+						pPlayer->InstaSwitch( iChangeClassValidClasses[random->RandomInt( 0, iChangeClassValidClasses.Count() - 1 )] );
 					}
 
 					if( pbFlags[ AT_CHANGETEAM_BLUE ] )
