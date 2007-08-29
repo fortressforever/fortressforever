@@ -1175,48 +1175,8 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 //-----------------------------------------------------------------------------
 void C_FFPlayer::PreThink( void )
 {
-	if ((m_flConcTime > gpGlobals->curtime) || (m_flConcTime < 0))
-	{
-		//Warning( "[prethink] conctime: %i\n", m_flConcTime );
-		float flLength = GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f;
-		float flConcAmount = 15.0f;
-		if( m_flConcTime > 0 )
-			flConcAmount *= (m_flConcTime - gpGlobals->curtime) / flLength;
+	// Jiggles: the main conc logic used to be here, but I moved it to Simulate() so it's not affected by tickrate changes
 
-		if (IsAlive())
-		{
-			// Our conc angles, this is also quite slow for now
-			m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
-
-			float flTotalAngle = BaseClass::EyeAngles().x;
-
-			// fix for demo playback lookdown bug, caused by looking up (above 0 or straight out) while conced
-			// playing regularly, looking upwards is 0 to -180
-			// so you can look down to go from 0 to 180 or up to go from 0 to -180
-			// but in demo playback, apparently you look down to go from 0 to 360 and up to go from 360 back to 0
-			// basically, it's 0 to 360 in demo playback instead of 0 to 180 and 0 to -180
-			if (flTotalAngle > 180)
-				flTotalAngle -= 360;
-			
-			flTotalAngle += m_angConced.x;
-
-			// We need to make sure we're not looking down further than 90 as this
-			// makes the viewmodel glitchy. Therefore remove any excess from the 
-			// conced angles.
-			// We have to do this here rather than on the viewmodel because the
-			// viewmodel also has to be locked so that you can't see below it which
-			// would conflict with also locking it above a certain point. So we have to
-			// remove it from the conc'ed angle itself.
-			if (flTotalAngle > 90.0f)
-			{
-				m_angConced.x -= flTotalAngle - 90.0f;
-			}
-		}
-		else
-		{
-			m_angConced = vec3_angle;
-		}
-	}
 
 	// Do we need to do a class specific skill?
 	if (m_afButtonPressed & IN_ATTACK2)
@@ -2044,9 +2004,51 @@ void C_FFPlayer::Simulate()
 {
 	BaseClass::Simulate();
 
-	//g_FFTimers.SimulateTimers(); // Jiggles: Doesn't seem to be used by anything anymore
-
 	g_FFHintTimers.SimulateTimers(); // For the time-based hints
+
+	// Jiggles: Moved the Conc logic here so it's not affected by tickrate changes (it was in Prethink() )
+	if ((m_flConcTime > gpGlobals->curtime) || (m_flConcTime < 0))
+	{
+		//Warning( "[prethink] conctime: %i\n", m_flConcTime );
+		float flLength = GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f;
+		float flConcAmount = 15.0f;
+		if( m_flConcTime > 0 )
+			flConcAmount *= (m_flConcTime - gpGlobals->curtime) / flLength;
+
+		if (IsAlive())
+		{
+			// Our conc angles, this is also quite slow for now
+			m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
+
+			float flTotalAngle = BaseClass::EyeAngles().x;
+
+			// fix for demo playback lookdown bug, caused by looking up (above 0 or straight out) while conced
+			// playing regularly, looking upwards is 0 to -180
+			// so you can look down to go from 0 to 180 or up to go from 0 to -180
+			// but in demo playback, apparently you look down to go from 0 to 360 and up to go from 360 back to 0
+			// basically, it's 0 to 360 in demo playback instead of 0 to 180 and 0 to -180
+			if (flTotalAngle > 180)
+				flTotalAngle -= 360;
+			
+			flTotalAngle += m_angConced.x;
+
+			// We need to make sure we're not looking down further than 90 as this
+			// makes the viewmodel glitchy. Therefore remove any excess from the 
+			// conced angles.
+			// We have to do this here rather than on the viewmodel because the
+			// viewmodel also has to be locked so that you can't see below it which
+			// would conflict with also locking it above a certain point. So we have to
+			// remove it from the conc'ed angle itself.
+			if (flTotalAngle > 90.0f)
+			{
+				m_angConced.x -= flTotalAngle - 90.0f;
+			}
+		}
+		else
+		{
+			m_angConced = vec3_angle;
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
