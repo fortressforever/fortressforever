@@ -96,8 +96,7 @@ namespace vgui
 		// Other
 		FFButton		*m_pFlythroughButton;
 
-		Button		*m_pMapScreenshotButton;			// Click to display the map screenshot
-		Frame		*m_pSSFrame;						// the frame that displays the large map screenshot
+		FFButton		*m_pMapScreenshotButton;			// Click to display the map screenshot
 	};
 }
 

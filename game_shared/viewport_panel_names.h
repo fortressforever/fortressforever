@@ -22,7 +22,7 @@
 #define PANEL_SPECGUI		"specgui"	// passive spectator elements (top/bottom bars)
 #define PANEL_SPECMENU		"specmenu"  // active spectator elements (options menus etc)
 #define PANEL_INFO			"info"
-#define PANEL_HINT			"hint"		// Jiggles: Hint Center panel
+#define PANEL_MAP			"map"		// so players can view the map at any time
 
 //#define PANEL_BUY			"buy"
 //#define PANEL_BUY_CT		"buy_ct"

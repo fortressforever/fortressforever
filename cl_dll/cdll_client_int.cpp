@@ -1188,6 +1188,7 @@ void CHLClient::LevelShutdown( void )
 	// Hide these panels so the game doesnt crash on us
 	gViewPortInterface->ShowPanel( PANEL_TEAM, false );
 	gViewPortInterface->ShowPanel( PANEL_CLASS, false );
+	gViewPortInterface->ShowPanel( PANEL_MAP, false );
 
 	internalCenterPrint->Clear();
 #ifndef _XBOX

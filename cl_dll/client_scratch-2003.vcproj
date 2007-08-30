@@ -2154,6 +2154,12 @@
 					RelativePath="game_controls\MapOverview.cpp">
 				</File>
 				<File
+					RelativePath=".\mapscreen.cpp">
+				</File>
+				<File
+					RelativePath=".\mapscreen.h">
+				</File>
+				<File
 					RelativePath=".\game_controls\NavProgress.cpp">
 				</File>
 				<File
@@ -2800,10 +2806,10 @@
 				RelativePath="..\public\vgui\IImage.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h">
+				RelativePath="iinput.h">
 			</File>
 			<File
-				RelativePath="iinput.h">
+				RelativePath="..\public\vgui\IInput.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui\IInputInternal.h">
@@ -3046,10 +3052,10 @@
 				RelativePath="..\public\tier1\mempool.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h">
+				RelativePath="menu.h">
 			</File>
 			<File
-				RelativePath="menu.h">
+				RelativePath="..\public\vgui_controls\Menu.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui_controls\MenuItem.h">
