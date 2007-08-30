@@ -24,6 +24,7 @@
 #include "c_ff_player.h"	// |-- Mirv: Needed for ScaleMovements
 #include "ff_hud_menu_medengy.h"	// |-- Mulch: for g_pMedEngyHudMenu
 #include "ff_hud_HintCenter.h"		// Jiggles: for g_pHintCenter
+#include "mapscreen.h"				// Jiggles: for g_pMapScreen
 
 extern ConVar in_joystick;
 
@@ -518,6 +519,25 @@ void IN_ScoreUp(void)
 		GetClientVoiceMgr()->StopSquelchMode();
 	}
 }
+
+// BEGIN: Jiggles: For display of the Map Screenshot
+void IN_MapShotDown( void )
+{
+	if ( gViewPortInterface )
+	{
+		if( g_pMapScreen )
+			g_pMapScreen->KeyDown();
+	}
+}
+void IN_MapShotUp( void )
+{
+	if ( gViewPortInterface )
+	{
+		if( g_pMapScreen )
+			g_pMapScreen->KeyUp();
+	}
+}
+// END: Jiggles: For display of the Map Screenshot
 
 // BEG: Added by Mulchman for team change & class change
 void IN_ChangeTeam( void )
@@ -1445,6 +1465,11 @@ static ConCommand endMedEngymenu( "-medengymenu", IN_MedEngyMenuUp );
 static ConCommand startHintCenter( "+hintcenter", IN_HintCenterDown );
 static ConCommand endHintCenter( "-hintcenter", IN_HintCenterUp );
 // END: Jiggles: For display of the Hint Center
+
+// BEGIN: Jiggles: For display of the Map Screenshot
+static ConCommand startMapShot( "+mapshot", IN_MapShotDown );
+static ConCommand endMapShot( "-mapshot", IN_MapShotUp );
+// END: Jiggles: For display of the Map Screenshot
 
 /*
 ============

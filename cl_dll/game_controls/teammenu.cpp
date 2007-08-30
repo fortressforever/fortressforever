@@ -229,14 +229,12 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM)
 	m_pSpectateButton = new FFButton(this, "SpectateButton", (const char *) NULL, this, "Spectate");
 	m_pFlythroughButton = new FFButton(this, "FlythroughButton", (const char *) NULL, this, "mapguide overview");
 
-	m_pMapScreenshotButton = new Button(this, "MapScreenshotButton", (const char *) NULL, this, "MapShot");
+	m_pMapScreenshotButton = new FFButton(this, "MapScreenshotButton", (const char *) NULL, this, "MapShot");
 
 	// Mulch: Removed this
 	//new Button(this, "screenshot", "screenshot", this, "jpeg");
 
 	LoadControlSettings("Resource/UI/TeamMenu.res");
-
-	m_pSSFrame = NULL;
 	
 	Reset();
 }
@@ -246,11 +244,6 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM)
 //-----------------------------------------------------------------------------
 CTeamMenu::~CTeamMenu() 
 {
-	if (m_pSSFrame)
-	{
-		delete m_pSSFrame;
-		m_pSSFrame = NULL;
-	}
 }
 
 void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
@@ -277,20 +270,9 @@ void CTeamMenu::OnCommand(const char *command)
 	// Create a new frame to display the Map Screenshot
 	if (Q_strcmp(command, "map shot") == 0) 
 	{
-		if ( m_pSSFrame )
-			delete m_pSSFrame;
-		//m_pViewPort->ShowPanel(this, false);
-		m_pSSFrame = new Frame( g_pClientMode->GetViewport(), "MSSFrame" );
-		m_pSSFrame->SetProportional( true );
-		m_pSSFrame->LoadControlSettings( "Resource/UI/MapScreenshotMenu.res" );
-		//m_pSSFrame->SetScheme( "ClientScheme.res" );
-		//m_pSSFrame->SetTitle("Map Screenshot", true );
-		m_pSSFrame->SetSizeable( false );
-		//m_pSSFrame->SetMoveable( false );
-		m_pSSFrame->Activate();
+		gViewPortInterface->ShowPanel(PANEL_MAP, true);
 		return;
 	}
-	
 
 	// Run the command
 	engine->ClientCmd(command);
@@ -399,6 +381,8 @@ void CTeamMenu::Update()
 	UpdateMapDescriptionText();
 	UpdateServerInfo();
 	UpdateTeamButtons();
+	// When a map 1st loads, the image proxy is in front of the button (so you can't click it) -- this seems to fix that
+	m_pMapScreenshotButton->SetZPos( 10 );
 }
 
 void CTeamMenu::UpdateTeamButtons()
