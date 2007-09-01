@@ -360,9 +360,9 @@ struct Event_PlayerUsed
 	GameEntity	m_WhoDidIt;
 };
 
-struct Event_HearSound
+struct Event_Sound
 {
-	char		m_SoundName[32];
+	char		m_SoundName[64];
 	float		m_Origin[3];
 	GameEntity	m_Source;
 	int			m_SoundType;

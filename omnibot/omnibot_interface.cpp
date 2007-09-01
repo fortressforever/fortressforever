@@ -22,7 +22,7 @@ extern ConVar mp_prematch;
 // Mirv: Just added this to stop all the redefinition warnings whenever i do a full recompile
 #pragma warning(disable: 4005)
 
-#pragma optimize("", off)
+//#pragma optimize("", off)
 
 #include "BotExports.h"
 
@@ -2444,24 +2444,6 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	void Bot_Event_Sound(int _client, int _sndtype, GameEntity _source, float *_origin, const char *_name)
-	{
-		if (IsOmnibotLoaded())
-		{
-			Event_HearSound d = {};
-			d.m_Source = _source;
-			d.m_SoundType = _sndtype;		
-			if(_origin)
-			{
-				d.m_Origin[0] = _origin[0];
-				d.m_Origin[1] = _origin[1];
-				d.m_Origin[2] = _origin[2];
-			}
-			Q_strncpy(d.m_SoundName, _name ? _name : "<unknown>", sizeof(d.m_SoundName) / sizeof(d.m_SoundName[0]));
-			g_BotFunctions.pfnBotSendEvent(_client, MessageHelper(PERCEPT_HEAR_SOUND, &d, sizeof(d)));
-		}
-	}
-
 	void omnibot_interface::OnDLLInit()
 	{
 		assert(!g_pEventHandler);
@@ -3547,6 +3529,22 @@ namespace Omnibot
 		}
 	}
 
+	void Notify_Sound(CBaseEntity *_source, int _sndtype, const char *_name)
+	{
+		if (IsOmnibotLoaded())
+		{
+			Event_Sound d = {};
+			d.m_Source = HandleFromEntity(_source);
+			d.m_SoundType = _sndtype;
+			Vector v = _source->GetAbsOrigin();
+			d.m_Origin[0] = v[0];
+			d.m_Origin[1] = v[1];
+			d.m_Origin[2] = v[2];
+			Q_strncpy(d.m_SoundName, _name ? _name : "<unknown>", sizeof(d.m_SoundName) / sizeof(d.m_SoundName[0]));
+			g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_SOUND, &d, sizeof(d)));
+		}
+	}
+
 	//////////////////////////////////////////////////////////////////////////
 
 	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _teamflags)
@@ -3774,7 +3772,7 @@ namespace Omnibot
 			pPlayer, 
 			true, 
 			obUtilGetBotTeamFromGameTeam(_team),
-			obUtilGetBotClassFromGameClass(_class));
+			_class>0?obUtilGetBotClassFromGameClass(_class):RANDOM_CLASS);
 	}
 	//////////////////////////////////////////////////////////////////////////
 

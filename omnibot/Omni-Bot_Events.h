@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-08-10 21:14:25 -0700 (Fri, 10 Aug 2007) $
-// $LastChangedRevision: 2123 $
+// $LastChangedDate: 2007-08-26 19:36:45 -0700 (Sun, 26 Aug 2007) $
+// $LastChangedRevision: 2137 $
 //
 // about: Generic Bot Events
 //
@@ -37,6 +37,7 @@ typedef enum
 		GAME_GRAVITY,
 		GAME_CHEATS,
 		GAME_SCRIPTSIGNAL,
+		GAME_SOUND,
 	GAME_ID_LAST,
 
 	EVENT_ID_FIRST,

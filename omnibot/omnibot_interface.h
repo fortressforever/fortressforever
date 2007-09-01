@@ -114,6 +114,8 @@ namespace Omnibot
 
 	void Notify_GotDispenserAmmo(CBasePlayer *_player);
 
+	void Notify_Sound(CBaseEntity *_source, int _sndtype, const char *_name);
+
 	// Goal Stuff
 	enum BotGoalTypes
 	{

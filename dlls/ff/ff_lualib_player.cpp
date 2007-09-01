@@ -117,6 +117,7 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 
 			.enum_("ClassId")
 			[
+				value("kRandom",		0),
 				value("kScout",			CLASS_SCOUT),
 				value("kSniper",		CLASS_SNIPER),
 				value("kSoldier",		CLASS_SOLDIER),
