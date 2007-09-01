@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-08-10 21:14:25 -0700 (Fri, 10 Aug 2007) $
-// $LastChangedRevision: 2123 $
+// $LastChangedDate: 2007-08-26 19:36:45 -0700 (Sun, 26 Aug 2007) $
+// $LastChangedRevision: 2137 $
 //
 // Title: TF Config
 //
@@ -519,6 +519,14 @@ typedef enum eTF_Events
 	// THIS MUST STAY LAST
 	TF_MSG_END_EVENTS
 } TF_Events;
+
+typedef enum eTF_SoundType
+{
+	TF_SND_RADAR = SND_MAX_SOUNDS,
+	
+	// THIS MUST BE LAST
+	TF_SND_MAX_SOUNDS
+} TF_SoundType;
 
 // typedef: TF_GameMessage
 //		Events that allow the bot to query for information from the game.
