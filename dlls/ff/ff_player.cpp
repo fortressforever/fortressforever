@@ -1828,8 +1828,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			// AfterShock - scoring system: 100 points for anyone fragging your radiotagged player
 			// No points if you kill your own radiomarked target
 			if ( !(pTagger == pKiller2) )
-				if( pKiller2 )
-					pKiller2->AddFortPoints( 50, "#FF_FORTPOINTS_TEAMMATERADIOTAGKILL" );
+				if( pTagger2 )
+					pTagger2->AddFortPoints( 50, "#FF_FORTPOINTS_TEAMMATERADIOTAGKILL" );
 		}
 	}
 
