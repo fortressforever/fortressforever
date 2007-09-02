@@ -215,7 +215,7 @@ void CFFPlayer::FireBullet(
 
 		if (tr.hitgroup == HITGROUP_HEAD)
 		{
-			DevMsg("Headshot\n");
+			DevMsg("Headshot, damage multiplied by %f\n", ffdev_sniper_headshotmod.GetFloat());
 			fCurrentDamage *= ffdev_sniper_headshotmod.GetFloat();
 
 			bHeadshot = true;
