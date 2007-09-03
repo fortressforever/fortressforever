@@ -1825,11 +1825,14 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		{
 			CFFPlayer *pTagger = GetPlayerWhoTaggedMe();
 			CFFPlayer *pKiller2 = ToFFPlayer( pKiller );
-			// AfterShock - scoring system: 100 points for anyone fragging your radiotagged player
-			// No points if you kill your own radiomarked target
+			// AfterShock - scoring system: If the dead player was radio tagged, award 100 points to the tagging player
+			// Do not award points to the tagger if the tagger is also the killer.
 			if ( !(pTagger == pKiller2) )
-				if( pTagger2 )
-					pTagger2->AddFortPoints( 50, "#FF_FORTPOINTS_TEAMMATERADIOTAGKILL" );
+			{
+				// fixed typo (wasn't compiling).  Also made above comment a bit less ambiguous -> Defrag
+				if( pTagger )
+					pTagger->AddFortPoints( 50, "#FF_FORTPOINTS_TEAMMATERADIOTAGKILL" );
+			}
 		}
 	}
 
