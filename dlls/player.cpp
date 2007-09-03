@@ -798,7 +798,7 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 		// Prevent team damage here so blood doesn't appear
 		if ( info.GetAttacker()->IsPlayer() )
 		{
-			if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
+			if ( !g_pGameRules->FCanTakeDamage( this, info.GetAttacker() ) )
 				return;
 		}*/
 		// <-- Mirv
@@ -995,7 +995,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	// go take the damage first
 
 	
-	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
+	if ( !g_pGameRules->FCanTakeDamage( this, info.GetAttacker() ) )
 	{
 		// Refuse the damage
 		return 0;
@@ -2101,7 +2101,10 @@ void CBasePlayer::PlayerDeathThink(void)
 		Q_snprintf( szSpawnTime, sizeof( szSpawnTime ), "Can't spawn for %i seconds.", ( int )( ( m_flDeathTime + m_flNextSpawnDelay + 1 ) - gpGlobals->curtime ) );
 		ClientPrint( this, HUD_PRINTCENTER, szSpawnTime );
 	}
-	else if( fTimeDelta > -2.0f ) // display the ready to spawn message for two seconds after the respawn timer has expired
+
+	// display the ready to spawn message for two seconds after the respawn timer has expired
+	// but only if there actually was a delay in the first place -> Defrag
+	else if( fTimeDelta > -2.0f && m_flNextSpawnDelay > 0.01f ) 
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_READYTOSPAWN" );
 	}

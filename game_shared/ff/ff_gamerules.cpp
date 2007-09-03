@@ -1147,8 +1147,10 @@ ConVar mp_prematch( "mp_prematch",
 				if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
 					flCalculatedForce *= fattypush_multiplier.GetFloat();
 
-				CFFPlayer *pAttacker = NULL;
+				//CFFPlayer *pAttacker = NULL;
+				CBaseEntity *pAttacker = info.GetAttacker();
 
+				/*
 				// If it's a building then take it's owner
 				if( ( info.GetAttacker()->Classify() == CLASS_DISPENSER ) ||
 					( info.GetAttacker()->Classify() == CLASS_SENTRYGUN ) ||
@@ -1159,10 +1161,12 @@ ConVar mp_prematch( "mp_prematch",
 				else
                     pAttacker = ToFFPlayer( info.GetAttacker() );
 
+				*/
+                
 				// And also reduce if we couldn't hurt them
 				// TODO: Get exact figure for this
 				// 0000936 - use convar
-				if (pPlayer && pAttacker && !g_pGameRules->FPlayerCanTakeDamage(pPlayer, pAttacker))
+				if (pPlayer && pAttacker && !g_pGameRules->FCanTakeDamage(pPlayer, pAttacker))
 					flCalculatedForce *= nodamagepush_multiplier.GetFloat();
 
 				// Don't use the damage source direction, use the reported position
@@ -1198,7 +1202,7 @@ ConVar mp_prematch( "mp_prematch",
 			
 
 			// For the moment we'll play blood effects if its a teammate too so its consistant with other weapons
-			// if (pEntity->IsPlayer() && g_pGameRules->FPlayerCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
+			// if (pEntity->IsPlayer() && g_pGameRules->FCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
 			{
 				// Bug #0000539: Blood decals are projected onto shit
 				// (direction needed normalising)
@@ -1641,34 +1645,57 @@ const char *CFFGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer 
 #endif
 
 //-----------------------------------------------------------------------------
-// Purpose: Determine if pPlayer can take damage from pAttacker
+// Purpose: Determine if pVictim can take damage from pAttacker.
+//			Each of the parameters can either be a player, sentry gun or a dispenser.
+//			If the victim is a buildable, the function will work out the teammate relationships using its owner
+//
+//
+// Parameters: pointers to victim and attacker.
+//
+// Returns: true = can take damage.  false = cannot take damage.
+//
+// Made big changes to this stuff so that it can handle buildables properly -- 2007/09/03 -> Defrag
+//			Modified to:
+//				1.	Solve Bug #0001705: Sentry gun takes no damage if engineer doesn't respawn.
+//				2.	Moved the burden of doing all of these checks to this function.  There were lots of ugly casts
+//					and checks going on that this function didn't cover, so I moved 'em here instead.
+//
 //-----------------------------------------------------------------------------
-bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
+bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker )
 {
+	// we need this stuff to handle the cases where the 'victim' is actually a buildable as opposed to a player.
+	// if it's a buildable, then we use the buildable's owner to perform the team checks etc. -> Defrag
+	CBasePlayer *pBuildableOwner = NULL;
+
 #ifdef GAME_DLL
 	// Special cases for sabotageable buildings
 
 	// If an SG is shooting its teammates then allow it to hurt them
 	if (pAttacker && pAttacker->Classify() == CLASS_SENTRYGUN)
 	{
-		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pAttacker);
+		CFFSentryGun *pSentry = dynamic_cast< CFFSentryGun* > (pAttacker);
 
 		if (pSentry && pSentry->IsShootingTeammates())
 			return true;
 	}
-
-	// If an SG is sabotaged or shooting its own team, allow them to kill it
-	if (pPlayer && pPlayer->Classify() == CLASS_SENTRYGUN)
+	
+	if ( pVictim && pVictim->Classify() == CLASS_SENTRYGUN )
 	{
-		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pPlayer);
+		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pVictim);
 
 		// Allow team to kill their own SG if it is sabotaged
 		if (pSentry && pSentry->IsSabotaged())
 			return true;
+
+		// if it's not sabotaged then we need to get its owner and use it later on
+		pBuildableOwner = dynamic_cast< CBasePlayer* > ( pSentry->m_hOwner.Get() );
+		
+		if( ! pBuildableOwner )
+			return false;
 	}
 
 	// Allow sabotaged dispensers to give out damage when they explode
-	if (pAttacker && pAttacker->Classify() == CLASS_DISPENSER)
+	if ( pAttacker && pAttacker->Classify() == CLASS_DISPENSER )
 	{
 		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pAttacker);
 
@@ -1677,27 +1704,42 @@ bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 	}
 
 	// Allow sabotaged dispensers to be destroyed by shooting
-	if (pPlayer && pPlayer->Classify() ==CLASS_DISPENSER)
+	if ( pVictim && pVictim->Classify() == CLASS_DISPENSER )
 	{
-		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pPlayer);
+		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pVictim);
 
 		if (pDispenser && pDispenser->IsSabotaged())
 			return true;
+
+		// if it's not sabotaged then we need to get its owner and use it later on
+		pBuildableOwner = dynamic_cast< CBasePlayer* > ( pDispenser->m_hOwner.Get() );
+
+		if( ! pBuildableOwner )
+			return false;
 	}
 #endif
 
-	// Don't affect players who are chilling out
-	if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsObserver())
+	if ( !pVictim )
 	{
 		return false;
 	}
 
-	if ((pAttacker) && (PlayerRelationship(pPlayer, pAttacker) == GR_TEAMMATE))
+	// Don't affect players who are chilling out
+    if( pVictim->IsPlayer() )
+	{
+		CBasePlayer *pVictimPlayer = dynamic_cast< CBasePlayer* > ( pVictim );
+		if( pVictimPlayer->IsObserver() || ! pVictimPlayer->IsAlive() ) 
+			return false;
+	}	
+
+	// if the buildable's owner is a non-null pointer, then we must use it to determine the relationship
+	// if it's null, then we're operating on a non-buildable (most likely a player), so just use the pVictim pointer instead.
+	if (( pAttacker ) && ( PlayerRelationship( pBuildableOwner ? pBuildableOwner : pVictim, pAttacker ) == GR_TEAMMATE ))
 	{
 		// If friendly fire is off and I'm not attacking myself, then
 		// someone else on my team/an ally is attacking me - don't
 		// take damage
-		if ((friendlyfire.GetInt() == 0) && (pPlayer != pAttacker))
+		if (( friendlyfire.GetInt() == 0 ) && ( pVictim != pAttacker ))
 			return false;
 	}
 

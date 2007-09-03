@@ -256,7 +256,7 @@ void CFFCaltrop::CaltropTouch ( CBaseEntity *pOther )
 	CFFPlayer *pPlayer = ToFFPlayer(pOther);
 	if( pPlayer && !pPlayer->IsObserver() )
 	{
-		if( g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+		if( g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 		{
 			float flDuration = 15.0f;
 			float flIconDuration = flDuration;

@@ -761,11 +761,16 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	// Depending on the teamplay value, take damage
-	if( !FFGameRules()->FPlayerCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), adjustedDamage.GetAttacker() ) )
+	
+	//if( !FFGameRules()->FCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), adjustedDamage.GetAttacker() ) )
+	//	return 0;
+
+	// we now pass the buildable itself instead of the owner.  The FCanTakeDamage function sorts it all out for us.
+	if( !FFGameRules()->FCanTakeDamage( this, adjustedDamage.GetAttacker() ) )
 		return 0;
 
 	// DrEvil: The following is fucking wrong, don't add it back.
-	// It's not as simple as checking player relationship. FPlayerCanTakeDamage compensates for sabotage and shit.
+	// It's not as simple as checking player relationship. FCanTakeDamage compensates for sabotage and shit.
 	/*if( ( FFGameRules()->PlayerRelationship( ToFFPlayer( m_hOwner.Get() ), adjustedDamage.GetAttacker() ) == GR_TEAMMATE ) && ( friendlyfire.GetInt() == 0 ) )
 		return 0;*/
 

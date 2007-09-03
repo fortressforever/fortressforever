@@ -99,7 +99,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 	{
 		CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
 
-		if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
+		if (g_pGameRules->FCanTakeDamage(pPlayer, pTarget)) 
 		{
 			// check to see if we got a backstab
 
@@ -180,7 +180,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 	{
 		CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
 
-		if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
+		if (g_pGameRules->FCanTakeDamage(pPlayer, pTarget)) 
 		{
 			// we scored a hit, so play the knife slash sound
 			WeaponSound(SPECIAL2);

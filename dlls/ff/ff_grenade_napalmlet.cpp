@@ -270,7 +270,7 @@ void CFFGrenadeNapalmlet::FlameThink()
 						if( !pPlayer )
 							continue;
 
-						if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
+						if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 						{
 							pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), burn_standon_ng.GetInt(), DMG_BURN ) );
 							pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 1.0f, 10.0f, BURNTYPE_NALPALMGRENADE);
@@ -280,16 +280,20 @@ void CFFGrenadeNapalmlet::FlameThink()
 					case CLASS_SENTRYGUN:
 					case CLASS_DISPENSER:
 					{
+						// don't have to bother casting this here anymore, just pass the buildable and the FCanTakeDamage function will sort it
+
+						/*
 						CFFBuildableObject *pBuildable = dynamic_cast< CFFBuildableObject * >( pEntity );
 						if( !pBuildable )
 							continue;
+						*/
 						
-						CFFPlayer *pPlayer = pBuildable->GetOwnerPlayer();
-						if( !pPlayer )
-							continue;
+						//CFFPlayer *pPlayer = pBuildable->GetOwnerPlayer();
+						//if( !pPlayer )
+						//	continue;
 
-						if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
-							pBuildable->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
+						if (g_pGameRules->FCanTakeDamage( pEntity, GetOwnerEntity()))
+							pEntity->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
 					}
 					
 					default:

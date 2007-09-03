@@ -150,8 +150,8 @@ public:
 
 	// These aren't pure virtual functions so that they don't 
 	// break all the other derived gamerule classes
-	virtual int		PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget) { AssertMsg(0, "This should not be called!"); return 0; }
-	virtual bool	FPlayerCanTakeDamage(CBasePlayer *pPlayer, CBaseEntity *pAttacker) { AssertMsg(0, "This should not be called!"); return TRUE; }
+	virtual int		PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget ) { AssertMsg(0, "This should not be called!"); return 0; }
+	virtual bool	FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker ) { AssertMsg(0, "This should not be called!"); return TRUE; }
 	// <-- Mirv
 
 
@@ -219,7 +219,7 @@ public:
 	
 // Client damage rules
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer ) = 0;// this client just hit the ground after a fall. How much damage?
-	virtual bool  FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker ) {return TRUE;};// can this player take damage from this attacker?
+	virtual bool  FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker ) {return TRUE;};// can this player take damage from this attacker?
 	virtual bool ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target ) { return TRUE; }
 	virtual float GetAutoAimScale( CBasePlayer *pPlayer ) { return 1.0f; }
 	virtual bool ShouldUseRobustRadiusDamage(CBaseEntity *pEntity) { return false; }

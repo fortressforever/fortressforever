@@ -216,7 +216,7 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
         return;
 
 	// Skip if person touching can't damage us
-	if( !g_pGameRules->FPlayerCanTakeDamage( ( ( CFFPlayer * )m_hOwner.Get() ), pPlayer ) )
+	if( !g_pGameRules->FCanTakeDamage( ( ( CFFPlayer * )m_hOwner.Get() ), pPlayer ) )
 		return;
 
 	// Play defuse sound
@@ -381,7 +381,7 @@ void CFFDetpack::DoExplosionDamage( void )
 			//			Bug: #0000666: detpack doesn't push teammates
 			//			Effect everybody...
 			// If the player can't take damage from us (our owner), bail
-			//			if( !FFGameRules()->FPlayerCanTakeDamage( pPlayer, pOwner ) )
+			//			if( !FFGameRules()->FCanTakeDamage( pPlayer, pOwner ) )
 			//				continue;
 
 #ifdef _DEBUG

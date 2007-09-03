@@ -217,7 +217,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 				if( !pPlayer || pPlayer->IsObserver() || !pGasser)
 					continue;
 
-				if( !g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+				if( !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 					continue;
 
 				pPlayer->Gas(10.0f, 10.0f, pGasser);

@@ -297,7 +297,7 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 				}
 
 				// Bug #0000551: Dispenser treats teammates as enemies if mp_friendlyfire is enabled
-				//if( g_pGameRules->FPlayerCanTakeDamage( pOwner, pPlayer ) )				
+				//if( g_pGameRules->FCanTakeDamage( pOwner, pPlayer ) )				
 				if( FFGameRules()->PlayerRelationship( pOwner, pPlayer ) == GR_NOTTEAMMATE )
 				{
 					// Touched by non-teammate/non-ally, send custom message

@@ -220,8 +220,9 @@ void CFFWeaponFlamethrower::Fire()
 	// We want to hit buildables too
 	if (traceHit.m_pEnt) /* && traceHit.m_pEnt->IsPlayer())*/
 	{
-		CFFPlayer *pTarget = NULL;
+		CBaseEntity *pTarget = traceHit.m_pEnt;
 
+		/*
 		if (traceHit.m_pEnt->IsPlayer())
 			pTarget = ToFFPlayer(traceHit.m_pEnt);
 		else
@@ -231,28 +232,32 @@ void CFFWeaponFlamethrower::Fire()
 			else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
 				pTarget = ToFFPlayer( ( ( CFFDispenser * )traceHit.m_pEnt )->m_hOwner.Get() );
 		}
-
-		if (pTarget)
+		*/
+		
+		// only interested in players, dispensers & sentry guns
+		if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN )
 		{
 			// If pTarget can take damage from the flame thrower shooter...
-			if (g_pGameRules->FPlayerCanTakeDamage(pTarget, pPlayer))
+			if ( g_pGameRules->FCanTakeDamage( pTarget, pPlayer ))
 			{
 				// Don't burn a guy who is underwater
 				if (traceHit.m_pEnt->IsPlayer() && ( pTarget->GetWaterLevel() < 3 ) )
 				{
-					pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
-					pTarget->ApplyBurning( pPlayer, 0.5f, 10.0f, BURNTYPE_FLAMETHROWER);
+					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+
+					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
+					pPlayerTarget->ApplyBurning( pPlayer, 0.5f, 10.0f, BURNTYPE_FLAMETHROWER);
 				}
 				// TODO: Check water level for dispensers & sentryguns!
-				else if( FF_IsDispenser( traceHit.m_pEnt ) )
+				else if( FF_IsDispenser( pTarget ) )
 				{
-					CFFDispenser *pDispenser = FF_ToDispenser( traceHit.m_pEnt );
+					CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
 					if( pDispenser && ( pDispenser->GetWaterLevel() <= WL_Waist ) )
 						pDispenser->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
 				}
-				else if( FF_IsSentrygun( traceHit.m_pEnt ) )
+				else if( FF_IsSentrygun( pTarget ) )
 				{
-					CFFSentryGun *pSentrygun = FF_ToSentrygun( traceHit.m_pEnt );
+					CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
 					if( pSentrygun && ( pSentrygun->GetWaterLevel() <= WL_Waist ) )
 						pSentrygun->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
 				}
