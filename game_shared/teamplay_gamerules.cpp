@@ -341,18 +341,18 @@ bool CTeamplayRules::IsTeamplay( void )
 	return true;
 }
 
-bool CTeamplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
+bool CTeamplayRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker )
 {
-	if(( pAttacker ) && ( PlayerRelationship( pPlayer, pAttacker ) == GR_TEAMMATE ))
+	if(( pAttacker ) && ( PlayerRelationship( pVictim, pAttacker ) == GR_TEAMMATE ))
 	{
 		// If friendly fire is off and I'm not attacking myself, then
 		// someone else on my team/an ally is attacking me - don't
 		// take damage
-		if(( friendlyfire.GetInt( ) == 0 ) && ( pPlayer != pAttacker ))
+		if(( friendlyfire.GetInt( ) == 0 ) && ( pVictim != pAttacker ))
 			return false;
 	}
 
-	return BaseClass::FPlayerCanTakeDamage( pPlayer, pAttacker );
+	return BaseClass::FCanTakeDamage( pVictim, pAttacker );
 }
 
 //=========================================================

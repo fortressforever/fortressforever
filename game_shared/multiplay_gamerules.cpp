@@ -389,7 +389,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 
 	//=========================================================
 	//=========================================================
-	bool CMultiplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
+	bool CMultiplayRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker )
 	{
 		return true;
 	}

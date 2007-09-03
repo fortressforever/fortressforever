@@ -371,7 +371,7 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 //						if( !pPlayer )
 //							continue;
 //
-//						if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
+//						if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 //						{
 //							pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 10.0f, DMG_BURN ) );
 //							pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 5.0f, 10.0f, BURNTYPE_NALPALMGRENADE);
@@ -389,7 +389,7 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 //						if( !pPlayer )
 //							continue;
 //
-//						if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
+//						if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 //							pBuildable->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
 //					}
 //					

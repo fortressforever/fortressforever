@@ -217,7 +217,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			Vector vecDir = vecDisplacement / flDistance;
 
 			// Concuss the player first
-			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
+			if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 			{
 				QAngle angDirection;
 				VectorAngles(vecDir, angDirection);

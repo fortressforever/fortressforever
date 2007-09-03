@@ -5001,7 +5001,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	func.CallFunction("player_ondamage");
 
 	// go take the damage first
-	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
+	if ( !g_pGameRules->FCanTakeDamage( this, info.GetAttacker() ) )
 	{
         // Refuse the damage
 		return 0;

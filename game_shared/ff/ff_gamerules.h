@@ -103,7 +103,11 @@ public:
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
 	virtual int		PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget);
-	virtual bool	FPlayerCanTakeDamage(CBasePlayer *pPlayer, CBaseEntity *pAttacker);
+
+	// Changed to incorporate buildables and to stop the fugly casting. 
+	// Previously, with FCanPlayerTakeDamage(), everything had to be cast down. 
+	// You can now pass players, sentries & dispensers to the function.  
+	virtual bool	FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker);
 
 	virtual bool	IsTeamplay( void ) { return false;	}
 	bool			IsIntermission();
