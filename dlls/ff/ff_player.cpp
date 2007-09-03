@@ -1727,7 +1727,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	// Sends a hint to a player killed by an EMP
 	if ( info.GetInflictor() && ( info.GetInflictor()->Classify() == CLASS_GREN_EMP ) )
-		FF_SendHint( this, GLOBAL_EMPDEATH, -1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_EMPDEATH" );
+		FF_SendHint( this, GLOBAL_EMPDEATH, 3, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_EMPDEATH" );
 
 	// Drop any grenades
 	if (m_iGrenadeState != FF_GREN_NONE)
@@ -3143,7 +3143,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			{
 				case FF_BUILD_DISPENSER:
 				{					
-					FF_SendHint( this, ENGY_BUILDDISP, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILDDISP" );
+					FF_SendHint( this, ENGY_BUILDDISP, 3, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILDDISP" );
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
@@ -3174,7 +3174,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 					// Jiggles: Start hint code	
 					// Event: Player starts building SG
-					FF_SendHint( this, ENGY_BUILDSG, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILDSG" );
+					FF_SendHint( this, ENGY_BUILDSG, 3, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILDSG" );
 
 					// Notify allied players within 1000 units
 					CBaseEntity *ent = NULL;
@@ -3187,9 +3187,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 							if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) )
 							{
 								if( player->GetClassSlot() == CLASS_ENGINEER )
-									FF_SendHint( player, ENGY_TEAMSG, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_TEAMSG" );  // Go help that dude upgrade!
+									FF_SendHint( player, ENGY_TEAMSG, 3, PRIORITY_NORMAL, "#FF_HINT_ENGY_TEAMSG" );  // Go help that dude upgrade!
 								else
-									FF_SendHint( player, GLOBAL_DEFENDSG, -1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_DEFENDSG" );  // Go protect that dude!
+									FF_SendHint( player, GLOBAL_DEFENDSG, 3, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_DEFENDSG" );  // Go protect that dude!
 							}
 						}
 					}			
@@ -3337,7 +3337,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 						gameeventmanager->FireEvent( pEvent, true );
 					}	
 					
-					FF_SendHint( this, ENGY_BUILTDISP, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILTDISP" );
+					FF_SendHint( this, ENGY_BUILTDISP, 3, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILTDISP" );
 
 
 				}
@@ -3358,7 +3358,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 						gameeventmanager->FireEvent( pEvent, true );
 					}
 					
-					FF_SendHint( this, ENGY_BUILTSG, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILTSG" );
+					FF_SendHint( this, ENGY_BUILTSG, 3, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILTSG" );
 
 				}
 			}
@@ -4398,7 +4398,7 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 	}
 
 	else if ( !IsInfected() ) // they aren't infected, but they are immune
-		FF_SendHint( pInfector, MEDIC_NOINFECT, -1, PRIORITY_NORMAL, "#FF_HINT_MEDIC_NOINFECT" );
+		FF_SendHint( pInfector, MEDIC_NOINFECT, 3, PRIORITY_NORMAL, "#FF_HINT_MEDIC_NOINFECT" );
 	
 }
 void CFFPlayer::Cure( CFFPlayer *pCurer )
@@ -4671,7 +4671,7 @@ void CFFPlayer::Command_PrimeTwo(void)
 				switch( GetClassSlot() )
 				{
 					case CLASS_SOLDIER: 
-						FF_SendHint( this, SOLDIER_NAILGREN, 4, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_NAILGREN" );
+						FF_SendHint( this, SOLDIER_NAILGREN, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_NAILGREN" );
 						break;
 					case CLASS_MEDIC:
 					case CLASS_SCOUT:
