@@ -545,7 +545,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 			pScorer->IncrementFragCount( IPointsForKill( pScorer, pVictim ) );
 
 			// AfterShock - scoring system : Just award 100 points for frag (for now)
-			if (PlayerRelationship( pScorer, pVictim ) == GR_TEAMMATE
+			if( PlayerRelationship( pScorer, pVictim ) == GR_TEAMMATE )
 			{
 				pScorer->AddFortPoints( -50, "#FF_FORTPOINTS_TEAMKILL" );
 			}
