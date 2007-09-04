@@ -131,6 +131,8 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 		UTIL_Remove(this);
 	}
 
+	// Jiggles: I commented out the enabling of vphysics in an attempt to "fix" (avoid)
+	//			1552: Gas nades can make detpacks clip through map
 	void CFFGrenadeGas::GrenadeThink( void )
 	{
 		// If we're done deploying, deploy idle
@@ -144,23 +146,23 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 		}
 
 		// Stop the thing from rolling if it starts moving
-		if( ( gpGlobals->curtime > m_flOpenTime + 2.0f ) && VPhysicsGetObject() )
-		{
-			IPhysicsObject *pObject = VPhysicsGetObject();
-			
-			Vector vecVelocity;
-			AngularImpulse angImpulse;
-			pObject->GetVelocity( &vecVelocity, &angImpulse );
+		//if( ( gpGlobals->curtime > m_flOpenTime + 2.0f ) && VPhysicsGetObject() )
+		//{
+		//	IPhysicsObject *pObject = VPhysicsGetObject();
+		//	
+		//	Vector vecVelocity;
+		//	AngularImpulse angImpulse;
+		//	pObject->GetVelocity( &vecVelocity, &angImpulse );
 
-			if( vecVelocity.IsZero() || angImpulse.IsZero() )
-				pObject->EnableMotion( false );
-		}
+		//	if( vecVelocity.IsZero() || angImpulse.IsZero() )
+		//		pObject->EnableMotion( false );
+		//}
 
 		// If open and we're not moving and physics aren't enabled, enable physics
-		if( ( m_flOpenTime != 0.0f ) && ( GetAbsVelocity() == vec3_origin ) && !VPhysicsGetObject() )
-		{
-			VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
-		}
+		//if( ( m_flOpenTime != 0.0f ) && ( GetAbsVelocity() == vec3_origin ) && !VPhysicsGetObject() )
+		//{
+		//	VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
+		//}
 
 		// Been detonated for 10 secs now, so fade out
 		if (gpGlobals->curtime > m_flDetonateTime + 10.0f)
@@ -190,8 +192,8 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 			if( m_Activity == ACT_GAS_IDLE )
 			{
 				// If it's at rest, enable physics
-				if( GetAbsVelocity() == vec3_origin )
-					VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
+				//if( GetAbsVelocity() == vec3_origin )
+				//	VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
 
 				m_flOpenTime = gpGlobals->curtime;
 
