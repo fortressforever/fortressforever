@@ -128,10 +128,19 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 		return;
 
 	// Ignore hints that are less important than the one currently showing
-	if ( ( hintPriority < m_iLastHintPriority ) && ( gpGlobals->curtime < m_flLastHintDuration ) )
-		return;
-
-	// So, any higher-priority hints are done showing
+	if ( hintPriority < m_iLastHintPriority )
+	{  
+		if ( gpGlobals->curtime < m_flLastHintDuration  )
+			return;
+	}
+	// Also ignore equally-important hints that come in too "quickly"
+	else if ( hintPriority == m_iLastHintPriority )
+	{
+		//	This gives the previous hint 5 seconds to show before it might be "preempted"
+		if ( gpGlobals->curtime < ( m_flLastHintDuration - HINTCENTER_FADEOUT_TIME - 5.0f ) )
+			return;
+	}
+	
 	// Now, let's see if this hint has been shown yet
 	HintInfo structHintInfo( hintID, NumShow );
 	int foundIndex = m_HintVector.Find( structHintInfo );
@@ -147,7 +156,7 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 		return;
 
 	m_iLastHintPriority = hintPriority;
-	m_flLastHintDuration = gpGlobals->curtime + SELECTION_TIMEOUT_THRESHOLD + SELECTION_FADEOUT_TIME;
+	m_flLastHintDuration = gpGlobals->curtime + HINTCENTER_TIMEOUT_THRESHOLD + HINTCENTER_FADEOUT_TIME;
 	
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	//char oldHintString[HINT_HISTORY];
@@ -420,7 +429,7 @@ void CHudHintCenter::VidInit( void )
 void CHudHintCenter::OnThink( void )
 {
 	// Time out after awhile of inactivity
-	if ( ( ( gpGlobals->curtime - m_flSelectionTime ) > SELECTION_TIMEOUT_THRESHOLD ) && !m_bHintKeyHeld )
+	if ( ( ( gpGlobals->curtime - m_flSelectionTime ) > HINTCENTER_TIMEOUT_THRESHOLD ) && !m_bHintKeyHeld )
 	{
 		if (!m_bFadingOut)
 		{
@@ -428,7 +437,7 @@ void CHudHintCenter::OnThink( void )
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "FadeOutHintCenter" );
 			m_bFadingOut = true;
 		}
-		else if (gpGlobals->curtime - m_flSelectionTime > SELECTION_TIMEOUT_THRESHOLD + SELECTION_FADEOUT_TIME)
+		else if (gpGlobals->curtime - m_flSelectionTime > HINTCENTER_TIMEOUT_THRESHOLD + HINTCENTER_FADEOUT_TIME)
 		{
 			// finished fade, close
 			HideSelection();
@@ -556,7 +565,7 @@ void CHudHintCenter::KeyUp( void )
 	// start fading out
 	//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "FadeOutHintCenter" );
 	//m_bFadingOut = true;
-	m_flSelectionTime = gpGlobals->curtime - SELECTION_TIMEOUT_THRESHOLD;
+	m_flSelectionTime = gpGlobals->curtime - HINTCENTER_TIMEOUT_THRESHOLD;
 	SetMouseInputEnabled(false);
 }
 

@@ -27,8 +27,8 @@ using namespace vgui;
 #include "ff_hud_menu.h"
 
 
-#define SELECTION_TIMEOUT_THRESHOLD		10.0f	// Seconds
-#define SELECTION_FADEOUT_TIME			1.5f
+#define HINTCENTER_TIMEOUT_THRESHOLD	10.0f	// Seconds
+#define HINTCENTER_FADEOUT_TIME			1.5f
 #define HINT_HISTORY					100		// Number of hint strings to remember
 
 class CHudHintCenter : public CHudElement, public vgui::Frame

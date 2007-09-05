@@ -1725,9 +1725,27 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, "", GetAbsOrigin(), GetLocation());
 	}
 
-	// Sends a hint to a player killed by an EMP
-	if ( info.GetInflictor() && ( info.GetInflictor()->Classify() == CLASS_GREN_EMP ) )
-		FF_SendHint( this, GLOBAL_EMPDEATH, 3, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_EMPDEATH" );
+	if ( info.GetInflictor() )
+	{
+		switch ( info.GetInflictor()->Classify() )
+		{
+			// Sends a hint to a player killed by an EMP
+			case CLASS_GREN_EMP:
+				FF_SendHint( this, GLOBAL_EMPDEATH, 3, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_EMPDEATH" );
+				break;
+
+			// Sends a hint explaining how to use grenades
+			case CLASS_GREN:
+			case CLASS_GREN_NAIL:
+			case CLASS_GREN_MIRV:
+			case CLASS_GREN_MIRVLET:
+			case CLASS_GREN_NAPALM:
+			case CLASS_GREN_GAS:
+			case CLASS_GREN_CALTROP:
+				FF_SendHint( this, GLOBAL_GRENDEATH, 3, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_GRENDEATH" );
+				break;
+		}    
+	}
 
 	// Drop any grenades
 	if (m_iGrenadeState != FF_GREN_NONE)
