@@ -49,8 +49,9 @@ IFileSystem **pFilesystem = &filesystem;
 
 // [integer] Duration [in seconds] that each hut hint is
 // drawn on the screen
-static ConVar hint_duration( "ffdev_hint_duration", "10" );
-static ConVar hint_on("cl_hints", "1");
+// Jiggles: Sorry, but I want to use this :)
+//static ConVar hint_duration( "ffdev_hint_duration", "10" );
+//static ConVar hint_on("cl_hints", "1");
 
 // Helper var
 CHudHint *pHudHintHelper = NULL;
@@ -154,7 +155,7 @@ void CHudHint::AddHudHint(byte bType, unsigned short wID, const char *pszMessage
 	// to find the duration they want. Hard code it
 	// later in VidInit or Init. This just lets it
 	// get updated everytime we get a new hud hint.
-	m_flDuration = hint_duration.GetInt();
+	m_flDuration = 10;//hint_duration.GetInt();
 	m_flStarted = gpGlobals->curtime;
 	m_flNextHint = m_flStarted + m_flDuration + 2.0f;
 
@@ -212,7 +213,7 @@ void CHudHint::MsgFunc_FF_HudHint( bf_read &msg )
 void CHudHint::Paint()
 {
 	// TODO: Let's not actually do this every loop
-	if (!hint_on.GetBool())
+	if (1/*!hint_on.GetBool()*/)
 	{
 		if (m_pRichText->IsVisible())
 			m_pRichText->SetVisible(false);
@@ -222,7 +223,7 @@ void CHudHint::Paint()
 
 	bool bVisible = false;
 
-	if (hint_on.GetBool() && gpGlobals->curtime > m_flStarted && gpGlobals->curtime < m_flNextHint)
+	if (/*hint_on.GetBool() &&*/ gpGlobals->curtime > m_flStarted && gpGlobals->curtime < m_flNextHint)
 	{
 		// Make sure we are visible
 		if (!IsVisible())
@@ -256,8 +257,8 @@ void LoadHints(const char *pFilename, HintVector &hints)
 {
 	// There's no need for any of this if they don't want hints
 	// (TODO: remember to freshly load hints if they turn them on)
-	if (!hint_on.GetBool())
-		return;
+	//if (!hint_on.GetBool())
+	//	return;
 
 	FileHandle_t f = (*pFilesystem)->Open(pFilename, "rb", "MOD");
 
@@ -361,7 +362,7 @@ CON_COMMAND(showhint, "Show a trigger'd hint")
 	pHudHintHelper->m_bActive = true;
 
 	// Oh yeah and do all this mess again
-	pHudHintHelper->m_flDuration = hint_duration.GetInt();
+	pHudHintHelper->m_flDuration = 10;//hint_duration.GetInt();
 	pHudHintHelper->m_flStarted = gpGlobals->curtime;
 	pHudHintHelper->m_flNextHint = pHudHintHelper->m_flStarted + pHudHintHelper->m_flDuration + 2.0f;
 }
