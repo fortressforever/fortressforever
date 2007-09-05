@@ -1180,6 +1180,9 @@ void C_FFPlayer::PreThink( void )
 {
 	// Jiggles: the main conc logic used to be here, but I moved it to Simulate() so it's not affected by tickrate changes
 
+	// For the time-based hints
+	//	We really don't need per-frame accuracy here
+	g_FFHintTimers.SimulateTimers();
 
 	// Do we need to do a class specific skill?
 	if (m_afButtonPressed & IN_ATTACK2)
@@ -2025,8 +2028,6 @@ void C_FFPlayer::ClientThink( void )
 void C_FFPlayer::Simulate()
 {
 	BaseClass::Simulate();
-
-	g_FFHintTimers.SimulateTimers(); // For the time-based hints
 
 	// Jiggles: Moved the Conc logic here so it's not affected by tickrate changes (it was in Prethink() )
 	if ((m_flConcTime > gpGlobals->curtime) || (m_flConcTime < 0))

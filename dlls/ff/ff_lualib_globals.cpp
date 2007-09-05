@@ -671,6 +671,34 @@ namespace FFLib
 		}
 	}
 
+	void SmartSpeak(CBaseEntity *pEntity, const char* playerSentence, const char* teamSentence, const char* otherSentence)
+	{
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
+		if(NULL == pPlayer)
+			return;
+
+		int iPlayerSentence = engine->SentenceIndexFromName(playerSentence);
+		int iTeamSentence = engine->SentenceIndexFromName(teamSentence);
+		int iOtherSentence = engine->SentenceIndexFromName(otherSentence);
+
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pTestPlayer )
+				continue;
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SENTENCEG_PlaySentenceIndex(pTestPlayer->edict(), iPlayerSentence, 1.0f, SNDLVL_TALKING, 0, 100);
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SENTENCEG_PlaySentenceIndex(pTestPlayer->edict(), iTeamSentence, 1.0f, SNDLVL_TALKING, 0, 100);
+
+			else
+				SENTENCEG_PlaySentenceIndex(pTestPlayer->edict(), iOtherSentence, 1.0f, SNDLVL_TALKING, 0, 100);
+		}
+	}
+
 	void SmartTeamMessage(CFFTeam *pTeam, const char* teamMsg, const char* otherMsg)
 	{
 		// get team
@@ -1311,6 +1339,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SetTeamName",				&FFLib::SetTeamName),
 		def("SmartMessage",				&FFLib::SmartMessage),
 		def("SmartSound",				&FFLib::SmartSound),
+		def("SmartSpeak",				&FFLib::SmartSpeak),
 		def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
 		def("SmartTeamSound",			&FFLib::SmartTeamSound),
 		def("SpeakAll",					&FFLib::SpeakAll),
