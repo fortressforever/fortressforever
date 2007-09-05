@@ -722,6 +722,32 @@ namespace FFLib
 		}
 	}
 
+	void SmartTeamSpeak(CFFTeam *pTeam, const char* teamSentence, const char* otherSentence)
+	{
+		// get team
+		//CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL == pTeam)
+			return;
+
+		int iTeamSentence = engine->SentenceIndexFromName(teamSentence);
+		int iOtherSentence = engine->SentenceIndexFromName(otherSentence);
+
+		// set the appropriate sound to each player
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			if(pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber())
+				SENTENCEG_PlaySentenceIndex(pPlayer->edict(), iTeamSentence, 1.0f, SNDLVL_TALKING, 0, 100);
+			else
+				SENTENCEG_PlaySentenceIndex(pPlayer->edict(), iOtherSentence, 1.0f, SNDLVL_TALKING, 0, 100);
+		}
+	}
+
 	void SmartTeamSound(CFFTeam *pTeam, const char* teamSound, const char* otherSound)
 	{
 		// get team
@@ -744,6 +770,7 @@ namespace FFLib
 				SendPlayerSound(pPlayer, otherSound);
 		}
 	}
+
 
 	CFFPlayer *GetPlayerByID( int player_id )
 	{
@@ -1342,6 +1369,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SmartSpeak",				&FFLib::SmartSpeak),
 		def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
 		def("SmartTeamSound",			&FFLib::SmartTeamSound),
+		def("SmartTeamSpeak",			&FFLib::SmartTeamSpeak),
 		def("SpeakAll",					&FFLib::SpeakAll),
 		def("SpeakPlayer",				&FFLib::SpeakPlayer),
 		def("SpeakTeam",				&FFLib::SpeakTeam)

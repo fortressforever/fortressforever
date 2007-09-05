@@ -43,7 +43,7 @@ CHudHintCenter *g_pHintCenter = NULL;
 // Global Helper var
 CHudHintCenter *g_pHintHelper = NULL;
 
-ConVar hudhints( "cl_hudhints", "1", FCVAR_ARCHIVE, "Display hints" );
+ConVar hudhints( "cl_hints", "1", FCVAR_ARCHIVE, "Display hints" );
 
 
 DECLARE_HUDELEMENT( CHudHintCenter );
