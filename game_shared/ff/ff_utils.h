@@ -204,6 +204,7 @@ enum HintType
 	GLOBAL_NOLASTINV,	// Event: Player goes for 10 minutes without issuing the "lastinv" weapon switch command
 	GLOBAL_EMPDEATH,	// Event: Player dies from emp explosion
 	GLOBAL_GRENDEATH,	// Event: Player dies from a grenade (non-emp, non-projectile) explosion
+	GLOBAL_MAP,			// Event: Player plays for 2  minutes (tell the player about using the Map key)
 
 	// INTRO HINT
 	INTRO_HINT			// Event: Player's first spawn (introduces the Hint Center)

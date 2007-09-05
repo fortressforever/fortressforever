@@ -191,7 +191,10 @@ void OnIntroHintTimerExpired( C_FFHintTimer *pHintTimer )
 	FF_SendHint( INTRO_HINT, 1, PRIORITY_HIGH, "#FF_HINT_INTRO_HINT" );
 }
 
-
+void OnMapHintTimerExpired( C_FFHintTimer *pHintTimer )
+{
+	FF_SendHint( GLOBAL_MAP, 1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_MAP" );
+}
 
 // --> Mirv: Toggle grenades (requested by defrag)
 void CC_ToggleOne()
@@ -1372,6 +1375,25 @@ void C_FFPlayer::Spawn( void )
 		pLastInvHintTimer->Unpause();
 	else
 		pLastInvHintTimer->Pause();
+
+
+	// Event: Player plays for 2 minutes -- tell the player about the Map key
+	C_FFHintTimer *pMapHintTimer = g_FFHintTimers.FindTimer( "MAP" );
+	if ( pMapHintTimer == NULL ) // Setup timer
+	{	
+		pMapHintTimer = g_FFHintTimers.Create( "MAP", 120.0f );
+		if ( pMapHintTimer )
+		{
+			pMapHintTimer->SetHintExpiredCallback( OnMapHintTimerExpired, false );
+			pMapHintTimer->StartTimer();
+			if ( GetClassSlot() <= 0 ) // Pause the timer if player isn't a player class
+				pMapHintTimer->Pause();
+		}
+	}
+	else if ( GetClassSlot() > 0 ) // Unpause the timer if the player is now a valid player class
+		pMapHintTimer->Unpause();
+	else
+		pMapHintTimer->Pause();
 
 	// End hint code
 
