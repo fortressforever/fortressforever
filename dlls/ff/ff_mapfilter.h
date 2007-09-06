@@ -167,6 +167,7 @@ static const char *g_MapEntityFilterKeepList[] =
 	"light_spot",
 	"env_lightglow",
 	"water_lod_control",
+	"path_mapguide",
 	"",
 	NULL
 };
