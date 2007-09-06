@@ -163,6 +163,15 @@ static const char *g_MapEntityFilterKeepList[] =
 	"predicted_viewmodel",
 	"worldspawn",
 	"point_devshot_camera",
+	"light",
+	"light_spot",
+	"env_soundscape",
+	"env_lightglow",
+	"water_lod_control",
+	"info_target",
+	"func_door",
+	"func_illusionary",
+	"path_mapguide",
 	"",
 	NULL
 };
