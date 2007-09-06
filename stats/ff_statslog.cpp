@@ -73,7 +73,7 @@ public:
 		m_vStartTimes.clear();
 		m_vActions.clear();
 	}
-
+	
 public:
 	CFFString m_sName;
 	CFFString m_sSteamID;
@@ -82,6 +82,7 @@ public:
 	int m_iUniqueID;
 	std::vector< double > m_vStats;
 	std::vector< double > m_vStartTimes;
+	std::vector< bool > m_vAutoApply;
 	std::vector< CFFAction > m_vActions;
 };
 
@@ -95,14 +96,16 @@ public:
 	int GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name);
 	void AddStat(int playerid, int statid, double value);
 	void AddAction(int playerid, int targetid, int actionid, const char *param, Vector coords, const char *location);
-	void StartTimer(int playerid, int statid);
+	void StartTimer(int playerid, int statid, bool autoapply = true);
 	void StopTimer(int playerid, int statid, bool apply = true);
 	void ResetStats();
 	void Serialise(char *buffer, int buffer_size);
+	void FinalizeStats();
 
 	const char *GetAuthString() const;
 	const char *GetTimestampString() const;
 
+	const bool HasData() { return m_vPlayers.size() && m_vStats.size(); }
 private:
 	// holds all of the player's stats
 	std::vector<CFFPlayerStats> m_vPlayers;
@@ -275,7 +278,7 @@ Start a timer for a particular stat. For example, when a player joins a server,
 start the timer for the stat "played", and stop it later when they leave the
 server or change classes/teams.
 */
-void CFFStatsLog::StartTimer(int playerid, int statid)
+void CFFStatsLog::StartTimer(int playerid, int statid, bool autoapply)
 {
 	VPROF_BUDGET( "CFFStatsLog::StartTimer", VPROF_BUDGETGROUP_FF_STATS );
 
@@ -285,6 +288,8 @@ void CFFStatsLog::StartTimer(int playerid, int statid)
 	// make sure it's big enough
 	if (m_vPlayers[playerid].m_vStartTimes.size() < m_vStats.size())
 		m_vPlayers[playerid].m_vStartTimes.resize(m_vStats.size(), 0.0);
+	if (m_vPlayers[playerid].m_vAutoApply.size() < m_vStats.size())
+		m_vPlayers[playerid].m_vAutoApply.resize(m_vStats.size(), 0.0);
 
 	// make sure it's stopped
 	if (m_vPlayers[playerid].m_vStartTimes[statid] > 0.0001)
@@ -295,6 +300,7 @@ void CFFStatsLog::StartTimer(int playerid, int statid)
 
 	// set the start time to now
 	m_vPlayers[playerid].m_vStartTimes[statid] = gpGlobals->curtime;
+	m_vPlayers[playerid].m_vAutoApply[statid] = autoapply;
 }
 
 /**
@@ -307,6 +313,10 @@ timer would be started when the flag was touched, but cancelled if the flag is d
 void CFFStatsLog::StopTimer(int playerid, int statid, bool apply)
 {
 	VPROF_BUDGET( "CFFStatsLog::StopTimer", VPROF_BUDGETGROUP_FF_STATS );
+	
+	// don't try this if we're not even running
+	if (m_vPlayers.size() == 0)
+		return;
 
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
 	assert(statid >= 0 && statid < (int)m_vStats.size());
@@ -314,12 +324,31 @@ void CFFStatsLog::StopTimer(int playerid, int statid, bool apply)
 	// make sure it's big enough
 	if (m_vPlayers[playerid].m_vStartTimes.size() < m_vStats.size())
 		m_vPlayers[playerid].m_vStartTimes.resize(m_vStats.size(), 0.0);
-
+	if (m_vPlayers[playerid].m_vAutoApply.size() < m_vStats.size())
+		m_vPlayers[playerid].m_vAutoApply.resize(m_vStats.size(), 0.0);
+		
 	if (apply && m_vPlayers[playerid].m_vStartTimes[statid] > 0.0f)
 		AddStat(playerid, statid, gpGlobals->curtime - m_vPlayers[playerid].m_vStartTimes[statid]);
 
 	m_vPlayers[playerid].m_vStartTimes[statid] = 0.0f;
+	m_vPlayers[playerid].m_vAutoApply[statid] = false;	// false so it doesn't attempt to try to apply something that's not on
 }
+
+/**
+Stop all timers that need to be stopped before the round ends
+*/
+void CFFStatsLog::FinalizeStats()
+{
+	int i, j;
+	for (i=0; i<(int)m_vPlayers.size(); i++) {
+		for (j=0; j<(int)m_vPlayers[i].m_vAutoApply.size(); j++) {
+			if (m_vPlayers[i].m_vAutoApply[i]) {
+				StopTimer(i, j, true);
+			}
+		}
+	}			
+}
+
 
 /**
 Reset all of the statistics for all players. This is useful for starting a new map
@@ -329,6 +358,8 @@ void CFFStatsLog::ResetStats()
 	VPROF_BUDGET( "CFFStatsLog::ResetStats", VPROF_BUDGETGROUP_FF_STATS );
 
 	m_vPlayers.clear();
+	m_vStats.clear();
+	m_vActions.clear();
 
 	// TODO: Do we care about other stuff resetting?
 }
@@ -370,7 +401,7 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 {
 	VPROF_BUDGET( "CFFStatsLog::Serialise", VPROF_BUDGETGROUP_FF_STATS );
 
-	Msg("[STATS] Generating Serialized stats log\n");
+	DevMsg("[STATS] Generating Serialized stats log\n");
 
 	// build the auth string here
 	const char *pszLogin = stats_login.GetString();
@@ -455,19 +486,26 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 #define STATS_BOUNDARY "STATSBOUNDSzx9n12"
 void SendStats() 
 {
+	Socks sock;
+
 	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
 
 	if (!stats_enable.GetBool())
-		return;
+		goto end;
+		
+	if (!g_StatsLogSingleton.HasData())
+		goto end;
+
+	g_StatsLogSingleton.FinalizeStats();
 		
 	// this is kind of wasteful :(
 	char buf[100000], buf2[120000];
 
-	Msg("[STATS] Sending stats...\n");
+	DevMsg("[STATS] Sending stats...\n");
 
 	g_StatsLogSingleton.Serialise(buf, sizeof(buf));
-	//Msg(buf);
-	//Msg("------\n\n");
+	//DevMsg(buf);
+	//DevMsg("------\n\n");
 
 	// generate post-data first (size is used in the part below)
 	Q_snprintf(buf2, sizeof(buf2),
@@ -492,23 +530,21 @@ void SendStats()
 		strlen(buf2),
 		buf2);
 
-	Msg(buf);
+	DevMsg(buf);
 	//UTIL_LogPrintf(buf);
-
-	Socks sock;
 
 	// Open up a socket
 	if (!sock.Open(/*SOCK_STREAM */ 1, 0)) 
 	{
 		Warning("[STATS] Could not open socket\n");
-		return;
+		goto end;
 	}
 
 	// Connect to remote host
 	if (!sock.Connect(STATS_HOST, 80)) 
 	{
 		Warning("[STATS] Could not connect to remote host\n");
-		return;
+		goto end;
 	}
 
 	// Send data
@@ -516,7 +552,7 @@ void SendStats()
 	{
 		Warning("[STATS] Could not send data to remote host\n");
 		sock.Close();
-		return;
+		goto end;
 	}
 
 	// Send data
@@ -524,7 +560,7 @@ void SendStats()
 	{
 		Warning("[STATS] Could not send data to remote host\n");
 		sock.Close();
-		return;
+		goto end;
 	}
 
 	int a;
@@ -539,8 +575,12 @@ void SendStats()
 
 	buf[a] = '\0';
 
-	Msg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
+	DevMsg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
 
 	// Close socket
 	sock.Close();
+
+end:
+	// now that we've sent them, we can reset them.	
+	g_StatsLogSingleton.ResetStats();
 }

@@ -277,7 +277,6 @@ ConVar mp_prematch( "mp_prematch",
 		m_flGameStarted = -1.0f;
 		
 		// Start stats engine
-		SendStats();
 		g_StatsLog->ResetStats();
 
 		// Reset the effects timeouts
@@ -423,7 +422,6 @@ ConVar mp_prematch( "mp_prematch",
 			// TODO: Do stuff!
 
 			// Restart stats!
-			SendStats();
 			g_StatsLog->ResetStats();
 
 			// Kill entity system helper
@@ -1243,7 +1241,10 @@ ConVar mp_prematch( "mp_prematch",
 
 			// We should have started now, lets go!
 			if( gpGlobals->curtime > flPrematch )
+			{
+				g_StatsLog->ResetStats();	// we should restart at the end of prematch
 				StartGame();
+			}
 			else
 			{
 				// Only send message every second (not every frame)
