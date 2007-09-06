@@ -438,32 +438,63 @@ ConVar mp_prematch( "mp_prematch",
 			// Re-start entsys for the map
 			_scriptman.LevelInit(STRING(gpGlobals->mapname));
 
-			// Go through and delete entities
-			CBaseEntity *pEntity = gEntList.FirstEnt();
-			while( pEntity )
+			// Mulch: 9/6/2007: Old code
+			//// Go through and delete entities
+			//CBaseEntity *pEntity = gEntList.FirstEnt();
+			//while( pEntity )
+			//{
+			//	if( m_hMapFilter.ShouldCreateEntity( pEntity->GetClassname() ) )
+			//	{
+			//		// Grab the next ent
+			//		CBaseEntity *pTemp = gEntList.NextEnt( pEntity );
+
+			//		// Delete current ent
+			//		UTIL_Remove( pEntity );
+
+			//		// Set up current ent again
+			//		pEntity = pTemp;
+			//	}
+			//	else
+			//	{
+			//		pEntity = gEntList.NextEnt( pEntity );
+			//	}
+			//}
+
+			//// Clear anything that's been deleted
+			//gEntList.CleanupDeleteList();
+
+			//// RAWR! Add all entities back
+			//MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &m_hMapFilter, true );
+
+			// Mulch: 9/6/2007: New code per: http://developer.valvesoftware.com/wiki/Resetting_Maps_and_Entities
+			
+			// Recreate all the map entities from the map data (preserving their indices),
+			// then remove everything else except the players.
+
+			// Get rid of all entities except players.
+			CBaseEntity *pCur = gEntList.FirstEnt();
+			while( pCur )
 			{
-				if( m_hMapFilter.ShouldCreateEntity( pEntity->GetClassname() ) )
+				if( !FindInList( g_MapEntityFilterKeepList, pCur->GetClassname() ) )
 				{
-					// Grab the next ent
-					CBaseEntity *pTemp = gEntList.NextEnt( pEntity );
-
-					// Delete current ent
-					UTIL_Remove( pEntity );
-
-					// Set up current ent again
-					pEntity = pTemp;
+					CBaseEntity *pTemp = gEntList.NextEnt( pCur );
+					UTIL_Remove( pCur );
+					pCur = pTemp;
 				}
 				else
 				{
-					pEntity = gEntList.NextEnt( pEntity );
+					pCur = gEntList.NextEnt( pCur );
 				}
 			}
 
-			// Clear anything that's been deleted
+			// Really remove the entities so we can have access to their slots below.
 			gEntList.CleanupDeleteList();
 
-			// RAWR! Add all entities back
-			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &m_hMapFilter, true );
+			CFFMapEntityFilter filter;
+			filter.m_iIterator = g_MapEntityRefs.Head();
+
+			// final task, trigger the recreation of any entities that need it.
+			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
 
 			// Run startup stuff again!
 			CFFLuaSC hStartup;
