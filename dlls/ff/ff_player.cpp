@@ -812,6 +812,9 @@ CBaseEntity *g_pLastSpawnRandomizer = NULL;
 void CFFPlayer::SetLastSpawn( CBaseEntity *pEntity )
 {
 	g_pLastSpawn = pEntity;
+
+	if( !pEntity )
+		g_pLastSpawnRandomizer = NULL;
 }
 
 CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
