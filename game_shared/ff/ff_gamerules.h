@@ -156,8 +156,8 @@ public:
 	virtual void	ClientDisconnected( edict_t *pClient );
 	virtual void	LevelShutdown( void );
 
-private:
-	CFFMapFilter	m_hMapFilter;
+//private:
+//	CFFMapFilter	m_hMapFilter;
 
 #endif
 
