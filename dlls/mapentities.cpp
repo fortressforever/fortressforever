@@ -347,10 +347,6 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 		if (!pMapData)
 			break;
 
-		// Mulch: 9/6/2007: Test temp shit
-		logFile << "[Entry] " << pMapData << endl;
-		logFile.flush();
-
 		if (token[0] != '{')
 		{
 			Error( "MapEntity_ParseAllEntities: found %s when expecting {", token);
@@ -365,6 +361,13 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 		pMapData = MapEntity_ParseEntity(pEntity, pMapData, pFilter);
 		if (pEntity == NULL)
 			continue;
+
+		// Mulch: 9/6/2007: Test temp shit
+		if (pEntity->GetClassname())
+		{
+			logFile << "[Entry] " << pEntity->GetClassname() << endl;
+			logFile.flush();
+		}
 
 		if (pEntity->IsTemplate())
 		{
