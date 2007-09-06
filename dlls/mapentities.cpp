@@ -339,17 +339,17 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 		// Parse the opening brace.
 		//
 		char token[MAPKEY_MAXLENGTH];
-		pMapData = MapEntity_ParseToken( pMapData, token );
-
-		// Mulch: 9/6/2007: Test temp shit
-		logFile << "[Entry] " << pMapData << endl;
-		logFile.flush();
+		pMapData = MapEntity_ParseToken( pMapData, token );		
 
 		//
 		// Check to see if we've finished or not.
 		//
 		if (!pMapData)
 			break;
+
+		// Mulch: 9/6/2007: Test temp shit
+		logFile << "[Entry] " << pMapData << endl;
+		logFile.flush();
 
 		if (token[0] != '{')
 		{
