@@ -1126,6 +1126,8 @@ CBaseEntity *CGlobalEntityList::FindEntityByOwner(CBaseEntity *pStartEntity, con
 //-----------------------------------------------------------------------------
 CBaseEntity *CGlobalEntityList::FindEntityByClassT( CBaseEntity *pStartEntity, int szClassT )
 {
+	try
+	{
 	const CEntInfo *pInfo = pStartEntity ? GetEntInfoPtr( pStartEntity->GetRefEHandle() )->m_pNext : FirstEntInfo();
 
 	for( ; pInfo; pInfo = pInfo->m_pNext )
@@ -1143,6 +1145,11 @@ CBaseEntity *CGlobalEntityList::FindEntityByClassT( CBaseEntity *pStartEntity, i
 	}
 
 	return NULL;
+	}
+	catch (...)
+	{
+		return NULL;
+	}
 }
 
 //-----------------------------------------------------------------------------
