@@ -217,12 +217,11 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	// Add a temp slowdown as we unwind
-	if(pPlayer->IsSpeedEffectSet(SE_ASSAULTCANNON))
-		pPlayer->AddSpeedEffect( SE_ASSAULTCANNON, 0.5f, FF_AC_SPEEDEFFECT_MIN, SEM_BOOLEAN );
+	//if(pPlayer->IsSpeedEffectSet(SE_ASSAULTCANNON))
+	//	pPlayer->AddSpeedEffect( SE_ASSAULTCANNON, 0.5f, FF_AC_SPEEDEFFECT_MIN, SEM_BOOLEAN );
 
 	// uh....why slow the player down when they're holstering it?
-	//pPlayer->RemoveSpeedEffect(SE_ASSAULTCANNON);
-	// that up there actually makes the player "gradually" come out of being slowed down...if the player holsters while shooting
+	pPlayer->RemoveSpeedEffect(SE_ASSAULTCANNON);
 #endif
 
 	//if (!m_fFireState) 

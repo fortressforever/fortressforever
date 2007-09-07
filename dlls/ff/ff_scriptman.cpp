@@ -195,15 +195,15 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	// That way servers can keep their suffix set without worrying about every map having whatever game mode they always want to use.
 	if ( sv_mapluasuffix.GetString()[0] != '0' )
 	{
-		Msg( "[SCRIPT] sv_mapluasuffix set to %s | attempting to load maps\\%s__%s__.lua\n", sv_mapluasuffix.GetString(), szMapName, sv_mapluasuffix.GetString() );
+		Msg( "[SCRIPT] sv_mapluasuffix set to %s | finding maps\\%s__%s__.lua\n", sv_mapluasuffix.GetString(), szMapName, sv_mapluasuffix.GetString() );
 		if ( filesystem->FileExists( UTIL_VarArgs( "maps/%s__%s__.lua", szMapName, sv_mapluasuffix.GetString() ) ) )
 		{
 			Q_snprintf( filename, sizeof(filename), "maps/%s__%s__.lua", szMapName, sv_mapluasuffix.GetString() );
-			Msg( "[SCRIPT] maps\\%s__%s__.lua successfully loaded\n", szMapName, sv_mapluasuffix.GetString() );
+			Msg( "[SCRIPT] maps\\%s__%s__.lua found\n", szMapName, sv_mapluasuffix.GetString() );
 		}
 		else
 		{
-			Msg( "[SCRIPT] maps\\%s__%s__.lua not found | loading maps\\%s.lua\n", szMapName, sv_mapluasuffix.GetString(), szMapName);
+			Msg( "[SCRIPT] maps\\%s__%s__.lua not found | reverting to maps\\%s.lua\n", szMapName, sv_mapluasuffix.GetString(), szMapName);
 		}
 	}
 
