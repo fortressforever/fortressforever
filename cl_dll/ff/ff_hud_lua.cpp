@@ -114,9 +114,6 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 	int xPos = msg.ReadShort();
 	int yPos = msg.ReadShort();
 
-	if (xPos < 0 || yPos < 0)
-		return;
-
 	switch (wType)
 	{
 	case HUD_ICON:
@@ -134,8 +131,27 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 			break;
 		}
 
+	case HUD_ICON_ALIGNXY:
+		{
+			char szSource[256];
+			if (!msg.ReadString(szSource, 255))
+				return;
+
+			int iWidth = msg.ReadShort();
+			int iHeight = msg.ReadShort();
+			int iAlignX = msg.ReadShort();
+			int iAlignY = msg.ReadShort();
+
+			HudIcon(szIdentifier, xPos, yPos, szSource, iWidth, iHeight, iAlignX, iAlignY);
+
+			break;
+		}
+
 	case HUD_TEXT:
 		{
+			if (xPos < 0 || yPos < 0)
+				return;
+
 			char szText[256];
 			if (!msg.ReadString(szText, 255))
 				return;
@@ -147,6 +163,9 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 
 	case HUD_TIMER:
 		{
+			if (xPos < 0 || yPos < 0)
+				return;
+
 			int		iValue = msg.ReadShort();
 			float	flSpeed = msg.ReadFloat();
 
@@ -190,23 +209,113 @@ void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *psz
 		int scaledW = scheme()->GetProportionalScaledValue( iWidth );
 		switch (iAlign)
 		{
-			case 0 : // HUD_LEFT : 
-				iProperXPosition = scaledX;
-				break;
-			case 1 : //HUD_RIGHT :
+			case 1 : //HUD_ALIGNX_RIGHT :
 				iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
 				break;
-			case 2 : //HUD_CENTERLEFT :
+			case 2 : //HUD_ALIGNX_CENTERLEFT :
 				iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
 				break;
-			case 3 : //HUD_CENTERRIGHT :
+			case 3 : //HUD_ALIGNX_CENTERRIGHT :
 				iProperXPosition = (ScreenWidth() / 2) + scaledX;
+				break;
+			case 4 : //HUD_ALIGNX_CENTER :
+				iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
+				break;
+			case 0 : //HUD_ALIGNX_LEFT : 
+			default :
+				iProperXPosition = scaledX;
 				break;
 		}
 
 		//int iProperXPosition = ScreenWidth() - scheme()->GetProportionalScaledValue( iWidth ) - 5;
 		pImagePanel->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
 		
+		pImagePanel->SetShouldScaleImage( true );
+		pImagePanel->SetWide( scheme()->GetProportionalScaledValue( iWidth ) );
+		pImagePanel->SetTall( scheme()->GetProportionalScaledValue( iHeight ) );
+	}
+
+	pImagePanel->SetImage(pszSource);
+	pImagePanel->SetVisible(true);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a new icon on the hud (added y alignment)
+//-----------------------------------------------------------------------------
+void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY)
+{
+	// Create or find the correct hud element
+	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(pszIdentifier, HUD_ICON_ALIGNXY));
+
+	if (!pImagePanel)
+		return;
+
+	// Yo mirv: Think this is a good idea?
+	// Assume x & y are in 640 x 480 so we need to scale so
+	// use the proportional scale thingy
+
+	// Now set this label up
+	//pImagePanel->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
+
+	// Jiggles: The above line displays the flag icon incorrectly on non 4:3 display resolutions
+	// -- See: Mantis issue 0001144 -- http://beta.fortress-forever.com/bugtracker/view.php?id=1144
+	// Instead, I scale the CHudLua container to the current display resolution, then calculate an x-position
+	// 5 pixels to the right of the screen.
+	// This solution has a minor problem, though: If the player changes screen resolution while carrying a flag,
+	// the flag icon will not be repositioned until he/she picks up a new one.
+
+	if( ( iWidth > 0 ) && ( iHeight > 0 ) )
+	{
+		SetSize(ScreenWidth(), ScreenHeight());
+		int iProperXPosition = 0;
+		int iProperYPosition = 0;
+		int scaledX = scheme()->GetProportionalScaledValue( iX );
+		int scaledY = scheme()->GetProportionalScaledValue( iY );
+		int scaledW = scheme()->GetProportionalScaledValue( iWidth );
+		int scaledH = scheme()->GetProportionalScaledValue( iHeight );
+		switch (iAlignX)
+		{
+		case 1 : //HUD_ALIGNX_RIGHT :
+			iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
+			break;
+		case 2 : //HUD_ALIGNX_CENTERLEFT :
+			iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
+			break;
+		case 3 : //HUD_ALIGNX_CENTERRIGHT :
+			iProperXPosition = (ScreenWidth() / 2) + scaledX;
+			break;
+		case 4 : //HUD_ALIGNX_CENTER :
+			iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
+			break;
+		case 0 : //HUD_ALIGNX_LEFT : 
+		default :
+			iProperXPosition = scaledX;
+			break;
+		}
+		switch (iAlignY)
+		{
+		case 1 : //HUD_ALIGNY_BOTTOM :
+			iProperYPosition = ( ScreenHeight() - scaledY ) - scaledH;
+			break;
+		case 2 : //HUD_ALIGNY_CENTERUP :
+			iProperYPosition = ((ScreenHeight() / 2) - scaledY) - scaledH;
+			break;
+		case 3 : //HUD_ALIGNY_CENTERDOWN :
+			iProperYPosition = (ScreenHeight() / 2) + scaledY;
+			break;
+		case 4 : //HUD_ALIGNY_CENTER :
+			iProperYPosition = (ScreenHeight() / 2) - (scaledH / 2) + scaledY;
+			break;
+		case 0 : //HUD_ALIGNY_TOP : 
+		default :
+			iProperYPosition = scaledY;
+			break;
+		}
+
+		//int iProperXPosition = ScreenWidth() - scheme()->GetProportionalScaledValue( iWidth ) - 5;
+		//pImagePanel->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
+		pImagePanel->SetPos( iProperXPosition, iProperYPosition );
+
 		pImagePanel->SetShouldScaleImage( true );
 		pImagePanel->SetWide( scheme()->GetProportionalScaledValue( iWidth ) );
 		pImagePanel->SetTall( scheme()->GetProportionalScaledValue( iHeight ) );
@@ -283,6 +392,10 @@ Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType,
 	switch (iType)
 	{
 	case HUD_ICON:
+		pPanel = new ImagePanel(this, pszIdentifier);
+		break;
+
+	case HUD_ICON_ALIGNXY:
 		pPanel = new ImagePanel(this, pszIdentifier);
 		break;
 
