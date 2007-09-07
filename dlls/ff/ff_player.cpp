@@ -444,6 +444,7 @@ CFFPlayer::CFFPlayer()
 	m_bBurnFlagIC = false;
 
 	m_bACDamageHint = true;  // For triggering the "Pyro takes damage from HWGuy" hint only once
+	m_bSGDamageHint = true;	 // For triggering the "Spy takes damage from SG while cloaked" hint only once
 
 	m_bDisguisable = 1;
 
@@ -5287,14 +5288,22 @@ int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 	
 	// Jiggles: Hint Code
 	//			Event: Pyro takes damage from enemy Hwguy
-	CFFPlayer *pAttacker = ToFFPlayer( attacker );
-
-	if ( m_bACDamageHint && ( GetClassSlot() == CLASS_PYRO ) && pAttacker && ( pAttacker->GetClassSlot() == CLASS_HWGUY )  )
+	if ( m_bACDamageHint )
 	{
-		FF_SendHint( this, PYRO_ROASTHW, 1, PRIORITY_NORMAL, "#FF_HINT_PYRO_ROASTHW" );
-		m_bACDamageHint = false; // Only do this hint once -- we don't want this hint sent every time this function is triggered!
+		CFFPlayer *pAttacker = ToFFPlayer( attacker );
+		if ( ( GetClassSlot() == CLASS_PYRO ) && pAttacker && ( pAttacker->GetClassSlot() == CLASS_HWGUY )  )
+		{
+			FF_SendHint( this, PYRO_ROASTHW, 1, PRIORITY_NORMAL, "#FF_HINT_PYRO_ROASTHW" );
+			m_bACDamageHint = false; // Only do this hint once -- we don't want this hint sent every time this function is triggered!
+		}
 	}
 
+	//	Event: Spy, while cloaked, takes damage from SG
+	if ( m_bSGDamageHint && IsCloaked() && ( attacker->Classify() == CLASS_SENTRYGUN )  )
+	{
+		FF_SendHint( this, SPY_SGCLOAK, 1, PRIORITY_NORMAL, "#FF_HINT_SPY_SGCLOAK" );
+		m_bSGDamageHint = false; // Only do this hint once -- we don't want this hint sent every time this function is triggered!
+	}
 	// End hint code
 
 	// Apply the force needed

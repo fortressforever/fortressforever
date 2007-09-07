@@ -409,6 +409,7 @@ public:
 private:
 	bool m_bRespawnable;
 	bool m_bACDamageHint; // For triggering the "Pyro takes damage from HWGuy" hint only once
+	bool m_bSGDamageHint; // For triggering the "Spy takes damage from SG while cloaked" hint only once
 
 public:
 	// Can we update our location yet?
