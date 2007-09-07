@@ -33,7 +33,8 @@ enum HudElementType_t
 	HUD_ICON = 0,
 	HUD_TEXT,
 	HUD_TIMER,
-	HUD_REMOVE
+	HUD_REMOVE,
+	HUD_ICON_ALIGNXY,
 };
 
 typedef struct HudElement_s
@@ -61,6 +62,7 @@ public:
 	Panel	*GetHudElement(const char *pszIdentifier, HudElementType_t iType, bool bCreateNew = true);
 	void	RemoveElement(const char *pszIdentifier);
 	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlign);
+	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY); // added y alignment
 	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText);
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed);
 

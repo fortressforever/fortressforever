@@ -581,14 +581,39 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(0);	// HUD_ICON
+	WRITE_BYTE(0);	// HUD_ICON
+	WRITE_STRING(pszIdentifier);
+	WRITE_SHORT(x);
+	WRITE_SHORT(y);
+	WRITE_STRING(pszImage);
+	WRITE_SHORT(iWidth);
+	WRITE_SHORT(iHeight);
+	WRITE_SHORT(iAlign);
+
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set an icon on the hud (added y alignment)
+//-----------------------------------------------------------------------------
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlignX, int iAlignY)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+		WRITE_BYTE(4);	// HUD_ICON_ALIGNXY
 		WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
 		WRITE_STRING(pszImage);
 		WRITE_SHORT(iWidth);
 		WRITE_SHORT(iHeight);
-		WRITE_SHORT(iAlign);
+		WRITE_SHORT(iAlignX);
+		WRITE_SHORT(iAlignY);
 	MessageEnd();
 }
 

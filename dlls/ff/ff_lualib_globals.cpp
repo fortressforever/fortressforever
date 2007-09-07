@@ -986,7 +986,7 @@ namespace FFLib
 		if( !pPlayer || !pszImage || !pszIdentifier )
 			return;
 
-		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage );
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 0 );
 	}
 
 	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlign )
@@ -995,6 +995,29 @@ namespace FFLib
 			return;
 
 		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlign );
+	}
+
+	// added y alignment
+	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlignX, int iAlignY )
+	{
+		if( !pPlayer || !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
+			return;
+
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlignX, iAlignY );
+	}
+
+	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y )
+	{
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 0);
+			}
+		}
 	}
 
 	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlign )
@@ -1007,6 +1030,21 @@ namespace FFLib
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
 				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlign);
+			}
+		}
+	}
+
+	// added y alignment
+	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlignX, int iAlignY )
+	{
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlignX, iAlignY);
 			}
 		}
 	}
@@ -1279,7 +1317,10 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		// global functions
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int))&FFLib::AddHudIcon),
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int, int))&FFLib::AddHudIcon),
-		def("AddHudIconToAll",				(void(*)(const char *, const char *, int, int, int, int, int))&FFLib::AddHudIconToAll),
+		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int, int, int))&FFLib::AddHudIcon),
+		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int))&FFLib::AddHudIconToAll),
+		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int, int, int, int))&FFLib::AddHudIconToAll),
+		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int, int, int, int, int))&FFLib::AddHudIconToAll),
 		def("AddHudText",				&FFLib::AddHudText),
 		def("AddHudTimer",				&FFLib::AddHudTimer),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
