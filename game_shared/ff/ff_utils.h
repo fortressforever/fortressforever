@@ -183,6 +183,7 @@ enum HintType
 	SPY_GANKDISGUISE,	// Event: Player successfully backstabs from disguise to steal enemy disguise 
 	SPY_LOSEDISGUISE,	// Event: Player's disguise is removed by proximity to an enemy spy or scout
 	SPY_LOSECLOAK,		// Event: Player's cloak is removed by proximity to an enemy spy
+	SPY_SGCLOAK,		// Event: Player, while cloaked, is shot by an SG
 	SPY_KNIFE,			// Event: Player selects the knife
 	SPY_TRANQ,			// Event: Player selects the tranq gun
 	SPY_SPLAT,			// Event: Player falls to a crunching thud(damage taking fall due to +duck not being held)
