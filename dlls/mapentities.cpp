@@ -31,9 +31,6 @@
 #endif
 #endif
 
-#include <fstream>
-using namespace std;
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -314,11 +311,6 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 
 	char szTokenBuffer[MAPKEY_MAXLENGTH];
 
-	// Mulch: 9/6/2007: Test temp shit
-	ofstream logFile;
-	logFile.open( "mulch_jiggles_fun_log.txt", ios_base::out );
-	logFile << "Starting log, bitch" << endl;
-
 #if !defined( _RETAIL )
 #if defined( _XBOX )
 	char sz[ 128 ];
@@ -361,13 +353,6 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 		pMapData = MapEntity_ParseEntity(pEntity, pMapData, pFilter);
 		if (pEntity == NULL)
 			continue;
-
-		// Mulch: 9/6/2007: Test temp shit
-		if (pEntity->GetClassname())
-		{
-			logFile << "[Entry] " << pEntity->GetClassname() << endl;
-			logFile.flush();
-		}
 
 		if (pEntity->IsTemplate())
 		{
@@ -444,9 +429,6 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 			nEntities++;
 		}
 	}
-
-	// Mulch: 9/6/2007: Test temp shit
-	logFile.close();
 
 #if !defined( _RETAIL )
 #if defined( _XBOX )
