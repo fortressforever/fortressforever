@@ -280,6 +280,7 @@ server or change classes/teams.
 */
 void CFFStatsLog::StartTimer(int playerid, int statid, bool autoapply)
 {
+	return;
 	VPROF_BUDGET( "CFFStatsLog::StartTimer", VPROF_BUDGETGROUP_FF_STATS );
 
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
@@ -312,6 +313,7 @@ timer would be started when the flag was touched, but cancelled if the flag is d
 */
 void CFFStatsLog::StopTimer(int playerid, int statid, bool apply)
 {
+	return;
 	VPROF_BUDGET( "CFFStatsLog::StopTimer", VPROF_BUDGETGROUP_FF_STATS );
 	
 	// don't try this if we're not even running
@@ -486,6 +488,7 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 #define STATS_BOUNDARY "STATSBOUNDSzx9n12"
 void SendStats() 
 {
+	return;
 	Socks sock;
 
 	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
