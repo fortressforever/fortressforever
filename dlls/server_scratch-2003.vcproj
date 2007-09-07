@@ -220,8 +220,7 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
-				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
-"
+				CommandLine="if exist &quot;%ffbetabin%&quot; copy &quot;$(TargetPath)&quot; &quot;%ffbetabin%&quot;"
 				Outputs="server.dll"/>
 			<Tool
 				Name="VCLinkerTool"
