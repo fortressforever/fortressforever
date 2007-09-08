@@ -70,6 +70,8 @@
 //#include "ff_detpack.h"
 #include "ff_buildableobjects_shared.h"
 
+#ifdef _DEBUG
+
 class CFFBot;
 void Bot_Think( CFFBot *pBot );
 bool Bot_GhostThinkRecord( CFFBot *pBot );
@@ -1058,3 +1060,4 @@ void Bot_Think( CFFBot *pBot )
 }
 
 
+#endif // _DEBUG
