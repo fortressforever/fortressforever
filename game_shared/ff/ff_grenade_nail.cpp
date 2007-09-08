@@ -81,7 +81,8 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 	ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100");
 #endif
 
-	extern ConVar ffdev_nail_bbox;
+	//extern ConVar ffdev_nail_bbox;
+#define NAIL_BBOX 2.0f
 
 //-----------------------------------------------------------------------------
 // Purpose: Various precache things

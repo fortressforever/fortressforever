@@ -21,10 +21,12 @@
 
 #define NAIL_MODEL "models/projectiles/nail/w_nail.mdl"
 
-ConVar ffdev_nail_speed("ffdev_nail_speed", "2000.0", FCVAR_REPLICATED, "Nail speed");
-ConVar ffdev_nail_bbox("ffdev_nail_bbox", "2.0", FCVAR_REPLICATED, "Nail bbox");
-ConVar ffdev_nail_sgmod( "ffdev_nail_sgmod", "10.0", FCVAR_REPLICATED, "Added to nail damage when hitting a SG so SG's take more damage" );
-
+//ConVar ffdev_nail_speed("ffdev_nail_speed", "2000.0", FCVAR_REPLICATED, "Nail speed");
+#define NAIL_SPEED 2000.0f
+//ConVar ffdev_nail_bbox("ffdev_nail_bbox", "2.0", FCVAR_REPLICATED, "Nail bbox");
+#define NAIL_BBOX 2.0f
+//ConVar ffdev_nail_sgmod( "ffdev_nail_sgmod", "10.0", FCVAR_REPLICATED, "Added to nail damage when hitting a SG so SG's take more damage" );
+#define NAIL_SGMOD 10.0f
 
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
@@ -58,7 +60,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_nail);
 		// Setup
 		//SetModel(NAIL_MODEL);
 		SetMoveType(/*MOVETYPE_FLYGRAVITY*/ MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM);
-		SetSize(-Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat(), Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat());
+		SetSize(-Vector(1.0f, 1.0f, 1.0f) * NAIL_BBOX, Vector(1.0f, 1.0f, 1.0f) * NAIL_BBOX);
 		SetSolid(SOLID_BBOX);
 		//SetGravity(0.01f);
 		SetEffects(EF_NODRAW);
@@ -130,7 +132,7 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 		else if( ( pOther->Classify() == CLASS_SENTRYGUN ) && m_bNailGrenadeNail )
 		{
 			// Modify the damage +- cvar value
-			dmgInfo.SetDamage( dmgInfo.GetDamage() + ffdev_nail_sgmod.GetFloat() );
+			dmgInfo.SetDamage( dmgInfo.GetDamage() + NAIL_SGMOD );
 		}
 
 		pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
@@ -191,7 +193,7 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, con
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);
 
-	vecForward *= /*iSpeed*/ ffdev_nail_speed.GetFloat();
+	vecForward *= /*iSpeed*/ NAIL_SPEED;
 
 	// Set the speed and the initial transmitted velocity
 	pNail->SetAbsVelocity(vecForward);

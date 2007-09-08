@@ -32,8 +32,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_spy_mincloakness( "ffdev_spy_mincloakness", "0.1" );
-ConVar ffdev_spy_maxrefractval( "ffdev_spy_maxrefractval", "0.5" );
+//ConVar ffdev_spy_mincloakness( "ffdev_spy_mincloakness", "0.1" );
+#define SPY_MINCLOAKNESS 0.1f
+//ConVar ffdev_spy_maxrefractval( "ffdev_spy_maxrefractval", "0.5" );
+#define SPY_MAXREFRACTVAL 0.5f
 
 //=============================================================================
 //
@@ -281,7 +283,7 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	//float flSpeed = pPlayer->GetCloakSpeed();
 	float flSpeed = pPlayer->GetLocalVelocity().Length();
 
-	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
+	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), SPY_MINCLOAKNESS, SPY_MAXREFRACTVAL );
 
 	// Player Velocity
 	SetFloatResult( flVal );
@@ -334,7 +336,7 @@ void C_FFLocalPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Assert( m_pResult );
 
 	float flSpeed = pPlayer->GetLocalVelocity().Length();
-	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
+	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), SPY_MINCLOAKNESS, SPY_MAXREFRACTVAL );
 
 	// Player Velocity
 	SetFloatResult( flVal );
@@ -396,7 +398,7 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Assert( m_pResult );
 
 	float flSpeed = pWeaponOwner->GetLocalVelocity().Length();
-	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
+	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), SPY_MINCLOAKNESS, SPY_MAXREFRACTVAL );
 
 	// Weapon Velocity
 	SetFloatResult( flVal );
@@ -486,7 +488,7 @@ void C_FFSpyCloakMaterialProxy::OnBind( void *pC_BaseEntity )
 	Assert( m_pResult );
 
 	float flSpeed = pPlayer->GetLocalVelocity().Length();
-	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
+	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), SPY_MINCLOAKNESS, SPY_MAXREFRACTVAL );
 
 	// Update the value in the material proxy
 	SetFloatResult( flVal );

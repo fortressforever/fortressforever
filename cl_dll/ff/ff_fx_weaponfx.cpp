@@ -38,11 +38,12 @@ void FF_FX_EjectBrass_40mm_Callback( const CEffectData &data )
 	FF_EjectBrass( FF_SHELL_40MM, data );
 }
 
-extern ConVar ffdev_nail_speed;
+//extern ConVar ffdev_nail_speed;
+#define NAIL_SPEED 2000.0f
 
 void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
 {
-	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, ffdev_nail_speed.GetFloat(), FF_PROJECTILE_NAIL, 
+	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, NAIL_SPEED, FF_PROJECTILE_NAIL, 
 
 #ifdef GAME_DLL
 		data.m_nEntIndex
@@ -52,18 +53,19 @@ void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
 		);
 }
 
-static ConVar ffdev_nailradial_number("ffdev_nailradial_number", "8");
+//static ConVar ffdev_nailradial_number("ffdev_nailradial_number", "8");
+#define NAILRADIAL_NUMBER 8
 
 void FF_FX_Projectile_Nail_Radial_Callback(const CEffectData &data)
 {
-	int nNails = ffdev_nailradial_number.GetInt();
+	int nNails = NAILRADIAL_NUMBER;
 
 	float flDeltaAngle = 360.0f / nNails;
 	QAngle angRadial = QAngle(0.0f, random->RandomFloat(0.0f, flDeltaAngle), 0.0f);
 	
 	while (nNails-- > 0)
 	{
-		tempents->FFProjectile(data.m_vOrigin, angRadial, ffdev_nail_speed.GetFloat(), FF_PROJECTILE_NAIL_NG, 
+		tempents->FFProjectile(data.m_vOrigin, angRadial, NAIL_SPEED, FF_PROJECTILE_NAIL_NG, 
 #ifdef GAME_DLL
 			data.m_nEntIndex
 #else
