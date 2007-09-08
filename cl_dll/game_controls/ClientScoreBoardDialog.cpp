@@ -50,9 +50,9 @@ extern bool g_fBlockedStatus[256];	// |-- Mirv: The blocked status of people's t
 
 static CClientScoreBoardDialog *g_pScoreboard = NULL;
 
-ConVar row_alpha("ffdev_row_alpha", "0.55", FCVAR_REPLICATED);
-ConVar header_alpha("ffdev_header_alpha", "0.6", FCVAR_REPLICATED);
-ConVar local_row_alpha("ffdev_local_row_alpha", "0.9", FCVAR_REPLICATED);
+//ConVar row_alpha("ffdev_row_alpha", "0.55", FCVAR_REPLICATED);
+//ConVar header_alpha("ffdev_header_alpha", "0.6", FCVAR_REPLICATED);
+//ConVar local_row_alpha("ffdev_local_row_alpha", "0.9", FCVAR_REPLICATED);
 
 // Returns -1 if pLHS < pRHS, 1 if pLHS > pRHS, and 0 is pLHS == pRHS
 inline int ScoreboardSection_Sort( const ScoreboardSection_s *pLHS, const ScoreboardSection_s* pRHS )
@@ -420,9 +420,9 @@ void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 
 			// Set the row color based on players team
 			if( pGR->IsLocalPlayer( i ) )
-				m_pPlayerList->SetItemFgColor( iItemId, Color( cCol.r() * 0.6f, cCol.g() * 0.6f, cCol.b() * 0.6f, cCol.a() * local_row_alpha.GetFloat() ), true );
+				m_pPlayerList->SetItemFgColor( iItemId, Color( cCol.r() * 0.6f, cCol.g() * 0.6f, cCol.b() * 0.6f, cCol.a() * 0.9/*local_row_alpha.GetFloat()*/ ), true );
 			else
-				m_pPlayerList->SetItemFgColor( iItemId, Color( cCol.r() * 0.6f, cCol.g() * 0.6f, cCol.b() * 0.6f, cCol.a() * row_alpha.GetFloat() ) );
+				m_pPlayerList->SetItemFgColor( iItemId, Color( cCol.r() * 0.6f, cCol.g() * 0.6f, cCol.b() * 0.6f, cCol.a() * 0.55/*row_alpha.GetFloat()*/ ) );
 
 			pPlayerData->deleteThis();
 		}
@@ -571,7 +571,7 @@ void CClientScoreBoardDialog::UpdateHeaders( void )
 		Color cCol = pGR->GetTeamColor( iTeam );
 		// This is nice and all but if teams get sorted while
 		// you're viewing the scoreboard the color doesn't change :/
-		m_pPlayerList->SetSectionFgColor( i, Color(cCol.r(), cCol.g(), cCol.b(), cCol.a() * header_alpha.GetFloat()) );
+		m_pPlayerList->SetSectionFgColor( i, Color(cCol.r(), cCol.g(), cCol.b(), cCol.a() * 0.6/*header_alpha.GetFloat()*/) );
 
 		wchar_t *szTeamName = localize()->Find( pGR->GetTeamName( iTeam ) );
 		wchar_t	szName[ 256 ];

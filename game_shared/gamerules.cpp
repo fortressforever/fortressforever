@@ -188,7 +188,7 @@ CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	return pSpawnSpot;
 }
 
-ConVar ffdev_playerspawnspotoffset_attempts( "ffdev_playerspawnspotoffset_attempts" , "5", FCVAR_REPLICATED, "4 rotations PER this value.  Also, it keeps trying offset positions while less than this value.  Oh and also, attempt 0 just checks the original spawn location so there are no rotations.", true, 0, false, 0);
+ConVar ffdev_playerspawnspotoffset_attempts( "ffdev_playerspawnspotoffset_attempts" , "5", FCVAR_REPLICATED | FCVAR_CHEAT, "4 rotations PER this value.  Also, it keeps trying offset positions while less than this value.  Oh and also, attempt 0 just checks the original spawn location so there are no rotations.", true, 0, false, 0);
 
 // for moving the spawn spot around the original spawn spot if other players are inside it
 Vector CGameRules::GetPlayerSpawnSpotOffset( const CBasePlayer *pPlayer, const Vector vecOrigin, const Vector vecPlayerBoundsMins, const Vector vecPlayerBoundsMaxs )

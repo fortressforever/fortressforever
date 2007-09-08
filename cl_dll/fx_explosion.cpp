@@ -680,13 +680,13 @@ void C_BaseExplosionEffect::CreateMisc( void )
 {
 }
 
-ConVar ffdev_explosion_light_radius_min( "ffdev_explosion_light_radius_min", "224" );
-ConVar ffdev_explosion_light_radius_max( "ffdev_explosion_light_radius_max", "256" );
-ConVar ffdev_explosion_light_life( "ffdev_explosion_light_life", "0.25" );
-ConVar ffdev_explosion_light_color_r( "ffdev_explosion_light_color_r", "255" );
-ConVar ffdev_explosion_light_color_g( "ffdev_explosion_light_color_g", "224" );
-ConVar ffdev_explosion_light_color_b( "ffdev_explosion_light_color_b", "128" );
-ConVar ffdev_explosion_light_color_e( "ffdev_explosion_light_color_e", "5" );
+//ConVar ffdev_explosion_light_radius_min( "ffdev_explosion_light_radius_min", "224" );
+//ConVar ffdev_explosion_light_radius_max( "ffdev_explosion_light_radius_max", "256" );
+//ConVar ffdev_explosion_light_life( "ffdev_explosion_light_life", "0.25" );
+//ConVar ffdev_explosion_light_color_r( "ffdev_explosion_light_color_r", "255" );
+//ConVar ffdev_explosion_light_color_g( "ffdev_explosion_light_color_g", "224" );
+//ConVar ffdev_explosion_light_color_b( "ffdev_explosion_light_color_b", "128" );
+//ConVar ffdev_explosion_light_color_e( "ffdev_explosion_light_color_e", "5" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -703,13 +703,13 @@ void C_BaseExplosionEffect::CreateDynamicLight( void )
 	if (dl) // I'm scared, daddy...of NULL pointers.
 	{
 		dl->origin = m_vecOrigin;
-		dl->radius	= random->RandomFloat( ffdev_explosion_light_radius_min.GetFloat(), ffdev_explosion_light_radius_max.GetFloat() ); // kinda big radius for explosion
-		dl->die = gpGlobals->curtime + ffdev_explosion_light_life.GetFloat(); // die = current time + life
-		dl->decay = dl->radius / ffdev_explosion_light_life.GetFloat(); // radius / life = good fade
-		dl->color.r = ffdev_explosion_light_color_r.GetFloat();
-		dl->color.g = ffdev_explosion_light_color_g.GetFloat();
-		dl->color.b = ffdev_explosion_light_color_b.GetFloat();
-		dl->color.exponent = ffdev_explosion_light_color_e.GetFloat(); // essentially the brightness...also determines the gradient, basically
+		dl->radius	= random->RandomFloat( 224/*ffdev_explosion_light_radius_min.GetFloat()*/, 256/*ffdev_explosion_light_radius_max.GetFloat()*/ ); // kinda big radius for explosion
+		dl->die = gpGlobals->curtime + 0.25/*ffdev_explosion_light_life.GetFloat()*/; // die = current time + life
+		dl->decay = dl->radius / 0.25/*ffdev_explosion_light_life.GetFloat()*/; // radius / life = good fade
+		dl->color.r = 255/*ffdev_explosion_light_color_r.GetFloat()*/;
+		dl->color.g = 254/*ffdev_explosion_light_color_g.GetFloat()*/;
+		dl->color.b = 128/*ffdev_explosion_light_color_b.GetFloat()*/;
+		dl->color.exponent = 5/*ffdev_explosion_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
 	}
 }
 

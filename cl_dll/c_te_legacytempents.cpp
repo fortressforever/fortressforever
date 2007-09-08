@@ -61,7 +61,7 @@ CLIENTEFFECT_REGISTER_END()
 //Whether or not to eject brass from weapons
 ConVar cl_ejectbrass("cl_ejectbrass", "1", FCVAR_ARCHIVE);
 
-ConVar ffdev_disablemuzzleflashes("ffdev_disablemuzzleflashes", "0");
+ConVar ffdev_disablemuzzleflashes("ffdev_disablemuzzleflashes", "0", FCVAR_ARCHIVE );
 
 ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED );
 
