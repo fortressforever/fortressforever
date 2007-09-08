@@ -1609,7 +1609,8 @@ void RespawnEntities()
 	g_EntityListSystem.m_bRespawnAllEntities = true;
 }
 
-static ConCommand restart_entities( "respawn_entities", RespawnEntities, "Respawn all the entities in the map." );
+// Jiggles: No, this crashes the hell out of FF
+//static ConCommand restart_entities( "respawn_entities", RespawnEntities, "Respawn all the entities in the map." );
 
 class CSortedEntityList
 {
