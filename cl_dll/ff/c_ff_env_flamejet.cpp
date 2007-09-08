@@ -27,33 +27,33 @@
 // Debug ConVars
 //=============================================================================
 
-static ConVar ffdev_flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"150", 	0, 	"How fast the flames spread outwards");
-static ConVar ffdev_flame_speed(			"ffdev_flame_speed", 			"800", 	0, 	"How fast the flames go forwards");
-static ConVar ffdev_flame_startsize(		"ffdev_flame_startsize", 		"3", 	0, 	"How big the flame starts(0-255) ");
-static ConVar ffdev_flame_endsize(		"ffdev_flame_endsize", 		"128", 	0, 	"How big the flame finishes(0-255) ");
-static ConVar ffdev_flame_rate(			"ffdev_flame_rate", 			"128", 	0, 	"Number of flame particles per second");
-static ConVar ffdev_flame_alpha(			"ffdev_flame_alpha", 			"0.4", 	0, 	"Alpha value of the flame(0 - 1.0) ");
+//static ConVar ffdev_flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"150", 	0, 	"How fast the flames spread outwards");
+//static ConVar ffdev_flame_speed(			"ffdev_flame_speed", 			"800", 	0, 	"How fast the flames go forwards");
+//static ConVar ffdev_flame_startsize(		"ffdev_flame_startsize", 		"3", 	0, 	"How big the flame starts(0-255) ");
+//static ConVar ffdev_flame_endsize(		"ffdev_flame_endsize", 		"128", 	0, 	"How big the flame finishes(0-255) ");
+//static ConVar ffdev_flame_rate(			"ffdev_flame_rate", 			"128", 	0, 	"Number of flame particles per second");
+//static ConVar ffdev_flame_alpha(			"ffdev_flame_alpha", 			"0.4", 	0, 	"Alpha value of the flame(0 - 1.0) ");
 
-static ConVar ffdev_flame_startblue(		"ffdev_flame_startblue", "0.05",		0, "How long the flame stays blue for");
+//static ConVar ffdev_flame_startblue(		"ffdev_flame_startblue", "0.05",		0, "How long the flame stays blue for");
 
-static ConVar ffdev_flame_fadeout_time(	"ffdev_flame_fadeout_time", 	"0.2", 		0, 	"How long before end of life will flames fade out(in seconds) ");
+//static ConVar ffdev_flame_fadeout_time(	"ffdev_flame_fadeout_time", 	"0.2", 		0, 	"How long before end of life will flames fade out(in seconds) ");
 
-static ConVar ffdev_flame_dietime_min(		"ffdev_flame_dietime_min", 		/*"0.3"*/ "0.36", 	0, 	"Lifespan of the flames in seconds");
-static ConVar ffdev_flame_dietime_max(		"ffdev_flame_dietime_max", 		/*"0.4"*/ "0.48", 	0, 	"Lifespan of the flames in seconds");
+//static ConVar ffdev_flame_dietime_min(		"ffdev_flame_dietime_min", 		/*"0.3"*/ "0.36", 	0, 	"Lifespan of the flames in seconds");
+//static ConVar ffdev_flame_dietime_max(		"ffdev_flame_dietime_max", 		/*"0.4"*/ "0.48", 	0, 	"Lifespan of the flames in seconds");
 
 // -> Defrag
-static ConVar ffdev_flame_eye_angle_bias( "ffdev_flame_eye_angle_bias", "0.5", 0, "Lerp factor for blending between eye & muzzle angles. 0.0 = Use muzzle angles as velocity. 1.0 = Use eye angles.", true, 0.0f, true, 1.0f );
+//static ConVar ffdev_flame_eye_angle_bias( "ffdev_flame_eye_angle_bias", "0.5", 0, "Lerp factor for blending between eye & muzzle angles. 0.0 = Use muzzle angles as velocity. 1.0 = Use eye angles.", true, 0.0f, true, 1.0f );
 
-ConVar ffdev_flame_dlight_color_r( "ffdev_flame_dlight_color_r", "255" );
-ConVar ffdev_flame_dlight_color_g( "ffdev_flame_dlight_color_g", "144" );
-ConVar ffdev_flame_dlight_color_b( "ffdev_flame_dlight_color_b", "64" );
-ConVar ffdev_flame_dlight_color_e( "ffdev_flame_dlight_color_e", "5" );
-ConVar ffdev_flame_dlight_startradius_min( "ffdev_flame_dlight_startradius_min", "80" );
-ConVar ffdev_flame_dlight_startradius_max( "ffdev_flame_dlight_startradius_max", "100" );
-ConVar ffdev_flame_dlight_endradius_min( "ffdev_flame_dlight_endradius_min", "130" );
-ConVar ffdev_flame_dlight_endradius_max( "ffdev_flame_dlight_endradius_max", "150" );
-ConVar ffdev_flame_dlight_rate( "ffdev_flame_dlight_rate", "0.2", 0, "Attach a light to one of the flame particles every X seconds." );
-ConVar ffdev_flame_dlight_style( "ffdev_flame_dlight_style", "6", 0, "0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker)");
+//ConVar ffdev_flame_dlight_color_r( "ffdev_flame_dlight_color_r", "255" );
+//ConVar ffdev_flame_dlight_color_g( "ffdev_flame_dlight_color_g", "144" );
+//ConVar ffdev_flame_dlight_color_b( "ffdev_flame_dlight_color_b", "64" );
+//ConVar ffdev_flame_dlight_color_e( "ffdev_flame_dlight_color_e", "5" );
+//ConVar ffdev_flame_dlight_startradius_min( "ffdev_flame_dlight_startradius_min", "80" );
+//ConVar ffdev_flame_dlight_startradius_max( "ffdev_flame_dlight_startradius_max", "100" );
+//ConVar ffdev_flame_dlight_endradius_min( "ffdev_flame_dlight_endradius_min", "130" );
+//ConVar ffdev_flame_dlight_endradius_max( "ffdev_flame_dlight_endradius_max", "150" );
+//ConVar ffdev_flame_dlight_rate( "ffdev_flame_dlight_rate", "0.2", 0, "Attach a light to one of the flame particles every X seconds." );
+//ConVar ffdev_flame_dlight_style( "ffdev_flame_dlight_style", "6", 0, "0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker)");
 
 //=============================================================================
 // Globals
@@ -113,11 +113,11 @@ C_FFFlameJet::C_FFFlameJet()
 	m_pParticleMgr	= NULL;
 	m_hMaterialFlame = m_hMaterialSmoke = INVALID_MATERIAL_HANDLE;
 	
-	m_SpreadSpeed	= ffdev_flame_spreadspeed.GetInt();	// 50;
-	m_Speed			= ffdev_flame_speed.GetInt();			// 800;
-	m_StartSize		= ffdev_flame_startsize.GetInt();		// 3;
-	m_EndSize		= ffdev_flame_endsize.GetInt();		// 128;
-	m_Rate			= ffdev_flame_rate.GetInt();			// 128; 
+	m_SpreadSpeed	= 150/*ffdev_flame_spreadspeed.GetInt()*/;	// 50;
+	m_Speed			= 800/*ffdev_flame_speed.GetInt()*/;			// 800;
+	m_StartSize		= 3/*ffdev_flame_startsize.GetInt()*/;		// 3;
+	m_EndSize		= 128/*ffdev_flame_endsize.GetInt()*/;		// 128;
+	m_Rate			= 128/*ffdev_flame_rate.GetInt()*/;			// 128; 
 
 	m_fEmit			= true;
 
@@ -254,7 +254,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 		pWeapon->GetAttachment(iAttachment, vecStart, angWeapon);
 		
 		// factor by which we bias towards eye angles
-		const float fEyeAngleBias = ffdev_flame_eye_angle_bias.GetFloat();		
+		const float fEyeAngleBias = 0.5f/*ffdev_flame_eye_angle_bias.GetFloat()*/;		
 		
 		// lerp between pitch of eye and weapon angles.  The bigger the eye angle bias, the more the flamethrower jet's
 		// velocity heads out along the eye angles.  Set it to 1.0f to make it use the eye angles.  Set it to 0 to use model angles.
@@ -296,10 +296,10 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	m_ParticleEffect.SetBBox(vMin, vMax);
 
 	// Temp
-	m_SpreadSpeed	= ffdev_flame_spreadspeed.GetInt();	// 50;
-	m_Speed			= ffdev_flame_speed.GetInt();			// 800;
-	m_StartSize		= ffdev_flame_startsize.GetInt();		// 3;
-	m_EndSize		= ffdev_flame_endsize.GetInt();		// 128;
+	m_SpreadSpeed	= 150/*ffdev_flame_spreadspeed.GetInt()*/;	// 50;
+	m_Speed			= 800/*ffdev_flame_speed.GetInt()*/;			// 800;
+	m_StartSize		= 3/*ffdev_flame_startsize.GetInt()*/;		// 3;
+	m_EndSize		= 128/*ffdev_flame_endsize.GetInt()*/;		// 128;
 
 
 	if (m_fEmit && m_ParticleEffect.WasDrawnPrevFrame()) 
@@ -308,16 +308,16 @@ void C_FFFlameJet::Update(float fTimeDelta)
 		if (m_pDLight)
 		{
 			m_pDLight->origin = vecStart;
-			m_pDLight->die = gpGlobals->curtime + (ffdev_flame_dietime_min.GetFloat() * 0.5);
+			m_pDLight->die = gpGlobals->curtime + (0.36f/*ffdev_flame_dietime_min.GetFloat()*/ * 0.5);
 
 			// Make it flicker
 			m_pDLight->radius = random->RandomFloat(m_pDLight->radius * 0.9f, m_pDLight->radius * 1.1f);
 
 			// flicker within limits
-			if (m_pDLight->radius < ffdev_flame_dlight_startradius_min.GetFloat())
-				m_pDLight->radius = ffdev_flame_dlight_startradius_min.GetFloat();
-			else if (m_pDLight->radius > ffdev_flame_dlight_startradius_max.GetFloat())
-				m_pDLight->radius = ffdev_flame_dlight_startradius_max.GetFloat();
+			if (m_pDLight->radius < 80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/)
+				m_pDLight->radius = 80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/;
+			else if (m_pDLight->radius > 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/)
+				m_pDLight->radius = 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/;
 		}
 		else
 		{
@@ -326,13 +326,13 @@ void C_FFFlameJet::Update(float fTimeDelta)
 			if ( m_pDLight )
 			{
 				m_pDLight->origin = vecStart;
-				m_pDLight->radius = random->RandomFloat(ffdev_flame_dlight_startradius_min.GetFloat(), ffdev_flame_dlight_startradius_max.GetFloat());
-				m_pDLight->die = gpGlobals->curtime + (ffdev_flame_dietime_min.GetFloat() * 0.5);
-				m_pDLight->color.r = ffdev_flame_dlight_color_r.GetInt();
-				m_pDLight->color.g = ffdev_flame_dlight_color_g.GetInt();
-				m_pDLight->color.b = ffdev_flame_dlight_color_b.GetInt();
-				m_pDLight->color.exponent = ffdev_flame_dlight_color_e.GetInt();
-				m_pDLight->style = ffdev_flame_dlight_style.GetInt();
+				m_pDLight->radius = random->RandomFloat(80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/, 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/);
+				m_pDLight->die = gpGlobals->curtime + (0.36f/*ffdev_flame_dietime_min.GetFloat()*/ * 0.5);
+				m_pDLight->color.r = 255;//ffdev_flame_dlight_color_r.GetInt();
+				m_pDLight->color.g = 144;//ffdev_flame_dlight_color_g.GetInt();
+				m_pDLight->color.b = 64;//ffdev_flame_dlight_color_b.GetInt();
+				m_pDLight->color.exponent = 5;//ffdev_flame_dlight_color_e.GetInt();
+				m_pDLight->style = 6;//ffdev_flame_dlight_style.GetInt();
 			}
 		}
 
@@ -358,7 +358,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				//pParticle->m_Origin = pOwner->Weapon_ShootPosition();
 				
 				pParticle->m_Lifetime		= 0;
-				pParticle->m_Dietime		= random->RandomFloat(ffdev_flame_dietime_min.GetFloat() /*0.3 */, ffdev_flame_dietime_max.GetFloat() /*0.4 */);
+				pParticle->m_Dietime		= random->RandomFloat(/*ffdev_flame_dietime_min.GetFloat()*/ 0.36, /*ffdev_flame_dietime_max.GetFloat()*/ 0.48 );
 
 				pParticle->m_uchStartSize	= m_StartSize;
 				pParticle->m_uchEndSize		= m_EndSize;
@@ -376,11 +376,11 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				pParticle->m_Collisiontime = tr.fraction * pParticle->m_Dietime;
 				pParticle->m_HitSurfaceNormal = tr.plane.normal;
 
-				if (gpGlobals->curtime - ffdev_flame_dlight_rate.GetFloat() > m_fLastParticleDLightTime )
+				if (gpGlobals->curtime - 0.2f/*ffdev_flame_dlight_rate.GetFloat()*/ > m_fLastParticleDLightTime )
 				{
 					pParticle->m_fDLightDieTime = gpGlobals->curtime + pParticle->m_Dietime;
-					pParticle->m_fDLightStartRadius = random->RandomFloat(ffdev_flame_dlight_startradius_min.GetFloat(), ffdev_flame_dlight_startradius_max.GetFloat());
-					pParticle->m_fDLightEndRadius = random->RandomFloat(ffdev_flame_dlight_endradius_min.GetFloat(), ffdev_flame_dlight_endradius_max.GetFloat());
+					pParticle->m_fDLightStartRadius = random->RandomFloat(80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/, 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/);
+					pParticle->m_fDLightEndRadius = random->RandomFloat(130.0f/*ffdev_flame_dlight_endradius_min.GetFloat()*/, 150.0f/*ffdev_flame_dlight_endradius_max.GetFloat()*/);
 
 					// -------------------------------------
 					// Dynamic light stuff
@@ -393,11 +393,11 @@ void C_FFFlameJet::Update(float fTimeDelta)
 						pParticle->m_pDLight->origin = pParticle->m_Origin;
 						pParticle->m_pDLight->radius = pParticle->m_fDLightStartRadius;
 						pParticle->m_pDLight->die = pParticle->m_fDLightDieTime;
-						pParticle->m_pDLight->color.r = ffdev_flame_dlight_color_r.GetInt();
-						pParticle->m_pDLight->color.g = ffdev_flame_dlight_color_g.GetInt();
-						pParticle->m_pDLight->color.b = ffdev_flame_dlight_color_b.GetInt();
-						pParticle->m_pDLight->color.exponent = ffdev_flame_dlight_color_e.GetInt();
-						pParticle->m_pDLight->style = ffdev_flame_dlight_style.GetInt();
+						pParticle->m_pDLight->color.r = 255;//ffdev_flame_dlight_color_r.GetInt();
+						pParticle->m_pDLight->color.g = 144;//ffdev_flame_dlight_color_g.GetInt();
+						pParticle->m_pDLight->color.b = 64;//ffdev_flame_dlight_color_b.GetInt();
+						pParticle->m_pDLight->color.exponent = 5;//ffdev_flame_dlight_color_e.GetInt();
+						pParticle->m_pDLight->style = 6;//ffdev_flame_dlight_style.GetInt();
 
 						m_fLastParticleDLightTime = gpGlobals->curtime;
 					}
@@ -489,22 +489,22 @@ void C_FFFlameJet::RenderParticles(CParticleRenderIterator *pIterator)
 		float sortKey = tPos.z;
 
 		// Normal alpha
-		float alpha = ffdev_flame_alpha.GetFloat(); //0.95f; // 180.0f
+		float alpha = 0.4f/*ffdev_flame_alpha.GetFloat()*/; //0.95f; // 180.0f
 
 		// Fade out everything in its last moments
-		if (/*pParticle->m_Type != SMOKE &&*/ pParticle->m_Dietime - pParticle->m_Lifetime < ffdev_flame_fadeout_time.GetFloat() /*0.2f */) 
+		if (/*pParticle->m_Type != SMOKE &&*/ pParticle->m_Dietime - pParticle->m_Lifetime < /*ffdev_flame_fadeout_time.GetFloat()*/ 0.2f ) 
 		{
-			alpha *= ((pParticle->m_Dietime - pParticle->m_Lifetime) / ffdev_flame_fadeout_time.GetFloat() /*0.2f */);
+			alpha *= ((pParticle->m_Dietime - pParticle->m_Lifetime) / /*ffdev_flame_fadeout_time.GetFloat()*/ 0.2f );
 
 			// also fade the dynamic light
 			if ( pParticle->m_pDLight && gpGlobals->curtime < pParticle->m_fDLightDieTime )
-				pParticle->m_pDLight->color.exponent = ffdev_flame_dlight_color_e.GetFloat() * ((pParticle->m_Dietime - pParticle->m_Lifetime) / ffdev_flame_fadeout_time.GetFloat());
+				pParticle->m_pDLight->color.exponent = 5.0f/*ffdev_flame_dlight_color_e.GetFloat()*/ * ((pParticle->m_Dietime - pParticle->m_Lifetime) / 0.2f/*ffdev_flame_fadeout_time.GetFloat()*/);
 		}
 
 		// Fade in smoke after a delay
-		if (pParticle->m_Type == SMOKE && pParticle->m_Lifetime < ffdev_flame_fadeout_time.GetFloat() /*0.2f */) 
+		if (pParticle->m_Type == SMOKE && pParticle->m_Lifetime < /*ffdev_flame_fadeout_time.GetFloat()*/ 0.2f ) 
 		{
-			alpha *= pParticle->m_Lifetime / /*0.2f */ ffdev_flame_fadeout_time.GetFloat();
+			alpha *= pParticle->m_Lifetime / 0.2f /*ffdev_flame_fadeout_time.GetFloat()*/;
 		}
 
 		// Randomise the brightness
@@ -518,9 +518,9 @@ void C_FFFlameJet::RenderParticles(CParticleRenderIterator *pIterator)
 
 		float r = 1.0f, g = 1.0f, b = 1.0f;
 
-		if (pParticle->m_Lifetime < ffdev_flame_startblue.GetFloat())
+		if (pParticle->m_Lifetime < 0.05/*ffdev_flame_startblue.GetFloat()*/)
 		{
-			float reduction = (ffdev_flame_startblue.GetFloat() - pParticle->m_Lifetime) / ffdev_flame_startblue.GetFloat();
+			float reduction = (0.05/*ffdev_flame_startblue.GetFloat()*/ - pParticle->m_Lifetime) / 0.05/*ffdev_flame_startblue.GetFloat()*/;
 			r -= reduction;
 			g -= reduction;
 		}

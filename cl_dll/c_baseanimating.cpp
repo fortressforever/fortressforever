@@ -2617,13 +2617,13 @@ void C_BaseAnimating::StopMaterialOverride()
 
 extern ConVar muzzleflash_light;
 
-ConVar ffdev_muzzleflash_light_radius_min( "ffdev_muzzleflash_light_radius_min", "56" );
-ConVar ffdev_muzzleflash_light_radius_max( "ffdev_muzzleflash_light_radius_max", "72" );
-ConVar ffdev_muzzleflash_light_life( "ffdev_muzzleflash_light_life", "0.05" );
-ConVar ffdev_muzzleflash_light_color_r( "ffdev_muzzleflash_light_color_r", "255" );
-ConVar ffdev_muzzleflash_light_color_g( "ffdev_muzzleflash_light_color_g", "192" );
-ConVar ffdev_muzzleflash_light_color_b( "ffdev_muzzleflash_light_color_b", "64" );
-ConVar ffdev_muzzleflash_light_color_e( "ffdev_muzzleflash_light_color_e", "5" );
+//ConVar ffdev_muzzleflash_light_radius_min( "ffdev_muzzleflash_light_radius_min", "56" );
+//ConVar ffdev_muzzleflash_light_radius_max( "ffdev_muzzleflash_light_radius_max", "72" );
+//ConVar ffdev_muzzleflash_light_life( "ffdev_muzzleflash_light_life", "0.05" );
+//ConVar ffdev_muzzleflash_light_color_r( "ffdev_muzzleflash_light_color_r", "255" );
+//ConVar ffdev_muzzleflash_light_color_g( "ffdev_muzzleflash_light_color_g", "192" );
+//ConVar ffdev_muzzleflash_light_color_b( "ffdev_muzzleflash_light_color_b", "64" );
+//ConVar ffdev_muzzleflash_light_color_e( "ffdev_muzzleflash_light_color_e", "5" );
 
 void C_BaseAnimating::ProcessMuzzleFlashEvent()
 {
@@ -2644,13 +2644,13 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			if (dl) // I'm scared, daddy...of NULL pointers.
 			{
 				dl->origin = vAttachment;
-				dl->radius = random->RandomFloat( ffdev_muzzleflash_light_radius_min.GetFloat(), ffdev_muzzleflash_light_radius_max.GetFloat() ); // sorta small radius for muzzle flash
-				dl->die = gpGlobals->curtime + ffdev_muzzleflash_light_life.GetFloat(); // die = current time + life
-				dl->decay = dl->radius / ffdev_muzzleflash_light_life.GetFloat(); // radius / life = good fade
-				dl->color.r = ffdev_muzzleflash_light_color_r.GetFloat();
-				dl->color.g = ffdev_muzzleflash_light_color_g.GetFloat();
-				dl->color.b = ffdev_muzzleflash_light_color_b.GetFloat();
-				dl->color.exponent = ffdev_muzzleflash_light_color_e.GetFloat(); // essentially the brightness...also determines the gradient, basically
+				dl->radius = random->RandomFloat( 56/*ffdev_muzzleflash_light_radius_min.GetFloat()*/, 72/*ffdev_muzzleflash_light_radius_max.GetFloat()*/ ); // sorta small radius for muzzle flash
+				dl->die = gpGlobals->curtime + 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // die = current time + life
+				dl->decay = dl->radius / 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // radius / life = good fade
+				dl->color.r = 255/*ffdev_muzzleflash_light_color_r.GetFloat()*/;
+				dl->color.g = 192/*ffdev_muzzleflash_light_color_g.GetFloat()*/;
+				dl->color.b = 64/*ffdev_muzzleflash_light_color_b.GetFloat()*/;
+				dl->color.exponent = 5/*ffdev_muzzleflash_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
 			}
 		}
 	}
