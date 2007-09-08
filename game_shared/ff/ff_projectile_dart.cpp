@@ -19,9 +19,10 @@
 	#include "ff_player.h"
 #endif
 
-extern ConVar ffdev_nail_speed;
-extern ConVar ffdev_nail_bbox;
-
+//extern ConVar ffdev_nail_speed;
+//extern ConVar ffdev_nail_bbox;
+#define NAIL_SPEED 2000.0f
+#define NAIL_BBOX 2.0f
 
 #define DART_MODEL "models/projectiles/dart/w_dart.mdl"
 
@@ -62,7 +63,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_dart);
 		// Setup
 		SetModel(DART_MODEL);
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
-		SetSize(-Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat(), Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat());
+		SetSize(-Vector(1.0f, 1.0f, 1.0f) * NAIL_BBOX, Vector(1.0f, 1.0f, 1.0f) * NAIL_BBOX);
 		SetSolid(SOLID_BBOX);
 		SetGravity(0.01f);
 		
@@ -305,7 +306,7 @@ CFFProjectileDart *CFFProjectileDart::CreateDart(const CBaseEntity *pSource, con
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);
 
-	vecForward *= ffdev_nail_speed.GetFloat();		// iSpeed;
+	vecForward *= NAIL_SPEED;//ffdev_nail_speed.GetFloat();		// iSpeed;
 
 	// Set the speed and the initial transmitted velocity
 	pDart->SetAbsVelocity(vecForward);

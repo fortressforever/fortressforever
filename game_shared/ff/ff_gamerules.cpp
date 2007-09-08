@@ -233,6 +233,12 @@ ConVar mp_prematch( "mp_prematch",
 	// --------------------------------------------------------------------------------
 	void CC_FF_RestartRound( void )
 	{
+		if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		{
+			Msg( "You must be a server admin to use ff_restartround\n" );
+			return;
+		}
+
 		if( FFGameRules() )
 		{
 			if( engine->Cmd_Argc() > 1 )
