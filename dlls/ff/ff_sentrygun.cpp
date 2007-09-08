@@ -74,9 +74,9 @@ ConVar  sg_range( "ffdev_sg_range", "1050.0" );
 ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "24.0", FCVAR_REPLICATED, "SG bullet push force");
 ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED, "SG bullet damage");
-ConVar ffdev_sg_rof_lvl1("ffdev_sg_rof_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG rate of fire");
-ConVar ffdev_sg_rof_lvl2("ffdev_sg_rof_lvl2", "0.1", FCVAR_REPLICATED, "Level 2 SG rate of fire");
-ConVar ffdev_sg_rof_lvl3("ffdev_sg_rof_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG rate of fire");
+ConVar ffdev_sg_rof_lvl1("ffdev_sg_rof_lvl1", "0.200", FCVAR_REPLICATED, "Level 1 SG rate of fire");
+ConVar ffdev_sg_rof_lvl2("ffdev_sg_rof_lvl2", "0.100", FCVAR_REPLICATED, "Level 2 SG rate of fire");
+ConVar ffdev_sg_rof_lvl3("ffdev_sg_rof_lvl3", "0.100", FCVAR_REPLICATED, "Level 3 SG rate of fire");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
