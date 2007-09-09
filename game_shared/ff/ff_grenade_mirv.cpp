@@ -26,16 +26,19 @@
 #endif
 
 #ifdef GAME_DLL
-	static ConVar mirv_vel_min( "ffdev_mirv_vel_min","250");
-	static ConVar mirv_vel_max( "ffdev_mirv_vel_max","350");
-	static ConVar mirv_ang_x_min("ffdev_mirv_ang_x_min","45.0",0,"Minimum x spawn angle for mirvlets");
-	static ConVar mirv_ang_x_max("ffdev_mirv_ang_x_max","90.0",0,"Maximum x spawn angle for mirvlets");
-	static ConVar mirv_ang_y_seed("ffdev_mirv_ang_y_seed","0",0,"");
-	static ConVar mirv_ang_y_min("ffdev_mirv_ang_y_min","0",0,"Minimum y spawn angle for mirvlets");
-	static ConVar mirv_ang_y_max("ffdev_mirv_ang_y_max","360",0,"Maximum y spawn angle for mirvlets");
-	static ConVar mirv_ang_z_min("ffdev_mirv_ang_z_min","0",0,"Minimum x spawn angle for mirvlets");
-	static ConVar mirv_ang_z_max("ffdev_mirv_ang_z_max","0",0,"Maximum x spawn angle for mirvlets");
-	static ConVar mirvlet_dmg("ffdev_mirvlet_dmg","180.0",0,"Damage a single mirvlet does");
+	//static ConVar mirv_vel_min( "ffdev_mirv_vel_min","250");
+	#define MIRV_VEL_MIN 250.0f
+	//static ConVar mirv_vel_max( "ffdev_mirv_vel_max","350");
+	#define MIRV_VEL_MAX 350.0f
+	//static ConVar mirv_ang_x_min("ffdev_mirv_ang_x_min","45.0",0,"Minimum x spawn angle for mirvlets");
+	//static ConVar mirv_ang_x_max("ffdev_mirv_ang_x_max","90.0",0,"Maximum x spawn angle for mirvlets");
+	//static ConVar mirv_ang_y_seed("ffdev_mirv_ang_y_seed","0",0,"");
+	//static ConVar mirv_ang_y_min("ffdev_mirv_ang_y_min","0",0,"Minimum y spawn angle for mirvlets");
+	//static ConVar mirv_ang_y_max("ffdev_mirv_ang_y_max","360",0,"Maximum y spawn angle for mirvlets");
+	//static ConVar mirv_ang_z_min("ffdev_mirv_ang_z_min","0",0,"Minimum x spawn angle for mirvlets");
+	//static ConVar mirv_ang_z_max("ffdev_mirv_ang_z_max","0",0,"Maximum x spawn angle for mirvlets");
+	//static ConVar mirvlet_dmg("ffdev_mirvlet_dmg","180.0",0,"Damage a single mirvlet does");
+	#define MIRVLET_DMG 180
 #endif
 
 class CFFGrenadeMirv : public CFFGrenadeBase
@@ -114,11 +117,11 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 
 		angSpawn.x = RandomFloat(45.0f,90.0f);
 		angSpawn.y = y_ang_seed + (i*90.0f);
-		angSpawn.z = RandomFloat(mirv_ang_z_min.GetFloat(),mirv_ang_z_max.GetFloat());//0.0f;
+		angSpawn.z = /*RandomFloat(mirv_z_min.GetFloat(),mirv_ang_z_max.GetFloat());*/0.0f;
 
 		Vector vecVelocity;
 		AngleVectors(angSpawn,&vecVelocity);
-		vecVelocity *= RandomFloat(mirv_vel_min.GetFloat(),mirv_vel_max.GetFloat());
+		vecVelocity *= RandomFloat(MIRV_VEL_MIN,MIRV_VEL_MAX);
 
 		// So they don't begin moving down, I guess
 		if (vecVelocity.z < 0)
@@ -143,7 +146,7 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 
 		// Set the speed and the initial transmitted velocity
 		// L0ki: changed this to a cvar to tweak mirvlet damage
-		pMirvlet->SetDamage( mirvlet_dmg.GetFloat() );
+		pMirvlet->SetDamage( MIRVLET_DMG );
 		pMirvlet->m_DmgRadius = CFFGrenadeBase::GetGrenadeRadius();
 		pMirvlet->SetAbsVelocity( vecVelocity );
 		pMirvlet->SetupInitialTransmittedVelocity( vecVelocity );

@@ -310,9 +310,9 @@ PRECACHE_REGISTER( ff_miniturret );
 #ifdef GAME_DLL
 
 // Debug visualization
-ConVar	miniturret_debug( "ffdev_miniturret_debug", "0" );
-ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "17.0" );
-ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0" );
+ConVar	miniturret_debug( "ffdev_miniturret_debug", "0", FCVAR_CHEAT );
+ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "17.0", FCVAR_CHEAT );
+ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0", FCVAR_CHEAT );
 
 // Datatable
 BEGIN_DATADESC( CFFMiniTurret )

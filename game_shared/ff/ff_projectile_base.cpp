@@ -57,7 +57,7 @@ END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 
-	static ConVar ffdev_addinterpsamples("ffdev_addinterpsamples", "0", 0, "");
+	static ConVar ffdev_addinterpsamples("ffdev_addinterpsamples", "0", FCVAR_CHEAT, "");
 
 	//----------------------------------------------------------------------------
 	// Purpose: When the rocket enters the client's PVS, add the flight sound
