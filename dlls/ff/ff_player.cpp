@@ -4423,6 +4423,9 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 {
 	if( !IsInfected() && !IsImmune() )
 	{
+		if( !FFScriptRunPredicates( this, "oninfect", true ) )
+			return;
+
 		// they aren't infected or immune, so go ahead and infect them
 		m_bInfected = 1;
 		m_fLastInfectedTick = gpGlobals->curtime;
