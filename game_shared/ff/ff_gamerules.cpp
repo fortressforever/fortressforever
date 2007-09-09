@@ -68,13 +68,18 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 
 // 0000936: Horizontal push from explosions too low
 #ifdef GAME_DLL
-	ConVar push_multiplier("ffdev_pushmultiplier", "8.0", FCVAR_REPLICATED);
-	ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED);
-	ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_REPLICATED);
-	ConVar push_clamp("ffdev_pushclamp", "450", FCVAR_REPLICATED);
+	//ConVar push_multiplier("ffdev_pushmultiplier", "8.0", FCVAR_REPLICATED);
+	#define PUSH_MULTIPLIER 8.0f
+	//ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED);
+	#define FATTYPUSH_MULTIPLIER 0.15f
+	//ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_REPLICATED);
+	#define NODAMAGEPUSH_MULTIPLIER 0.80f
+	//ConVar push_clamp("ffdev_pushclamp", "450", FCVAR_REPLICATED);
+	#define PUSH_CLAMP 450
 
 	// AfterShock - increase IC self damage to reduce number of jumps you can do
-	ConVar ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier", "1.8", FCVAR_REPLICATED);
+	//ConVar ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier", "1.8", FCVAR_REPLICATED);
+	#define IC_SELFDAMAGEMULTIPLIER 1.8f
 	
 #endif
 
@@ -1142,7 +1147,7 @@ ConVar mp_prematch( "mp_prematch",
 			{
 				// Multiply the damage by 8.0f (ala tfc) to get the force
 				// 0000936 - use convar; ensure a lower "bounds"
-				float flCalculatedForce = flAdjustedDamage * push_multiplier.GetFloat();
+				float flCalculatedForce = flAdjustedDamage * PUSH_MULTIPLIER;
 				
 				CBaseEntity *pInflictor = info.GetInflictor();
 				// If this is an IC projectile, set to a lower clamp (350)
@@ -1155,7 +1160,7 @@ ConVar mp_prematch( "mp_prematch",
 					flCalculatedForce /= 3;
 					if (pEntity == info.GetAttacker() && !pBuildable)
 					{
-						flAdjustedDamage *= ic_selfdamagemultiplier.GetFloat();
+						flAdjustedDamage *= IC_SELFDAMAGEMULTIPLIER;
 						adjustedInfo.SetDamage(flAdjustedDamage);
 					}
 
@@ -1167,7 +1172,7 @@ ConVar mp_prematch( "mp_prematch",
 					flCalculatedForce /= 3;
 				}
 				else
-					flPushClamp = push_clamp.GetFloat();
+					flPushClamp = PUSH_CLAMP;
 
 				if (flCalculatedForce < flPushClamp)
 					flCalculatedForce = flPushClamp;
@@ -1180,7 +1185,7 @@ ConVar mp_prematch( "mp_prematch",
 				// We have to reduce the force further if they're fat
 				// 0000936 - use convar
 				if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
-					flCalculatedForce *= fattypush_multiplier.GetFloat();
+					flCalculatedForce *= FATTYPUSH_MULTIPLIER;
 
 				//CFFPlayer *pAttacker = NULL;
 				CBaseEntity *pAttacker = info.GetAttacker();
@@ -1202,7 +1207,7 @@ ConVar mp_prematch( "mp_prematch",
 				// TODO: Get exact figure for this
 				// 0000936 - use convar
 				if (pPlayer && pAttacker && !g_pGameRules->FCanTakeDamage(pPlayer, pAttacker))
-					flCalculatedForce *= nodamagepush_multiplier.GetFloat();
+					flCalculatedForce *= NODAMAGEPUSH_MULTIPLIER;
 
 				// Don't use the damage source direction, use the reported position
 				// if it exists
