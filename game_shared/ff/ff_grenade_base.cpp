@@ -37,13 +37,15 @@ END_DATADESC()
 //========================================================================
 // Developer ConVars
 //========================================================================
-ConVar gren_grav("ffdev_gren_grav", "0.8", FCVAR_REPLICATED);
-ConVar gren_fric("ffdev_gren_fric", "0.6", FCVAR_REPLICATED);
-ConVar gren_elas("ffdev_gren_elas", "0.5", FCVAR_REPLICATED);
-ConVar gren_radius("ffdev_gren_radius", "180.0f", FCVAR_REPLICATED, "Radius of grenade explosions");
-ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED);
-ConVar gren_water_vel_dec("ffdev_gren_water_vel_dec", "0.5", FCVAR_REPLICATED);
-ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_REPLICATED);
+ConVar gren_grav("ffdev_gren_grav", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar gren_fric("ffdev_gren_fric", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar gren_elas("ffdev_gren_elas", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar gren_radius("ffdev_gren_radius", "180.0f", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of grenade explosions");
+ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | FCVAR_CHEAT);
+//ConVar gren_water_vel_dec("ffdev_gren_water_vel_dec", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define GREN_WATER_VEL_DEC 0.5f
+//ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_REPLICATED);
+#define GREN_WATER_REDUCE_THINK 0.2f
 
 //=============================================================================
 // CFFGrenadeBase implementation
@@ -157,16 +159,16 @@ ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_REP
 			if (!m_bHitwater)
 			{
 				//DevMsg( "[greande] first hit the water: reducing velocity by %f\n", gren_water_vel_dec.GetFloat() );
-				SetAbsVelocity(GetAbsVelocity() * gren_water_vel_dec.GetFloat());
+				SetAbsVelocity(GetAbsVelocity() * GREN_WATER_VEL_DEC);
 				m_bHitwater = true;
 
 				m_flHitwaterTimer = gpGlobals->curtime;
 			}
 
-			if ((m_flHitwaterTimer + gren_water_reduce_think.GetFloat()) < gpGlobals->curtime)
+			if ((m_flHitwaterTimer + GREN_WATER_REDUCE_THINK) < gpGlobals->curtime)
 			{
 				//DevMsg( "[greande] under water: reducing velocity by %f\n", gren_water_vel_dec.GetFloat() );
-				SetAbsVelocity(GetAbsVelocity() * gren_water_vel_dec.GetFloat());
+				SetAbsVelocity(GetAbsVelocity() * GREN_WATER_VEL_DEC);
 				m_flHitwaterTimer = gpGlobals->curtime;
 			}
 		}
