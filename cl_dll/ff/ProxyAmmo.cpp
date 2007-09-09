@@ -99,7 +99,7 @@ void CProxyAmmo::OnBind(void *pC_BaseEntity)
 	// Make sure we show the correct digit
 	if (m_iModifier >= 0)
 	{
-		int p = pow(10, m_iModifier);
+		int p = pow(10.0f, m_iModifier);
 		iAmmo /= p;
 		iAmmo -= 10 * (iAmmo / 10);
 	}

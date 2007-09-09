@@ -43,17 +43,17 @@ DECLARE_HUDELEMENT( CHudContextMenu_MedEngy );
 //-----------------------------------------------------------------------------
 // Purpose: Menu elements
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( MedEngyMenu_Armor, L"Armor!", 'j', "#FF_MEDENGYMENU_ARMOR" )
+ADD_MENU_OPTION( MedEngyMenu_Armor, _T("Armor!"), 'j', "#FF_MEDENGYMENU_ARMOR" )
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( MedEngyMenu_Medic, L"Medic!", 'j', "#FF_MEDENGYMENU_MEDIC" )
+ADD_MENU_OPTION( MedEngyMenu_Medic, _T("Medic!"), 'j', "#FF_MEDENGYMENU_MEDIC" )
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( MedEngyMenu_Ammo, L"Ammo!", 'j', "#FF_MEDENGYMENU_AMMO" )
+ADD_MENU_OPTION( MedEngyMenu_Ammo, _T("Ammo!"), 'j', "#FF_MEDENGYMENU_AMMO" )
 {
 	return MENU_SHOW;
 }
