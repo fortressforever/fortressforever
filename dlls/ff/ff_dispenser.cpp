@@ -568,9 +568,12 @@ void CFFDispenser::Detonate()
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_detonated");						
 	if(pEvent)
 	{
-		CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
-		pEvent->SetInt("userid", pOwner->GetUserID());
-		gameeventmanager->FireEvent(pEvent, true);
+		if (m_hOwner.Get())
+		{
+			CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
+			pEvent->SetInt("userid", pOwner->GetUserID());
+			gameeventmanager->FireEvent(pEvent, true);
+		}		
 	}
 
 	CFFBuildableObject::Detonate();
