@@ -16,13 +16,13 @@
 static int g_iBeam, g_iHalo;
 
 #ifdef CLIENT_DLL
-	ConVar laser_beam_angle("ffdev_laserbeamangle", "0.01");
+	ConVar laser_beam_angle("ffdev_laserbeamangle", "0.01", FCVAR_CHEAT);
 #else
 	#include "omnibot_interface.h"
 #endif
 
-ConVar sniperrifle_laserdot_scale("ffdev_sniperrifle_laserdot_scale", "0.15", FCVAR_REPLICATED, "Scale of the sniper rifle laser dot");
-ConVar sniperrifle_zoomfov("ffdev_sniperrifle_zoomfov", "25", FCVAR_REPLICATED, "fov of the sniper zoom (+attack2). smaller value = more zoomed in.");
+ConVar sniperrifle_laserdot_scale("ffdev_sniperrifle_laserdot_scale", "0.15", FCVAR_REPLICATED | FCVAR_CHEAT, "Scale of the sniper rifle laser dot");
+ConVar sniperrifle_zoomfov("ffdev_sniperrifle_zoomfov", "25", FCVAR_REPLICATED | FCVAR_CHEAT, "fov of the sniper zoom (+attack2). smaller value = more zoomed in.");
 
 //=============================================================================
 // CFFWeaponLaserDot

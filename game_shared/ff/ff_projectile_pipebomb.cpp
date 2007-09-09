@@ -41,7 +41,7 @@ LINK_ENTITY_TO_CLASS(ff_projectile_pl, CFFProjectilePipebomb);
 PRECACHE_WEAPON_REGISTER(ff_projectile_pl);
 
 //0001279: Need convar for pipe det delay
-ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED);
+ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | FCVAR_CHEAT);
 
 //=============================================================================
 // CFFProjectilePipebomb implementation

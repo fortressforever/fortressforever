@@ -72,13 +72,13 @@ LINK_ENTITY_TO_CLASS(ff_grenade_nail, CFFGrenadeNail);
 PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 
 #ifndef CLIENT_DLL
-	ConVar nailspeed("ffdev_nailspeed", "800");
+	ConVar nailspeed("ffdev_nailspeed", "800", FCVAR_CHEAT);
 	ConVar naildamage("ffdev_naildamage", "8");
-	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.3" );
-	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0" );
+	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.3", FCVAR_CHEAT );
+	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_CHEAT );
 	//ConVar nailspread( "ffdev_nailgren_spread", "5.0" );
-	ConVar nailstreams( "ffdev_nailgren_streams", "4" );
-	ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100");
+	ConVar nailstreams( "ffdev_nailgren_streams", "4", FCVAR_CHEAT );
+	ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
 #endif
 
 	//extern ConVar ffdev_nail_bbox;
