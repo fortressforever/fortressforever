@@ -15,11 +15,16 @@
 #include "particles_simple.h"
 #include "ff_fx_bloodstream.h"
 
-static ConVar blood_speed_min("ffdev_blood_speed_min", "10.0");
-static ConVar blood_speed_max("ffdev_blood_speed_max", "15.0");
-static ConVar blood_startsize("ffdev_blood_startsize", "4.0");
-static ConVar blood_endsize("ffdev_blood_endsize", "6.0");
-static ConVar blood_fluc("ffdev_blood_fluc", "10.0f");
+//static ConVar blood_speed_min("ffdev_blood_speed_min", "10.0");
+#define BLOOD_SPEED_MIN 10.0f
+//static ConVar blood_speed_max("ffdev_blood_speed_max", "15.0");
+#define BLOOD_SPEED_MAX 15.0f
+//static ConVar blood_startsize("ffdev_blood_startsize", "4.0");
+#define BLOOD_STARTSIZE 4.0f
+//static ConVar blood_endsize("ffdev_blood_endsize", "6.0");
+#define BLOOD_ENDSIZE 6.0f
+//static ConVar blood_fluc("ffdev_blood_fluc", "10.0f");
+#define BLOOD_FLUCTUATION 10.0f
 
 PMaterialHandle CBloodStream::m_hMaterial			= INVALID_MATERIAL_HANDLE;
 
@@ -116,7 +121,7 @@ void CBloodStream::SimulateParticles(CParticleSimulateIterator *pIterator)
 		pParticle->m_vVelocity += Vector(0, 0, -0.5f) * pParticle->m_flLifetime;		// gravity
 		pParticle->m_Pos += pParticle->m_vVelocity * timeDelta * 0.5f;
 		pParticle->m_flAlpha = 0.8f * start + 0.0f * end;
-		pParticle->m_flSize = blood_startsize.GetFloat() * start + blood_endsize.GetFloat() * end;
+		pParticle->m_flSize = BLOOD_STARTSIZE * start + BLOOD_ENDSIZE * end;
 
 		if (pParticle->m_flLifetime >= pParticle->m_flDieTime)
 			pIterator->RemoveParticle(pParticle);
@@ -213,10 +218,10 @@ void CBloodStream::Update(float flTimeDelta)
 			if (!pParticle)
 				return;
 
-#define BLOOD_FLUCTUATION	blood_fluc.GetFloat()
+//#define BLOOD_FLUCTUATION	blood_fluc.GetFloat()
 
 			AngleVectors(angDir + QAngle(random->RandomFloat(-BLOOD_FLUCTUATION, BLOOD_FLUCTUATION), random->RandomFloat(-BLOOD_FLUCTUATION, BLOOD_FLUCTUATION),random->RandomFloat(-BLOOD_FLUCTUATION, BLOOD_FLUCTUATION)), &vecOrigin);
-			pParticle->m_vVelocity = vecOrigin * random->RandomFloat(blood_speed_min.GetFloat(), blood_speed_max.GetFloat());
+			pParticle->m_vVelocity = vecOrigin * random->RandomFloat(BLOOD_SPEED_MIN, BLOOD_SPEED_MAX);
 		}
 	}
 }

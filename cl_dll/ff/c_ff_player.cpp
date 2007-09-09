@@ -60,16 +60,20 @@ extern CHudGrenade2Timer *g_pGrenade2Timer;
 #include "ff_fx_bloodstream.h"
 
 // --> Mirv: Conc stuff
-static ConVar horiz_speed( "ffdev_concuss_hspeed", "2.0", 0, "Horizontal speed" );
-static ConVar horiz_mag( "ffdev_concuss_hmag", "2.0", 0, "Horizontal magnitude" );
-static ConVar vert_speed( "ffdev_concuss_vspeed", "1.0", 0, "Vertical speed" );
-static ConVar vert_mag( "ffdev_concuss_vmag", "2.0", 0, "Vertical magnitude" );
-static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
+//static ConVar horiz_speed( "ffdev_concuss_hspeed", "2.0", 0, "Horizontal speed" );
+#define CONC_HORIZ_SPEED 2.0f
+//static ConVar horiz_mag( "ffdev_concuss_hmag", "2.0", 0, "Horizontal magnitude" );
+#define CONC_HORIZ_MAG 2.0f
+//static ConVar vert_speed( "ffdev_concuss_vspeed", "1.0", 0, "Vertical speed" );
+#define CONC_VERT_SPEED 1.0f
+//static ConVar vert_mag( "ffdev_concuss_vmag", "2.0", 0, "Vertical magnitude" );
+#define CONC_VERT_MAG 2.0f
+//static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
 static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL );
 
-static ConVar decap_test("ffdev_decaptest", "0");
+static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CHEAT );
 static ConVar gibcount("cl_gibcount", "6");
 
 static ConVar cl_spawnweapon("cl_spawnslot", "0", FCVAR_ARCHIVE, "Weapon slot to spawn with");
@@ -1745,12 +1749,12 @@ const QAngle &C_FFPlayer::EyeAngles()
 		return m_vecInfoIntermission;
 
 	// Concussion
-	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() != 0 )
-	{
-		m_angConcedTest = BaseClass::EyeAngles() + m_angConced;
-		return m_angConcedTest;
-	}
-	else
+	//if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() != 0 )
+	//{
+	//	m_angConcedTest = BaseClass::EyeAngles() + m_angConced;
+	//	return m_angConcedTest;
+	//}
+	//else
 		return BaseClass::EyeAngles();
 }
 
@@ -1792,7 +1796,7 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 
 	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
 
-	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() == 0)
+	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) /*&& conc_test.GetInt() == 0*/)
 		eyeAngles += m_angConced;
 }
 
@@ -2041,7 +2045,7 @@ void C_FFPlayer::Simulate()
 		if (IsAlive())
 		{
 			// Our conc angles, this is also quite slow for now
-			m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
+			m_angConced = QAngle( flConcAmount * CONC_VERT_MAG * sin(CONC_VERT_SPEED * gpGlobals->curtime), flConcAmount * CONC_HORIZ_MAG * sin(CONC_HORIZ_SPEED * gpGlobals->curtime), 0 );
 
 			float flTotalAngle = BaseClass::EyeAngles().x;
 
@@ -2382,7 +2386,7 @@ void C_FFPlayer::UpdateFlashlight()
 		QAngle angUnperturbedEye = EyeAngles();
 		QAngle angFinal = angUnperturbedEye;
 
-		if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() == 0)
+		if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) /*&& conc_test.GetInt() == 0*/)
 		{
 			angFinal = angUnperturbedEye + m_angConced;
 		}
