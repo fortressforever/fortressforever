@@ -10,8 +10,8 @@
 	#include "ff_player.h"
 #endif
 
-ConVar burn_standon_ng("ffdev_burn_standon_ng", "7.0", 0, "Damage you take when standing on a burning napalmlet");
-
+//ConVar burn_standon_ng("ffdev_burn_standon_ng", "7.0", 0, "Damage you take when standing on a burning napalmlet");
+#define BURN_STANDON_NG 7
 
 BEGIN_DATADESC( CFFGrenadeNapalmlet )
 	DEFINE_THINKFUNC( FlameThink ),
@@ -272,7 +272,7 @@ void CFFGrenadeNapalmlet::FlameThink()
 
 						if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 						{
-							pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), burn_standon_ng.GetInt(), DMG_BURN ) );
+							pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
 							pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 1.0f, 10.0f, BURNTYPE_NALPALMGRENADE);
 						}
 					}

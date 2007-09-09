@@ -27,17 +27,26 @@
 #endif
 
 #ifdef GAME_DLL
-	ConVar caltrop_vel_min( "ffdev_caltrop_vel_min","100");
-	ConVar caltrop_vel_max( "ffdev_caltrop_vel_max","250");
-	ConVar caltrop_ang_x_min("ffdev_caltrop_ang_x_min","30.0",0,"Minimum pitch angle for caltroplets");
-	ConVar caltrop_ang_x_max("ffdev_caltrop_ang_x_max","60.0",0,"Maximum pitch angle for caltroplets");
-	ConVar caltrop_ang_y_seed("ffdev_caltrop_ang_y_seed","0",0,"");
-	ConVar caltrop_ang_y_min("ffdev_caltrop_ang_y_min","0",0,"Minimum yaw angle for caltroplets");
-	ConVar caltrop_ang_y_max("ffdev_caltrop_ang_y_max","360",0,"Maximum yaw angle for caltroplets");
-	ConVar caltrop_ang_z_min("ffdev_caltrop_ang_z_min","0",0,"Minimum z spawn angle for caltroplets");
-	ConVar caltrop_ang_z_max("ffdev_caltrop_ang_z_max","0",0,"Maximum z spawn angle for caltroplets");
+	//ConVar caltrop_vel_min( "ffdev_caltrop_vel_min","100");
+	#define CALTROP_VEL_MIN 100.0f
+	//ConVar caltrop_vel_max( "ffdev_caltrop_vel_max","250");
+	#define CALTROP_VEL_MAX 250.0f
+	//ConVar caltrop_ang_x_min("ffdev_caltrop_ang_x_min","30.0",0,"Minimum pitch angle for caltroplets");
+	#define CALTROP_ANG_X_MIN 30.0f
+	//ConVar caltrop_ang_x_max("ffdev_caltrop_ang_x_max","60.0",0,"Maximum pitch angle for caltroplets");
+	#define CALTROP_ANG_X_MAX 60.0f
+	//ConVar caltrop_ang_y_seed("ffdev_caltrop_ang_y_seed","0",0,"");
+	//ConVar caltrop_ang_y_min("ffdev_caltrop_ang_y_min","0",0,"Minimum yaw angle for caltroplets");
+	#define CALTROP_ANG_Y_MIN 0
+	//ConVar caltrop_ang_y_max("ffdev_caltrop_ang_y_max","360",0,"Maximum yaw angle for caltroplets");
+	#define CALTROP_ANG_Y_MAX 360.0f
+	//ConVar caltrop_ang_z_min("ffdev_caltrop_ang_z_min","0",0,"Minimum z spawn angle for caltroplets");
+	#define CALTROP_ANG_Z_MIN 0
+	//ConVar caltrop_ang_z_max("ffdev_caltrop_ang_z_max","0",0,"Maximum z spawn angle for caltroplets");
+	#define CALTROP_ANG_Z_MAX 0
 
-	ConVar caltrop_number("ffdef_caltrop_number", "6");
+	//ConVar caltrop_number("ffdef_caltrop_number", "6");
+	#define CALTROP_NUMBER 6
 #endif
 
 class CFFGrenadeCaltrop : public CFFGrenadeBase
@@ -125,13 +134,13 @@ void CFFGrenadeCaltrop::Precache()
 			Vector vShellOrigin = vCannisterOrigin;
 			QAngle angSpawn;
 
-			angSpawn.x = RandomFloat(caltrop_ang_x_min.GetFloat(),caltrop_ang_x_max.GetFloat());
-			angSpawn.y = RandomFloat(caltrop_ang_y_min.GetFloat(),caltrop_ang_y_max.GetFloat());
-			angSpawn.z = RandomFloat(caltrop_ang_z_min.GetFloat(),caltrop_ang_z_max.GetFloat());//0.0f;
+			angSpawn.x = RandomFloat(CALTROP_ANG_X_MIN,CALTROP_ANG_X_MAX);
+			angSpawn.y = RandomFloat(CALTROP_ANG_Y_MIN,CALTROP_ANG_Y_MAX);
+			angSpawn.z = RandomFloat(CALTROP_ANG_Z_MIN,CALTROP_ANG_Z_MAX);//0.0f;
 
 			Vector vecVelocity;
 			AngleVectors(angSpawn,&vecVelocity);
-			vecVelocity *= RandomFloat(caltrop_vel_min.GetFloat(),caltrop_vel_max.GetFloat());
+			vecVelocity *= RandomFloat(CALTROP_VEL_MIN,CALTROP_VEL_MAX);
 
 			// shift them a little so they don't stick on each other
 			Vector vOffset = vecVelocity;
@@ -174,18 +183,18 @@ void CFFGrenadeCaltrop::Precache()
 		}
 
 		// Drop the caltrops
-		for ( int i = 0; i < caltrop_number.GetInt(); i++ )
+		for ( int i = 0; i < CALTROP_NUMBER; i++ )
 		{			
 			Vector vCaltropOrigin = vCannisterOrigin;
 			QAngle angSpawn;
 
-			angSpawn.x = RandomFloat(caltrop_ang_x_min.GetFloat(),caltrop_ang_x_max.GetFloat());
-			angSpawn.y = RandomFloat(caltrop_ang_y_min.GetFloat(),caltrop_ang_y_max.GetFloat());
-			angSpawn.z = RandomFloat(caltrop_ang_z_min.GetFloat(),caltrop_ang_z_max.GetFloat());//0.0f;
+			angSpawn.x = RandomFloat(CALTROP_ANG_X_MIN,CALTROP_ANG_X_MAX);
+			angSpawn.y = RandomFloat(CALTROP_ANG_Y_MIN,CALTROP_ANG_Y_MAX);
+			angSpawn.z = RandomFloat(CALTROP_ANG_Z_MIN,CALTROP_ANG_Z_MAX);//0.0f;
 
 			Vector vecVelocity;
 			AngleVectors(angSpawn,&vecVelocity);
-			vecVelocity *= RandomFloat(caltrop_vel_min.GetFloat(),caltrop_vel_max.GetFloat());
+			vecVelocity *= RandomFloat(CALTROP_VEL_MIN,CALTROP_VEL_MAX);
 
 			// So they don't begin moving down, I guess
 			if (vecVelocity.z < 0)

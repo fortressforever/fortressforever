@@ -32,7 +32,8 @@ const char *g_pszFFSevTestSounds[ ] =
 	NULL
 };
 
-static ConVar sevtest_duration( "ffdev_sevtest_duration", "5" );
+//static ConVar sevtest_duration( "ffdev_sevtest_duration", "5" );
+#define SEVTEST_DURATION 5
 
 CFFSevTest::CFFSevTest( void )
 {
@@ -49,7 +50,7 @@ CFFSevTest::~CFFSevTest( void )
 void CFFSevTest::OnObjectThink( void )
 {
 	// See if it's time to remove yet
-	if( gpGlobals->curtime > ( sevtest_duration.GetInt( ) + m_flSpawnTime ))
+	if( gpGlobals->curtime > ( SEVTEST_DURATION + m_flSpawnTime ))
 		UTIL_Remove( this );	
 
 	// Call base class think func to synchronize health

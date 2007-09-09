@@ -47,7 +47,8 @@ BEGIN_DATADESC( CFFDetpack )
 END_DATADESC( )
 
 //static ConVar detpack_radius( "ffdev_detpack_radius", "700" );
-static ConVar detpack_falloff( "ffdev_detpack_falloff", "1" );
+//static ConVar detpack_falloff( "ffdev_detpack_falloff", "1" );
+#define DETPACK_FALLOFF 1.0f
 
 // Array of char *'s to dispenser models
 const char *g_pszFFDetpackModels[ ] =
@@ -467,7 +468,7 @@ void CFFDetpack::DoExplosionDamage( void )
 			VectorNormalize( vecDir );
 
 			// Linear falloff * detpack_falloff%
-			float flDamage = ( ( m_flExplosionRadius - (float)vecOrigin.DistTo( GetAbsOrigin() ) ) / m_flExplosionRadius ) * m_flExplosionDamage * detpack_falloff.GetFloat();
+			float flDamage = ( ( m_flExplosionRadius - (float)vecOrigin.DistTo( GetAbsOrigin() ) ) / m_flExplosionRadius ) * m_flExplosionDamage * DETPACK_FALLOFF;
 			pEntity->TakeDamage( CTakeDamageInfo( this, m_hOwner.Get(), vecDir * m_flExplosionForce, pEntity->GetAbsOrigin(), flDamage, DMG_SHOCK | DMG_BLAST ) );
 		}
 	}

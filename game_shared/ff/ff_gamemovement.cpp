@@ -33,11 +33,17 @@
 #define FF_MUL_CONSTANT 209.76177f //sqrt(2.0f * 800.0f * FF_JUMP_HEIGHT);
 //static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5" );
 
-static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED);
-static ConVar sv_trimpdownmultiplier("sv_trimpdownmultiplier", "1.2", FCVAR_REPLICATED);
-static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
-static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED);
-static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED);
+//static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED);
+#define SV_TRIMPMULTIPLIER 1.4f
+//static ConVar sv_trimpdownmultiplier("sv_trimpdownmultiplier", "1.2", FCVAR_REPLICATED);
+#define SV_TRIMPDOWNMULTIPLIER 1.2f
+//static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
+#define SV_TRIMPMAX 5000.0f
+//static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED);
+#define SV_TRIMPTRIGGERSPEED 550.0f
+//static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED);
+#define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
+
 class CBasePlayer;
 
 //=============================================================================
@@ -250,7 +256,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 		float flRampSlideDotProduct = DotProduct(mv->m_vecVelocity, pm.plane.normal);
 
 		// They have to be at least moving a bit
-		if (flHorizontalSpeed > sv_trimptriggerspeed.GetFloat())
+		if (flHorizontalSpeed > SV_TRIMPTRIGGERSPEED)
 		{
 			// Don't do anything for flat ground or downwardly sloping (relative to motion)
 			// Changed to 0.15f to make it a bit less trimpy on only slightly uneven ground
@@ -258,13 +264,13 @@ bool CFFGameMovement::CheckJumpButton(void)
 			if (flDotProduct < -0.15f)
 			{
 				// This is one way to do it
-				fMul += -flDotProduct * flHorizontalSpeed * sv_trimpmultiplier.GetFloat(); //0.6f;
+				fMul += -flDotProduct * flHorizontalSpeed * SV_TRIMPMULTIPLIER; //0.6f;
 				DevMsg("[S] Trimp %f! Dotproduct:%f. Horizontal speed:%f. Rampslide dot.p.:%f\n", fMul, flDotProduct, flHorizontalSpeed, flRampSlideDotProduct);
 				
-				if (sv_trimpmultiplier.GetFloat() > 0)
+				if (SV_TRIMPMULTIPLIER > 0)
 				{
-					mv->m_vecVelocity[0] *= (1.0f / sv_trimpmultiplier.GetFloat() );
-					mv->m_vecVelocity[1] *= (1.0f / sv_trimpmultiplier.GetFloat() );
+					mv->m_vecVelocity[0] *= (1.0f / SV_TRIMPMULTIPLIER );
+					mv->m_vecVelocity[1] *= (1.0f / SV_TRIMPMULTIPLIER );
 				}
 				// This is another that'll give some different height results
 				// UNDONE: Reverted back to the original way for now
@@ -274,7 +280,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 			}
 		}
 		// trigger downwards trimp at any speed
-		if (flHorizontalSpeed > sv_trimptriggerspeeddown.GetFloat())
+		if (flHorizontalSpeed > SV_TRIMPTRIGGERSPEEDDOWN)
 		{
 			if (flDotProduct > 0.15f) // AfterShock: travelling downwards onto a downward ramp - give boost horizontally
 			{
@@ -283,12 +289,12 @@ bool CFFGameMovement::CheckJumpButton(void)
 				//mv->m_vecVelocity[0] += -flDotProduct * mv->m_vecVelocity[2] * sv_trimpmultiplier.GetFloat(); //0.6f;
 				//mv->m_vecVelocity[1] += -flDotProduct * fMul * sv_trimpmultiplier.GetFloat(); //0.6f;
 				//mv->m_vecVelocity[0] += -flDotProduct * fMul * sv_trimpmultiplier.GetFloat(); //0.6f;
-				mv->m_vecVelocity[1] *= sv_trimpdownmultiplier.GetFloat(); //0.6f;
-				mv->m_vecVelocity[0] *= sv_trimpdownmultiplier.GetFloat(); //0.6f;
+				mv->m_vecVelocity[1] *= SV_TRIMPDOWNMULTIPLIER; //0.6f;
+				mv->m_vecVelocity[0] *= SV_TRIMPDOWNMULTIPLIER; //0.6f;
 				DevMsg("[S] Down Trimp %f! Dotproduct:%f, upwards vel:%f, vel 1:%f, vel 0:%f\n", fMul, flDotProduct,mv->m_vecVelocity[2],mv->m_vecVelocity[1],mv->m_vecVelocity[0]);
-				if (sv_trimpmultiplier.GetFloat() > 0)
+				if (SV_TRIMPMULTIPLIER > 0)
 				{
-					fMul *= (1.0f / sv_trimpdownmultiplier.GetFloat() );
+					fMul *= (1.0f / SV_TRIMPDOWNMULTIPLIER );
 				}
 				// This is another that'll give some different height results
 				// UNDONE: Reverted back to the original way for now
@@ -354,7 +360,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 //	if (fMul > 500)
 //		DevMsg("[S] vert velocity %f!\n", mv->m_vecVelocity[2]);
 				
-	mv->m_vecVelocity[2] = min(mv->m_vecVelocity[2], sv_trimpmax.GetFloat());
+	mv->m_vecVelocity[2] = min(mv->m_vecVelocity[2], SV_TRIMPMAX);
 //	if (fMul > 500)
 //		DevMsg("[S] vert velocity2 %f!\n", mv->m_vecVelocity[2]);
 	

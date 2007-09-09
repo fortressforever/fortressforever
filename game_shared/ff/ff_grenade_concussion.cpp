@@ -33,12 +33,12 @@
 
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag
 #ifdef GAME_DLL
-	static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", 0, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
-	static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", 0, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
+	static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_CHEAT, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
+	static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_CHEAT, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
 #endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
-ConVar conc_ragdoll_push("conc_ragdoll_push","600",0,"How much to push ragdolls");
+ConVar conc_ragdoll_push("conc_ragdoll_push","600", FCVAR_CHEAT,"How much to push ragdolls");
 
 #define CONCUSSIONGRENADE_MODEL			"models/grenades/conc/conc.mdl"
 #define CONCUSSIONGRENADE_GLOW_SPRITE	"sprites/glow04_noz.vmt"

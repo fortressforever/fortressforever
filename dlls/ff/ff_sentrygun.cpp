@@ -65,18 +65,19 @@
 #define TO_YAW(x) ((x) < -180 ? ((x) + 360) : ((x) > 180) ? ((x) - 360) : (x)) 
 
 // Debug visualization
-ConVar	sg_debug( "ffdev_sg_debug", "1" );
-ConVar	sg_usepvs( "ffdev_sg_usepvs", "0" );
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
-ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
-ConVar  sg_range( "ffdev_sg_range", "1050.0" );
+ConVar	sg_debug( "ffdev_sg_debug", "1", FCVAR_CHEAT );
+ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_CHEAT );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0", FCVAR_CHEAT );
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0", FCVAR_CHEAT );
+ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_CHEAT );
 
-ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
-ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "24.0", FCVAR_REPLICATED, "SG bullet push force");
-ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED, "SG bullet damage");
-ConVar ffdev_sg_rof_lvl1("ffdev_sg_rof_lvl1", "0.200", FCVAR_REPLICATED, "Level 1 SG rate of fire");
-ConVar ffdev_sg_rof_lvl2("ffdev_sg_rof_lvl2", "0.100", FCVAR_REPLICATED, "Level 2 SG rate of fire");
-ConVar ffdev_sg_rof_lvl3("ffdev_sg_rof_lvl3", "0.100", FCVAR_REPLICATED, "Level 3 SG rate of fire");
+//ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
+#define SG_EXPLOSIONDAMAGE_BASE 51.0f
+ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "24.0", FCVAR_REPLICATED | FCVAR_CHEAT, "SG bullet push force");
+ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED | FCVAR_CHEAT, "SG bullet damage");
+ConVar ffdev_sg_rof_lvl1("ffdev_sg_rof_lvl1", "0.200", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 1 SG rate of fire");
+ConVar ffdev_sg_rof_lvl2("ffdev_sg_rof_lvl2", "0.100", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 2 SG rate of fire");
+ConVar ffdev_sg_rof_lvl3("ffdev_sg_rof_lvl3", "0.100", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 3 SG rate of fire");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -1322,7 +1323,7 @@ void CFFSentryGun::DoExplosionDamage()
 {
 	VPROF_BUDGET( "CFFSentryGun::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	float flDamage = sg_explosiondamage_base.GetFloat() * m_iLevel  + (m_iRockets * 1.4f);
+	float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
 	// COmmented out for testing explosion damage - AfterShock
 	//flDamage = min(280, flDamage);
 	

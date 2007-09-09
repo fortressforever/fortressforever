@@ -38,13 +38,13 @@ int g_iEmpRingTexture = -1;
 #endif
 
 #ifndef CLIENT_DLL
-	ConVar emp_framerate("ffdev_emp_framerate","2",0,"Framerate of the emp explosion");
-	ConVar emp_width("ffdev_emp_width","8.0",0,"width of the emp shockwave");
-	ConVar emp_life("ffdev_emp_life","0.3",0,"life of the emp shockwave");
-	ConVar emp_spread("ffdev_emp_spread","0",0,"spread of the emp shockwave");
-	ConVar emp_amplitude("ffdev_emp_amplitude","1",0,"amplitude of the emp shockwave");
-	ConVar emp_speed("ffdev_emp_speed","0",0,"speed of the emp shockwave");
-	ConVar emp_buildable_damage("ffdev_emp_buildable_damage","10.0",0,"Amount of damage to deal to sentryguns and dispensers in the emp radius.");
+	ConVar emp_framerate("ffdev_emp_framerate","2",FCVAR_CHEAT,"Framerate of the emp explosion");
+	ConVar emp_width("ffdev_emp_width","8.0",FCVAR_CHEAT,"width of the emp shockwave");
+	ConVar emp_life("ffdev_emp_life","0.3",FCVAR_CHEAT,"life of the emp shockwave");
+	ConVar emp_spread("ffdev_emp_spread","0",FCVAR_CHEAT,"spread of the emp shockwave");
+	ConVar emp_amplitude("ffdev_emp_amplitude","1",FCVAR_CHEAT,"amplitude of the emp shockwave");
+	ConVar emp_speed("ffdev_emp_speed","0",FCVAR_CHEAT,"speed of the emp shockwave");
+	ConVar emp_buildable_damage("ffdev_emp_buildable_damage","10.0",FCVAR_CHEAT,"Amount of damage to deal to sentryguns and dispensers in the emp radius.");
 #endif
 
 LINK_ENTITY_TO_CLASS( ff_grenade_emp, CFFGrenadeEmp );

@@ -18,7 +18,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar minecart_pushvelmul( "ffdev_minecart_pushvelmul", "3500", FCVAR_NONE, "Mine Cart push velocity multiplier." );
+//ConVar minecart_pushvelmul( "ffdev_minecart_pushvelmul", "3500", FCVAR_NONE, "Mine Cart push velocity multiplier." );
+#define MINECART_PUSHVELMUL 3500.0f
 
 //=============================================================================
 //
@@ -134,7 +135,7 @@ void CFFMineCart::OnUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 
 	if( pActivator && pActivator->IsPlayer() )
 	{
-		VPhysicsGetObject()->ApplyForceCenter( ( GetAbsOrigin() - ToFFPlayer( pActivator )->GetAbsOrigin() ) * minecart_pushvelmul.GetFloat() );
+		VPhysicsGetObject()->ApplyForceCenter( ( GetAbsOrigin() - ToFFPlayer( pActivator )->GetAbsOrigin() ) * MINECART_PUSHVELMUL );
 	}
 }
 

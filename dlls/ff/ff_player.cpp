@@ -51,61 +51,87 @@ extern int gEvilImpulse101;
 int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
 // grenade information
-ConVar gren_timer("ffdev_gren_timer","3.81",0,"Timer length for all grenades.");
-ConVar gren_throw_delay("ffdev_throw_delay","0.5",0,"Delay before primed grenades can be thrown.");
+//ConVar gren_timer("ffdev_gren_timer","3.81",0,"Timer length for all grenades.");
+#define GREN_TIMER 3.81f
+//ConVar gren_throw_delay("ffdev_throw_delay","0.5",0,"Delay before primed grenades can be thrown.");
+#define GREN_THROW_DELAY 0.5f
 //ConVar gren_speed("ffdev_gren_speed","500.0",0,"Speed grenades are thrown at.");
-ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at.");
+//ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at.");
+#define GREN_SPAWN_ANG_X 18.5f
 //ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");
 
-ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
-ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
-ConVar burn_damage_ft("ffdev_burn_damage_ft","15.0",0,"Burn damage of the Flamethrower (per tick)");
-ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
-ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","5",0,"Burn damage multiplier for all 3 burn types.");
-ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
+//ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
+//ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
+//ConVar burn_damage_ft("ffdev_burn_damage_ft","15.0",0,"Burn damage of the Flamethrower (per tick)");
+#define BURN_DAMAGE_FT 15.0f
+//ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
+#define BURN_TICKS 6
+//ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","5",0,"Burn damage multiplier for all 3 burn types.");
+#define BURN_MULTIPLIER_3BURNS 5.0f
+//ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
+#define BURN_MULTIPLIER_2BURNS 2.5f
 
 // For testing purposes
 // [integer] Number of cells it takes to perform the "radar" command
-static ConVar radar_num_cells( "ffdev_radar_num_cells", "5" );
+//static ConVar radar_num_cells( "ffdev_radar_num_cells", "5" );
+#define RADAR_NUM_CELLS 5
 
 // [integer] Distance of the "radar" pulse - ie. max distance someone
 // can be from us when doing a "radar" command so that the player
 // will show up on our screen
-static ConVar radar_radius_distance( "ffdev_radar_radius_distance", "1024" );
+//static ConVar radar_radius_distance( "ffdev_radar_radius_distance", "1024" );
+#define RADAR_RADIUS_DISTANCE 1024
 
 // [integer] Time [in seconds] you have to wait before doing another "radar" command
-static ConVar radar_wait_time( "ffdev_radar_wait_time", "5" );
+//static ConVar radar_wait_time( "ffdev_radar_wait_time", "5" );
+#define RADAR_WAIT_TIME 3
 
 // [integer] Max distance a player can be from us to be shown
-static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
+//static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
+#define RADIOTAG_DISTANCE 1024
 
 // [float] Time between radio tag updates
-static ConVar radiotag_duration( "ffdev_radiotag_duration", "0.25" );
+//static ConVar radiotag_duration( "ffdev_radiotag_duration", "0.25" );
+#define RADIOTAG_DURATION 0.25f
 
 // [integer] Time in seconds you will stay 'tagged' once hit by a radio tag rifle round
-static ConVar radiotag_draw_duration( "ffdev_radiotag_draw_duration", "60" );
+//static ConVar radiotag_draw_duration( "ffdev_radiotag_draw_duration", "60" );
+#define RADIOTAG_DRAW_DURATION 60
 
 // [float] Time between updating the players location
-static ConVar location_update_frequency( "ffdev_location_update_frequency", "0.5" );
+//static ConVar location_update_frequency( "ffdev_location_update_frequency", "0.5" );
+#define LOCATION_UPDATE_FREQUENCY 0.5f
 
 // status effect
-ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
-ConVar ffdev_infect_damage("ffdev_infect_damage","8",0,"Amount of health a player loses while infected");
-ConVar ffdev_regen_freq("ffdev_regen_freq","3",0,"Frequency (in seconds) a player loses health when a medic");
-ConVar ffdev_regen_health("ffdev_regen_health","2",0,"Amount of health a player gains while a medic");
-ConVar ffdev_regen_armor("ffdev_regen_armor","4",0,"Amount of armor a player gains while a engy");
-ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
+//ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
+#define FFDEV_INFECT_FREQ 2.0f
+//ConVar ffdev_infect_damage("ffdev_infect_damage","8",0,"Amount of health a player loses while infected");
+#define FFDEV_INFECT_DAMAGE 8
+//ConVar ffdev_regen_freq("ffdev_regen_freq","3",0,"Frequency (in seconds) a player loses health when a medic");
+#define FFDEV_REGEN_FREQ 3.0f
+//ConVar ffdev_regen_health("ffdev_regen_health","2",0,"Amount of health a player gains while a medic");
+#define FFDEV_REGEN_HEALTH 2
+//ConVar ffdev_regen_armor("ffdev_regen_armor","4",0,"Amount of armor a player gains while a engy");
+#define FFDEV_REGEN_ARMOR 4
+//ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
+#define FFDEV_OVERHEALTH_FREQ 3.0f
 
-static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
+//static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
+#define JERKMULTI 0.0004f
 
-static ConVar ffdev_gibdamage("ffdev_gibdamage", "100");
+//static ConVar ffdev_gibdamage("ffdev_gibdamage", "100");
+#define FFDEV_GIBDAMAGE 100.0f
 
 extern ConVar sv_maxspeed;
 
-ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_REPLICATED, "Time it takes to cloak (fade out to cloak)" );
-ConVar ffdev_spy_scloakfadespeed( "ffdev_spy_scloaktime", ".3", FCVAR_REPLICATED, "Time it takes to silent cloak (fade out to cloak)" );
-ConVar ffdev_spy_speedenforcewait( "ffdev_spy_speedenforcewait", "2", FCVAR_REPLICATED, "Time after cloaking a spys' speed will get enforced to the max cloak speed" );
-ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_REPLICATED, "To tweak z factor of velocity when spy is cloaked" );
+//ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_REPLICATED, "Time it takes to cloak (fade out to cloak)" );
+#define FFDEV_SPY_CLOAKFADESPEED 1.0f
+//ConVar ffdev_spy_scloakfadespeed( "ffdev_spy_scloaktime", ".3", FCVAR_REPLICATED, "Time it takes to silent cloak (fade out to cloak)" );
+#define FFDEV_SPY_SCLOAKFADESPEED 0.3f
+//ConVar ffdev_spy_speedenforcewait( "ffdev_spy_speedenforcewait", "2", FCVAR_REPLICATED, "Time after cloaking a spys' speed will get enforced to the max cloak speed" );
+#define FFDEV_SPY_SPEEDENFORCEWAIT 2.0f
+//ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_REPLICATED, "To tweak z factor of velocity when spy is cloaked" );
+#define FFDEV_SPY_CLOAKZVEL 0.5f
 
 #ifdef _DEBUG
 	// --------------------------------------------------------------------------------
@@ -424,7 +450,7 @@ CFFPlayer::CFFPlayer()
 
 	m_bRadioTagged = false;
 	m_flRadioTaggedStartTime = 0.0f;
-	m_flRadioTaggedDuration = radiotag_draw_duration.GetInt();
+	m_flRadioTaggedDuration = RADIOTAG_DRAW_DURATION;
 
 	// Grenade Related
 	m_iGrenadeState = FF_GREN_NONE;
@@ -640,7 +666,7 @@ void CFFPlayer::PreThink(void)
 		Vector vecCloakVelocity = GetLocalVelocity();
 		float flSpeed = FastSqrt( ( vecCloakVelocity.x * vecCloakVelocity.x ) + 
 		  ( vecCloakVelocity.y * vecCloakVelocity.y ) + 
-		  ( ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) * ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) ) );
+		  ( ( vecCloakVelocity.z * FFDEV_SPY_CLOAKZVEL ) * ( vecCloakVelocity.z * FFDEV_SPY_CLOAKZVEL ) ) );
 
 		// If going faster than spies walk speed, reset
 		if( IsCloaked() && ( flSpeed > ffdev_spy_maxcloakspeed.GetFloat() ) )
@@ -653,7 +679,7 @@ void CFFPlayer::PreThink(void)
 			// When this is false it's a regular cloak that got us cloaked
 			if( !m_bCloakFadeType )
 			{
-				if( gpGlobals->curtime > ( m_flCloakTime +  ffdev_spy_speedenforcewait.GetFloat() ) )
+				if( gpGlobals->curtime > ( m_flCloakTime +  FFDEV_SPY_SPEEDENFORCEWAIT ) )
 					bUncloak = true;
 			}
 			else
@@ -1754,7 +1780,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Drop any grenades
 	if (m_iGrenadeState != FF_GREN_NONE)
 	{
-		ThrowGrenade(gren_timer.GetFloat() - (gpGlobals->curtime - m_flServerPrimeTime), 0.0f);
+		ThrowGrenade(GREN_TIMER - (gpGlobals->curtime - m_flServerPrimeTime), 0.0f);
 		m_iGrenadeState = FF_GREN_NONE;
 		m_flServerPrimeTime = 0;
 		m_bEngyGrenWarned = false;
@@ -2808,7 +2834,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		Vector vecPlayerOrigin = pPlayer->GetFeetOrigin();
 
 		// Skip if they're out of range
-		if( vecOrigin.DistTo( vecPlayerOrigin ) > radiotag_distance.GetInt() )
+		if( vecOrigin.DistTo( vecPlayerOrigin ) > RADIOTAG_DISTANCE )
 			continue;
 
 		// We're left w/ a player who's within range
@@ -2887,10 +2913,10 @@ void CFFPlayer::Command_Radar( void )
 	// Player issued the command "radar"
 	// Can only do it every CVAR seconds (atm)
 	// Cost is CVAR cells (atm)
-	if( gpGlobals->curtime > ( m_flLastScoutRadarUpdate + ( float )radar_wait_time.GetInt() ) )
+	if( gpGlobals->curtime > ( m_flLastScoutRadarUpdate + ( float )RADAR_WAIT_TIME ) )
 	{
 		// See if the player has enough ammo
-		if( GetAmmoCount( AMMO_CELLS ) >= radar_num_cells.GetInt() )
+		if( GetAmmoCount( AMMO_CELLS ) >= RADAR_NUM_CELLS )
 		{				
 					FF_SendHint( this, SCOUT_RADAR, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_RADAR" );
 
@@ -2902,7 +2928,7 @@ void CFFPlayer::Command_Radar( void )
 			EmitSound( sndFilter, entindex(), "radar.single_shot");
 
 			// Remove ammo
-			RemoveAmmo( radar_num_cells.GetInt(), AMMO_CELLS );
+			RemoveAmmo( RADAR_NUM_CELLS, AMMO_CELLS );
 
 			CUtlVector< ScoutRadar_s > hRadarInfo;
 
@@ -2931,7 +2957,7 @@ void CFFPlayer::Command_Radar( void )
 					Vector vecPlayerOrigin = pPlayer->GetFeetOrigin();
 					float flDist = vecOrigin.DistTo( vecPlayerOrigin );
 
-					if( flDist <= ( float )radar_radius_distance.GetInt() )
+					if( flDist <= ( float )RADAR_RADIUS_DISTANCE )
 					{
 						int iInfo = pPlayer->GetTeamNumber();
 						iInfo += pPlayer->GetClassSlot() << 4;
@@ -3796,7 +3822,7 @@ void CFFPlayer::StatusEffectsThink( void )
 
 	// check if the player needs a little health/armor (because they are a medic/engy)
 	if( ( ( GetClassSlot() == CLASS_MEDIC ) || ( GetClassSlot() == CLASS_ENGINEER ) ) &&
-		( gpGlobals->curtime > ( m_fLastHealTick + ffdev_regen_freq.GetFloat() ) ) )
+		( gpGlobals->curtime > ( m_fLastHealTick + FFDEV_REGEN_FREQ ) ) )
 	{		
 		m_fLastHealTick = gpGlobals->curtime;
 
@@ -3805,7 +3831,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			// add the regen health
 			// Don't call CFFPlayer::TakeHealth as it will clear status effects
 			// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
-			if( BaseClass::TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )			
+			if( BaseClass::TakeHealth( FFDEV_REGEN_HEALTH, DMG_GENERIC ) )			
 			//if( TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )
 			{				
 				// make a sound if we did
@@ -3815,7 +3841,7 @@ void CFFPlayer::StatusEffectsThink( void )
 		else if( GetClassSlot() == CLASS_ENGINEER )
 		{
 			// add the regen armor
-			m_iArmor.GetForModify() = clamp( m_iArmor + ffdev_regen_armor.GetInt(), 0, m_iMaxArmor );
+			m_iArmor.GetForModify() = clamp( m_iArmor + FFDEV_REGEN_ARMOR, 0, m_iMaxArmor );
 		}
 	}
 
@@ -3823,15 +3849,15 @@ void CFFPlayer::StatusEffectsThink( void )
 	// Reduce health if we're over healthed (health > maxhealth
 	if( m_iHealth > m_iMaxHealth )
 	{
-		if( gpGlobals->curtime > ( m_flLastOverHealthTick + ffdev_overhealth_freq.GetFloat() ) )
+		if( gpGlobals->curtime > ( m_flLastOverHealthTick + FFDEV_OVERHEALTH_FREQ ) )
 		{
 			m_flLastOverHealthTick = gpGlobals->curtime;
-			m_iHealth = max( m_iHealth - ffdev_regen_health.GetInt(), m_iMaxHealth );
+			m_iHealth = max( m_iHealth - FFDEV_REGEN_HEALTH, m_iMaxHealth );
 		}
 	}
 
 	// If the player is infected, then take appropriate action
-	if( IsInfected() && ( gpGlobals->curtime > ( m_fLastInfectedTick + ffdev_infect_freq.GetFloat() ) ) )
+	if( IsInfected() && ( gpGlobals->curtime > ( m_fLastInfectedTick + FFDEV_INFECT_FREQ ) ) )
 	{
 		bool bIsInfected = true;
 
@@ -3876,7 +3902,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			EmitSound( "Player.DrownContinue" );	// |-- Mirv: [TODO] Change to something more suitable
 
 			m_fLastInfectedTick = gpGlobals->curtime;
-			CTakeDamageInfo info( pInfector, pInfector, ffdev_infect_damage.GetInt(), DMG_POISON );
+			CTakeDamageInfo info( pInfector, pInfector, FFDEV_INFECT_DAMAGE, DMG_POISON );
 			//info.SetDamageForce( Vector( 0, 0, -1 ) );
 			//info.SetDamagePosition( Vector( 0, 0, 1 ) );
 			info.SetCustomKill(KILLTYPE_INFECTION);
@@ -4492,7 +4518,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
 	//m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
 
-	m_iBurnTicks = burn_ticks.GetInt(); //cvar - must be an int !
+	m_iBurnTicks = BURN_TICKS;
 	int oldburnlevel = 0;
 	if (m_bBurnFlagNG == true) 
 		++oldburnlevel;
@@ -4529,13 +4555,13 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		m_flBurningDamage += burn_damage_ic.GetFloat();
 	*/
 	// Else use this single value (from flamethrower) and multiply it by the burn multipliers
-	m_flBurningDamage = burn_damage_ft.GetFloat() * newburnlevel;
+	m_flBurningDamage = BURN_DAMAGE_FT * newburnlevel;
 	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
 	
 	// if we're on fire from all 3 flame weapons, holy shit BURN! - shok
 	if (newburnlevel == 3)
 	{
-		m_flBurningDamage *= burn_multiplier_3burns.GetFloat();
+		m_flBurningDamage *= BURN_MULTIPLIER_3BURNS;
 		EmitSound("Player.Scream"); // haha
 		if (oldburnlevel == 2) 
 		{
@@ -4552,7 +4578,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	// if we're on fire from 2 flame weapons, burn a bit more
 	else if (newburnlevel == 2)
 	{
-		m_flBurningDamage *= burn_multiplier_2burns.GetFloat();
+		m_flBurningDamage *= BURN_MULTIPLIER_2BURNS;
 		if (oldburnlevel == 1) 
 		{
 			UserMessageBegin(user, "StatusIconUpdate");
@@ -4722,7 +4748,7 @@ void CFFPlayer::Command_ThrowGren(void)
 
 	// ted_maul: 0000614: Grenade timer issues
 	// release delay
-	if(gpGlobals->curtime - m_flServerPrimeTime < gren_throw_delay.GetFloat())
+	if(gpGlobals->curtime - m_flServerPrimeTime < GREN_THROW_DELAY)
 	{
 		// release this grenade at the earliest opportunity
 		m_bWantToThrowGrenade = true;
@@ -4730,12 +4756,12 @@ void CFFPlayer::Command_ThrowGren(void)
 	}
 
 	bool bThrowGrenade = true;
-	float fPrimeTimer = gren_timer.GetFloat() - (gpGlobals->curtime - m_flServerPrimeTime);
+	float fPrimeTimer = GREN_TIMER - (gpGlobals->curtime - m_flServerPrimeTime);
 
 	// Give lua the chance to override grenade throwing.
 	// It should return false to avoid throwing the grenade
 	CFFLuaSC hContext( 1, this );
-	hContext.Push(1.0f - (fPrimeTimer / gren_timer.GetFloat()));
+	hContext.Push(1.0f - (fPrimeTimer / GREN_TIMER));
 	
 	const char *pLuaFn = 0;
 	if(m_iGrenadeState == FF_GREN_PRIMEONE)
@@ -4806,20 +4832,20 @@ void CFFPlayer::GrenadeThink(void)
 	// we've gotta play the sound here if applicable
 	if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_iGrenadeState == FF_GREN_PRIMETWO ) )
 	{
-		if( !m_bEngyGrenWarned && ( gpGlobals->curtime > ( m_flServerPrimeTime + gren_timer.GetFloat() - 0.685f ) ) )
+		if( !m_bEngyGrenWarned && ( gpGlobals->curtime > ( m_flServerPrimeTime + GREN_TIMER - 0.685f ) ) )
 		{
 			m_bEngyGrenWarned = true;
 			EmitSound( EMP_SOUND );
 		}
 	}	
 
-	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= gren_throw_delay.GetFloat())
+	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= GREN_THROW_DELAY)
 	{
 		Command_ThrowGren();
 		return;
 	}
 
-	if ( (m_flServerPrimeTime != 0 ) && ( ( gpGlobals->curtime - m_flServerPrimeTime ) >= gren_timer.GetFloat() ) )
+	if ( (m_flServerPrimeTime != 0 ) && ( ( gpGlobals->curtime - m_flServerPrimeTime ) >= GREN_TIMER ) )
 	{
 		ThrowGrenade(0); // "throw" a grenade that immediately explodes at the player's origin
 		m_iGrenadeState = FF_GREN_NONE;
@@ -4875,7 +4901,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		vecSrc = GetLegacyAbsOrigin();
 
 		VectorAngles( vecForward, angAngles );
-		angAngles.x -= gren_spawn_ang_x.GetFloat();
+		angAngles.x -= GREN_SPAWN_ANG_X;
 
 		UTIL_SetOrigin(pGrenade, vecSrc);
 
@@ -5051,7 +5077,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 			CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
 			if( pAttacker )
 			{
-				SetRadioTagged( pAttacker, gpGlobals->curtime, radiotag_draw_duration.GetInt() );
+				SetRadioTagged( pAttacker, gpGlobals->curtime, RADIOTAG_DRAW_DURATION );
 
 				// AfterShock - Scoring system: 10 points for a radiotag (if not already tagged)
 				// This could be editted later to give points for a renewed tag
@@ -5460,7 +5486,7 @@ void CFFPlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 bool CFFPlayer::ShouldGib( const CTakeDamageInfo &info )
 {
-	return (GetHealth() <= -ffdev_gibdamage.GetFloat());
+	return (GetHealth() <= -FFDEV_GIBDAMAGE);
 }
 
 bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
@@ -5546,7 +5572,7 @@ void CFFPlayer::Concuss(float flDuration, float flIconDuration, const QAngle *vi
 
 	if (viewjerk)
 	{
-		ViewPunch((*viewjerk) * jerkmulti.GetFloat() * flDistance);
+		ViewPunch((*viewjerk) * JERKMULTI * flDistance);
 	}
 }
 
@@ -6521,7 +6547,7 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 
 	// Find out when we'll finish the cloak fade
 	m_flCloakFadeStart = gpGlobals->curtime;
-	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? ffdev_spy_scloakfadespeed.GetFloat() : ffdev_spy_cloakfadespeed.GetFloat() );
+	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? FFDEV_SPY_SCLOAKFADESPEED : FFDEV_SPY_CLOAKFADESPEED );
 
 	// If instant, set alpha back to normal and bail
 	if( bInstant )
@@ -6560,7 +6586,7 @@ void CFFPlayer::SpyCloakFadeOut( bool bInstant )
 	bInstant = true;
 
 	m_flCloakFadeStart = gpGlobals->curtime;
-	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? ffdev_spy_scloakfadespeed.GetFloat() : ffdev_spy_cloakfadespeed.GetFloat() );
+	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? FFDEV_SPY_SCLOAKFADESPEED : FFDEV_SPY_CLOAKFADESPEED );
 
 	// Change render mode so we can start fading out
 	//SetRenderMode( ( RenderMode_t )kRenderTransTexture );
