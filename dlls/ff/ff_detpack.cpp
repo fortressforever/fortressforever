@@ -312,8 +312,11 @@ void CFFDetpack::Detonate()
 	if(pEvent)
 	{
 		CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
-		pEvent->SetInt("userid", pOwner->GetUserID());
-		gameeventmanager->FireEvent(pEvent, true);
+		if (pOwner)
+		{
+			pEvent->SetInt("userid", pOwner->GetUserID());
+			gameeventmanager->FireEvent(pEvent, true);
+		}
 	}
 
 	CFFBuildableObject::Detonate();
