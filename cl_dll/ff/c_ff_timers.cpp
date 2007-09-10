@@ -140,20 +140,26 @@ void C_FFTimerManager::DeleteTimer( string strName )
 	{
 		//DevMsg( "\tSearching...\n" );
 
-		bool bFound = false;
-		TimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end(), ts = NULL;
-		for( ; ( tb != te ) && !bFound; tb++ )
+		// Edited to comply with VS 2005's stricter iterator stuff -> Defrag
+		// bool bFound = false;
+
+		TimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end(); //, ts = NULL;
+		for( ; ( tb != te ) /*&& !bFound*/; tb++ )
 		{
 			if( ( *( tb ) )->GetTimerName() == strName )
 			{
 				//DevMsg( "\tFound match! (0x%X)\n", *( tb ) );				
-				ts = tb;
-				bFound = true;
+				
+				TimerIterator iterFound = tb;
+				RemoveEntry( iterFound );
+				
+				return;
+				//bFound = true;
 			}
 		}
 
-		if( bFound )
-			RemoveEntry( ts );
+		//if( bFound )
+		//	RemoveEntry( ts );
 
 		/*
 		TimerIterator timer = m_vecTimers.begin();
@@ -187,25 +193,30 @@ void C_FFTimerManager::DeleteTimer( C_FFTimer *pTimer )
 
 	// Try and delete it if the ptr isn't NULL
 	// and we've got some timers we're managing
+
+	// edited to deal with VS 2005's iterator strictness stuff -> Defrag
+
 	if( pTimer && !m_vecTimers.empty() )
 	{
 		//DevMsg( "\tSearching...\n" );
 		
 		// Gotta find this particular C_FFTimer * in our vector
-		bool bFound = false;
-		TimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end(), ts = NULL;
-		for( ; ( tb != te ) && !bFound; tb++ )
+		// bool bFound = false;
+		TimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end(); //, ts = NULL;
+		for( ; ( tb != te ) /*&& !bFound */ ; tb++ )
 		{			
 			if( *( tb ) == pTimer )
 			{
 				//DevMsg( "\tFound a guy to erase: 0x%X\n", *tb );
-				ts = tb;
-				bFound = true;
+				TimerIterator iterFound = tb;
+				RemoveEntry( iterFound );
+				return;
+				//bFound = true;
 			}
 		}
 
-		if( bFound )
-			RemoveEntry( ts );
+		//if( bFound )
+		//	RemoveEntry( ts );
 	}
 
 	//DevMsg( "Number of active timers: %i\n", m_vecTimers.size() );
