@@ -128,20 +128,23 @@ void C_FFHintTimerManager::DeleteTimer( string strName )
 	{
 		//DevMsg( "\tSearching...\n" );
 
-		bool bFound = false;
-		HintTimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end(), ts = NULL;
-		for( ; ( tb != te ) && !bFound; tb++ )
+		// Modified to make compatible with vs2005's strictness -> Defrag
+		//bool bFound = false;
+		HintTimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end();//, ts = NULL;
+		for( ; ( tb != te ) /*&& !bFound*/ ; tb++ )
 		{
 			if( ( *( tb ) )->GetTimerName() == strName )
 			{
 				//DevMsg( "\tFound match! (0x%X)\n", *( tb ) );				
-				ts = tb;
-				bFound = true;
+				HintTimerIterator iterFound = tb;
+				RemoveEntry( iterFound );
+				return;
+				//bFound = true;
 			}
 		}
 
-		if( bFound )
-			RemoveEntry( ts );
+		//if( bFound )
+		//	RemoveEntry( ts );
 
 		/*
 		TimerIterator timer = m_vecTimers.begin();
@@ -173,27 +176,33 @@ void C_FFHintTimerManager::DeleteTimer( C_FFHintTimer *pTimer )
 {
 	//DevMsg( "C_FFHintTimerManager::DeleteTimer(0x%X) - Num active timers: %i\n", pTimer, m_vecTimers.size() );
 
+
+	// modified to make compatible with vs2005 -> Defrag
+
 	// Try and delete it if the ptr isn't NULL
 	// and we've got some timers we're managing
+
 	if( pTimer && !m_vecTimers.empty() )
 	{
 		//DevMsg( "\tSearching...\n" );
 		
 		// Gotta find this particular C_FFHintTimer * in our vector
-		bool bFound = false;
-		HintTimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end(), ts = NULL;
-		for( ; ( tb != te ) && !bFound; tb++ )
+		//bool bFound = false;
+		HintTimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end(); //, ts = NULL;
+		for( ; ( tb != te ) /*&& !bFound*/ ; tb++ )
 		{			
 			if( *( tb ) == pTimer )
 			{
 				//DevMsg( "\tFound a guy to erase: 0x%X\n", *tb );
-				ts = tb;
-				bFound = true;
+				HintTimerIterator iterFound = tb;
+				RemoveEntry( iterFound );
+				return;
+				//bFound = true;
 			}
 		}
 
-		if( bFound )
-			RemoveEntry( ts );
+		//if( bFound )
+		//	RemoveEntry( ts );
 	}
 
 	//DevMsg( "Number of active timers: %i\n", m_vecTimers.size() );
