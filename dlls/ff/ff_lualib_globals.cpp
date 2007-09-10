@@ -986,7 +986,16 @@ namespace FFLib
 		if( !pPlayer || !pszImage || !pszIdentifier )
 			return;
 
-		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 0 );
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 1 );
+	}
+
+	// default alignment
+	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight )
+	{
+		if( !pPlayer || !pszImage || !pszIdentifier )
+			return;
+
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, 1 );
 	}
 
 	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlign )
@@ -1015,7 +1024,22 @@ namespace FFLib
 			if (ent && ent->IsPlayer())
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
-				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 0);
+				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 1);
+			}
+		}
+	}
+
+	// default alignment
+	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight )
+	{
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, 1);
 			}
 		}
 	}
@@ -1316,9 +1340,11 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 
 		// global functions
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int))&FFLib::AddHudIcon),
+		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int))&FFLib::AddHudIcon),
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int, int))&FFLib::AddHudIcon),
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int, int, int))&FFLib::AddHudIcon),
 		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int))&FFLib::AddHudIconToAll),
+		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int, int, int))&FFLib::AddHudIconToAll),
 		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int, int, int, int))&FFLib::AddHudIconToAll),
 		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int, int, int, int, int))&FFLib::AddHudIconToAll),
 		def("AddHudText",				&FFLib::AddHudText),
