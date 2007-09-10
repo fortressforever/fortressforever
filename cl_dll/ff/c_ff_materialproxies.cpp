@@ -132,7 +132,11 @@ void C_TeamColorMaterialProxy::OnBind( void *pC_BaseEntity )
 			// 2 = red
 			// 3 = yellow
 			// 4 = green
-			iTeam = ToFFPlayer( pEntity )->GetTeamNumber() - 1;
+			CFFPlayer *pFFPlayer = ToFFPlayer( pEntity );
+			if ( pFFPlayer )
+				iTeam = pFFPlayer->GetTeamNumber() - 1;
+			else
+				iTeam = -1;
 		}
 		else
 		{
@@ -146,7 +150,11 @@ void C_TeamColorMaterialProxy::OnBind( void *pC_BaseEntity )
 				C_FFBuildableObject *pBuildable = dynamic_cast< C_FFBuildableObject * >( pEntity );
 				if( pBuildable )
 				{
-					iTeam = pBuildable->GetOwnerPlayer()->GetTeamNumber() - 1;
+					CFFPlayer *pBuildableOwner = pBuildable->GetOwnerPlayer();
+					if ( pBuildableOwner )
+						iTeam = pBuildableOwner->GetTeamNumber() - 1;
+					else
+						iTeam = -1;
 				}
 			}
 			else if( pEntity->Classify() == CLASS_NONE )

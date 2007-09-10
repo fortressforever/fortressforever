@@ -289,11 +289,10 @@ int CFFPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequen
 			case ACT_CROUCHIDLE:
 			case ACT_RUN_CROUCH: // Jiggles: We need this case for proper blending to crouch-idle instead of standing-idle
 				return CalcSequenceIndex( "%s%s", DEFAULT_CROUCH_IDLE_NAME, pSuffix );
-// Jiggles: Removed Swim Animations for release since DK's not done with them
-/*			case ACT_HOVER:
+			case ACT_HOVER:
 				return CalcSequenceIndex( "%s%s", DEFAULT_SWIM_IDLE_NAME, pSuffix );
 			case ACT_SWIM:
-				return CalcSequenceIndex( "%s%s", DEFAULT_SWIM_NAME, pSuffix ); */
+				return CalcSequenceIndex( "%s%s", DEFAULT_SWIM_NAME, pSuffix );
 			default:
 				return CalcSequenceIndex( "%s%s", DEFAULT_IDLE_NAME, pSuffix );
 		}
@@ -318,13 +317,13 @@ int CFFPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequen
 
 			case ACT_RUN_CROUCH:
 				return CalcSequenceIndex( "%s%s", DEFAULT_CROUCH_WALK_NAME, pSuffix );
-/*
+
 			case ACT_SWIM:
 				return CalcSequenceIndex( "%s%s", DEFAULT_SWIM_NAME, pSuffix );
 			
 			case ACT_HOVER:
 				return CalcSequenceIndex( "%s%s", DEFAULT_SWIM_IDLE_NAME, pSuffix );
-*/
+
 			case ACT_IDLE:
 			default:
 				return CalcSequenceIndex( "%s%s", DEFAULT_IDLE_NAME, pSuffix );
@@ -472,10 +471,9 @@ Activity CFFPlayerAnimState::CalcMainActivity()
 					// FF TODO: play separate animations run/walk while cloaked?  all sneaky and shit
 					if ( pPlayer )
 					{	
-// Jiggles: Removed Swim Animations for release since DK's not done with them
-/*						if ( pPlayer->GetWaterLevel() > 2 ) // But not if we're swimming!
+						if ( pPlayer->GetWaterLevel() > 2 ) // But not if we're swimming!
 							idealActivity = ACT_SWIM;
-						else */if ( pPlayer->IsCloaked() )
+						else if ( pPlayer->IsCloaked() )
 							idealActivity = ACT_WALK;
 						else
 							idealActivity = ACT_RUN;
@@ -483,9 +481,9 @@ Activity CFFPlayerAnimState::CalcMainActivity()
 				}
 				else
 				{	
-/*					if ( pPlayer && ( pPlayer->GetWaterLevel() > 2 ) )
+					if ( pPlayer && ( pPlayer->GetWaterLevel() > 2 ) )
 						idealActivity = ACT_SWIM;
-					else*/
+					else
 						idealActivity = ACT_WALK;
 				}
 				/* commenting this out cause it borks the animations - fryguy
@@ -499,9 +497,9 @@ Activity CFFPlayerAnimState::CalcMainActivity()
 			}
 			else
 			{
-/*				if ( pPlayer && ( pPlayer->GetWaterLevel() > 2 ) )
+				if ( pPlayer && ( pPlayer->GetWaterLevel() > 2 ) )
 					idealActivity = ACT_HOVER;
-				else*/
+				else
 					idealActivity = ACT_IDLE;
 			}
 		}
