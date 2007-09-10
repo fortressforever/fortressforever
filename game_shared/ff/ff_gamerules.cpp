@@ -1816,8 +1816,11 @@ int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget
 	{
 		// --> Mirv: Allies
 		CFFTeam *pPlayerTeam = ( CFFTeam * )GetGlobalTeam( pPlayer->GetTeamNumber() );
-
-		if( pPlayerTeam->GetAllies() & ( 1 << pBuildable->GetOwnerPlayer()->GetTeamNumber() ) )
+		// Jiggles: I threw in some more error checking here because the server was crashing here
+		//	Specifically: CBaseEntity::GetTeamNumber (this=0x0)
+		CFFPlayer *pBuildableOwner = pBuildable->GetOwnerPlayer();
+		if( pBuildableOwner && pPlayerTeam && ( pPlayerTeam->GetAllies() & ( 1 << pBuildableOwner->GetTeamNumber() ) ) )
+		//if( pPlayerTeam->GetAllies() & ( 1 << pBuildable->GetOwnerPlayer()->GetTeamNumber() ) )
 			return GR_TEAMMATE;		// Do you want them identified as an ally or a tm?
 		// <-- Mirv: Allies
 	}
