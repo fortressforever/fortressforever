@@ -200,6 +200,11 @@ void OnMapHintTimerExpired( C_FFHintTimer *pHintTimer )
 	FF_SendHint( GLOBAL_MAP, 1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_MAP" );
 }
 
+void OnChangeToCTimerExpired( C_FFHintTimer *pHintTimer )
+{
+	FF_SendHint( GLOBAL_CTOC, 1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_CTOC" );
+}
+
 // --> Mirv: Toggle grenades (requested by defrag)
 void CC_ToggleOne()
 {
@@ -1382,6 +1387,24 @@ void C_FFPlayer::Spawn( void )
 		pLastInvHintTimer->Unpause();
 	else
 		pLastInvHintTimer->Pause();
+
+	// Event: Player plays for 4 minutes -- tell the player about the "change class" and "change team" commands
+	C_FFHintTimer *pChangeToCTimer = g_FFHintTimers.FindTimer( "CToC" );
+	if ( pChangeToCTimer == NULL ) // Setup timer
+	{	
+		pChangeToCTimer = g_FFHintTimers.Create( "CToC", 240.0f );
+		if ( pChangeToCTimer )
+		{
+			pChangeToCTimer->SetHintExpiredCallback( OnChangeToCTimerExpired, false );
+			pChangeToCTimer->StartTimer();
+			if ( GetClassSlot() <= 0 ) // Pause the timer if player isn't a player class
+				pChangeToCTimer->Pause();
+		}
+	}
+	else if ( GetClassSlot() > 0 ) // Unpause the timer if the player is now a valid player class
+		pChangeToCTimer->Unpause();
+	else
+		pChangeToCTimer->Pause();
 
 
 	// Event: Player plays for 2 minutes -- tell the player about the Map key

@@ -207,6 +207,7 @@ enum HintType
 	GLOBAL_EMPDEATH,	// Event: Player dies from emp explosion
 	GLOBAL_GRENDEATH,	// Event: Player dies from a grenade (non-emp, non-projectile) explosion
 	GLOBAL_MAP,			// Event: Player plays for 2  minutes (tell the player about using the Map key)
+	GLOBAL_CTOC,		// Event: Player plays for 4 minutes (tell the player how to change team and class)
 
 	// INTRO HINT
 	INTRO_HINT			// Event: Player's first spawn (introduces the Hint Center)

@@ -1137,7 +1137,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 	if(bUpgraded)
 	{
 		IGameEvent *pEvent = gameeventmanager->CreateEvent( "sentrygun_upgraded" );
-		if( pEvent )
+		if( pEvent && m_hOwner.Get() )
 		{
 			CFFPlayer *pOwner = static_cast<CFFPlayer*>( m_hOwner.Get() );
 			pEvent->SetInt( "userid", pOwner->GetUserID() );
@@ -1327,8 +1327,11 @@ void CFFSentryGun::DoExplosionDamage()
 	// COmmented out for testing explosion damage - AfterShock
 	//flDamage = min(280, flDamage);
 	
-	CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
-	RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
+	if (m_hOwner.Get())
+	{
+		CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
+		RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
 
-	UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
+		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
+	}
 }
