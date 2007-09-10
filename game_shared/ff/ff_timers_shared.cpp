@@ -18,7 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 // CFFTimerBase implementation
 //////////////////////////////////////////////////////////////////////////
-CFFTimerBase::CFFTimerBase( string strName, const float flDuration )
+CFFTimerBase::CFFTimerBase( std::string strName, const float flDuration )
 :	m_pfnExpiredCallback(NULL), m_pfnIntervalCallback(NULL), m_flCallbackInterval(0), m_bRemoveWhenExpired(false),
 m_flDuration( flDuration ), m_strName( strName )
 {
@@ -92,7 +92,7 @@ bool CFFTimerBase::Interval( void )
 		return true;
 	return false;
 }
-string CFFTimerBase::GetTimerName( void ) const
+std::string CFFTimerBase::GetTimerName( void ) const
 {
 	return m_strName;
 }

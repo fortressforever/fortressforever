@@ -19,7 +19,7 @@
 class C_FFHintTimer : public CFFTimerBase
 {
 	public:
-		C_FFHintTimer( string strName, const float flDuration );
+		C_FFHintTimer( std::string strName, const float flDuration );
 		virtual ~C_FFHintTimer();
 
 		void StartTimer( void );
@@ -46,9 +46,9 @@ class C_FFHintTimerManager
 		C_FFHintTimerManager();
 		~C_FFHintTimerManager();
 
-		C_FFHintTimer*	Create			( string strName, float flDuration );
-		C_FFHintTimer*	FindTimer		( string strName );
-		void		DeleteTimer		( string strName );
+		C_FFHintTimer*	Create			( std::string strName, float flDuration );
+		C_FFHintTimer*	FindTimer		( std::string strName );
+		void		DeleteTimer		( std::string strName );
 		void		DeleteTimer		( C_FFHintTimer *pTimer );
 		void		DeleteAll		( void );
 		void		SimulateTimers	( void );

@@ -17,7 +17,7 @@
 
 C_FFHintTimerManager g_FFHintTimers;
 
-C_FFHintTimer::C_FFHintTimer( string strName, const float flDuration )
+C_FFHintTimer::C_FFHintTimer( std::string strName, const float flDuration )
 : CFFTimerBase( strName.c_str(), flDuration )
 {
 	m_bPaused = false;
@@ -73,7 +73,7 @@ C_FFHintTimerManager::~C_FFHintTimerManager()
 	DeleteAll();
 }
 
-C_FFHintTimer* C_FFHintTimerManager::Create( string strName, float flDuration )
+C_FFHintTimer* C_FFHintTimerManager::Create( std::string strName, float flDuration )
 {
 	//DevMsg("C_FFHintTimerManager::Create(%s, %f)\n",strName.c_str(),flDuration);
 	C_FFHintTimer *pTimer = FindTimer( strName );
@@ -95,7 +95,7 @@ C_FFHintTimer* C_FFHintTimerManager::Create( string strName, float flDuration )
 	return pTimer;
 }
 
-C_FFHintTimer* C_FFHintTimerManager::FindTimer( string strName )
+C_FFHintTimer* C_FFHintTimerManager::FindTimer( std::string strName )
 {
 	//DevMsg("C_FFHintTimerManager::FindTimer(%s)\n",strName.c_str());
 	C_FFHintTimer *pTimer = NULL;
@@ -120,7 +120,7 @@ C_FFHintTimer* C_FFHintTimerManager::FindTimer( string strName )
 	return NULL;
 }
 
-void C_FFHintTimerManager::DeleteTimer( string strName )
+void C_FFHintTimerManager::DeleteTimer( std::string strName )
 {
 	//DevMsg( "C_FFHintTimerManager::DeleteTimer(%s) - Num active timers: %i\n",strName.c_str(), m_vecTimers.size() );
 	
@@ -210,7 +210,8 @@ void C_FFHintTimerManager::DeleteTimer( C_FFHintTimer *pTimer )
 
 void C_FFHintTimerManager::RemoveEntry( HintTimerIterator ti )
 {
-	if( ti != NULL )
+
+	if( ti != m_vecTimers.end() )
 	{
 		// Stop animating this guy
 		( *( ti ) )->ResetTimer();

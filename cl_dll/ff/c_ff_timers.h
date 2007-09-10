@@ -33,7 +33,7 @@ class C_FFTimer : public CHudElement, public vgui::Panel, public CFFTimerBase
 	DECLARE_CLASS_SIMPLE( C_FFTimer, vgui::Panel );
 
 public:
-	C_FFTimer( string strName, const float flDuration );
+	C_FFTimer( std::string strName, const float flDuration );
 	virtual ~C_FFTimer();
 
 	void StartTimer( void );
@@ -56,9 +56,9 @@ public:
 	C_FFTimerManager();
 	~C_FFTimerManager();
 
-	C_FFTimer*	Create			( string strName, float flDuration );
-	C_FFTimer*	FindTimer		( string strName );
-	void		DeleteTimer		( string strName );
+	C_FFTimer*	Create			( std::string strName, float flDuration );
+	C_FFTimer*	FindTimer		( std::string strName );
+	void		DeleteTimer		( std::string strName );
 	void		DeleteTimer		( C_FFTimer *pTimer );
 	void		DeleteAll		( void );
 	void		SimulateTimers	( void );

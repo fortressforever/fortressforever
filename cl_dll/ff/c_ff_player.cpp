@@ -153,7 +153,7 @@ bool CanStealMouseForAimSentry( void )
 //			logged 5 minutes (total) as a Pyro
 void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
 {
-	string name = pHintTimer->GetTimerName();
+	std::string name = pHintTimer->GetTimerName();
 
 	if ( name == "RJHint" )	// Player logged 10 minutes as a Soldier
 		FF_SendHint( SOLDIER_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_PLAYTIME" );

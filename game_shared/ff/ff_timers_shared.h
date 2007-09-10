@@ -19,7 +19,9 @@
 //#include "util_shared.h"
 #include <string>
 #include <vector>
-using namespace std;
+
+// no using namespace in headers please... -> Defrag
+//using namespace std;
 
 //maximum amount of timers on the client, do we even need this many?
 //	1 - detpack countdown
