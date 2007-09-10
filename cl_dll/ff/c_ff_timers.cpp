@@ -16,6 +16,8 @@
 #include "c_ff_timers.h"
 #include <algorithm>
 
+using namespace vgui;
+
 C_FFTimerManager g_FFTimers;
 
 C_FFTimer::C_FFTimer( std::string strName, const float flDuration )

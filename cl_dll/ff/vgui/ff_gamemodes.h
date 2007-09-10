@@ -24,9 +24,9 @@
 #include <vgui_controls/PropertyPage.h>
 #include "ff_gameui.h"
 
-using namespace vgui;
+//using namespace vgui;
 
-class CFFGameModesPage : public PropertyPage
+class CFFGameModesPage : public vgui::PropertyPage
 {
 	DECLARE_CLASS_SIMPLE(CFFGameModesPage, PropertyPage);
 
@@ -41,9 +41,9 @@ public:
 //-----------------------------------------------------------------------------
 // Purpose: Fortress Forever GameModes
 //-----------------------------------------------------------------------------
-class CFFGameModesPanel : public Frame
+class CFFGameModesPanel : public vgui::Frame
 {
-	DECLARE_CLASS_SIMPLE(CFFGameModesPanel, Frame);
+	DECLARE_CLASS_SIMPLE(CFFGameModesPanel, vgui::Frame);
 
 public:
 	CFFGameModesPanel(vgui::VPANEL parent);
@@ -53,13 +53,13 @@ private:
 
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	
-	PropertySheet		*m_pPropertyPages;
-	CFFGameModesPage	*m_pScenarioGameMode;
-	CFFGameModesPage	*m_pTrainingGameMode;
+	vgui::PropertySheet		*m_pPropertyPages;
+	CFFGameModesPage		*m_pScenarioGameMode;
+	CFFGameModesPage		*m_pTrainingGameMode;
 
-	Button			*m_pOKButton;
-	Button			*m_pCancelButton;
-	Button			*m_pApplyButton;
+	vgui::Button			*m_pOKButton;
+	vgui::Button			*m_pCancelButton;
+	vgui::Button			*m_pApplyButton;
 };
 
 DECLARE_GAMEUI(CFFGameModes, CFFGameModesPanel, ffgamemodes);

@@ -14,6 +14,7 @@
 #include "clientmode_shared.h"
 #include "c_playerresource.h"
 
+using namespace vgui;
 
 ConVar *sv_alltalk = NULL;
 

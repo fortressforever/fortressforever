@@ -25,7 +25,7 @@
 #include <vgui/IScheme.h>
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
-using namespace vgui;
+//using namespace vgui;
 #include "iclientmode.h"
 
 class C_FFTimer : public CHudElement, public vgui::Panel, public CFFTimerBase
@@ -41,7 +41,7 @@ public:
 
 protected:
 	virtual void Paint( void );
-	virtual void ApplySchemeSettings( IScheme *pScheme );
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 private:
 	vgui::ProgressBar *m_pProgressBar;

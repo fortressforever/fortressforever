@@ -26,7 +26,7 @@
 #define MAX_HUD_ELEMENTS	30
 #define	DONT_CREATE_NEW		false
 
-using namespace vgui;
+//using namespace vgui;
 
 enum HudElementType_t
 {
@@ -40,7 +40,7 @@ enum HudElementType_t
 typedef struct HudElement_s
 {
 	char				szIdentifier[128];
-	Panel				*pPanel;
+	vgui::Panel			*pPanel;
 	HudElementType_t	iType;
 } HudElement_t;
 

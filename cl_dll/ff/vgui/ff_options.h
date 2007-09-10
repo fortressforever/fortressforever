@@ -23,11 +23,11 @@
 #include <vgui_controls/PropertyPage.h>
 #include "ff_gameui.h"
 
-using namespace vgui;
+//using namespace vgui;
 
-class CFFOptionsPage : public PropertyPage
+class CFFOptionsPage : public vgui::PropertyPage
 {
-	DECLARE_CLASS_SIMPLE(CFFOptionsPage, PropertyPage);
+	DECLARE_CLASS_SIMPLE(CFFOptionsPage, vgui::PropertyPage);
 
 public:
 	virtual void	Apply() = 0;
@@ -40,9 +40,9 @@ public:
 //-----------------------------------------------------------------------------
 // Purpose: Fortress Forever options
 //-----------------------------------------------------------------------------
-class CFFOptionsPanel : public Frame
+class CFFOptionsPanel : public vgui::Frame
 {
-	DECLARE_CLASS_SIMPLE(CFFOptionsPanel, Frame);
+	DECLARE_CLASS_SIMPLE(CFFOptionsPanel, vgui::Frame);
 
 public:
 	CFFOptionsPanel(vgui::VPANEL parent);
@@ -52,13 +52,13 @@ private:
 
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	
-	PropertySheet	*m_pPropertyPages;
-	CFFOptionsPage	*m_pCrosshairOptions;
-	CFFOptionsPage	*m_pTimerOptions;
+	vgui::PropertySheet		*m_pPropertyPages;
+	CFFOptionsPage			*m_pCrosshairOptions;
+	CFFOptionsPage			*m_pTimerOptions;
 
-	Button			*m_pOKButton;
-	Button			*m_pCancelButton;
-	Button			*m_pApplyButton;
+	vgui::Button			*m_pOKButton;
+	vgui::Button			*m_pCancelButton;
+	vgui::Button			*m_pApplyButton;
 };
 
 DECLARE_GAMEUI(CFFOptions, CFFOptionsPanel, ffoptions);
