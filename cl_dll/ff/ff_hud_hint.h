@@ -19,7 +19,7 @@
 #include "hudelement.h"
 #include "iclientmode.h"
 
-using namespace vgui;
+//using namespace vgui;
 
 #include <vgui_controls/Panel.h>
 
@@ -59,7 +59,7 @@ private:
 
 	bool		m_bActive;
 
-	RichText	*m_pRichText;
+	vgui::RichText	*m_pRichText;
 
 public:
 

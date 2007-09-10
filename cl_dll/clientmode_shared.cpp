@@ -37,7 +37,7 @@
 class CHudWeaponSelection;
 class CHudChat;
 
-static vgui::HContext s_hVGuiContext = DEFAULT_VGUI_CONTEXT;
+static vgui::HContext s_hVGuiContext = vgui::DEFAULT_VGUI_CONTEXT;
 
 // Yeah, don't want this to be a cheat
 ConVar cl_drawhud( "cl_drawhud","1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Enable the rendering of the hud" );
@@ -508,7 +508,7 @@ void ClientModeShared::LevelInit( const char *newmap )
 	}
 
 	// Create a vgui context for all of the in-game vgui panels...
-	if ( s_hVGuiContext == DEFAULT_VGUI_CONTEXT )
+	if ( s_hVGuiContext == vgui::DEFAULT_VGUI_CONTEXT )
 	{
 		s_hVGuiContext = vgui::ivgui()->CreateContext();
 	}
@@ -527,10 +527,10 @@ void ClientModeShared::LevelShutdown( void )
 	{
 		m_pChatElement->LevelShutdown();
 	}
-	if ( s_hVGuiContext != DEFAULT_VGUI_CONTEXT )
+	if ( s_hVGuiContext != vgui::DEFAULT_VGUI_CONTEXT )
 	{
 		vgui::ivgui()->DestroyContext( s_hVGuiContext );
- 		s_hVGuiContext = DEFAULT_VGUI_CONTEXT;
+ 		s_hVGuiContext = vgui::DEFAULT_VGUI_CONTEXT;
 	}
 
 	// Reset any player explosion/shock effects
@@ -655,7 +655,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 
 			if( szName )
 			{
-				localize( )->ConvertUnicodeToANSI( szName, szbuf, sizeof( szbuf ) );
+				vgui::localize( )->ConvertUnicodeToANSI( szName, szbuf, sizeof( szbuf ) );
 				pszName = szbuf;
 			}
 			else
@@ -711,6 +711,6 @@ void ClientModeShared::ActivateInGameVGuiContext( vgui::Panel *pPanel )
 
 void ClientModeShared::DeactivateInGameVGuiContext()
 {
-	vgui::ivgui()->ActivateContext( DEFAULT_VGUI_CONTEXT );
+	vgui::ivgui()->ActivateContext( vgui::DEFAULT_VGUI_CONTEXT );
 }
 

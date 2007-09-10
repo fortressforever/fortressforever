@@ -13,7 +13,7 @@
 #include "baseviewport.h"
 
 
-using namespace vgui;
+//using namespace vgui;
 
 namespace vgui 
 {

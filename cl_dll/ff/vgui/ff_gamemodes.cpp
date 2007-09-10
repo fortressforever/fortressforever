@@ -30,6 +30,7 @@ extern const char *s_WeaponAliasInfo[];
 #include <vgui_controls/Button.h>
 #include <vgui_controls/CheckButton.h>
 
+using namespace vgui;
 extern IFileSystem **pFilesystem;
 
 // memdbgon must be the last include file in a .cpp file!!! 

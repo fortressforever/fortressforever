@@ -40,6 +40,8 @@
 #include <vgui_controls/ImagePanel.h>
 #include "vgui/ff_vgui_timer.h"
 
+using namespace vgui;
+
 DECLARE_HUDELEMENT(CHudLua);
 DECLARE_HUD_MESSAGE(CHudLua, FF_HudLua);
 

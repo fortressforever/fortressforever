@@ -46,7 +46,7 @@ IFileSystem **pFilesystem = &filesystem;
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <vgui_controls/RichText.h>
-
+using namespace vgui;
 // [integer] Duration [in seconds] that each hut hint is
 // drawn on the screen
 // Jiggles: Sorry, but I want to use this :)

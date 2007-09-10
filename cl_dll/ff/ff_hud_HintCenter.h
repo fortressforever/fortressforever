@@ -19,8 +19,7 @@
 #include "hudelement.h"
 #include "iclientmode.h"
 
-
-using namespace vgui;
+//using namespace vgui;
 
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/AnimationController.h>
@@ -108,9 +107,9 @@ private:
 	float		m_flLastHintDuration;	// Duration of the hint
 	short		m_iLastHintPriority;		// How important was the last hint?
 
-	RichText	*m_pRichText;				// Stores the hint text for display
-	Button		*m_pNextHintButton;			// Click to display the next hint
-	Button		*m_pPreviousHintButton;		// Click to display the previous hint
+	vgui::RichText	*m_pRichText;				// Stores the hint text for display
+	vgui::Button		*m_pNextHintButton;			// Click to display the next hint
+	vgui::Button		*m_pPreviousHintButton;		// Click to display the previous hint
 
 	CUtlVector< struct HintInfo > m_HintVector;  // Stores whether a hint has been shown yet
 
