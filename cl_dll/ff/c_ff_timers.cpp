@@ -18,7 +18,7 @@
 
 C_FFTimerManager g_FFTimers;
 
-C_FFTimer::C_FFTimer( string strName, const float flDuration )
+C_FFTimer::C_FFTimer( std::string strName, const float flDuration )
 : CHudElement( strName.c_str() ), vgui::Panel(NULL, strName.c_str()), CFFTimerBase( strName.c_str(), flDuration )
 {
 	SetParent( g_pClientMode->GetViewport() );
@@ -85,7 +85,7 @@ C_FFTimerManager::~C_FFTimerManager()
 	DeleteAll();
 }
 
-C_FFTimer* C_FFTimerManager::Create( string strName, float flDuration )
+C_FFTimer* C_FFTimerManager::Create( std::string strName, float flDuration )
 {
 	//DevMsg("C_FFTimerManager::Create(%s, %f)\n",strName.c_str(),flDuration);
 	C_FFTimer *pTimer = FindTimer( strName );
@@ -107,7 +107,7 @@ C_FFTimer* C_FFTimerManager::Create( string strName, float flDuration )
 	return pTimer;
 }
 
-C_FFTimer* C_FFTimerManager::FindTimer( string strName )
+C_FFTimer* C_FFTimerManager::FindTimer( std::string strName )
 {
 	//DevMsg("C_FFTimerManager::FindTimer(%s)\n",strName.c_str());
 	C_FFTimer *pTimer = NULL;
@@ -132,7 +132,7 @@ C_FFTimer* C_FFTimerManager::FindTimer( string strName )
 	return NULL;
 }
 
-void C_FFTimerManager::DeleteTimer( string strName )
+void C_FFTimerManager::DeleteTimer( std::string strName )
 {
 	//DevMsg( "C_FFTimerManager::DeleteTimer(%s) - Num active timers: %i\n",strName.c_str(), m_vecTimers.size() );
 	
@@ -224,7 +224,8 @@ void C_FFTimerManager::DeleteTimer( C_FFTimer *pTimer )
 
 void C_FFTimerManager::RemoveEntry( TimerIterator ti )
 {
-	if( ti != NULL )
+	// set iterator to equal .end() as the default value
+	if( ti != m_vecTimers.end() )
 	{
 		// Stop animating this guy
 		( *( ti ) )->ResetTimer();
