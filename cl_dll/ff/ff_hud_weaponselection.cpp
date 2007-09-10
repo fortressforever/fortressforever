@@ -246,7 +246,7 @@ void CHudWeaponSelection::Paint()
 	// calculate where to start drawing
 	int width = (MAX_WEAPON_SLOTS - 1) * (m_flSmallBoxSize + m_flBoxGap) + largeBoxWide;
 	int xpos = (GetWide() - width) / 2;
-	int ypos = 0;
+	int ypos = (largeBoxTall / 2) + m_flBoxGap; // moving them down some...hopefully not too much
 
 	// iterate over all the weapon slots
 	for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
@@ -289,7 +289,8 @@ void CHudWeaponSelection::Paint()
 					}
 
 					// draw the inactive version
-					pWeapon->GetSpriteInactive()->DrawSelf( xpos + x_offs, ypos + y_offs, col );
+					if ( pWeapon->GetSpriteInactive() )
+						pWeapon->GetSpriteInactive()->DrawSelf( xpos + x_offs, ypos + y_offs, col );
 				}
 
 				// draw text
@@ -389,10 +390,39 @@ void CHudWeaponSelection::Paint()
 		else
 		{
 			// check to see if there is a weapons in this bucket
-			if ( GetFirstPos( i ) )
+			C_BaseCombatWeapon *pWeapon = GetFirstPos(i);
+			if ( pWeapon )
 			{
 				// draw has weapon in slot
 				DrawBox(xpos, ypos, m_flSmallBoxSize, m_flSmallBoxSize, m_BoxColor, m_flAlphaOverride, i + 1);
+
+				// draw tiny weapon icons
+				if ( strlen(pWeapon->GetName()) > 3 )
+				{
+					char death_string[128];
+					Q_snprintf( death_string, sizeof(death_string), "death_%s", pWeapon->GetName() + 3 );
+					CHudTexture *icon = gHUD.GetIcon(death_string);
+					if ( icon )
+					{
+						Color col = GetFgColor();
+						col[3] *= 0.5;
+
+						if (!pWeapon->CanBeSelected())
+						{
+							// unselectable weapon, display as such
+							col = Color(255, 0, 0, col[3]);
+						}
+
+						// find the center of the box to draw in
+						int iconWidth = icon->Width();
+						int iconHeight = icon->Height();
+
+						int x_offs = (m_flSmallBoxSize - iconWidth) / 2;
+						int y_offs = (m_flSmallBoxSize - iconHeight) * 0.9;
+
+						icon->DrawSelf( xpos + x_offs, ypos + y_offs, col );
+					}
+				}
 			}
 			else
 			{
@@ -404,7 +434,7 @@ void CHudWeaponSelection::Paint()
 		}
 
 		// reset position
-		ypos = 0;
+		ypos = (largeBoxTall / 2) + m_flBoxGap; // moving them down some...hopefully not too much
 		xpos += m_flBoxGap;
 	}
 }
