@@ -1150,6 +1150,7 @@ void CFFPlayer::PreForceSpawn( void )
 			CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
 			if( pBuildable )
 				pBuildable->Cancel();
+			m_bBuilding = false;
 		}
 
 		// Detonate player's pipes
@@ -1409,6 +1410,9 @@ void CFFPlayer::Spawn( void )
 	// Set on ground
 	AddFlag(FL_ONGROUND);
 
+	// Jiggles: Another attempt to fix the death slant-view bug
+	SnapEyeAngles(QAngle( 0, 0, 0 ));
+	
 	// Make sure we don't go running around during the intermission
 	// AfterShock - Commented out to try to prevent mapload respawn frozen
 	/*
