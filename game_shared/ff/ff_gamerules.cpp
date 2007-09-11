@@ -1151,28 +1151,35 @@ ConVar mp_prematch( "mp_prematch",
 				
 				CBaseEntity *pInflictor = info.GetInflictor();
 				// If this is an IC projectile, set to a lower clamp (350)
-				float flPushClamp = 0.0f;
+				float flPushClamp = PUSH_CLAMP;
 				
-				if (pInflictor && (pInflictor->Classify() == CLASS_IC_ROCKET))
+				if ( pInflictor )
 				{
-					flPushClamp = 350.0f;
-					// lower the push because of the increased damage needed
-					flCalculatedForce /= 3;
-					if (pEntity == info.GetAttacker() && !pBuildable)
+					switch ( pInflictor->Classify() )
 					{
-						flAdjustedDamage *= IC_SELFDAMAGEMULTIPLIER;
-						adjustedInfo.SetDamage(flAdjustedDamage);
-					}
+						case CLASS_IC_ROCKET:
+							flPushClamp = 350.0f;
+							// lower the push because of the increased damage needed
+							flCalculatedForce /= 3;
+							if (pEntity == info.GetAttacker() && !pBuildable)
+							{
+								flAdjustedDamage *= IC_SELFDAMAGEMULTIPLIER;
+								adjustedInfo.SetDamage(flAdjustedDamage);
+							}
+							break;
 
-				}
-				else if ( pInflictor && ( pInflictor->Classify() == CLASS_RAIL_PROJECTILE ) )
-				{
-					flPushClamp = 300.0f;
-					// Don't want people jumpin' real high with the Rail Gun :)
-					flCalculatedForce /= 3;
-				}
-				else
-					flPushClamp = PUSH_CLAMP;
+						case CLASS_RAIL_PROJECTILE:
+							flPushClamp = 300.0f;
+							// Don't want people jumpin' real high with the Rail Gun :)
+							flCalculatedForce /= 3;
+							break;
+
+						case CLASS_GREN_EMP:
+							if (flCalculatedForce > 700.0f )
+								flCalculatedForce = 700.0f;
+							break;
+					}
+				}	
 
 				if (flCalculatedForce < flPushClamp)
 					flCalculatedForce = flPushClamp;
