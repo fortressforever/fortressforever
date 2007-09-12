@@ -705,6 +705,10 @@ float CServerGameDLL::GetTickInterval( void ) const
 	if ( CommandLine()->CheckParm( "-tickrate" ) )
 	{
 		float tickrate = CommandLine()->ParmValue( "-tickrate", 0 );
+		// Jiggles: Bad stuff happens if the tickrate is set too high
+		if ( tickrate > 66 )
+			tickrate = 66.0f;
+
 		if ( tickrate > 10 )
 			tickinterval = 1.0f / tickrate;
 	}
