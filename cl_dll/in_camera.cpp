@@ -458,9 +458,10 @@ void CInput::CAM_ToThirdPerson(void)
 #if defined ( TF_CLIENT_DLL )
 		// This is empty intentionally!
 #else
-	if ( gpGlobals->maxClients > 1 )
+	sv_cheats = cvar->FindVar( "sv_cheats" );
+	if ( gpGlobals->maxClients > 1 && sv_cheats && !sv_cheats->GetBool() )
 	{
-		// no thirdperson in multiplayer.
+		// no thirdperson in multiplayer. | jon: unless cheats are on
 		return;
 	}
 #endif

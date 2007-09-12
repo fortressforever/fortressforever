@@ -147,7 +147,7 @@ public:
 #if defined( CSTRIKE_DLL )
 	#define MAX_PLAYERS				64  // Absolute max players supported
 #else
-	#define MAX_PLAYERS				32  // Absolute max players supported
+	#define MAX_PLAYERS				22  // Absolute max players supported
 #endif
 
 #define MAX_PLACE_NAME_LENGTH		18
