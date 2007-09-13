@@ -72,7 +72,7 @@ SectionEnd
 Section "Desktop Shortcut" SHORTCUT
 	SetOutPath "$DESKTOP"
 	CreateShortcut "${FULL_GAME_NAME}.lnk" $STEAMEXE \
-		'-applaunch ${APPID} -game "$INSTDIR"' "$ICONDIR\${FULL_GAME_NAME}.ico"
+		'-applaunch ${APPID} -game "$INSTDIR\${MODDIR}"' "$ICONDIR\${FULL_GAME_NAME}.ico"
 SectionEnd
 !endif
 Page custom Finish
