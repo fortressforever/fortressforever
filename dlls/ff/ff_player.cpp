@@ -1237,7 +1237,11 @@ void CFFPlayer::Spawn( void )
 	m_iGrenadeState = FF_GREN_NONE;
 
 	// Maybe this will fix the death slant problem
-	pl.v_angle.z = 0;
+	//pl.v_angle.z = 0;
+	// Jiggles: Trying DrEvil's 1st idea for fixing the death slant bug
+	QAngle eyeAngles = EyeAngles();
+	eyeAngles.z = 0.f;
+	SnapEyeAngles(eyeAngles); 
 
 	// Fixes water bug
 	if (GetWaterLevel() == 3)
@@ -1409,9 +1413,6 @@ void CFFPlayer::Spawn( void )
 
 	// Set on ground
 	AddFlag(FL_ONGROUND);
-
-	// Jiggles: Another attempt to fix the death slant-view bug
-	SnapEyeAngles(QAngle( 0, 0, 0 ));
 	
 	// Make sure we don't go running around during the intermission
 	// AfterShock - Commented out to try to prevent mapload respawn frozen
@@ -1440,7 +1441,7 @@ void CFFPlayer::Spawn( void )
 		GetPlayerName());
 		
 	g_StatsLog->StartTimer(m_iStatsID, m_iPlayTime);
-	
+
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1965,8 +1966,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	BaseClass::Event_Killed( info );
 
 	// Set view angle + positions
-	SetViewOffset(VEC_DEAD_VIEWHEIGHT);
-	AddFlag(FL_DUCKING);
+	//SetViewOffset(VEC_DEAD_VIEWHEIGHT);
+	//AddFlag(FL_DUCKING);
 	QAngle eyeAngles = EyeAngles();
 	eyeAngles.z = 50.0f;
 	SnapEyeAngles(eyeAngles);
