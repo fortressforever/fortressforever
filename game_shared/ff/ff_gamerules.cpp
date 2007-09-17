@@ -1863,7 +1863,11 @@ int CFFGameRules::IsTeam1AlliedToTeam2( int iTeam1, int iTeam2 )
 	{
 		// Use mirv's allies stuff...
 		CFFTeam *pTeam1 = ( CFFTeam * )GetGlobalTeam( iTeam1 );
-		if( pTeam1->GetAllies() & ( 1 << iTeam2 ) )
+
+		// Watch out for this happening in debug builds, maybe we can catch the cause
+		Assert(pTeam1);
+
+		if( pTeam1 && (pTeam1->GetAllies() & ( 1 << iTeam2 )) )
 			return GR_TEAMMATE;
 	}
 
