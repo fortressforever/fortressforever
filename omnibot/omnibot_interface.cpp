@@ -769,9 +769,11 @@ namespace Omnibot
 				VectorAngles(vFacing, cmd.viewangles);
 
 				// Calculate the movement vector, taking into account the view direction.
+				QAngle angle2d = cmd.viewangles; angle2d.x = 0;
+
 				Vector vForward, vRight, vUp;
 				Vector vMoveDir(_input.m_MoveDir[0],_input.m_MoveDir[1],_input.m_MoveDir[2]);
-				AngleVectors(cmd.viewangles, &vForward, &vRight, &vUp);
+				AngleVectors(angle2d, &vForward, &vRight, &vUp);
 
 				const Vector worldUp(0.f, 0.f, 1.f);
 				cmd.forwardmove = vForward.Dot(vMoveDir) * pPlayer->MaxSpeed();

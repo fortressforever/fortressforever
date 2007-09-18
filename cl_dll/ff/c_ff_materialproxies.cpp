@@ -159,12 +159,12 @@ void C_TeamColorMaterialProxy::OnBind( void *pC_BaseEntity )
 			}
 			else if( pEntity->Classify() == CLASS_NONE )
 			{
-				Warning( "[Team Color Proxy] (Classify() == CLASS_NONE)\n" );
+				//Warning( "[Team Color Proxy] (Classify() == CLASS_NONE)\n" );
 				iTeam = -1;
 			}
 			else
 			{
-				Warning( "[Team Color Proxy] No Class_T entry for classname: %s\n", pEntity->GetClassname() );
+				//Warning( "[Team Color Proxy] No Class_T entry for classname: %s\n", pEntity->GetClassname() );
 				iTeam = -1;
 			}
 		}

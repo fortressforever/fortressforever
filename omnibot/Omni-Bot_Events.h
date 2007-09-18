@@ -75,6 +75,7 @@ typedef enum
 			MESSAGE_SPECTATED,
 			MESSAGE_AIMCOMPLETED,
 			MESSAGE_SCRIPTMSG,
+			MESSAGE_PROXIMITY_TRIGGER,
 		MESSAGE_ID_LAST,
 
 		// Percepts  (senses: feel, see, hear, smell, )

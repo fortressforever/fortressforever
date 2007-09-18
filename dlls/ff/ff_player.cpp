@@ -5053,7 +5053,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// call script: player_ondamage(player, damageinfo)	
 	CFFLuaSC func;
 	func.Push(this);
-	func.Push(&info);
+	func.PushRef(info);
 	func.CallFunction("player_ondamage");
 
 	// go take the damage first

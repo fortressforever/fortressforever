@@ -431,6 +431,7 @@ typedef enum eTF_Events
 	TF_MSG_DETPACK_ALREADYBUILT,
 	TF_MSG_DETPACK_DETONATED,
 	// Internal Events
+	TF_MSG_PIPE_PROXIMITY,
 	TF_MSG_DETPIPES,		// The bot has detected the desire to det pipes.
 	TF_MSG_DETPIPESNOW,		// Configurable delayed message for the actual detting.
 	TF_MSG_DEMOMAN_END,

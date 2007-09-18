@@ -128,7 +128,7 @@ bool CollectionFilterParseFlags( const luabind::adl::object& table, bool *pbFlag
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool PassesCollectionFilter_Players( CBaseEntity *pEntity, bool _nobots, bool _nohumans )
+bool PassesCollectionFilter_Players( CBaseEntity *pEntity, bool _nobots = false, bool _nohumans = false )
 {
 	if( !pEntity )
 		return false;
@@ -196,7 +196,7 @@ bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags )
 
 	if( pbFlags[ CF_PLAYERS ] )
 	{
-		if( !PassesCollectionFilter_Players( pEntity, false, true ) )
+		if( !PassesCollectionFilter_Players( pEntity ) )
 			return false;
 	}
 	else if( pbFlags[ CF_HUMAN_PLAYERS ] )
