@@ -58,6 +58,7 @@ void CFFLuaLib::InitWeapons(lua_State* L)
 			.def("GetDamageType",		(int(CTakeDamageInfo::*)(void))&CTakeDamageInfo::GetDamageType)
 			.def("GetAmmoType",			&CTakeDamageInfo::GetAmmoTypeLua)
 			.def("SetDamage",			&CTakeDamageInfo::SetDamage)
+			.def("ScaleDamage",			&CTakeDamageInfo::ScaleDamage)
 			.enum_("DamageTypes")
 			[
 				value("kGeneric",		DMG_GENERIC),

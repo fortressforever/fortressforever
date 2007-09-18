@@ -12,8 +12,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release FF|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="$(ConfigurationName)/2003"
+			IntermediateDirectory="$(ConfigurationName)/2003"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -101,8 +101,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug FF|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="$(ConfigurationName)/2003"
+			IntermediateDirectory="$(ConfigurationName)/2003"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -182,8 +182,8 @@
 		</Configuration>
 		<Configuration
 			Name="Beta FF|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="$(ConfigurationName)/2003"
+			IntermediateDirectory="$(ConfigurationName)/2003"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -220,7 +220,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
-				CommandLine="if exist &quot;%ffbetabin%&quot; copy &quot;$(TargetPath)&quot; &quot;%ffbetabin%&quot;"
+				CommandLine="if exist &quot;%ffbetabin%&quot; copy &quot;$(TargetPath)&quot; &quot;%ffbetabin%&quot;
+"
 				Outputs="server.dll"/>
 			<Tool
 				Name="VCLinkerTool"

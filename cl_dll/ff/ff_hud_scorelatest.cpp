@@ -29,6 +29,8 @@
 
 #include <vgui/ILocalize.h>
 
+#include "G15.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -151,6 +153,15 @@ void CHudPlayerLatestScore::MsgFunc_SetPlayerLatestFortPoints( bf_read &msg )
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "NewLatestFortPoints" );
 	
 	//DevMsg( "[Location] Team: %i, String: %s\n", iTeam, szString );
+	if(G15::IsEnabled())
+	{
+		enum { BufferSize = 1024 };
+		char description[BufferSize] = {0};
+		char score[BufferSize] = {0};
+		vgui::localize()->ConvertUnicodeToANSI(m_pTextDesc, description, BufferSize);
+		vgui::localize()->ConvertUnicodeToANSI(m_pTextScore, score, BufferSize);
+		G15::AddFortPoints(description, score);
+	}
 }
 
 //-----------------------------------------------------------------------------
