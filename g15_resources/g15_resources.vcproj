@@ -44,7 +44,8 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy to Bin"
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(FortressForeverBin)&quot;"/>
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(FortressForeverBin)&quot;
+copy &quot;$(TargetPath)&quot; &quot;$(FortressForeverBin)/../bin_release/&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
@@ -94,7 +95,8 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy to Bin"
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(FortressForeverBin)/dlls&quot;"/>
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(FortressForeverBin)&quot;
+copy &quot;$(TargetPath)&quot; &quot;$(FortressForeverBin)/../bin_release/&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
