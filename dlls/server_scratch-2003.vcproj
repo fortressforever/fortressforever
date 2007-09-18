@@ -51,6 +51,9 @@
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
 				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
+if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%/../bin_release/&quot;
+if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quot; &quot;%FortressForeverBin%&quot;
+if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quot; &quot;%FortressForeverBin%/../bin_release/&quot;
 "
 				Outputs="server.dll"/>
 			<Tool
