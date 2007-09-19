@@ -706,6 +706,12 @@ void CFFBuildableObject::DoExplosion( void )
 	//CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 
 	// Explosion!
+
+	// Don't play sound if the buildable has an explode sound.
+	int flags = TE_EXPLFLAG_NONE;
+	if(m_ppszSounds[1])
+		flags = TE_EXPLFLAG_NOSOUND;
+
 	Vector vecAbsOrigin = GetAbsOrigin() + Vector( 0, 0, 32.0f ); // Bring off the ground a little 
 	CPASFilter filter( vecAbsOrigin );
 	te->Explosion( filter,			// Filter
@@ -714,7 +720,7 @@ void CFFBuildableObject::DoExplosion( void )
 		g_sModelIndexFireball,		// Model index
 		m_iExplosionFireballScale,	// scale
 		random->RandomInt( 8, 15 ),	// framerate
-		TE_EXPLFLAG_NONE,			// flags
+		flags,			// flags
 		m_iExplosionRadius,			// radius
 		m_iExplosionMagnitude		// magnitude
 	);
