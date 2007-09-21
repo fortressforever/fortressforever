@@ -2042,6 +2042,26 @@
 				>
 			</File>
 			<File
+				RelativePath="..\public\tier0\memoverride.cpp"
+				>
+				<FileConfiguration
+					Name="Release FF|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug FF|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\tier1\mempool.cpp"
 				>
 				<FileConfiguration
