@@ -94,7 +94,7 @@
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\lib\public;..\external\lua\lib;..\external\luabind\lib"
-				IgnoreDefaultLibraryNames="LIBC,LIBCD,LIBCMT"
+				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(IntDir)/server.pdb"
 				GenerateMapFile="true"
