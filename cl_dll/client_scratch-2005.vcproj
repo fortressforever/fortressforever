@@ -1356,6 +1356,26 @@
 				>
 			</File>
 			<File
+				RelativePath="..\public\tier0\memoverride.cpp"
+				>
+				<FileConfiguration
+					Name="Debug FF|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release FF|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="menu.cpp"
 				>
 			</File>
