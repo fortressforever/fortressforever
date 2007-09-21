@@ -89,7 +89,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				LinkLibraryDependencies="false"
+				LinkLibraryDependencies="true"
 				AdditionalDependencies="winmm.lib luabind80.lib lua80.lib"
 				OutputFile="$(IntDir)/server.dll"
 				LinkIncremental="2"
@@ -200,7 +200,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				LinkLibraryDependencies="false"
+				LinkLibraryDependencies="true"
 				AdditionalDependencies="winmm.lib lua80D.lib luabind80D.lib"
 				OutputFile="$(IntDir)/server.dll"
 				LinkIncremental="2"
