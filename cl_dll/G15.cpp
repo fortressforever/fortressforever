@@ -2,7 +2,6 @@
 
 #include <list>
 #include <windows.h>
-#include <resource.h>
 #include "../g15_resources/resource.h"
 #include "LCDOutput.h"
 #include "LCDManager.h"
