@@ -533,8 +533,16 @@ void CBaseEntity::SetPredictionRandomSeed( const CUserCmd *cmd )
 //------------------------------------------------------------------------------
 // Purpose : Base implimentation for entity handling decals
 //------------------------------------------------------------------------------
+ConVar	ffdev_disableentitydecals( "ffdev_disableentitydecals", "1", FCVAR_CHEAT );
+
 void CBaseEntity::DecalTrace( trace_t *pTrace, char const *decalName )
 {
+	if(ffdev_disableentitydecals.GetBool())
+	{
+		if(Classify() != CLASS_NONE && Classify() < NUM_AI_CLASSES)
+			return;
+	}	
+
 	int index = decalsystem->GetDecalIndexForName( decalName );
 	if ( index < 0 )
 		return;

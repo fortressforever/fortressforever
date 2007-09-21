@@ -3275,9 +3275,17 @@ void C_BaseEntity::AddBrushModelDecal( const Ray_t& ray, const Vector& decalCent
 //-----------------------------------------------------------------------------
 // A method to apply a decal to an entity
 //-----------------------------------------------------------------------------
+extern ConVar	ffdev_disableentitydecals;
+
 void C_BaseEntity::AddDecal( const Vector& rayStart, const Vector& rayEnd,
 		const Vector& decalCenter, int hitbox, int decalIndex, bool doTrace, trace_t& tr, int maxLODToDecal )
 {
+	if(ffdev_disableentitydecals.GetBool())
+	{
+		if(Classify() != CLASS_NONE && Classify() < NUM_AI_CLASSES)
+			return;
+	}
+
 	Ray_t ray;
 	ray.Init( rayStart, rayEnd );
 
