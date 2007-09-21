@@ -89,6 +89,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
+				LinkLibraryDependencies="false"
 				AdditionalDependencies="winmm.lib luabind80.lib lua80.lib"
 				OutputFile="$(IntDir)/server.dll"
 				LinkIncremental="2"
