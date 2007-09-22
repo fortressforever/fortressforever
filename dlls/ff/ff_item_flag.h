@@ -209,7 +209,7 @@ public:
 	DECLARE_CLASS( CFFInfoScriptAnimator, CBaseAnimating );
 	DECLARE_DATADESC();
 
-	CFFInfoScriptAnimator( void ) {}
+	CFFInfoScriptAnimator( void ) : m_pFFScript(NULL) {}
 	~CFFInfoScriptAnimator( void ) {}
 
 	virtual void	Spawn( void );
