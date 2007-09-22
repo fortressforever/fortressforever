@@ -462,11 +462,14 @@ void CBaseDoor::Activate( void )
 	
 	switch ( m_toggle_state )
 	{
-	case TS_AT_TOP:
-		UpdateAreaPortals( true );
-		break;
 	case TS_AT_BOTTOM:
 		UpdateAreaPortals( false );
+		break;
+	case TS_GOING_DOWN:
+	case TS_GOING_UP:
+	case TS_AT_TOP:
+	default:
+		UpdateAreaPortals( true );
 		break;
 	}
 
@@ -810,7 +813,8 @@ void CBaseDoor::InputLock( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CBaseDoor::InputOpen( inputdata_t &inputdata )
 {
-	if (m_toggle_state != TS_AT_TOP && m_toggle_state != TS_GOING_UP )
+	// jon: if already open and being told to open, stay open...
+	if ( /* m_toggle_state != TS_AT_TOP && */ m_toggle_state != TS_GOING_UP )
 	{	
 		// I'm locked, can't open
 		if (m_bLocked)
@@ -897,7 +901,8 @@ int CBaseDoor::DoorActivate( )
 		// play door unlock sounds
 		PlayLockSounds(this, &m_ls, FALSE, FALSE);
 
-		if ( m_toggle_state != TS_AT_TOP && m_toggle_state != TS_GOING_UP )
+		// jon: if already open and being told to open, stay open...
+		if ( /* m_toggle_state != TS_AT_TOP && */ m_toggle_state != TS_GOING_UP )
 		{
 			DoorGoUp();
 		}
@@ -915,6 +920,38 @@ void CBaseDoor::DoorGoUp( void )
 	edict_t	*pevActivator;
 
 	UpdateAreaPortals( true );
+
+	// jon: if already open and being told to open, stay open...
+	if ( m_toggle_state == TS_AT_TOP )
+	{
+		// toggle-doors don't come down automatically, they wait for refire.
+		if (HasSpawnFlags( SF_DOOR_NO_AUTO_RETURN))
+		{
+			// Re-instate touch method, movement is complete
+			SetTouch( &CBaseDoor::DoorTouch );
+		}
+		else
+		{
+			// set destdelta to the vector needed to move
+			Vector vecDestDelta = m_vecPosition2 - m_vecPosition1;
+
+			// divide vector length by speed to get time to reach dest
+			float flTravelTime = vecDestDelta.Length() / m_flSpeed;
+
+			// In flWait seconds, DoorGoDown will fire, unless wait is -1, then door stays open
+			SetMoveDoneTime( m_flWait + (flTravelTime * 2) );
+			SetMoveDone( &CBaseDoor::DoorGoDown );
+
+			if ( m_flWait == -1 )
+			{
+				SetNextThink( TICK_NEVER_THINK );
+			}
+		}
+
+		// seriously, do nothing but stay open
+		return;
+	}
+
 	// It could be going-down, if blocked.
 	ASSERT(m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN);
 
@@ -1102,7 +1139,7 @@ void CBaseDoor::DoorHitBottom( void )
 	}
 
 	// Close the area portals just after the door closes, to prevent visual artifacts in multiplayer games
-	SetContextThink( &CBaseDoor::CloseAreaPortalsThink, gpGlobals->curtime + 0.5f, CLOSE_AREAPORTAL_THINK_CONTEXT );
+	SetContextThink( &CBaseDoor::CloseAreaPortalsThink, gpGlobals->curtime + 2.0f, CLOSE_AREAPORTAL_THINK_CONTEXT );
 }
 
 
