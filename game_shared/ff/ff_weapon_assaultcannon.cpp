@@ -31,8 +31,10 @@
 #define FF_AC_CHARGEUPTIME 0.0f // Assault Cannon Chargeup Time
 #define FF_AC_OVERHEATDELAY 1.0f // Assault Cannon Overheat delay
 
-#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
-#define FF_AC_SPREAD_MAX 0.10f // Assault Cannon Maximum spread
+//#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
+ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.010", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
+//#define FF_AC_SPREAD_MAX 0.10f // Assault Cannon Maximum spread
+ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.100", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
 
 #define FF_AC_ROF_MAX 0.12f // Assault Cannon maximum rate of fire
 #define FF_AC_ROF_MIN 0.06f // Assault Cannon minimum rate of fire
@@ -693,8 +695,9 @@ Vector CFFWeaponAssaultCannon::GetFireSpread()
 	t = clamp(t, 0.0f, 1.0f);
 	t = SimpleSpline(t);
 
-	float flSpread = FF_AC_SPREAD_MIN * (1.0f - t) + FF_AC_SPREAD_MAX * t;
-
+	//float flSpread = FF_AC_SPREAD_MIN * (1.0f - t) + FF_AC_SPREAD_MAX * t;
+	float flSpread = ffdev_ac_spread_min.GetFloat() * (1.0f - t) + ffdev_ac_spread_max.GetFloat() * t;
+	
 	return Vector(flSpread, flSpread, flSpread);
 }
 
