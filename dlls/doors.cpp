@@ -933,13 +933,14 @@ void CBaseDoor::DoorGoUp( void )
 		else
 		{
 			// set destdelta to the vector needed to move
-			Vector vecDestDelta = m_vecPosition2 - m_vecPosition1;
+			//Vector vecDestDelta = m_vecPosition2 - m_vecPosition1;
 
 			// divide vector length by speed to get time to reach dest
-			float flTravelTime = vecDestDelta.Length() / m_flSpeed;
+			//float flTravelTime = vecDestDelta.Length() / m_flSpeed;
 
 			// In flWait seconds, DoorGoDown will fire, unless wait is -1, then door stays open
-			SetMoveDoneTime( m_flWait + (flTravelTime * 2) );
+			//SetMoveDoneTime( m_flWait + (flTravelTime * 2) );
+			SetMoveDoneTime( m_flWait + 0.25f );
 			SetMoveDone( &CBaseDoor::DoorGoDown );
 
 			if ( m_flWait == -1 )
@@ -1139,7 +1140,7 @@ void CBaseDoor::DoorHitBottom( void )
 	}
 
 	// Close the area portals just after the door closes, to prevent visual artifacts in multiplayer games
-	SetContextThink( &CBaseDoor::CloseAreaPortalsThink, gpGlobals->curtime + 2.0f, CLOSE_AREAPORTAL_THINK_CONTEXT );
+	SetContextThink( &CBaseDoor::CloseAreaPortalsThink, gpGlobals->curtime + 1.0f, CLOSE_AREAPORTAL_THINK_CONTEXT );
 }
 
 
