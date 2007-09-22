@@ -1426,8 +1426,9 @@ void CFuncTrackTrain::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 		delta = ((int)(m_flSpeed * 4) / (int)m_maxSpeed)*0.25 + 0.25 * delta;
 		if ( delta > 1 )
 			delta = 1;
-		else if ( delta < -0.25 )
-			delta = -0.25;
+		// jon: allow backwards at full speed
+		else if ( delta < -1 )
+			delta = -1;
 		if ( m_spawnflags & SF_TRACKTRAIN_FORWARDONLY )
 		{
 			if ( delta < 0 )
