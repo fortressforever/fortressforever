@@ -99,7 +99,8 @@ public:
 		VOICE_NOTTALKING = 2,
 		VOICE_TALKING = 3,
 		VOICE_BANNED = 4,
-		VOICE_BANNEDTEXT = 5
+		VOICE_BANNEDTEXT = 5,
+		VOICE_ALLOWEDTEXT = 6,
 	};
 
 	// Call from the HUD_CreateEntities function so it can add sprites above player heads.

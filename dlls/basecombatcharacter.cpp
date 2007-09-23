@@ -2120,7 +2120,7 @@ int CBaseCombatCharacter::OnTakeDamage( const CTakeDamageInfo &info )
 				bGibbed = Event_Gibbed( info );
 				retVal = bGibbed;
 			}
-			
+
 			if ( bGibbed == false )
 			{
 				Event_Dying();

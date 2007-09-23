@@ -736,6 +736,7 @@ public:
 	virtual bool TakeNamedItem(const char* szName);	
 
 public:
+	int LuaAddHealth(int iAmount);
 	int LuaAddAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAllAmmo(bool bClipToo);

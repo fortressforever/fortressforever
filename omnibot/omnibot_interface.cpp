@@ -3797,7 +3797,6 @@ namespace Omnibot
 
 				int index = ENTINDEX(pEnt);
 				d.m_Entity = GameEntity(index, m_EntityHandles[index].m_HandleSerial);
-
 				d.m_EntityClass = iClass;
 				g_InterfaceFunctions->GetEntityCategory(ent, d.m_EntityCategory);
 				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ENTITYCREATED, &d, sizeof(d)));
