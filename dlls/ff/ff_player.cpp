@@ -1255,13 +1255,6 @@ void CFFPlayer::Spawn( void )
 	m_flServerPrimeTime = 0.0f;
 	m_iGrenadeState = FF_GREN_NONE;
 
-	// Maybe this will fix the death slant problem
-	//pl.v_angle.z = 0;
-	// Jiggles: Trying DrEvil's 1st idea for fixing the death slant bug
-	QAngle eyeAngles = EyeAngles();
-	eyeAngles.z = 0.f;
-	SnapEyeAngles(eyeAngles); 
-
 	// Fixes water bug
 	if (GetWaterLevel() == 3)
 	{
@@ -2059,12 +2052,12 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 
-	// Set view angle + positions
+	// Jiggles: We're not doing the death view change here now -- see C_FFPlayer::CalcView() instead
 	//SetViewOffset(VEC_DEAD_VIEWHEIGHT);
 	//AddFlag(FL_DUCKING);
-	QAngle eyeAngles = EyeAngles();
-	eyeAngles.z = 50.0f;
-	SnapEyeAngles(eyeAngles);
+	//QAngle eyeAngles = EyeAngles();
+	//eyeAngles.z = 50.0f;
+	//SnapEyeAngles(eyeAngles);
 
 	if (!ShouldGib(info))
 	{

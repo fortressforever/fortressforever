@@ -1819,6 +1819,14 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 
 	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
 
+	// Jiggles: Doing the "death slant" here now to try and avoid the bug where sometimes the player spawns still slanted
+	if ( m_lifeState != LIFE_ALIVE && (GetClassSlot() > 0) && !IsObserver() )
+	{
+		eyeOrigin -= VEC_DEAD_VIEWHEIGHT;
+		eyeAngles.z = 50.0f;
+		return;
+	}
+
 	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) /*&& conc_test.GetInt() == 0*/)
 		eyeAngles += m_angConced;
 }
