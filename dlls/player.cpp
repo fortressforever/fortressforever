@@ -1518,7 +1518,8 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	SetAnimation( PLAYER_DIE );
 
-	SetViewOffset( VEC_DEAD_VIEWHEIGHT );
+	// Jiggles: We're not doing the death view change here now -- see C_FFPlayer::CalcView() instead
+	//SetViewOffset( VEC_DEAD_VIEWHEIGHT );
 	m_lifeState		= LIFE_DYING;
 
 	pl.deadflag = true;
