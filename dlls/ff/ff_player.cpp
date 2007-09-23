@@ -4458,9 +4458,20 @@ void CFFPlayer::RecalculateSpeed( void )
 				bAssaultCannonIncluded = true;
 		}		
 	}
+	
 	// No amount of effects should let you go below 40% speed unless you're firing the AC
-	if (flSpeed < 0.4f && bAssaultCannonIncluded == false ) 
-		flSpeed = 0.4f;
+	if( bAssaultCannonIncluded ) 
+	{
+		// May as well clamp this at 0 for safety; dunno if it'll ever happen
+		if( flSpeed < 0.0f )
+			flSpeed = 0.0f;
+	}
+	else
+	{
+		// no AC effect so just clamp @ 40%
+		if( flSpeed < 0.4f )
+			flSpeed = 0.4f;
+	}	
 
 	// If speed has gotten slower then delay the max speed change on the server.
 	// This way the client can predict in time that the speed has changed, and warping
