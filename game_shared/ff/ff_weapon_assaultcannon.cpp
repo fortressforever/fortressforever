@@ -168,10 +168,8 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_assaultcannon);
 //----------------------------------------------------------------------------
 CFFWeaponAssaultCannon::CFFWeaponAssaultCannon() 
 {
-	m_flNextSecondaryAttack = gpGlobals->curtime;
-
-	m_flLastTick = 0.0f;
-	m_flDeployTick = 0.0f;
+	m_flChargeTime = 0.0f;
+	m_flLastTick = m_flDeployTick = m_flNextSecondaryAttack = gpGlobals->curtime;
 
 	m_flTriggerReleased = 1.0f;
 	m_flTriggerPressed = 0.0f;
@@ -198,9 +196,6 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 //----------------------------------------------------------------------------
 CFFWeaponAssaultCannon::~CFFWeaponAssaultCannon() 
 {
-	m_flNextSecondaryAttack = gpGlobals->curtime;
-
-
 #ifdef CLIENT_DLL
 
 	StopBarrelRotationSound();
@@ -408,9 +403,6 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 		float flTimeHeld = m_flTriggerReleased - m_flTriggerPressed;
 
 		m_flChargeTime = flTimeHeld - flTimeSinceRelease;
-
-		if (m_flChargeTime < 0)
-			m_flChargeTime = 0;
 	}
 
 	// They might have overheated.
@@ -419,6 +411,9 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 	{
 		m_flChargeTime = FF_AC_MAXCHARGETIME * ((m_flNextSecondaryAttack - gpGlobals->curtime) / FF_AC_OVERHEATDELAY);
 	}
+
+	if (m_flChargeTime < 0)
+		m_flChargeTime = 0;
 
 #ifdef CLIENT_DLL
 
@@ -485,7 +480,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 		}
 
 		// Time for the next real fire think
-		else if ((m_flChargeTime > 0.0f || m_bFiring) && m_flNextPrimaryAttack <= gpGlobals->curtime)
+		else if ((m_flChargeTime > FF_AC_WINDUPTIME || m_bFiring) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
 			// Out of ammo
 			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
