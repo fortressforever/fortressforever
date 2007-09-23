@@ -28,14 +28,14 @@
 
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
 #define FF_AC_MAXCHARGETIME 2.0f // Assault Cannon Max Charge Time
-#define FF_AC_WINDUPTIME 1.0f // Assault Cannon Wind Up Time
+#define FF_AC_WINDUPTIME 0.5f // Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME 2.5f // Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f // Assault Cannon Overheat delay
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
-ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.010", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
+ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.10", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
 //#define FF_AC_SPREAD_MAX 0.10f // Assault Cannon Maximum spread
-ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.125", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
+ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.15", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
 
 #define FF_AC_ROF_MAX 0.12f // Assault Cannon maximum rate of fire
 #define FF_AC_ROF_MIN 0.06f // Assault Cannon minimum rate of fire
@@ -84,7 +84,7 @@ public:
 	virtual void Drop( const Vector& vecVelocity );
 	virtual void ItemPostFrame();
 	virtual void PrimaryAttack();
-	virtual void Fire();
+	//virtual void Fire();
 
 	void UpdateChargeTime();
 
@@ -315,7 +315,7 @@ bool CFFWeaponAssaultCannon::Deploy()
 }
 
 // Jiggles: the below function doesn't actually get called anymore...
-
+/*
 //----------------------------------------------------------------------------
 // Purpose: Fires bullets
 //----------------------------------------------------------------------------
@@ -347,7 +347,7 @@ void CFFWeaponAssaultCannon::Fire()
 #ifdef GAME_DLL
 	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_MINIGUN, 0);
 #endif
-}
+}*/
 
 void CFFWeaponAssaultCannon::UpdateChargeTime()
 {
