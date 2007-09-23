@@ -1249,7 +1249,8 @@ ConVar mp_prematch( "mp_prematch",
 			
 
 			// For the moment we'll play blood effects if its a teammate too so its consistant with other weapons
-			// if (pEntity->IsPlayer() && g_pGameRules->FCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
+			// NOT!  Adding no blood for teammates when FF is off. -> Defrag
+			if (pEntity->IsPlayer() && g_pGameRules->FCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
 			{
 				// Bug #0000539: Blood decals are projected onto shit
 				// (direction needed normalising)
