@@ -27,10 +27,13 @@
 
 
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
-#define FF_AC_MAXCHARGETIME 2.0f // Assault Cannon Max Charge Time
-#define FF_AC_WINDUPTIME 1.0f // Assault Cannon Wind Up Time
-#define FF_AC_WINDDOWNTIME 2.5f // Assault Cannon Wind Down Time
-#define FF_AC_OVERHEATDELAY 1.0f // Assault Cannon Overheat delay
+#define FF_AC_MAXCHARGETIME 2.0f	// Assault Cannon Max Charge Time
+#define FF_AC_WINDUPTIME	1.0f	// Assault Cannon Wind Up Time
+#define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
+#define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
+#define FF_AC_MOVEMENTDELAY 0.6f	// Time the player has to wait after firing the AC before the speed penalty wears off.
+
+
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.10", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
@@ -222,7 +225,9 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	//	pPlayer->AddSpeedEffect( SE_ASSAULTCANNON, 0.5f, FF_AC_SPEEDEFFECT_MIN, SEM_BOOLEAN );
 
 	// uh....why slow the player down when they're holstering it?
-	pPlayer->RemoveSpeedEffect(SE_ASSAULTCANNON);
+	if( pPlayer)
+		pPlayer->RemoveSpeedEffect(SE_ASSAULTCANNON);
+
 #endif
 
 	//if (!m_fFireState) 
@@ -561,16 +566,23 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	}
 
 #ifdef GAME_DLL
-	if (m_flChargeTime > 0.0f)
+	// if there's a charge on the bar and the duder is firing, then keep making sure the speed penalty is implemented
+	// This makes it so that if there's a charge on the bar but the player is not attacking, the player can move around 
+	// after a certain period of time has passed (whereas it may take another few seconds for the bar to fully drain)
+	if( m_flChargeTime > 0.0f && ( pOwner->m_nButtons & IN_ATTACK ))
 	{
 		// base the speed effect on how charged the ac is
 		//float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
-		// HW is too mobile. Instantly slow him down on revving the AC.
+		
+		// HW is too mobile. Instantly slow him down on revving the AC -> Defrag
 		float flSpeed = FF_AC_SPEEDEFFECT_MAX;
 		
+		/*
 		CFFPlayer *pPlayer = GetPlayerOwner();
+
 		if (pPlayer)
-			pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, flSpeed, SEM_BOOLEAN);
+		*/
+		pOwner->AddSpeedEffect(SE_ASSAULTCANNON, FF_AC_MOVEMENTDELAY, flSpeed, SEM_BOOLEAN);
 	}
 #endif
 
