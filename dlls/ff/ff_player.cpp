@@ -4044,6 +4044,9 @@ void CFFPlayer::StatusEffectsThink( void )
 			DispatchEffect( "FF_InfectionEffect", data2 );
 			*/
 
+			// Removing friendly infection spreading to stop laming on servers -> Defrag
+
+			/*
 			CBaseEntity *ent = NULL;
 
 			// Infect anybody nearby
@@ -4075,6 +4078,7 @@ void CFFPlayer::StatusEffectsThink( void )
 					}
 				}
 			}
+			*/
 		}
 	}
 
