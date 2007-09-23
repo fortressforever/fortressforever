@@ -28,21 +28,22 @@
 
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
 #define FF_AC_MAXCHARGETIME 2.0f // Assault Cannon Max Charge Time
-#define FF_AC_CHARGEUPTIME 0.0f // Assault Cannon Chargeup Time
+#define FF_AC_WINDUPTIME 1.0f // Assault Cannon Wind Up Time
+#define FF_AC_WINDDOWNTIME 2.5f // Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f // Assault Cannon Overheat delay
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.010", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
 //#define FF_AC_SPREAD_MAX 0.10f // Assault Cannon Maximum spread
-ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.100", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
+ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.125", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
 
 #define FF_AC_ROF_MAX 0.12f // Assault Cannon maximum rate of fire
 #define FF_AC_ROF_MIN 0.06f // Assault Cannon minimum rate of fire
 
 #define FF_AC_BULLETPUSH 1.0 // Assault Cannon bullet push force
 
-#define FF_AC_SPEEDEFFECT_MAX 0.5f
-#define FF_AC_SPEEDEFFECT_MIN 0.2f
+#define FF_AC_SPEEDEFFECT_MAX 0.6f
+#define FF_AC_SPEEDEFFECT_MIN 0.3f
 
 #ifdef CLIENT_DLL
 
@@ -287,7 +288,7 @@ void CFFWeaponAssaultCannon::Drop( const Vector& vecVelocity )
 //----------------------------------------------------------------------------
 bool CFFWeaponAssaultCannon::Deploy()
 {
-	m_flChargeTime = 0;
+	m_flChargeTime = 0.0f;
 	m_flLastTick = gpGlobals->curtime;
 	m_flDeployTick = gpGlobals->curtime;
 
@@ -380,7 +381,7 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 
 		// Sometimes m_afButtonPressed seems to be set for 2 frames in a row.
 		// Therefore only allow 
-		else if (m_flTriggerReleased > 0)
+		else if ( m_flTriggerReleased > 0.0f )
 			m_flTriggerPressed = gpGlobals->curtime;
 
 		// Reset the trigger released
@@ -460,7 +461,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 		// Oh no...
 		if (m_flChargeTime > FF_AC_MAXCHARGETIME)
 		{
-			// Freeze for 5s, reduce to max rev sound so it falls away instantly
+			// Freeze for overheat delay, reduce to max rev sound so it falls away instantly
 			m_flNextSecondaryAttack = gpGlobals->curtime + FF_AC_OVERHEATDELAY;
 			m_flTriggerPressed = gpGlobals->curtime + FF_AC_OVERHEATDELAY;
 			m_flTriggerReleased = 0; //gpGlobals->curtime;
@@ -471,22 +472,20 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 #ifdef CLIENT_DLL
 			StopBarrelRotationSound();
 			StopLoopShotSound();
-#endif
 
-#ifdef CLIENT_DLL
 			FF_SendHint( HWGUY_OVERHEAT, 3, PRIORITY_NORMAL, "#FF_HINT_HWGUY_OVERHEAT" );
 #endif
 
 #ifdef GAME_DLL
 			// Remember to reset the speed soon
-			pOwner->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, FF_AC_SPEEDEFFECT_MIN, SEM_BOOLEAN);
+			pOwner->AddSpeedEffect(SE_ASSAULTCANNON, FF_AC_OVERHEATDELAY, FF_AC_SPEEDEFFECT_MIN, SEM_BOOLEAN);
 #endif
 
 			m_bFiring = false;
 		}
 
 		// Time for the next real fire think
-		else if (m_flChargeTime >= FF_AC_CHARGEUPTIME && m_flNextPrimaryAttack <= gpGlobals->curtime)
+		else if ((m_flChargeTime > 0.0f || m_bFiring) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
 			// Out of ammo
 			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
@@ -511,36 +510,19 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 			else if(m_flDeployTick + 0.5f <= gpGlobals->curtime)
 			{
 				// If the firing button was just pressed, reset the firing time
-				if (pOwner && pOwner->m_afButtonPressed & IN_ATTACK)
+				if (pOwner->m_nButtons & IN_ATTACK)
 					m_flNextPrimaryAttack = gpGlobals->curtime;
 
-#ifdef GAME_DLL
-				// base the speed effect on how charged the ac is
-				float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
-				CFFPlayer *pPlayer = GetPlayerOwner();
-				pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, flSpeed, SEM_BOOLEAN);
-#endif
+//#ifdef GAME_DLL
+//				// base the speed effect on how charged the ac is
+//				float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
+//				CFFPlayer *pPlayer = GetPlayerOwner();
+//				if (pPlayer)
+//					pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, flSpeed, SEM_BOOLEAN);
+//#endif
 
 				m_flPlaybackRate = 1.0f + m_flChargeTime;
 				PrimaryAttack();
-
-				m_bFiring = true;
-			}
-
-			//m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
-
-			//float flT = (m_flChargeTime - FF_AC_CHARGEUPTIME) / (2.0f * FF_AC_MAXCHARGETIME);
-
-			//m_flNextPrimaryAttack = gpGlobals->curtime + (GetFFWpnData().m_flCycleTime * (flT > 0.0f ? 1.0f : 1 - flT));
-
-			if (!m_bFiring && m_flChargeTime > FF_AC_CHARGEUPTIME)
-			{
-				//WeaponSound(SINGLE);
-
-#ifdef GAME_DLL
-				CFFPlayer *pPlayer = GetPlayerOwner();
-				pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, FF_AC_SPEEDEFFECT_MAX, SEM_BOOLEAN);
-#endif
 
 				m_bFiring = true;
 			}
@@ -550,12 +532,16 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	else
 	{
 		// Reduce speed at 3 times the rate
-		if (m_flChargeTime > 0)
+		if (m_flChargeTime > 0.0f)
 		{
 			m_flChargeTime -= flTimeDelta;
 
 			if (m_flChargeTime < 0)
 				m_flChargeTime = 0;
+		}
+		else
+		{
+			WeaponIdle();
 		}
 		
 		if (m_bFiring)
@@ -574,9 +560,18 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 			m_bFiring = false;
 		}
-
-		WeaponIdle();
 	}
+
+#ifdef GAME_DLL
+	if (m_flChargeTime > 0.0f)
+	{
+		// base the speed effect on how charged the ac is
+		float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
+		CFFPlayer *pPlayer = GetPlayerOwner();
+		if (pPlayer)
+			pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, flSpeed, SEM_BOOLEAN);
+	}
+#endif
 
 	m_flLastTick = gpGlobals->curtime;
 }
@@ -652,7 +647,7 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 	FireBulletsInfo_t info(iBulletsToFire * pWeaponInfo.m_iBullets, 
 		pPlayer->Weapon_ShootPosition(), 
 		vecForward, 
-		Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), 
+		GetFireSpread(), 
 		MAX_TRACE_LENGTH, 
 		m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
@@ -691,8 +686,7 @@ float CFFWeaponAssaultCannon::GetFireRate()
 
 Vector CFFWeaponAssaultCannon::GetFireSpread()
 {
-	float t = m_flChargeTime / FF_AC_MAXCHARGETIME;
-	t = clamp(t, 0.0f, 1.0f);
+	float t = clamp(m_flChargeTime, 0.0f, FF_AC_MAXCHARGETIME) / FF_AC_MAXCHARGETIME;
 	t = SimpleSpline(t);
 
 	//float flSpread = FF_AC_SPREAD_MIN * (1.0f - t) + FF_AC_SPREAD_MAX * t;
@@ -922,10 +916,10 @@ void CFFWeaponAssaultCannon::UpdateBarrelRotation()
 		else if (m_flBarrelRotationDelta > 0)
 		{
 			// take X seconds to stop
-			m_flBarrelRotationStopTimer = clamp(m_flBarrelRotationStopTimer + gpGlobals->frametime, 0, 2.5f);
+			m_flBarrelRotationStopTimer = clamp(m_flBarrelRotationStopTimer + gpGlobals->frametime, 0, FF_AC_WINDDOWNTIME);
 
 			// smooth transition (FLerp rules)
-			m_flBarrelRotationDelta = gpGlobals->frametime * FLerp( FF_AC_BARRELROTATION_SPEED_MIN, 0, m_flBarrelRotationStopTimer / 2.5f );
+			m_flBarrelRotationDelta = gpGlobals->frametime * FLerp( FF_AC_BARRELROTATION_SPEED_MIN, 0, m_flBarrelRotationStopTimer / FF_AC_WINDDOWNTIME );
 		}
 		else
 			// reset the timer
