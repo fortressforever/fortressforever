@@ -235,6 +235,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	s_VoiceImage[ CVoiceStatus::VOICE_TALKING ] = imageList->AddImage( scheme( )->GetImage( "640_speaker3", true ) );
 	s_VoiceImage[ CVoiceStatus::VOICE_BANNED ] = imageList->AddImage( scheme( )->GetImage( "640_voiceblocked", true ) );
 	s_VoiceImage[ CVoiceStatus::VOICE_BANNEDTEXT ] = imageList->AddImage( scheme( )->GetImage( "640_textblocked", true ) );		// |-- Mirv: Text ban
+	s_VoiceImage[ CVoiceStatus::VOICE_ALLOWEDTEXT ] = imageList->AddImage( scheme( )->GetImage( "640_textallowed", true ) );	// |-- DrEvil: Text allowed
 
 	// --> Mirv: Channel images
 	//s_ChannelImage[0] = 0;
@@ -739,7 +740,10 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 	}
 	else
 	{
-		kv->SetInt( "voice", 0 );
+		if(g_fBlockedStatus[playerIndex])
+			kv->SetInt( "voice", s_VoiceImage[ CVoiceStatus::VOICE_BANNEDTEXT ] );
+		else
+			kv->SetInt( "voice", s_VoiceImage[ CVoiceStatus::VOICE_ALLOWEDTEXT ] );
 		//kv->SetInt( "channel", 0 );
 	}
 
