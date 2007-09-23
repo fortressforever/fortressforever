@@ -128,7 +128,7 @@ void CHudPlayerTotalScore::MsgFunc_SetPlayerTotalFortPoints( bf_read &msg )
 {
 	// Read int and convert to string
 	char szString3[ 1024 ];
-	Q_snprintf( szString3, sizeof(szString3), "%i", msg.ReadShort() );
+	Q_snprintf( szString3, sizeof(szString3), "%i", msg.ReadWord() );
 
 	char szString4[ 1024 ];
 	Q_snprintf( szString4, sizeof(szString4), "Fortress Points" );

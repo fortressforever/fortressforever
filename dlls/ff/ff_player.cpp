@@ -217,20 +217,28 @@ void CC_Player_Kill( void )
 
 		// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
 		if( pPlayer->IsAlive() )
+		{
+			CFFLuaSC hPlayerOnKill;
+			hPlayerOnKill.Push(pPlayer);
+			if(_scriptman.RunPredicates_LUA( NULL, &hPlayerOnKill, "player_onkill" ))
+			{
+				if(hPlayerOnKill.GetBool() == false)
+					return;
+			}
+
 			pPlayer->SetRespawnDelay( 5.0f );
 
-		// Bug #0000700: people with infection should give medic kill if they suicide
-		if( pPlayer->IsInfected() && pPlayer->GetInfector() )
-			pPlayer->SetSpecialInfectedDeath();
+			// Bug #0000700: people with infection should give medic kill if they suicide
+			if( pPlayer->IsInfected() && pPlayer->GetInfector() )
+				pPlayer->SetSpecialInfectedDeath();
 
-		ClientKill( pPlayer->edict() );
+			ClientKill( pPlayer->edict() );
 
-		// Call lua player_killed on suicides
-		//_scriptman.SetVar( "killer", ENTINDEX( pPlayer ) );
-		CFFLuaSC hPlayerKilled;
-		hPlayerKilled.Push(pPlayer);
-		hPlayerKilled.Push(pPlayer);
-		_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
+			// Call lua player_killed on suicides
+			CFFLuaSC hPlayerKilled;
+			hPlayerKilled.Push(pPlayer);
+			_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
+		}
 	}
 }
 static ConCommand kill("kill", CC_Player_Kill, "kills the player");
@@ -2361,7 +2369,8 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 			KillAndRemoveItems();
 			if( bAlive && (GetClassSlot() != 0) )
 			{
-				CFFLuaSC hPlayerKilled( 1, this );
+				CFFLuaSC hPlayerKilled;
+				hPlayerKilled.Push(this);
 				_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 			}
 		}
@@ -2432,7 +2441,8 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 
 		if( bAlive && (GetClassSlot() != 0) )
 		{
-			CFFLuaSC hPlayerKilled( 1, this );
+			CFFLuaSC hPlayerKilled;
+			hPlayerKilled.Push(this);
 			_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 		}		
 
@@ -2586,7 +2596,8 @@ void CFFPlayer::Command_Team( void )
 		KillPlayer();
 
 		// This isn't called when you changeteams
-		CFFLuaSC hPlayerKilled( 1, this );
+		CFFLuaSC hPlayerKilled;
+		hPlayerKilled.Push(this);
 		_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 	}
 	

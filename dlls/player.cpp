@@ -2903,7 +2903,6 @@ void CBasePlayer::AddFortPoints( int iFortpoints, const char *szDescription )
 		g_StatsLog->AddStat(ffplayer->m_iStatsID, statsID, iFortpoints);
 	}
 
-
 	CSingleUserRecipientFilter filter( this );
 	filter.MakeReliable();
 
@@ -2915,7 +2914,7 @@ void CBasePlayer::AddFortPoints( int iFortpoints, const char *szDescription )
 
 	// set new total score on user HUD
 	UserMessageBegin( filter, "SetPlayerTotalFortPoints" );
-	WRITE_SHORT( m_iFortPoints );
+	WRITE_WORD( m_iFortPoints );
 	MessageEnd();
 }
 
