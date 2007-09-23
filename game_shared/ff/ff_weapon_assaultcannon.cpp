@@ -28,7 +28,7 @@
 
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
 #define FF_AC_MAXCHARGETIME 2.0f // Assault Cannon Max Charge Time
-#define FF_AC_WINDUPTIME 0.5f // Assault Cannon Wind Up Time
+#define FF_AC_WINDUPTIME 1.0f // Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME 2.5f // Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f // Assault Cannon Overheat delay
 
@@ -42,8 +42,11 @@ ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.15", FCVAR_REPLICATED | FC
 
 #define FF_AC_BULLETPUSH 1.0 // Assault Cannon bullet push force
 
-#define FF_AC_SPEEDEFFECT_MAX 0.6f
-#define FF_AC_SPEEDEFFECT_MIN 0.3f
+//#define FF_AC_SPEEDEFFECT_MAX 0.6f
+
+// Someone had these backwards I think -> Defrag
+#define FF_AC_SPEEDEFFECT_MAX 0.2f
+#define FF_AC_SPEEDEFFECT_MIN 0.7f
 
 #ifdef CLIENT_DLL
 
@@ -561,7 +564,10 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	if (m_flChargeTime > 0.0f)
 	{
 		// base the speed effect on how charged the ac is
-		float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
+		//float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
+		// HW is too mobile. Instantly slow him down on revving the AC.
+		float flSpeed = FF_AC_SPEEDEFFECT_MAX;
+		
 		CFFPlayer *pPlayer = GetPlayerOwner();
 		if (pPlayer)
 			pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, flSpeed, SEM_BOOLEAN);

@@ -1475,11 +1475,15 @@ void CFFPlayer::Spawn( void )
 		Q_snprintf(weaponSpawn, BufferSize, "ff_weapon_%s", pSpawnWpn?pSpawnWpn:"");
 
 		CBaseCombatWeapon *pSpawnWeapon = 0;
+
+		//TODO: Is this assignment in the conditional expression intended?
 		if(pSpawnWpn && (pSpawnWeapon = Weapon_OwnsThisType(weaponDefault)))
 		{
 			if(Weapon_Switch(pSpawnWeapon))
 				break;
 		}
+
+		//TODO: Is this assignment in the conditional expression intended?
 		if(pDefaultWpn && (pSpawnWeapon = Weapon_OwnsThisType(weaponSpawn)))
 		{
 			if(Weapon_Switch(pSpawnWeapon))
@@ -4447,16 +4451,23 @@ void CFFPlayer::RecalculateSpeed( void )
 {
 	float flSpeed = 1.0f;
 
+	// need this so we can slow down the player more if using the assault cannon
+	bool bAssaultCannonIncluded = false;
+
 	// go apply all speed effects
 	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 	{
 		if (m_vSpeedEffects[i].active)
+		{
 			flSpeed -= (1 - m_vSpeedEffects[i].speed);
-		
+
+			if( m_vSpeedEffects[i].type == SE_ASSAULTCANNON )
+				bAssaultCannonIncluded = true;
+		}		
 	}
-	// No amount of effects should let you go below 40% speed 
-	if (flSpeed < 0.4f) 
-			flSpeed = 0.4f;
+	// No amount of effects should let you go below 40% speed unless you're firing the AC
+	if (flSpeed < 0.4f && bAssaultCannonIncluded == false ) 
+		flSpeed = 0.4f;
 
 	// If speed has gotten slower then delay the max speed change on the server.
 	// This way the client can predict in time that the speed has changed, and warping
