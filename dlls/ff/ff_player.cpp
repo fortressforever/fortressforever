@@ -142,6 +142,7 @@ ConVar ff_defaultweapon_hwguy("cl_spawnweapon_hwguy", "assaultcannon", FCVAR_USE
 ConVar ff_defaultweapon_pyro("cl_spawnweapon_pyro", "flamethrower", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Pyro.");
 ConVar ff_defaultweapon_engineer("cl_spawnweapon_engineer", "railgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Engineer.");
 ConVar ff_defaultweapon_spy("cl_spawnweapon_spy", "tranq", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Spy.");
+ConVar ff_defaultweapon_civy("cl_spawnweapon_civilian", "tommygun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Civilian.");
 
 #ifdef _DEBUG
 	// --------------------------------------------------------------------------------
@@ -1460,6 +1461,10 @@ void CFFPlayer::Spawn( void )
 		case CLASS_SPY:
 			pDefaultWpn = ff_defaultweapon_spy.GetDefault();
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_spy");
+			break;
+		case CLASS_CIVILIAN:
+			pDefaultWpn = ff_defaultweapon_civy.GetDefault();
+			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_civilian");
 			break;
 		}
 
