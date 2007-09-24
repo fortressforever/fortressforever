@@ -529,6 +529,7 @@ CBasePlayer::CBasePlayer( )
 	m_PlayerInfo.SetParent( this );
 
 	ResetObserverMode();
+	ResetFortPointsCount();
 
 	m_surfaceProps = 0;
 	m_pSurfaceData = NULL;
@@ -2915,7 +2916,7 @@ void CBasePlayer::AddFortPoints( int iFortpoints, const char *szDescription )
 
 	// set new total score on user HUD
 	UserMessageBegin( filter, "SetPlayerTotalFortPoints" );
-	WRITE_WORD( m_iFortPoints );
+	WRITE_LONG( m_iFortPoints );
 	MessageEnd();
 }
 

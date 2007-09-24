@@ -64,7 +64,7 @@ public:
 	virtual void VidInit( void );
 	virtual bool ShouldDraw( void );
 	void MsgFunc_SetPlayerLatestFortPoints( bf_read &msg );
-	
+
 protected:
 	wchar_t		m_pTextScore[ 1024 ];	// Unicode text buffer
 	wchar_t		m_pTextDesc[ 1024 ];	// Unicode text buffer
@@ -72,11 +72,11 @@ protected:
 
 private:
 	// Stuff we need to know	
-		CPanelAnimationVar( vgui::HFont, m_hScoreFont, "ScoreFont", "Default" );
-		CPanelAnimationVar( vgui::HFont, m_hDescFont, "DescFont", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hScoreFont, "ScoreFont", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hDescFont, "DescFont", "Default" );
 
-		CPanelAnimationVar( vgui::HFont, m_hScoreFontBG, "ScoreFontBG", "Default" );
-		CPanelAnimationVar( vgui::HFont, m_hDescFontBG, "DescFontBG", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hScoreFontBG, "ScoreFontBG", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hDescFontBG, "DescFontBG", "Default" );
 
 	CPanelAnimationVarAliasType( float, ScoreFont_xpos, "ScoreFont_xpos", "0", "proportional_float" );
 	CPanelAnimationVarAliasType( float, ScoreFont_ypos, "ScoreFont_ypos", "0", "proportional_float" );
@@ -106,7 +106,7 @@ void CHudPlayerLatestScore::VidInit( void )
 	SetPaintBackgroundEnabled( false );
 	m_pTextScore[ 0 ] = '\0'; 
 	m_pTextDesc[ 0 ] = '\0';
-	
+
 }
 
 //-----------------------------------------------------------------------------
@@ -114,18 +114,18 @@ void CHudPlayerLatestScore::VidInit( void )
 //-----------------------------------------------------------------------------
 bool CHudPlayerLatestScore::ShouldDraw() 
 { 
-   if( !engine->IsInGame() ) 
-      return false; 
+	if( !engine->IsInGame() ) 
+		return false; 
 
-   C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
 
-   if( !pPlayer ) 
-      return false; 
+	if( !pPlayer ) 
+		return false; 
 
-   if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) ) 
-      return false; 
+	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) ) 
+		return false; 
 
-   return true; 
+	return true; 
 } 
 
 void CHudPlayerLatestScore::MsgFunc_SetPlayerLatestFortPoints( bf_read &msg )
@@ -135,9 +135,12 @@ void CHudPlayerLatestScore::MsgFunc_SetPlayerLatestFortPoints( bf_read &msg )
 	msg.ReadString( szString, sizeof( szString ) );
 
 	// Read int and convert to string
+	const int ptVal = msg.ReadShort();
+	if(ptVal==0)
+		return;
+
 	char szString2[ 1024 ];
-	Q_snprintf( szString2, sizeof(szString2), "+%i", msg.ReadShort() );
-	//itoa(msg.ReadShort(), szString2, 10);
+	Q_snprintf( szString2, sizeof(szString2), "%s%i", ptVal>0?"+":"",ptVal );
 
 	// Convert string to unicode
 	wchar_t *pszTemp = vgui::localize()->Find( szString );
@@ -151,7 +154,7 @@ void CHudPlayerLatestScore::MsgFunc_SetPlayerLatestFortPoints( bf_read &msg )
 
 	// play animation (new points value)
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "NewLatestFortPoints" );
-	
+
 	//DevMsg( "[Location] Team: %i, String: %s\n", iTeam, szString );
 	if(G15::IsEnabled())
 	{
@@ -168,54 +171,53 @@ void CHudPlayerLatestScore::MsgFunc_SetPlayerLatestFortPoints( bf_read &msg )
 // Purpose: Draw stuff!
 //-----------------------------------------------------------------------------
 void CHudPlayerLatestScore::Paint() 
-{ 
+{
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
+	if ( !pPlayer ) 
+		return; 
 
-      C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
-      if ( !pPlayer ) 
-         return; 
-
-	  if(!hud_fortpoints_latest.GetBool())
+	if(!hud_fortpoints_latest.GetBool())
 		return;
 
-   FFPanel::Paint(); // Draws the background glyphs 
+	FFPanel::Paint(); // Draws the background glyphs 
 
-		if( m_pTextDesc[ 0 ] != '\0' )
-		{
-			/*
-			surface()->DrawSetTextFont( m_hDescFontBG );
-			surface()->DrawSetTextColor( Color(0,0,0,255) );
-			surface()->DrawSetTextPos( DescFont_xpos, DescFont_ypos );
+	if( m_pTextDesc[ 0 ] != '\0' )
+	{
+		/*
+		surface()->DrawSetTextFont( m_hDescFontBG );
+		surface()->DrawSetTextColor( Color(0,0,0,255) );
+		surface()->DrawSetTextPos( DescFont_xpos, DescFont_ypos );
 
-			for( wchar_t *wch = m_pTextDesc; *wch != 0; wch++ )
-				surface()->DrawUnicodeChar( *wch );
-*/
+		for( wchar_t *wch = m_pTextDesc; *wch != 0; wch++ )
+		surface()->DrawUnicodeChar( *wch );
+		*/
 
-			surface()->DrawSetTextFont( m_hDescFont );
-			surface()->DrawSetTextColor( GetFgColor() );
-			surface()->DrawSetTextPos( DescFont_xpos, DescFont_ypos );
+		surface()->DrawSetTextFont( m_hDescFont );
+		surface()->DrawSetTextColor( GetFgColor() );
+		surface()->DrawSetTextPos( DescFont_xpos, DescFont_ypos );
 
-			for( wchar_t *wch = m_pTextDesc; *wch != 0; wch++ )
-				surface()->DrawUnicodeChar( *wch );
+		for( wchar_t *wch = m_pTextDesc; *wch != 0; wch++ )
+			surface()->DrawUnicodeChar( *wch );
 
 
-		}
+	}
 
-		if( m_pTextScore[ 0 ] != '\0' )
-		{
-	/*
-			surface()->DrawSetTextFont( m_hScoreFontBG );
-			surface()->DrawSetTextColor( Color(0,0,0,255) );
-			surface()->DrawSetTextPos( ScoreFont_xpos, ScoreFont_ypos );
+	if( m_pTextScore[ 0 ] != '\0' )
+	{
+		/*
+		surface()->DrawSetTextFont( m_hScoreFontBG );
+		surface()->DrawSetTextColor( Color(0,0,0,255) );
+		surface()->DrawSetTextPos( ScoreFont_xpos, ScoreFont_ypos );
 
-			for( wchar_t *wch = m_pTextScore; *wch != 0; wch++ )
-				surface()->DrawUnicodeChar( *wch );
-			*/
-			surface()->DrawSetTextFont( m_hScoreFont );
-			surface()->DrawSetTextColor( GetFgColor() );
-			surface()->DrawSetTextPos( ScoreFont_xpos, ScoreFont_ypos );
+		for( wchar_t *wch = m_pTextScore; *wch != 0; wch++ )
+		surface()->DrawUnicodeChar( *wch );
+		*/
+		surface()->DrawSetTextFont( m_hScoreFont );
+		surface()->DrawSetTextColor( GetFgColor() );
+		surface()->DrawSetTextPos( ScoreFont_xpos, ScoreFont_ypos );
 
-			for( wchar_t *wch = m_pTextScore; *wch != 0; wch++ )
-				surface()->DrawUnicodeChar( *wch );
+		for( wchar_t *wch = m_pTextScore; *wch != 0; wch++ )
+			surface()->DrawUnicodeChar( *wch );
 
-		}
+	}
 }
