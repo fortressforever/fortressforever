@@ -154,15 +154,13 @@ ConVar mp_prematch( "mp_prematch",
 		virtual bool		CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker )
 		{
 			// Dead players can only be heard by other dead team mates
-			if ( pTalker->IsAlive() == false )
+			if ( !pTalker->IsAlive() )
 			{
-				if ( pListener->IsAlive() == false )
-					return ( pListener->InSameTeam( pTalker ) );
-
+				if ( !pListener->IsAlive())
+					return g_pGameRules->PlayerRelationship(pTalker, pListener) == GR_TEAMMATE;
 				return false;
 			}
-
-			return ( pListener->InSameTeam( pTalker ) );
+			return g_pGameRules->PlayerRelationship(pTalker, pListener) == GR_TEAMMATE;;
 		}
 	};
 	CVoiceGameMgrHelper g_VoiceGameMgrHelper;

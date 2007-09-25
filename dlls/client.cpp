@@ -52,6 +52,7 @@ inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszTex
 	// %a = armor
 	// %c = class
 	// %l = location
+	// %d = disguised team class
 	// %i = if you add this do it clientside to use the hud_crosshairinfo stuff so it's consistant
 
 	CFFPlayer *pPlayer = ToFFPlayer( ( ( CBasePlayer * )CBaseEntity::Instance( pEdict ) ) );
@@ -107,6 +108,66 @@ inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszTex
 			return true;
 		}
 		break;
+
+		case 'd':
+		case 'D':
+			{
+				int iDisguiseClass = pPlayer->GetClassSlot();
+				int iDisguiseTeam = pPlayer->GetTeamNumber();
+				if(pPlayer->IsDisguised())
+				{
+					iDisguiseTeam = pPlayer->GetDisguisedTeam();
+					iDisguiseClass = pPlayer->GetDisguisedClass();
+				}
+
+				const char *pClassName = "Spy";
+				const char *pTeamName = "";
+
+				/*switch( iTeam )
+				{
+				case TEAM_BLUE: szTeam = "#FF_TEAM_BLUE"; break;
+				case TEAM_RED: szTeam = "#FF_TEAM_RED"; break;
+				case TEAM_YELLOW: szTeam = "#FF_TEAM_YELLOW"; break;
+				case TEAM_GREEN: szTeam = "#FF_TEAM_GREEN"; break;
+				}*/
+				switch(iDisguiseTeam)
+				{
+				case TEAM_BLUE:
+					pTeamName = "Blue";
+					break;
+				case TEAM_RED:
+					pTeamName = "Red";
+					break;
+				case TEAM_YELLOW:
+					pTeamName = "Yellow";
+					break;
+				case TEAM_GREEN:
+					pTeamName = "Green";
+					break;
+				default:
+					pTeamName = "LOL";
+					break;
+				}
+
+				switch(iDisguiseClass)
+				{
+				case 1: pClassName = "Scout"; break;
+				case 2: pClassName = "Sniper"; break;
+				case 3: pClassName = "Soldier"; break;
+				case 4: pClassName = "Demoman"; break;
+				case 5: pClassName = "Medic"; break;
+				case 6: pClassName = "Hwguy"; break;
+				case 7: pClassName = "Pyro"; break;
+				case 8: pClassName = "Spy"; break;
+				case 9: pClassName = "Engineer"; break;
+				case 10: pClassName = "Civilian"; break;
+				default: pClassName = "LOL"; break;
+				}
+
+				Q_snprintf( pszText, iDestLen, "%s %s", iDisguiseTeam, iDisguiseClass );
+				return true;
+			}
+			break;
 	}
 
 	return false;
