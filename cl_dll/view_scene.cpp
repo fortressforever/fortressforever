@@ -105,7 +105,7 @@ void GenerateOverdrawForTesting()
 //-----------------------------------------------------------------------------
 static ConVar cl_maxrenderable_dist("cl_maxrenderable_dist", "3000", FCVAR_CHEAT, "Max distance from the camera at which things will be rendered" );
 
-ConVar r_updaterefracttexture( "r_updaterefracttexture", "1" );
+ConVar r_updaterefracttexture( "r_updaterefracttexture", "1", FCVAR_CHEAT ); // Jiggles: Made this a cheat so players can't disable the Spy cloak
 
 ConVar r_entityclips( "r_entityclips", "1" ); //FIXME: Nvidia drivers before 81.94 on cards that support user clip planes will have problems with this, require driver update? Detect and disable?
 
