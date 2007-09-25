@@ -164,7 +164,7 @@ inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszTex
 				default: pClassName = "LOL"; break;
 				}
 
-				Q_snprintf( pszText, iDestLen, "%s %s", iDisguiseTeam, iDisguiseClass );
+				Q_snprintf( pszText, iDestLen, "%s %s", pTeamName, pClassName );
 				return true;
 			}
 			break;
