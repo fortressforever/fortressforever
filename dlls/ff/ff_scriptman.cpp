@@ -175,12 +175,16 @@ void CFFScriptManager::Shutdown()
 }
 
 /////////////////////////////////////////////////////////////////////////////
+extern bool g_Disable_Timelimit;
+
 void CFFScriptManager::LevelInit(const char* szMapName)
 {
 	VPROF_BUDGET("CFFScriptManager::LevelInit", VPROF_BUDGETGROUP_FF_LUA);
 
 	if(!szMapName)
 		return;
+
+	g_Disable_Timelimit = false;
 
 	// setup VM
 	Init();

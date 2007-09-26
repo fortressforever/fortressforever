@@ -43,6 +43,8 @@ extern "C"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern bool g_Disable_Timelimit;
+
 //----------------------------------------------------------------------------
 // defines
 #define temp_max(a,b) (((a)>(b))?(a):(b))
@@ -205,6 +207,11 @@ namespace FFLib
 	{
 		if (FFGameRules())
 			FFGameRules()->GoToIntermission();
+	}
+
+	void DisableTimeLimit(bool _b = true)
+	{
+		g_Disable_Timelimit = _b;
 	}
 
 	bool ApplyToParseFlags( const luabind::adl::object& table, bool *pbFlags )
@@ -1400,6 +1407,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("GetSteamID",				&FFLib::GetSteamID),
 		def("GetTeam",					&FFLib::GetTeam),
 		def("GetTriggerScriptByName",	&FFLib::GetTriggerScriptByName),
+		def("DisableTimeLimit",			(void(*)())&FFLib::DisableTimeLimit),
+		def("DisableTimeLimit",			(void(*)(bool))&FFLib::DisableTimeLimit),
 		def("GoToIntermission",			&FFLib::GoToIntermission),
 		def("IncludeScript",			&FFLib::IncludeScript),
 		def("IsPlayer",					&FFLib::IsPlayer),

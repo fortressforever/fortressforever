@@ -64,6 +64,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	ConVar botrules_teamlimits("botrules_teamlimits", "", FCVAR_GAMEDLL);
 	ConVar botrules_teamroles("botrules_teamroles", "", FCVAR_GAMEDLL);
 	ConVar mp_respawndelay( "mp_respawndelay", "0", 0, "Time (in seconds) for spawn delays. Can be overridden by LUA." );
+
+	bool g_Disable_Timelimit = false;
 #endif
 
 // 0000936: Horizontal push from explosions too low
@@ -1321,20 +1323,23 @@ ConVar mp_prematch( "mp_prematch",
 		}
 		else
 		{
-			float flTimeLimit = mp_timelimit.GetFloat() * 60;
+			if(!g_Disable_Timelimit)
+			{
+				float flTimeLimit = mp_timelimit.GetFloat() * 60;
 
-			// Changelevel after intermission
-			if (g_fGameOver && gpGlobals->curtime > m_flIntermissionEndTime)
-			{
-				ChangeLevel();
-				return;
-			}
-		
-			// Catch the end of the map
-			if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit + m_flGameStarted )
-			{
-				GoToIntermission(); //ChangeLevel();
-				return;
+				// Changelevel after intermission
+				if (g_fGameOver && gpGlobals->curtime > m_flIntermissionEndTime)
+				{
+					ChangeLevel();
+					return;
+				}
+
+				// Catch the end of the map
+				if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit + m_flGameStarted )
+				{
+					GoToIntermission(); //ChangeLevel();
+					return;
+				}
 			}
 		}
 		
