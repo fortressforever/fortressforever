@@ -57,7 +57,8 @@ void CFFItemBackpack::Spawn()
 	
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
-	SetSolid(SOLID_BBOX);
+	// Jigggles: But with SetSolid(SOLID_BBOX), backpacks block doors/eles -- I think the sniper dot passing through backpacks isn't a big deal
+	SetSolid(SOLID_NONE);
 	AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
 	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 
