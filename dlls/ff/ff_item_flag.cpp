@@ -172,7 +172,7 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
-	SetSolid( SOLID_BBOX );
+	SetSolid( SOLID_NONE );
 	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
 	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 
@@ -222,7 +222,7 @@ void CFFInfoScript::Spawn( void )
 	
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
-	SetSolid( SOLID_BBOX );
+	SetSolid( SOLID_NONE );
 	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
 	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 	SetModel( FLAG_MODEL );
@@ -565,7 +565,7 @@ void CFFInfoScript::Drop( float delay, Vector pos, Vector velocity )
 
 	// stop following
 	FollowEntity( NULL );
-	SetSolid( SOLID_BBOX );
+	SetSolid( SOLID_NONE );
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	CollisionRulesChanged();
 
