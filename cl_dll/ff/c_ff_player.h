@@ -199,7 +199,7 @@ private:
 	unsigned int m_bInfected;
 	unsigned int m_bImmune;
 	int m_iActiveSabotages;
-
+	int m_iNewSpyDisguise;
 // Called by shared code.
 public:
 	
@@ -288,6 +288,7 @@ public:
 	int GetDisguisedClass( void ) const;
 	int GetDisguisedTeam( void ) const;
 	bool IsDisguised( void ) const;
+	bool IsDisguising( void ) const { return m_iNewSpyDisguise != 0; } // Client-side only
 	CNetworkVar( int, m_iSpyDisguise );
 
 public:
