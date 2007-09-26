@@ -32,6 +32,8 @@
 
 using namespace vgui;
 
+#define SPY_DISGUISE_TIME 7.0f
+
 inline void MapClassToGlyph( int iClass, char& cGlyph )
 {
 	/* Straight from the horses mouth
@@ -78,6 +80,9 @@ public:
 
 		// Hide when player is dead
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+
+		m_flDisguiseStartTime = 0.0f;
+		m_bStartCalc = false;
 	}
 
 	virtual ~CHudSpyDisguise( void )
@@ -105,6 +110,14 @@ private:
 
 	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "2", "proportional_float" );
 	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "4", "proportional_float" );
+
+	// For the disguising progress bar
+	CPanelAnimationVar( Color, m_BarColor, "HUD_Tone_Default", "HUD_Tone_Default" );
+	CPanelAnimationVarAliasType( float, bar_width, "bar_width", "75", "proportional_float" );
+	CPanelAnimationVarAliasType( float, bar_height, "bar_height", "24", "proportional_float" );
+	
+	float m_flDisguiseStartTime;
+	bool m_bStartCalc;
 
 };
 
@@ -138,6 +151,40 @@ void CHudSpyDisguise::Paint( void )
 
 	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
 		return;
+
+	// Let's calculate and draw the disguising progress bar
+	if ( pPlayer->IsDisguising() )
+	{
+		if ( !m_bStartCalc )
+		{
+			m_flDisguiseStartTime = gpGlobals->curtime;
+			m_bStartCalc = true;
+		}
+		float flRemainingTime = gpGlobals->curtime - m_flDisguiseStartTime;
+		float iProgressPercent = ( ( 1 - ( SPY_DISGUISE_TIME - flRemainingTime ) / SPY_DISGUISE_TIME ) );
+	
+		// Paint foreground/background stuff
+		BaseClass::PaintBackground();
+
+		//char szProgress[3];
+		//wchar_t wsProgress[3];
+		//Q_snprintf( szProgress, sizeof( szProgress ), "%i", iProgressPercent );
+		//vgui::localize()->ConvertANSIToUnicode( szProgress, wsProgress, sizeof(wsProgress) );
+
+		//// Draw text
+		//surface()->DrawSetTextFont( m_hTextFont );
+		//surface()->DrawSetTextColor( pPlayer->GetTeamColor() );
+		//surface()->DrawSetTextPos( text1_xpos, text1_ypos );
+		//surface()->DrawUnicodeString( wsProgress );
+
+		// Draw progress bar
+		surface()->DrawSetColor( m_BarColor );
+		surface()->DrawFilledRect( image1_xpos, image1_ypos, image1_xpos + bar_width * iProgressPercent, image1_ypos + bar_height );
+		return;
+	}
+	else
+		m_bStartCalc = false;
+
 
 	if( !pPlayer->IsDisguised() )
 		return;	

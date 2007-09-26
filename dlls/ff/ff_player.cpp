@@ -364,6 +364,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 
 	SendPropFloat(SENDINFO(m_flSpeedModifier)),
 
+	SendPropInt( SENDINFO( m_iNewSpyDisguise ), 4 ),
+
 	// Radiotag information the local client needs to know
 	SendPropEHandle( SENDINFO( m_hRadioTagData ) ),
 	SendPropInt( SENDINFO( m_bCloakable ), 1, SPROP_UNSIGNED ),

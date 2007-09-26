@@ -614,6 +614,8 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 
 	RecvPropFloat(RECVINFO(m_flSpeedModifier)),
 
+	RecvPropInt( RECVINFO( m_iNewSpyDisguise ) ),
+
 	// Radiotag information the local client needs to know
 	RecvPropEHandle( RECVINFO( m_hRadioTagData ) ),
 	RecvPropInt( RECVINFO( m_bCloakable ) ),

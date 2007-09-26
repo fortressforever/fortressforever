@@ -1237,8 +1237,8 @@ void CFFPlayer::Cloak( void )
 		m_iCloaked = 0;
 
 		// If we're currently disguising, remove some time (50%)
-		if( m_flFinishDisguise > gpGlobals->curtime )
-			m_flFinishDisguise -= ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
+		//if( m_flFinishDisguise > gpGlobals->curtime )
+		//	m_flFinishDisguise -= ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
 
 		//// Redeploy our weapon
 		//if( GetActiveWeapon() && ( GetActiveWeapon()->IsWeaponVisible() == false ) )
@@ -1291,8 +1291,8 @@ void CFFPlayer::Cloak( void )
 		m_flCloakTime = gpGlobals->curtime;
 
 		// If we're currently disguising, add on some time (50%)
-		if( m_flFinishDisguise > gpGlobals->curtime )
-			m_flFinishDisguise += ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
+		//if( m_flFinishDisguise > gpGlobals->curtime )
+		//	m_flFinishDisguise += ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
 
 		//// Holster our current weapon
 		//if( GetActiveWeapon() )
