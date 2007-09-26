@@ -133,16 +133,16 @@ inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszTex
 				switch(iDisguiseTeam)
 				{
 				case TEAM_BLUE:
-					pTeamName = "Blue";
+					pTeamName = "^1Blue";
 					break;
 				case TEAM_RED:
-					pTeamName = "Red";
+					pTeamName = "^2Red";
 					break;
 				case TEAM_YELLOW:
-					pTeamName = "Yellow";
+					pTeamName = "^3Yellow";
 					break;
 				case TEAM_GREEN:
-					pTeamName = "Green";
+					pTeamName = "^4Green";
 					break;
 				default:
 					pTeamName = "LOL";

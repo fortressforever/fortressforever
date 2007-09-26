@@ -24,13 +24,11 @@ extern ConVar sv_specchat;
 static CHudChat *g_pHudChat = NULL;
 
 // --> Mirv: Colours!
-int g_ColorConsole[3]	= { 153, 255, 153 };
-int g_ColorOrange[3]	= { 255, 170, 0 };
+Color g_ColorConsole(153, 255, 153, 255);
+Color g_ColorOrange(255, 170, 0, 255);
 
-int *GetClientColor( int clientIndex )
+Color GetClientColor( int clientIndex )
 {
-	static int iColor[3];
-
 	if ( clientIndex == 0 ) // console msg
 	{
 		return g_ColorConsole;
@@ -42,12 +40,7 @@ int *GetClientColor( int clientIndex )
 		if (!gr )
 			return g_ColorOrange;
 
-		Color col = gr->GetTeamColor( gr->GetTeam( clientIndex ) );
-
-		int alpha = 0;
-		col.GetColor(iColor[0], iColor[1], iColor[2], alpha);
-
-		return iColor;
+		return gr->GetTeamColor( gr->GetTeam( clientIndex ) );
 	}	
 }
 // <-- Mirv: Colours!
@@ -488,24 +481,29 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		}
 	}
 	else
-		line->InsertColorChange( Color( g_ColorOrange[0], g_ColorOrange[1], g_ColorOrange[2], 255 ) );
+		line->InsertColorChange( g_ColorOrange );
 
 	char *buf = static_cast<char *>( _alloca( strlen( pmsg ) + 1  ) );
 	wchar_t *wbuf = static_cast<wchar_t *>( _alloca( (strlen( pmsg ) + 1 ) * sizeof(wchar_t) ) );
 	if ( buf )
 	{
-		int *iColor = GetClientColor( iPlayerIndex );
+		Color col = GetClientColor( iPlayerIndex );
 
 		line->SetExpireTime();
 	
 		// draw the first x characters in the player color
 		Q_strncpy( buf, pmsg, min( iNameLength + 1, MAX_PLAYER_NAME_LENGTH+32) );
 		buf[ min( iNameLength, MAX_PLAYER_NAME_LENGTH+31) ] = 0;
-		line->InsertColorChange( Color( iColor[0], iColor[1], iColor[2], 255 ) );
+		line->InsertColorChange( col );
 		line->InsertString( buf );
 		Q_strncpy( buf, pmsg + iNameLength, strlen( pmsg ));
 		buf[ strlen( pmsg + iNameLength ) ] = '\0';
-		line->InsertColorChange( Color( g_ColorOrange[0], g_ColorOrange[1], g_ColorOrange[2], 255 ) );
+		line->InsertColorChange( g_ColorOrange );
+
+		enum { ColorStackSize = 64 };
+		Color m_ColorStack[ColorStackSize];
+		int m_StackIndex = 0;
+		m_ColorStack[m_StackIndex] = g_ColorOrange;
 
 		// Want to look in buf for any localized strings
 		// and convert them to resource strings if possible
@@ -549,6 +547,69 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 
 				iAdjust = i;
 			}
+			else if(pBeg[0] == '^')
+			{
+				if(pBeg[1] >= '0' && pBeg[1] <= '9')
+				{
+					// If there's stuff in our buffer, dump it first
+					if( iPos )
+						DumpBufToChatline( line, szTemp, iPos );
+
+					enum MarkupColors
+					{
+						COL_ORANGE,
+						COL_BLUE,
+						COL_RED,
+						COL_YELLOW,
+						COL_GREEN,
+						COL_WHITE,
+						COL_BLACK,
+						COL_GREY,
+						COL_MAGENTA,
+						COL_CYAN,
+						NUM_COLORS,
+					};
+
+					Color colorMarkup[NUM_COLORS];
+					colorMarkup[COL_WHITE] = Color(255,255,255, 255);
+					colorMarkup[COL_BLACK] = Color(0,0,0, 255);
+					colorMarkup[COL_GREY] = Color(204, 204, 204, 255);
+					colorMarkup[COL_BLUE] = Color(0,0,255, 255);
+					colorMarkup[COL_RED] = Color(255,0,0, 255);
+					colorMarkup[COL_YELLOW] = Color(255,255,0, 255);
+					colorMarkup[COL_GREEN] = Color(0,255,0, 255);
+					colorMarkup[COL_MAGENTA] = Color(255, 0, 255, 255);
+					colorMarkup[COL_CYAN] = Color(0, 255, 255, 255);
+					colorMarkup[COL_ORANGE] = Color(255, 170, 0, 255);
+
+					char col[2];
+					col[0] = pBeg[1];
+					col[1] = NULL;
+					int c = atoi(col);
+					Color colo = colorMarkup[COL_WHITE];
+					if(c>=0 && c<NUM_COLORS)
+						colo = colorMarkup[c];
+
+					line->InsertColorChange(colo);
+
+					if(m_StackIndex < ColorStackSize-1)
+						m_ColorStack[++m_StackIndex] = colo;
+
+					iAdjust = 2;
+				}
+				else
+				{
+					// If there's stuff in our buffer, dump it first
+					if( iPos )
+						DumpBufToChatline( line, szTemp, iPos );
+
+					//just a ^ with no number after terminates the color
+					if(m_StackIndex>0)
+						--m_StackIndex;
+
+					line->InsertColorChange(m_ColorStack[m_StackIndex]);
+				}
+			}
 			// Regular characters
 			else
 			{
@@ -570,7 +631,7 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 
 		line->SetVisible( true );
 		line->SetNameLength( iNameLength );
-		line->SetNameColor( Color( iColor[0], iColor[1], iColor[2], 255 ) );
+		line->SetNameColor( col );
 	}
 
 	CLocalPlayerFilter filter;
