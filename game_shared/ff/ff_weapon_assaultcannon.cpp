@@ -25,15 +25,12 @@
 	#include "ff_player.h"
 #endif
 
-
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
-#define FF_AC_MAXCHARGETIME 2.0f	// Assault Cannon Max Charge Time
+#define FF_AC_MAXCHARGETIME 3.0f	// Assault Cannon Max Charge Time
 #define FF_AC_WINDUPTIME	1.0f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
 #define FF_AC_MOVEMENTDELAY 0.6f	// Time the player has to wait after firing the AC before the speed penalty wears off.
-
-
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.10", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
@@ -86,7 +83,7 @@ public:
 
 	virtual void Precache();
 	virtual bool Deploy();
-	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
+	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual void Drop( const Vector& vecVelocity );
 	virtual void ItemPostFrame();
 	virtual void PrimaryAttack();
@@ -1014,7 +1011,12 @@ float GetAssaultCannonCharge()
 
 	CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *) pWeapon;
 
-	return (100.0f * pAC->m_flChargeTime / FF_AC_MAXCHARGETIME);
+	// gotta take into account the spinup before we start displaying heat.
+	float fCharge = ( pAC->m_flChargeTime - FF_AC_WINDUPTIME ) / ( FF_AC_MAXCHARGETIME - FF_AC_WINDUPTIME );
+	
+	fCharge = clamp( fCharge, 0.0f, 1.0f );
+
+	return 100 * fCharge;
 }
 
 #endif
