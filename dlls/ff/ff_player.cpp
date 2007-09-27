@@ -6010,11 +6010,37 @@ void CFFPlayer::Command_Disguise()
 	int iTeam = 0, iClass = 0;
 
 	// Allow either specify enemy/friendly or an actual team
-	if (FStrEq(szTeam, "enemy"))
+	if (FStrEq(szTeam, "enemy") || FStrEq(szTeam, "e"))
+	{
+		int iMyTeam = GetTeamNumber();
+
 		// TODO: Check friendliness of the other team (do a loop methinks)
-		iTeam = ( ( GetTeamNumber() == TEAM_BLUE ) ? TEAM_RED : TEAM_BLUE );
-	else if (FStrEq(szTeam, "friendly"))
+		//iTeam = ( ( GetTeamNumber() == TEAM_BLUE ) ? TEAM_RED : TEAM_BLUE );
+
+		int iEnemyTeams[8] = {0};
+		int iNumTeams = 0;
+		for(int i = TEAM_BLUE; i <= TEAM_GREEN; ++i)
+		{
+			if(i==iMyTeam)
+				continue;
+
+			CFFTeam *pTeam = GetGlobalFFTeam(i);
+			if(pTeam && pTeam->GetTeamLimits() != -1)
+			{
+				if(!(pTeam->GetAllies() & iMyTeam))
+				{
+					iEnemyTeams[iNumTeams++] = i;
+				}
+			}
+		}
+
+		if(iNumTeams>0)
+			iTeam = iEnemyTeams[RandomInt(0,iNumTeams-1)];
+	}
+	else if (FStrEq(szTeam, "friendly") || FStrEq(szTeam, "f"))
+	{
 		iTeam = GetTeamNumber();
+	}
 	else
 	{
 		// iTeam = atoi(szTeam) + (TEAM_BLUE - 1);
