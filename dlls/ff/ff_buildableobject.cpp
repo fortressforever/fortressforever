@@ -762,7 +762,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// Run through LUA!
 	CFFLuaSC hContext;
 	hContext.Push( this );
-	hContext.PushRef( adjustedDamage );
+	hContext.PushRef( &adjustedDamage );
 	_scriptman.RunPredicates_LUA( NULL, &hContext, "buildable_ondamage" );
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building

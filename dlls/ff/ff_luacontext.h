@@ -71,7 +71,7 @@ public:
 	void Push(const CTakeDamageInfo* pInfo);
 
 	// pushes a parameter by reference in preparation for a function call
-	void PushRef(CTakeDamageInfo& info);
+	void PushRef(CTakeDamageInfo* info);
 
 	// returns the number of parameters
 	int GetNumParams() const { return m_params.Count(); }
