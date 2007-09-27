@@ -134,10 +134,7 @@ void CFFLuaSC::Push(QAngle angle) { m_params.AddToTail(SETOBJECT(angle)); }
 void CFFLuaSC::Push(const CTakeDamageInfo* pInfo) { m_params.AddToTail(SETOBJECT(pInfo)); }
 
 //---------------------------------------------------------------------------
-// Mulch: 9/26/2007: I'm hijacking this as a means to pass a CTakeDamageInfo for Lua to modify
-//					 The previous shit, when compiled in release, passed the CTakeDamageInfo
-//					 as a const reference so mappers/scripters weren't able to modify damage values.
-void CFFLuaSC::PushRef(CTakeDamageInfo* info) { m_params.AddToTail(SETOBJECT(info)); }
+void CFFLuaSC::PushRef(CTakeDamageInfo& info) { m_params.AddToTail(SETOBJECTREF(info)); }
 
 //---------------------------------------------------------------------------
 bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName, const char *szTargetEntName)
