@@ -134,20 +134,22 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 			pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 			ApplyMultiDamage();
 
+			WeaponSound_t wpnSound = SINGLE;
+
 			// Bug #0000510: Medics can infect medics.
 			if( pTarget->GetClassSlot() != CLASS_MEDIC )
 			{
 #ifdef GAME_DLL
 				// otherwise, if they are bad people, then infect them
 				pTarget->Infect(pPlayer);
-				//DevMsg("[medkit] Infected Player\n");
 #endif
+				wpnSound = SPECIAL2;
 			}
 
 			// Infect sound. Add a sound before next sound can be played too
 			if (m_flNextSecondaryAttack <= gpGlobals->curtime)
 			{
-				WeaponSound(SPECIAL2);
+				WeaponSound(wpnSound);
 				m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;
 			}
 			

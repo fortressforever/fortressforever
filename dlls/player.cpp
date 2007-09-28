@@ -2821,15 +2821,6 @@ void CBasePlayer::Duck( )
 	}
 }
 
-//
-// ID's player as such.
-//
-Class_T  CBasePlayer::Classify ( void )
-{
-	return CLASS_PLAYER;
-}
-
-
 void CBasePlayer::ResetFragCount()
 {
 	m_iFrags = 0;

@@ -369,7 +369,7 @@ public:
 	virtual void			PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 	virtual void			DeathSound( const CTakeDamageInfo &info );
 
-	Class_T					Classify ( void );
+	Class_T					Classify ( void ) { return CLASS_PLAYER; }
 	virtual void			SetAnimation( PLAYER_ANIM playerAnim );
 	void					SetWeaponAnimType( const char *szExtention );
 

@@ -88,6 +88,8 @@ public:
 
 	void	SetAnimationExtension( const char *pExtension );
 
+	Class_T			Classify ( void ) { return CLASS_PLAYER; }
+
 	C_BaseViewModel		*GetViewModel( int viewmodelindex = 0 );
 	C_BaseCombatWeapon	*GetActiveWeapon( void ) const;
 

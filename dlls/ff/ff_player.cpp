@@ -4553,12 +4553,12 @@ int CFFPlayer::GetPacketloss( void ) const
 	return iPacketloss;
 }
 
-void CFFPlayer::Infect( CFFPlayer *pInfector )
+bool CFFPlayer::Infect( CFFPlayer *pInfector )
 {
 	if( !IsInfected() && !IsImmune() )
 	{
 		if( !FFScriptRunPredicates( this, "oninfect", true ) )
-			return;
+			return false;
 
 		// they aren't infected or immune, so go ahead and infect them
 		m_bInfected = 1;
@@ -4580,13 +4580,17 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		MessageEnd();
 
 		Omnibot::Notify_Infected(this, pInfector);
+
+		return true;
 	}
 
 	else if ( !IsInfected() ) // they aren't infected, but they are immune
 		FF_SendHint( pInfector, MEDIC_NOINFECT, 3, PRIORITY_NORMAL, "#FF_HINT_MEDIC_NOINFECT" );
-	
+
+	return false;	
 }
-void CFFPlayer::Cure( CFFPlayer *pCurer )
+
+bool CFFPlayer::Cure( CFFPlayer *pCurer )
 {
 	if( IsInfected() )
 	{
@@ -4615,6 +4619,8 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 			g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatInfectCures, 1);
 
 		Omnibot::Notify_Cured(this, pCurer);
+
+		return true;
 	}
 
 	// Hack-ish - removing infection effect
@@ -4630,6 +4636,8 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 
 	// Wiki says curing removes everything but concussion
 	Extinguish();
+
+	return false;
 }
 
 // scale = damage per tick :: Scale currently ignored - use cvars for weapon damage!

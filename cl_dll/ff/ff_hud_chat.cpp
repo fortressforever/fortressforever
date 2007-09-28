@@ -483,8 +483,9 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 	else
 		line->InsertColorChange( g_ColorOrange );
 
-	char *buf = static_cast<char *>( _alloca( strlen( pmsg ) + 1  ) );
-	wchar_t *wbuf = static_cast<wchar_t *>( _alloca( (strlen( pmsg ) + 1 ) * sizeof(wchar_t) ) );
+	const int iBufferSize = strlen( pmsg ) + 1;
+	char *buf = static_cast<char *>( _alloca( iBufferSize ) );
+	wchar_t *wbuf = static_cast<wchar_t *>( _alloca( iBufferSize * sizeof(wchar_t) ) );
 	if ( buf )
 	{
 		Color col = GetClientColor( iPlayerIndex );
@@ -541,7 +542,7 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 					line->InsertString( pszTemp );
 				else
 				{
-					vgui::localize()->ConvertANSIToUnicode( szToken, wbuf, sizeof( wbuf ) );
+					vgui::localize()->ConvertANSIToUnicode( szToken, wbuf, iBufferSize * sizeof(wchar_t) );
 					line->InsertString( wbuf );
 				}
 
