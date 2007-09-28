@@ -354,7 +354,11 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS) && (pOther->GetFlags() & FL_CLIENT)) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_NPCS) && (pOther->GetFlags() & FL_NPC)) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_PUSHABLES) && FClassnameIs(pOther, "func_pushable")) ||
-		(HasSpawnFlags(SF_TRIGGER_ALLOW_PHYSICS) && pOther->GetMoveType() == MOVETYPE_VPHYSICS))
+		(HasSpawnFlags(SF_TRIGGER_ALLOW_PHYSICS) && pOther->GetMoveType() == MOVETYPE_VPHYSICS) ||
+		(HasSpawnFlags(SF_TRIGGER_ALLOW_FF_GRENADES) && (pOther->GetFlags() & FL_GRENADE)) ||
+		(HasSpawnFlags(SF_TRIGGER_ALLOW_FF_BUILDABLES) && ((pOther->Classify() == CLASS_SENTRYGUN) || (pOther->Classify() == CLASS_DISPENSER))) 
+		//(HasSpawnFlags(SF_TRIGGER_ALLOW_FF_INFOSCRIPTS) && ((pOther->Classify() == CLASS_INFOSCRIPT)))
+		)
 	{
 		// This is needed as CBaseTrigger::StartTouch can fail
 		// but the superclass (like a push or teleporter) will
@@ -400,6 +404,62 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 				}
 			}
 		}
+		
+		if( HasSpawnFlags( SF_TRIGGER_ALLOW_FF_GRENADES ))
+		{
+			if( pOther->GetFlags() & FL_GRENADE )
+			{
+				// If the entity sys allowed func returns false then 
+				// bail. If true, run these other checks.
+				CFFLuaSC hAllowed( 1, pOther );
+				if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+				{
+					if( !hAllowed.GetBool() )
+					{
+						_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
+						return false;
+					}
+				}
+			}
+		}
+
+		if( HasSpawnFlags( SF_TRIGGER_ALLOW_FF_BUILDABLES ))
+		{
+			if(( pOther->Classify() == CLASS_SENTRYGUN ) || (pOther->Classify() == CLASS_DISPENSER ))
+			{
+				// If the entity sys allowed func returns false then 
+				// bail. If true, run these other checks.
+				CFFLuaSC hAllowed( 1, pOther );
+				if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+				{
+					if( !hAllowed.GetBool() )
+					{
+						_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
+						return false;
+					}
+				}
+			}
+		}
+
+		/*
+		if( HasSpawnFlags( SF_TRIGGER_ALLOW_FF_INFOSCRIPTS ))
+		{
+			if( pOther->Classify() == CLASS_INFOSCRIPT )
+			{
+				// If the entity sys allowed func returns false then 
+				// bail. If true, run these other checks.
+				CFFLuaSC hAllowed( 1, pOther );
+				if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+				{
+					if( !hAllowed.GetBool() )
+					{
+						_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
+						return false;
+					}
+				}
+			}
+		}
+		*/
 
 		bool bOtherIsPlayer = pOther->IsPlayer();
 		if( HasSpawnFlags(SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS) && !bOtherIsPlayer )
