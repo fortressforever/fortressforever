@@ -41,7 +41,7 @@ using namespace vgui;
 
 // [integer] Duration [in seconds] that the radar information
 // is drawn on the screen
-static ConVar radar_duration( "ffdev_radar_duration", "5" );
+static ConVar radar_duration( "ffdev_radar_duration", "5", FCVAR_CHEAT );
 
 class CHudRadar : public CHudElement, public vgui::Panel
 {
