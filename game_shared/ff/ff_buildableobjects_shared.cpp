@@ -31,7 +31,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//#define FF_BUILD_DEBUG_VISUALIZATIONS
+#define FF_BUILD_DEBUG_VISUALIZATIONS
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor - initializes a bunch of stuff and figures out if
@@ -229,6 +229,12 @@ bool CFFBuildableInfo::IsGeometryInTheWay( void )
 			m_vecBuildAirOrigin.z += 16.0f;
 			continue;
 		}
+
+		// Jiggles: Added to prevent people from building through certain displacements
+		trace_t	evilDisp;
+		UTIL_TraceLine( m_pPlayer->GetAbsOrigin(), m_vecBuildAirOrigin, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &evilDisp );
+		if ( evilDisp.fraction != 1.0 )
+			continue;
 
 		bValid = true;
 	}
