@@ -27,10 +27,16 @@ enum
 	SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS		= 0x10,		// *if* NPCs can fire this trigger, this flag means only player allies do so
 	SF_TRIGGER_ONLY_CLIENTS_IN_VEHICLES		= 0x20,		// *if* Players can fire this trigger, this flag means only players inside vehicles can 
 	SF_TRIGGER_ALLOW_ALL					= 0x40,		// Everything can fire this trigger
-	SF_TRIGGER_ONLY_CLIENTS_OUT_OF_VEHICLES	= 0x200,	// *if* Players can fire this trigger, this flag means only players outside vehicles can 
 	SF_TRIG_PUSH_ONCE						= 0x80,		// trigger_push removes itself after firing once
 	SF_TRIG_PUSH_AFFECT_PLAYER_ON_LADDER	= 0x100,	// if pushed object is player on a ladder, then this disengages them from the ladder (HL2only)
+	SF_TRIGGER_ONLY_CLIENTS_OUT_OF_VEHICLES	= 0x200,	// *if* Players can fire this trigger, this flag means only players outside vehicles can 
 	SF_TRIG_TOUCH_DEBRIS 					= 0x400,	// Will touch physics debris objects
+
+	// New FF stuff.  Be careful not to add too many or we'll run out of bits
+	// Also, there's already a #define SF_VPHYSICS_MOTION_MOVEABLE	0x1000 ... and also 0x800 is skipped; possibly reserved?
+	SF_TRIGGER_ALLOW_FF_GRENADES			= 0x2000,	// Allow grenades
+	SF_TRIGGER_ALLOW_FF_BUILDABLES			= 0x4000,	// Allow buildables
+	//SF_TRIGGER_ALLOW_FF_INFOSCRIPTS			= 0x8000,	// info_ff_scripts
 };
 
 // DVS TODO: get rid of CBaseToggle
