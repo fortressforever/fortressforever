@@ -843,6 +843,7 @@ public:
 	virtual void					ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName );
 
 	virtual bool					ShouldPredict( void ) { return false; };
+
 	// interface function pointers
 	void							(C_BaseEntity::*m_pfnThink)(void);
 	virtual void					Think( void )

@@ -133,7 +133,7 @@ bool Impact( Vector &vecOrigin, Vector &vecStart, int iMaterial, int iDamageType
 		{
 			// Here we deal with decals on entities.
 			bool bDraw = true;
-			if(!ffdev_disableentitydecals.GetBool())
+			if(ffdev_disableentitydecals.GetBool())
 			{
 				if(pEntity->Classify() != CLASS_NONE && pEntity->Classify() < NUM_AI_CLASSES)
 					bDraw = false;

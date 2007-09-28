@@ -877,7 +877,7 @@ public:
 
 // Classify - returns the type of group (i.e, "houndeye", or "human military" so that NPCs with different classnames
 // still realize that they are teammates. (overridden for NPCs that form groups)
-	virtual Class_T Classify ( void );
+	virtual Class_T Classify ( void ) { return CLASS_NONE; }
 	virtual void	DeathNotice ( CBaseEntity *pVictim ) {}// NPC maker children use this to tell the NPC maker that they have died.
 	virtual bool	ShouldAttractAutoAim( CBaseEntity *pAimingEnt ) { return false; }
 	virtual float	GetAutoAimRadius() { return 24.0f; }

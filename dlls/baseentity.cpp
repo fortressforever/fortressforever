@@ -2532,12 +2532,6 @@ void CC_AI_LOS_Debug( ConVar *var, char const *pOldString )
 ConVar ai_debug_los("ai_debug_los", "0", FCVAR_CHEAT, "NPC Line-Of-Sight debug mode. If 1, solid entities that block NPC LOC will be highlighted with white bounding boxes. If 2, it'll show non-solid entities that would do it if they were solid.", CC_AI_LOS_Debug );
 
 
-Class_T CBaseEntity::Classify ( void )
-{ 
-	return CLASS_NONE;
-}
-
-
 //-----------------------------------------------------------------------------
 // Changes the shadow cast distance over time
 //-----------------------------------------------------------------------------

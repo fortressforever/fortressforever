@@ -86,7 +86,7 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REP
 		SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 
 		// smaller, cube bounding box so we rest on the ground
-		SetSize(Vector(-3, -3, -3), Vector(3, 3, 3));
+		SetSize(Vector(-5, -5, -5), Vector(5, 5, 5));
 
 		// Set the think
 		SetThink(&CFFProjectileGrenade::GrenadeThink);		// |-- Mirv: Account for GCC strictness
