@@ -378,7 +378,7 @@ ConVar mp_prematch( "mp_prematch",
 		if( pPlayer )
 		{
 			CFFLuaSC func( 1, pPlayer );
-			_scriptman.RunPredicates_LUA( NULL, &func, "player_disconnected" );
+			func.CallFunction( "player_disconnected" );
 
 			pPlayer->RemoveProjectiles();
 			pPlayer->RemoveBackpacks();
