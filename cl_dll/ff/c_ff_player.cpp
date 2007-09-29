@@ -76,8 +76,6 @@ static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL );
 static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CHEAT );
 static ConVar gibcount("cl_gibcount", "6");
 
-static ConVar cl_spawnweapon("cl_spawnslot", "0", FCVAR_ARCHIVE, "Weapon slot to spawn with");
-
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
 static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Change class instantly");
 
@@ -1436,14 +1434,6 @@ void C_FFPlayer::Spawn( void )
 	{
 		Q_snprintf(szCommand, 127, "exec %.10s.cfg", Class_IntToString(GetClassSlot()));
 		engine->ClientCmd(szCommand);
-	}
-
-	int iSpawnWeapon = cl_spawnweapon.GetInt();
-
-	// Automatically call the slot specified by cl_spawnslot
-	if (iSpawnWeapon > 0 && iSpawnWeapon <= MAX_WEAPON_SLOTS)
-	{
-		SwapToWeaponSlot(iSpawnWeapon);
 	}
 
 	// Stop any looping sounds - this too hack-ish?
