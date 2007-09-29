@@ -354,7 +354,7 @@ ConVar mp_prematch( "mp_prematch",
 		}		
 #endif
 
-		CFFLuaSC func( 2, pszName, pszAddress );
+		CFFLuaSC func( 3, pszName, pszAddress, ENTINDEX( pEdict ) );
 		if( func.CallFunction( "player_connected" ) )
 		{
 			if( !func.GetBool() )
