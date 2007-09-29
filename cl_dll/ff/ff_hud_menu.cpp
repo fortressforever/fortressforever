@@ -142,7 +142,7 @@ int CheckDisguiseClass( int iClass )
 // Engineer menu options
 //-----------------------------------------------------------------------------
 
-/*ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDSENTRY", 'G', "builddispensers")
+ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDDISPENSER", 'Q', "slot4")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -158,7 +158,7 @@ int CheckDisguiseClass( int iClass )
 		return MENU_DIM;
 
 	return MENU_SHOW;
-}*/
+}
 
 ADD_MENU_OPTION(detdispenser, "#FF_CM_DETDISPENSER", 'P', "detdispenser")
 {
@@ -196,7 +196,7 @@ ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'Q', "dismantle
 	return MENU_SHOW;
 }
 
-/*ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'G', "buildsentry")
+ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'S', "slot5")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -212,7 +212,7 @@ ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'Q', "dismantle
 		return MENU_DIM;
 
 	return MENU_SHOW;
-}*/
+}
 
 ADD_MENU_OPTION(detsentry, "#FF_CM_DETSENTRY", 'R', "detsentry")
 {
@@ -413,7 +413,7 @@ ADD_MENU_OPTION( need_ammo, "#FF_CM_CALLAMMO", '^', "ammome" ) { return MENU_SHO
 //-----------------------------------------------------------------------------
 // Menu option lists
 //-----------------------------------------------------------------------------
-MenuOption EngineerOptionList[] = { aimsentry, detdispenser, dismantledispenser, dismantlesentry, detsentry };
+MenuOption EngineerOptionList[] = { aimsentry, builddispenser, detdispenser, dismantledispenser, dismantlesentry, detsentry, buildsentry };
 MenuOption DemomanOptionList[] = { det5, det10, det20, det50 };
 MenuOption SpyOptionList[] = { lastdisguise, disguiseenemy, scloak, sentrysabotage, dispensersabotage, cloak, disguiseteam };
 MenuOption ClassDOptionList[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
@@ -515,7 +515,7 @@ void CHudContextMenu::Display(bool state)
 		if (m_iSelected >= 0)
 		{
 			// Make sure this is a valid button (i.e. not disabled)
-			if (m_pMenu->options[m_iSelected].conditionfunc() == MENU_SHOW)
+			if (m_pMenu->options[m_iSelected].conditionfunc && m_pMenu->options[m_iSelected].conditionfunc() == MENU_SHOW)
 			{
 				pPlayer->EmitSound("ContextMenu.Select");
 				DoCommand(m_pMenu->options[m_iSelected].szCommand);
