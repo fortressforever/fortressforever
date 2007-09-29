@@ -354,6 +354,18 @@ ConVar mp_prematch( "mp_prematch",
 		}		
 #endif
 
+		CFFLuaSC func( 2, pszName, pszAddress );
+		if( func.CallFunction( "player_connected" ) )
+		{
+			if( !func.GetBool() )
+			{
+				// TODO: Retrieve a string from Lua with the rejection message
+				Q_snprintf( reject, maxrejectlen, "Lua said you are not welcome!" );
+
+				return false;
+			}
+		}
+
 		return BaseClass::ClientConnected( pEdict, pszName, pszAddress, reject, maxrejectlen );
 	}
 
@@ -365,6 +377,9 @@ ConVar mp_prematch( "mp_prematch",
 		CFFPlayer *pPlayer = ToFFPlayer( CBaseEntity::Instance( pClient ) );
 		if( pPlayer )
 		{
+			CFFLuaSC func( 1, pPlayer );
+			_scriptman.RunPredicates_LUA( NULL, &func, "player_disconnected" );
+
 			pPlayer->RemoveProjectiles();
 			pPlayer->RemoveBackpacks();
 			pPlayer->RemoveBuildables();
