@@ -1314,6 +1314,14 @@ namespace FFLib
 		}
 	}
 
+	void DropToFloor( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return;
+
+		UTIL_DropToFloor( pEntity, MASK_SOLID );
+	}
+
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -1391,6 +1399,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToDetpack",			&FFLib::CastToDetpack),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
 		def("DeleteSchedule",			&FFLib::DeleteSchedule),
+		def("DropToFloor",				&FFLib::DropToFloor),
 		def("RemoveSchedule",			&FFLib::RemoveSchedule),
 		def("GetConvar",				&FFLib::GetConvar),
 		def("GetEntity",				&FFLib::GetEntity),
