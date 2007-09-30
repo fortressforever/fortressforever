@@ -158,31 +158,31 @@ namespace Omnibot
 	const char *g_Weapons[TF_WP_MAX] =
 	{
 		0,		
-			"ff_weapon_umbrella", // TF_WP_UMBRELLA
-			0, // TF_WP_AXE
-			"ff_weapon_crowbar", // TF_WP_CROWBAR
-			"ff_weapon_medkit", // TF_WP_MEDKIT
-			"ff_weapon_knife", // TF_WP_KNIFE
-			"ff_weapon_spanner", // TF_WP_SPANNER
-			"ff_weapon_shotgun", // TF_WP_SHOTGUN
-			"ff_weapon_supershotgun", // TF_WP_SUPERSHOTGUN	
-			"ff_weapon_nailgun", // TF_WP_NAILGUN
-			"ff_weapon_supernailgun", // TF_WP_SUPERNAILGUN		
-			"ff_weapon_grenadelauncher", // TF_WP_GRENADE_LAUNCHER
-			"ff_weapon_rpg", // TF_WP_ROCKET_LAUNCHER
-			"ff_weapon_sniperrifle", // TF_WP_SNIPER_RIFLE		
-			"ff_weapon_railgun", // TF_WP_RAILGUN
-			"ff_weapon_flamethrower", // TF_WP_FLAMETHROWER
-			"ff_weapon_assaultcannon", // TF_WP_MINIGUN
-			"ff_weapon_autorifle", // TF_WP_AUTORIFLE
-			"ff_weapon_tranq", // TF_WP_DARTGUN
-			"ff_weapon_pipelauncher", // TF_WP_PIPELAUNCHER
-			"ff_weapon_ic", // TF_WP_NAPALMCANNON
-			"ff_weapon_tommygun", // TF_WP_TOMMYGUN
-			"ff_weapon_deploysentrygun", // TF_WP_DEPLOY_SG
-			"ff_weapon_deploydispenser", // TF_WP_DEPLOY_DISP
-			"ff_weapon_deploydetpack", // TF_WP_DEPLOY_DETP
-			"ff_weapon_flag", // TF_WP_FLAG
+		"ff_weapon_umbrella", // TF_WP_UMBRELLA
+		0, // TF_WP_AXE
+		"ff_weapon_crowbar", // TF_WP_CROWBAR
+		"ff_weapon_medkit", // TF_WP_MEDKIT
+		"ff_weapon_knife", // TF_WP_KNIFE
+		"ff_weapon_spanner", // TF_WP_SPANNER
+		"ff_weapon_shotgun", // TF_WP_SHOTGUN
+		"ff_weapon_supershotgun", // TF_WP_SUPERSHOTGUN	
+		"ff_weapon_nailgun", // TF_WP_NAILGUN
+		"ff_weapon_supernailgun", // TF_WP_SUPERNAILGUN		
+		"ff_weapon_grenadelauncher", // TF_WP_GRENADE_LAUNCHER
+		"ff_weapon_rpg", // TF_WP_ROCKET_LAUNCHER
+		"ff_weapon_sniperrifle", // TF_WP_SNIPER_RIFLE		
+		"ff_weapon_railgun", // TF_WP_RAILGUN
+		"ff_weapon_flamethrower", // TF_WP_FLAMETHROWER
+		"ff_weapon_assaultcannon", // TF_WP_MINIGUN
+		"ff_weapon_autorifle", // TF_WP_AUTORIFLE
+		"ff_weapon_tranq", // TF_WP_DARTGUN
+		"ff_weapon_pipelauncher", // TF_WP_PIPELAUNCHER
+		"ff_weapon_ic", // TF_WP_NAPALMCANNON
+		"ff_weapon_tommygun", // TF_WP_TOMMYGUN
+		"ff_weapon_deploysentrygun", // TF_WP_DEPLOY_SG
+		"ff_weapon_deploydispenser", // TF_WP_DEPLOY_DISP
+		"ff_weapon_deploydetpack", // TF_WP_DEPLOY_DETP
+		"ff_weapon_flag", // TF_WP_FLAG
 	};
 
 	int obUtilGetWeaponId(const char *_weaponName)
