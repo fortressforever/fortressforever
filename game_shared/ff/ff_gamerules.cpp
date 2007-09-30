@@ -1538,6 +1538,7 @@ ConVar mp_prematch( "mp_prematch",
 	void CFFGameRules::StartGame()
 	{
 #ifndef FF_BETA_TEST_COMPILE
+		m_flIntermissionEndTime = 0.f;
 		m_flGameStarted = gpGlobals->curtime;
 
 		// Don't do this upon first spawning in a map w/o any prematch

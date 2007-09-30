@@ -132,6 +132,8 @@ bool CMultiplayRules::IsMultiplayer( void )
 				engine->ServerCommand( szCommand );
 			}
 		}
+
+		m_flIntermissionEndTime = 0.f;
 	}
 
 	//=========================================================
