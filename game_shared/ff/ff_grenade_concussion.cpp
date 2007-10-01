@@ -24,11 +24,11 @@
 #endif
 
 #ifdef CLIENT_DLL
-	ConVar conc_glow_r("ffdev_conc_glow_r", "255", 0, "Conc glow red(0-255) ");
-	ConVar conc_glow_g("ffdev_conc_glow_g", "255", 0, "Conc glow green(0-255) ");
-	ConVar conc_glow_b("ffdev_conc_glow_b", "200", 0, "Conc glow blue(0-255) ");
-	ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", 0, "Conc glow alpha(0-1) ");
-	ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", 0, "Conc glow size(0.0-10.0");
+	ConVar conc_glow_r("ffdev_conc_glow_r", "255", FCVAR_CHEAT, "Conc glow red(0-255) ");
+	ConVar conc_glow_g("ffdev_conc_glow_g", "255", FCVAR_CHEAT, "Conc glow green(0-255) ");
+	ConVar conc_glow_b("ffdev_conc_glow_b", "200", FCVAR_CHEAT, "Conc glow blue(0-255) ");
+	ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", FCVAR_CHEAT, "Conc glow alpha(0-1) ");
+	ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", FCVAR_CHEAT, "Conc glow size(0.0-10.0");
 #endif
 
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag

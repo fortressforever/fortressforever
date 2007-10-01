@@ -20,10 +20,10 @@
 #include "ff_fx_gascloud_emitter.h"
 #include "ff_grenade_base.h"
 
-ConVar gas_dietime("ffdev_gas_dietime","5.0",0,"How long gas cloud particles live.");
-ConVar gas_scale("ffdev_gas_scale","48.0",0,"How big gas particles are.");
-ConVar gas_alpha("ffdev_gas_alpha","0.2",0,"Alpha of gas particles.");
-ConVar gas_moveforce("ffdev_gas_moveforce","0.025",0,"Strength of gas movement attractor.");
+ConVar gas_dietime("ffdev_gas_dietime","5.0", FCVAR_CHEAT,"How long gas cloud particles live.");
+ConVar gas_scale("ffdev_gas_scale","48.0", FCVAR_CHEAT,"How big gas particles are.");
+ConVar gas_alpha("ffdev_gas_alpha","0.2", FCVAR_CHEAT,"Alpha of gas particles.");
+ConVar gas_moveforce("ffdev_gas_moveforce","0.025", FCVAR_CHEAT,"Strength of gas movement attractor.");
 
 //========================================================================
 // Static material handles

@@ -23,10 +23,10 @@
 
 #define INFECTION_EFFECT_MATERIAL "particle/particle_smokegrenade"
 
-ConVar infection_particles	( "ffdev_particles_per_infection", "100", 0, "The number of particles in each infection." );
-ConVar infection_scale		( "ffdev_infection_scale", "20.0", 0, "How big the particles in the infections are." );
-ConVar infection_speed		( "ffdev_infection_speed", "0.2", 0, "Duration of the infections effect." );
-ConVar infection_magnitude	( "ffdev_infection_magnitude", "1000.0", 0, "Speed the infections expand." );
+ConVar infection_particles	( "ffdev_particles_per_infection", "100", FCVAR_CHEAT, "The number of particles in each infection." );
+ConVar infection_scale		( "ffdev_infection_scale", "20.0", FCVAR_CHEAT, "How big the particles in the infections are." );
+ConVar infection_speed		( "ffdev_infection_speed", "0.2", FCVAR_CHEAT, "Duration of the infections effect." );
+ConVar infection_magnitude	( "ffdev_infection_magnitude", "1000.0", FCVAR_CHEAT, "Speed the infections expand." );
 
 //========================================================================
 // Client effect precache table

@@ -2464,17 +2464,17 @@ float C_FFPlayer::GetFOV()
 	return default_fov.GetFloat();
 }
 
-CON_COMMAND(ffdev_hallucinate, "hallucination!")
-{
-	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
-	pPlayer->m_iHallucinationIndex++;
-}
-
-CON_COMMAND(ffdev_hallucinatereset, "okay stop")
-{
-	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
-	pPlayer->m_iHallucinationIndex = 0;
-}
+//CON_COMMAND(ffdev_hallucinate, "hallucination!")
+//{
+//	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+//	pPlayer->m_iHallucinationIndex++;
+//}
+//
+//CON_COMMAND(ffdev_hallucinatereset, "okay stop")
+//{
+//	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+//	pPlayer->m_iHallucinationIndex = 0;
+//}
 
 //-----------------------------------------------------------------------------
 // Purpose: This is a bit of a mis-use of the effects system

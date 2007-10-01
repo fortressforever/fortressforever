@@ -21,11 +21,11 @@
 
 #define FLASH_EFFECT_MATERIAL "effects/yellowflare"
 
-ConVar flash_on				( "ffdev_flash_on", "1", 0, "Turn the flash effect on or off - 1 or 0." );
-ConVar flash_scale			( "ffdev_flash_scale", "512.0", 0, "How big the flash effect gets.");
-ConVar flash_speed			( "ffdev_flash_speed", "0.3", 0, "Duration of the flash effect.");
-ConVar flash_ripples		( "ffdev_flash_ripples", "1", 0, "How many ripples the flash effect has.");
-ConVar flash_ripple_period	( "ffdev_flash_ripple_period", "0.5", 0, "Time between ripples.");
+ConVar flash_on				( "ffdev_flash_on", "1", FCVAR_CHEAT, "Turn the flash effect on or off - 1 or 0." );
+ConVar flash_scale			( "ffdev_flash_scale", "512.0", FCVAR_CHEAT, "How big the flash effect gets.");
+ConVar flash_speed			( "ffdev_flash_speed", "0.3", FCVAR_CHEAT, "Duration of the flash effect.");
+ConVar flash_ripples		( "ffdev_flash_ripples", "1", FCVAR_CHEAT, "How many ripples the flash effect has.");
+ConVar flash_ripple_period	( "ffdev_flash_ripple_period", "0.5", FCVAR_CHEAT, "Time between ripples.");
 
 //========================================================================
 // Client effect precache table
