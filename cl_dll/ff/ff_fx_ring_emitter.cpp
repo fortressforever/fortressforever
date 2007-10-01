@@ -22,13 +22,13 @@
 
 #define RING_EFFECT_MATERIAL "effects/yellowflare"
 
-ConVar ring_on			( "ffdev_ring_on", "1", 0, "Turn the ring effect on or off - 1 or 0." );
-ConVar ring_particles	( "ffdev_particles_per_ring", "100", 0, "The number of particles in each ring." );
-ConVar ring_scale		( "ffdev_ring_scale", "20.0", 0, "How big the particles in the rings are." );
-ConVar ring_speed		( "ffdev_ring_speed", "0.2", 0, "Duration of the rings effect." );
-ConVar ring_magnitude	( "ffdev_ring_magnitude", "1000.0", 0, "Speed the rings expand." );
-//ConVar ring_ripples			( "ffdev_ring_ripples", "1", 0, "How many ripples the ring effect has.");
-//ConVar ring_ripple_period	( "ffdev_ring_ripple_period", "0.05", 0, "Time between ripples.");
+ConVar ring_on			( "ffdev_ring_on", "1", FCVAR_CHEAT, "Turn the ring effect on or off - 1 or 0." );
+ConVar ring_particles	( "ffdev_particles_per_ring", "100", FCVAR_CHEAT, "The number of particles in each ring." );
+ConVar ring_scale		( "ffdev_ring_scale", "20.0", FCVAR_CHEAT, "How big the particles in the rings are." );
+ConVar ring_speed		( "ffdev_ring_speed", "0.2", FCVAR_CHEAT, "Duration of the rings effect." );
+ConVar ring_magnitude	( "ffdev_ring_magnitude", "1000.0", FCVAR_CHEAT, "Speed the rings expand." );
+//ConVar ring_ripples			( "ffdev_ring_ripples", "1", FCVAR_CHEAT, "How many ripples the ring effect has.");
+//ConVar ring_ripple_period	( "ffdev_ring_ripple_period", "0.05", FCVAR_CHEAT, "Time between ripples.");
 
 //========================================================================
 // Client effect precache table

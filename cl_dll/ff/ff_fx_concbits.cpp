@@ -21,8 +21,8 @@ extern ConVar conc_glow_g;
 extern ConVar conc_glow_b;
 extern ConVar conc_glow_a;
 
-ConVar conc_bitforce("ffdev_conc_bitforce","30000",0,"Strength of conc bit attractor.");
-ConVar conc_moveforce("ffdev_conc_moveforce","0.2",0,"Strength of conc movement attractor.");
+ConVar conc_bitforce("ffdev_conc_bitforce","30000", FCVAR_CHEAT,"Strength of conc bit attractor.");
+ConVar conc_moveforce("ffdev_conc_moveforce","0.2", FCVAR_CHEAT,"Strength of conc movement attractor.");
 
 PMaterialHandle CConcBitsEmitter::m_hMaterial = INVALID_MATERIAL_HANDLE;
 

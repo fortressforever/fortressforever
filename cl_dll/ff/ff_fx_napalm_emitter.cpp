@@ -54,7 +54,7 @@ float flame_tex_coords[][4] =
 	{ 0.625f,	0.75f,	0.5f, 1.0f}		//frame 13
 };
 #define NUM_FLAME_FRAMES	14
-ConVar nap_burst_flame_framerate("ffdev_nap_burst_flame_framerate","12",0,"Framerate of the fire \"sprites\".");
+ConVar nap_burst_flame_framerate("ffdev_nap_burst_flame_framerate","12", FCVAR_CHEAT,"Framerate of the fire \"sprites\".");
 
 //========================================================================
 // Client effect precache table
@@ -68,10 +68,10 @@ CLIENTEFFECT_REGISTER_END()
 //========================================================================
 // Development ConVars
 //========================================================================
-ConVar nap_burst_scale("ffdev_nap_burst_scale","10",0,"Napalm burst scale");
-ConVar nap_burst_dietime("ffdev_nap_burst_dietime","3.0",0,"Napalm burst particle dietime");
-ConVar nap_burst_flame_scale("ffdev_nap_burst_flame_scale","16.0",0,"Scale of the flame sprites");
-ConVar nap_burst_flame_time("ffdev_nap_burst_flame_time","5.0",0,"BUrn time for flames");
+ConVar nap_burst_scale("ffdev_nap_burst_scale","10", FCVAR_CHEAT,"Napalm burst scale");
+ConVar nap_burst_dietime("ffdev_nap_burst_dietime","3.0", FCVAR_CHEAT,"Napalm burst particle dietime");
+ConVar nap_burst_flame_scale("ffdev_nap_burst_flame_scale","16.0", FCVAR_CHEAT,"Scale of the flame sprites");
+ConVar nap_burst_flame_time("ffdev_nap_burst_flame_time","5.0", FCVAR_CHEAT,"Burn time for flames");
 
 //========================================================================
 // CNapalmEmitter constructor

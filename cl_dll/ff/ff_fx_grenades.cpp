@@ -30,12 +30,12 @@ extern ConVar conc_amplitude;
 extern ConVar conc_speed;
 
 extern ConVar nap_burst_scale;
-ConVar nap_burst_gravity("ffdev_nap_burst_gravity","-500.0",0,"Gravity magnitude for the napalm burst");
-ConVar nap_burst_vel("ffdev_nap_burst_vel","475",0,"Velocity of the napalm particles.");
-ConVar nap_burst_vel_z_divisor("ffdev_nap_burst_vel_z_divisor","2.0",0,"How much to divide the linear velocity for napalm particles by for the vertical velocity.");
+ConVar nap_burst_gravity("ffdev_nap_burst_gravity","-500.0", FCVAR_CHEAT,"Gravity magnitude for the napalm burst");
+ConVar nap_burst_vel("ffdev_nap_burst_vel","475", FCVAR_CHEAT,"Velocity of the napalm particles.");
+ConVar nap_burst_vel_z_divisor("ffdev_nap_burst_vel_z_divisor","2.0", FCVAR_CHEAT,"How much to divide the linear velocity for napalm particles by for the vertical velocity.");
 
 extern ConVar gas_scale;
-ConVar gas_speed("ffdev_gas_speed","0.75",0,"Speed gas particles expand outward.");
+ConVar gas_speed("ffdev_gas_speed","0.75", FCVAR_CHEAT,"Speed gas particles expand outward.");
 
 void FF_FX_DrawCircle(Vector &center, float radius, int modelindex, float life = 1.0f)
 {

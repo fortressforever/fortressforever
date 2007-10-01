@@ -24,10 +24,10 @@
 //#define IMMUNITY_EFFECT_MATERIAL "particle/particle_smokegrenade"
 #define IMMUNITY_EFFECT_MATERIAL "effects/yellowflare"
 
-ConVar immunity_particles	( "ffdev_particles_per_immunity", "100", 0, "The number of particles in each immunity." );
-ConVar immunity_scale		( "ffdev_immunity_scale", "20.0", 0, "How big the particles in the immunities are." );
-ConVar immunity_speed		( "ffdev_immunity_speed", "0.2", 0, "Duration of the immunity effect." );
-ConVar immunity_magnitude	( "ffdev_immunity_magnitude", "1000.0", 0, "Speed the immunity particles expand." );
+ConVar immunity_particles	( "ffdev_particles_per_immunity", "100", FCVAR_CHEAT, "The number of particles in each immunity." );
+ConVar immunity_scale		( "ffdev_immunity_scale", "20.0", FCVAR_CHEAT, "How big the particles in the immunities are." );
+ConVar immunity_speed		( "ffdev_immunity_speed", "0.2", FCVAR_CHEAT, "Duration of the immunity effect." );
+ConVar immunity_magnitude	( "ffdev_immunity_magnitude", "1000.0", FCVAR_CHEAT, "Speed the immunity particles expand." );
 
 //========================================================================
 // Client effect precache table

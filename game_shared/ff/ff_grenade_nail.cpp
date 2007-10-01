@@ -73,10 +73,10 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 
 #ifndef CLIENT_DLL
 	ConVar nailspeed("ffdev_nailspeed", "800", FCVAR_CHEAT);
-	ConVar naildamage("ffdev_naildamage", "8");
+	ConVar naildamage("ffdev_naildamage", "8", FCVAR_CHEAT);
 	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.3", FCVAR_CHEAT );
 	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_CHEAT );
-	//ConVar nailspread( "ffdev_nailgren_spread", "5.0" );
+	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
 	ConVar nailstreams( "ffdev_nailgren_streams", "4", FCVAR_CHEAT );
 	ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
 #endif
