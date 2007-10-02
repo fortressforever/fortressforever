@@ -542,6 +542,20 @@ bool CServerGameDLL::DLLInit(CreateInterfaceFn engineFactory,
 
 	// init the cvar list first in case inits want to reference them
 	InitializeCvars();
+
+	// --> Mirv: Default max_updaterate to tickrate
+	ConVar *sv_maxupdaterate = cvar->FindVar("sv_maxupdaterate");
+	ConVar *sv_maxcmdrate = cvar->FindVar("sv_maxcmdrate");
+
+	int nTickRate = 33;
+	if (CommandLine()->CheckParm("-tickrate"))
+	{
+		nTickRate = CommandLine()->ParmValue("-tickrate", 0);
+		nTickRate = clamp(nTickRate, 10, 66);
+	}
+	sv_maxupdaterate->SetValue(nTickRate);
+	sv_maxcmdrate->SetValue(nTickRate);
+	// <-- Mirv
 	
 	sv_cheats = (ConVar*) ConCommandBase::FindCommand( "sv_cheats" );
 	if ( !sv_cheats )
@@ -2108,6 +2122,8 @@ void CServerGameClients::ClientCommand( edict_t *pEntity )
 	::ClientCommand(player);
 }
 
+static ConVar *pMaxUpdateRate = NULL;
+
 //-----------------------------------------------------------------------------
 // Purpose: called after the player changes userinfo - gives dll a chance to modify 
 //			it before it gets sent into the rest of the engine->
@@ -2129,12 +2145,24 @@ void CServerGameClients::ClientSettingsChanged( edict_t *pEdict )
 
 	// get network setting for prediction & lag compensation
 	player->m_nUpdateRate = Q_atoi( QUICKGETCVARVALUE("cl_updaterate") );
+	
+	// --> Mirv: This seems like a wise idea
+	if (!pMaxUpdateRate)
+		pMaxUpdateRate = cvar->FindVar("sv_maxupdaterate");
+	player->m_nUpdateRate = min(player->m_nUpdateRate, pMaxUpdateRate->GetInt());
+	// <-- Mirv
 
 	bool useInterpolation = Q_atoi( QUICKGETCVARVALUE("cl_interpolate") ) != 0;
 
 	if ( useInterpolation )
 	{
-		player->m_fLerpTime = Q_atof( QUICKGETCVARVALUE("cl_interp") );
+		// --> Mirv: Use our new ratio thing
+		//player->m_fLerpTime = Q_atof( QUICKGETCVARVALUE("cl_interp") );
+
+		// We use cl_interp_ratio / update rate to calculate the interpolation required.
+		float flRatio = Q_atof(QUICKGETCVARVALUE("cl_interp_ratio"));
+		player->m_fLerpTime = flRatio / (float) player->m_nUpdateRate;
+		// <-- Mirv
 	}
 	else
 	{
