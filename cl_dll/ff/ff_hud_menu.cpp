@@ -76,6 +76,19 @@ extern menu_t EnemyDMenu;
 // We buffer our commands onto here sequentially.
 char szCmdBuffer[MAX_CMD_LEN];
 
+CON_COMMAND(qsentry, "qsentry")
+{
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+	if (pPlayer)
+		pPlayer->SwapToWeaponSlot(5);
+}
+
+CON_COMMAND(qdispenser, "qdispenser")
+{
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+	if (pPlayer)
+		pPlayer->SwapToWeaponSlot(4);
+}
 
 int CheckDisguiseClass( int iClass )
 {
@@ -142,7 +155,7 @@ int CheckDisguiseClass( int iClass )
 // Engineer menu options
 //-----------------------------------------------------------------------------
 
-ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDDISPENSER", 'Q', "slot4")
+ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDDISPENSER", 'Q', "qdispenser")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
@@ -196,7 +209,7 @@ ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'Q', "dismantle
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'S', "slot5")
+ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'S', "qsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
