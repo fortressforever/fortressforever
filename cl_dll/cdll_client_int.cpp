@@ -666,6 +666,13 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	if (!Initializer::InitializeAllObjects())
 		return false;
 
+	// --> Mirv: Default value for cl_updaterate up to 33
+	ConVar *cl_updaterate = cvar->FindVar("cl_updaterate");
+	ConVar *cl_cmdrate = cvar->FindVar("cl_cmdrate");
+	cl_updaterate->SetValue(33);
+	cl_cmdrate->SetValue(33);
+	// <-- Mirv
+
 	if (!ParticleMgr()->Init(MAX_TOTAL_PARTICLES, materials))
 		return false;
 

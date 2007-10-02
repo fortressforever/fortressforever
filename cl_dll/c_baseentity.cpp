@@ -75,12 +75,14 @@ void cc_cl_interp_all_changed( ConVar *var, const char *pOldString )
 	}
 }
 
+// --> Mirv: Using this to select interp
+static ConVar  cl_interp_ratio("cl_interp_ratio", "2.0", FCVAR_USERINFO|FCVAR_DEMO, "This is best kept to 2.0, don't you know.", true, 0.1f, true, 4.0f, cc_cl_interp_changed);
+// <--
 
 static ConVar  cl_extrapolate( "cl_extrapolate", "1", FCVAR_CHEAT, "Enable/disable extrapolation if interpolation history runs out." );
 static ConVar  cl_interpolate( "cl_interpolate", "1.0", FCVAR_USERINFO, "Interpolate entities on the client." );
-static ConVar  cl_interp	 ( "cl_interp", "0.1", FCVAR_USERINFO | FCVAR_DEMO, "Interpolate object positions starting this many seconds in past", true, 0.01, true, 1.0, cc_cl_interp_changed );  
+//static ConVar  cl_interp	 ( "cl_interp", "0.1", FCVAR_USERINFO | FCVAR_DEMO, "Interpolate object positions starting this many seconds in past", true, 0.01, true, 1.0, cc_cl_interp_changed );  
 static ConVar  cl_interp_npcs( "cl_interp_npcs", "0.0", FCVAR_USERINFO, "Interpolate NPC positions starting this many seconds in past (or cl_interp, if greater)", 0, 0, 0, 0, cc_cl_interp_changed );  
-//static ConVar  cl_interp_ents( "cl_interp_ents", "0.1", 0, "", true, 0.01, true, 1.0, cc_cl_interp_changed);
 static ConVar  cl_interp_all( "cl_interp_all", "0", 0, "Disable interpolation list optimizations.", 0, 0, 0, 0, cc_cl_interp_all_changed );
 //APSFIXME - Temp until I fix
 ConVar  r_drawmodeldecals( "r_drawmodeldecals", IsXbox() ? "0" : "1" );
@@ -5287,15 +5289,6 @@ void C_BaseEntity::ResetLatched()
 
 static float AdjustInterpolationAmount( C_BaseEntity *pEntity, float baseInterpolation )
 {
-#if 0
-	// --> Mirv: Reduce the interpolation for our projectiles
-	if (!pEntity->IsPlayer() && pEntity->Classify() >= CLASS_GREN)
-	{
-		return TICKS_TO_TIME(TIME_TO_TICKS(/*0.01f*/ cl_interp_ents.GetFloat()) + 1.0f);
-	}
-	// <-- Mirv
-#endif
-
 	if ( cl_interp_npcs.GetFloat() > 0 )
 	{
 		const float minNPCInterpolationTime = cl_interp_npcs.GetFloat();
@@ -5318,8 +5311,30 @@ static float AdjustInterpolationAmount( C_BaseEntity *pEntity, float baseInterpo
 
 //-------------------------------------
 
+static const ConVar *pUpdateRateCvar = NULL;
+static const ConVar *pMaxUpdateRateCvar = NULL;
+int nLastUpdateRate = 0;
+
 float C_BaseEntity::GetInterpolationAmount( int flags )
 {
+	// --> Mirv: Interpolation based on ratio
+	if (!pUpdateRateCvar || !pMaxUpdateRateCvar)
+	{
+		pUpdateRateCvar = cvar->FindVar("cl_updaterate");
+		pMaxUpdateRateCvar = cvar->FindVar("sv_maxupdaterate");
+		nLastUpdateRate = pUpdateRateCvar->GetFloat();
+	}
+	// Since it's not safe to hack in a handler we'll just have to test
+	// for the value changing here...
+	int nUpdateRate = min(pMaxUpdateRateCvar->GetInt(), pUpdateRateCvar->GetInt());
+	//if (nUpdateRate != nLastUpdateRate)
+	//{
+	//	nLastUpdateRate = nUpdateRate;
+	//	cc_cl_interp_changed(NULL, NULL);
+	//}
+	float flInterp = cl_interp_ratio.GetFloat() / nUpdateRate;
+	// <-- Mirv	
+
 	// If single player server is "skipping ticks" everything needs to interpolate for a bit longer
 	int serverTickMultiple = 1;
 	if ( IsSimulatingOnAlternateTicks() )
@@ -5335,7 +5350,7 @@ float C_BaseEntity::GetInterpolationAmount( int flags )
 	// Always fully interpolation in multiplayer or during demo playback...
 	if ( gpGlobals->maxClients > 1 || engine->IsPlayingDemo() )
 	{
-		return AdjustInterpolationAmount( this, TICKS_TO_TIME ( TIME_TO_TICKS( cl_interp.GetFloat() ) + serverTickMultiple ) );
+		return AdjustInterpolationAmount( this, TICKS_TO_TIME ( TIME_TO_TICKS( flInterp ) + serverTickMultiple ) );	// |-- Mirv: Use dynamic interp
 	}
 
 	if ( IsAnimatedEveryTick() && IsSimulatedEveryTick() )
@@ -5352,7 +5367,7 @@ float C_BaseEntity::GetInterpolationAmount( int flags )
 		return TICK_INTERVAL * serverTickMultiple;
 	}
 
-	return AdjustInterpolationAmount( this, TICK_INTERVAL * ( TIME_TO_TICKS( cl_interp.GetFloat() ) +  serverTickMultiple ) );
+	return AdjustInterpolationAmount( this, TICK_INTERVAL * ( TIME_TO_TICKS( flInterp ) +  serverTickMultiple ) );	// |-- Mirv: Use dynamic interp
 }
 
 
