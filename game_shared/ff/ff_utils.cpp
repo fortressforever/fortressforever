@@ -1049,4 +1049,62 @@ int UTIL_PickRandomTeam()
 	}
 	return iBestTeam;
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Works out the position & angles of the info intermission.  
+// In: pointers to existing vector & angles to be filled out.
+// Returns: Nonzero for success, 0 for failure.
+//-----------------------------------------------------------------------------
+
+int UTIL_GetIntermissionData( Vector *pPosition, QAngle *pAngles )
+{
+	assert( pPosition && pAngles );
+
+	// Find an info_player_start place to spawn observer mode at
+	//CBaseEntity *pSpawnSpot = gEntList.FindEntityByClassname( NULL, "info_intermission");
+	CPointEntity *pIntermission = dynamic_cast< CPointEntity * >( gEntList.FindEntityByClassname( NULL, "info_intermission" ) );
+
+	// We could find one
+	if( pIntermission )
+	{
+		// Try to point at the target of the info_intermission
+		CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, pIntermission->m_target );
+		if( pTarget )
+		{
+			Vector vecDir = pTarget->GetAbsOrigin() - pIntermission->GetAbsOrigin();
+			VectorNormalize( vecDir );
+
+			QAngle vecAngles;
+			VectorAngles( vecDir, vecAngles );
+
+			*pAngles = vecAngles;
+			*pPosition = pIntermission->GetAbsOrigin();
+
+			//SetAbsOrigin( pIntermission->GetLocalOrigin() );
+			//SetAbsAngles( vecAngles );
+
+			// Send this to client so the client will
+			// actually look at what we want it to!
+			//m_vecInfoIntermission = vecAngles;
+		}
+		else
+		{
+			//SetLocalOrigin(pIntermission->GetLocalOrigin() + Vector(0, 0, 1));
+			//SetLocalAngles(pIntermission->GetLocalAngles());
+			*pAngles = pIntermission->GetAbsAngles();
+			*pPosition = pIntermission->GetAbsOrigin();
+		}		
+
+		return 1;
+	}
+	// We couldn't find one
+	else
+	{
+		*pPosition = Vector( 0, 0, 72 );
+		*pAngles = QAngle( 0, 0, 0 );
+
+		return 0;
+	}
+}
+
 #endif

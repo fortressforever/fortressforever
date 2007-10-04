@@ -698,6 +698,8 @@ public:
 
 	void Command_MapGuide();
 
+	void UpdateCamera( bool bUnassigned );
+
 	void ClassSpecificSkill();
 	void ClassSpecificSkill_Post();
 

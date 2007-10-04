@@ -93,6 +93,7 @@ void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier);
 
 int UTIL_PickRandomClass(int _curteam);
 int UTIL_PickRandomTeam();
+int UTIL_GetIntermissionData( Vector *pPosition, QAngle *pAngles );
 #endif
 
 bool FF_IsPlayerSpec( CFFPlayer *pPlayer );
