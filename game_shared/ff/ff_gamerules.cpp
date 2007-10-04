@@ -28,7 +28,6 @@
 	#include "ff_scriptman.h"
 	#include "ff_luacontext.h"
 	#include "ff_scheduleman.h"
-	#include "ff_betalist.h"
 	#include "ff_utils.h"
 	#include "ff_buildableobjects_shared.h"
 #endif
@@ -331,28 +330,28 @@ ConVar mp_prematch( "mp_prematch",
 	//-----------------------------------------------------------------------------
 	bool CFFGameRules::ClientConnected( edict_t *pEdict, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
 	{
-#ifdef FF_BETA_TEST_COMPILE
-		// NO ONE CAN JOIN THE SERVER WHEN ITS A BETA TEST COMPILE!
-		// A beta test compile means this is the server.dll the 
-		// beta testers get so that the tables match up and so they
-		// can actually play with us. But, don't let them have the
-		// ability to host servers!
-		Q_snprintf( reject, maxrejectlen, "You are violating the terms\nof service for the beta" );
-		return false;
-#endif
+//#ifdef FF_BETA_TEST_COMPILE
+//		// NO ONE CAN JOIN THE SERVER WHEN ITS A BETA TEST COMPILE!
+//		// A beta test compile means this is the server.dll the 
+//		// beta testers get so that the tables match up and so they
+//		// can actually play with us. But, don't let them have the
+//		// ability to host servers!
+//		Q_snprintf( reject, maxrejectlen, "You are violating the terms\nof service for the beta" );
+//		return false;
+//#endif
 
-#ifdef FF_BETA
-		// Special stuff for beta!
-		if( !g_FFBetaList.IsValidName( pszName ) )
-		{
-			// Note: An extra period will be added onto this string so don't add
-			// one to make it proper or it will look stupid with "sentence.."!
-			Q_snprintf( reject, maxrejectlen, "You are not welcome in the\nFortress Forever beta test" );
-
-			// Sorry, buddy.
-			return false;
-		}		
-#endif
+//#ifdef FF_BETA
+//		// Special stuff for beta!
+//		if( !g_FFBetaList.IsValidName( pszName ) )
+//		{
+//			// Note: An extra period will be added onto this string so don't add
+//			// one to make it proper or it will look stupid with "sentence.."!
+//			Q_snprintf( reject, maxrejectlen, "You are not welcome in the\nFortress Forever beta test" );
+//
+//			// Sorry, buddy.
+//			return false;
+//		}		
+//#endif
 
 		CFFLuaSC func;
 		func.Push( pszName );
