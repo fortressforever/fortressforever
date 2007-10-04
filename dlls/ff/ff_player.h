@@ -32,12 +32,6 @@ class CFFDispenser;
 class CFFSentryGun;
 class CFFSevTest;
 
-#include "ff_betalist.h"
-#ifdef FF_BETA
-// Special stuff for beta!
-class CFFBetaList_Player;
-#endif
-
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
 #define FF_BUILD_DISP_STRING_LEN	256

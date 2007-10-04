@@ -3657,12 +3657,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 			Name="FF Source"
 			Filter="">
 			<File
-				RelativePath=".\ff\ff_betalist.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\ff_betalist.h">
-			</File>
-			<File
 				RelativePath=".\ff\ff_bot_temp.cpp">
 			</File>
 			<File
