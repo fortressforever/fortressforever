@@ -1279,56 +1279,11 @@ void CFFPlayer::Spawn( void )
 	Extinguish();
 
 	// Tried to spawn while unassigned (and not in a map guide)
+	// Bug #0001767 (Improved camera stuff when speccing)
 	if (GetTeamNumber() == TEAM_UNASSIGNED)
 	{
-		// Start a new map overview guide
-		if (!m_hNextMapGuide)
-			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("overview"));
-
-		// Check if mapguide was found
-		if (m_hNextMapGuide)
-			m_flNextMapGuideTime = 0;
-
-		// Set us in the intermission location instead
-		else
-		{
-			// Find an info_player_start place to spawn observer mode at
-			//CBaseEntity *pSpawnSpot = gEntList.FindEntityByClassname( NULL, "info_intermission");
-			CPointEntity *pSpawnSpot = dynamic_cast< CPointEntity * >( gEntList.FindEntityByClassname( NULL, "info_intermission" ) );
-
-			// We could find one
-			if( pSpawnSpot )
-			{
-				// Try to point at the target of the info_intermission
-				CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, pSpawnSpot->m_target );
-				if( pTarget )
-				{
-					Vector vecDir = pTarget->GetLocalOrigin() - pSpawnSpot->GetLocalOrigin();
-					VectorNormalize( vecDir );
-
-					QAngle vecAngles;
-					VectorAngles( vecDir, vecAngles );
-
-					SetAbsOrigin( pSpawnSpot->GetLocalOrigin() );
-					SetAbsAngles( vecAngles );
-
-					// Send this to client so the client will
-					// actually look at what we want it to!
-					m_vecInfoIntermission = vecAngles;
-				}
-				else
-				{
-					SetLocalOrigin(pSpawnSpot->GetLocalOrigin() + Vector(0, 0, 1));
-					SetLocalAngles(pSpawnSpot->GetLocalAngles());
-				}				
-			}
-			// We couldn't find one
-			else
-			{
-				SetAbsOrigin(Vector( 0, 0, 0 ));
-				SetAbsAngles(QAngle( 0, 0, 0 ));
-			}
-		}
+		// Update camera stuff while unassigned
+		UpdateCamera( true );
 
 		// Show the team menu
 		ShowViewPortPanel(PANEL_TEAM, true);
@@ -1340,19 +1295,8 @@ void CFFPlayer::Spawn( void )
 	// They tried to spawn with no class and they are not a spectator (or randompc)
 	if (GetClassSlot() == 0 && GetTeamNumber() != TEAM_SPECTATOR && !m_fRandomPC)
 	{
-		// Start a new map overview guide
-		if (!m_hNextMapGuide)
-			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("overview"));
-
-		// Check if mapguide was found
-		if (m_hNextMapGuide)
-			m_flNextMapGuideTime = 0;
-
-		// TODO set something if no map guides on this map
-
-		// Show the class select menu	
-		// Bug #0000584: Switch teams results in the class menu appearing twice.
-		//ShowViewPortPanel( PANEL_CLASS, true );
+		// Update camera stuff while assigned to a team
+		UpdateCamera( false );
 
 		// Don't allow them to spawn
 		return;
@@ -7420,4 +7364,93 @@ void CFFPlayer::AddAction(CFFPlayer *target, const char *action, const char *par
 {
 	int actionId = g_StatsLog->GetActionID(action);
 	g_StatsLog->AddAction(m_iStatsID, target!=NULL ? target->m_iStatsID : -1, actionId, param, origin, location);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Updates camera position & mapguide stuff (called from CFFPlayer::Spawn()
+// Fixes bug #0001767
+//-----------------------------------------------------------------------------
+void CFFPlayer::UpdateCamera( bool bUnassigned )
+{
+	Vector position( 0, 0, 0 );
+	QAngle angles( 0, 0, 0 );
+
+	// Unassigned logic.  Should start the mapguide if there's multiple points.  If there's only one, use its angles.  
+	// Failing that, use the intermission.  If that fails, then set default stuff.
+	if( bUnassigned )
+	{
+		// Start a new map overview guide
+		if (!m_hNextMapGuide)
+			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("overview"));
+		
+		// m_hNextMapGuide = FindMapGuide(m_hLastMapGuide->m_iNextMapguide);
+
+		// Check if mapguide was found & whether there is more than one
+		if( m_hNextMapGuide )
+		{
+			CFFMapGuide *pNextOne = FindMapGuide( m_hNextMapGuide->m_iNextMapguide );
+			
+			// If there's no next one, then sod it!  Just use the overview mapguide's position & angles and chill.
+			if( ! pNextOne )
+			{
+				CFFMapGuide *pCurrent = dynamic_cast< CFFMapGuide* >( m_hNextMapGuide.Get() );	
+				
+				if( pCurrent )
+				{
+					// use the angles
+					SnapEyeAngles( pCurrent->GetAbsAngles() );
+					SetAbsOrigin( pCurrent->GetAbsOrigin() );
+					
+					m_vecInfoIntermission = pCurrent->GetAbsAngles();
+				}		
+
+				// Don't use mapguides any more (since there's only one = static view).
+				m_hLastMapGuide = m_hNextMapGuide = NULL;
+			}	
+			else
+			{
+				// we're ready to rock.  Mapguide shall proceed as ordered, guv'nor!
+				m_flNextMapGuideTime = 0;
+			}
+		}
+		else	// no mapguide found -- put the player at the intermission spot
+		{			
+			// this function will return a decent fallback value so just use what it sets regardless of whether it succeeds
+			UTIL_GetIntermissionData( &position, &angles );
+			SetAbsOrigin( position );				
+			SnapEyeAngles( angles );
+
+			// Send this to client so the client will actually look at what we want it to!
+			m_vecInfoIntermission = angles;
+		}
+			
+	}	// END if( unassigned )
+	
+	else	// this is the regular logic that is used most often
+	{
+		// If intermission data was found, use it.
+		if( UTIL_GetIntermissionData( &position, &angles ) )
+		{
+			SetAbsOrigin( position );
+			SnapEyeAngles( angles );
+
+			// Don't need to bother with this if we're not unassigned afaik
+			// m_vecInfoIntermission = angles;
+		}
+		else	// no intermission so use the mapguide overview point to start with
+		{
+			CFFMapGuide *pMapGuide = FindMapGuide(MAKE_STRING("overview"));
+
+			if( pMapGuide )
+			{				
+				SnapEyeAngles( pMapGuide->GetAbsAngles() );
+				SetAbsOrigin( pMapGuide->GetAbsOrigin() );
+			}
+			else	// no mapguide found; just use the default position & angles 
+			{
+				SetAbsOrigin( position );
+				SnapEyeAngles( angles );
+			}
+		}				
+	}
 }
