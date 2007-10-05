@@ -128,7 +128,7 @@ void CFFWeaponPipeLauncher::Fire()
 	else if( tr.fraction != 1.0f )
 		vecSrc += ( vForward * -24.0f );
 
-	CFFProjectilePipebomb *pPipe = CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectilePipebomb *pPipe = CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
 	pPipe;
 
 #ifdef GAME_DLL

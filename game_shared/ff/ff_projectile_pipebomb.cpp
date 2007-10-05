@@ -217,7 +217,7 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 //----------------------------------------------------------------------------
 // Purpose: Create a new pipebomb
 //----------------------------------------------------------------------------
-CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed) 
 {
 	CFFProjectilePipebomb *pPipebomb = (CFFProjectilePipebomb *) CreateEntityByName("ff_projectile_pl");
 
@@ -245,7 +245,7 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity 
 #endif
 
 	pPipebomb->SetDamage(iDamage);
-	pPipebomb->SetDamageRadius(iDamage);
+	pPipebomb->SetDamageRadius(iDamageRadius);
 
 	pPipebomb->m_bIsLive = false;
 

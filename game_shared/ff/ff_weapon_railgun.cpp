@@ -283,7 +283,8 @@ void CFFWeaponRailgun::Fire( void )
 	// Now determine damage the same way
 	float flDamage = ffdev_rail_damage_min.GetFloat() + ( (ffdev_rail_damage_max.GetFloat() - ffdev_rail_damage_min.GetFloat()) * flPercent );
 
-	CFFProjectileRail *pRail = CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, flDamage, flSpeed, m_flClampedChargeTime );	
+	const int iDamageRadius = 100;
+	CFFProjectileRail *pRail = CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, flDamage, iDamageRadius, flSpeed, m_flClampedChargeTime );	
 	pRail;
 
 #ifdef GAME_DLL

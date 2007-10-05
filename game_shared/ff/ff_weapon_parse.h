@@ -32,6 +32,7 @@ public:
 	float	m_iCycleDecrement;
 
 	int		m_iDamage;
+	int		m_iDamageRadius;
 
 	int		m_iBullets;
 	float	m_flBulletSpread;

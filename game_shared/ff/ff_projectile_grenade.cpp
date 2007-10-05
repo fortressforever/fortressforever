@@ -244,7 +244,7 @@ void CFFProjectileGrenade::Precache()
 //----------------------------------------------------------------------------
 // Purpose: Create a new grenade
 //----------------------------------------------------------------------------
-CFFProjectileGrenade * CFFProjectileGrenade::CreateGrenade(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectileGrenade * CFFProjectileGrenade::CreateGrenade(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed) 
 {
 	CFFProjectileGrenade *pGrenade = (CFFProjectileGrenade *) CreateEntityByName("ff_projectile_gl");
 
@@ -269,7 +269,7 @@ CFFProjectileGrenade * CFFProjectileGrenade::CreateGrenade(const CBaseEntity *pS
 #endif
 
 	pGrenade->SetDamage(iDamage);
-	pGrenade->SetDamageRadius(iDamage);
+	pGrenade->SetDamageRadius(iDamageRadius);
 
 	pGrenade->m_bIsLive = true;
 
