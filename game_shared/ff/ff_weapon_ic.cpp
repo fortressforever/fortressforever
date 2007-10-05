@@ -26,7 +26,6 @@
 #endif
 
 ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
-ConVar ffdev_ic_damage("ffdev_ic_damage", "60", FCVAR_REPLICATED | FCVAR_CHEAT);
 
 //=============================================================================
 // CFFWeaponIC
@@ -111,7 +110,7 @@ void CFFWeaponIC::Fire()
 
 	// 0000936 - added cvar for testing. Keep line below commented out.
 	//CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
-	CFFProjectileIncendiaryRocket *pRocket = CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, ffdev_ic_damage.GetFloat(), pWeaponInfo.m_iSpeed);
+	CFFProjectileIncendiaryRocket *pRocket = CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
 	pRocket;
 
 #ifdef GAME_DLL

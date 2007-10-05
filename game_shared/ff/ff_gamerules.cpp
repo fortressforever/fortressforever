@@ -449,6 +449,8 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			// TODO: Do stuff!
 
+			m_flIntermissionEndTime = 0.f;
+
 			// Restart stats!
 			g_StatsLog->ResetStats();
 
@@ -523,8 +525,6 @@ ConVar mp_prematch( "mp_prematch",
 
 			// final task, trigger the recreation of any entities that need it.
 			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
-
-			m_flIntermissionEndTime = 0.f;
 
 			// Run startup stuff again!
 			CFFLuaSC hStartup;

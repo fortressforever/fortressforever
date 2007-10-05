@@ -808,7 +808,9 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 		debugoverlay->AddLineOverlay(vecSrc, vecSrc+vecDir*1024.f, 0, 255, 0, false, 0.2f);
 	}*/
 
-	CFFProjectileRocket::CreateRocket( this, vecSrc, vecAngles, this, 102, 900.0f );
+	const int iSentryDamage = 102;
+	const int iSentryDamageRadius = 102;
+	CFFProjectileRocket::CreateRocket( this, vecSrc, vecAngles, this, iSentryDamage, iSentryDamageRadius, 900.0f );
 
 	EmitSound( "Sentry.RocketFire" );
 	//DoRocketMuzzleFlash( ( m_bRocketLeftBarrel ? m_iRocketLAttachment : m_iRocketRAttachment ), vecSrc, vecAngles );

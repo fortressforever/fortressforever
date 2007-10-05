@@ -109,7 +109,7 @@ void CFFProjectileRail::Precache( void )
 //----------------------------------------------------------------------------
 // Purpose: Create a new rail
 //----------------------------------------------------------------------------
-CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed, float flChargeTime )
+CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed, float flChargeTime )
 {
 	CFFProjectileRail *pRail = ( CFFProjectileRail * )CreateEntityByName( "ff_projectile_rail" );
 
@@ -134,6 +134,7 @@ CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, co
 	//#endif
 
 	pRail->m_flDamage = iDamage;
+	pRail->m_DmgRadius = iDamageRadius;
 
 	return pRail;
 }

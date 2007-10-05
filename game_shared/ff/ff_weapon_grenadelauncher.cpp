@@ -106,7 +106,7 @@ void CFFWeaponGrenadeLauncher::Fire()
 	else if( tr.fraction != 1.0f )
 		vecSrc += ( vForward * -24.0f );
 
-	CFFProjectileGrenade *pGrenade = CFFProjectileGrenade::CreateGrenade(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileGrenade *pGrenade = CFFProjectileGrenade::CreateGrenade(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
 	pGrenade;
 
 #ifdef GAME_DLL

@@ -41,7 +41,7 @@ public:
 public:
 
 	virtual void Precache();
-	static CFFProjectileIncendiaryRocket *CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
+	static CFFProjectileIncendiaryRocket *CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed);
 	virtual void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType);
 	virtual Class_T Classify( void ) { return CLASS_IC_ROCKET; }
 

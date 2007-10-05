@@ -224,7 +224,7 @@ void CFFProjectileIncendiaryRocket::Precache()
 //----------------------------------------------------------------------------
 // Purpose: Create a new rocket
 //----------------------------------------------------------------------------
-CFFProjectileIncendiaryRocket * CFFProjectileIncendiaryRocket::CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed)
+CFFProjectileIncendiaryRocket * CFFProjectileIncendiaryRocket::CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed)
 {
 	CFFProjectileIncendiaryRocket *pRocket = (CFFProjectileIncendiaryRocket *) CreateEntityByName("ff_projectile_ic");
 
@@ -246,7 +246,7 @@ CFFProjectileIncendiaryRocket * CFFProjectileIncendiaryRocket::CreateRocket(cons
 #endif
 
 	pRocket->m_flDamage = iDamage;
-	pRocket->m_DmgRadius = pRocket->m_flDamage * 2.0f;
+	pRocket->m_DmgRadius = iDamageRadius;//pRocket->m_flDamage * 2.0f;
 
 	return pRocket; 
 }

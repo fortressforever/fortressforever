@@ -133,7 +133,7 @@ void CFFProjectileRocket::Precache()
 //----------------------------------------------------------------------------
 // Purpose: Create a new rocket
 //----------------------------------------------------------------------------
-CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed) 
 {
 	CFFProjectileRocket *pRocket = (CFFProjectileRocket *) CreateEntityByName("ff_projectile_rocket");
 
@@ -154,6 +154,7 @@ CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSour
 #endif
 
 	pRocket->m_flDamage = iDamage;
+	pRocket->m_DmgRadius = iDamageRadius;
 
 	// Bug #0000231: Rocket splash is incorrect
 	// TFC doesn't multiply the radius at all, dont you know
