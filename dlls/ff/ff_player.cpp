@@ -1279,7 +1279,7 @@ void CFFPlayer::Spawn( void )
 	Extinguish();
 
 	// Tried to spawn while unassigned (and not in a map guide)
-	// Bug #0001767 (Improved camera stuff when speccing)
+	// Bug #0001767 -- Improved camera stuff when speccing / changing teams / etc.
 	if (GetTeamNumber() == TEAM_UNASSIGNED)
 	{
 		// Update camera stuff while unassigned
@@ -1295,6 +1295,24 @@ void CFFPlayer::Spawn( void )
 	// They tried to spawn with no class and they are not a spectator (or randompc)
 	if (GetClassSlot() == 0 && GetTeamNumber() != TEAM_SPECTATOR && !m_fRandomPC)
 	{
+		// Set stuff we need to make sure the spec cam doesn't vibrate due to prediction errors
+		// The way it now works is that when you switch teams, the player's view will move to the
+		// intermission / mapguide / map origin rather than staying put.  As a result, we need to 
+		// stop any glitching caused by switching between being a regular player and a pseudo-spectator.
+
+		m_iHealth = 1;
+		m_lifeState = LIFE_DEAD; 
+		pl.deadflag = true;
+
+		//m_afPhysicsFlags |= PFLAG_OBSERVER; 
+
+		SetGroundEntity( (CBaseEntity *)NULL );
+		RemoveFlag( FL_DUCKING );
+		//SetSolidFlags( FSOLID_NOT_SOLID );
+		
+		// This is the biggie!
+		SetMoveType( MOVETYPE_NONE );
+
 		// Update camera stuff while assigned to a team
 		UpdateCamera( false );
 
