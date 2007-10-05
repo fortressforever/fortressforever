@@ -49,7 +49,8 @@ void CFFTeam::Init( const char *pName, int iNumber )
 	BaseClass::Init( pName, iNumber );
 
 	// --> Mirv: Some default settings
-	memset( &m_iClasses, 0, sizeof( m_iClasses ) );		// no disallowed classes
+	memset( &m_iClasses, -1, sizeof( m_iClasses ) );	// Jiggles: All classes start as "disallowed" so players can't pick
+														//			a disallowed class in the time it takes to update the client menu
 	m_iAllies = 0;										// no allies
 	// <-- Mirv: Some default settings
 
