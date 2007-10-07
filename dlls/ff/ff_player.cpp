@@ -3162,7 +3162,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		m_vecBuildOrigin = GetAbsOrigin();
 
 		// See if player is in a no build area first
-		if( !FFScriptRunPredicates( this, "onbuild", true ) && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
+		if( IsInNoBuild() && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
 		{
 			Omnibot::Notify_Build_CantBuild(this, m_iWantBuild);
 
@@ -6538,9 +6538,23 @@ bool CFFPlayer::HasItem(const char* itemname) const
 }
 
 //-----------------------------------------------------------------------------
-bool CFFPlayer::IsInNoBuild() const
+bool CFFPlayer::IsInNoBuild()
 {
-	return !FFScriptRunPredicates( (CBaseEntity*)this, "onbuild", true );
+	Vector vecForward;
+	EyeVectors(&vecForward);
+	vecForward.z = 0;
+	VectorNormalize( vecForward );
+	Vector vecOrigin = GetAbsOrigin() + (vecForward * 88.0f);
+
+#ifdef _DEBUG
+	if( !engine->IsDedicatedServer() )
+	{
+		// draw a green box
+		NDebugOverlay::Box( vecOrigin, Vector( -28, -28, -28 ), Vector( 28, 28, 28 ), 0, 255, 0, 100, 5.0f );
+	}
+#endif
+
+	return !FFScriptRunPredicates( (CBaseEntity*)this, "onbuild", true, vecOrigin, 40.0f );
 }
 
 
