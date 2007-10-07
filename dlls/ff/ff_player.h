@@ -308,7 +308,7 @@ public:
 	// <-- Mirv: Damage & force stuff
 
 	bool HasItem(const char* szItemName) const;
-	bool IsInNoBuild() const;
+	bool IsInNoBuild();
 	bool IsUnderWater() const { return (GetWaterLevel() == WL_Eyes); }
 	bool IsWaistDeepInWater() const { return (GetWaterLevel() == WL_Waist); }
 	bool IsFeetDeepInWater() const { return (GetWaterLevel() == WL_Feet); }

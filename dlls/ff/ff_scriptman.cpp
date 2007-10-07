@@ -7,6 +7,8 @@
 #include "ff_luacontext.h"
 #include "ff_lualib.h"
 #include "ff_utils.h"
+#include "ff_item_flag.h"
+#include "triggers.h"
 
 // engine
 #include "filesystem.h"
@@ -516,6 +518,98 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 			CBaseEntity *pEntity = UTIL_EntityByIndex( pObject->m_hActiveScripts[ i ] );
 			if( pEntity )
 			{
+				bool bEntSys = bExpectedVal;
+				//CFFLuaObjectWrapper hOutput;
+				CFFLuaSC hOutput( 1, pObject );
+				//bool bEntSys = entsys.RunPredicates_LUA( pEntity, pObject, pszFunction ) > 0;
+				if( _scriptman.RunPredicates_LUA( pEntity, &hOutput, pszFunction ) )
+					bEntSys = hOutput.GetBool();
+
+				if( bEntSys != bExpectedVal )
+					return !bExpectedVal;
+			}
+		}
+	}
+
+	return bExpectedVal;
+}
+
+// same as above, but uses a separate box
+bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal, Vector vecOrigin, Vector vecMins, Vector vecMaxs )
+{
+	VPROF_BUDGET( "FFScriptRunPredicates", VPROF_BUDGETGROUP_FF_LUA );
+
+	if( pObject && pszFunction )
+	{
+		CBaseEntity *pList[ 128 ];
+		int count = UTIL_EntitiesInBox( pList, 128, vecOrigin + vecMins, vecOrigin + vecMaxs, 0 );
+
+		for( int i = 0; i < count; i++ )
+		{
+			CBaseEntity *pEntity = pList[i];
+			if( pEntity )
+			{
+				if ( pEntity->Classify() == CLASS_TRIGGERSCRIPT )
+				{
+					CFuncFFScript *pFFScript = dynamic_cast<CFuncFFScript*>(pEntity);
+					if ( pFFScript && pFFScript->IsRemoved() )
+						continue;
+				}
+				else if ( pEntity->Classify() == CLASS_INFOSCRIPT )
+				{
+					CFFInfoScript *pFFScript = dynamic_cast<CFFInfoScript*>(pEntity);
+					if ( pFFScript && pFFScript->IsRemoved() )
+						continue;
+				}
+				else
+					continue;
+
+				bool bEntSys = bExpectedVal;
+				//CFFLuaObjectWrapper hOutput;
+				CFFLuaSC hOutput( 1, pObject );
+				//bool bEntSys = entsys.RunPredicates_LUA( pEntity, pObject, pszFunction ) > 0;
+				if( _scriptman.RunPredicates_LUA( pEntity, &hOutput, pszFunction ) )
+					bEntSys = hOutput.GetBool();
+
+				if( bEntSys != bExpectedVal )
+					return !bExpectedVal;
+			}
+		}
+	}
+
+	return bExpectedVal;
+}
+
+// same as above, but uses a separate sphere
+bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal, Vector vecOrigin, float flRadius )
+{
+	VPROF_BUDGET( "FFScriptRunPredicates", VPROF_BUDGETGROUP_FF_LUA );
+
+	if( pObject && pszFunction )
+	{
+		CBaseEntity *pList[ 128 ];
+		int count = UTIL_EntitiesInSphere( pList, 128, vecOrigin, flRadius, 0 );
+
+		for( int i = 0; i < count; i++ )
+		{
+			CBaseEntity *pEntity = pList[i];
+			if( pEntity )
+			{
+				if ( pEntity->Classify() == CLASS_TRIGGERSCRIPT )
+				{
+					CFuncFFScript *pFFScript = dynamic_cast<CFuncFFScript*>(pEntity);
+					if ( pFFScript && pFFScript->IsRemoved() )
+						continue;
+				}
+				else if ( pEntity->Classify() == CLASS_INFOSCRIPT )
+				{
+					CFFInfoScript *pFFScript = dynamic_cast<CFFInfoScript*>(pEntity);
+					if ( pFFScript && pFFScript->IsRemoved() )
+						continue;
+				}
+				else
+					continue;
+
 				bool bEntSys = bExpectedVal;
 				//CFFLuaObjectWrapper hOutput;
 				CFFLuaSC hOutput( 1, pObject );
