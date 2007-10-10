@@ -219,6 +219,12 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	m_ScriptExists = LoadFile(L, filename);
 	EndScriptLoad();
 
+	// Try a precache, rumor has it this will cause the engine to send the lua files to clients
+	/*if(m_ScriptExists)
+	{
+		engine->PrecacheGeneric(filename, true);
+	}*/
+
 	// spawn the helper entity
 	CFFEntitySystemHelper::Create();
 }

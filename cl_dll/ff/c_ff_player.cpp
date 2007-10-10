@@ -1077,6 +1077,9 @@ C_FFPlayer::C_FFPlayer() :
 	//VOOGRU: I'll have bad nightmares if I don't do this.
 	memset(&m_DisguisedWeapons, 0, sizeof(m_DisguisedWeapons));
 
+	memset(&m_hCrosshairInfo, 0, sizeof(m_hCrosshairInfo));
+	
+
 	//Loop through all classes.
 	for (int i=1; i < 10; i++)
 	{
@@ -1440,10 +1443,10 @@ void C_FFPlayer::Spawn( void )
 	// Mirv: Might be better to ensure this happens only for local player, all players
 	// will have this function called when they are first created and this might 
 	// therefore stop sounds at 'random' times
-	if (IsLocalPlayer())
-	{
+	//if (IsLocalPlayer())
+	//{
 		//enginesound->StopAllSounds( true );
-	}
+	//}
 	ViewPunchReset();
 
 	// #0001382: Random player class mode should show "you spawned as..." upon each spawn -> Defrag

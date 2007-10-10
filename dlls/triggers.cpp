@@ -1184,6 +1184,11 @@ void CFuncFFScript::Spawn( void )
 	_scriptman.RunPredicates_LUA( this, &hContext, "spawn" );
 }
 
+void CFuncFFScript::LuaSetLocation()
+{
+
+}
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------

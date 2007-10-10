@@ -179,6 +179,7 @@ public:
 
 	virtual void	LuaRestore( void )			{ SetRestored(); SetInactive(); Enable(); }
 	virtual void	LuaRemove( void )			{ SetRemoved(); Disable(); }
+	virtual void	LuaSetLocation();
 
 	virtual Class_T Classify( void )			{ return CLASS_TRIGGERSCRIPT; }
 
