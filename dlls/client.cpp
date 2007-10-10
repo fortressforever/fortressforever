@@ -9,7 +9,7 @@
 
 ===== client.cpp ========================================================
 
-  client/server game specific stuff
+client/server game specific stuff
 
 */
 
@@ -45,7 +45,8 @@ extern CBaseEntity*	FindPickerEntity( CBasePlayer* pPlayer );
 ConVar  *sv_cheats = NULL;
 
 // Parse out % commands.
-inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszText, int iDestLen )
+// return the number of command chars used, 1 or 2
+inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *pszText, int iDestLen )
 {
 	// Current % Commands:
 	// %h = health
@@ -54,123 +55,228 @@ inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszTex
 	// %l = location
 	// %d = disguised team class
 	// %i = if you add this do it clientside to use the hud_crosshairinfo stuff so it's consistant
+	// %sh - sentry health
+	// %sa - sentry ammo
+	// %sl - sentry location
+	// %sv - sentry level
+	
+	// %dh - dispenser health
+	// %da - dispenser ammo
+	// %dl - dispenser location
+	// %df - detpack fuse time
 
 	CFFPlayer *pPlayer = ToFFPlayer( ( ( CBasePlayer * )CBaseEntity::Instance( pEdict ) ) );
 	if( !pPlayer )
 		return false;
 
-	switch( cCommand )
+	switch( cCommand[0] )
 	{
-		case 'h':
-		case 'H':
+	case 'h':
+	case 'H':
 		{
 			if ( pPlayer->IsGassed() ) // Jiggles: Don't want players finding out their true health when gassed
 			{
 				V_strncpy( pszText, "LOL", sizeof(pszText) );
-				return true;
+				return 1;
 			}
 			else
 			{
 				Q_snprintf( pszText, iDestLen, "%i", pPlayer->GetHealth() );
-				return true;
+				return 1;
 			}
 		}
 		break;
 
-		case 'a':
-		case 'A':
+	case 'a':
+	case 'A':
 		{
 			if ( pPlayer->IsGassed() )  // Jiggles: Don't want players finding out their true armor when gassed
 			{
 				V_strncpy( pszText, "LOL", sizeof(pszText) );
-				return true;
+				return 1;
 			}
 			else
 			{
 				Q_snprintf( pszText, iDestLen, "%i", pPlayer->GetArmor() );
-				return true;
+				return 1;
 			}
 		}
 		break;
 
-		case 'c':
-		case 'C':
+	case 'c':
+	case 'C':
 		{
 			Q_snprintf( pszText, iDestLen, "%s", pPlayer->GetFFClassData().m_szPrintName );
-			return true;
+			return 1;
 		}
 		break;
 
-		case 'l':
-		case 'L':
+	case 'l':
+	case 'L':
 		{
 			Q_snprintf( pszText, iDestLen, "%s", g_pGameRules->GetChatLocation( true, pPlayer ) );
-			return true;
+			return 1;
 		}
 		break;
 
-		case 'd':
-		case 'D':
+	case 'd':
+	case 'D':
+		{
+			//////////////////////////////////////////////////////////////////////////
+			// Dispenser info
+			switch(cCommand[1])
 			{
-				int iDisguiseClass = pPlayer->GetClassSlot();
-				int iDisguiseTeam = pPlayer->GetTeamNumber();
-				if(pPlayer->IsDisguised())
+			case 'h':
+			case 'H':
 				{
-					iDisguiseTeam = pPlayer->GetDisguisedTeam();
-					iDisguiseClass = pPlayer->GetDisguisedClass();
+					CFFDispenser *pDispenser = pPlayer->GetDispenser();
+					if(pDispenser && pDispenser->IsBuilt())
+					{
+						Q_snprintf( pszText, iDestLen, "%d", pDispenser->GetHealthPercent());
+					}
+					return 2;
 				}
-
-				const char *pClassName = "Spy";
-				const char *pTeamName = "";
-
-				/*switch( iTeam )
+			case 'a':
+			case 'A':
 				{
-				case TEAM_BLUE: szTeam = "#FF_TEAM_BLUE"; break;
-				case TEAM_RED: szTeam = "#FF_TEAM_RED"; break;
-				case TEAM_YELLOW: szTeam = "#FF_TEAM_YELLOW"; break;
-				case TEAM_GREEN: szTeam = "#FF_TEAM_GREEN"; break;
-				}*/
-				switch(iDisguiseTeam)
-				{
-				case TEAM_BLUE:
-					pTeamName = "^1Blue";
-					break;
-				case TEAM_RED:
-					pTeamName = "^2Red";
-					break;
-				case TEAM_YELLOW:
-					pTeamName = "^3Yellow";
-					break;
-				case TEAM_GREEN:
-					pTeamName = "^4Green";
-					break;
-				default:
-					pTeamName = "LOL";
-					break;
+					CFFDispenser *pDispenser = pPlayer->GetDispenser();
+					if(pDispenser && pDispenser->IsBuilt())
+					{
+						Q_snprintf( pszText, iDestLen, "%d", (int)pDispenser->m_iAmmoPercent);
+					}
+					return 2;
 				}
-
-				switch(iDisguiseClass)
+			case 'l':
+			case 'L':
 				{
-				case 1: pClassName = "Scout"; break;
-				case 2: pClassName = "Sniper"; break;
-				case 3: pClassName = "Soldier"; break;
-				case 4: pClassName = "Demoman"; break;
-				case 5: pClassName = "Medic"; break;
-				case 6: pClassName = "Hwguy"; break;
-				case 7: pClassName = "Pyro"; break;
-				case 8: pClassName = "Spy"; break;
-				case 9: pClassName = "Engineer"; break;
-				case 10: pClassName = "Civilian"; break;
-				default: pClassName = "LOL"; break;
+					/*CFFDispenser *pDispenser = pPlayer->GetDispenser();
+					if(pDispenser)
+					{
+					Q_snprintf( pszText, iDestLen, "%i", pDispenser->GetAmmoPercent());
+					}*/
+					return 2;
 				}
-
-				Q_snprintf( pszText, iDestLen, "%s %s", pTeamName, pClassName );
-				return true;
+			case 'f':
+			case 'F':
+				{
+					CFFDetpack *pDetpack = pPlayer->GetDetpack();
+					if(pDetpack && pDetpack->IsBuilt())
+					{
+						Q_snprintf( pszText, iDestLen, "%d", pDetpack->m_iFuseTime);
+					}
+					return 2;
+				}
+			default:
+				break;
 			}
+			//////////////////////////////////////////////////////////////////////////
+
+			int iDisguiseClass = pPlayer->GetClassSlot();
+			int iDisguiseTeam = pPlayer->GetTeamNumber();
+			if(pPlayer->IsDisguised())
+			{
+				iDisguiseTeam = pPlayer->GetDisguisedTeam();
+				iDisguiseClass = pPlayer->GetDisguisedClass();
+			}
+
+			const char *pClassName = "Spy";
+			const char *pTeamName = "";
+
+			const char COLOR_CHAR = '^';
+			const bool bInColor = (cCommand[1] == COLOR_CHAR);
+
+			switch(iDisguiseTeam)
+			{
+			case TEAM_BLUE:
+				pTeamName = bInColor ? "^1Blue" : "Blue";
+				break;
+			case TEAM_RED:
+				pTeamName = bInColor ? "^2Red" : "Red";
+				break;
+			case TEAM_YELLOW:
+				pTeamName = bInColor ? "^3Yellow" : "Yellow";
+				break;
+			case TEAM_GREEN:
+				pTeamName = bInColor ? "^4Green" : "Green";
+				break;
+			default:
+				pTeamName = "LOL";
+				break;
+			}
+
+			switch(iDisguiseClass)
+			{
+			case 1: pClassName = "Scout"; break;
+			case 2: pClassName = "Sniper"; break;
+			case 3: pClassName = "Soldier"; break;
+			case 4: pClassName = "Demoman"; break;
+			case 5: pClassName = "Medic"; break;
+			case 6: pClassName = "Hwguy"; break;
+			case 7: pClassName = "Pyro"; break;
+			case 8: pClassName = "Spy"; break;
+			case 9: pClassName = "Engineer"; break;
+			case 10: pClassName = "Civilian"; break;
+			default: pClassName = "LOL"; break;
+			}
+
+			Q_snprintf( pszText, iDestLen, "%s %s", pTeamName, pClassName );
+			return  1;
+		}
+		break;
+	case 's':
+	case 'S':
+		{
+			//////////////////////////////////////////////////////////////////////////
+			switch(cCommand[1])
+			{
+			case 'h':
+			case 'H':
+				{
+					CFFSentryGun *pSentry = pPlayer->GetSentryGun();
+					if(pSentry && pSentry->IsBuilt())
+					{
+						Q_snprintf( pszText, iDestLen, "%d", pSentry->GetHealthPercent());
+					}
+					return 2;
+				}
+			case 'a':
+			case 'A':
+				{
+					CFFSentryGun *pSentry = pPlayer->GetSentryGun();
+					if(pSentry && pSentry->IsBuilt())
+					{
+						Q_snprintf( pszText, iDestLen, "%d", (int)pSentry->m_iAmmoPercent);
+					}
+					return 2;
+				}
+			case 'v':
+			case 'V':
+				{
+					CFFSentryGun *pSentry = pPlayer->GetSentryGun();
+					if(pSentry && pSentry->IsBuilt())
+					{
+						Q_snprintf( pszText, iDestLen, "%d", pSentry->GetLevel());
+					}
+					return 2;
+				}
+			case 'l':
+			case 'L':
+				{
+					/*CFFSentryGun *pSentry = pPlayer->GetSentryGun();
+					if(pSentry)
+					{
+					}*/
+					return 2;
+				}
+			default:
+				break;
+			}
+			//////////////////////////////////////////////////////////////////////////
 			break;
+		}
 	}
 
-	return false;
+	return 0;
 }
 
 /*
@@ -312,13 +418,14 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 			// Parse the % command and get what 
 			// should be in its place
 			char szTempText[ 1024 + 1 ] = {0};	// for location + \0
-			if( FF_ParsePercentCommand( pEdict, pBeg[ 1 ], szTempText, 1025 ) )
+			int iChars = FF_ParsePercentCommand( pEdict, &pBeg[1], szTempText, 1025 );
+			if(iChars > 0)
 			{
 				// Add to text
 				Q_strncat( szText, szTempText, sizeof(szText) );
 
 				// % commands are 2 characters long (for now)
-				iAdjust = 2;
+				iAdjust = 1+iChars;
 
 				// Don't add char as per normal
 				bAddChar = false;
@@ -372,7 +479,7 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 
 		// See if the player wants to modify of check the text
 		pPlayer->CheckChatText( p, 127 );	// though the buffer szTemp that p points to is 256, 
-											// chat text is capped to 127 in CheckChatText above
+		// chat text is capped to 127 in CheckChatText above
 
 		Assert( strlen( pPlayer->GetPlayerName() ) > 0 );
 
@@ -404,7 +511,7 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 		//}
 		//else
 		//{
-			Q_snprintf( text, sizeof(text), "%s %s: ", pszPrefix, pszPlayerName );
+		Q_snprintf( text, sizeof(text), "%s %s: ", pszPrefix, pszPlayerName );
 		//}
 	}
 	else
@@ -430,7 +537,7 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 		client = UTIL_PlayerByIndex( i );
 		if ( !client || !client->edict() )
 			continue;
-		
+
 		if ( client->edict() == pEdict )
 			continue;
 
@@ -475,7 +582,7 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 	// echo to server console
 	// Adrian: Only do this if we're running a dedicated server since we already print to console on the client.
 	if ( engine->IsDedicatedServer() )
-		 Msg( "%s", text );
+		Msg( "%s", text );
 
 	Assert( p );
 
@@ -494,7 +601,7 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 			playerTeam = team->GetName();
 		}
 	}
-		
+
 	if ( teamonly )
 		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say_team \"%s\"\n", playerName, userid, networkID, playerTeam, p );
 	else
@@ -521,7 +628,7 @@ void ClientPrecache( void )
 	CBaseEntity::PrecacheModel( "sprites/blueglow1.vmt" );	
 	CBaseEntity::PrecacheModel( "sprites/purpleglow1.vmt" );	
 	CBaseEntity::PrecacheModel( "sprites/purplelaser1.vmt" );	
-	
+
 	CBaseEntity::PrecacheScriptSound( "Player.FallDamage" );
 	CBaseEntity::PrecacheScriptSound( "Player.Swim" );
 
@@ -548,7 +655,7 @@ void ClientPrecache( void )
 CON_COMMAND_F( cast_ray, "Tests collision detection", FCVAR_CHEAT )
 {
 	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	
+
 	Vector forward;
 	trace_t tr;
 
@@ -570,7 +677,7 @@ CON_COMMAND_F( cast_ray, "Tests collision detection", FCVAR_CHEAT )
 CON_COMMAND_F( cast_hull, "Tests hull collision detection", FCVAR_CHEAT )
 {
 	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	
+
 	Vector forward;
 	trace_t tr;
 
@@ -622,12 +729,12 @@ CBaseEntity *GetNextCommandEntity( CBasePlayer *pPlayer, char *name, CBaseEntity
 
 		return CBaseEntity::Instance( index );
 	}
-		
+
 	// Loop through all entities matching, starting from the specified previous
 	while ( (ent = gEntList.NextEnt(ent)) != NULL )
 	{
 		if (  (ent->GetEntityName() != NULL_STRING	&& ent->NameMatches(name))	|| 
-			  (ent->m_iClassname != NULL_STRING && ent->ClassMatches(name)) )
+			(ent->m_iClassname != NULL_STRING && ent->ClassMatches(name)) )
 		{
 			return ent;
 		}
@@ -737,7 +844,7 @@ void CPointClientCommand::InputCommand( inputdata_t& inputdata )
 }
 
 BEGIN_DATADESC( CPointClientCommand )
-	DEFINE_INPUTFUNC( FIELD_STRING, "Command", InputCommand ),
+DEFINE_INPUTFUNC( FIELD_STRING, "Command", InputCommand ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( point_clientcommand, CPointClientCommand );
@@ -766,7 +873,7 @@ void CPointServerCommand::InputCommand( inputdata_t& inputdata )
 }
 
 BEGIN_DATADESC( CPointServerCommand )
-	DEFINE_INPUTFUNC( FIELD_STRING, "Command", InputCommand ),
+DEFINE_INPUTFUNC( FIELD_STRING, "Command", InputCommand ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( point_servercommand, CPointServerCommand );
@@ -833,39 +940,39 @@ static ConCommand drawcross("drawcross", CC_DrawCross, "Draws a cross at the giv
 //------------------------------------------------------------------------------
 void CC_Player_Kill( void )
 {
-	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	if (pPlayer)
-	{
+CBasePlayer *pPlayer = UTIL_GetCommandClient();
+if (pPlayer)
+{
 #ifdef _DEBUG
-		if ( engine->Cmd_Argc() > 1	)
+if ( engine->Cmd_Argc() > 1	)
 #else
-		if ( engine->Cmd_Argc() > 1 && !g_pGameRules->IsMultiplayer() )
+if ( engine->Cmd_Argc() > 1 && !g_pGameRules->IsMultiplayer() )
 #endif
-		{
-			// Find the matching netname
-			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-			{
-				CBasePlayer *pPlayer = ToBasePlayer( UTIL_PlayerByIndex(i) );
-				if ( pPlayer )
-				{
-					if ( Q_strstr( pPlayer->GetPlayerName(), engine->Cmd_Argv(1)) )
-					{
-						// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
-						if( pPlayer->IsAlive() )
-							pPlayer->m_flNextSpawnDelay = 5.0f;
-						ClientKill( pPlayer->edict() );
-					}
-				}
-			}
-		}
-		else
-		{
-			// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
-			if( pPlayer->IsAlive() )
-				pPlayer->m_flNextSpawnDelay = 5.0f;
-			ClientKill( pPlayer->edict() );
-		}
-	}
+{
+// Find the matching netname
+for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+{
+CBasePlayer *pPlayer = ToBasePlayer( UTIL_PlayerByIndex(i) );
+if ( pPlayer )
+{
+if ( Q_strstr( pPlayer->GetPlayerName(), engine->Cmd_Argv(1)) )
+{
+// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
+if( pPlayer->IsAlive() )
+pPlayer->m_flNextSpawnDelay = 5.0f;
+ClientKill( pPlayer->edict() );
+}
+}
+}
+}
+else
+{
+// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
+if( pPlayer->IsAlive() )
+pPlayer->m_flNextSpawnDelay = 5.0f;
+ClientKill( pPlayer->edict() );
+}
+}
 }
 static ConCommand kill("kill", CC_Player_Kill, "kills the player");
 */
@@ -1007,7 +1114,7 @@ void CC_Player_TestDispatchEffect( void )
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
 	if ( !pPlayer)
 		return;
-	
+
 	if ( engine->Cmd_Argc() < 2 )
 	{
 		Msg(" Usage: test_dispatcheffect <effect name> <distance away> <flags> <magnitude> <scale>\n " );
@@ -1083,7 +1190,7 @@ static ConCommand test_dispatcheffect("test_dispatcheffect", CC_Player_TestDispa
 void CC_Player_PhysSwap( void )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
-	
+
 	if ( pPlayer )
 	{
 		CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
@@ -1114,7 +1221,7 @@ static ConCommand physswap("phys_swap", CC_Player_PhysSwap, "Automatically swaps
 void CC_Player_BugBaitSwap( void )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
-	
+
 	if ( pPlayer )
 	{
 		CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
@@ -1221,7 +1328,7 @@ void CC_Player_NoClip( void )
 		Vector forward, right, up;
 
 		AngleVectors ( pl->v_angle, &forward, &right, &up);
-		
+
 		// Try to move into the world
 		if ( !FindPassableSpace( pPlayer, forward, 1, oldorigin ) )
 		{
@@ -1502,18 +1609,18 @@ void ClientCommand( CBasePlayer *pPlayer )
 
 	if (((pstr = strstr(pcmd, "weapon_")) != NULL)  && (pstr == pcmd))
 	{
-		// Subtype may be specified
-		if ( engine->Cmd_Argc() == 2 )
-		{
-			pPlayer->SelectItem( pcmd, atoi( engine->Cmd_Argv( 1 ) ) );
-		}
-		else
-		{
-			pPlayer->SelectItem(pcmd);
-		}
+	// Subtype may be specified
+	if ( engine->Cmd_Argc() == 2 )
+	{
+	pPlayer->SelectItem( pcmd, atoi( engine->Cmd_Argv( 1 ) ) );
+	}
+	else
+	{
+	pPlayer->SelectItem(pcmd);
+	}
 	}
 	*/
-	
+
 	if ( FStrEq( pcmd, "killtarget" ) )
 	{
 		if ( g_pDeveloper->GetBool() && sv_cheats->GetBool() && UTIL_IsCommandIssuedByServerAdmin() )

@@ -369,8 +369,17 @@ namespace FFLib
 			{
 				// Try looking in the maps directory
 				Q_snprintf( realscript, sizeof( realscript ), "maps/%s.lua", script );
-				CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript );
+				if(CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript ))
+				{
+					// Try a precache, rumor has it this will cause the engine to send the lua files to clients
+					//engine->PrecacheGeneric(realscript, true);
+				}
 			}
+			//else
+			//{
+			//	// Try a precache, rumor has it this will cause the engine to send the lua files to clients
+			//	engine->PrecacheGeneric(realscript, true);
+			//}
 		}
 		else
 		{

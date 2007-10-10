@@ -73,11 +73,15 @@ void CC_SpySilentCloak( void );
 typedef struct SpyInfo_s
 {
 	char	m_szName[ MAX_PLAYER_NAME_LENGTH ];	// Name we're using
+	char	m_szNameLastSeen[ MAX_PLAYER_NAME_LENGTH ];	// Name we're using
 	int		m_iTeam;	// Disguised team
 	int		m_iClass;	// Disguised class
 
 	void	Set( const char *pszName, int iTeam, int iClass )
 	{
+		if(pszName[0])
+			Q_strcpy( m_szNameLastSeen, pszName );			
+
 		Q_strcpy( m_szName, pszName );
 		m_iTeam = iTeam;
 		m_iClass = iClass;
@@ -85,7 +89,13 @@ typedef struct SpyInfo_s
 
 	void	SetTeam( int iTeam ) { m_iTeam = iTeam; }
 	void	SetClass( int iClass ) { m_iClass = iClass; }
-	void	SetName( const char *pszName ) { Q_strcpy( m_szName, pszName ); }
+	void	SetName( const char *pszName ) 
+	{
+		if(pszName[0])
+			Q_strcpy( m_szNameLastSeen, pszName );
+
+		Q_strcpy( m_szName, pszName ); 
+	}
 
 	bool	SameGuy( int iTeam, int iClass ) const
 	{

@@ -7,7 +7,7 @@
 
 #include "cbase.h"
 #include "hud_basechat.h"
-
+#include <string>
 #include <vgui/IScheme.h>
 #include <vgui/IVGui.h>
 #include "iclientmode.h"
@@ -20,6 +20,8 @@
 #include <KeyValues.h>
 #include "ienginevgui.h"
 #include "cl_dll/iviewport.h"
+
+#include "c_ff_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -898,13 +900,33 @@ This is a very long string that I am going to attempt to paste into the cs hud c
 	{
 		ansi[ len - 1 ] = '\0';
 	}
-
+	
 	if( len > 0 )
 	{
-		char szbuf[144];	// more than 128
-		Q_snprintf( szbuf, sizeof(szbuf), "%s \"%s\"", m_nMessageMode == MM_SAY ? "say" : "say_team", ansi );
+		std::string strcmd = m_nMessageMode == MM_SAY ? "say " : "say_team ";
+		strcmd += "\"";
+		strcmd += ansi;
+		strcmd += "\"";
 
-		engine->ClientCmd(szbuf);
+		//C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
+
+		// %i support
+		//while(true)
+		//{
+		//	size_t tok = strcmd.find("%i");
+		//	if(tok == strcmd.npos)
+		//		break;
+		//	strcmd.erase(tok, 2); // erase the token
+		//	if(pPlayer && pPlayer->m_hCrosshairInfo.m_szNameLastSeen[0])
+		//	{
+		//		strcmd.insert(tok, pPlayer->m_hCrosshairInfo.m_szNameLastSeen);
+		//	}
+		//}
+
+		//char szbuf[256];	// more than 128
+		//Q_snprintf( szbuf, sizeof(szbuf), "%s \"%s\"", m_nMessageMode == MM_SAY ? "say" : "say_team", ansi );
+
+		engine->ClientCmd(strcmd.c_str());
 	}
 	
 	m_pChatInput->ClearEntry();
