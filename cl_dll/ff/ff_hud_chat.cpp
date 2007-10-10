@@ -18,6 +18,9 @@
 bool g_fBlockedStatus[256] = { false };		// |-- Mirv: Hold whether these dudes are blocked
 
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
+
+ConVar cl_chat_color( "cl_chat_color", "1", FCVAR_ARCHIVE, "Enable/disable text messages colorization." );
+
 extern ConVar sv_specchat;
 
 // Yar!
@@ -590,6 +593,9 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 					Color colo = colorMarkup[COL_WHITE];
 					if(c>=0 && c<NUM_COLORS)
 						colo = colorMarkup[c];
+
+					if(!cl_chat_color.GetBool())
+						colo = g_ColorOrange;
 
 					line->InsertColorChange(colo);
 
