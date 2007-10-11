@@ -130,9 +130,12 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 			case 'H':
 				{
 					CFFDispenser *pDispenser = pPlayer->GetDispenser();
-					if(pDispenser && pDispenser->IsBuilt())
+					if(pDispenser)
 					{
-						Q_snprintf( pszText, iDestLen, "%d", pDispenser->GetHealthPercent());
+						if(pDispenser->IsBuilt())
+							Q_snprintf( pszText, iDestLen, "%d", pDispenser->GetHealthPercent());
+						else
+							Q_snprintf( pszText, iDestLen, "0");
 					}
 					return 2;
 				}
@@ -140,29 +143,22 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 			case 'A':
 				{
 					CFFDispenser *pDispenser = pPlayer->GetDispenser();
-					if(pDispenser && pDispenser->IsBuilt())
+					if(pDispenser)
 					{
-						Q_snprintf( pszText, iDestLen, "%d", (int)pDispenser->m_iAmmoPercent);
+						if(pDispenser->IsBuilt())
+							Q_snprintf( pszText, iDestLen, "%d", (int)pDispenser->m_iAmmoPercent);
+						else
+							Q_snprintf( pszText, iDestLen, "0");
 					}
 					return 2;
 				}
 			case 'l':
 			case 'L':
 				{
-					/*CFFDispenser *pDispenser = pPlayer->GetDispenser();
+					CFFDispenser *pDispenser = pPlayer->GetDispenser();
 					if(pDispenser)
 					{
-					Q_snprintf( pszText, iDestLen, "%i", pDispenser->GetAmmoPercent());
-					}*/
-					return 2;
-				}
-			case 'f':
-			case 'F':
-				{
-					CFFDetpack *pDetpack = pPlayer->GetDetpack();
-					if(pDetpack && pDetpack->IsBuilt())
-					{
-						Q_snprintf( pszText, iDestLen, "%d", pDetpack->m_iFuseTime);
+						Q_snprintf( pszText, iDestLen, "%s", pDispenser->GetLocation());
 					}
 					return 2;
 				}
@@ -233,9 +229,12 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 			case 'H':
 				{
 					CFFSentryGun *pSentry = pPlayer->GetSentryGun();
-					if(pSentry && pSentry->IsBuilt())
+					if(pSentry)
 					{
-						Q_snprintf( pszText, iDestLen, "%d", pSentry->GetHealthPercent());
+						if(pSentry->IsBuilt())
+							Q_snprintf( pszText, iDestLen, "%d", pSentry->GetHealthPercent());
+						else
+							Q_snprintf( pszText, iDestLen, "0");
 					}
 					return 2;
 				}
@@ -243,9 +242,12 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 			case 'A':
 				{
 					CFFSentryGun *pSentry = pPlayer->GetSentryGun();
-					if(pSentry && pSentry->IsBuilt())
+					if(pSentry)
 					{
-						Q_snprintf( pszText, iDestLen, "%d", (int)pSentry->m_iAmmoPercent);
+						if(pSentry->IsBuilt())
+							Q_snprintf( pszText, iDestLen, "%d", (int)pSentry->m_iAmmoPercent);
+						else
+							Q_snprintf( pszText, iDestLen, "0");
 					}
 					return 2;
 				}
@@ -253,25 +255,58 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 			case 'V':
 				{
 					CFFSentryGun *pSentry = pPlayer->GetSentryGun();
-					if(pSentry && pSentry->IsBuilt())
+					if(pSentry)
 					{
-						Q_snprintf( pszText, iDestLen, "%d", pSentry->GetLevel());
+						if(pSentry->IsBuilt())
+							Q_snprintf( pszText, iDestLen, "%d", pSentry->GetLevel());
+						else
+							Q_snprintf( pszText, iDestLen, "1");
 					}
 					return 2;
 				}
 			case 'l':
 			case 'L':
 				{
-					/*CFFSentryGun *pSentry = pPlayer->GetSentryGun();
+					CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 					if(pSentry)
 					{
-					}*/
+						Q_snprintf( pszText, iDestLen, "%s", pSentry->GetLocation());
+					}
 					return 2;
 				}
 			default:
 				break;
 			}
 			//////////////////////////////////////////////////////////////////////////
+			break;
+		}
+
+	case 'p':
+	case 'P':
+		{
+			switch(cCommand[1])
+			{
+			case 'f':
+			case 'F':
+				{
+					CFFDetpack *pDetpack = pPlayer->GetDetpack();
+					if(pDetpack)
+					{
+						Q_snprintf( pszText, iDestLen, "%d", pDetpack->m_iFuseTime);
+					}
+					return 2;
+				}
+			case 'l':
+			case 'L':
+				{
+					CFFDetpack *pDetpack = pPlayer->GetDetpack();
+					if(pDetpack)
+					{
+						Q_snprintf( pszText, iDestLen, "%s", pDetpack->GetLocation());
+					}
+					return 2;
+				}
+			}
 			break;
 		}
 	}
