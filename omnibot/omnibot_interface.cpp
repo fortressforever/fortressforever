@@ -2230,6 +2230,37 @@ namespace Omnibot
 			return true;
 		}
 
+		bool DebugPolygon(const float **_pts, int _numpts, const obColor &_color, float _time)
+		{
+			if(_numpts >= 3)
+			{
+				Vector 
+					p1(_pts[0][0], _pts[0][1], _pts[0][2]), 
+					p2(_pts[1][0], _pts[1][1], _pts[1][2]), 
+					p3(_pts[2][0], _pts[2][1], _pts[2][2]);
+
+				debugoverlay->AddTriangleOverlay(p1, p2, p3, 
+					_color.r(), 
+					_color.g(), 
+					_color.b(), 
+					255, false, _time);
+				
+				for(int p = 3; p < _numpts; ++p)
+				{
+					p2 = p3;
+
+					p3 = Vector(_pts[p][0], _pts[p][1], _pts[p][2]);
+
+					debugoverlay->AddTriangleOverlay(p1, p2, p3, 
+						_color.r(), 
+						_color.g(), 
+						_color.b(), 
+						255, false, _time);
+				}
+			}
+			return true;
+		}
+
 		void PrintError(const char *_error)
 		{
 			if(_error)

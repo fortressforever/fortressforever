@@ -233,6 +233,8 @@ CFFBuildableObject::CFFBuildableObject( void )
 
 	// Set to null
 	m_pFlickerer = NULL;
+
+	m_BuildableLocation[0] = 0;
 }
 
 /**
@@ -820,3 +822,9 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 
 	return CBaseEntity::OnTakeDamage( adjustedDamage );
 }
+
+void CFFBuildableObject::SetLocation(const char *_loc)
+{
+	Q_strncpy(m_BuildableLocation, _loc?_loc:"", sizeof(m_BuildableLocation));
+}
+

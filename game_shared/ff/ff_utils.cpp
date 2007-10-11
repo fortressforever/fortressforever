@@ -181,10 +181,10 @@ void SetColorByTeam( int iTeam, Color& cColor )
 
 	switch( iTeam )
 	{
-		case 1: cColor.SetColor( 64, 128, 255 ); break;
-		case 2: cColor.SetColor( 255, 64, 64 ); break;
-		case 3: cColor.SetColor( 255, 255, 64 ); break;
-		case 4: cColor.SetColor( 100, 255, 100 ); break;
+		case TEAM_BLUE: cColor.SetColor( 64, 128, 255 ); break;
+		case TEAM_RED: cColor.SetColor( 255, 64, 64 ); break;
+		case TEAM_YELLOW: cColor.SetColor( 255, 255, 64 ); break;
+		case TEAM_GREEN: cColor.SetColor( 100, 255, 100 ); break;
 		default: cColor.SetColor( 255, 255, 255 ); break;
 	}
 }

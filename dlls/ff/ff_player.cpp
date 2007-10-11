@@ -2190,12 +2190,12 @@ void CFFPlayer::SetLocation( int entindex, const char *szNewLocation, int iNewLo
 		filter.MakeReliable();	// added
 		UserMessageBegin( filter, "SetPlayerLocation" );
 		WRITE_STRING( GetLocation() );
-		WRITE_SHORT( GetLocationTeam() - 1 ); // changed
+		WRITE_SHORT( GetLocationTeam() ); // changed
 		MessageEnd();
 
 		m_iClientLocation = entindex;
 		Q_strncpy( m_szLastLocation, GetLocation(), sizeof( m_szLastLocation ) );
-		m_iLastLocationTeam = GetLocationTeam() - 1;
+		m_iLastLocationTeam = GetLocationTeam();
 	}
 }
 
@@ -3269,7 +3269,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
 					
 					// Set custom text
-					pDispenser->SetText( m_szCustomDispenserText );					
+					pDispenser->SetText( m_szCustomDispenserText );
+
+					pDispenser->SetLocation(g_pGameRules->GetChatLocation(true, this));
 
 					// Mirv: Store future ground location + orientation
 					pDispenser->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
@@ -3318,6 +3320,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
 				
+					pSentryGun->SetLocation(g_pGameRules->GetChatLocation(true, this));
+
 					// Mirv: Store future ground location + orientation
 					pSentryGun->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
 					pSentryGun->SetGroundAngles( hBuildInfo.GetBuildAngles() );
@@ -3340,6 +3344,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDetpack *pDetpack = CFFDetpack::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
+
+					pDetpack->SetLocation(g_pGameRules->GetChatLocation(true, this));
 
 					// Set the fuse time
 					pDetpack->m_iFuseTime = m_iDetpackTime;

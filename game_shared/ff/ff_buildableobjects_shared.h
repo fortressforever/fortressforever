@@ -244,6 +244,7 @@ public:
 	int GetHealthPercent( void ) const;
 	unsigned int GetAmmoPercent( void ) const { return m_iAmmoPercent; }
 
+
 protected:
 	CNetworkVarForDerived( unsigned int, m_iAmmoPercent );
 	// <-- shared
@@ -319,6 +320,8 @@ public:
 	virtual void SetGroundAngles(const QAngle &ang) { m_angGroundAngles = ang; }
 	virtual void SetGroundOrigin(const Vector &vec) { m_vecGroundOrigin = vec; }
 
+	void SetLocation(const char *_loc);
+	const char *GetLocation() const { return m_BuildableLocation; }
 private:
 	// NOTE: Don't call the CFFBuildableObject::Create function
 	static CFFBuildableObject *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
@@ -394,6 +397,8 @@ protected:
 
 	// If true we should be using physics
 	bool	m_bUsePhysics;
+
+	char	m_BuildableLocation[1024];
 
 #endif
 

@@ -19,7 +19,8 @@ bool g_fBlockedStatus[256] = { false };		// |-- Mirv: Hold whether these dudes a
 
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
 
-ConVar cl_chat_color( "cl_chat_color", "1", FCVAR_ARCHIVE, "Enable/disable text messages colorization." );
+ConVar cl_chat_colorize( "cl_chat_colorize", "1", FCVAR_ARCHIVE, "Enable/disable text messages colorization." );
+ConVar cl_chat_color_default( "cl_chat_color_default", "255 170 0", FCVAR_ARCHIVE, "Set the default chat text color(before colorization)." );
 
 extern ConVar sv_specchat;
 
@@ -29,6 +30,18 @@ static CHudChat *g_pHudChat = NULL;
 // --> Mirv: Colours!
 Color g_ColorConsole(153, 255, 153, 255);
 Color g_ColorOrange(255, 170, 0, 255);
+
+Color GetDefaultChatColor()
+{
+	int r, g, b;
+	if(sscanf( cl_chat_color_default.GetString(), "%i %i %i", &r, &g, &b ) != 3)
+		return g_ColorOrange;
+	
+	r = clamp(r,0,255);
+	g = clamp(g,0,255);
+	b = clamp(b,0,255);
+	return Color(r, g, b, 255);
+}
 
 Color GetClientColor( int clientIndex )
 {
@@ -41,7 +54,7 @@ Color GetClientColor( int clientIndex )
 		IGameResources *gr = GameResources();
 
 		if (!gr )
-			return g_ColorOrange;
+			return GetDefaultChatColor();
 
 		return gr->GetTeamColor( gr->GetTeam( clientIndex ) );
 	}	
@@ -160,7 +173,9 @@ void CHudChatLine::PerformFadeout( void )
 
 			wcsncpy( wText, wbuf + ( m_iNameLength ), wcslen( wbuf + m_iNameLength ) );
 			wText[ wcslen( wbuf + m_iNameLength ) ] = '\0';
-			InsertColorChange( Color( g_ColorOrange[0], g_ColorOrange[1], g_ColorOrange[2], alpha ) );
+
+			Color c = GetDefaultChatColor();
+			InsertColorChange( Color( c[0], c[1], c[2], alpha ) );
 			InsertString( wText );
 			InvalidateLayout( true );
 		}
@@ -484,7 +499,7 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		}
 	}
 	else
-		line->InsertColorChange( g_ColorOrange );
+		line->InsertColorChange( GetDefaultChatColor() );
 
 	const int iBufferSize = strlen( pmsg ) + 1;
 	char *buf = static_cast<char *>( _alloca( iBufferSize ) );
@@ -502,12 +517,12 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		line->InsertString( buf );
 		Q_strncpy( buf, pmsg + iNameLength, strlen( pmsg ));
 		buf[ strlen( pmsg + iNameLength ) ] = '\0';
-		line->InsertColorChange( g_ColorOrange );
+		line->InsertColorChange( GetDefaultChatColor() );
 
 		enum { ColorStackSize = 64 };
 		Color m_ColorStack[ColorStackSize];
 		int m_StackIndex = 0;
-		m_ColorStack[m_StackIndex] = g_ColorOrange;
+		m_ColorStack[m_StackIndex] = GetDefaultChatColor();
 
 		// Want to look in buf for any localized strings
 		// and convert them to resource strings if possible
@@ -594,8 +609,8 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 					if(c>=0 && c<NUM_COLORS)
 						colo = colorMarkup[c];
 
-					if(!cl_chat_color.GetBool())
-						colo = g_ColorOrange;
+					if(!cl_chat_colorize.GetBool())
+						colo = GetDefaultChatColor();
 
 					line->InsertColorChange(colo);
 
