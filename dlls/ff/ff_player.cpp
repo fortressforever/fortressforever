@@ -5134,6 +5134,12 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !IsAlive() )
 		return 0;
 
+	// call script: player_ondamage(player, damageinfo)	
+	CFFLuaSC func;
+	func.Push(this);
+	func.PushRef(info);
+	func.CallFunction("player_ondamage");
+
 	// Bug #0000781: Placing a detpack can be interrupted
 	if( !m_bBuilding )
 	{
@@ -5152,12 +5158,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
         //if (weapon)
 		//	entsys.SetVar("info_classname", weapon->GetName());
 	//}
-
-	// call script: player_ondamage(player, damageinfo)	
-	CFFLuaSC func;
-	func.Push(this);
-	func.PushRef(info);
-	func.CallFunction("player_ondamage");
 
 	// go take the damage first
 	if ( !g_pGameRules->FCanTakeDamage( this, info.GetAttacker() ) )
