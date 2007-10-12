@@ -59,6 +59,8 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_knife);
 // CFFWeaponKnife implementation
 //=============================================================================
 
+ConVar ffdev_knife_backstab_angle("ffdev_knife_backstab_angle", "0.643", FCVAR_REPLICATED | FCVAR_CHEAT);
+
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
@@ -116,7 +118,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 
 			// see if they are facing the same direction
 			float angle = vFacing.Dot(vDisplacement);
-			if (angle > .707) // cos(45deg) 
+			if (angle > ffdev_knife_backstab_angle.GetFloat()/*.707*/) // cos(45deg) 
 			{
 				//DevMsg("BACKSTAB!!!!!\n");
 				// we get to totally kerplown this guy
