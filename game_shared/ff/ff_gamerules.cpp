@@ -1248,7 +1248,6 @@ ConVar mp_prematch( "mp_prematch",
 #endif
 				}
 
-
 				// Now set all our calculated values
 				adjustedInfo.SetDamageForce(vecDirection * flCalculatedForce);
 				adjustedInfo.SetDamagePosition(vecSrc);

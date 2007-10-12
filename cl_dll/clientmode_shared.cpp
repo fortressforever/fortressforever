@@ -30,6 +30,9 @@
 #include "c_vguiscreen.h"
 #include "c_team.h"
 #include "c_rumble.h"
+#include "c_ff_player.h"
+
+#include <string>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -386,25 +389,88 @@ int	ClientModeShared::KeyInput( int down, int keynum, const char *pszCurrentBind
 		return 1;
 	
 	// Should we start typing a message?
-	if ( pszCurrentBinding &&
-		( Q_strcmp( pszCurrentBinding, "messagemode" ) == 0 ||
-		  Q_strcmp( pszCurrentBinding, "say" ) == 0 ) )
+	if ( pszCurrentBinding )
 	{
-		if ( down )
+		//////////////////////////////////////////////////////////////////////////
+		// Say
+		bool bMessageMode = !Q_strncmp( pszCurrentBinding, "messagemode", 11 );
+		bool bSay = !Q_strcmp( pszCurrentBinding, "say" );
+
+		if( bMessageMode || bSay )
 		{
-			StartMessageMode( MM_SAY );
+			if ( down )
+			{
+				StartMessageMode( MM_SAY );
+			}
+
+			// Support starting the message partially filled in
+			if(bMessageMode && m_pChatElement)
+			{
+				const char *pStartStr = pszCurrentBinding+11;
+				while(pStartStr && *pStartStr && *pStartStr == ' ')
+					++pStartStr;
+				m_pChatElement->StartInputMessage(pStartStr);
+			}
+			return 0;
 		}
-		return 0;
-	}
-	else if ( pszCurrentBinding &&
-				( Q_strcmp( pszCurrentBinding, "messagemode2" ) == 0 ||
-				  Q_strcmp( pszCurrentBinding, "say_team" ) == 0 ) )
-	{
-		if ( down )
+
+		//////////////////////////////////////////////////////////////////////////
+		// TeamSay
+		bool bMessageMode2 = !Q_strncmp( pszCurrentBinding, "messagemode2", 12 );
+		bool bSayTeam = !Q_strcmp( pszCurrentBinding, "say_team" );
+
+		if(bMessageMode2 || bSayTeam)
 		{
-			StartMessageMode( MM_SAY_TEAM );
+			if ( down )
+			{
+				StartMessageMode( MM_SAY_TEAM );
+			}
+
+			// Support starting the message partially filled in
+			if(bMessageMode2 && m_pChatElement)
+			{
+				const char *pStartStr = pszCurrentBinding+12;
+				while(pStartStr && *pStartStr && *pStartStr == ' ')
+					++pStartStr;
+				m_pChatElement->StartInputMessage(pStartStr);
+			}
+			return 0;
 		}
-		return 0;
+
+		//////////////////////////////////////////////////////////////////////////
+		// %i hack
+		bool bParsedOutMacro = false;
+		bool bSayBind = !Q_strncmp( pszCurrentBinding, "say ", 4 );
+		bool bSayTeamBind = !Q_strncmp( pszCurrentBinding, "say_team ", 9 );
+		if(bSayBind || bSayTeamBind)
+		{
+			C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
+			if(pPlayer)
+			{
+				std::string strcmd = pszCurrentBinding;
+				while(true)
+				{
+					size_t tok = strcmd.find("%i");
+					if(tok == strcmd.npos)
+						break;
+
+					bParsedOutMacro = true;
+
+					strcmd.erase(tok, 2); // erase the token
+					if(pPlayer && pPlayer->m_hCrosshairInfo.m_szNameLastSeen[0])
+					{
+						strcmd.insert(tok, pPlayer->m_hCrosshairInfo.m_szNameLastSeen);
+					}
+				}
+
+				if(bParsedOutMacro)
+				{
+					// don't let the engine handle this one, because we're sending a new one with the macros replaced
+					engine->ClientCmd(strcmd.c_str());
+					return 0;
+				}
+			}
+		}
 	}
 	
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();

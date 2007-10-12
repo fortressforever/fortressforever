@@ -133,6 +133,7 @@ public:
 	// IGameEventListener interface:
 	virtual void FireGameEvent( IGameEvent *event);
 
+	void StartInputMessage(const char *_msg); // drevil
 protected:
 	CBaseHudChatLine		*FindUnusedChatLine( void );
 	void				ExpireOldest( void );
@@ -219,6 +220,7 @@ public:
 	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
 
 	vgui::Panel		*GetInputPanel( void );
+	CBaseHudChatEntry *GetChatEntryInput() { return m_pInput; }
 	virtual vgui::VPANEL GetCurrentKeyFocus() { return m_pInput->GetVPanel(); } 
 
 	virtual void Paint()

@@ -1012,3 +1012,17 @@ void CBaseHudChat::FireGameEvent( IGameEvent *event )
 	}
 #endif
 }
+
+void CBaseHudChat::StartInputMessage(const char *_msg)
+{
+	if(m_pChatInput)
+	{
+		if(_msg)
+		{
+			wchar_t wBuffer[1024];
+			vgui::localize()->ConvertANSIToUnicode(_msg, wBuffer, 1024);
+			m_pChatInput->SetEntry(wBuffer);
+			m_pChatInput->GetChatEntryInput()->GotoEndOfLine();
+		}		
+	}
+}
