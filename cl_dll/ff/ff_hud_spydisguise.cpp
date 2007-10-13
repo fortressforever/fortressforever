@@ -180,7 +180,6 @@ void CHudSpyDisguise::Paint( void )
 		// Draw progress bar
 		surface()->DrawSetColor( m_BarColor );
 		surface()->DrawFilledRect( image1_xpos, image1_ypos, image1_xpos + bar_width * iProgressPercent, image1_ypos + bar_height );
-		return;
 	}
 	else
 		m_bStartCalc = false;
@@ -192,8 +191,9 @@ void CHudSpyDisguise::Paint( void )
 	// Draw!
 	if( m_pHudSpyDisguise )
 	{
-		// Paint foreground/background stuff
-		BaseClass::PaintBackground();
+		// Don't paint foreground/background stuff twice!
+		if ( !pPlayer->IsDisguising() )
+			BaseClass::PaintBackground();
 
 		// Figure out which glyph to use for the actual icon
 		MapClassToGlyph( pPlayer->GetDisguisedClass(), m_pHudSpyDisguise->cCharacterInFont );
