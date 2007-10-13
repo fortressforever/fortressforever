@@ -26,6 +26,11 @@
 
 #define DART_MODEL "models/projectiles/dart/w_dart.mdl"
 
+class CRecvProxyData;
+extern void RecvProxy_LocalVelocityX(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern void RecvProxy_LocalVelocityY(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern void RecvProxy_LocalVelocityZ(const CRecvProxyData *pData, void *pStruct, void *pOut);
+
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
 #else
@@ -44,6 +49,19 @@
 IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileDart, DT_FFProjectileDart)
 
 BEGIN_NETWORK_TABLE(CFFProjectileDart, DT_FFProjectileDart)
+#ifdef CLIENT_DLL
+	RecvPropFloat		( RECVINFO(m_vecVelocity[0]), 0, RecvProxy_LocalVelocityX ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[1]), 0, RecvProxy_LocalVelocityY ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[2]), 0, RecvProxy_LocalVelocityZ ),
+#else
+	// Increased range for this because it goes at a mad speed
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[0]"),
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[1]"),
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[2]"),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 0), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 1), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+#endif
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(ff_projectile_dart, CFFProjectileDart);
