@@ -82,7 +82,7 @@ public:
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );
 
 		m_flDisguiseStartTime = 0.0f;
-		m_bStartCalc = false;
+		m_iDisguising = 0;
 	}
 
 	virtual ~CHudSpyDisguise( void )
@@ -117,8 +117,7 @@ private:
 	CPanelAnimationVarAliasType( float, bar_height, "bar_height", "24", "proportional_float" );
 	
 	float m_flDisguiseStartTime;
-	bool m_bStartCalc;
-
+	int	m_iDisguising;
 };
 
 DECLARE_HUDELEMENT( CHudSpyDisguise );
@@ -154,12 +153,13 @@ void CHudSpyDisguise::Paint( void )
 
 	// Let's calculate and draw the disguising progress bar
 	if ( pPlayer->IsDisguising() )
-	{
-		if ( !m_bStartCalc )
+	{	
+		if ( m_iDisguising != pPlayer->IsDisguising() )
 		{
+			m_iDisguising = pPlayer->IsDisguising();
 			m_flDisguiseStartTime = gpGlobals->curtime;
-			m_bStartCalc = true;
 		}
+
 		float flRemainingTime = gpGlobals->curtime - m_flDisguiseStartTime;
 		float iProgressPercent = ( ( 1 - ( SPY_DISGUISE_TIME - flRemainingTime ) / SPY_DISGUISE_TIME ) );
 	
@@ -182,8 +182,7 @@ void CHudSpyDisguise::Paint( void )
 		surface()->DrawFilledRect( image1_xpos, image1_ypos, image1_xpos + bar_width * iProgressPercent, image1_ypos + bar_height );
 	}
 	else
-		m_bStartCalc = false;
-
+		m_iDisguising = 0;
 
 	if( !pPlayer->IsDisguised() )
 		return;	

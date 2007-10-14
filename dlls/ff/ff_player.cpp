@@ -364,7 +364,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 
 	SendPropFloat(SENDINFO(m_flSpeedModifier)),
 
-	SendPropInt( SENDINFO( m_iNewSpyDisguise ), 4 ),
+	SendPropInt( SENDINFO( m_iSpyDisguising ), 4 ),
 
 	// Radiotag information the local client needs to know
 	SendPropEHandle( SENDINFO( m_hRadioTagData ) ),
@@ -1522,6 +1522,7 @@ void CFFPlayer::SetupClassVariables()
 	m_flFinishDisguise = 0;
 	m_iSpyDisguise = 0;
 	m_iNewSpyDisguise = 0;
+	m_iSpyDisguising = 0;
 	m_flNextSpySabotageThink = 0.0f;
 	m_flSpySabotageFinish = 0.0f;
 	m_hSabotaging = NULL;
@@ -6171,6 +6172,7 @@ void CFFPlayer::ResetDisguise()
 
 	m_iNewSpyDisguise = 0;
 	m_iSpyDisguise = 0;
+	m_iSpyDisguising = 0;
 
 	Omnibot::Notify_DisguiseLost(this);
 }
@@ -6202,6 +6204,7 @@ void CFFPlayer::FinishDisguise()
 
 	m_iSpyDisguise = m_iNewSpyDisguise;
 	m_iNewSpyDisguise = 0;
+	m_iSpyDisguising = 0;
 
 	// Fire an event.
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("disguised");						
@@ -6225,6 +6228,8 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 
 	m_iNewSpyDisguise = iTeam;
 	m_iNewSpyDisguise += iClass << 4;
+
+	m_iSpyDisguising++;	// Jiggles: For the client HUD disguise progress bar
 	
 	// TODO: Time logic
 	if (bInstant)
@@ -6237,8 +6242,8 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 	}
 
 	// 50% longer when Cloaked
-	if( IsCloaked() )
-		m_flFinishDisguise += 7.0f * 0.5f;
+	//if( IsCloaked() )
+	//	m_flFinishDisguise += 7.0f * 0.5f;
 }
 
 int CFFPlayer::AddHealth(unsigned int amount)
