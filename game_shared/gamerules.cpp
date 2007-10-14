@@ -188,7 +188,8 @@ CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	return pSpawnSpot;
 }
 
-ConVar ffdev_playerspawnspotoffset_attempts( "ffdev_playerspawnspotoffset_attempts" , "5", FCVAR_REPLICATED | FCVAR_CHEAT, "4 rotations PER this value.  Also, it keeps trying offset positions while less than this value.  Oh and also, attempt 0 just checks the original spawn location so there are no rotations.", true, 0, false, 0);
+// this is not a cheat
+ConVar sv_spawnoffsetattempts( "sv_spawnoffsetattempts" , "5", 0, "4 rotations PER this value.  It keeps trying offset positions while less than this value.  Oh and also, attempt 0 just checks the original spawn location so there are no rotations.", true, 0, true, 9);
 
 // for moving the spawn spot around the original spawn spot if other players are inside it
 Vector CGameRules::GetPlayerSpawnSpotOffset( const CBasePlayer *pPlayer, const Vector vecOrigin, const Vector vecPlayerBoundsMins, const Vector vecPlayerBoundsMaxs )
@@ -198,8 +199,8 @@ Vector CGameRules::GetPlayerSpawnSpotOffset( const CBasePlayer *pPlayer, const V
 
 	Vector vecOffset = Vector(0,0,0);
 
-	// only try this 5 times (first attempt is actually just for checking the original spawn location)
-	for (int i = 0; i < ffdev_playerspawnspotoffset_attempts.GetInt(); i++)
+	// only try this X times (first attempt is actually just for checking the original spawn location)
+	for (int i = 0; i < sv_spawnoffsetattempts.GetInt(); i++)
 	{
 		// keep track of how many directions are blocked, so we know when to give up
 		int iNumBlockedDirections = 0;
