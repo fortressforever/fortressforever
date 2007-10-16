@@ -2282,6 +2282,7 @@ void EffectsPrecache( void *pUser )
 	if ( gpGlobals->maxClients > 1 )
 	{
 		CBaseEntity::PrecacheScriptSound( "HudChat.Message" );
+		CBaseEntity::PrecacheScriptSound( "HudChat.TeamMessage" );
 	}
 }
 

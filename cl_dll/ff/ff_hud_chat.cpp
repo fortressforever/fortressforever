@@ -496,6 +496,15 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		if ( nameInString )
 		{
 			iNameLength = strlen( pName ) + (nameInString - pmsg);
+
+			// Jiggles: For the two different "chat beeps" that Mr.Beefy was dying to have
+			CLocalPlayerFilter filter;
+			// These strings will be the same length if the "(TEAM)" prefix is missing
+			if ( strlen( pmsg ) == strlen( nameInString ) )
+				C_BaseEntity::EmitSound( filter, -1, "HudChat.Message" );
+			else // They're not the same length, so this must be team chat
+				C_BaseEntity::EmitSound( filter, -1, "HudChat.TeamMessage" );
+			// End Beefy's demand
 		}
 	}
 	else
@@ -656,8 +665,8 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		line->SetNameColor( col );
 	}
 
-	CLocalPlayerFilter filter;
-	C_BaseEntity::EmitSound( filter, -1 /*SOUND_FROM_LOCAL_PLAYER*/, "HudChat.Message" );
+	//CLocalPlayerFilter filter;
+	//C_BaseEntity::EmitSound( filter, -1 /*SOUND_FROM_LOCAL_PLAYER*/, "HudChat.Message" );
 }
 
 int CHudChat::GetChatInputOffset( void )
