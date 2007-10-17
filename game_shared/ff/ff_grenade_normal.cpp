@@ -30,6 +30,12 @@ public:
 	virtual void Spawn();
 	virtual const char *GetBounceSound() { return "NormalGrenade.Bounce"; }
 
+	// Jiggles: Lowered Frag damage from 180 to 126 (30% less), but kept the radius about the same
+#ifdef GAME_DLL
+	virtual float GetGrenadeDamage()		{ return 126.0f; }
+	virtual float GetGrenadeRadius()		{ return GetGrenadeDamage() * 2.15f/*1.5f*/; }
+#endif
+
 #ifdef CLIENT_DLL
 	CFFGrenadeNormal() {}
 	CFFGrenadeNormal(const CFFGrenadeNormal &) {}
