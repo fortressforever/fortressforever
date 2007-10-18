@@ -539,7 +539,8 @@ bool FF_TraceHitWorld( trace_t *pTrace )
 		// narrows the search before we start to do classname compares.
 		if( FClassnameIs( pTrace->m_pEnt, "prop_door_rotating" ) ||
 			FClassnameIs( pTrace->m_pEnt, "func_door" ) ||
-			FClassnameIs( pTrace->m_pEnt, "func_door_rotating" ) )
+			FClassnameIs( pTrace->m_pEnt, "func_door_rotating" ) ||
+			FClassnameIs( pTrace->m_pEnt, "func_breakable" ) )	// Jiggles: Detpacks were tracing through the Dustbowl gates
 			return true;
 	}
 
