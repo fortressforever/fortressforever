@@ -873,6 +873,10 @@ namespace FFLib
 		if( !pConvar || !pConvar->IsCommand() )
 			return;
 
+		// TODO: We should test something like this so this can't be abused!
+		if( pConvar->IsBitSet( FCVAR_CHEAT ) )
+			return;
+
 		pConvar->SetValue( flValue );
 	}
 
