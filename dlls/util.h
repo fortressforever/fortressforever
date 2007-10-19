@@ -616,4 +616,6 @@ AngularImpulse WorldToLocalRotation( const VMatrix &localToWorld, const Vector &
 
 bool UTIL_LoadAndSpawnEntitiesFromScript( CUtlVector <CBaseEntity*> &entities, const char *pScriptFile, const char *pBlock, bool bActivate = true );
 
+bool Util_AddDownload(const char *pszFile);
+
 #endif // UTIL_H
