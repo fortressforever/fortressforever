@@ -10,6 +10,8 @@
 	#include "checksum_crc.h"
 #endif
 
+#define PRECACHE_LUA_FILES 1
+
 /////////////////////////////////////////////////////////////////////////////
 // forward declarations
 struct lua_State;

@@ -1372,7 +1372,8 @@ void CBaseAnimating::UpdateStepOrigin()
 			if (toAbs.z == 0.0)
 			{
 				CAI_BaseNPC *pNPC = MyNPCPointer();
-				// FIXME:  There needs to be a default step height somewhere
+				// FIXME:  There needs to be a default step height somewhere
+
 				float height = 18.0f;
 				if (pNPC)
 				{

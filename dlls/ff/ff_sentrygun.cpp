@@ -500,24 +500,41 @@ CBaseEntity *SG_IsBetterTarget( CBaseEntity *cur, CBaseEntity *latest, float dis
 		return cur;
 
 	if( !cur ) 
+	{
+		lastdistance = distance;
 		return latest;
+	}
 
 	// A player is always preferable to a buildable
 	if( latest->IsPlayer() && !cur->IsPlayer() ) 
+	{
+		lastdistance = distance;
 		return latest;
+	}
+
+	// If we're on a player already, don't consider non players
+	// Do we want to do this?
+	if(cur->IsPlayer() && !latest->IsPlayer())
+		return cur;
 
 	// Check radio tagged players
 	if( latest->IsPlayer() && cur->IsPlayer() )
 	{
 		if( ToFFPlayer( latest )->IsRadioTagged() && !ToFFPlayer( cur )->IsRadioTagged() )
+		{
+			lastdistance = distance;
 			return latest;
+		}
 		else if( !ToFFPlayer( latest )->IsRadioTagged() && ToFFPlayer( cur )->IsRadioTagged() )
 			return cur;
 	}
 
 	// Go for the nearest
 	if( distance < lastdistance ) 
+	{
+		lastdistance = distance;
 		return latest;
+	}
 
 	return cur;
 }

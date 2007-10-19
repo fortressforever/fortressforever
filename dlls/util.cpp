@@ -34,6 +34,7 @@
 #include "ndebugoverlay.h"
 #include "engine/ivdebugoverlay.h"
 #include "datacache/imdlcache.h"
+#include "networkstringtable_gamedll.h"
 #include "util.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -3100,6 +3101,24 @@ void CC_CollisionTest( void )
 }
 static ConCommand collision_test("collision_test", CC_CollisionTest, "Tests collision system", FCVAR_CHEAT );
 
+bool Util_AddDownload(const char *pszFile)
+{
+	INetworkStringTable *pDownloadablesTable = networkstringtable->FindTable( "downloadables" );
 
+	if ( pDownloadablesTable )
+	{
+		bool bSave = engine->LockNetworkStringTables( false );
+		int iRet = pDownloadablesTable->FindStringIndex( pszFile );
+
+		//Don't add duplicates.
+		if ( iRet == INVALID_STRING_INDEX )
+		{
+			pDownloadablesTable->AddString( pszFile, strlen( pszFile ) + 1 );
+			engine->LockNetworkStringTables( bSave );
+			return true;
+		}
+	}
+	return false;
+}
 
 

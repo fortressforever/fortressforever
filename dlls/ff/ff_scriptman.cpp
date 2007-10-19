@@ -216,14 +216,19 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	if ( !filename[0] )
 		Q_snprintf( filename, sizeof(filename), "maps/%s.lua", szMapName );
 
+	//////////////////////////////////////////////////////////////////////////
+	// Try a precache, rumor has it this will cause the engine to send the lua files to clients
+	if(PRECACHE_LUA_FILES)
+	{
+		if(filesystem->FileExists(filename))
+		{
+			Util_AddDownload(filename);
+		}
+	}
+	//////////////////////////////////////////////////////////////////////////
+
 	m_ScriptExists = LoadFile(L, filename);
 	EndScriptLoad();
-
-	// Try a precache, rumor has it this will cause the engine to send the lua files to clients
-	/*if(m_ScriptExists)
-	{
-		engine->PrecacheGeneric(filename, true);
-	}*/
 
 	// spawn the helper entity
 	CFFEntitySystemHelper::Create();

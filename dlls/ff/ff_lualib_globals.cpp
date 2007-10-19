@@ -20,6 +20,8 @@
 #include "doors.h"
 #include "recipientfilter.h"
 #include "triggers.h"
+#include "filesystem.h"
+#include "sharedInterface.h"
 
 // Lua includes
 extern "C"
@@ -363,23 +365,26 @@ namespace FFLib
 			strcat(realscript, script);
 			strcat(realscript, ".lua");
 			*/
+
 			Q_snprintf( realscript, sizeof( realscript ), "maps/includes/%s.lua", script );
+
+			//////////////////////////////////////////////////////////////////////////
+			// Try a precache, rumor has it this will cause the engine to send the lua files to clients
+			if(PRECACHE_LUA_FILES)
+			{
+				if(filesystem->FileExists(realscript))
+				{
+					Util_AddDownload(realscript);
+				}
+			}
+			//////////////////////////////////////////////////////////////////////////
 
 			if( !CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript ) )
 			{
 				// Try looking in the maps directory
 				Q_snprintf( realscript, sizeof( realscript ), "maps/%s.lua", script );
-				if(CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript ))
-				{
-					// Try a precache, rumor has it this will cause the engine to send the lua files to clients
-					//engine->PrecacheGeneric(realscript, true);
-				}
+				CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript );
 			}
-			//else
-			//{
-			//	// Try a precache, rumor has it this will cause the engine to send the lua files to clients
-			//	engine->PrecacheGeneric(realscript, true);
-			//}
 		}
 		else
 		{

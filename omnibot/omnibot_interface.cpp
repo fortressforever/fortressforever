@@ -1551,12 +1551,7 @@ namespace Omnibot
 					if(!pEntity->CollisionProp() || pEntity->entindex() == 0)
 						return InvalidEntity;
 
-					Vector vOrig(0.f, 0.f, 0.f);
-					if(pEntity->CollisionProp()->IsBoundsDefinedInEntitySpace())
-						vOrig = pEntity->GetAbsOrigin();
-
-					vMins = vOrig + pEntity->CollisionProp()->OBBMins();;
-					vMaxs = vOrig + pEntity->CollisionProp()->OBBMaxs();
+					pEntity->CollisionProp()->WorldSpaceAABB(&vMins, &vMaxs);
 				}
 
 				_aabb.m_Mins[0] = vMins.x;
