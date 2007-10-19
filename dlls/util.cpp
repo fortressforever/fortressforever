@@ -3105,20 +3105,20 @@ bool Util_AddDownload(const char *pszFile)
 {
 	INetworkStringTable *pDownloadablesTable = networkstringtable->FindTable( "downloadables" );
 
+	bool bSuccess = false;
 	if ( pDownloadablesTable )
 	{
 		bool bSave = engine->LockNetworkStringTables( false );
-		int iRet = pDownloadablesTable->FindStringIndex( pszFile );
 
 		//Don't add duplicates.
-		if ( iRet == INVALID_STRING_INDEX )
+		if ( pDownloadablesTable->FindStringIndex( pszFile ) == INVALID_STRING_INDEX )
 		{
 			pDownloadablesTable->AddString( pszFile, strlen( pszFile ) + 1 );
-			engine->LockNetworkStringTables( bSave );
-			return true;
+			bSuccess = true;
 		}
+		engine->LockNetworkStringTables( bSave );
 	}
-	return false;
+	return bSuccess;
 }
 
 

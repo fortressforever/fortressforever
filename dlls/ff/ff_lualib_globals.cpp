@@ -372,9 +372,13 @@ namespace FFLib
 			// Try a precache, rumor has it this will cause the engine to send the lua files to clients
 			if(PRECACHE_LUA_FILES)
 			{
+				V_FixSlashes(realscript);
 				if(filesystem->FileExists(realscript))
 				{
 					Util_AddDownload(realscript);
+
+					if(!engine->IsGenericPrecached(realscript))
+						engine->PrecacheGeneric(realscript, true);
 				}
 			}
 			//////////////////////////////////////////////////////////////////////////

@@ -220,10 +220,26 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	// Try a precache, rumor has it this will cause the engine to send the lua files to clients
 	if(PRECACHE_LUA_FILES)
 	{
+		V_FixSlashes(filename);
 		if(filesystem->FileExists(filename))
 		{
 			Util_AddDownload(filename);
+
+			if(!engine->IsGenericPrecached(filename))
+				engine->PrecacheGeneric(filename, true);
 		}
+
+		//////////////////////////////////////////////////////////////////////////
+		/*char testfile[] = {"maps/ff_dm.txt"};
+		V_FixSlashes(testfile);
+		if(filesystem->FileExists(testfile))
+		{
+			Util_AddDownload(testfile);
+
+			if(!engine->IsGenericPrecached(testfile))
+				engine->PrecacheGeneric(testfile, true);
+		}*/
+		//////////////////////////////////////////////////////////////////////////
 	}
 	//////////////////////////////////////////////////////////////////////////
 
