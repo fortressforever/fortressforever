@@ -4278,11 +4278,6 @@ int CBaseEntity::PrecacheModel( const char *name )
 		return -1;
 	}
 
-	char tmp[1024];
-	Q_strcpy(tmp,name);
-	V_FixSlashes(tmp);
-	name = tmp;
-
 	// Warn on out of order precache
 	if ( !CBaseEntity::IsPrecacheAllowed() )
 	{
