@@ -400,7 +400,10 @@ int	ClientModeShared::KeyInput( int down, int keynum, const char *pszCurrentBind
 		{
 			if ( down )
 			{
-				StartMessageMode( MM_SAY );
+				if(bMessageMode)
+					StartMessageMode( MM_MESSAGEMODE );
+				else
+					StartMessageMode( MM_SAY );
 			}
 
 			// Support starting the message partially filled in
@@ -416,23 +419,13 @@ int	ClientModeShared::KeyInput( int down, int keynum, const char *pszCurrentBind
 
 		//////////////////////////////////////////////////////////////////////////
 		// TeamSay
-		bool bMessageMode2 = !Q_strncmp( pszCurrentBinding, "messagemode2", 12 );
 		bool bSayTeam = !Q_strcmp( pszCurrentBinding, "say_team" );
 
-		if(bMessageMode2 || bSayTeam)
+		if(bSayTeam)
 		{
 			if ( down )
 			{
 				StartMessageMode( MM_SAY_TEAM );
-			}
-
-			// Support starting the message partially filled in
-			if(bMessageMode2 && m_pChatElement)
-			{
-				const char *pStartStr = pszCurrentBinding+12;
-				while(pStartStr && *pStartStr && *pStartStr == ' ')
-					++pStartStr;
-				m_pChatElement->StartInputMessage(pStartStr);
 			}
 			return 0;
 		}
