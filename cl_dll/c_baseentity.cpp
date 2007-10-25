@@ -4213,11 +4213,6 @@ void C_BaseEntity::SetSize( const Vector &vecMin, const Vector &vecMax )
 //-----------------------------------------------------------------------------
 int C_BaseEntity::PrecacheModel( const char *name )
 {
-	char tmp[1024];
-	Q_strcpy(tmp,name);
-	V_FixSlashes(tmp);
-	name = tmp;
-
 	return modelinfo->GetModelIndex( name );
 }
 

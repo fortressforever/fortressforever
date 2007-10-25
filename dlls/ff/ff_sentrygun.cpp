@@ -640,6 +640,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		}
 		*/
 	}
+	return target;
 }
 
 //-----------------------------------------------------------------------------
