@@ -685,7 +685,7 @@ public:
 	void OnSearchThink( void );
 	void OnActiveThink( void );
 
-	void HackFindEnemy( void );
+	CBaseEntity *HackFindEnemy( void );
 
 	float MaxYawSpeed( void ) const;
 	float MaxPitchSpeed( void ) const;

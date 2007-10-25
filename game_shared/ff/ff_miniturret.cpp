@@ -586,7 +586,7 @@ CBaseEntity *MiniTurret_IsBetterTarget( CBaseEntity *cur, CBaseEntity *latest, f
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CFFMiniTurret::HackFindEnemy( void )
+CBaseEntity *CFFMiniTurret::HackFindEnemy( void )
 {
 	// Our location - used later
 	Vector vecOrigin = GetAbsOrigin();
@@ -655,7 +655,7 @@ void CFFMiniTurret::HackFindEnemy( void )
 		}
 	}
 
-	SetEnemy( pTarget );
+	return pTarget;
 }
 
 //-----------------------------------------------------------------------------
@@ -701,10 +701,8 @@ void CFFMiniTurret::OnAutoSearchThink( void )
 	if( GetEnemy() && !GetEnemy()->IsAlive() )
 		SetEnemy( NULL );
 
-	if( !GetEnemy() )
-	{
-		HackFindEnemy();
-	}
+	if(!GetEnemy())
+		SetEnemy(HackFindEnemy());
 
 	if( GetEnemy() )
 	{
@@ -779,7 +777,7 @@ void CFFMiniTurret::OnSearchThink( void )
 		SetEnemy( NULL );
 
 	if( !GetEnemy() )
-		HackFindEnemy();
+		SetEnemy(HackFindEnemy());
 
 	if( GetEnemy() )
 	{

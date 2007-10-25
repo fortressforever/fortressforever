@@ -267,7 +267,7 @@ public:
 	void			OnActiveThink( void );
 	void			OnSearchThink( void );
 	void			OnAutoSearchThink( void );
-	void			HackFindEnemy( void );
+	CBaseEntity *	HackFindEnemy( void );
 
 	// Inputs
 	/*
