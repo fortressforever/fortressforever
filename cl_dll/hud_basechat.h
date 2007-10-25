@@ -212,6 +212,8 @@ public:
 	CBaseHudChatInputLine( CBaseHudChat *parent, char const *panelName );
 
 	void			SetPrompt( const wchar_t *prompt );
+	void			GetPrompt( wchar_t *buffer, int buffersizebytes );
+	
 	void			ClearEntry( void );
 	void			SetEntry( const wchar_t *entry );
 	void			GetMessageText( wchar_t *buffer, int buffersizebytes );

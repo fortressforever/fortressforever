@@ -247,6 +247,11 @@ void CBaseHudChatInputLine::SetPrompt( const wchar_t *prompt )
 	InvalidateLayout();
 }
 
+void CBaseHudChatInputLine::GetPrompt( wchar_t *buffer, int buffersizebytes )
+{
+	m_pPrompt->GetText( buffer, buffersizebytes);
+}
+
 void CBaseHudChatInputLine::ClearEntry( void )
 {
 	Assert( m_pInput );
@@ -784,10 +789,12 @@ void CBaseHudChat::StartMessageMode( int iMessageModeType )
 	{
 		m_pChatInput->SetPrompt( L"Say :" );
 	}
-	else
+	else if ( m_nMessageMode == MM_SAY_TEAM )
 	{
 		m_pChatInput->SetPrompt( L"Say (TEAM) :" );
 	}
+	else
+		m_pChatInput->SetPrompt( L"" );
 
 	// Mirv: All these now only act on the chat input line
 	vgui::SETUP_PANEL( m_pChatInput );
@@ -881,12 +888,16 @@ void CBaseHudChat::ExpireOldest( void )
 void CBaseHudChat::Send( void )
 {
 #ifndef _XBOX
+	wchar_t szPrompt[128];
 	wchar_t szTextbuf[128];
 
 	m_pChatInput->GetMessageText( szTextbuf, sizeof( szTextbuf ) );
+	m_pChatInput->GetPrompt( szPrompt, sizeof( szPrompt ) );
 	
 	char ansi[128];
+	char ansiprompt[128];
 	vgui::localize()->ConvertUnicodeToANSI( szTextbuf, ansi, sizeof( ansi ) );
+	vgui::localize()->ConvertUnicodeToANSI( szPrompt, ansiprompt, sizeof( ansiprompt ) );
 
 	int len = Q_strlen(ansi);
 
@@ -908,24 +919,28 @@ This is a very long string that I am going to attempt to paste into the cs hud c
 		strcmd += ansi;
 		strcmd += "\"";
 
-		//C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
+		if(m_nMessageMode == MM_MESSAGEMODE)
+		{
+			strcmd = ansiprompt;
+			strcmd += ansi;
+		}
 
+		C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
+
+		//////////////////////////////////////////////////////////////////////////
 		// %i support
-		//while(true)
-		//{
-		//	size_t tok = strcmd.find("%i");
-		//	if(tok == strcmd.npos)
-		//		break;
-		//	strcmd.erase(tok, 2); // erase the token
-		//	if(pPlayer && pPlayer->m_hCrosshairInfo.m_szNameLastSeen[0])
-		//	{
-		//		strcmd.insert(tok, pPlayer->m_hCrosshairInfo.m_szNameLastSeen);
-		//	}
-		//}
-
-		//char szbuf[256];	// more than 128
-		//Q_snprintf( szbuf, sizeof(szbuf), "%s \"%s\"", m_nMessageMode == MM_SAY ? "say" : "say_team", ansi );
-
+		while(true)
+		{
+			size_t tok = strcmd.find("%i");
+			if(tok == strcmd.npos)
+				break;
+			strcmd.erase(tok, 2); // erase the token
+			if(pPlayer && pPlayer->m_hCrosshairInfo.m_szNameLastSeen[0])
+			{
+				strcmd.insert(tok, pPlayer->m_hCrosshairInfo.m_szNameLastSeen);
+			}
+		}
+		//////////////////////////////////////////////////////////////////////////
 		engine->ClientCmd(strcmd.c_str());
 	}
 	
@@ -1021,7 +1036,8 @@ void CBaseHudChat::StartInputMessage(const char *_msg)
 		{
 			wchar_t wBuffer[1024];
 			vgui::localize()->ConvertANSIToUnicode(_msg, wBuffer, 1024);
-			m_pChatInput->SetEntry(wBuffer);
+			//m_pChatInput->SetEntry(wBuffer);
+			m_pChatInput->SetPrompt(wBuffer);
 			m_pChatInput->GetChatEntryInput()->GotoEndOfLine();
 		}		
 	}

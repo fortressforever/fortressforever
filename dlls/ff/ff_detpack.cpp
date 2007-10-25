@@ -394,7 +394,7 @@ void CFFDetpack::DoExplosionDamage( void )
 			if( !engine->IsDedicatedServer() )
 			{
 				Color cColor;
-				SetColorByTeam( pPlayer->GetTeamNumber() - 1, cColor );
+				SetColorByTeam( pPlayer->GetTeamNumber(), cColor );
 
 				NDebugOverlay::Line( vecOrigin, vecTarget, cColor.r(), cColor.g(), cColor.b(), false, 10.0f );
 			}

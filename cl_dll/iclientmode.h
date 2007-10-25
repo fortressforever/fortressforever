@@ -28,6 +28,7 @@ enum
 	MM_NONE = 0,
 	MM_SAY,
 	MM_SAY_TEAM,
+	MM_MESSAGEMODE,
 };
 
 abstract_class IClientMode

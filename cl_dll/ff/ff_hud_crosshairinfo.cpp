@@ -625,7 +625,7 @@ void CHudCrosshairInfo::Paint( void )
 		// Bug #0000686: defrag wants team colored hud_crosshair names
 		surface()->DrawSetTextFont( m_hTextFont );
 		Color cColor;
-		SetColorByTeam( m_iTeam - 1, cColor );		
+		SetColorByTeam( m_iTeam, cColor );		
 		surface()->DrawSetTextColor( cColor.r(), cColor.g(), cColor.b(), 255 );
 
 		for( wchar_t *wch = m_pText; *wch != 0; wch++ )
