@@ -338,7 +338,7 @@ void CFFSentryGun::OnSearchThink( void )
 		SetEnemy( NULL );
 
 	if( !GetEnemy() ) 
-		HackFindEnemy();
+		SetEnemy(HackFindEnemy());
 
 	if( GetEnemy() )
 	{
@@ -413,6 +413,14 @@ void CFFSentryGun::OnActiveThink( void )
 		SetThink( &CFFSentryGun::OnSearchThink );
 		SpinDown();
 		return;
+	}
+
+	// If we're targeting a buildable, and a player is a better target, change.
+	if(enemy && FF_IsBuildableObject(enemy))
+	{
+		CBaseEntity *pNewTarget = HackFindEnemy();
+		if(pNewTarget && pNewTarget->IsPlayer())
+			SetEnemy(pNewTarget);
 	}
 
 	// Get our shot positions - lets try the center of the SG
@@ -543,7 +551,7 @@ CBaseEntity *SG_IsBetterTarget( CBaseEntity *cur, CBaseEntity *latest, float dis
 // Purpose: The turret doesn't run base AI properly, which is a bad decision.
 //			As a result, it has to manually find enemies.
 //-----------------------------------------------------------------------------
-void CFFSentryGun::HackFindEnemy( void ) 
+CBaseEntity *CFFSentryGun::HackFindEnemy( void ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::HackFindEnemy", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
@@ -553,7 +561,7 @@ void CFFSentryGun::HackFindEnemy( void )
 	if( !pOwner ) 
 	{
 		Warning( "[SentryGun] Can't find our owner!\n" );
-		return;
+		return 0;
 	}
 
 	// Our location - used later
@@ -632,8 +640,6 @@ void CFFSentryGun::HackFindEnemy( void )
 		}
 		*/
 	}
-
-	SetEnemy( target );
 }
 
 //-----------------------------------------------------------------------------
