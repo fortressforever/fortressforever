@@ -805,6 +805,71 @@ private:
 	Button		*m_pPlayButton;
 };
 
+// Jiggles: Begin Miscellaneous Options Tab
+//=============================================================================
+// This Tab lets the player enable/disable various FF specific options
+//=============================================================================
+class CFFMiscOptions : public CFFOptionsPage
+{
+	DECLARE_CLASS_SIMPLE(CFFMiscOptions, CFFOptionsPage);
+
+public:
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Populate all the menu stuff
+	//-----------------------------------------------------------------------------
+	CFFMiscOptions(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
+	{
+		m_pHints = new CheckButton( this, "HintCheck", "Enable Hints" );
+		m_pHintsConVar = NULL;
+
+		LoadControlSettings("resource/ui/FFOptionsSubMisc.res");
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Apply the player's changes
+	//			
+	//-----------------------------------------------------------------------------
+	void Apply()
+	{
+		if ( m_pHintsConVar )
+				m_pHintsConVar->SetValue( m_pHints->IsSelected() );
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Just load again to reset
+	//-----------------------------------------------------------------------------
+	void Reset()
+	{
+		Load();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Find the appropriate ConVar states and update the Check Boxes
+	//-----------------------------------------------------------------------------
+	void Load()
+	{
+		if ( !m_pHintsConVar )
+			m_pHintsConVar = cvar->FindVar( "cl_hints" );
+		if ( m_pHintsConVar )
+			m_pHints->SetSelected( m_pHintsConVar->GetBool() );
+	}
+
+private:
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Catch checkbox updating -- not needed, yet
+	//-----------------------------------------------------------------------------
+	//MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data)
+	//{
+	//}
+
+	CheckButton		*m_pHints;			// The enable/disable hints check box
+	ConVar			*m_pHintsConVar;	// Pointer to the cl_hints convar
+};
+
+// Jiggles: End Miscellaneous Options Tab
+
 DEFINE_GAMEUI(CFFOptions, CFFOptionsPanel, ffoptions);
 
 //-----------------------------------------------------------------------------
@@ -837,10 +902,12 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 
 	m_pCrosshairOptions = new CFFCrosshairOptions(this, "CrosshairOptions");
 	m_pTimerOptions = new CFFTimerOptions(this, "TimerOptions");
+	m_pMiscOptions = new CFFMiscOptions(this, "MiscOptions");
 
 	m_pPropertyPages = new PropertySheet(this, "OptionsPages", true);
 	m_pPropertyPages->AddPage(m_pCrosshairOptions, "#GameUI_Crosshairs");
 	m_pPropertyPages->AddPage(m_pTimerOptions, "#GameUI_Timers");
+	m_pPropertyPages->AddPage(m_pMiscOptions, "#GameUI_Misc");
 	m_pPropertyPages->SetActivePage(m_pCrosshairOptions);
 	m_pPropertyPages->SetDragEnabled(false);
 
@@ -866,6 +933,7 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 	{
 		m_pCrosshairOptions->Apply();
 		m_pTimerOptions->Apply();
+		m_pMiscOptions->Apply();
 
 		// Apply doesn't quit the menu
 		if (pszCommand[0] == 'A')
@@ -878,6 +946,7 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		// Cancelled, so reset the settings
 		m_pCrosshairOptions->Reset();
 		m_pTimerOptions->Reset();
+		m_pMiscOptions->Reset();
 	}
 
 	// Now make invisible
@@ -894,6 +963,7 @@ void CFFOptionsPanel::SetVisible(bool state)
 	{
 		m_pCrosshairOptions->Load();
 		m_pTimerOptions->Load();
+		m_pMiscOptions->Load();
 
 		RequestFocus();
 		MoveToFront();
