@@ -2647,6 +2647,9 @@ void CFFPlayer::Command_Team( void )
 
 	RemoveItems();
 
+	// Make sure they don't subsequently drop any grenades
+	m_iGrenadeState = 0;
+
 	// Only kill the player if they are alive on a team
 	if (IsAlive() && GetTeamNumber() >= TEAM_BLUE)
 	{
