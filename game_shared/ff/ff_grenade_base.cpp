@@ -223,8 +223,26 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 		// NOTE: A backoff of 2.0f is a reflection
 		Vector vecAbsVelocity;
-		PhysicsClipVelocity(GetAbsVelocity(), trace.plane.normal, vecAbsVelocity, 2.0f);
-		vecAbsVelocity *= flTotalElasticity;
+		PhysicsClipVelocity(GetAbsVelocity(), trace.plane.normal, vecAbsVelocity, 1.0f + GetElasticity());
+		//vecAbsVelocity *= flTotalElasticity;
+
+		// ----------------------------
+		// Some new friction calculating. 200 is a base figure which *looks* correct
+		float flSpeed = vecAbsVelocity.Length();
+		float flNewSpeed = flSpeed - 200 * GetFriction();
+
+		flNewSpeed /= flSpeed;
+
+		if (flNewSpeed < 0)
+			flNewSpeed = 0;
+
+		// Better download slope handling
+		if (vecAbsVelocity.z < 0)
+			vecAbsVelocity.z = 0;
+		
+		vecAbsVelocity.x *= flNewSpeed;
+		vecAbsVelocity.y *= flNewSpeed;
+		// ----------------------------
 
 		// Get the total velocity (player + conveyors, etc.)
 		VectorAdd(vecAbsVelocity, GetBaseVelocity(), vecVelocity);
