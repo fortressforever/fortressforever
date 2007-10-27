@@ -306,7 +306,7 @@ void TE_Explosion( IRecipientFilter& filter, float delay,
 	__g_C_TEExplosion.m_nFrameRate = framerate;
 	__g_C_TEExplosion.m_nFlags = flags;
 	__g_C_TEExplosion.m_vecOrigin = *pos;
-	__g_C_TEExplosion.m_vecNormal = *normal;
+	__g_C_TEExplosion.m_vecNormal = normal ? *normal : Vector(0.0f, 0.0f, 0.0f);	// |-- Mirv: Argh
 	__g_C_TEExplosion.m_chMaterialType = materialType;
 	__g_C_TEExplosion.m_nRadius = radius;
 	__g_C_TEExplosion.m_nMagnitude = magnitude;

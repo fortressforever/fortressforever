@@ -103,10 +103,7 @@ void CFFWeaponTranquiliser::Fire()
 
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 28.0f + vRight * 8.0f + vUp * -8.0f;
 
-	QAngle angAiming;
-	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
-
-	CFFProjectileDart *pDart = CFFProjectileDart::CreateDart(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileDart *pDart = CFFProjectileDart::CreateDart(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 	pDart;
 #ifdef GAME_DLL
 	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_DARTGUN, pDart);

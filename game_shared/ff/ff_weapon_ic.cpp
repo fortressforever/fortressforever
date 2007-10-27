@@ -105,12 +105,9 @@ void CFFWeaponIC::Fire()
 	//Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 4.0f + Vector(0, 1, 20.0f);
 	Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
 
-	QAngle angAiming;
-	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
-
 	// 0000936 - added cvar for testing. Keep line below commented out.
 	//CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
-	CFFProjectileIncendiaryRocket *pRocket = CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
+	CFFProjectileIncendiaryRocket *pRocket = CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
 	pRocket;
 
 #ifdef GAME_DLL
