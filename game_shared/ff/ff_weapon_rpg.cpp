@@ -88,10 +88,7 @@ void CFFWeaponRPG::Fire()
 	//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
 	Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
 
-	QAngle angAiming;
-	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
-
-	CFFProjectileRocket *pRocket = CFFProjectileRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
+	CFFProjectileRocket *pRocket = CFFProjectileRocket::CreateRocket(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
 	pRocket;
 
 #ifdef GAME_DLL

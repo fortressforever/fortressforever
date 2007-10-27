@@ -92,11 +92,6 @@ void CFFWeaponGrenadeLauncher::Fire()
 
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 16.0f + vRight * 7.0f + vUp * -8.0f;
 
-	QAngle angAiming;
-	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
-
-	angAiming -= QAngle(12.0f, 0, 0);
-
 	// Bug #0000192: Demoman can stick pipes to walls
 	// Mirv got a better idea?
 	trace_t tr;
@@ -106,7 +101,7 @@ void CFFWeaponGrenadeLauncher::Fire()
 	else if( tr.fraction != 1.0f )
 		vecSrc += ( vForward * -24.0f );
 
-	CFFProjectileGrenade *pGrenade = CFFProjectileGrenade::CreateGrenade(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
+	CFFProjectileGrenade *pGrenade = CFFProjectileGrenade::CreateGrenade(this, vecSrc, pPlayer->EyeAngles() - QAngle(12.0f, 0.0f, 0.0f), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
 	pGrenade;
 
 #ifdef GAME_DLL

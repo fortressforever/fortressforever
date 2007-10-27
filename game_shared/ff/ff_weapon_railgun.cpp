@@ -256,9 +256,6 @@ void CFFWeaponRailgun::Fire( void )
 //		AssertMsg( 0, "Couldn't get weapon railgun!" );
 //#endif
 
-	QAngle angAiming;
-	VectorAngles( vecForward, angAiming) ;
-
 	// Check that this isn't going through a wall
 	//trace_t tr;
 	//UTIL_TraceLine(pPlayer->EyePosition(), vecSrc /*+ ( vecForward * 4.0f )*/, MASK_SOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &tr);
@@ -284,7 +281,7 @@ void CFFWeaponRailgun::Fire( void )
 	float flDamage = ffdev_rail_damage_min.GetFloat() + ( (ffdev_rail_damage_max.GetFloat() - ffdev_rail_damage_min.GetFloat()) * flPercent );
 
 	const int iDamageRadius = 100;
-	CFFProjectileRail *pRail = CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, flDamage, iDamageRadius, flSpeed, m_flClampedChargeTime );	
+	CFFProjectileRail *pRail = CFFProjectileRail::CreateRail( this, vecSrc, pPlayer->EyeAngles(), pPlayer, flDamage, iDamageRadius, flSpeed, m_flClampedChargeTime );	
 	pRail;
 
 #ifdef GAME_DLL

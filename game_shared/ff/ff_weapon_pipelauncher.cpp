@@ -114,11 +114,6 @@ void CFFWeaponPipeLauncher::Fire()
 
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 16.0f + vRight * 8.0f + vUp * -8.0f;
 
-	QAngle angAiming;
-	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
-
-	angAiming -= QAngle(12.0f, 0, 0);
-
 	// Bug #0000192: Demoman can stick pipes to walls
 	// Mirv got a better idea?
 	trace_t tr;
@@ -128,7 +123,7 @@ void CFFWeaponPipeLauncher::Fire()
 	else if( tr.fraction != 1.0f )
 		vecSrc += ( vForward * -24.0f );
 
-	CFFProjectilePipebomb *pPipe = CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
+	CFFProjectilePipebomb *pPipe = CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, pPlayer->EyeAngles() - QAngle(12.0f, 0.0f, 0.0f), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
 	pPipe;
 
 #ifdef GAME_DLL
