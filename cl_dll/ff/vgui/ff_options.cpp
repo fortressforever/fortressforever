@@ -823,6 +823,12 @@ public:
 		m_pHints = new CheckButton( this, "HintCheck", "Enable Hints" );
 		m_pHintsConVar = NULL;
 
+		m_pARCheck = new CheckButton( this, "ARCheck", "Enable Auto-Reload" );
+		m_pAutoRLConVar = NULL;
+
+		m_pAutoKillCheck = new CheckButton( this, "AKCheck", "Change Class Instantly" );
+		m_pAutoKillConVar = NULL;
+
 		LoadControlSettings("resource/ui/FFOptionsSubMisc.res");
 	}
 
@@ -833,7 +839,13 @@ public:
 	void Apply()
 	{
 		if ( m_pHintsConVar )
-				m_pHintsConVar->SetValue( m_pHints->IsSelected() );
+			m_pHintsConVar->SetValue( m_pHints->IsSelected() );
+
+		if ( m_pAutoRLConVar )
+			m_pAutoRLConVar->SetValue( m_pARCheck->IsSelected() );
+
+		if ( m_pAutoKillConVar )
+			m_pAutoKillConVar->SetValue( m_pAutoKillCheck->IsSelected() );
 	}
 
 	//-----------------------------------------------------------------------------
@@ -853,6 +865,16 @@ public:
 			m_pHintsConVar = cvar->FindVar( "cl_hints" );
 		if ( m_pHintsConVar )
 			m_pHints->SetSelected( m_pHintsConVar->GetBool() );
+
+		if ( !m_pAutoRLConVar )
+			m_pAutoRLConVar = cvar->FindVar( "cl_autoreload" );
+		if ( m_pAutoRLConVar )
+			m_pARCheck->SetSelected( m_pAutoRLConVar->GetBool() );
+
+		if ( !m_pAutoKillConVar )
+			m_pAutoKillConVar = cvar->FindVar( "cl_classautokill" );
+		if ( m_pAutoKillConVar )
+			m_pAutoKillCheck->SetSelected( m_pAutoKillConVar->GetBool() );
 	}
 
 private:
@@ -866,6 +888,12 @@ private:
 
 	CheckButton		*m_pHints;			// The enable/disable hints check box
 	ConVar			*m_pHintsConVar;	// Pointer to the cl_hints convar
+
+	CheckButton		*m_pARCheck;		// The enable/disable autoreload check box
+	ConVar			*m_pAutoRLConVar;	// Pointer to the cl_autoreload convar
+
+	CheckButton		*m_pAutoKillCheck;	// The enable/disable classautokill check box
+	ConVar			*m_pAutoKillConVar;	// Pointer to the cl_classautokill convar
 };
 
 // Jiggles: End Miscellaneous Options Tab
