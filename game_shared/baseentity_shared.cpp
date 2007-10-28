@@ -21,12 +21,19 @@
 
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
+	
+	// not ideal but I need this to be able to do ToFFPlayer for the team blood stuff
+	#include "c_ff_player.h"
 #else
 	#include "te_effect_dispatch.h"
 	#include "soundent.h"
 	#include "iservervehicle.h"
 	#include "player_pickup.h"
 	#include "waterbullet.h"
+	
+	// not ideal but I need this to be able to do ToFFPlayer for the team blood stuff
+	#include "ff_player.h"
+	
 
 #ifdef HL2MP
 	#include "te_hl2mp_shotgun_shot.h"
@@ -1809,8 +1816,12 @@ void CBaseEntity::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 		
 		if ( blood != DONT_BLEED )
 		{
-			SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
-			TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
+			// Fix blood showing for teammates when FF is off.
+			if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
+			{
+				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
+				TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
+			}			
 		}
 	}
 }
