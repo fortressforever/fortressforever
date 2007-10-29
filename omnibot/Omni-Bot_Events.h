@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: drevil $
-// $LastChangedDate: 2007-10-13 14:55:48 -0700 (Sat, 13 Oct 2007) $
-// $LastChangedRevision: 2148 $
+// $LastChangedBy: ensiform $
+// $LastChangedDate: 2007-10-25 17:18:49 -0700 (Thu, 25 Oct 2007) $
+// $LastChangedRevision: 2167 $
 //
 // about: Generic Bot Events
 //
@@ -148,6 +148,8 @@ typedef enum
 	GEN_MSG_PLAYSOUND,
 	GEN_MSG_STOPSOUND,
 	GEN_MSG_SCRIPTEVENT,
+
+	GEN_MSG_GOTOWAYPOINT,
 
 	// This must stay last.
 	GEN_MSG_END

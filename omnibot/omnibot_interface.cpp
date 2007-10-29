@@ -692,8 +692,7 @@ namespace Omnibot
 			CBaseEntity *pEntity = pEdict && !FNullEnt(pEdict) ? CBaseEntity::Instance(pEdict) : 0;
 			CFFPlayer *pPlayer = pEntity ? ToFFPlayer(pEntity) : 0;
 			if(pPlayer && pPlayer->IsBot())
-			{
-				
+			{				
 				CBotCmd cmd;
 				//CUserCmd cmd;
 

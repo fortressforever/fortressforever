@@ -398,7 +398,9 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 	// trigger was pressed (assuming trigger actually was pressed).
 	if (pOwner->m_nButtons & IN_ATTACK && m_flTriggerPressed)
 	{
-		m_flChargeTime = gpGlobals->curtime - m_flTriggerPressed;
+		// DrEvil: add a very small delta because bots can pulse the attack button every frame
+		// and keep the m_flChargeTime at 0 to avoid the move speed penalty.
+		m_flChargeTime = gpGlobals->curtime - m_flTriggerPressed + 0.0001f;
 	}
 	// Otherwise the charge time is the amount it was held minus the amount of time
 	// that has elapsed since it was released.
@@ -561,6 +563,9 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 			m_bFiring = false;
 		}
 	}
+
+	debugoverlay->AddEntityTextOverlay(pOwner->entindex(),0,flTimeDelta,0,255,0,255,"Charge:%.1f, %s",
+		m_flChargeTime,pOwner->m_nButtons & IN_ATTACK?"Attack":"NoAttack");
 
 #ifdef GAME_DLL
 	// if there's a charge on the bar and the duder is firing, then keep making sure the speed penalty is implemented
