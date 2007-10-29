@@ -860,11 +860,17 @@ namespace FFLib
 	float GetConvar( const char *pszConvarName )
 	{
 		if( !pszConvarName )
-			return 0.0f;
+			return -1.0f;
 
-		ConVar *pConvar = ( ConVar * )ConCommandBase::FindCommand( pszConvarName );
-		if( !pConvar || !pConvar->IsCommand() )
-			return 0.0f;
+		if( !cvar )
+			return -1.0f;
+
+		ConVar *pConvar = cvar->FindVar( pszConvarName );
+		if( !pConvar )
+			return -1.0f;
+
+		if( pConvar->IsBitSet( FCVAR_CHEAT ) )
+			return -1.0f;
 
 		return pConvar->GetFloat();
 	}
@@ -878,11 +884,13 @@ namespace FFLib
 		if( !Q_stricmp( pszConvarName, "sv_cheats" ) )
 			return;
 
-		ConVar *pConvar = ( ConVar * )ConCommandBase::FindCommand( pszConvarName );
-		if( !pConvar || !pConvar->IsCommand() )
+		if( !cvar )
 			return;
 
-		// TODO: We should test something like this so this can't be abused!
+		ConVar *pConvar = cvar->FindVar( pszConvarName );
+		if( !pConvar )
+			return;
+
 		if( pConvar->IsBitSet( FCVAR_CHEAT ) )
 			return;
 
