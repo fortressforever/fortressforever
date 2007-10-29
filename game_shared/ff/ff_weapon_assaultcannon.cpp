@@ -564,9 +564,6 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 		}
 	}
 
-	debugoverlay->AddEntityTextOverlay(pOwner->entindex(),0,flTimeDelta,0,255,0,255,"Charge:%.1f, %s",
-		m_flChargeTime,pOwner->m_nButtons & IN_ATTACK?"Attack":"NoAttack");
-
 #ifdef GAME_DLL
 	// if there's a charge on the bar and the duder is firing, then keep making sure the speed penalty is implemented
 	// This makes it so that if there's a charge on the bar but the player is not attacking, the player can move around 
