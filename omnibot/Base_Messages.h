@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-08-31 23:25:33 -0700 (Fri, 31 Aug 2007) $
-// $LastChangedRevision: 2142 $
+// $LastChangedBy: ensiform $
+// $LastChangedDate: 2007-10-25 17:18:49 -0700 (Thu, 25 Oct 2007) $
+// $LastChangedRevision: 2167 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -207,6 +207,12 @@ struct Event_ScriptEvent
 	char		m_Param1[64];
 	char		m_Param2[64];
 	char		m_Param3[64];
+};
+
+struct Msg_GotoWaypoint
+{
+	int			m_UID;
+	float		m_Origin[3];
 };
 
 //////////////////////////////////////////////////////////////////////////
