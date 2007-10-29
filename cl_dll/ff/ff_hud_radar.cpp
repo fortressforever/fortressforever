@@ -125,6 +125,9 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 {
 	bool bRecvMessage = false;
 
+	// Fixes bug where items being radar'd would keep growing and growin
+	m_hRadarList.RemoveAll();
+
 	int iCount = msg.ReadShort();
 	for( int i = 0; i < iCount; i++ )
 	{
@@ -133,7 +136,7 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 		int iInfo = msg.ReadWord();
 
 		// Get team
-		hObject.m_iTeam = ( iInfo & 0x0000000F ) - 1;
+		hObject.m_iTeam = ( iInfo & 0x0000000F );
 		// Get class
 		hObject.m_iClass = ( ( iInfo & 0xFFFFFFF0 ) >> 4 );
 		// Get ducked state
