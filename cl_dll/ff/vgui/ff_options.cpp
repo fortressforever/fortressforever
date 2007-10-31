@@ -829,6 +829,9 @@ public:
 		m_pAutoKillCheck = new CheckButton( this, "AKCheck", "Change Class Instantly" );
 		m_pAutoKillConVar = NULL;
 
+		m_pBlurCheck = new CheckButton( this, "BlurCheck", "Enable Motion Blur" );
+		m_pBlurConVar = NULL;
+
 		LoadControlSettings("resource/ui/FFOptionsSubMisc.res");
 	}
 
@@ -846,6 +849,9 @@ public:
 
 		if ( m_pAutoKillConVar )
 			m_pAutoKillConVar->SetValue( m_pAutoKillCheck->IsSelected() );
+
+		if ( m_pBlurConVar )
+			m_pBlurConVar->SetValue( m_pBlurCheck->IsSelected() );
 	}
 
 	//-----------------------------------------------------------------------------
@@ -875,6 +881,11 @@ public:
 			m_pAutoKillConVar = cvar->FindVar( "cl_classautokill" );
 		if ( m_pAutoKillConVar )
 			m_pAutoKillCheck->SetSelected( m_pAutoKillConVar->GetBool() );
+
+		if ( !m_pBlurConVar )
+			m_pBlurConVar = cvar->FindVar( "ffdev_blur_enable" );
+		if ( m_pBlurConVar )
+			m_pBlurCheck->SetSelected( m_pBlurConVar->GetBool() );
 	}
 
 private:
@@ -894,6 +905,9 @@ private:
 
 	CheckButton		*m_pAutoKillCheck;	// The enable/disable classautokill check box
 	ConVar			*m_pAutoKillConVar;	// Pointer to the cl_classautokill convar
+
+	CheckButton		*m_pBlurCheck;		// The enable/disable speed blur check box
+	ConVar			*m_pBlurConVar;		// Pointer to the ffdev_blur_enable convar
 };
 
 // Jiggles: End Miscellaneous Options Tab
