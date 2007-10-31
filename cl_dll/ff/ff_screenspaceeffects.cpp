@@ -256,8 +256,9 @@ void CBaseEffect::Render(int x, int y, int w, int h)
 	}
 }
 
-static ConVar ffdev_blur_minspeed("ffdev_blur_minspeed", "1000");
-static ConVar ffdev_blur_rangespeed("ffdev_blur_rangespeed", "600");
+static ConVar ffdev_blur_enable("ffdev_blur_enable", "1", FCVAR_ARCHIVE, "Enable/disable speed-based blur effect");
+static ConVar ffdev_blur_minspeed("ffdev_blur_minspeed", "1000", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
+static ConVar ffdev_blur_rangespeed("ffdev_blur_rangespeed", "600", FCVAR_ARCHIVE);
 
 //-----------------------------------------------------------------------------
 // Purpose: A motion blur for concs
@@ -322,7 +323,7 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
 
 	// Must be valid, on a team and not no-clipping and alive
-	if (!pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || !pPlayer->IsAlive() || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
+	if (!ffdev_blur_enable.GetBool() || !pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || !pPlayer->IsAlive() || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
 		return;
 
 	Vector vecVelocity = pPlayer->GetAbsVelocity();
