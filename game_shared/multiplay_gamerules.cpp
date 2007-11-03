@@ -579,7 +579,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 	//=========================================================
 	void CMultiplayRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 	{
-		UTIL_LogPrintf("CMultiplayRules::DeathNotice\n");
+		//UTIL_LogPrintf("CMultiplayRules::DeathNotice\n");
 		// Work out what killed the player, and send a message to all clients about it
 		const char *killer_weapon_name = "world";		// by default, the player is killed by the world
 		int killer_ID = 0;
@@ -693,37 +693,37 @@ bool CMultiplayRules::IsMultiplayer( void )
 				break;
 			}
 			
-			UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);
-			UTIL_LogPrintf(" killer_weapon_name: %s\n",killer_weapon_name);
+			//UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);
+			//UTIL_LogPrintf(" killer_weapon_name: %s\n",killer_weapon_name);
 
 			// strip the NPC_* or weapon_* from the inflictor's classname
 			if ( Q_strnicmp( killer_weapon_name, "weapon_", 7 ) == 0 )
 			{
-				UTIL_LogPrintf("  begins with weapon_, removing\n");
+				//UTIL_LogPrintf("  begins with weapon_, removing\n");
 				killer_weapon_name += 7;
 			}
 			else if ( Q_strnicmp( killer_weapon_name, "NPC_", 8 ) == 0 )
 			{
-				UTIL_LogPrintf("  begins with NPC_, removing\n");
+				//UTIL_LogPrintf("  begins with NPC_, removing\n");
 				killer_weapon_name += 8;
 			}
 			else if ( Q_strnicmp( killer_weapon_name, "func_", 5 ) == 0 )
 			{
-				UTIL_LogPrintf("  begins with func_, removing\n");
+				//UTIL_LogPrintf("  begins with func_, removing\n");
 				killer_weapon_name += 5;
 			}
 			// BEG: Added by Mulchman for ff_ entities
 			else if( Q_strnicmp( killer_weapon_name, "ff_", 3 ) == 0 )
 			{
-				UTIL_LogPrintf( "  begins with ff_, removing\n" );
+				//UTIL_LogPrintf( "  begins with ff_, removing\n" );
 				killer_weapon_name += 3;
 			}
 			// END: Added by Mulchman for FF_ entities
 		}
 
-		UTIL_LogPrintf(" userid (victim): %i\n",pVictim->GetUserID());
-		UTIL_LogPrintf(" attacker: %i\n",killer_ID);
-		UTIL_LogPrintf(" weapon: %s\n",killer_weapon_name);
+		//UTIL_LogPrintf(" userid (victim): %i\n",pVictim->GetUserID());
+		//UTIL_LogPrintf(" attacker: %i\n",killer_ID);
+		//UTIL_LogPrintf(" weapon: %s\n",killer_weapon_name);
 
 		IGameEvent * event = gameeventmanager->CreateEvent( "player_death" );
 		if ( event )

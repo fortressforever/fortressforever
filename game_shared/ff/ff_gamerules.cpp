@@ -1459,29 +1459,29 @@ ConVar mp_prematch( "mp_prematch",
 				break;
 			}
 
-			UTIL_LogPrintf( " killer_ID: %i\n", iKillerID );
-			UTIL_LogPrintf( " killer_weapon_name: %s\n", pszWeapon );
+			//UTIL_LogPrintf( " killer_ID: %i\n", iKillerID );
+			//UTIL_LogPrintf( " killer_weapon_name: %s\n", pszWeapon );
 
 			// strip the NPC_* or weapon_* from the inflictor's classname
 			if( Q_strnicmp( pszWeapon, "weapon_", 7 ) == 0 )
 			{
-				UTIL_LogPrintf( "  begins with weapon_, removing\n" );
+				//UTIL_LogPrintf( "  begins with weapon_, removing\n" );
 				pszWeapon += 7;
 			}
 			else if( Q_strnicmp( pszWeapon, "NPC_", 8 ) == 0 )
 			{
-				UTIL_LogPrintf( "  begins with NPC_, removing\n" );
+				//UTIL_LogPrintf( "  begins with NPC_, removing\n" );
 				pszWeapon += 8;
 			}
 			else if( Q_strnicmp( pszWeapon, "func_", 5 ) == 0 )
 			{
-				UTIL_LogPrintf( "  begins with func_, removing\n" );
+				//UTIL_LogPrintf( "  begins with func_, removing\n" );
 				pszWeapon += 5;
 			}
 			// BEG: Added by Mulchman for FF_ entities
 			else if( Q_strnicmp( pszWeapon, "ff_", 3 ) == 0 )
 			{
-				UTIL_LogPrintf( "  begins with ff_, removing\n" );
+				//UTIL_LogPrintf( "  begins with ff_, removing\n" );
 				pszWeapon += 3;
 			}
 			// END: Added by Mulchman for FF_ entities
@@ -1517,9 +1517,9 @@ ConVar mp_prematch( "mp_prematch",
 			}
 		}
 
-		UTIL_LogPrintf( " userid (buildable's owner): %i\n", pVictim->GetUserID() );
-		UTIL_LogPrintf( " attacker: %i\n", iKillerID );
-		UTIL_LogPrintf( " weapon: %s\n", pszWeapon );
+		//UTIL_LogPrintf( " userid (buildable's owner): %i\n", pVictim->GetUserID() );
+		//UTIL_LogPrintf( " attacker: %i\n", iKillerID );
+		//UTIL_LogPrintf( " weapon: %s\n", pszWeapon );
 		
 		IGameEvent *pEvent = NULL;
 		if( pObject->Classify() == CLASS_SENTRYGUN )
