@@ -87,6 +87,22 @@ const int MAX_ENTITIES = 4096;
 BotEntity		m_EntityHandles[MAX_ENTITIES] = {DefaultBotEntity()};
 
 //////////////////////////////////////////////////////////////////////////
+void NormalizeAngles( QAngle& angles )
+{
+	// Normalize angles to -180 to 180 range
+	for (int i = 0; i < 3; i++ )
+	{
+		if ( angles[i] > 180.0 )
+		{
+			angles[i] -= 360.0;
+		}
+		else if ( angles[i] < -180.0 )
+		{
+			angles[i] += 360.0;
+		}
+	}
+}
+//////////////////////////////////////////////////////////////////////////
 
 void Omnibot_Load_PrintMsg(const char *_msg)
 {
@@ -763,9 +779,17 @@ namespace Omnibot
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_RADAR))
 					serverpluginhelpers->ClientCommand(pEdict, "radar");
 
-				// Store the facing.
+				// Convert the facing vector to angles.
+				const QAngle currentAngles = pPlayer->EyeAngles();
 				Vector vFacing(_input.m_Facing[0], _input.m_Facing[1], _input.m_Facing[2]);
 				VectorAngles(vFacing, cmd.viewangles);
+				NormalizeAngles(cmd.viewangles);
+
+				// Any facings that go abive the clamp need to have their yaw fixed just in case.
+				if(cmd.viewangles[PITCH] > 89 || cmd.viewangles[PITCH] < -89)
+					cmd.viewangles[YAW] = currentAngles[YAW];
+
+				//cmd.viewangles[PITCH] = clamp(cmd.viewangles[PITCH],-89,89);
 
 				// Calculate the movement vector, taking into account the view direction.
 				QAngle angle2d = cmd.viewangles; angle2d.x = 0;
