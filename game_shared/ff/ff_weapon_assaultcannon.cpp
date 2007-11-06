@@ -512,8 +512,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 			else if(m_flDeployTick + 0.5f <= gpGlobals->curtime)
 			{
 				// If the firing button was just pressed, reset the firing time
-				if (pOwner->m_nButtons & IN_ATTACK)
-					m_flNextPrimaryAttack = gpGlobals->curtime;
+				m_flNextPrimaryAttack = m_flLastTick;
 
 //#ifdef GAME_DLL
 //				// base the speed effect on how charged the ac is
