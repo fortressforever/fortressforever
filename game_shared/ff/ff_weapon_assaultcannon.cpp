@@ -27,7 +27,7 @@
 
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
 #define FF_AC_MAXCHARGETIME 3.0f	// Assault Cannon Max Charge Time
-#define FF_AC_WINDUPTIME	1.0f	// Assault Cannon Wind Up Time
+#define FF_AC_WINDUPTIME	0.5f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
 #define FF_AC_MOVEMENTDELAY 0.6f	// Time the player has to wait after firing the AC before the speed penalty wears off.
