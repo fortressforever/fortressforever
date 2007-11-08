@@ -2208,72 +2208,81 @@ namespace Omnibot
 
 		bool DebugLine(const float _start[3], const float _end[3], const obColor &_color, float _time)
 		{
-			Vector vStart(_start[0], _start[1], _start[2]);
-			Vector vEnd(_end[0], _end[1], _end[2]);
-			debugoverlay->AddLineOverlay(vStart, 
-				vEnd, 
-				_color.r(), 
-				_color.g(), 
-				_color.b(), 
-				false, 
-				_time);
+			if(debugoverlay)
+			{
+				Vector vStart(_start[0], _start[1], _start[2]);
+				Vector vEnd(_end[0], _end[1], _end[2]);
+				debugoverlay->AddLineOverlay(vStart, 
+					vEnd, 
+					_color.r(), 
+					_color.g(), 
+					_color.b(), 
+					false, 
+					_time);
+			}
 			return true;
 		}
 
 		bool DebugRadius(const float _pos[3], const float _radius, const obColor &_color, float _time)
 		{
-			Vector pos(_pos[0], _pos[1], _pos[2] + 4);
-			Vector start;
-			Vector end;
-			start.Init();
-			end.Init();
-			start.y += _radius;
-			end.y -= _radius;
-
-			float fStepSize = 180.0f / 8.0f;
-			for(int i = 0; i < 8; ++i)
+			if(debugoverlay)
 			{
-				VectorYawRotate(start, fStepSize, start);
-				VectorYawRotate(end, fStepSize, end);
+				Vector pos(_pos[0], _pos[1], _pos[2] + 4);
+				Vector start;
+				Vector end;
+				start.Init();
+				end.Init();
+				start.y += _radius;
+				end.y -= _radius;
 
-				debugoverlay->AddLineOverlay(
-					pos + start,
-					pos + end,
-					_color.r(), 
-					_color.g(), 
-					_color.b(), 
-					false,
-					_time);
+				float fStepSize = 180.0f / 8.0f;
+				for(int i = 0; i < 8; ++i)
+				{
+					VectorYawRotate(start, fStepSize, start);
+					VectorYawRotate(end, fStepSize, end);
+
+					debugoverlay->AddLineOverlay(
+						pos + start,
+						pos + end,
+						_color.r(), 
+						_color.g(), 
+						_color.b(), 
+						false,
+						_time);
+				}
 			}
 			return true;
 		}
 
 		bool DebugPolygon(const float **_pts, int _numpts, const obColor &_color, float _time)
 		{
-			if(_numpts >= 3)
+			if(debugoverlay)
 			{
-				Vector 
-					p1(_pts[0][0], _pts[0][1], _pts[0][2]), 
-					p2(_pts[1][0], _pts[1][1], _pts[1][2]), 
-					p3(_pts[2][0], _pts[2][1], _pts[2][2]);
-
-				debugoverlay->AddTriangleOverlay(p1, p2, p3, 
-					_color.r(), 
-					_color.g(), 
-					_color.b(), 
-					255, false, _time);
-				
-				for(int p = 3; p < _numpts; ++p)
+				if(_numpts >= 3)
 				{
-					p2 = p3;
-
-					p3 = Vector(_pts[p][0], _pts[p][1], _pts[p][2]);
+					Vector 
+						p1(_pts[0][0], _pts[0][1], _pts[0][2]), 
+						p2(_pts[1][0], _pts[1][1], _pts[1][2]), 
+						p3(_pts[2][0], _pts[2][1], _pts[2][2]);
 
 					debugoverlay->AddTriangleOverlay(p1, p2, p3, 
 						_color.r(), 
 						_color.g(), 
 						_color.b(), 
 						255, false, _time);
+
+					for(int p = 3; p < _numpts; ++p)
+					{
+						p2 = p3;
+
+						p3 = Vector(_pts[p][0], _pts[p][1], _pts[p][2]);
+
+						debugoverlay->AddTriangleOverlay(p1, p2, p3, 
+							_color.r(), 
+							_color.g(), 
+							_color.b(), 
+							255, false, _time);
+					}
 				}
 			}
 			return true;
