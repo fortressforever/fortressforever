@@ -2533,17 +2533,21 @@ namespace Omnibot
 			Warning("Omni-bot Not Loaded\n");
 	}
 
-	void omnibot_interface::Bot_SendTrigger(TriggerInfo *_triggerInfo)
+	void omnibot_interface::Trigger(CBaseEntity *_ent, CBaseEntity *_activator, const char *_tagname, const char *_action)
 	{
 		if(IsOmnibotLoaded())
 		{
 			if(g_BotFunctions.pfnBotSendTrigger)
 			{
-				g_BotFunctions.pfnBotSendTrigger(_triggerInfo);
+				TriggerInfo ti;
+				ti.m_Entity = HandleFromEntity(_ent);
+				ti.m_Activator = HandleFromEntity(_activator);
+				Q_strncpy(ti.m_Action,_action,TriggerBufferSize);
+				Q_strncpy(ti.m_TagName,_tagname,TriggerBufferSize);
+				g_BotFunctions.pfnBotSendTrigger(&ti);
 			}
 		}
 	}
-
 	//////////////////////////////////////////////////////////////////////////
 
 	class OmnibotEntityListener : public IEntityListener
@@ -3677,72 +3681,42 @@ namespace Omnibot
 		if(!IsOmnibotLoaded())
 			return;
 
-		TriggerInfo ti;
-		Q_strncpy(ti.m_TagName, _entity->GetName(), TriggerBufferSize);
-		Q_strncpy(ti.m_Action, "item_removed", TriggerBufferSize);
-		ti.m_Entity = _entity ? HandleFromEntity(_entity) : GameEntity();
-		ti.m_Activator = GameEntity();
-		omnibot_interface::Bot_SendTrigger(&ti);
+		omnibot_interface::Trigger(_entity,NULL,_entity->GetName(),"item_removed");
 	}
 	void Notify_ItemRestore(CBaseEntity *_entity)
 	{
 		if(!IsOmnibotLoaded())
 			return;
 
-		TriggerInfo ti;
-		Q_strncpy(ti.m_TagName, _entity->GetName(), TriggerBufferSize);
-		Q_strncpy(ti.m_Action, "item_restored", TriggerBufferSize);
-		ti.m_Entity = _entity ? HandleFromEntity(_entity) : GameEntity();
-		ti.m_Activator = GameEntity();
-		omnibot_interface::Bot_SendTrigger(&ti);
+		omnibot_interface::Trigger(_entity,NULL,_entity->GetName(),"item_restored");
 	}
 	void Notify_ItemDropped(CBaseEntity *_entity)
 	{
 		if(!IsOmnibotLoaded())
 			return;
 
-		TriggerInfo ti;
-		Q_strncpy(ti.m_TagName, _entity->GetName(), TriggerBufferSize);
-		Q_strncpy(ti.m_Action, "item_dropped", TriggerBufferSize);
-		ti.m_Entity = _entity ? HandleFromEntity(_entity) : GameEntity();
-		ti.m_Activator = GameEntity();
-		omnibot_interface::Bot_SendTrigger(&ti);
+		omnibot_interface::Trigger(_entity,NULL,_entity->GetName(),"item_dropped");
 	}
 	void Notify_ItemPickedUp(CBaseEntity *_entity, CBaseEntity *_whodoneit)
 	{
 		if(!IsOmnibotLoaded())
 			return;
 
-		TriggerInfo ti;
-		Q_strncpy(ti.m_TagName, _entity->GetName(), TriggerBufferSize);
-		Q_strncpy(ti.m_Action, "item_pickedup", TriggerBufferSize);
-		ti.m_Entity = _entity ? HandleFromEntity(_entity) : GameEntity();
-		ti.m_Activator = _whodoneit ? HandleFromEntity(_whodoneit) : GameEntity();
-		omnibot_interface::Bot_SendTrigger(&ti);
+		omnibot_interface::Trigger(_entity,_whodoneit,_entity->GetName(),"item_pickedup");
 	}
 	void Notify_ItemRespawned(CBaseEntity *_entity)
 	{
 		if(!IsOmnibotLoaded())
 			return;
 
-		TriggerInfo ti;
-		Q_strncpy(ti.m_TagName, _entity->GetName(), TriggerBufferSize);
-		Q_strncpy(ti.m_Action, "item_respawned", TriggerBufferSize);
-		ti.m_Entity = _entity ? HandleFromEntity(_entity) : GameEntity();
-		ti.m_Activator = GameEntity();
-		omnibot_interface::Bot_SendTrigger(&ti);
+		omnibot_interface::Trigger(_entity,NULL,_entity->GetName(),"item_respawned");
 	}
 	void Notify_ItemReturned(CBaseEntity *_entity)
 	{
 		if(!IsOmnibotLoaded())
 			return;
 
-		TriggerInfo ti;
-		Q_strncpy(ti.m_TagName, _entity->GetName(), TriggerBufferSize);
-		Q_strncpy(ti.m_Action, "item_returned", TriggerBufferSize);
-		ti.m_Entity = _entity ? HandleFromEntity(_entity) : GameEntity();
-		ti.m_Activator = GameEntity();
-		omnibot_interface::Bot_SendTrigger(&ti);
+		omnibot_interface::Trigger(_entity,NULL,_entity->GetName(),"item_returned");
 	}
 	void Notify_FireOutput(const char *_entityname, const char *_output)
 	{
@@ -3750,25 +3724,14 @@ namespace Omnibot
 			return;
 
 		CBaseEntity *pEnt = _entityname ? gEntList.FindEntityByName(NULL, _entityname, NULL) : NULL;
-
-		TriggerInfo ti;
-		Q_strncpy(ti.m_TagName, _entityname, TriggerBufferSize);
-		Q_strncpy(ti.m_Action, _output, TriggerBufferSize);
-		ti.m_Entity = pEnt ? HandleFromEntity(pEnt) : GameEntity();
-		ti.m_Activator = GameEntity();
-		omnibot_interface::Bot_SendTrigger(&ti);
+		omnibot_interface::Trigger(pEnt,NULL,_entityname,_output);
 	}
 	void BotSendTriggerEx(const char *_entityname, const char *_action)
 	{
 		if(!IsOmnibotLoaded())
 			return;
 
-		TriggerInfo ti;
-		Q_strncpy(ti.m_TagName, _entityname, TriggerBufferSize);
-		Q_strncpy(ti.m_Action, _action, TriggerBufferSize);
-		ti.m_Entity = GameEntity();
-		ti.m_Activator = GameEntity();
-		omnibot_interface::Bot_SendTrigger(&ti);
+		omnibot_interface::Trigger(NULL,NULL,_entityname,_action);
 	}
 	void SendBotSignal(const char *_signal)
 	{

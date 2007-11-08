@@ -166,6 +166,8 @@ namespace FFLib
 		UserMessageBegin(filter, "GameMessage");
 			WRITE_STRING(szMessage);
 		MessageEnd();
+
+		Omnibot::omnibot_interface::Trigger(NULL,NULL,UTIL_VarArgs("broadcast_msg: %s", szMessage),"broadcast_msg");
 	}
 
 	void SendPlayerMessage(CFFPlayer* pPlayer, const char* szMessage)
@@ -186,6 +188,9 @@ namespace FFLib
 		CFFEntitySystemHelper* pHelperInst = CFFEntitySystemHelper::GetInstance();
 		if(pHelperInst)
 			pHelperInst->EmitSound( filter, pHelperInst->entindex(), szSound);
+
+		
+		Omnibot::omnibot_interface::Trigger(NULL,NULL,UTIL_VarArgs("broadcast_snd: %s", szSound),"broadcast_snd");
 	}
 
 	void SendPlayerSound(CFFPlayer* pPlayer, const char* szSound)
@@ -1309,6 +1314,8 @@ namespace FFLib
 
 			SENTENCEG_PlaySentenceIndex(pPlayer->edict(), iSentence, 1.0f, SNDLVL_TALKING, 0, 100);
 		}
+
+		Omnibot::omnibot_interface::Trigger(NULL,NULL,UTIL_VarArgs("speak: %s", szSentenceName),"speak_all");
 	}
 
 	void SpeakPlayer(CFFPlayer *pPlayer, const char* szSentenceName)
