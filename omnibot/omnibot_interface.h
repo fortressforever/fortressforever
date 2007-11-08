@@ -19,9 +19,9 @@ namespace Omnibot
 		static bool InitBotInterface();
 		static void ShutdownBotInterface();
 		static void UpdateBotInterface();
-		static void Bot_SendTrigger(TriggerInfo *_triggerInfo);
 		static void OmnibotCommand();
 
+		static void Trigger(CBaseEntity *_ent, CBaseEntity *_activator, const char *_tagname, const char *_action);
 	private:
 
 	};
