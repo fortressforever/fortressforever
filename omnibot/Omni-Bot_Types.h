@@ -290,6 +290,11 @@ typedef struct AABB_t
 				m_Maxs[i] = _pt[i];
 		}
 	}
+	void Expand(const AABB_t &_bbox)
+	{
+		Expand(_bbox.m_Mins);
+		Expand(_bbox.m_Maxs);
+	}
 	bool Intersects(const AABB_t &_bbox) const
 	{
 		for (int i = 0; i < 3; i++)
