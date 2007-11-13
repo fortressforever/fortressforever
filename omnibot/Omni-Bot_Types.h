@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-08-26 19:36:45 -0700 (Sun, 26 Aug 2007) $
-// $LastChangedRevision: 2137 $
+// $LastChangedBy: drevil $
+// $LastChangedDate: 2007-11-08 23:05:03 -0800 (Thu, 08 Nov 2007) $
+// $LastChangedRevision: 2201 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -462,6 +462,8 @@ typedef struct AABB_t
 //		BOT_BUTTON_BACK - If the bot is pressing the backward key.
 //		BOT_BUTTON_RSTRAFE - If the bot is pressing right strafe.
 //		BOT_BUTTON_LSTRAFE - If the bot is pressing left strafe.
+//		BOT_BUTTON_MOVEUP - Move up, typically a ladder
+//		BOT_BUTTON_MOVEDN - Move down, typically a ladder
 //		BOT_BUTTON_RELOAD - If the bot is pressing reload.
 //		BOT_BUTTON_SPRINT - If the bot wants to sprint.
 //		BOT_BUTTON_DROP - If the bot wants to drop current item.
@@ -482,6 +484,8 @@ typedef enum eButtonFlags
 	BOT_BUTTON_BACK,
 	BOT_BUTTON_RSTRAFE,
 	BOT_BUTTON_LSTRAFE,
+	BOT_BUTTON_MOVEUP,
+	BOT_BUTTON_MOVEDN,
 	BOT_BUTTON_RELOAD,
 	BOT_BUTTON_SPRINT,
 	BOT_BUTTON_DROP,
