@@ -803,6 +803,11 @@ namespace Omnibot
 				cmd.sidemove = vRight.Dot(vMoveDir) * pPlayer->MaxSpeed();
 				cmd.upmove = worldUp.Dot(vMoveDir) * pPlayer->MaxSpeed();
 
+				if(_input.m_ButtonFlags.CheckFlag(BOT_BUTTON_MOVEUP))
+					cmd.upmove = 127;
+				else if(_input.m_ButtonFlags.CheckFlag(BOT_BUTTON_MOVEDN))
+					cmd.upmove = -127;
+
 				if(cmd.sidemove > 0)
 					cmd.buttons |= IN_MOVERIGHT;
 				else if(cmd.sidemove < 0)
