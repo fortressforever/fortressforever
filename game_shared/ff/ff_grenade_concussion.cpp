@@ -16,6 +16,7 @@
 #include "beam_flags.h"
 #include "Sprite.h"
 #include "model_types.h"
+#include "IEffects.h"
 
 #ifdef GAME_DLL
 	#include "ff_player.h"
@@ -163,6 +164,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 		data.m_flRadius = GetGrenadeRadius();
 		
 		DispatchEffect(CONCUSSION_EFFECT, data);
+		g_pEffects->EnergySplash(GetAbsOrigin(), Vector(0, 0, 1.0f), true);
 
 		//Need this so they make ragdolls go flying.
 		Vector vecAbsOrigin = GetAbsOrigin();

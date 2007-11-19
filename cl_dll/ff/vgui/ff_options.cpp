@@ -1013,3 +1013,41 @@ void CFFOptionsPanel::SetVisible(bool state)
 
 	BaseClass::SetVisible(state);
 }
+
+const char szSplashUrl[] = "http://www.madabouthats.org/misc/splash.php?v=1.11";
+
+class SplashHTML : public HTML
+{
+	DECLARE_CLASS_SIMPLE(SplashHTML, HTML);
+
+public:
+	SplashHTML(Panel *parent, const char *name, bool allowJavaScript = false) : HTML(parent, name, allowJavaScript) {}
+
+	void OnFinishURL(const char *url)
+	{
+		BaseClass::OnFinishURL(url);
+
+		// The page we have ended up at isn't the original splash page
+		// This means that we've been redirected to a page that we should display
+		if (Q_strncmp(url, szSplashUrl, sizeof(szSplashUrl)) != 0)
+		{
+			GetParent()->SetVisible(true);
+			RequestFocus();
+			GetParent()->MoveToFront();
+		}
+	}
+};
+
+CFFSplashPanel::CFFSplashPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFSplashPanel")
+{
+	HTML *h = new SplashHTML(this, "FFSplashPanelHTML");
+	h->OpenURL(szSplashUrl);
+	h->SetVisible(true);
+
+	SetParent(parent);
+	SetSizeable(false);
+
+	LoadControlSettings("resource/ui/FFSplash.res");
+};
+
+DEFINE_GAMEUI(CFFSplash, CFFSplashPanel, ffsplash);

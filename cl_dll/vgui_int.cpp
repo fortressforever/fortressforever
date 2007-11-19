@@ -186,6 +186,7 @@ void VGui_CreateGlobalPanels( void )
 	// --> Mirv: Create extra gameui panels
 	ffoptions->Create(uiParent);
 	ffgamemodes->Create(uiParent);
+	ffsplash->Create(uiParent);
 	// <-- Mirv
 }
 
@@ -212,6 +213,7 @@ void VGui_Shutdown()
 	// --> Mirv: Destroy extra gameui panels
 	ffoptions->Destroy();
 	ffgamemodes->Destroy();
+	ffsplash->Destroy();
 	// <-- Mirv
 
 	if ( g_pClientMode )
