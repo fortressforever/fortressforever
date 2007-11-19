@@ -21,6 +21,7 @@
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/PropertySheet.h>
 #include <vgui_controls/PropertyPage.h>
+#include <vgui_controls/HTML.h>
 #include "ff_gameui.h"
 
 //using namespace vgui;
@@ -63,5 +64,22 @@ private:
 };
 
 DECLARE_GAMEUI(CFFOptions, CFFOptionsPanel, ffoptions);
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Fortress Forever options
+//-----------------------------------------------------------------------------
+class CFFSplashPanel : public vgui::Frame
+{
+	DECLARE_CLASS_SIMPLE(CFFSplashPanel, vgui::Frame);
+
+public:
+	CFFSplashPanel(vgui::VPANEL parent);
+
+private:
+};
+
+DECLARE_GAMEUI(CFFSplash, CFFSplashPanel, ffsplash);
+
 
 #endif // TESTPANEL_H 

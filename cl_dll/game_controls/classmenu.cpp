@@ -197,6 +197,8 @@ void CClassMenu::ShowPanel(bool bShow)
 
 		// Update straight away
 		Update();
+
+		MoveToFront();
 	}
 	else
 	{

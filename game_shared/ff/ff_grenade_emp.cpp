@@ -16,6 +16,7 @@
 #include "ff_grenade_emp.h"
 #include "ff_utils.h"
 #include "engine/IEngineSound.h"
+#include "IEffects.h"
 
 #ifdef GAME_DLL
 	#include "ff_buildableobjects_shared.h"
@@ -78,7 +79,10 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_emp );
 		data.m_vOrigin = GetAbsOrigin();
 		data.m_flScale = 1.0f;
 
+		Vector vecUp(0, 0, 1.0f);
+
 		DispatchEffect(EMP_EFFECT, data);
+		g_pEffects->Sparks(GetAbsOrigin(), 20, 10, &vecUp);
 
 		float radius = GetGrenadeRadius();
 

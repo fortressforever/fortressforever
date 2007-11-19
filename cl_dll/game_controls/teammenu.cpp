@@ -356,6 +356,8 @@ void CTeamMenu::ShowPanel(bool bShow)
 		SetEnabled(true);
 
 		Update();
+
+		MoveToFront();
 	}
 	else
 	{
