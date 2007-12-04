@@ -1250,6 +1250,10 @@ void C_FFPlayer::Spawn( void )
 		m_bFirstSpawn = false;
 	}
 
+	// Jiggles: The rest is only run on the local player
+	if ( !IsLocalPlayer() )
+		return;
+
 	m_flNextCloak = 0.0f;
 
 	// Bug #0001448: Spy menu stuck on screen.  |----> Defrag
