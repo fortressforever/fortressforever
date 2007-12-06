@@ -239,7 +239,7 @@ CFFBuildableObject::CFFBuildableObject( void )
 
 /**
 @fn ~CFFBuildableObject
-@brief Deconstructor
+@brief Destructor
 @return N/A
 */
 CFFBuildableObject::~CFFBuildableObject( void )

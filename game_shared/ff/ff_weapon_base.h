@@ -36,6 +36,7 @@ class CFFPlayer;
 #define AMMO_ROCKETS			"AMMO_ROCKETS"	// rpg
 #define AMMO_CELLS				"AMMO_CELLS"	// for building dispenser, sentry gun
 #define AMMO_DETPACK			"AMMO_DETPACK"	// for "building" detpacks
+#define AMMO_MANCANNON			"AMMO_MANCANNON"	// for "building" man cannons
 #define AMMO_GREN1				"AMMO_GREN1"	// gren1
 #define AMMO_GREN2				"AMMO_GREN2"	// gren2
 

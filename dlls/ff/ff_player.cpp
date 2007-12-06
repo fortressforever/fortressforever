@@ -338,6 +338,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hDispenser ) ),
 	SendPropEHandle( SENDINFO( m_hSentryGun ) ),
 	SendPropEHandle( SENDINFO( m_hDetpack ) ),
+	SendPropEHandle( SENDINFO( m_hManCannon ) ),
 	SendPropInt( SENDINFO( m_bBuilding ) ),
 	SendPropInt( SENDINFO( m_iCurBuild ) ),
 
@@ -464,7 +465,8 @@ CFFPlayer::CFFPlayer()
 	m_iCurBuild = FF_BUILD_NONE;
 	m_hDispenser = NULL;
 	m_hSentryGun = NULL;
-	m_hDetpack = NULL;	
+	m_hDetpack = NULL;
+	m_hManCannon = NULL;
 	m_flBuildTime = 0.0f;
 
 	m_flLastScoutRadarUpdate = 0.0f;
@@ -1560,6 +1562,7 @@ void CFFPlayer::SetupClassVariables()
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_SHELLS)] = pPlayerClassInfo.m_iMaxShells;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_ROCKETS)] = pPlayerClassInfo.m_iMaxRockets;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_DETPACK)] = pPlayerClassInfo.m_iMaxDetpack;
+	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_MANCANNON)] = pPlayerClassInfo.m_iMaxManCannon;
 
 	// Can I get some freakin ammo please?
 	// Maybe some sharks with freakin laser beams?
@@ -2151,6 +2154,7 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 		GiveAmmo(300, AMMO_ROCKETS);
 		GiveAmmo(300, AMMO_CELLS);
 		GiveAmmo(300, AMMO_DETPACK);
+		GiveAmmo(300, AMMO_MANCANNON);
 		AddPrimaryGrenades( 4 );
 		AddSecondaryGrenades( 4 );
 		SetHealth(m_iMaxHealth);
@@ -3215,7 +3219,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 		// See if the user has appropriate ammo
 		if( ( ( m_iWantBuild == FF_BUILD_DISPENSER ) && ( GetAmmoCount( AMMO_CELLS ) < 100 ) ) ||
 			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && ( GetAmmoCount( AMMO_CELLS ) < 130 ) ) ||
-			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( GetAmmoCount( AMMO_DETPACK ) < 1 ) ) )
+			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( GetAmmoCount( AMMO_DETPACK ) < 1 ) ) ||
+			( ( m_iWantBuild == FF_BUILD_MANCANNON ) && ( GetAmmoCount( AMMO_MANCANNON ) < 1 ) ) )
 		{
 			Omnibot::Notify_Build_NotEnoughAmmo(this, m_iWantBuild);
 
@@ -3224,6 +3229,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO" ); break;
 				case FF_BUILD_SENTRYGUN: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_NOTENOUGHAMMO" ); break;
 				case FF_BUILD_DETPACK: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_NOTENOUGHAMMO" ); break;
+				case FF_BUILD_MANCANNON: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_NOTENOUGHAMMO" ); break;
 			}
 			
 			// Re-initialize
@@ -3365,6 +3371,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 					m_flBuildTime = gpGlobals->curtime + 3.0f; // mulch: bug 0000337: build time 3 seconds for detpack
 
 					Omnibot::Notify_DetpackBuilding(this, pDetpack);
+				}
+				break;
+
+				case FF_BUILD_MANCANNON:
+				{
+					// TODO:
 				}
 				break;
 			}

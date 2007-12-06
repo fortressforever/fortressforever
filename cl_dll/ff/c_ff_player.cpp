@@ -578,6 +578,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropEHandle( RECVINFO( m_hDispenser ) ),
 	RecvPropEHandle( RECVINFO( m_hSentryGun ) ),
 	RecvPropEHandle( RECVINFO( m_hDetpack ) ),
+	RecvPropEHandle( RECVINFO( m_hManCannon ) ),
 	RecvPropInt( RECVINFO( m_bBuilding ) ),
 	RecvPropInt( RECVINFO( m_iCurBuild ) ),
 	// End: Added by Mulchman for building objects and such

@@ -690,6 +690,14 @@ CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Get man cannon
+//-----------------------------------------------------------------------------
+CFFManCannon *CFFPlayer::GetManCannon( void ) const
+{
+	return dynamic_cast<CFFManCannon *>( m_hManCannon.Get() );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 CFFBuildableObject *CFFPlayer::GetBuildable( int iBuildable ) const
@@ -701,6 +709,7 @@ CFFBuildableObject *CFFPlayer::GetBuildable( int iBuildable ) const
 		case FF_BUILD_DISPENSER: pEntity = GetDispenser(); break;
 		case FF_BUILD_SENTRYGUN: pEntity = GetSentryGun(); break;
 		case FF_BUILD_DETPACK: pEntity = GetDetpack(); break;
+		case FF_BUILD_MANCANNON: pEntity = GetManCannon(); break;
 		default: return NULL; break;
 	}
 

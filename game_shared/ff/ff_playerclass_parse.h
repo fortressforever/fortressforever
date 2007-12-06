@@ -9,6 +9,9 @@
 /// REVISIONS
 /// ---------
 /// Mar 30, 2005 Mirv: Initial implementation
+//
+//	12/6/2007, Mulchman:
+//		Added man cannon stuff
 
 #ifndef FF_PLAYERCLASS_PARSE_H
 #define FF_PLAYERCLASS_PARSE_H
@@ -93,6 +96,7 @@ public:
 	int						m_iMaxCells;
 	int						m_iMaxRockets;
 	int						m_iMaxDetpack;
+	int						m_iMaxManCannon;
 };
 
 // The playerclass parse function

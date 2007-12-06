@@ -54,7 +54,7 @@ CFF_InfoScript::CFF_InfoScript( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 CFF_InfoScript::~CFF_InfoScript( void )
 {

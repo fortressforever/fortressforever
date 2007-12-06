@@ -195,7 +195,7 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //----------------------------------------------------------------------------
 CFFWeaponAssaultCannon::~CFFWeaponAssaultCannon() 
 {

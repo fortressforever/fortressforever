@@ -154,7 +154,7 @@ void CHudBuildState::OnTick()
 
 	if (pDispenser) 
 	{
-		if (pDispenser->m_bBuilt == true)
+		if (pDispenser->IsBuilt())
 		{
 			m_bDrawDispenser = true;
 			_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealthPercent(), m_szAmmo, pDispenser->GetAmmoPercent());
