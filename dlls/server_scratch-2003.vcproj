@@ -3786,6 +3786,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath=".\ff\ff_lualib_weapons.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_mancannon.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_mapfilter.cpp">
 			</File>
 			<File
