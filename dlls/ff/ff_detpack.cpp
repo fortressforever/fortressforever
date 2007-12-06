@@ -367,6 +367,12 @@ void CFFDetpack::DoExplosionDamage( void )
 			pPlayer = ToFFPlayer( pSentryGun->m_hOwner.Get() );
 			vecTarget = pSentryGun->GetAbsOrigin() + Vector( 0, 0, 16 );
 		}
+		else if( pEntity->Classify() == CLASS_MANCANNON )
+		{
+			CFFManCannon *pManCannon = static_cast<CFFManCannon *>( pEntity );
+			pPlayer = ToFFPlayer( pManCannon->m_hOwner.Get() );
+			vecTarget = pManCannon->GetAbsOrigin() + Vector( 0, 0, 16 );
+		}
 		else
 		{
 			// Not a player, dispenser, or SG. Still need to give out damage

@@ -185,7 +185,7 @@ void CHudCrosshairInfo::OnTick( void )
 			else if( tr.m_pEnt->Classify() == CLASS_SENTRYGUN )
 			{
 				C_FFSentryGun *pSentryGun = ( C_FFSentryGun * )tr.m_pEnt;
-				if( !pSentryGun->m_bBuilt )
+				if( !pSentryGun->IsBuilt() )
 					return;					
 
 				if( pSentryGun->IsAlive() )
@@ -198,7 +198,7 @@ void CHudCrosshairInfo::OnTick( void )
 			else if( tr.m_pEnt->Classify() == CLASS_DISPENSER )
 			{
 				C_FFDispenser *pDispenser = ( C_FFDispenser * )tr.m_pEnt;
-				if( !pDispenser->m_bBuilt )
+				if( !pDispenser->IsBuilt() )
 					return;
 
 				if( pDispenser->IsAlive() )

@@ -61,7 +61,7 @@ CFFModelGlyph::CFFModelGlyph( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 CFFModelGlyph::~CFFModelGlyph( void )
 {

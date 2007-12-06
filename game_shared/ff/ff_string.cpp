@@ -50,7 +50,7 @@ CFFString::CFFString( const CFFString& hRHS )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 CFFString::~CFFString( void )
 {

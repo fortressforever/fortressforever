@@ -63,7 +63,7 @@ C_TeamColorMaterialProxy::C_TeamColorMaterialProxy( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 C_TeamColorMaterialProxy::~C_TeamColorMaterialProxy( void )
 {
@@ -249,7 +249,7 @@ C_FFPlayerVelocityMaterialProxy::C_FFPlayerVelocityMaterialProxy( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 C_FFPlayerVelocityMaterialProxy::~C_FFPlayerVelocityMaterialProxy( void )
 {
@@ -315,7 +315,7 @@ C_FFLocalPlayerVelocityMaterialProxy::C_FFLocalPlayerVelocityMaterialProxy( void
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 C_FFLocalPlayerVelocityMaterialProxy::~C_FFLocalPlayerVelocityMaterialProxy( void )
 {
@@ -366,7 +366,7 @@ C_FFWeaponVelocityMaterialProxy::C_FFWeaponVelocityMaterialProxy( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 C_FFWeaponVelocityMaterialProxy::~C_FFWeaponVelocityMaterialProxy( void )
 {

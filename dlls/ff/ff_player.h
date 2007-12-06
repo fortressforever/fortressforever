@@ -31,6 +31,7 @@ class CFFDetpack;
 class CFFDispenser;
 class CFFSentryGun;
 class CFFSevTest;
+class CFFManCannon;
 
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
@@ -257,6 +258,7 @@ public:
 	int GetMaxNails( void ) const { return GetFFClassData().m_iMaxNails; }
 	int GetMaxRockets( void ) const { return GetFFClassData().m_iMaxRockets; }
 	int GetMaxDetpack( void ) const { return GetFFClassData().m_iMaxDetpack; }
+	int GetMaxManCannon( void ) const { return GetFFClassData().m_iMaxManCannon; }
 
 	// These "needs" functions will return however much the player needs
 	// of the item to reach the max capacity. It'll return 0 if they don't
@@ -267,6 +269,7 @@ public:
 	int NeedsNails( void ) const { return GetMaxNails() - GetAmmoCount( AMMO_NAILS ); }
 	int NeedsRockets( void ) const { return GetMaxRockets() - GetAmmoCount( AMMO_ROCKETS ); }
 	int NeedsDetpack( void ) const { return GetMaxDetpack() - GetAmmoCount( AMMO_DETPACK ); }
+	int NeedsManCannon( void ) const { return GetMaxManCannon() - GetAmmoCount( AMMO_MANCANNON ); }
 	// END: Added by Mulchman for armor stuff
 
 	void	SetLastSpawn( CBaseEntity *pEntity );
@@ -363,6 +366,7 @@ protected:
 	CNetworkHandle( CFFDispenser, m_hDispenser );
 	CNetworkHandle( CFFSentryGun, m_hSentryGun );
 	CNetworkHandle( CFFDetpack, m_hDetpack );
+	CNetworkHandle( CFFManCannon, m_hManCannon );
 	
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
@@ -391,6 +395,7 @@ public:
 	CFFDetpack *GetDetpack( void ) const;
 	CFFDispenser *GetDispenser( void ) const;
 	CFFSentryGun *GetSentryGun( void ) const;
+	CFFManCannon *GetManCannon( void ) const;
 	CFFBuildableObject *GetBuildable( int iBuildable ) const;
 
 	void PreBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***

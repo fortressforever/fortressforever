@@ -1657,6 +1657,7 @@ CAmmoDef* GetAmmoDef()
 		def.AddAmmoType( AMMO_ROCKETS,	DMG_BLAST,	TRACER_LINE, 0, 0,	200/*max carry*/, 1, 0 );
 		def.AddAmmoType( AMMO_CELLS,	DMG_SHOCK,	TRACER_LINE, 0, 0,	200/*max carry*/, 1, 0 );
 		def.AddAmmoType( AMMO_DETPACK,	DMG_BLAST,	TRACER_LINE, 0, 0,	1/*max carry*/, 1, 0 );
+		def.AddAmmoType( AMMO_MANCANNON, DMG_BLAST,	TRACER_LINE, 0, 0,	1/*max carry*/, 1, 0 );
 	}
 
 	return &def;

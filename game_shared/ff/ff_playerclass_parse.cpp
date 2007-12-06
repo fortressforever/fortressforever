@@ -9,6 +9,9 @@
 /// REVISIONS
 /// ---------
 /// Mar 30, 2005 Mirv: Initial implementation
+//
+//	12/6/2007, Mulchman:
+//		Added man cannon stuff
 
 #include "cbase.h"
 #include <KeyValues.h>
@@ -394,6 +397,8 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 				m_iMaxRockets = iVal;
 			else if (Q_strcmp(AMMO_DETPACK, pszAmmo) == 0) 
 				m_iMaxDetpack = iVal;
+			else if (Q_strcmp(AMMO_MANCANNON, pszAmmo) == 0)
+				m_iMaxManCannon = iVal;
 
 			iMaxNumAmmos++;
 		}

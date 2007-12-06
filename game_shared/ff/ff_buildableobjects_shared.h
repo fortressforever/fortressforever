@@ -18,6 +18,9 @@
 //
 // 9/16/2006, Mulchman:
 //		Re-jigged the building process, hopefully it's a little better now
+//
+//	12/6/2007, Mulchman:
+//		Added man cannon stuff
 
 #ifndef FF_BUILDABLEOBJECTS_SHARED_H
 #define FF_BUILDABLEOBJECTS_SHARED_H
@@ -41,6 +44,7 @@
 	#define CFFSentryGun C_FFSentryGun
 	#define CFFDetpack C_FFDetpack
 	#define CFFSevTest C_FFSevTest
+	#define CFFManCannon C_FFManCannon
 #else
 	#include "ff_player.h"
 	#include "ff_team.h"
@@ -66,6 +70,10 @@
 #define FF_SENTRYGUN_UNBUILD_SOUND			"Sentry.unbuild"
 #define FF_SENTRYGUN_EXPLODE_SOUND			"Sentry.Explode"
 
+#define FF_MANCANNON_MODEL					"models/buildable/detpack/detpack.mdl"
+#define FF_MANCANNON_BUILD_SOUND			"Detpack.Build"
+#define FF_MANCANNON_EXPLODE_SOUND			"Detpack.Explode"
+
 //#define FF_SENTRYGUN_AIMSPHERE_MODEL		"models/buildable/sg/sentrygun_aimsphere.mdl"
 
 #define FF_SEVTEST_MODEL					"models/weapons/w_missile.mdl"
@@ -83,6 +91,7 @@
 #define FF_BUILD_DISPENSER	1
 #define FF_BUILD_SENTRYGUN	2
 #define FF_BUILD_DETPACK	3
+#define FF_BUILD_MANCANNON	4
 
 // The *_BUILD_DIST means how far in front of the player
 // the object is built
@@ -91,6 +100,10 @@
 #define FF_BUILD_DET_BUILD_DIST		42.0f
 #define FF_BUILD_DET_RAISE_VAL		48.0f
 #define FF_BUILD_DET_DUCKED_RAISE_VAL	24.0f
+
+#define FF_BUILD_MC_BUILD_DIST		42.0f
+#define FF_BUILD_MC_RAISE_VAL		48.0f
+#define FF_BUILD_MC_DUCKED_RAISE_VAL	24.0f
 
 #define FF_BUILD_DISP_STRING_LEN	256
 
@@ -106,29 +119,36 @@
 #define FF_DETPACK_MINS		Vector( -14, -14, 0 )
 #define FF_DETPACK_MAXS		Vector( 14, 14, 11 )
 
+#define FF_MANCANNON_MINS	Vector( -14, -14, 0 )
+#define FF_MANCANNON_MAXS	Vector( 14, 14, 11 )
+
 #define FF_SOUND_BUILD		0	// Don't change these two values
 #define FF_SOUND_EXPLODE	1
 
 // Currently only the server uses these...
 #ifdef CLIENT_DLL 
 #else
-	extern const char *g_pszFFDispenserModels[ ];
-	extern const char *g_pszFFDispenserGibModels[ ];
-	extern const char *g_pszFFDispenserSounds[ ];
+	extern const char *g_pszFFDispenserModels[];
+	extern const char *g_pszFFDispenserGibModels[];
+	extern const char *g_pszFFDispenserSounds[];
 
-	extern const char *g_pszFFDetpackModels[ ];
-	extern const char *g_pszFFDetpackGibModels[ ];
-	extern const char *g_pszFFDetpackSounds[ ];
+	extern const char *g_pszFFDetpackModels[];
+	extern const char *g_pszFFDetpackGibModels[];
+	extern const char *g_pszFFDetpackSounds[];
 
-	extern const char *g_pszFFSentryGunModels[ ];
-	extern const char *g_pszFFSentryGunGibModels[ ];
-	extern const char *g_pszFFSentryGunSounds[ ];
+	extern const char *g_pszFFSentryGunModels[];
+	extern const char *g_pszFFSentryGunGibModels[];
+	extern const char *g_pszFFSentryGunSounds[];
 
-	extern const char *g_pszFFSevTestModels[ ];
-	extern const char *g_pszFFSevTestGibModels[ ];
-	extern const char *g_pszFFSevTestSounds[ ];
+	extern const char *g_pszFFSevTestModels[];
+	extern const char *g_pszFFSevTestGibModels[];
+	extern const char *g_pszFFSevTestSounds[];
 
-	extern const char *g_pszFFGenGibModels[ ];
+	extern const char *g_pszFFGenGibModels[];
+
+	extern const char *g_pszFFManCannonModels[];
+	extern const char *g_pszFFManCannonGibModels[];
+	extern const char *g_pszFFManCannonSounds[];
 #endif
 
 enum BuildInfoResult_t
@@ -226,7 +246,7 @@ public:
 
 	// --> shared
 	CFFBuildableObject();
-	~CFFBuildableObject();
+	virtual ~CFFBuildableObject();
 	
 	virtual bool IsAlive( void ) { return true; }
 	virtual bool IsPlayer( void ) const { return false; }
@@ -238,6 +258,7 @@ public:
 	CNetworkHandle( CBaseEntity, m_hOwner );
 
 	CFFPlayer *GetOwnerPlayer( void );
+	CFFPlayer *GetPlayerOwner( void ) { return GetOwnerPlayer(); } // I always want to type it this way instead of the one that already exists
 	CFFTeam *GetOwnerTeam( void );
 	int GetOwnerTeamId( void );
 
@@ -258,9 +279,7 @@ public:
 	virtual int	GetHealth( void ) const { return m_iHealth; }
 	virtual int	GetMaxHealth( void ) const { return m_iMaxHealth; }
 
-	bool CheckForOwner( void ) { return ( m_hOwner.Get() ); }
-
-	bool m_bBuilt;	
+	bool CheckForOwner( void ) { return ( m_hOwner.Get() ); }		
 
 	// Stuff for the "can't build" type glyphs
 	virtual void SetClientSideOnly( bool bValue ) { m_bClientSideOnly = bValue; }
@@ -268,6 +287,7 @@ public:
 protected:
 	bool				m_bClientSideOnly;
 	BuildInfoResult_t	m_hBuildError;
+	bool m_bBuilt;
 
 #else
 public:
@@ -276,9 +296,9 @@ public:
 	
 	virtual Vector BodyTarget( const Vector &posSrc, bool bNoisy = false ) { return WorldSpaceCenter(); }
 	
-	void GoLive( void );
-	void Detonate( void );
-	void RemoveQuietly( void );
+	virtual void GoLive( void );
+	virtual void Detonate( void );
+	virtual void RemoveQuietly( void );
 
 	virtual bool CanSabotage() const { return false; }
 	virtual bool IsSabotaged() const { return false; }
@@ -423,7 +443,7 @@ public:
 
 	// --> shared
 	CFFSevTest( void );
-	~CFFSevTest( void );
+	virtual ~CFFSevTest( void );
 	virtual bool BlocksLOS( void ) const { return false; }
 	// <-- shared
 
@@ -462,7 +482,7 @@ public:
 
 	// --> shared
 	CFFDetpack( void );
-	~CFFDetpack( void );
+	virtual ~CFFDetpack( void );
 
 	virtual bool	BlocksLOS( void ) const { return false; }
 	virtual Class_T Classify( void ) { return CLASS_DETPACK; }
@@ -514,7 +534,7 @@ public:
 
 	// --> shared
 	CFFDispenser( void );
-	~CFFDispenser( void );
+	virtual ~CFFDispenser( void );
 
 	virtual Class_T Classify( void ) { return CLASS_DISPENSER; }
 
@@ -631,7 +651,7 @@ public:
 
 	// --> shared
 	CFFSentryGun( void );
-	~CFFSentryGun( void );
+	virtual ~CFFSentryGun( void );
 	int GetRockets( void ) const  { return m_iRockets; };
 	int GetShells( void ) const  { return m_iShells; };
 	int GetRocketsPercent( void ) const  { return (int) ((float) m_iRockets / (float) m_iMaxRockets) * 100.0f; };
@@ -787,6 +807,50 @@ public:
 #endif
 };
 
+//=============================================================================
+//
+//	class CFFManCannon / C_FFManCannon
+//
+//=============================================================================
+class CFFManCannon : public CFFBuildableObject
+{
+public:
+	DECLARE_CLASS( CFFManCannon, CFFBuildableObject )
+
+#ifdef CLIENT_DLL 
+	DECLARE_CLIENTCLASS()
+#else
+	DECLARE_SERVERCLASS()
+	DECLARE_DATADESC()
+#endif
+
+	// --> shared
+	CFFManCannon( void );
+	virtual ~CFFManCannon( void );
+
+	virtual Class_T Classify( void ) { return CLASS_MANCANNON; }
+	// <-- shared
+
+#ifdef CLIENT_DLL
+	virtual void OnDataChanged( DataUpdateType_t updateType );
+#else
+	virtual void Spawn( void );
+	virtual void GoLive( void );
+
+	void OnObjectTouch( CBaseEntity *pOther );
+
+	virtual bool CanSabotage( void ) const { return false; }
+	virtual bool IsSabotaged( void ) const { return false; }
+	virtual void Sabotage( CFFPlayer *pSaboteur ) { }
+	virtual void MaliciousSabotage( CFFPlayer *pSaboteur ) { }
+
+	virtual void Detonate( void );
+	virtual void DoExplosionDamage( void );
+
+	static CFFManCannon *Create( const Vector& vecOrigin, const QAngle& vecAngles, CBaseEntity *pentOwner = NULL );
+#endif
+};
+
 #ifdef GAME_DLL
 //=============================================================================
 //
@@ -821,7 +885,8 @@ inline bool FF_IsBuildableObject( CBaseEntity *pEntity )
 
 	return( ( pEntity->Classify() == CLASS_DISPENSER ) ||
 		( pEntity->Classify() == CLASS_SENTRYGUN ) ||
-		( pEntity->Classify() == CLASS_DISPENSER ) );
+		( pEntity->Classify() == CLASS_DISPENSER ) ||
+		( pEntity->Classify() == CLASS_MANCANNON ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -855,6 +920,17 @@ inline bool FF_IsDetpack( CBaseEntity *pEntity )
 		return false;
 
 	return pEntity->Classify() == CLASS_DETPACK;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is the entity a man cannon?
+//-----------------------------------------------------------------------------
+inline bool FF_IsManCannon( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+
+	return pEntity->Classify() == CLASS_MANCANNON;
 }
 
 //-----------------------------------------------------------------------------
@@ -900,6 +976,17 @@ inline CFFDetpack *FF_ToDetpack( CBaseEntity *pEntity )
 		return NULL;
 
 	return dynamic_cast< CFFDetpack * >( pEntity );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Try and convert entity to a man cannon
+//-----------------------------------------------------------------------------
+inline CFFManCannon *FF_ToManCannon( CBaseEntity *pEntity )
+{
+	if( !pEntity || !FF_IsManCannon( pEntity ) )
+		return NULL;
+
+	return dynamic_cast< CFFManCannon * >( pEntity );
 }
 
 #endif // FF_BUILDABLEOBJECTS_SHARED_H

@@ -62,7 +62,7 @@ CFFRadioTagData::CFFRadioTagData( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 CFFRadioTagData::~CFFRadioTagData( void )
 {

@@ -20,6 +20,9 @@
 //
 // 9/16/2006, Mulchman:
 //		Re-jigged the building process, hopefully it's a little better now
+//
+//	12/6/2007, Mulchman:
+//		Added man cannon stuff
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
@@ -57,6 +60,7 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 		case FF_BUILD_DISPENSER: flBuildDist = FF_BUILD_DISP_BUILD_DIST; flOffset = -22.0f; break;
 		case FF_BUILD_SENTRYGUN: flBuildDist = FF_BUILD_SG_BUILD_DIST; flOffset = -22.0f; break;
 		case FF_BUILD_DETPACK: flBuildDist = FF_BUILD_DET_BUILD_DIST; break;
+		case FF_BUILD_MANCANNON: flBuildDist = FF_BUILD_MC_BUILD_DIST; break;
 	}
 
 	// Player building the object
@@ -122,6 +126,13 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 		else
 			break;
 		return;
+	case FF_BUILD_MANCANNON:
+		if( pPlayer->GetManCannon() )
+			m_BuildResult = BUILD_ALREADYBUILT;
+		else if( pPlayer->GetAmmoCount( AMMO_MANCANNON ) < 1 )
+			m_BuildResult = BUILD_NEEDAMMO;
+		else
+			break;
 	}
 
 	// For the sg, because its so large, the hull (when doing the trace later) will stick
@@ -154,7 +165,7 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 		return;
 
 	// If we're dealing w/ a detpack then we're finished here
-	if( m_iBuildObject == FF_BUILD_DETPACK )
+	if( (m_iBuildObject == FF_BUILD_DETPACK) || (m_iBuildObject == FF_BUILD_MANCANNON) )
 	{
 		m_BuildResult = BUILD_ALLOWED;
 		return;
@@ -176,6 +187,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay( void )
 		case FF_BUILD_DISPENSER: vecMins = FF_DISPENSER_MINS; vecMaxs = FF_DISPENSER_MAXS; break;
 		case FF_BUILD_SENTRYGUN: vecMins = FF_SENTRYGUN_MINS; vecMaxs = FF_SENTRYGUN_MAXS; break;
 		case FF_BUILD_DETPACK:   vecMins = FF_DETPACK_MINS;   vecMaxs = FF_DETPACK_MAXS;   break;
+		case FF_BUILD_MANCANNON: vecMins = FF_MANCANNON_MINS; vecMaxs = FF_MANCANNON_MAXS; break;
 	}
 
 	// We're going to do this test 3 times... building on an incline always kills us
@@ -512,6 +524,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 
 		// Shouldn't get here w/ the detpack
 		case FF_BUILD_DETPACK: Assert( 0 ); return BUILD_ALLOWED; break;
+		case FF_BUILD_MANCANNON: Assert( 0 ); return BUILD_ALLOWED; break;
 
 		default: AssertMsg( 0, "Invalid buildable!" ); return BUILD_ERROR; break;
 	}
@@ -633,8 +646,33 @@ CFFDispenser::CFFDispenser( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 CFFDispenser::~CFFDispenser( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+CFFManCannon::CFFManCannon( void )
+{
+#ifdef GAME_DLL
+	// Overwrite the base class stubs
+	m_ppszModels = g_pszFFManCannonModels;
+	m_ppszGibModels = g_pszFFManCannonGibModels;
+	m_ppszSounds = g_pszFFManCannonSounds;
+
+	m_bUsePhysics = true;
+#endif
+
+	// Health
+	m_iMaxHealth = m_iHealth = 100;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Destructor
+//-----------------------------------------------------------------------------
+CFFManCannon::~CFFManCannon( void )
 {
 }

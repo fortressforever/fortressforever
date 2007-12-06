@@ -180,7 +180,7 @@ CFFMiniTurretLaserBeam::CFFMiniTurretLaserBeam( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 CFFMiniTurretLaserBeam::~CFFMiniTurretLaserBeam( void )
 {
@@ -379,7 +379,7 @@ CFFMiniTurret::CFFMiniTurret( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 CFFMiniTurret::~CFFMiniTurret( void )
 {

@@ -46,6 +46,9 @@
 //
 //	05/10/2006, Mulchman:
 //		Add radio tags to dispenser
+//
+//	12/6/2007, Mulchman:
+//		Added man cannon stuff
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
@@ -124,7 +127,7 @@ C_FFBuildableObject::C_FFBuildableObject( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 C_FFBuildableObject::~C_FFBuildableObject( void )
 {
@@ -283,7 +286,7 @@ C_FFSevTest::C_FFSevTest( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 C_FFSevTest::~C_FFSevTest( void )
 {
@@ -325,7 +328,7 @@ C_FFDetpack::C_FFDetpack( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 C_FFDetpack::~C_FFDetpack( void )
 {
@@ -401,21 +404,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFDispenser, DT_FFDispenser, CFFDispenser )
 	RecvPropInt( RECVINFO( m_iNails ) ),
 	RecvPropInt( RECVINFO( m_iRockets ) ),
 	RecvPropInt( RECVINFO( m_iArmor ) ),
-END_RECV_TABLE( )
-
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-//C_FFDispenser::C_FFDispenser( void )
-//{
-//}
-
-//-----------------------------------------------------------------------------
-// Purpose: Deconstructor
-//-----------------------------------------------------------------------------
-//C_FFDispenser::~C_FFDispenser( void )
-//{
-//}
+END_RECV_TABLE()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -496,7 +485,7 @@ C_FFSentryGun::C_FFSentryGun( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Deconstructor
+// Purpose: Destructor
 //-----------------------------------------------------------------------------
 C_FFSentryGun::~C_FFSentryGun( void )
 {
@@ -627,3 +616,66 @@ int C_FFSentryGun::DrawModel(int flags)
 
 	return nRet;
 }
+
+//=============================================================================
+//
+//	class C_FFManCannon
+//
+//=============================================================================
+
+#if defined( CFFManCannon )
+	#undef CFFManCannon
+#endif
+
+IMPLEMENT_CLIENTCLASS_DT( C_FFManCannon, DT_FFManCannon, CFFManCannon )
+END_RECV_TABLE()
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_FFManCannon::OnDataChanged( DataUpdateType_t updateType )
+{
+	// NOTE: We MUST call the base classes' implementation of this function
+	BaseClass::OnDataChanged( updateType );
+
+	if( updateType == DATA_UPDATE_CREATED )
+	{
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
+	}
+}
+
+////-----------------------------------------------------------------------------
+//// Purpose: Creates a client side entity using the dispenser model
+////-----------------------------------------------------------------------------
+//C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin, const QAngle& vecAngles )
+//{
+//	C_FFDispenser *pDispenser = new C_FFDispenser;
+//
+//	if( !pDispenser )
+//		return NULL;
+//
+//	if( !pDispenser->InitializeAsClientEntity( FF_DISPENSER_MODEL, RENDER_GROUP_TRANSLUCENT_ENTITY ) )
+//	{
+//		pDispenser->Release( );
+//
+//		return NULL;
+//	}
+//
+//	pDispenser->SetAbsOrigin( vecOrigin );
+//	pDispenser->SetLocalAngles( vecAngles );
+//	pDispenser->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+//	pDispenser->SetRenderMode( kRenderTransAlpha );
+//	pDispenser->SetRenderColorA( ( byte )110 );
+//	
+//	if(ffdev_pulsebuildable.GetBool())
+//		pDispenser->m_nRenderFX = g_BuildableRenderFx;
+//
+//	// Since this is client side only, give it an owner just in case
+//	// someone accesses the m_hOwner.Get() and wants to return something
+//	// that isn't NULL!
+//	pDispenser->m_hOwner = ( C_BaseEntity * )C_BasePlayer::GetLocalPlayer();
+//	pDispenser->SetClientSideOnly( true );
+//	pDispenser->SetNextClientThink( CLIENT_THINK_ALWAYS );
+//
+//	return pDispenser;
+//}

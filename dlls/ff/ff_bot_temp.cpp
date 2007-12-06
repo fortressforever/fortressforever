@@ -790,6 +790,7 @@ void Bot_HandleSendCmd( CFFBot *pBot )
 			pBot->GiveAmmo( 200, AMMO_NAILS );
 			pBot->GiveAmmo( 200, AMMO_ROCKETS );
 			pBot->GiveAmmo( 200, AMMO_DETPACK );
+			pBot->GiveAmmo( 200, AMMO_MANCANNON );
 		}
 
 		if( Q_strcmp( "disguise12", bot_sendcmd.GetString() ) == 0 )
