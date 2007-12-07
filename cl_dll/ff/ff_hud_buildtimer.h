@@ -38,8 +38,8 @@ private:
 	CPanelAnimationVarAliasType(Color, bar_color, "bar_color", "255 255 255", "color");
 
 	CHudTexture	*m_pHudElementTexture;
-	CHudTexture *m_pHudBuildIcons[4];
-	char *m_pszBuildLabels[4];
+	CHudTexture *m_pHudBuildIcons[5];
+	char *m_pszBuildLabels[5];
 
 public:
 	CHudBuildTimer(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudBuildTimer") 
