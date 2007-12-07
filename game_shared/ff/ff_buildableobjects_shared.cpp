@@ -194,7 +194,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay( void )
 	bool bValid = false;
 
 	// Detpack was climbing up short walls and stuff, nice! But a bug!
-	int iIterations = ( m_iBuildObject == FF_BUILD_DETPACK ) ? 1 : 3;
+	int iIterations = ( (m_iBuildObject == FF_BUILD_DETPACK) || (m_iBuildObject == FF_BUILD_MANCANNON) ) ? 1 : 3;
 
 	for( int i = 0; ( i < iIterations ) && !bValid; i++ )
 	{
