@@ -662,7 +662,7 @@ C_FFManCannon *C_FFManCannon::CreateClientSideManCannon( const Vector& vecOrigin
 	if( !pManCannon )
 		return NULL;
 
-	if( !pManCannon->InitializeAsClientEntity( FF_DISPENSER_MODEL, RENDER_GROUP_TRANSLUCENT_ENTITY ) )
+	if( !pManCannon->InitializeAsClientEntity( FF_MANCANNON_MODEL, RENDER_GROUP_TRANSLUCENT_ENTITY ) )
 	{
 		pManCannon->Release();
 
