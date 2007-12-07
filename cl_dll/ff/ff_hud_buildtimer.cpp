@@ -62,6 +62,7 @@ void CHudBuildTimer::VidInit()
 	ADD_BUILD_ICON(1, "vgui/hud_buildable_dispenser", "#FF_BUILDING_DISPENSER");
 	ADD_BUILD_ICON(2, "vgui/hud_buildable_sentry", "#FF_BUILDING_SENTRY");
 	ADD_BUILD_ICON(3, "vgui/hud_buildable_detpack", "#FF_BUILDING_DETPACK");
+	ADD_BUILD_ICON(4, "vgui/hud_buildable_detpack", "#FF_BUILDING_MANCANNON");
 }
 
 void CHudBuildTimer::Init() 

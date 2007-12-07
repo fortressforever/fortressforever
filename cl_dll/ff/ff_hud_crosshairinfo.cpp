@@ -207,6 +207,19 @@ void CHudCrosshairInfo::OnTick( void )
 					pHitPlayer = ToFFPlayer( pDispenser->m_hOwner.Get() );
 				}					
 			}
+			// If we hit a man cannon
+			else if( tr.m_pEnt->Classify() == CLASS_MANCANNON )
+			{
+				C_FFManCannon *pManCannon = (C_FFManCannon *)tr.m_pEnt;
+				if( !pManCannon->IsBuilt() )
+					return;
+
+				if( pManCannon->IsAlive() )
+				{
+					bBuildable = true;
+					pHitPlayer = ToFFPlayer( pManCannon->m_hOwner.Get() );
+				}
+			}
 
 			// If the players/objects aren't "alive" pHitPlayer will still be NULL
 			// and we'll bail here...
@@ -289,8 +302,15 @@ void CHudCrosshairInfo::OnTick( void )
 						//iFuseTime = ( ( C_FFDetpack * )pBuildable )->GetFuseTime();
 						iArmor = -1;
 					}
+					else if( pBuildable->Classify() == CLASS_MANCANNON )
+					{
+						// TODO: Do whatever other stuff is doing w/ the crosshair
+						iArmor = -1;
+					}
 					else
-							iArmor = -1;
+					{
+						iArmor = -1;
+					}
 				}
 				else if( FFGameRules()->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )
 				{
@@ -303,21 +323,30 @@ void CHudCrosshairInfo::OnTick( void )
 						// Bug #0000463: Hud Crosshair Info - douched
 						//if( bWeEngy )
 						//{
-							C_FFBuildableObject *pBuildable = ( C_FFBuildableObject * )tr.m_pEnt;
+							C_FFBuildableObject *pBuildable = (C_FFBuildableObject *)tr.m_pEnt;
 
 							iHealth = pBuildable->GetHealthPercent();
 								
 							if( pBuildable->Classify() == CLASS_DISPENSER )
-								iArmor = ( ( C_FFDispenser * )pBuildable )->GetAmmoPercent();
+							{
+								iArmor = ((C_FFDispenser *)pBuildable)->GetAmmoPercent();
+							}
 							else if( pBuildable->Classify() == CLASS_SENTRYGUN )
 							{
-								iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
+								iArmor = ((C_FFSentryGun *)pBuildable)->GetAmmoPercent();
 
 								if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
 									iArmor -= 128;
 							}
-							else
+							else if( pBuildable->Classify() == CLASS_MANCANNON )
+							{
+								// TODO: Maybe man cannon's have armor? or some other property we want to show?
 								iArmor = -1;
+							}
+							else
+							{
+								iArmor = -1;
+							}
 						//}
 					}
 					else

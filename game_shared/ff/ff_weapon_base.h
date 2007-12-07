@@ -58,6 +58,7 @@ class CFFPlayer;
 			case FF_BUILD_DISPENSER: pFFPlayer->Command_BuildDispenser(); break; \
 			case FF_BUILD_SENTRYGUN: pFFPlayer->Command_BuildSentryGun(); break; \
 			case FF_BUILD_DETPACK: engine->ClientCommand( pFFPlayer->edict(), "detpack 5" ); break; \
+			case FF_BUILD_MANCANNON: pFFPlayer->Command_BuildManCannon(); break; \
 		} \
 		return; \
 	} \

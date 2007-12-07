@@ -341,6 +341,7 @@ public:
 	void Command_BuildDispenser( void );
 	void Command_BuildSentryGun( void );
 	void Command_BuildDetpack( void );
+	void Command_BuildManCannon( void );
 	void Command_Radar( void );	
 	void Command_HintTest( void );
 	void Command_DispenserText( void );	// to set custom dispenser text messages on the server

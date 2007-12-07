@@ -3156,6 +3156,12 @@ void CFFPlayer::Command_BuildDetpack( void )
 	PreBuildGenericThink();
 }
 
+void CFFPlayer::Command_BuildManCannon( void )
+{
+	m_iWantBuild = FF_BUILD_MANCANNON;
+	PreBuildGenericThink();
+}
+
 void CFFPlayer::PreBuildGenericThink( void )
 {
 	//
@@ -3170,7 +3176,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		m_vecBuildOrigin = GetAbsOrigin();
 
 		// See if player is in a no build area first
-		if( IsInNoBuild() && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
+		if( IsInNoBuild() && ( (m_iWantBuild == FF_BUILD_DISPENSER) || (m_iWantBuild == FF_BUILD_SENTRYGUN) || (m_iWantBuild == FF_BUILD_MANCANNON) ) )
 		{
 			Omnibot::Notify_Build_CantBuild(this, m_iWantBuild);
 
@@ -3191,13 +3197,15 @@ void CFFPlayer::PreBuildGenericThink( void )
 			case FF_BUILD_DISPENSER: DevMsg( "dispenser\n" ); break;
 			case FF_BUILD_SENTRYGUN: DevMsg( "sentrygun\n" ); break;
 			case FF_BUILD_DETPACK: DevMsg( "detpack\n" ); break;
+			case FF_BUILD_MANCANNON: DevMsg( "mancannon\n" ); break;
 		}
 		*/
 
 		// See if the user has already built this item
-		if( ( ( m_iWantBuild == FF_BUILD_DISPENSER ) && GetDispenser() ) ||
-			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && GetSentryGun() ) ||
-			( ( m_iWantBuild == FF_BUILD_DETPACK ) && GetDetpack() ) )
+		if( ( (m_iWantBuild == FF_BUILD_DISPENSER) && GetDispenser()) ||
+			( (m_iWantBuild == FF_BUILD_SENTRYGUN) && GetSentryGun()) ||
+			( (m_iWantBuild == FF_BUILD_DETPACK) && GetDetpack()) ||
+			( (m_iWantBuild == FF_BUILD_MANCANNON) && GetManCannon()) )
 		{
 			Omnibot::Notify_Build_AlreadyBuilt(this, m_iWantBuild);
 
@@ -3206,6 +3214,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" ); break;
 				case FF_BUILD_SENTRYGUN: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_ALREADYBUILT" ); break;
 				case FF_BUILD_DETPACK: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYSET" ); break;
+				case FF_BUILD_MANCANNON: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_ALREADYBUILD" ); break;
 			}
 
 			// Re-initialize
@@ -3217,10 +3226,10 @@ void CFFPlayer::PreBuildGenericThink( void )
 		}
 
 		// See if the user has appropriate ammo
-		if( ( ( m_iWantBuild == FF_BUILD_DISPENSER ) && ( GetAmmoCount( AMMO_CELLS ) < 100 ) ) ||
-			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && ( GetAmmoCount( AMMO_CELLS ) < 130 ) ) ||
-			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( GetAmmoCount( AMMO_DETPACK ) < 1 ) ) ||
-			( ( m_iWantBuild == FF_BUILD_MANCANNON ) && ( GetAmmoCount( AMMO_MANCANNON ) < 1 ) ) )
+		if( ( (m_iWantBuild == FF_BUILD_DISPENSER) && (GetAmmoCount( AMMO_CELLS ) < 100) ) ||
+			( (m_iWantBuild == FF_BUILD_SENTRYGUN) && (GetAmmoCount( AMMO_CELLS ) < 130) ) ||
+			( (m_iWantBuild == FF_BUILD_DETPACK) && (GetAmmoCount( AMMO_DETPACK ) < 1 )) ||
+			( (m_iWantBuild == FF_BUILD_MANCANNON) && (GetAmmoCount( AMMO_MANCANNON ) < 1 )) )
 		{
 			Omnibot::Notify_Build_NotEnoughAmmo(this, m_iWantBuild);
 
@@ -3376,7 +3385,16 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 				case FF_BUILD_MANCANNON:
 				{
-					// TODO:
+					CFFManCannon *pManCannon = CFFManCannon::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
+
+					pManCannon->SetLocation( g_pGameRules->GetChatLocation( true, this ) );
+					pManCannon->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
+					pManCannon->SetGroundAngles( hBuildInfo.GetBuildAngles() );
+
+					m_hManCannon = pManCannon;
+					m_flBuildTime = gpGlobals->curtime + 1.5f; // 1.5 seconds to build?
+
+					// TODO: Omnibot::Notify_ManCannonBuilding( this, pManCannon );
 				}
 				break;
 			}
@@ -3523,6 +3541,23 @@ void CFFPlayer::PostBuildGenericThink( void )
 			}
 			break;
 
+			case FF_BUILD_MANCANNON:
+			{
+				if( GetManCannon() )
+				{
+					GetManCannon()->GoLive();
+
+					// TODO: Change to something
+					switchToWeapon = FF_WEAPON_NONE;
+					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_mancannon" );
+					if( pEvent )
+					{
+						pEvent->SetInt( "userid", GetUserID() );
+						gameeventmanager->FireEvent( pEvent, true );
+					}
+				}
+			}
+			break;
 		}
 
 		// Unlock the player
