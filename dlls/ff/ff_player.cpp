@@ -6317,6 +6317,7 @@ int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 		case LUA_AMMO_NAILS:
 		case LUA_AMMO_ROCKETS:
 		case LUA_AMMO_DETPACK:
+		case LUA_AMMO_MANCANNON:
 			iDispensed = GiveAmmo( iAmount, LookupLuaAmmo( iAmmoType ), true );
 		break;
 
@@ -6355,6 +6356,7 @@ void CFFPlayer::LuaRemoveAmmo( int iAmmoType, int iAmount )
 		case LUA_AMMO_NAILS:
 		case LUA_AMMO_ROCKETS:
 		case LUA_AMMO_DETPACK:
+		case LUA_AMMO_MANCANNON:
 			RemoveAmmo( iAmount, LookupLuaAmmo( iAmmoType ) );
 			break;
 

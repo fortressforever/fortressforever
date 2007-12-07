@@ -110,6 +110,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 		return;
 
 	// TODO: Launch the guy
+	DevMsg( "[CFFManCannon::OnObjectTouch] Touch me HARDER!\n" );
 }
 
 //-----------------------------------------------------------------------------
