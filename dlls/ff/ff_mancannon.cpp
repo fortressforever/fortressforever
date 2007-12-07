@@ -20,6 +20,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1000", FCVAR_NONE );
+ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "50", FCVAR_NONE );
+
 //=============================================================================
 //
 //	class CFFManCannon
@@ -108,8 +111,18 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	CFFPlayer *pPlayer = ToFFPlayer( pOther );
 	if( !pPlayer )
 		return;
+	
+	// Launch the guy
+	QAngle vecAngles = pPlayer->EyeAngles();
+	vecAngles.z = 0.0f;
 
-	// TODO: Launch the guy
+	Vector vecForward;
+	AngleVectors( vecAngles, &vecForward );
+	VectorNormalize( vecForward );
+
+	// Shoot forward & up-ish
+	pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
+	
 	DevMsg( "[CFFManCannon::OnObjectTouch] Touch me HARDER!\n" );
 }
 
