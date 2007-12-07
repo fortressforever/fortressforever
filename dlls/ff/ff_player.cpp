@@ -2731,6 +2731,9 @@ void CFFPlayer::RemoveBuildables( void )
 
 	if( GetDetpack() )
 		GetDetpack()->Cancel();
+
+	if( GetManCannon() )
+		GetManCannon()->Cancel();
 }
 
 //-----------------------------------------------------------------------------
@@ -3214,7 +3217,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" ); break;
 				case FF_BUILD_SENTRYGUN: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_ALREADYBUILT" ); break;
 				case FF_BUILD_DETPACK: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYSET" ); break;
-				case FF_BUILD_MANCANNON: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_ALREADYBUILD" ); break;
+				case FF_BUILD_MANCANNON: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_ALREADYBUILT" ); break;
 			}
 
 			// Re-initialize
