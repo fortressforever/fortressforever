@@ -1,26 +1,23 @@
 //	=============== Fortress Forever ==============
 //	======== A modification for Half-Life 2 =======
 //
-//	@file ff_weapon_deploydetpack.cpp
+//	@file ff_weapon_deploymancannon.cpp
 //	@author Patrick O'Leary (Mulchman)
-//	@date May 12, 2005
-//	@brief A detpack construction slot
+//	@date 12/7/2007
+//	@brief A man cannon construction slot
 //
 //	REVISIONS
 //	---------
-//	05/12/05, Mulchman: 
-//		First created - basically a copy/paste of the dispenser one!
-//
-//	05/14/05, Mulchman:
-//		Optimized as per Mirv's forum suggestion
+//	12/7/2007, Mulchman: 
+//		First created
 
 #include "cbase.h"
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
 
 #if defined( CLIENT_DLL )
-	#define CFFWeaponDeployDetpack C_FFWeaponDeployDetpack
-	#define CFFDetpack C_FFDetpack
+	#define CFFWeaponDeployManCannon C_FFWeaponDeployManCannon
+	#define CFFManCannon C_FFManCannon
 	#include "c_ff_player.h"	
 	#include "ff_hud_chat.h"
 	#include "ff_utils.h"
@@ -33,19 +30,19 @@
 #include "ff_buildableobjects_shared.h"
 
 //=============================================================================
-// CFFWeaponDeployDetpack
+// CFFWeaponDeployManCannon
 //=============================================================================
 
-class CFFWeaponDeployDetpack : public CFFWeaponBase
+class CFFWeaponDeployManCannon : public CFFWeaponBase
 {
 public:
-	DECLARE_CLASS( CFFWeaponDeployDetpack, CFFWeaponBase );
+	DECLARE_CLASS( CFFWeaponDeployManCannon, CFFWeaponBase );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
-	
-	CFFWeaponDeployDetpack( void );
+
+	CFFWeaponDeployManCannon( void );
 #ifdef CLIENT_DLL 
-	~CFFWeaponDeployDetpack( void ) { Cleanup(); }
+	~CFFWeaponDeployManCannon( void ) { Cleanup(); }
 #endif
 
 	virtual void PrimaryAttack( void );
@@ -56,15 +53,15 @@ public:
 	virtual bool CanDeploy( void );
 	virtual bool Deploy( void );
 
-	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYDETPACK; }
+	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYMANCANNON; }
 
 private:
 
-	CFFWeaponDeployDetpack( const CFFWeaponDeployDetpack & );
+	CFFWeaponDeployManCannon( const CFFWeaponDeployManCannon & );
 
 protected:
 #ifdef CLIENT_DLL
-	C_FFDetpack *m_pBuildable;
+	C_FFManCannon *m_pBuildable;
 	bool m_bInSetTimerMenu;
 #endif
 
@@ -81,28 +78,28 @@ protected:
 };
 
 //=============================================================================
-// CFFWeaponDeployDetpack tables
+// CFFWeaponDeployManCannon tables
 //=============================================================================
 
-IMPLEMENT_NETWORKCLASS_ALIASED( FFWeaponDeployDetpack, DT_FFWeaponDeployDetpack )
+IMPLEMENT_NETWORKCLASS_ALIASED( FFWeaponDeployManCannon, DT_FFWeaponDeployManCannon )
 
-BEGIN_NETWORK_TABLE( CFFWeaponDeployDetpack, DT_FFWeaponDeployDetpack )
+BEGIN_NETWORK_TABLE( CFFWeaponDeployManCannon, DT_FFWeaponDeployManCannon )
 END_NETWORK_TABLE()
 
-BEGIN_PREDICTION_DATA( CFFWeaponDeployDetpack )
+BEGIN_PREDICTION_DATA( CFFWeaponDeployManCannon )
 END_PREDICTION_DATA()
 
-LINK_ENTITY_TO_CLASS( ff_weapon_deploydetpack, CFFWeaponDeployDetpack );
-PRECACHE_WEAPON_REGISTER( ff_weapon_deploydetpack );
+LINK_ENTITY_TO_CLASS( ff_weapon_deploymancannon, CFFWeaponDeployManCannon );
+PRECACHE_WEAPON_REGISTER( ff_weapon_deploymancannon );
 
 //=============================================================================
-// CFFWeaponDeployDetpack implementation
+// CFFWeaponDeployManCannon implementation
 //=============================================================================
 
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
-CFFWeaponDeployDetpack::CFFWeaponDeployDetpack( void )
+CFFWeaponDeployManCannon::CFFWeaponDeployManCannon( void )
 {
 #ifdef CLIENT_DLL
 	m_pBuildable = NULL;
@@ -113,47 +110,30 @@ CFFWeaponDeployDetpack::CFFWeaponDeployDetpack( void )
 //----------------------------------------------------------------------------
 // Purpose: Handles whatever should be done when they fire (build, aim, etc)
 //----------------------------------------------------------------------------
-void CFFWeaponDeployDetpack::PrimaryAttack( void )
+void CFFWeaponDeployManCannon::PrimaryAttack( void )
 {
 	if( m_flNextPrimaryAttack < gpGlobals->curtime )
 	{
 		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 
 		Cleanup();
-
-//#ifdef GAME_DLL
-//		// Bug #0000378: Detpack slot sometimes cancels the deploy phase almost immediately
-//		engine->ClientCommand( GetPlayerOwner()->edict(), "detpack 5" );
-//
-//#endif
-
-#ifdef CLIENT_DLL
-		// By holding down the attack button, the player brings up a radial menu
-		// to choose the timer length
-		if (!m_bInSetTimerMenu)
-		{
-			m_bInSetTimerMenu = true;
-			HudContextShow(true);
-			
-			FF_SendHint( DEMOMAN_SETDET, 2, PRIORITY_NORMAL, "#FF_HINT_DEMOMAN_SETDET" );
-		}
-#endif
 	}
 }
 
 //----------------------------------------------------------------------------
 // Purpose: Handles whatever should be done when they scondary fire
 //----------------------------------------------------------------------------
-void CFFWeaponDeployDetpack::SecondaryAttack( void )
+void CFFWeaponDeployManCannon::SecondaryAttack( void )
 {
 	if( m_flNextSecondaryAttack < gpGlobals->curtime )
 		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
 }
 
+
 //----------------------------------------------------------------------------
 // Purpose: Checks validity of ground at this point or whatever
 //----------------------------------------------------------------------------
-void CFFWeaponDeployDetpack::WeaponIdle( void )
+void CFFWeaponDeployManCannon::WeaponIdle( void )
 {
 	if( m_flTimeWeaponIdle < gpGlobals->curtime )
 	{
@@ -162,10 +142,10 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 
 		if( !pPlayer->IsBuilding() )
 		{
-			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DETPACK );
+			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_MANCANNON );
 			if( !m_pBuildable )
 			{
-				m_pBuildable = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
+				m_pBuildable = CFFManCannon::CreateClientSideManCannon( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 			else
 			{
@@ -175,7 +155,9 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 			m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 		}
 		else
+		{
 			Cleanup();
+		}
 
 		// The player just released the attack button
 		if( m_bInSetTimerMenu /* pPlayer->m_afButtonReleased & IN_ATTACK */ )
@@ -187,48 +169,58 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 	}
 }
 
-bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
+//----------------------------------------------------------------------------
+// Purpose: 
+//----------------------------------------------------------------------------
+bool CFFWeaponDeployManCannon::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	Cleanup();
+
 #ifdef CLIENT_DLL
 	HudContextShow(false);
 #endif
+
 	return BaseClass::Holster( pSwitchingTo );
 }
 
-bool CFFWeaponDeployDetpack::CanDeploy( void )
+//----------------------------------------------------------------------------
+// Purpose: 
+//----------------------------------------------------------------------------
+bool CFFWeaponDeployManCannon::CanDeploy( void )
 {
-	
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( !pPlayer )
 		return false;
-	
-	if( pPlayer->GetDetpack() )
+
+	if( pPlayer->GetManCannon() )
 	{
 #ifdef CLIENT_DLL
-		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYSET" );
+		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_ALREADYBUILT" );
 #endif
+
 		return false;
 	}
 
 	return BaseClass::CanDeploy();
 }
 
-bool CFFWeaponDeployDetpack::CanBeSelected( void )
+//----------------------------------------------------------------------------
+// Purpose: 
+//----------------------------------------------------------------------------
+bool CFFWeaponDeployManCannon::CanBeSelected( void )
 {
 	return BaseClass::CanBeSelected();
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Send special hint on detpack deploy
+// Purpose: Send special hint on man cannon deploy
 //----------------------------------------------------------------------------
-bool CFFWeaponDeployDetpack::Deploy() 
+bool CFFWeaponDeployManCannon::Deploy() 
 {
-
 #ifdef CLIENT_DLL	
-	FF_SendHint( DEMOMAN_DETPACK, 1, PRIORITY_LOW, "#FF_HINT_DEMOMAN_DETPACK" );
+	FF_SendHint( DEMOMAN_DETPACK, 1, PRIORITY_LOW, "#FF_HINT_SCOUT_MANCANNON" );
 #endif
-	
+
 	return BaseClass::Deploy();
 }

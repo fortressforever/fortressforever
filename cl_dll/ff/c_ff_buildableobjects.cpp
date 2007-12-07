@@ -5,7 +5,7 @@
 // @author Patrick O'Leary (Mulchman)
 // @date 06/08/2005
 // @brief Client side BuildableObject classes:
-//			Dispenser, Detpack, & SentryGun
+//			Dispenser, Detpack, Sentry Gun, & Man Cannon
 //
 // REVISIONS
 // ---------
@@ -70,6 +70,7 @@
 #define FF_BUILD_ERROR_NEEDAMMO		"sprites/ff_build_needammo"
 #define FF_BUILD_ERROR_ALREADYBUILTSG	"sprites/ff_build_alreadybuiltsg"
 #define FF_BUILD_ERROR_ALREADYBUILTDISP	"sprites/ff_build_alreadybuiltdisp"
+#define FF_BUILD_ERROR_ALREADYBUILTMANCANNON	"sprites/ff_build_alreadybuiltmancannon"
 
 
 // Define all the sprites to precache
@@ -175,6 +176,10 @@ void C_FFBuildableObject::ClientThink( void )
 				flBuildDist = FF_BUILD_DET_BUILD_DIST;
 			break;
 
+			case CLASS_MANCANNON:
+				flBuildDist = FF_BUILD_MC_BUILD_DIST;
+			break;
+
 			default: return; break;
 		}
 
@@ -216,6 +221,7 @@ int C_FFBuildableObject::DrawModel( int flags )
 				case CLASS_DISPENSER: flOffset = 32.0f; break;
 				case CLASS_SENTRYGUN: flOffset = 32.0f; break;
 				case CLASS_DETPACK: flOffset = 0.0f; break;
+				case CLASS_MANCANNON: flOffset = 0.0f; break;
 				default: return BaseClass::DrawModel( flags ); break;
 			}
 
@@ -234,7 +240,9 @@ int C_FFBuildableObject::DrawModel( int flags )
 					if(iEntityClass == CLASS_DISPENSER)
 						pszMaterial = FF_BUILD_ERROR_ALREADYBUILTDISP; 
 					else if(iEntityClass == CLASS_SENTRYGUN)
-						pszMaterial = FF_BUILD_ERROR_ALREADYBUILTSG; 
+						pszMaterial = FF_BUILD_ERROR_ALREADYBUILTSG;
+					else if( iEntityClass == CLASS_MANCANNON )
+						pszMaterial = FF_BUILD_ERROR_ALREADYBUILTMANCANNON;
 				}
 				break;
 			}
@@ -644,38 +652,38 @@ void C_FFManCannon::OnDataChanged( DataUpdateType_t updateType )
 	}
 }
 
-////-----------------------------------------------------------------------------
-//// Purpose: Creates a client side entity using the dispenser model
-////-----------------------------------------------------------------------------
-//C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin, const QAngle& vecAngles )
-//{
-//	C_FFDispenser *pDispenser = new C_FFDispenser;
-//
-//	if( !pDispenser )
-//		return NULL;
-//
-//	if( !pDispenser->InitializeAsClientEntity( FF_DISPENSER_MODEL, RENDER_GROUP_TRANSLUCENT_ENTITY ) )
-//	{
-//		pDispenser->Release( );
-//
-//		return NULL;
-//	}
-//
-//	pDispenser->SetAbsOrigin( vecOrigin );
-//	pDispenser->SetLocalAngles( vecAngles );
-//	pDispenser->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
-//	pDispenser->SetRenderMode( kRenderTransAlpha );
-//	pDispenser->SetRenderColorA( ( byte )110 );
-//	
-//	if(ffdev_pulsebuildable.GetBool())
-//		pDispenser->m_nRenderFX = g_BuildableRenderFx;
-//
-//	// Since this is client side only, give it an owner just in case
-//	// someone accesses the m_hOwner.Get() and wants to return something
-//	// that isn't NULL!
-//	pDispenser->m_hOwner = ( C_BaseEntity * )C_BasePlayer::GetLocalPlayer();
-//	pDispenser->SetClientSideOnly( true );
-//	pDispenser->SetNextClientThink( CLIENT_THINK_ALWAYS );
-//
-//	return pDispenser;
-//}
+//-----------------------------------------------------------------------------
+// Purpose: Creates a client side entity using the man cannon model
+//-----------------------------------------------------------------------------
+C_FFManCannon *C_FFManCannon::CreateClientSideManCannon( const Vector& vecOrigin, const QAngle& vecAngles )
+{
+	C_FFManCannon *pManCannon = new C_FFManCannon;
+
+	if( !pManCannon )
+		return NULL;
+
+	if( !pManCannon->InitializeAsClientEntity( FF_DISPENSER_MODEL, RENDER_GROUP_TRANSLUCENT_ENTITY ) )
+	{
+		pManCannon->Release();
+
+		return NULL;
+	}
+
+	pManCannon->SetAbsOrigin( vecOrigin );
+	pManCannon->SetLocalAngles( vecAngles );
+	pManCannon->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+	pManCannon->SetRenderMode( kRenderTransAlpha );
+	pManCannon->SetRenderColorA( ( byte )110 );
+	
+	if( ffdev_pulsebuildable.GetBool() )
+		pManCannon->m_nRenderFX = g_BuildableRenderFx;
+
+	// Since this is client side only, give it an owner just in case
+	// someone accesses the m_hOwner.Get() and wants to return something
+	// that isn't NULL!
+	pManCannon->m_hOwner = (C_BaseEntity *)C_BasePlayer::GetLocalPlayer();
+	pManCannon->SetClientSideOnly( true );
+	pManCannon->SetNextClientThink( CLIENT_THINK_ALWAYS );
+
+	return pManCannon;
+}
