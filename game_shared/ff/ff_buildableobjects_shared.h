@@ -70,7 +70,7 @@
 #define FF_SENTRYGUN_UNBUILD_SOUND			"Sentry.unbuild"
 #define FF_SENTRYGUN_EXPLODE_SOUND			"Sentry.Explode"
 
-#define FF_MANCANNON_MODEL					"models/buildable/detpack/detpack.mdl"
+#define FF_MANCANNON_MODEL					"models/items/jumppad/jumppad.mdl"
 #define FF_MANCANNON_BUILD_SOUND			"Detpack.Build"
 #define FF_MANCANNON_EXPLODE_SOUND			"Detpack.Explode"
 
