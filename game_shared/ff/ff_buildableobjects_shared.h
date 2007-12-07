@@ -833,6 +833,9 @@ public:
 
 #ifdef CLIENT_DLL
 	virtual void OnDataChanged( DataUpdateType_t updateType );
+
+	// Creates a client side ONLY man cannon - used for the build slot
+	static C_FFManCannon *CreateClientSideManCannon( const Vector& vecOrigin, const QAngle& vecAngles );	
 #else
 	virtual void Spawn( void );
 	virtual void GoLive( void );

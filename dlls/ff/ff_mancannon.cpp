@@ -122,8 +122,6 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 
 	// Shoot forward & up-ish
 	pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
-	
-	DevMsg( "[CFFManCannon::OnObjectTouch] Touch me HARDER!\n" );
 }
 
 //-----------------------------------------------------------------------------

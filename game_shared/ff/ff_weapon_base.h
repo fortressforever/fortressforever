@@ -157,7 +157,8 @@ typedef enum
 	// Buildables
 	FF_WEAPON_DEPLOYDISPENSER, 
 	FF_WEAPON_DEPLOYSENTRYGUN, 
-	FF_WEAPON_DEPLOYDETPACK, 
+	FF_WEAPON_DEPLOYDETPACK,
+	FF_WEAPON_DEPLOYMANCANNON,
 
 	// Don't put any more weapons down here! 
 	// Put the rest above the DEPLOY weapons please.
