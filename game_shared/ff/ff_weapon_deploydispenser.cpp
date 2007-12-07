@@ -185,32 +185,6 @@ void CFFWeaponDeployDispenser::WeaponIdle( void )
 		}
 		else
 			Cleanup();
-
-		// If we haven't built a dispenser...
-		//if( !pPlayer->GetDispenser() ) 
-		//{
-		//	CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DISPENSER );
-
-		//	if( m_pBuildable )
-		//	{
-		//		// Update current fake dispenser
-		//		m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
-		//		m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
-		//		m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
-		//	}
-		//	else
-		//	{
-		//		// Create fake dispenser
-		//		m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
-		//	}
-		//}
-		//else
-		//	Cleanup();
-
-		//// If we're building something else, make sure to clean up
-		//// this thing
-		//if( pPlayer->IsBuilding() )
-		//	Cleanup();
 #endif
 	}
 }
@@ -224,35 +198,6 @@ bool CFFWeaponDeployDispenser::Holster(CBaseCombatWeapon *pSwitchingTo)
 
 bool CFFWeaponDeployDispenser::CanDeploy( void )
 {
-	/*
-	CFFPlayer *pPlayer = GetPlayerOwner();
-
-	if( !pPlayer )
-		return false;
-
-	if( pPlayer->GetDispenser() )
-	{
-#ifdef CLIENT_DLL
-		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" );
-#endif
-		return false;
-	}
-	else if( pPlayer->IsBuilding() )
-	{
-#ifdef CLIENT_DLL
-		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
-#endif
-		return false;
-	}
-	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 )
-	{
-#ifdef CLIENT_DLL
-		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO" );
-#endif
-		return false;
-	}
-	*/
-
 	return BaseClass::CanDeploy();
 }
 

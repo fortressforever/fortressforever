@@ -117,6 +117,11 @@ void CFFWeaponDeployManCannon::PrimaryAttack( void )
 		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 
 		Cleanup();
+
+#ifdef GAME_DLL
+		CFFPlayer *pPlayer = GetPlayerOwner();
+		pPlayer->Command_BuildManCannon();
+#endif
 	}
 }
 
