@@ -2453,6 +2453,19 @@ bool C_FFPlayer::Weapon_Switch(CBaseCombatWeapon *pWeapon, int viewmodelindex /*
 
 extern ConVar default_fov;
 
+float flFOVModifier = 0.0f;
+
+inline float approach(float flInitial, float flDelta, float flTarget)
+{
+	flDelta = fabs(flDelta);
+	bool bSign = (flInitial < flTarget);
+	flInitial += (bSign ? flDelta : -flDelta);
+	// The sign has changed so we have overshot
+	if ((flInitial < flTarget) != bSign)
+		return flTarget;
+	return flInitial;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Disable FOV and use weapon-specific stuff
 //-----------------------------------------------------------------------------
@@ -2466,10 +2479,39 @@ float C_FFPlayer::GetFOV()
 		float flFOV = pWeapon->GetFOV();
 
 		if (flFOV > 0)
-			return pWeapon->GetFOV();
+			return flFOV;
 	}
 
-	return default_fov.GetFloat();
+	const float flMaximum = 600.0f;
+
+	if (!IsLocalPlayer() || !IsAlive() || GetTeamNumber() < TEAM_BLUE)
+	{
+		// This gives a neato zoom-in effect when you spawn
+		flFOVModifier = flMaximum * 0.75f;
+		return default_fov.GetFloat();
+	}
+
+	float flBaseFov = default_fov.GetFloat();
+
+	float flTargetModifier = GetLocalVelocity().Length2D() - (MaxSpeed() * 1.05f);
+
+	// No need for anything to change
+	if (flTargetModifier <= 0.0f && flFOVModifier == 0.0f)
+		return flBaseFov;
+
+	flTargetModifier = clamp(flTargetModifier, -flMaximum, flMaximum);
+
+	// Reduce faster than we increase
+	float flSpeed = flTargetModifier < 0.0f ? 2.0f : 1.0f;
+
+	flFOVModifier = approach(flFOVModifier, flTargetModifier * gpGlobals->frametime * flSpeed, max(flTargetModifier, 0.0f));
+
+	// Just double check the clamping here...
+	flFOVModifier = clamp(flFOVModifier, 0.0f, flMaximum);
+
+	float flNormalisedFOVModifier = /*SimpleSpline*/(flFOVModifier / flMaximum);
+
+	return default_fov.GetFloat() + (flNormalisedFOVModifier * 25.0f);
 }
 
 //CON_COMMAND(ffdev_hallucinate, "hallucination!")

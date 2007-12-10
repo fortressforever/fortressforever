@@ -265,4 +265,25 @@ private:
 	unsigned int	m_flag;
 };
 
+class DevConVar
+{
+private:
+	float m_flValue;
+	float m_iValue;
+
+	void Init(const char *value)
+	{
+		m_flValue = atof(value);
+		m_iValue = (int) m_flValue;
+	}
+
+public:
+	DevConVar(const char *name, const char *value, int flags, const char *description) { Init(value); }
+	DevConVar(const char *name, const char *value, int flags) { Init(value); }
+
+	int GetFloat() const { return m_flValue; }
+	int GetInt() const { return m_iValue; }
+	int GetBool() const { return m_iValue != 0; }
+};
+
 #endif // FF_UTILS_H

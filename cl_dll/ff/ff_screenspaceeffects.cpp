@@ -26,6 +26,7 @@
 #include "clienteffectprecachesystem.h"
 #include "in_buttons.h"
 #include "c_ff_player.h"
+#include "ff_utils.h"
 
 #include "ScreenSpaceEffects.h"
 
@@ -257,8 +258,8 @@ void CBaseEffect::Render(int x, int y, int w, int h)
 }
 
 static ConVar ffdev_blur_enable("ffdev_blur_enable", "1", FCVAR_ARCHIVE, "Enable/disable speed-based blur effect");
-static ConVar ffdev_blur_minspeed("ffdev_blur_minspeed", "1000", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
-static ConVar ffdev_blur_rangespeed("ffdev_blur_rangespeed", "600", FCVAR_ARCHIVE);
+static DevConVar ffdev_blur_min("ffdev_blur_min", "300", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
+static DevConVar ffdev_blur_range("ffdev_blur_range", "50", FCVAR_ARCHIVE);
 
 //-----------------------------------------------------------------------------
 // Purpose: A motion blur for concs
@@ -314,6 +315,12 @@ void CMotionBlur::Shutdown()
 	m_BlurImage.Shutdown();
 }
 
+float flAccumulativeAccel = 0.0f;
+float flLastSpeed = 0.0f;
+float m_flLastBlurTime = 0.0f;
+
+extern float GetAssaultCannonCharge();
+
 //-----------------------------------------------------------------------------
 // Purpose: Do the blurring effect based on player speed
 //-----------------------------------------------------------------------------
@@ -327,37 +334,44 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 		return;
 
 	Vector vecVelocity = pPlayer->GetAbsVelocity();
-	float flSpeed = vecVelocity.LengthSqr();
+	float flSpeed = vecVelocity.Length();
 
-	// Too slow for any blur effect
-	if (flSpeed < ffdev_blur_minspeed.GetFloat() * ffdev_blur_minspeed.GetFloat())
+	// Acceleration is change in speed over time :)
+	float flAcceleration = (flSpeed - flLastSpeed) / gpGlobals->frametime;
+	flLastSpeed = flSpeed;
+
+	// Only care about acceleration, not decceleration
+	if (flAcceleration > 0.0f)
+ 		flAccumulativeAccel += fabs(flAcceleration) * gpGlobals->frametime;
+
+	// Manage our accumulative acceleration a bit
+	flAccumulativeAccel -= gpGlobals->frametime * 2500.0f;
+	flAccumulativeAccel = clamp(flAccumulativeAccel, 0.0f, 10000.0f);
+
+	// Calculate the normalised blue now
+	float flBlur = (flAccumulativeAccel - ffdev_blur_min.GetFloat()) / ffdev_blur_range.GetFloat();
+	
+
+	// The assault cannon also blurs things when firing enough
+	// Take the largest blur from the two sources
+	float flCharge = GetAssaultCannonCharge();
+	if (flCharge > 50.0f)
+	{
+		float flACBlur = (flCharge - 50.0f) / 50.0f;
+		flBlur = max(flBlur, flACBlur);
+	}
+
+	// We're going too slow for a blur effect and we've faded off our last blur
+	if (gpGlobals->curtime > m_flLastBlurTime + 0.75f && flBlur < 0.0f)
 	{
 		m_flNextSampleTime = 0.0f;
-
-		// V QUICK HACK FOR COOLNESS
-		extern float GetAssaultCannonCharge();
-		float flCharge = GetAssaultCannonCharge();
-
-		// Blurring shouldn't stop just because the fire button has been released
-		// since it can carry on firing at high speed for a bit.
-		if (flCharge > 50.0f /*&& pPlayer->m_nButtons & IN_ATTACK*/)
-		{
-			m_flNextSampleTime = 0.0f;
-			flSpeed = (flCharge - 50.0f) / 50.0f;
-		}
-		else
-			return;
-	}
-	else
-	{
-		flSpeed = FastSqrt(flSpeed);
-		flSpeed -= ffdev_blur_minspeed.GetFloat();
-		flSpeed /= ffdev_blur_rangespeed.GetFloat();
+		return;
 	}
 
-	flSpeed = clamp(flSpeed, 0.0f, 1.0f);
+	bool bFadeOff = flBlur < 0.0f;
+	flBlur = clamp(flBlur, 0.05f, 1.0f);
 
-	Assert(flSpeed > 0.0f);
+	Assert(flBlur > 0.0f);
 
 	IMaterialVar *pVar = NULL;
 	bool	bFound;
@@ -373,12 +387,13 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 		// Update the full frame buffer texture ready for use
 		UpdateScreenEffectTexture(0, x, y, w, h, false, &actualRect);
 
+		// 100% opacity if we haven't yet got a previous sample
+
+		float flAlpha = (m_flNextSampleTime == 0.0f ? 1.0f : flBlur * 0.2f);
 		pVar = pMatScreen->FindVar("$alpha", &bFound, false);
 
 		if (pVar)
-		{
-			pVar->SetFloatValue((m_flNextSampleTime == 0.0f ? 1.0f : flSpeed * 0.2f));
-		}
+			pVar->SetFloatValue(flAlpha);
 
 		// Draw onto our buffer
 		materials->SetRenderTarget(m_BlurImage);
@@ -386,6 +401,9 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 
 		// Next sample time
 		m_flNextSampleTime = gpGlobals->curtime + 0.01f;
+
+		if (!bFadeOff)
+			m_flLastBlurTime = gpGlobals->curtime;
 	}
 
 	// Set the alpha for the screen
@@ -393,7 +411,7 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 
 	if (pVar)
 	{
-		pVar->SetFloatValue(flSpeed * 0.6f);
+		pVar->SetFloatValue(flBlur * 0.6f);
 	}
 
 	// Set the texture to our buffer
