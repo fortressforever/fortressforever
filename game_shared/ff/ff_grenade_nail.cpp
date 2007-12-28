@@ -10,6 +10,8 @@
 /// ---------
 /// Mar 22, 2005	Mirv: First created
 /// Apr. 23, 2005	L0ki: removed header file, moved everything to a single cpp file
+/// Dec. 27, 2007	Jiggles: Significantly revamped -- nails are now "simulated" as short tracehulls; 
+///								nail entities are apparently too expensive to spam as many as we need for a decent nailgren
 
 //========================================================================
 // Required includes
@@ -33,6 +35,122 @@
 #ifdef CLIENT_DLL
 	#define CFFGrenadeNail C_FFGrenadeNail
 #endif
+
+
+
+#ifdef GAME_DLL
+
+//class CFFGrenadeNail;
+
+
+	ConVar nailspeed("ffdev_nailspeed", "600", FCVAR_CHEAT);
+	ConVar naildamage("ffdev_naildamage", "10", FCVAR_CHEAT);
+	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.2", FCVAR_CHEAT );
+	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_CHEAT );
+	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
+	ConVar nailstreams( "ffdev_nailgren_streams", "10", FCVAR_CHEAT );
+	ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
+
+	ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT, "NG Nails bbox");
+	ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "1", FCVAR_CHEAT, "Show NG nails trace");
+	ConVar ffdev_ng_nail_length("ffdev_ng_nail_length", "5.0", FCVAR_CHEAT, "Length of NG nails");
+
+
+//-------------------------------------------------------------------------------------------------------
+// Simulates a nail as a tracehull moving in a straight line until it hits something
+//-------------------------------------------------------------------------------------------------------
+class PseudoNail
+{
+	public:
+
+	//-------------------------------------------------------------------------------------------------------
+	// Purpose: Constructor -- only the position and angle are unique for each nail
+	//-------------------------------------------------------------------------------------------------------
+		PseudoNail( const Vector &vOrigin, const QAngle &vAngles )
+		{
+			m_vecOrigin = vOrigin;
+			m_vecAngles = vAngles;
+		}
+
+	//-------------------------------------------------------------------------------------------------------
+	// Purpose: Traces the hull of the nail and damages what it "hits"
+	//			Returns true if the nail hits something (whether or not it caused damage), and false otherwise
+	//-------------------------------------------------------------------------------------------------------
+		bool TraceNail( CBaseEntity * pNailOwner, CFFPlayer * pNailGrenOwner )
+		{
+			if ( !pNailOwner || !pNailGrenOwner )
+				return false;
+			
+			Vector vecForward;
+			AngleVectors( m_vecAngles, &vecForward );
+			
+			// Visualise trace
+			if ( ffdev_ng_visualizenails.GetBool() )
+			{
+				NDebugOverlay::Line(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_ng_nail_length.GetInt() ), 255, 255, 0, false, 5.0f);
+				NDebugOverlay::SweptBox(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), m_vecAngles, 200, 100, 0, 100, 5.1f);
+			}
+
+			trace_t traceHit;
+			UTIL_TraceHull( m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), MASK_SHOT_HULL, pNailOwner, COLLISION_GROUP_NONE, &traceHit );
+
+			if (traceHit.m_pEnt)
+			{
+				CBaseEntity *pTarget = traceHit.m_pEnt;
+				
+				// only interested in players, dispensers & sentry guns
+				if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN )
+				{
+					// If pTarget can take damage from nails...
+					if ( g_pGameRules->FCanTakeDamage( pTarget, pNailGrenOwner ))
+					{
+						if (traceHit.m_pEnt->IsPlayer() )
+						{
+							CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+							pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, naildamage.GetInt(), DMG_BULLET ) );
+						}
+						else if( FF_IsDispenser( pTarget ) )
+						{
+							CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
+							if( pDispenser )
+								pDispenser->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, naildamage.GetInt() + 2, DMG_BULLET ) );
+						}
+						else /*if( FF_IsSentrygun( pTarget ) )*/
+						{
+							CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
+							if( pSentrygun )
+								pSentrygun->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, naildamage.GetInt() + 2, DMG_BULLET ) );
+						}
+					}
+				}
+				return true;
+			}
+			else
+				return false;
+		}
+	//-----------------------------------------------------------------------------
+	// Purpose: Moves a nail forward a certain distance
+	//-----------------------------------------------------------------------------
+		void UpdateNailPosition( float flForwardDist )
+		{
+			Vector vecForward;
+			AngleVectors( m_vecAngles, &vecForward );
+			vecForward *= flForwardDist;
+
+			m_vecOrigin += vecForward;
+		}
+
+	private:
+
+		Vector m_vecOrigin;		// Nail's position
+		QAngle m_vecAngles;		// Nail's angle of travel
+
+};
+
+#endif
+
+
+
 
 class CFFGrenadeNail : public CFFGrenadeBase
 {
@@ -59,6 +177,12 @@ private:
 protected:
 	float	m_flNailSpit;
 	float	m_flAngleOffset;
+
+	// Contains all the nails currently being simulated
+	CUtlVector< PseudoNail > m_NailsVector;
+
+	float	m_flLastThinkTime;
+
 #endif
 };
 
@@ -72,13 +196,17 @@ LINK_ENTITY_TO_CLASS(ff_grenade_nail, CFFGrenadeNail);
 PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 
 #ifndef CLIENT_DLL
-	ConVar nailspeed("ffdev_nailspeed", "800", FCVAR_CHEAT);
-	ConVar naildamage("ffdev_naildamage", "8", FCVAR_CHEAT);
-	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.3", FCVAR_CHEAT );
-	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_CHEAT );
-	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
-	ConVar nailstreams( "ffdev_nailgren_streams", "4", FCVAR_CHEAT );
-	ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
+	//ConVar nailspeed("ffdev_nailspeed", "800", FCVAR_CHEAT);
+	//ConVar naildamage("ffdev_naildamage", "8", FCVAR_CHEAT);
+	//ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.3", FCVAR_CHEAT );
+	//ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_CHEAT );
+	////ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
+	//ConVar nailstreams( "ffdev_nailgren_streams", "4", FCVAR_CHEAT );
+	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
+
+	//ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "NG Nails bbox");
+	//ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "1", FCVAR_CHEAT, "Show NG nails trace");
+	//ConVar ffdev_ng_nail_length("ffdev_ng_nail_length", "5.0", FCVAR_CHEAT, "Length of NG nails");
 #endif
 
 	//extern ConVar ffdev_nail_bbox;
@@ -115,6 +243,7 @@ void CFFGrenadeNail::Precache()
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeNail::ShootNail( const Vector& vecOrigin, const QAngle& vecAngles )
 	{
+		/*
 		// Create the nail and tell it it's a nail grenade nail
 		// We don't do a clientside nail with this because that is being done itself
 		CFFProjectileNail *pNail = CFFProjectileNail::CreateNail( this, vecOrigin, vecAngles, GetOwnerEntity(), naildamage.GetInt(), nailspeed.GetInt(), true );
@@ -127,6 +256,9 @@ void CFFGrenadeNail::Precache()
 		float flFlatten = ffdev_nailgren_flatten.GetFloat();
 		Vector vecFlattened = Vector(flFlatten, flFlatten, 1.0f);
 		pNail->SetSize(-vecFlattened, vecFlattened);
+		*/
+		
+		m_NailsVector.AddToTail( PseudoNail( vecOrigin, vecAngles ) );
 	}
 
 	//-----------------------------------------------------------------------------
@@ -156,6 +288,26 @@ void CFFGrenadeNail::Precache()
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeNail::NailEmit() 
 	{
+		// First we need to trace each nail's bounds to check for a hit, then "move" the nails that didn't hit anything
+		for ( int i=0; i < m_NailsVector.Count(); i++)
+		{
+			// Remove a nail that hits something
+			if ( m_NailsVector[i].TraceNail( this, ToFFPlayer( GetOwnerEntity() ) ) )
+			{
+				m_NailsVector.Remove(i);
+				// Remove shifts all the vector elements forward, so we have to adjust the index or we will skip a nail
+				i--;
+				// Don't jump off the begining or end of the vector, though
+				if ( i < 0 || i >= m_NailsVector.Count() )
+					i++;
+			}
+			else // No hit -- move the nail forward
+				m_NailsVector[i].UpdateNailPosition( nailspeed.GetInt() * ( gpGlobals->curtime - m_flLastThinkTime ) );
+			//if MAX DISTANCE
+			//	Remove
+		}
+		
+
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
@@ -269,6 +421,12 @@ void CFFGrenadeNail::Precache()
 		*/
 
 		SetNextThink(gpGlobals->curtime);
+		m_flLastThinkTime = gpGlobals->curtime;
 	}
 
+
+
+
 #endif
+
+
