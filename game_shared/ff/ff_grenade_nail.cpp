@@ -92,7 +92,7 @@ class PseudoNail
 			}
 
 			trace_t traceHit;
-			UTIL_TraceHull( m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), MASK_SHOT_HULL, pNailOwner, COLLISION_GROUP_NONE, &traceHit );
+			UTIL_TraceHull( m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), MASK_SHOT_HULL, NULL, COLLISION_GROUP_NONE, &traceHit );
 
 			if (traceHit.m_pEnt)
 			{
@@ -102,7 +102,7 @@ class PseudoNail
 				if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN )
 				{
 					// If pTarget can take damage from nails...
-					if ( g_pGameRules->FCanTakeDamage( pTarget, pNailGrenOwner ))
+					if ( g_pGameRules->FCanTakeDamage( pTarget, pNailGrenOwner ) )
 					{
 						if (traceHit.m_pEnt->IsPlayer() )
 						{
