@@ -40,16 +40,13 @@
 
 #ifdef GAME_DLL
 
-//class CFFGrenadeNail;
-
-
 	ConVar nailspeed("ffdev_nailspeed", "600", FCVAR_CHEAT);
 	ConVar naildamage("ffdev_naildamage", "10", FCVAR_CHEAT);
 	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.2", FCVAR_CHEAT );
 	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_CHEAT );
 	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
 	ConVar nailstreams( "ffdev_nailgren_streams", "10", FCVAR_CHEAT );
-	ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
+	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
 
 	ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT, "NG Nails bbox");
 	ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "1", FCVAR_CHEAT, "Show NG nails trace");
@@ -88,7 +85,7 @@ class PseudoNail
 			if ( ffdev_ng_visualizenails.GetBool() )
 			{
 				NDebugOverlay::Line(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_ng_nail_length.GetInt() ), 255, 255, 0, false, 5.0f);
-				NDebugOverlay::SweptBox(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), m_vecAngles, 200, 100, 0, 100, 5.1f);
+				NDebugOverlay::SweptBox(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_ng_nail_bounds.GetFloat(), m_vecAngles, 200, 100, 0, 100, 0.1f);
 			}
 
 			trace_t traceHit;
@@ -330,7 +327,8 @@ void CFFGrenadeNail::Precache()
 		if( m_flNailSpit < gpGlobals->curtime )
 		{
 			int iStreams = nailstreams.GetInt();
-			float flSize = ffdev_nailgren_flatten.GetFloat();
+			//float flSize = ffdev_nailgren_flatten.GetFloat();
+			float flSize = 20.0f;
 
 			float flDeltaAngle = 360.0f / iStreams;
 			QAngle angRadial = QAngle(0.0f, random->RandomFloat(0.0f, flDeltaAngle), 0.0f);
