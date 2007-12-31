@@ -2149,7 +2149,7 @@ void CServerGameClients::ClientSettingsChanged( edict_t *pEdict )
 	// --> Mirv: This seems like a wise idea
 	if (!pMaxUpdateRate)
 		pMaxUpdateRate = cvar->FindVar("sv_maxupdaterate");
-	player->m_nUpdateRate = min(player->m_nUpdateRate, pMaxUpdateRate->GetInt());
+	player->m_nUpdateRate = std::min(player->m_nUpdateRate, pMaxUpdateRate->GetInt());
 	// <-- Mirv
 
 	bool useInterpolation = Q_atoi( QUICKGETCVARVALUE("cl_interpolate") ) != 0;
