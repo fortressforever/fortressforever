@@ -189,3 +189,91 @@ int CFFItemBackpack::GetHealth()
 {
 	return m_iHealth;
 }
+
+///////////////////////////////
+// HEALTH DROPS
+// HEALTH DROPS
+///////////////////////////////
+
+#define HEALTHDROP_MODEL	"models/healthvial.mdl"
+#define HEALTHDROP_SOUND	"HealthVial.Touch"
+#define HEALTHDROP_LIFE		10.0f
+
+class CFFItemHealthDrop : public CBaseAnimating
+{
+public:
+	DECLARE_CLASS(CFFItemHealthDrop, CBaseAnimating);
+	DECLARE_DATADESC();
+
+	CFFItemHealthDrop()
+	{
+	}
+
+	void Spawn()
+	{
+		Precache();
+	
+		// These are the same as the backpack.
+		SetSolid(SOLID_NONE);
+		AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
+		SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
+
+		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
+
+		SetModel(HEALTHDROP_MODEL);
+	
+		CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT);
+
+		SetNextThink(gpGlobals->curtime + HEALTHDROP_LIFE);
+
+		SetTouch(&CFFItemHealthDrop::RestockTouch);
+		SetThink(&CFFItemHealthDrop::SUB_Remove);
+
+		m_flSpawnTime = gpGlobals->curtime;
+	}
+
+	void Precache()
+	{
+		PrecacheModel(HEALTHDROP_MODEL);
+		PrecacheScriptSound(HEALTHDROP_SOUND);
+	}
+
+	void RestockTouch(CBaseEntity *pEntity)
+	{
+		if (gpGlobals->curtime - m_flSpawnTime < 1.0f)
+			return;
+
+		if (!pEntity->IsPlayer())
+			return;
+
+		CFFPlayer *pFFPlayer = ToFFPlayer(pEntity);
+
+		if (!pFFPlayer || !pFFPlayer->IsAlive() || pFFPlayer == GetOwnerEntity())
+			return;
+
+		if (pFFPlayer->Heal(dynamic_cast<CFFPlayer *> (GetOwnerEntity()), 20.0f))
+		{
+			EmitSound(HEALTHDROP_SOUND);
+			UTIL_Remove(this);	
+		}
+	}
+
+
+	// Bug #0000656: Throwing discards at miniturret will freak it out
+	virtual bool IsPlayer( void ) { return false; }
+	virtual bool BlocksLOS( void ) { return false; }
+	virtual bool IsAlive( void ) { return false; }
+
+	virtual Class_T Classify( void ) { return CLASS_BACKPACK; }
+	virtual bool CanClipOwnerEntity( void ) const { return true; }
+
+private:
+	float m_flSpawnTime;
+};
+
+BEGIN_DATADESC(CFFItemHealthDrop)
+	DEFINE_ENTITYFUNC(RestockTouch),
+END_DATADESC();
+
+LINK_ENTITY_TO_CLASS(ff_item_healthdrop, CFFItemHealthDrop);
+PRECACHE_REGISTER(ff_item_healthdrop);

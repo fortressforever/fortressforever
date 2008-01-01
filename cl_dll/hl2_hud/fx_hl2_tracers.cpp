@@ -200,7 +200,7 @@ void FX_PlayerAR2Tracer( const Vector &start, const Vector &end )
 	VectorMA( dStart, min( length, random->RandomFloat( 256.0f, 1024.0f ) ), shotDir, dEnd );
 
 	//Create the line
-	CFXStaticLine *tracerLine = new CFXStaticLine( "Tracer", dStart, dEnd, random->RandomFloat( 6.0f, 12.0f ), 0.01f, "effects/gunshiptracer", 0 );
+	CFXStaticLine *tracerLine = new CFXStaticLine( "Tracer", dStart, dEnd, random->RandomFloat( 12.0f, 24.0f ), 0.03f, "effects/gunshiptracer", 0 );
 	assert( tracerLine );
 
 	//Throw it into the list
@@ -234,7 +234,7 @@ void FX_AR2Tracer( Vector& start, Vector& end, int velocity, bool makeWhiz )
 	float life = ( dist + length ) / velocity;	//NOTENOTE: We want the tail to finish its run as well
 	
 	//Add it
-	FX_AddDiscreetLine( start, dir, velocity, length, dist, random->RandomFloat( 0.5f, 1.5f ), life, "effects/gunshiptracer" );
+	FX_AddDiscreetLine( start, dir, velocity, length, dist, random->RandomFloat( 1.0f, 2.0f ), life, "effects/gunshiptracer" );
 
 	if( makeWhiz )
 	{

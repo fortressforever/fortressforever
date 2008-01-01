@@ -3677,7 +3677,34 @@ void CFFPlayer::Command_DropItems( void )
 
 void CFFPlayer::Command_Discard( void )
 {
-	
+	if (GetClassSlot() == CLASS_MEDIC)
+	{
+		CBaseEntity *pHealthDrop = CBaseEntity::Create("ff_item_healthdrop", GetAbsOrigin(), GetAbsAngles());
+
+		if (pHealthDrop)
+		{
+			pHealthDrop->Spawn();
+			pHealthDrop->SetOwnerEntity(this);
+			pHealthDrop->SetLocalAngularVelocity(RandomAngle(-400, 400));
+
+			Vector vForward;
+			AngleVectors(EyeAngles(), &vForward);
+
+			vForward *= 420.0f;
+
+			// Bugfix: Floating objects
+			if (vForward.z < 1.0f)
+				vForward.z = 1.0f;
+
+			pHealthDrop->SetAbsVelocity(vForward);
+			pHealthDrop->SetAbsOrigin(GetLegacyAbsOrigin());
+
+			// Play a sound
+			EmitSound("Item.Toss");
+		}
+		return;
+	}
+
 	CFFItemBackpack *pBackpack = NULL;
 
 	// if any of these are flagged as true, then we have a weapon that uses this ammo type and thus retain it (no discard allowed).  
