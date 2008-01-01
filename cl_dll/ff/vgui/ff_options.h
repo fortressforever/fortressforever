@@ -65,6 +65,7 @@ private:
 
 DECLARE_GAMEUI(CFFOptions, CFFOptionsPanel, ffoptions);
 
+class SplashHTML;
 
 //-----------------------------------------------------------------------------
 // Purpose: Fortress Forever options
@@ -75,8 +76,10 @@ class CFFSplashPanel : public vgui::Frame
 
 public:
 	CFFSplashPanel(vgui::VPANEL parent);
+	void CheckUpdate(const char *pszServerVersion = NULL);
 
 private:
+	SplashHTML	*m_pSplashHTML;
 };
 
 DECLARE_GAMEUI(CFFSplash, CFFSplashPanel, ffsplash);
