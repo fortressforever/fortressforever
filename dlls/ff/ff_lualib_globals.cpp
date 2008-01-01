@@ -801,6 +801,44 @@ namespace FFLib
 		}
 	}
 
+	// For generically handling Lua events (like flag caps, drops, or whatever)
+	void LogLuaEvent( 
+		int luaid,			// entity index of the Lua object (flag, ball, etc)
+		int objid,			// entity index of some CBaseEntity* that is doing something to the lua object
+		const char* name,	// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
+		const char* field0,
+		const char* field1,
+		const char* field2,
+		const char* field3,
+		const char* field4,
+		const char* field5,
+		const char* field6 )
+		//const char* field7,
+		//const char* field8,
+		//const char* field9 )
+	{
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "luaevent" );
+		if( pEvent )
+		{
+			pEvent->SetInt( "luaid", luaid );
+			pEvent->SetInt( "objid", objid );
+			pEvent->SetString( "name", name );
+			pEvent->SetString( "field0", field0 );
+			pEvent->SetString( "field1", field1 );
+			pEvent->SetString( "field2", field2 );
+			pEvent->SetString( "field3", field3 );
+			pEvent->SetString( "field4", field4 );
+			pEvent->SetString( "field5", field5 );
+			pEvent->SetString( "field6", field6 );
+			//pEvent->SetString( "field7", field7 );
+			//pEvent->SetString( "field8", field8 );
+			//pEvent->SetString( "field9", field9 );
+
+			gameeventmanager->FireEvent( pEvent, true );
+		}
+	}
+
 
 	CFFPlayer *GetPlayerByID( int player_id )
 	{
@@ -1494,6 +1532,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SmartTeamSpeak",			&FFLib::SmartTeamSpeak),
 		def("SpeakAll",					&FFLib::SpeakAll),
 		def("SpeakPlayer",				&FFLib::SpeakPlayer),
-		def("SpeakTeam",				&FFLib::SpeakTeam)
+		def("SpeakTeam",				&FFLib::SpeakTeam),
+		def("LogLuaEvent",				&FFLib::LogLuaEvent)
 	];
 }
