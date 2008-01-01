@@ -36,6 +36,23 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+// Okay the server and client are versioned separately so that we can do a 
+// client- or server- only update if required.
+// The client version is checked when FF is loaded
+// The client + server versions are checked when a server is joined
+// It is the discretion of the web-based version check script whether or not
+// to tell the client to upgrade or that the server they are joining is out of date.
+const char *MOD_CLIENT_VERSION = "1.11";
+const char *MOD_SERVER_VERSION = "1.11";
+
+// Ignore this for now...!
+void VersionCvarChange(ConVar *var, const char *pOldString) {}
+ConVar cvar_version("sync_version_cvar", MOD_SERVER_VERSION, FCVAR_REPLICATED, ""
+#ifdef CLIENT_DLL
+					, VersionCvarChange);
+#else
+					);
+#endif
 
 #ifndef CLIENT_DLL
 // Let's not use these or allow them.

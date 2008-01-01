@@ -1014,7 +1014,14 @@ void CFFOptionsPanel::SetVisible(bool state)
 	BaseClass::SetVisible(state);
 }
 
-const char szSplashUrl[] = "http://www.madabouthats.org/misc/splash.php?v=1.11";
+// This is the mod version string (defined in ff_gamerules.cpp)
+extern const char *MOD_CLIENT_VERSION;
+
+// This is the URL for checking updates.
+char *szSplashUrl = "http://www.madabouthats.org/misc/check.php?c=%s&s=%s";
+
+// Singleton for our splash panel
+static CFFSplashPanel *g_pSplashPanel = NULL;
 
 class SplashHTML : public HTML
 {
@@ -1027,27 +1034,65 @@ public:
 	{
 		BaseClass::OnFinishURL(url);
 
-		// The page we have ended up at isn't the original splash page
-		// This means that we've been redirected to a page that we should display
-		if (Q_strncmp(url, szSplashUrl, sizeof(szSplashUrl)) != 0)
+		// We've been redirected to a page that we need to display
+		if (url && Q_strstr(url, "update_notice") != NULL)
 		{
+			Msg("Client/Server out of date\n");
 			GetParent()->SetVisible(true);
 			RequestFocus();
 			GetParent()->MoveToFront();
 		}
+		else
+		{
+			Msg("Client/Server up to date\n");
+		}
 	}
 };
 
-CFFSplashPanel::CFFSplashPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFSplashPanel")
+CFFSplashPanel::CFFSplashPanel(vgui::VPANEL parent)
+		: BaseClass(NULL, "FFSplashPanel")
 {
-	HTML *h = new SplashHTML(this, "FFSplashPanelHTML");
-	h->OpenURL(szSplashUrl);
-	h->SetVisible(true);
+	Assert(g_pSplashPanel == NULL);
+	g_pSplashPanel = this;
+
+	m_pSplashHTML = new SplashHTML(this, "FFSplashPanelHTML");
+	m_pSplashHTML->SetVisible(true);
 
 	SetParent(parent);
 	SetSizeable(false);
 
 	LoadControlSettings("resource/ui/FFSplash.res");
+
+	CheckUpdate();
 };
 
+void CFFSplashPanel::CheckUpdate(const char *pszServerVersion /*= NULL*/)
+{
+	m_pSplashHTML->OpenURL(VarArgs(szSplashUrl, MOD_CLIENT_VERSION, pszServerVersion ? pszServerVersion : ""));
+	m_pSplashHTML->SetVisible(true);
+}
+
+void CheckModUpdate(const char *pszServerVersion = NULL)
+{
+	Assert(g_pSplashPanel);
+	if (g_pSplashPanel)
+	{
+		g_pSplashPanel->CheckUpdate(pszServerVersion);
+	}
+}
+
 DEFINE_GAMEUI(CFFSplash, CFFSplashPanel, ffsplash);
+
+float g_flLastCheck = -15.0f;
+
+// We have received the server's version, so check on the website
+CON_COMMAND(sync_version, "Sync version")
+{
+	if (engine->Cmd_Argc() > 1 && g_flLastCheck < gpGlobals->realtime)
+	{
+		g_flLastCheck = gpGlobals->realtime + 3.0f;
+		const char *pszVersion = engine->Cmd_Argv(1);
+		CheckModUpdate(pszVersion);
+		Msg("Server version %s\n", pszVersion);
+	}
+}
