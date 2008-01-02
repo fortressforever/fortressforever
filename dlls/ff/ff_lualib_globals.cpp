@@ -803,16 +803,16 @@ namespace FFLib
 
 	// For generically handling Lua events (like flag caps, drops, or whatever)
 	void LogLuaEvent( 
-		int luaid,			// entity index of the Lua object (flag, ball, etc)
-		int objid,			// entity index of some CBaseEntity* that is doing something to the lua object
-		const char* name,	// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
-		const char* field0,
-		const char* field1,
-		const char* field2,
-		const char* field3,
-		const char* field4,
-		const char* field5,
-		const char* field6 )
+		int luaid = -1,							// entity index of the Lua object (flag, ball, etc)
+		int objid = -1,							// entity index of some CBaseEntity* that is doing something to the lua object
+		const char* name = "Generic_Lua_Event",	// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
+		const char* field0 = "",				// "Extra" fields
+		const char* field1 = "",
+		const char* field2 = "",
+		const char* field3 = "",
+		const char* field4 = "",
+		const char* field5 = "",
+		const char* field6 = "" )
 		//const char* field7,
 		//const char* field8,
 		//const char* field9 )
