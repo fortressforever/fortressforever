@@ -49,7 +49,7 @@
 	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
 
 	ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT, "NG Nails bbox");
-	ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "1", FCVAR_CHEAT, "Show NG nails trace");
+	ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "0", FCVAR_CHEAT, "Show NG nails trace");
 	ConVar ffdev_ng_nail_length("ffdev_ng_nail_length", "5.0", FCVAR_CHEAT, "Length of NG nails");
 
 
