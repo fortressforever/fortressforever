@@ -32,7 +32,7 @@
 
 using namespace vgui;
 
-#define SPY_DISGUISE_TIME 7.0f
+#define SPY_DISGUISE_TIME 3.5f
 
 inline void MapClassToGlyph( int iClass, char& cGlyph )
 {

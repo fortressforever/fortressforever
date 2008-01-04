@@ -6318,7 +6318,7 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 	}
 	else
 	{
-		m_flFinishDisguise = gpGlobals->curtime + 7.0f;
+		m_flFinishDisguise = gpGlobals->curtime + 3.5f;
 	}
 
 	// 50% longer when Cloaked
