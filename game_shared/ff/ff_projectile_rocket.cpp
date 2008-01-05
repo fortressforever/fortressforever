@@ -156,10 +156,6 @@ CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSour
 	pRocket->m_flDamage = iDamage;
 	pRocket->m_DmgRadius = iDamageRadius;
 
-	// Bug #0000231: Rocket splash is incorrect
-	// TFC doesn't multiply the radius at all, dont you know
-	pRocket->m_DmgRadius = pRocket->m_flDamage;
-
 	//pRocket->EmitSound("rocket.fly");
 	// this is being swapped over to the client -mirv
 
