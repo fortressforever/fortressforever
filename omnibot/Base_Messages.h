@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: ensiform $
-// $LastChangedDate: 2007-10-25 17:18:49 -0700 (Thu, 25 Oct 2007) $
-// $LastChangedRevision: 2167 $
+// $LastChangedBy: drevil $
+// $LastChangedDate: 2007-12-06 08:58:50 -0800 (Thu, 06 Dec 2007) $
+// $LastChangedRevision: 2251 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -152,6 +152,28 @@ struct TurretProperties
 	float		m_MinPitch;
 	float		m_MaxPitch;
 	int			m_WeaponId;
+};
+
+struct VehicleInfo
+{
+	int			m_Type;
+	GameEntity	m_Entity;
+	GameEntity	m_Weapon;
+	GameEntity	m_Driver;
+	int			m_VehicleHealth;
+	int			m_VehicleMaxHealth;
+	float		m_Armor;
+
+	VehicleInfo()
+	{
+		m_Type = 0;
+		m_Entity = GameEntity();
+		m_Weapon = GameEntity();
+		m_Driver = GameEntity();
+		m_VehicleHealth = 0;
+		m_VehicleMaxHealth = 0;
+		m_Armor = 0.f;
+	}
 };
 
 struct ControllingTeam

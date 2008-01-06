@@ -93,6 +93,60 @@ public:
 	}
 };
 
+class obPlayerInfo
+{
+public:
+	enum { MaxPlayers=64,MaxTeams=6 };
+	enum Controller { Bot = 0, Human, Both };
+	struct PInfo 
+	{
+		int			m_Team;
+		int			m_Class;
+		Controller	m_Controller;
+
+		PInfo()
+		{
+			m_Team = OB_TEAM_NONE;
+			m_Class = 0;
+			m_Controller = Bot;
+		}
+	};
+
+	PInfo		m_Players[MaxPlayers];
+	int			m_MaxPlayers;
+	int			m_AvailableTeams;
+
+	int GetNumPlayers(int t = OB_TEAM_ALL, Controller c = Both) const
+	{
+		int n = 0;
+		for(int i = 0; i < MaxPlayers; ++i)
+		{
+			if(m_Players[i].m_Team==0)
+				continue;
+			if(t!=OB_TEAM_ALL&&m_Players[i].m_Team!=t)
+				continue;
+			if(c!=Both&&m_Players[i].m_Controller!=c)
+				continue;
+			++n;
+		}
+		return n;
+	}
+	int GetMaxPlayers() const
+	{
+		return m_MaxPlayers;
+	}
+	int GetAvailableTeams() const
+	{
+		return m_AvailableTeams;
+	}
+	obPlayerInfo()
+	{
+		for(int i = 0; i < MaxPlayers; ++i)
+			m_Players[i] = PInfo();
+		m_AvailableTeams = 0;
+	}
+};
+
 // typedef: IEngineInterface
 //		This struct defines all the function pointers that the
 //		game will fill in and give to the bot so that the bot may perform generic
@@ -214,13 +268,9 @@ public:
 	//		This function should tell the game to register all <MapGoal>s with the bot
 	virtual void GetGoals() = 0;
 
-	// Function: GetMaxNumPlayers
-	//		Gets the currently set maximum number of players from the game
-	virtual int GetMaxNumPlayers() = 0;
-
-	// Function: GetCurNumPlayers
-	//		Gets the current number of players from the game. Combine with above?
-	virtual int GetCurNumPlayers() = 0;
+	// Function: GetPlayerInfo
+	//		Collects team,class,controller info for all players.
+	virtual void GetPlayerInfo(obPlayerInfo &info) = 0;
 
 	// Function: InterfaceSendMessage
 	//		This function sends a message to the game with optional <MessageHelper> in/out parameters

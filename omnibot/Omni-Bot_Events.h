@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: ensiform $
-// $LastChangedDate: 2007-10-25 17:18:49 -0700 (Thu, 25 Oct 2007) $
-// $LastChangedRevision: 2167 $
+// $LastChangedBy: drevil $
+// $LastChangedDate: 2007-12-05 09:20:04 -0800 (Wed, 05 Dec 2007) $
+// $LastChangedRevision: 2250 $
 //
 // about: Generic Bot Events
 //
@@ -150,6 +150,7 @@ typedef enum
 	GEN_MSG_SCRIPTEVENT,
 
 	GEN_MSG_GOTOWAYPOINT,
+	GEN_MSG_VEHICLEINFO,
 
 	// This must stay last.
 	GEN_MSG_END
