@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2007-10-13 14:55:48 -0700 (Sat, 13 Oct 2007) $
-// $LastChangedRevision: 2148 $
+// $LastChangedDate: 2008-01-04 23:04:02 -0800 (Fri, 04 Jan 2008) $
+// $LastChangedRevision: 2272 $
 //
 // Title: TF Config
 //
@@ -186,7 +186,6 @@ typedef enum eTF_EntityFlags
 	TF_ENT_FLAG_TRANQED,
 	TF_ENT_FLAG_INFECTED,
 	TF_ENT_FLAG_GASSED,
-	TF_ENT_FLAG_SNIPERAIMING,
 	TF_ENT_FLAG_ASSAULTFIRING,
 	TF_ENT_FLAG_LEGSHOT,
 	TF_ENT_FLAG_CALTROP,
@@ -290,7 +289,9 @@ typedef enum eTF_Weapon
 	TF_WP_DEPLOY_SG,
 	TF_WP_DEPLOY_DISP,
 	TF_WP_DEPLOY_DETP,
+	TF_WP_DEPLOY_JUMPPAD,
 	TF_WP_FLAG,
+
 	TF_WP_GRENADE1,
 	TF_WP_GRENADE2,
 
@@ -367,7 +368,7 @@ typedef enum eTF_ItemTypes
 //		TF_TEAM_GREEN - Green team.
 typedef enum eTF_Team
 {
-	TF_TEAM_NONE = 0,
+	TF_TEAM_NONE = OB_TEAM_NONE,
 	TF_TEAM_BLUE,
 	TF_TEAM_RED,
 	TF_TEAM_YELLOW,

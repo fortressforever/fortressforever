@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-01-06 17:41:11 -0800 (Sat, 06 Jan 2007) $
-// $LastChangedRevision: 1491 $
+// $LastChangedBy: geekfeststarter $
+// $LastChangedDate: 2007-12-03 10:15:02 -0800 (Mon, 03 Dec 2007) $
+// $LastChangedRevision: 2243 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __COLOR_H__
-#define __COLOR_H__
+#ifndef __OMNICOLOR_H__
+#define __OMNICOLOR_H__
 
 #include "Omni-Bot_BasicTypes.h"
 

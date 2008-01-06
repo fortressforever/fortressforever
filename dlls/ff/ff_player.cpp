@@ -5009,9 +5009,17 @@ int CFFPlayer::AddSecondaryGrenades( int iNewCount )
 	return ret;
 }
 
-bool CFFPlayer::IsGrenadePrimed(void)
+bool CFFPlayer::IsGrenade1Primed()
 {
-	return ( ( m_iGrenadeState == FF_GREN_PRIMEONE ) || ( m_iGrenadeState == FF_GREN_PRIMETWO ) );
+	return ( ( m_iGrenadeState == FF_GREN_PRIMEONE ) );
+}
+bool CFFPlayer::IsGrenade2Primed()
+{
+	return ( ( m_iGrenadeState == FF_GREN_PRIMETWO ) );
+}
+bool CFFPlayer::IsGrenadePrimed()
+{
+	return IsGrenade1Primed() || IsGrenade2Primed();
 }
 
 void CFFPlayer::GrenadeThink(void)

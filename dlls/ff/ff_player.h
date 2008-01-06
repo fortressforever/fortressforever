@@ -459,7 +459,9 @@ public:
 	int AddPrimaryGrenades( int iNewCount );
 	int AddSecondaryGrenades( int iNewCount );
 
-	bool IsGrenadePrimed(void);
+	bool IsGrenade1Primed();
+	bool IsGrenade2Primed();
+	bool IsGrenadePrimed();	
 private:	
 	void GrenadeThink(void);
 	void ThrowGrenade(float fTimer, float speed = 630.0f);		// |-- Mirv: So we can drop grens

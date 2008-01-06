@@ -246,7 +246,7 @@ CFFProjectileIncendiaryRocket * CFFProjectileIncendiaryRocket::CreateRocket(cons
 #endif
 
 	pRocket->m_flDamage = iDamage;
-	pRocket->m_DmgRadius = iDamageRadius;//pRocket->m_flDamage * 2.0f;
+	pRocket->m_DmgRadius = iDamageRadius;
 
 	return pRocket; 
 }

@@ -198,6 +198,7 @@ namespace Omnibot
 		"ff_weapon_deploysentrygun", // TF_WP_DEPLOY_SG
 		"ff_weapon_deploydispenser", // TF_WP_DEPLOY_DISP
 		"ff_weapon_deploydetpack", // TF_WP_DEPLOY_DETP
+		"ff_weapon_deploymancannon", // TF_WP_DEPLOY_JUMPPAD
 		"ff_weapon_flag", // TF_WP_FLAG
 	};
 
@@ -732,11 +733,12 @@ namespace Omnibot
 
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN1))
 					serverpluginhelpers->ClientCommand(pEdict, "primeone");
-				else if(pPlayer->IsGrenadePrimed())
+				else if(pPlayer->IsGrenade1Primed())
 					serverpluginhelpers->ClientCommand(pEdict, "throwgren");
+
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN2))
 					serverpluginhelpers->ClientCommand(pEdict, "primetwo");
-				else if(pPlayer->IsGrenadePrimed())
+				else if(pPlayer->IsGrenade2Primed())
 					serverpluginhelpers->ClientCommand(pEdict, "throwgren");
                 
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DROPITEM))
@@ -1092,14 +1094,17 @@ namespace Omnibot
 				case CLASS_PLAYER_ALLY:
 					_category.SetFlag(ENT_CAT_SHOOTABLE);
 					_category.SetFlag(ENT_CAT_PLAYER);
+					_category.SetFlag(ENT_CAT_AVOID);
 					break;
 				case CLASS_DISPENSER:
 					_category.SetFlag(TF_ENT_CAT_BUILDABLE);
 					_category.SetFlag(ENT_CAT_SHOOTABLE);
+					_category.SetFlag(ENT_CAT_AVOID);
 					break;
 				case CLASS_SENTRYGUN:
 					_category.SetFlag(TF_ENT_CAT_BUILDABLE);
 					_category.SetFlag(ENT_CAT_SHOOTABLE);
+					_category.SetFlag(ENT_CAT_AVOID);
 					break;
 				case CLASS_DETPACK:
 					_category.SetFlag(TF_ENT_CAT_BUILDABLE);
@@ -1207,7 +1212,7 @@ namespace Omnibot
 							if(!pffPlayer->IsBot())
 								_flags.SetFlag(ENT_FLAG_HUMANCONTROLLED);
 							if(pffPlayer->IsSpeedEffectSet(SE_SNIPERRIFLE))
-								_flags.SetFlag(TF_ENT_FLAG_SNIPERAIMING);
+								_flags.SetFlag(ENT_FLAG_IRONSIGHT);
 							if(pffPlayer->IsSpeedEffectSet(SE_ASSAULTCANNON))
 								_flags.SetFlag(TF_ENT_FLAG_ASSAULTFIRING);
 							if(pffPlayer->IsRadioTagged())
@@ -1733,22 +1738,26 @@ namespace Omnibot
 		{
 		}
 
-		int GetMaxNumPlayers()
+		void GetPlayerInfo(obPlayerInfo &info)
 		{
-			// TODO: fix this
-			return gpGlobals->maxClients;
-		}
-
-		int GetCurNumPlayers()
-		{
-			int iNumPlayers = 0;
-			for(int i = 0; i < gpGlobals->maxClients; ++i)
+			for(int i = TEAM_BLUE; i <= TEAM_GREEN; ++i)
 			{
-				CBaseEntity *pEnt = CBaseEntity::Instance(i);
-				if(pEnt)
-					++iNumPlayers;
+				CFFTeam *pTeam = GetGlobalFFTeam(i);
+				if(pTeam->GetTeamLimits()>0)
+					info.m_AvailableTeams |= (1<<obUtilGetBotTeamFromGameTeam(i));
 			}
-			return iNumPlayers;
+
+			for(int i = 1; i <= gpGlobals->maxClients; ++i)
+			{
+				CBasePlayer	*pEnt = UTIL_PlayerByIndex(i);
+				if(pEnt)
+				{
+					GameEntity ge = HandleFromEntity(pEnt);
+					info.m_Players[i].m_Team = GetEntityTeam(ge);
+					info.m_Players[i].m_Class = GetEntityClass(ge);
+					info.m_Players[i].m_Controller = pEnt->IsBot()?obPlayerInfo::Bot:obPlayerInfo::Human;
+				}
+			}
 		}
 
 		obResult InterfaceSendMessage(const MessageHelper &_data, const GameEntity _ent)

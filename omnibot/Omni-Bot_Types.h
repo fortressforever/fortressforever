@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2007-11-08 23:05:03 -0800 (Thu, 08 Nov 2007) $
-// $LastChangedRevision: 2201 $
+// $LastChangedDate: 2007-12-16 22:06:51 -0800 (Sun, 16 Dec 2007) $
+// $LastChangedRevision: 2270 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,8 @@ typedef enum eMessageType
 	kInfo,
 	kWarning,
 	kError,
-	kDebug
+	kDebug,
+	kScript
 } MessageType;
 
 // typedef: GameEntity
@@ -190,6 +191,13 @@ typedef enum eBotDebugFlag
 	// THIS MUST STAY LAST
 	NUM_BOT_DEBUG_FLAGS = 16,
 } BotDebugFlag;
+
+typedef enum eTeamBase
+{
+	OB_TEAM_ALL = -2,
+	OB_TEAM_SPECTATOR = -1,
+	OB_TEAM_NONE,
+} TeamBase;
 
 // enumerations: Helpers
 //		RANDOM_CLASS - Pick a random class.
@@ -597,6 +605,8 @@ typedef enum eBasicGoals
 //		ENT_FLAG_RELOADING - Entity is currently reloading
 //		ENT_FLAG_ON_ICE - Entity on slippery surface.
 //		ENT_FLAG_HUMANCONTROLLED - Human player controls this entity.
+//		ENT_FLAG_IRONSIGHT - Entity is aiming down their weapon.
+//		ENT_FLAG_INVEHICLE - Entity is inside a vehicle
 typedef enum eEntityFlag
 {
 	ENT_FLAG_TEAM1,
@@ -617,6 +627,8 @@ typedef enum eEntityFlag
 	ENT_FLAG_RELOADING,
 	ENT_FLAG_ON_ICE,
 	ENT_FLAG_HUMANCONTROLLED,
+	ENT_FLAG_IRONSIGHT,
+	ENT_FLAG_INVEHICLE,
 
 	// THIS MUST BE LAST
 	ENT_FLAG_FIRST_USER	= 32
@@ -711,8 +723,8 @@ typedef enum eSoundType
 	SND_TAKEDAMAGE,
 	SND_POWERUP_SPAWN,
 	SND_POWERUP_PICKUP,
-	SND_WEAPON_FIRE,
-	SND_WEAPON_RELOAD,
+	SND_WEAPON_FIRE_OMNIBOT,
+	SND_WEAPON_RELOAD_OMNIBOT,
 	SND_WEAPON_EMPTY,
 	SND_WEAPON_STARTFIRE,
 	SND_VOICE_TAUNT,
@@ -865,6 +877,13 @@ typedef struct obUserData_t
 		udata.m_Vector[1] = _y; 
 		udata.m_Vector[2] = _z;
 	};
+	obUserData_t(float *_v) : 
+		DataType(dtVector) 
+	{
+		udata.m_Vector[0] = _v[0]; 
+		udata.m_Vector[1] = _v[1]; 
+		udata.m_Vector[2] = _v[2]; 
+	};
 	obUserData_t(int _0, int _1, int _2) : DataType(dt3_4byteFlags)
 	{
 		udata.m_4ByteFlags[0] = _0; 
@@ -963,7 +982,37 @@ typedef struct obUserData_t
 		return 0;
 	};
 
-	
+	//////////////////////////////////////////////////////////////////////////
+	bool Get(float &_val)
+	{
+		if(IsFloat())
+		{
+			_val = GetFloat();
+			return true;
+		}
+		return false;
+	}
+	bool Get(int &_val)
+	{
+		if(IsInt())
+		{
+			_val = GetInt();
+			return true;
+		}
+		return false;
+	}
+	bool Get(float *_val)
+	{
+		if(IsVector())
+		{
+			_val[0] = GetVector()[0];
+			_val[1] = GetVector()[1];
+			_val[2] = GetVector()[2];
+			return true;
+		}
+		return false;
+	}
+	//////////////////////////////////////////////////////////////////////////
 #endif
 } obUserData;
 
