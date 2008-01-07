@@ -71,6 +71,13 @@ ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | 
 	}
 #endif
 
+void CFFProjectilePipebomb::Precache( void ) 
+{
+
+	BaseClass::Precache();
+	PrecacheModel("sprites/bluelaser1.vmt");
+}
+
 //----------------------------------------------------------------------------
 // Purpose: Spawn like a normal grenade but replace skin
 //----------------------------------------------------------------------------
@@ -93,21 +100,53 @@ void CFFProjectilePipebomb::Spawn()
 #else
 
 	// Start the armed light
-	m_pArmedSprite = CSprite::SpriteCreate("sprites/redglow1.vmt", GetLocalOrigin(), false);
+	//m_pArmedSprite = CSprite::SpriteCreate("sprites/redglow1.vmt", GetLocalOrigin(), false);
 
-	int	nAttachment = LookupAttachment("glowsprite");
+	//int	nAttachment = LookupAttachment("glowsprite");
 
-	if (m_pArmedSprite != NULL) 
+	//if (m_pArmedSprite != NULL) 
+	//{
+	//	m_pArmedSprite->FollowEntity(this);
+	//	m_pArmedSprite->SetAttachment(this, nAttachment);
+	//	m_pArmedSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+	//	m_pArmedSprite->SetScale(0.05f);
+	//	m_pArmedSprite->SetGlowProxySize(4.0f);
+
+	//	m_pArmedSprite->SetThink(&CBaseEntity::SUB_Remove);
+	//	m_pArmedSprite->SetNextThink(gpGlobals->curtime + pipebomb_time_till_live.GetFloat());
+	//}
+
+	// Start up the eye glow
+	m_pMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
+
+	int nAttachment = LookupAttachment( "fuse" );
+
+	if ( m_pMainGlow != NULL )
 	{
-		m_pArmedSprite->FollowEntity(this);
-		m_pArmedSprite->SetAttachment(this, nAttachment);
-		m_pArmedSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
-		m_pArmedSprite->SetScale(0.05f);
-		m_pArmedSprite->SetGlowProxySize(4.0f);
-
-		m_pArmedSprite->SetThink(&CBaseEntity::SUB_Remove);
-		m_pArmedSprite->SetNextThink(gpGlobals->curtime + pipebomb_time_till_live.GetFloat());
+		m_pMainGlow->FollowEntity( this );
+		m_pMainGlow->SetAttachment( this, nAttachment );
+		m_pMainGlow->SetTransparency( kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation );
+		m_pMainGlow->SetScale( 0.2f );
+		m_pMainGlow->SetGlowProxySize( 4.0f );
+		m_pMainGlow->SetThink(&CBaseEntity::SUB_Remove);
+		m_pMainGlow->SetNextThink(gpGlobals->curtime + pipebomb_time_till_live.GetFloat());
 	}
+
+	// Start up the eye trail
+	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
+
+	if ( m_pGlowTrail != NULL )
+	{
+		m_pGlowTrail->FollowEntity( this );
+		m_pGlowTrail->SetAttachment( this, nAttachment );
+		m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
+		m_pGlowTrail->SetStartWidth( 10.0f );
+		m_pGlowTrail->SetEndWidth( 5.0f );
+		m_pGlowTrail->SetLifeTime( 0.5f );
+	}
+	
+
+
 #endif	
 }
 

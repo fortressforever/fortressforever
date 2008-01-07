@@ -19,6 +19,7 @@
 
 #include "ff_projectile_grenade.h"
 #include "Sprite.h"
+#include "SpriteTrail.h"
 
 #ifdef GAME_DLL
 	#include "baseentity.h"
@@ -57,6 +58,8 @@ public:
 	virtual Class_T Classify( void ) { return CLASS_PIPEBOMB; }
 	//-----------------------------------------------
 
+	void Precache( void );
+
 #ifdef CLIENT_DLL
 	virtual int DrawModel(int flags);
 #endif
@@ -79,7 +82,8 @@ public:
 	bool fAltSkin;
 #endif
 
-	CHandle<CSprite>		m_pArmedSprite;
+	CHandle<CSprite>		m_pMainGlow;
+	CHandle<CSpriteTrail>	m_pGlowTrail;
 };
 
 
