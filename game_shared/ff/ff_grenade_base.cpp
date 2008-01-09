@@ -23,6 +23,7 @@
 	#include "c_te_effect_dispatch.h"
 	#include "c_ff_player.h"
 	#include "ff_grenade_parse.h"
+	#include "beamdraw.h"
 #endif
 
 //========================================================================
@@ -33,6 +34,28 @@ BEGIN_DATADESC(CFFGrenadeBase)
 	DEFINE_THINKFUNC(GrenadeThink),
 END_DATADESC()
 #endif
+
+#ifdef CLIENT_DLL
+CLIENTEFFECT_REGISTER_BEGIN(PrecacheGrenadeSprite)
+CLIENTEFFECT_MATERIAL("sprites/ff_target")
+CLIENTEFFECT_MATERIAL("sprites/ff_trail")
+CLIENTEFFECT_REGISTER_END()
+#endif
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeBase, DT_FFGrenadeBase)
+
+BEGIN_NETWORK_TABLE(CFFGrenadeBase, DT_FFGrenadeBase)
+#ifdef CLIENT_DLL
+	RecvPropFloat(RECVINFO(m_flSpawnTime)) 
+#else
+	SendPropFloat(SENDINFO(m_flSpawnTime)),
+#endif
+END_NETWORK_TABLE()
+
+//BEGIN_PREDICTION_DATA(CFFGrenadeBase)
+//END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 
 //========================================================================
 // Developer ConVars
@@ -90,7 +113,26 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 		SetThink(&CFFGrenadeBase::GrenadeThink);
 		SetNextThink(gpGlobals->curtime);
+
+		CreateTrail();
 	}	
+
+	void CFFGrenadeBase::CreateTrail()
+	{
+		m_pTrail = CSpriteTrail::SpriteTrailCreate("sprites/ff_trail.vmt", GetLocalOrigin(), false);
+
+		if (!m_pTrail)
+			return;
+
+		color32 col = GetColour();
+
+		m_pTrail->FollowEntity(this);
+		//m_pTrail->SetAttachment(this, nAttachment);
+		m_pTrail->SetTransparency(kRenderTransAdd, col.r, col.g, col.b, col.a, kRenderFxNone);
+		m_pTrail->SetStartWidth(10.0f);
+		m_pTrail->SetEndWidth(5.0f);
+		m_pTrail->SetLifeTime(0.5f);
+	}
 
 	//-----------------------------------------------------------------------------
 	// Purpose: This'll be called once the grenade is actually thrown
@@ -373,12 +415,75 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 		return *pGrenadeInfo;
 	}
+
+	void DrawSpriteRotated( const Vector &vecOrigin, float flWidth, float flHeight, color32 color, float rotation );
+
+	ConVar target_clamp_min("ffdev_target_clamp_min", "5.0");
+	ConVar target_clamp_max("ffdev_target_clamp_max", "60.0"); // 30
+	ConVar target_size_base("ffdev_target_size_base", "15.0");
+	ConVar target_size_multiplier("ffdev_target_size_multiplier", "10.0"); // 15
+	ConVar target_time_remaining("ffdev_target_time_remaining", "3.0");
+
+	ConVar target_speed_max("ffdev_target_speed_min", "100");
+	ConVar target_speed_min("ffdev_target_speed_min", "20");
+
+	ConVar target_rotation("ffdev_target_rotation", "-200.0"); // -100
+
+	int CFFGrenadeBase::DrawModel(int flags)
+	{
+		int ret = BaseClass::DrawModel(flags);
+
+		if (ret == 0)
+			return 0;
+
+		float flSpeed = GetAbsVelocity().Length();
+		
+		float speed_max = target_speed_max.GetFloat();
+		float speed_min = target_speed_min.GetFloat();
+
+		// Safety check...
+		if (speed_max == speed_min)
+			speed_max += 0.1f;
+
+		if (flSpeed > speed_max)
+			return ret;
+
+		color32 col = GetColour();
+
+		// Need to scale somewhere between speed_min and speed_max...
+		if (flSpeed > speed_min)
+		{
+			float flScale = (flSpeed - speed_min) / (speed_max - speed_min);
+			col.a *= 1.0f - flScale;
+		}
+
+		float flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
+		float flSize = target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
+		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());
+
+		IMaterial *pMaterial = materials->FindMaterial("sprites/ff_target", TEXTURE_GROUP_CLIENT_EFFECTS);
+
+		if (pMaterial)
+		{
+			materials->Bind(pMaterial);
+			DrawSpriteRotated(GetAbsOrigin(), flSize, flSize, col, anglemod(m_flSpawnTime) + gpGlobals->curtime * target_rotation.GetFloat());
+		}
+
+		return ret;
+	}
 #endif
 
 void CFFGrenadeBase::Precache()
 {
 	//0000287: SV_StartSound: weapons/debris1.wav not precached (0)
 	PrecacheScriptSound("BaseGrenade.Explode");
+	PrecacheModel("sprites/ff_trail.vmt");
 
 	BaseClass::Precache();
+}
+
+color32 CFFGrenadeBase::GetColour()
+{
+	color32 col = { 255, 0, 250, 200 };
+	return col;
 }

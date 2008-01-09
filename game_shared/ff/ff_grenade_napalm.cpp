@@ -54,6 +54,7 @@ public:
 
 	float m_flLastBurnCheck;
 
+	virtual color32 GetColour() { color32 col = { 255, 128, 0, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeNapalm() {}

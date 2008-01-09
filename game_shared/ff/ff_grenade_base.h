@@ -14,6 +14,10 @@
 #define FF_GRENADE_BASE_H
 
 #include "ff_projectile_base.h"
+#include "Sprite.h"
+#include "SpriteTrail.h"
+
+#define GREN_ALPHA_DEFAULT	200
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeBase C_FFGrenadeBase
@@ -38,6 +42,7 @@ class CFFGrenadeBase : public CFFProjectileBase
 {
 public:
 	DECLARE_CLASS( CFFGrenadeBase, CFFProjectileBase );
+	DECLARE_NETWORKCLASS(); 
 
 #ifdef GAME_DLL
 	virtual float GetGrenadeGravity()		{ return gren_grav.GetFloat(); }
@@ -54,12 +59,15 @@ public:
 	
 	virtual Class_T		Classify( void ) { return CLASS_GREN; }
 	Class_T	GetGrenId() { return Classify(); }
+	virtual color32 CFFGrenadeBase::GetColour();
 
 #ifdef GAME_DLL
 
 	DECLARE_DATADESC();
 
 	virtual void	Spawn();
+	virtual void CFFGrenadeBase::CreateTrail();
+
 	virtual void	GrenadeThink();
 	virtual void	Detonate();
 	virtual void	Explode(trace_t *pTrace, int bitsDamageType);
@@ -93,7 +101,12 @@ private:
 public:
 	CFFGrenadeInfo const &GetFFGrenadeData() const;
 
+	int		DrawModel(int flags);
+
 #endif
+
+private:
+	CHandle<CSpriteTrail>	m_pTrail;
 };
 
 #endif //FF_GRENADE_BASE_H

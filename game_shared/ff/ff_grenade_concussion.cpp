@@ -108,6 +108,8 @@ public:
 	virtual const char *GetBounceSound() { return "ConcussionGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_CONC; }
 
+	virtual color32 GetColour() { color32 col = { 255, 255, 210, GREN_ALPHA_DEFAULT }; return col; }
+
 #ifdef CLIENT_DLL
 	CFFGrenadeConcussion() {}
 	CFFGrenadeConcussion(const CFFGrenadeConcussion&) {}

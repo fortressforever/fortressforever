@@ -48,7 +48,7 @@ public:
 	virtual const char *GetBounceSound() { return "BaseGrenade.BounceSound"; }
 	virtual const char *GetFlightSound() { return NULL; }
 
-	float m_flSpawnTime;
+	CNetworkVarForDerived(float, m_flSpawnTime);
 	float m_flNextBounceSoundTime;
 
 	string_t m_iSourceClassname;

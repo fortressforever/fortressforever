@@ -403,6 +403,90 @@ void DrawSprite( const Vector &vecOrigin, float flWidth, float flHeight, color32
 	pMesh->Draw();
 }
 
+void DrawSpriteRotated( const Vector &vecOrigin, float flWidth, float flHeight, color32 color, float rotation )
+{
+	unsigned char pColor[4] = { color.r, color.g, color.b, color.a };
+
+	// Generate half-widths
+	flWidth *= 0.5f;
+	flHeight *= 0.5f;
+
+	float flSin = sin(rotation);
+	float flCos = cos(rotation);
+
+	// Compute direction vectors for the sprite
+	Vector fwd, right( flCos, flSin, 0 ), up( flSin, flCos, 0 );
+	VectorSubtract( CurrentViewOrigin(), vecOrigin, fwd );
+	float flDist = VectorNormalize( fwd );
+	if (flDist >= 1e-3)
+	{
+		// Rotate this around fwd so that we rotate onscreen :)
+		//Vector P = CurrentViewUp();
+		//Vector A = CurrentViewForward();
+		//P = (P - (DotProduct(A, P) * A) * flCos) + (CrossProduct(P, A) * flSin) + (DotProduct(A, P) * A);
+
+		QAngle angView = CurrentViewAngles() + QAngle(0.0f, 0.0f, anglemod(rotation));
+		Vector vecUp;
+		AngleVectors(angView, NULL, NULL, &vecUp);
+
+		CrossProduct( vecUp, fwd, right );
+		flDist = VectorNormalize( right );
+		if (flDist >= 1e-3)
+		{
+			CrossProduct( fwd, right, up );
+		}
+		else
+		{
+			// In this case, fwd == g_vecVUp, it's right above or 
+			// below us in screen space
+			CrossProduct( fwd, CurrentViewRight(), up );
+			VectorNormalize( up );
+			CrossProduct( up, fwd, right );
+		}
+	}
+
+	CMeshBuilder meshBuilder;
+	Vector point;
+	IMesh* pMesh = materials->GetDynamicMesh( );
+
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color4ubv (pColor);
+	meshBuilder.TexCoord2f (0, 0, 1);
+	VectorMA (vecOrigin, -flHeight, up, point);
+	VectorMA (point, -flWidth, right, point);
+	meshBuilder.Position3fv (point.Base());
+	//meshBuilder.Position3f(vecOrigin.x + (-flCos + flSin) * flWidth, vecOrigin.y + (-flSin - flCos) * flWidth, vecOrigin.z);
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4ubv (pColor);
+	meshBuilder.TexCoord2f (0, 0, 0);
+	VectorMA (vecOrigin, flHeight, up, point);
+	VectorMA (point, -flWidth, right, point);
+	meshBuilder.Position3fv (point.Base());
+	//meshBuilder.Position3f(vecOrigin.x + (-flCos - flSin) * flWidth, vecOrigin.y + (-flSin + flCos) * flWidth, vecOrigin.z);
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4ubv (pColor);
+	meshBuilder.TexCoord2f (0, 1, 0);
+	VectorMA (vecOrigin, flHeight, up, point);
+	VectorMA (point, flWidth, right, point);
+	meshBuilder.Position3fv (point.Base());
+	//meshBuilder.Position3f(vecOrigin.x + (flCos - flSin) * flWidth, vecOrigin.y + (flSin + flCos) * flWidth, vecOrigin.z);
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4ubv (pColor);
+	meshBuilder.TexCoord2f (0, 1, 1);
+	VectorMA (vecOrigin, -flHeight, up, point);
+	VectorMA (point, flWidth, right, point);
+	meshBuilder.Position3fv (point.Base());
+	//meshBuilder.Position3f(vecOrigin.x + (flCos + flSin) * flWidth, vecOrigin.y + (flSin - flCos) * flWidth, vecOrigin.z);
+	meshBuilder.AdvanceVertex();
+	
+	meshBuilder.End();
+	pMesh->Draw();
+}
+
 
 //-----------------------------------------------------------------------------
 // Compute vectors perpendicular to the beam
