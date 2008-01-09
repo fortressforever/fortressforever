@@ -46,6 +46,8 @@ protected:
 	virtual void PaintLabel();
 
 	virtual void PaintNumbers(vgui::HFont font, int xpos, int ypos, int value);
+	virtual void PaintNumbersRightAligned(vgui::HFont font, int xpos, int ypos, int value, int maxchars);
+
 
 private:
 
