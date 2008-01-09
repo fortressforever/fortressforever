@@ -24,7 +24,8 @@
 class CFFGrenadeNormal : public CFFGrenadeBase
 {
 public:
-	DECLARE_CLASS(CFFGrenadeNormal,CFFGrenadeBase)
+	DECLARE_CLASS(CFFGrenadeNormal,CFFGrenadeBase);
+	DECLARE_NETWORKCLASS(); 
 
 	virtual void Precache();
 	virtual void Spawn();
@@ -36,11 +37,18 @@ public:
 	virtual float GetGrenadeRadius()		{ return GetGrenadeDamage() * 2.15f/*1.5f*/; }
 #endif
 
+	virtual color32 GetColour() { color32 col = { 150, 160, 150, GREN_ALPHA_DEFAULT }; return col; }
+
 #ifdef CLIENT_DLL
 	CFFGrenadeNormal() {}
 	CFFGrenadeNormal(const CFFGrenadeNormal &) {}
 #endif
 };
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeNormal, DT_FFGrenadeNormal)
+
+BEGIN_NETWORK_TABLE(CFFGrenadeNormal, DT_FFGrenadeNormal)
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(ff_grenade_normal, CFFGrenadeNormal);
 PRECACHE_WEAPON_REGISTER(ff_grenade_normal);

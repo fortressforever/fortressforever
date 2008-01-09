@@ -32,7 +32,8 @@
 class CFFGrenadeEmp : public CFFGrenadeBase
 {
 public:
-	DECLARE_CLASS(CFFGrenadeEmp,CFFGrenadeBase)
+	DECLARE_CLASS(CFFGrenadeEmp,CFFGrenadeBase);
+	DECLARE_NETWORKCLASS();
 
 	virtual void Precache();
 	virtual Class_T Classify( void ) { return CLASS_GREN_EMP; }
@@ -41,6 +42,8 @@ public:
 	virtual float GetGrenadeRadius() { return 240.0f; }
 	virtual float GetGrenadeDamage() { return 0.0f; }
 	virtual const char *GetBounceSound() { return "EmpGrenade.Bounce"; }
+
+	virtual color32 GetColour() { color32 col = { 225, 225, 0, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeEmp() {}

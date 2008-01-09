@@ -26,10 +26,13 @@
 class CFFGrenadeMirvlet : public CFFGrenadeBase
 {
 public:
-	DECLARE_CLASS(CFFGrenadeMirvlet,CFFGrenadeBase)
+	DECLARE_CLASS(CFFGrenadeMirvlet,CFFGrenadeBase);
+	DECLARE_NETWORKCLASS(); 
 
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "MirvletGrenade.Bounce"; }
+
+	virtual color32 GetColour() { color32 col = { 255, 0, 0, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeMirvlet() {}
@@ -38,6 +41,11 @@ public:
 	virtual void Spawn();
 #endif
 };
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeMirvlet, DT_FFGrenadeMirvlet)
+
+BEGIN_NETWORK_TABLE(CFFGrenadeMirvlet, DT_FFGrenadeMirvlet)
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_grenade_mirvlet, CFFGrenadeMirvlet);
 PRECACHE_WEAPON_REGISTER( ff_grenade_mirvlet );

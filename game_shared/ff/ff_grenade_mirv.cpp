@@ -44,11 +44,14 @@
 class CFFGrenadeMirv : public CFFGrenadeBase
 {
 public:
-	DECLARE_CLASS(CFFGrenadeMirv,CFFGrenadeBase)
+	DECLARE_CLASS(CFFGrenadeMirv,CFFGrenadeBase);
+	DECLARE_NETWORKCLASS(); 
 
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "MirvGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_MIRV; }
+
+	virtual color32 GetColour() { color32 col = { 255, 0, 0, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeMirv() {}
@@ -60,21 +63,10 @@ public:
 #endif
 };
 
-class CFFGrenadeMirvlet : public CFFGrenadeBase
-{
-public:
-	DECLARE_CLASS(CFFGrenadeMirvlet,CFFGrenadeBase)
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeMirv, DT_FFGrenadeMirv)
 
-	virtual void Precache();
-	virtual Class_T Classify( void ) { return CLASS_GREN_MIRVLET; }
-
-#ifdef CLIENT_DLL
-	CFFGrenadeMirvlet() {}
-	CFFGrenadeMirvlet( const CFFGrenadeMirvlet& ) {}
-#else
-	virtual void Spawn();
-#endif
-};
+BEGIN_NETWORK_TABLE(CFFGrenadeMirv, DT_FFGrenadeMirv)
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_grenade_mirv, CFFGrenadeMirv);
 PRECACHE_WEAPON_REGISTER( ff_grenade_mirv );
@@ -127,7 +119,7 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 		if (vecVelocity.z < 0)
 			vecVelocity.z *= -1;
 
-		CFFGrenadeMirvlet *pMirvlet = (CFFGrenadeMirvlet *)CreateEntityByName( "ff_grenade_mirvlet" );
+		CFFGrenadeBase *pMirvlet = (CFFGrenadeBase *) CreateEntityByName( "ff_grenade_mirvlet" );
 
 		// I dunno... just try again i suppose
 		if (!pMirvlet)

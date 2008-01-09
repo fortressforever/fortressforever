@@ -52,12 +52,15 @@
 class CFFGrenadeCaltrop : public CFFGrenadeBase
 {
 public:
-	DECLARE_CLASS(CFFGrenadeCaltrop,CFFGrenadeBase)
+	DECLARE_CLASS(CFFGrenadeCaltrop,CFFGrenadeBase);
+	DECLARE_NETWORKCLASS();
 
 	virtual void Precache();
 	virtual Class_T Classify( void ) { return CLASS_GREN_CALTROP; }
 
 	virtual float		GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
+
+	virtual color32 GetColour() { color32 col = { 128, 225, 255, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeCaltrop() {}
@@ -69,6 +72,11 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 #endif
 };
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeCaltrop, DT_FFGrenadeCaltrop)
+
+BEGIN_NETWORK_TABLE(CFFGrenadeCaltrop, DT_FFGrenadeCaltrop)
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_grenade_caltrop, CFFGrenadeCaltrop );
 PRECACHE_WEAPON_REGISTER( ff_grenade_caltrop );

@@ -48,6 +48,11 @@ int g_iEmpRingTexture = -1;
 	ConVar emp_buildable_damage("ffdev_emp_buildable_damage","10.0",FCVAR_CHEAT,"Amount of damage to deal to sentryguns and dispensers in the emp radius.");
 #endif
 
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeEmp, DT_FFGrenadeEmp)
+
+BEGIN_NETWORK_TABLE(CFFGrenadeEmp, DT_FFGrenadeEmp)
+END_NETWORK_TABLE()
+
 LINK_ENTITY_TO_CLASS( ff_grenade_emp, CFFGrenadeEmp );
 PRECACHE_WEAPON_REGISTER( ff_grenade_emp );
 

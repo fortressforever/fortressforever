@@ -153,11 +153,14 @@ class CFFGrenadeNail : public CFFGrenadeBase
 {
 public:
 	DECLARE_CLASS(CFFGrenadeNail, CFFGrenadeBase) 
+	DECLARE_NETWORKCLASS(); 
 
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "NailGrenade.Bounce"; }
 
 	virtual Class_T Classify( void ) { return CLASS_GREN_NAIL; } 
+
+	virtual color32 GetColour() { color32 col = { 0, 0, 160, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeNail() {}
@@ -188,6 +191,11 @@ protected:
 		DEFINE_THINKFUNC(NailEmit), 
 	END_DATADESC() 
 #endif
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeNail, DT_FFGrenadeNail)
+
+BEGIN_NETWORK_TABLE(CFFGrenadeNail, DT_FFGrenadeNail)
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(ff_grenade_nail, CFFGrenadeNail);
 PRECACHE_WEAPON_REGISTER(ff_grenade_nail);

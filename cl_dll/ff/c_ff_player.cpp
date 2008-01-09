@@ -1878,6 +1878,9 @@ const QAngle& C_FFPlayer::GetRenderAngles( void )
 //-----------------------------------------------------------------------------
 void C_FFPlayer::UpdateClientSideAnimation()
 {
+	if (!ShouldDraw())
+		return;
+
 	// Update the animation data. It does the local check here so this works when using
 	// a third-person camera (and we don't have valid player angles).
 	if ( this == C_FFPlayer::GetLocalFFPlayer() )
