@@ -116,6 +116,28 @@ void CHudNumericDisplay::PaintNumbers(HFont font, int xpos, int ypos, int value)
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: paints a number right aligned, so the digits column is always in the same place
+//-----------------------------------------------------------------------------
+void CHudNumericDisplay::PaintNumbersRightAligned(HFont font, int xpos, int ypos, int value, int maxchars)
+{	
+	int charWidth = surface()->GetCharacterWidth(font, '0');
+	int iTempxpos = xpos + charWidth * maxchars; // allow for X characters of score
+
+	wchar_t unicode[6];
+	swprintf(unicode, L"%d", value);
+
+	surface()->DrawSetTextFont( font );
+	
+	for( wchar_t *wch = unicode; *wch != 0; wch++ )
+		iTempxpos -= surface()->GetCharacterWidth(font, *wch);
+
+	surface()->DrawSetTextPos( iTempxpos, ypos );
+
+	for( wchar_t *wch = unicode; *wch != 0; wch++ )
+		surface()->DrawUnicodeChar( *wch );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: draws the text
 //-----------------------------------------------------------------------------
 void CHudNumericDisplay::PaintLabel( void )
