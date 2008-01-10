@@ -55,6 +55,13 @@ public:
 	bool m_fIsHandheld;
 #endif
 
+#ifdef CLIENT_DLL
+	CFFGrenadeBase()
+	{
+		m_flModelSize = 0.0f;
+	}
+#endif
+
 	virtual void	Precache();
 	
 	virtual Class_T		Classify( void ) { return CLASS_GREN; }
@@ -66,7 +73,7 @@ public:
 	DECLARE_DATADESC();
 
 	virtual void	Spawn();
-	virtual void CFFGrenadeBase::CreateTrail();
+	virtual void	CreateTrail();
 
 	virtual void	GrenadeThink();
 	virtual void	Detonate();
@@ -93,6 +100,8 @@ protected:
 #else
 
 private:
+
+	float	m_flModelSize;
 	
 	// This is only needed client-side so far
 	virtual const unsigned char	*GetEncryptionKey() { return NULL; }
