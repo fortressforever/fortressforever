@@ -24,6 +24,7 @@
 	#include "c_ff_player.h"
 	#include "ff_grenade_parse.h"
 	#include "beamdraw.h"
+	#include "cmodel.h"
 #endif
 
 //========================================================================
@@ -38,6 +39,7 @@ END_DATADESC()
 #ifdef CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN(PrecacheGrenadeSprite)
 CLIENTEFFECT_MATERIAL("sprites/ff_target")
+CLIENTEFFECT_MATERIAL("sprites/ff_target_blur")
 CLIENTEFFECT_MATERIAL("sprites/ff_trail")
 CLIENTEFFECT_REGISTER_END()
 #endif
@@ -420,7 +422,7 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 	ConVar target_clamp_min("ffdev_target_clamp_min", "5.0");
 	ConVar target_clamp_max("ffdev_target_clamp_max", "60.0"); // 30
-	ConVar target_size_base("ffdev_target_size_base", "15.0");
+	ConVar target_size_base("ffdev_target_size_base", "1.0");	// 15
 	ConVar target_size_multiplier("ffdev_target_size_multiplier", "10.0"); // 15
 	ConVar target_time_remaining("ffdev_target_time_remaining", "3.0");
 
@@ -450,6 +452,25 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 		color32 col = GetColour();
 
+		if (m_flModelSize == 0.0f)
+		{
+			const model_t *pModel = GetModel();
+
+			if (pModel)
+			{
+				studiohdr_t *pStudio = modelinfo->GetStudiomodel(pModel);
+
+				if (pStudio)
+				{
+					Vector vecDimensions = pStudio->hull_max - pStudio->hull_min;
+
+					// We could be cunning and project these with our projection matrix
+					// in order to be more accurate, but lets try like this first
+					m_flModelSize = vecDimensions.Length();
+				}
+			}
+		}
+
 		// Need to scale somewhere between speed_min and speed_max...
 		if (flSpeed > speed_min)
 		{
@@ -458,15 +479,32 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 		}
 
 		float flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
-		float flSize = target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
+		float flSize = m_flModelSize * target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
 		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());
 
-		IMaterial *pMaterial = materials->FindMaterial("sprites/ff_target", TEXTURE_GROUP_CLIENT_EFFECTS);
+		// The blur graphic now has everything all in one
+		// TODO: Stop doing this every frame.
+		//IMaterial *pMaterial = materials->FindMaterial("sprites/ff_target", TEXTURE_GROUP_CLIENT_EFFECTS);
+		IMaterial *pMaterialBlur = materials->FindMaterial("sprites/ff_target_blur", TEXTURE_GROUP_CLIENT_EFFECTS);
 
-		if (pMaterial)
+		float flRotation = anglemod(m_flSpawnTime) + gpGlobals->curtime * target_rotation.GetFloat();
+
+		/*if (pMaterialBlur)
 		{
-			materials->Bind(pMaterial);
-			DrawSpriteRotated(GetAbsOrigin(), flSize, flSize, col, anglemod(m_flSpawnTime) + gpGlobals->curtime * target_rotation.GetFloat());
+			color32 colblur = col;
+			colblur.r *= 0.5f;
+			colblur.g *= 0.5f;
+			colblur.b *= 0.5f;
+			colblur.a *= 0.6f;
+			materials->Bind(pMaterialBlur);
+			DrawSpriteRotated(GetAbsOrigin(), flSize, flSize, colblur, flRotation);
+		}*/
+
+		// Just display the blur material as that has all the stuff in one
+		if (pMaterialBlur)
+		{
+			materials->Bind(pMaterialBlur);
+			DrawSpriteRotated(GetAbsOrigin(), flSize, flSize, col, flRotation);
 		}
 
 		return ret;
