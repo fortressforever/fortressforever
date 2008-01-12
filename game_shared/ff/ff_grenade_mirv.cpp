@@ -51,7 +51,7 @@ public:
 	virtual const char *GetBounceSound() { return "MirvGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_MIRV; }
 
-	virtual color32 GetColour() { color32 col = { 255, 0, 0, GREN_ALPHA_DEFAULT }; return col; }
+	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeMirv() {}

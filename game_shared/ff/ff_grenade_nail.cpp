@@ -160,7 +160,7 @@ public:
 
 	virtual Class_T Classify( void ) { return CLASS_GREN_NAIL; } 
 
-	virtual color32 GetColour() { color32 col = { 0, 0, 160, GREN_ALPHA_DEFAULT }; return col; }
+	virtual color32 GetColour() { color32 col = { 128, 225, 255, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeNail() {}
