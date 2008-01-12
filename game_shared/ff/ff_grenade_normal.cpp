@@ -37,7 +37,7 @@ public:
 	virtual float GetGrenadeRadius()		{ return GetGrenadeDamage() * 2.15f/*1.5f*/; }
 #endif
 
-	virtual color32 GetColour() { color32 col = { 150, 160, 150, GREN_ALPHA_DEFAULT }; return col; }
+	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeNormal() {}

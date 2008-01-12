@@ -52,7 +52,7 @@ public:
 	virtual const char *GetBounceSound() { return "GasGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_GAS; }
 
-	virtual color32 GetColour() { color32 col = { 0, 128, 0, GREN_ALPHA_DEFAULT }; return col; }
+	virtual color32 GetColour() { color32 col = { 20, 168, 20, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeGas() {}
