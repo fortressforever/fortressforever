@@ -638,10 +638,11 @@ int CBasePlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 
 bool CBasePlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
 {
+	/*  Jiggles: We need to predict team members for our Medpack and Wrench
 	// Team members shouldn't be adjusted unless friendly fire is on.
 	if ( !friendlyfire.GetInt() && pPlayer->GetTeamNumber() == GetTeamNumber() )
 		return false;
-
+	*/
 	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
 	if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pPlayer->entindex() ) )
 		return false;
