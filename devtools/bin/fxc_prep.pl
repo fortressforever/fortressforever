@@ -934,6 +934,7 @@ if( !$dynamic_compile )
 			}
 	#			$cmd .= "/Zi "; # enable debug info
 			$cmd .= "/nologo ";
+			$cmd .= "/LD ";
 			if( $fxc_filename =~ /ps20/i && $forcehalf )
 			{
 				$cmd .= "/Gpp "; # use half everywhere
