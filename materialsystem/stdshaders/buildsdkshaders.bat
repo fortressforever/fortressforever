@@ -33,7 +33,7 @@ REM MOD ARGS - look for -game or the vproject environment variable
 REM ****************
 :set_mod_args
 
-if not exist "%sourcesdk%\bin\shadercompile.exe" goto NoShaderCompile
+if not exist "%sourcesdk%\bin\ep1\bin\shadercompile.exe" goto NoShaderCompile
 set ChangeToDir=%sourcesdk%\bin
 
 if /i "%4" NEQ "-source" goto NoSourceDirSpecified
