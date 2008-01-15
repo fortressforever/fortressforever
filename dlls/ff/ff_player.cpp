@@ -3677,34 +3677,6 @@ void CFFPlayer::Command_DropItems( void )
 
 void CFFPlayer::Command_Discard( void )
 {
-	if (GetClassSlot() == CLASS_MEDIC)
-	{
-		CBaseEntity *pHealthDrop = CBaseEntity::Create("ff_item_healthdrop", GetAbsOrigin(), GetAbsAngles());
-
-		if (pHealthDrop)
-		{
-			pHealthDrop->Spawn();
-			pHealthDrop->SetOwnerEntity(this);
-			pHealthDrop->SetLocalAngularVelocity(RandomAngle(-400, 400));
-
-			Vector vForward;
-			AngleVectors(EyeAngles(), &vForward);
-
-			vForward *= 420.0f;
-
-			// Bugfix: Floating objects
-			if (vForward.z < 1.0f)
-				vForward.z = 1.0f;
-
-			pHealthDrop->SetAbsVelocity(vForward);
-			pHealthDrop->SetAbsOrigin(GetLegacyAbsOrigin());
-
-			// Play a sound
-			EmitSound("Item.Toss");
-		}
-		return;
-	}
-
 	CFFItemBackpack *pBackpack = NULL;
 
 	// if any of these are flagged as true, then we have a weapon that uses this ammo type and thus retain it (no discard allowed).  
@@ -3996,6 +3968,9 @@ void CFFPlayer::StatusEffectsThink( void )
 				// make a sound if we did
 				//EmitSound( "medkit.hit" );
 			}
+
+			// Give te medic some cells to generate health packs with...!
+			GiveAmmo(3, AMMO_CELLS, true);
 		}
 		else if( GetClassSlot() == CLASS_ENGINEER )
 		{
@@ -4639,6 +4614,8 @@ bool CFFPlayer::Infect( CFFPlayer *pInfector )
 
 bool CFFPlayer::Cure( CFFPlayer *pCurer )
 {
+	bool bCured = false;
+
 	if( IsInfected() )
 	{
 		// they are infected, so go ahead and cure them
@@ -4667,7 +4644,7 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 
 		Omnibot::Notify_Cured(this, pCurer);
 
-		return true;
+		bCured = true;
 	}
 
 	// Hack-ish - removing infection effect
@@ -4679,12 +4656,16 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 	}
 
 	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
-	ClearSpeedEffects( SEM_HEALABLE );
+	if (ClearSpeedEffects( SEM_HEALABLE ) > 0)
+		bCured = true;
+
+	if (IsOnFire())
+		bCured = true;
 
 	// Wiki says curing removes everything but concussion
 	Extinguish();
 
-	return false;
+	return bCured;
 }
 
 // scale = damage per tick :: Scale currently ignored - use cvars for weapon damage!

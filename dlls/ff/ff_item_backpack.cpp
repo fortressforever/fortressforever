@@ -18,6 +18,7 @@
 
 #include "cbase.h"
 #include "ff_item_backpack.h"
+#include "ff_gamerules.h"
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		24
@@ -195,9 +196,9 @@ int CFFItemBackpack::GetHealth()
 // HEALTH DROPS
 ///////////////////////////////
 
-#define HEALTHDROP_MODEL	"models/healthvial.mdl"
+#define HEALTHDROP_MODEL	"models/items/healthkit.mdl"
 #define HEALTHDROP_SOUND	"HealthVial.Touch"
-#define HEALTHDROP_LIFE		10.0f
+#define HEALTHDROP_LIFE		20.0f
 
 class CFFItemHealthDrop : public CBaseAnimating
 {
@@ -247,11 +248,24 @@ public:
 			return;
 
 		CFFPlayer *pFFPlayer = ToFFPlayer(pEntity);
+		CFFPlayer *pFFOwner = dynamic_cast <CFFPlayer *> (GetOwnerEntity());
 
-		if (!pFFPlayer || !pFFPlayer->IsAlive() || pFFPlayer == GetOwnerEntity())
+		// Make sure a valid live owner and player
+		if (!pFFOwner || !pFFPlayer || !pFFPlayer->IsAlive())
 			return;
 
-		if (pFFPlayer->Heal(dynamic_cast<CFFPlayer *> (GetOwnerEntity()), 20.0f))
+		// We can't pick up our own packs
+		if (pFFPlayer == pFFOwner)
+			return;
+
+		// Enemies can't pick up this health
+		if (FFGameRules()->IsTeam1AlliedToTeam2(pFFPlayer->GetTeamNumber(), pFFOwner->GetTeamNumber()) == GR_NOTTEAMMATE)
+			return;
+
+		bool bCured = pFFPlayer->Cure(pFFOwner);
+
+		// Remove if we heal any health or if we cure any afflictions
+		if (pFFPlayer->Heal(dynamic_cast<CFFPlayer *> (GetOwnerEntity()), 30.0f) || bCured)
 		{
 			EmitSound(HEALTHDROP_SOUND);
 			UTIL_Remove(this);	

@@ -2819,7 +2819,7 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int at
 			return;
 
 		pParticle->m_flLifetime		= 0.0f;
-		pParticle->m_flDieTime		= 0.025f;
+		pParticle->m_flDieTime		= 0.045f;
 
 		pParticle->m_vecVelocity.Init();
 

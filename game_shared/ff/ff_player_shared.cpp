@@ -537,15 +537,43 @@ void CFFPlayer::ClassSpecificSkill()
 		if( ( GetPipebombShotTime() + pipebomb_time_till_live.GetFloat() ) < gpGlobals->curtime )
 			CFFProjectilePipebomb::DestroyAllPipes(this);
 		break;
+
+	case CLASS_MEDIC:
+		// Discard a health pack
+		if (IsAlive() && GetAmmoCount(AMMO_CELLS) >= 10)
+		{
+			CBaseEntity *pHealthDrop = CBaseEntity::Create("ff_item_healthdrop", GetAbsOrigin(), GetAbsAngles());
+
+			if (pHealthDrop)
+			{
+				pHealthDrop->Spawn();
+				pHealthDrop->SetOwnerEntity(this);
+				pHealthDrop->SetLocalAngularVelocity(RandomAngle(-400, 400));
+
+				Vector vForward;
+				AngleVectors(EyeAngles(), &vForward);
+
+				vForward *= 420.0f;
+
+				// Bugfix: Floating objects
+				if (vForward.z < 1.0f)
+					vForward.z = 1.0f;
+
+				pHealthDrop->SetAbsVelocity(vForward);
+				pHealthDrop->SetAbsOrigin(GetLegacyAbsOrigin());
+
+				// Play a sound
+				EmitSound("Item.Toss");
+
+				RemoveAmmo(10, AMMO_CELLS);
+			}
+		}
+		break;
 #endif
 
 #ifdef CLIENT_DLL
 		case CLASS_HWGUY:
 			SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
-			break;
-
-		case CLASS_MEDIC:
-			SwapToWeapon(FF_WEAPON_MEDKIT);
 			break;
 
 		case CLASS_PYRO:
