@@ -423,7 +423,7 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 	ConVar target_clamp_min("ffdev_target_clamp_min", "5.0");
 	ConVar target_clamp_max("ffdev_target_clamp_max", "60.0"); // 30
 	ConVar target_size_base("ffdev_target_size_base", "1.0");	// 15
-	ConVar target_size_multiplier("ffdev_target_size_multiplier", "10.0"); // 15
+	ConVar target_size_multiplier("ffdev_target_size_multiplier", "6.0"); // 15
 	ConVar target_time_remaining("ffdev_target_time_remaining", "3.0");
 
 	ConVar target_speed_max("ffdev_target_speed_min", "100");
@@ -479,6 +479,10 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 		}
 
 		float flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
+
+		if (flRemaining < -0.1f)
+			return ret;
+
 		float flSize = m_flModelSize * target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
 		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());
 

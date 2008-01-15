@@ -5122,6 +5122,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		pGrenade->ChangeTeam(GetTeamNumber());
 
 		pGrenade->SetDetonateTimerLength( fTimer );
+		pGrenade->m_flSpawnTime = gpGlobals->curtime - (3.0f - fTimer);	// This shold be done in a neater way!!
 		pGrenade->SetupInitialTransmittedVelocity(vecVelocity);
 
 		// Special case for emps since their explode sound starts before it actually explodes
