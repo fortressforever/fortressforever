@@ -2797,32 +2797,21 @@ void CTempEnts::MuzzleFlash_SMG1_Player( ClientEntityHandle_t hEntity, int attac
 void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Shotgun_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
-	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash_Shotgun_Player" );
-
-	pSimple->SetDrawBeforeViewModel( true );
+	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash_SMG1_Player", hEntity, attachmentIndex, FLE_VIEWMODEL );
 
 	CacheMuzzleFlashes();
 
-	Vector origin;
-	QAngle angles;
-
-	// Get our attachment's transformation matrix
-	FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
-
-	pSimple->GetBinding().SetBBox( origin - Vector( 4, 4, 4 ), origin + Vector( 4, 4, 4 ) );
-
-	Vector forward;
-	AngleVectors( angles, &forward, NULL, NULL );
-
 	SimpleParticle *pParticle;
-	Vector offset;
+	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
 
-	float flScale = random->RandomFloat( 1.25f, 1.5f );
+	float flScale = random->RandomFloat( 1.45f, 1.7f );
+
+	pSimple->SetDrawBeforeViewModel( true );
 
 	// Flash
 	for ( int i = 1; i < 6; i++ )
 	{
-		offset = origin + (forward * (i*8.0f*flScale));
+		offset = (forward * (i*8.0f*flScale));
 
 		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_MuzzleFlash_Player[random->RandomInt(0,3)], offset );
 			
@@ -2830,7 +2819,7 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int at
 			return;
 
 		pParticle->m_flLifetime		= 0.0f;
-		pParticle->m_flDieTime		= 0.001f;	// |-- Mirv: Last a bit longer
+		pParticle->m_flDieTime		= 0.025f;
 
 		pParticle->m_vecVelocity.Init();
 

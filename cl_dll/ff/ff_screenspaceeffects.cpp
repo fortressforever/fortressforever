@@ -258,8 +258,8 @@ void CBaseEffect::Render(int x, int y, int w, int h)
 }
 
 static ConVar ffdev_blur_enable("ffdev_blur_enable", "1", FCVAR_ARCHIVE, "Enable/disable speed-based blur effect");
-static DevConVar ffdev_blur_min("ffdev_blur_min", "300", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
-static DevConVar ffdev_blur_range("ffdev_blur_range", "50", FCVAR_ARCHIVE);
+static ConVar ffdev_blur_min("ffdev_blur_min", "400", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
+static ConVar ffdev_blur_range("ffdev_blur_range", "50", FCVAR_ARCHIVE);
 
 //-----------------------------------------------------------------------------
 // Purpose: A motion blur for concs
