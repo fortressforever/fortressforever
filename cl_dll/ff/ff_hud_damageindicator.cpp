@@ -50,15 +50,12 @@ private:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
 private:
-	CPanelAnimationVarAliasType(float, m_flDmgX, "dmg_xpos", "30", "proportional_float");
-	CPanelAnimationVarAliasType(float, m_flDmgY, "dmg_ypos", "100", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flMarginX, "dmg_xmargin", "40", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flMarginY, "dmg_ymargin", "40", "proportional_float");
 
-	CPanelAnimationVarAliasType(float, m_flDmgX2, "dmg_xpos2", "30", "proportional_float");
-	CPanelAnimationVarAliasType(float, m_flDmgY2, "dmg_ypos2", "220", "proportional_float");
-
-	CPanelAnimationVarAliasType(float, m_flDmgWide, "dmg_wide", "30", "proportional_float");
-	CPanelAnimationVarAliasType(float, m_flDmgTall1, "dmg_tall1", "300", "proportional_float");
-	CPanelAnimationVarAliasType(float, m_flDmgTall2, "dmg_tall2", "240", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flDmgDepth, "dmg_depth", "40", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flDmgOuterLength, "dmg_outerlength", "300", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flDmgInnerLength, "dmg_innerlength", "240", "proportional_float");
 
 	CPanelAnimationVar(Color, m_DmgColorLeft, "DmgColorLeft", "255 0 0 0");
 	CPanelAnimationVar(Color, m_DmgColorRight, "DmgColorRight", "255 0 0 0");
@@ -174,11 +171,12 @@ void CHudDamageIndicator::DrawDamageIndicator(int side)
 	CMeshBuilder meshBuilder;
 	meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
 
-	int insetY = (m_flDmgTall1 - m_flDmgTall2) / 2;
+	int iX, iY, iWidth, iTall;
+	GetParent()->GetBounds(iX, iY, iWidth, iTall);
 
-	int x1 = m_flDmgX;
-	int x2 = m_flDmgX + m_flDmgWide;
-	int y[4] = { m_flDmgY, m_flDmgY + insetY, m_flDmgY + m_flDmgTall1 - insetY, m_flDmgY + m_flDmgTall1 };
+	int x1 = m_flMarginX;
+	int x2 = m_flMarginX + m_flDmgDepth;
+	int y[4] = { (iTall / 2) - (m_flDmgOuterLength / 2), (iTall / 2) - (m_flDmgInnerLength / 2), (iTall / 2) + (m_flDmgInnerLength / 2), (iTall / 2) + (m_flDmgOuterLength / 2) };
 	int alpha[4] = { 0.0f, 1.0f, 1.0f, 0.0f };
 
 	int r, g, b, a;
@@ -240,11 +238,10 @@ void CHudDamageIndicator::DrawDamageIndicator(int side)
 	{
 		r = m_DmgColorFront[0], g = m_DmgColorFront[1], b = m_DmgColorFront[2], a = m_DmgColorFront[3];
 
-		int insetY = (m_flDmgTall1 - m_flDmgTall2) / 2;
+		int y1 = m_flMarginY;
+		int y2 = m_flMarginY + m_flDmgDepth;
 
-		int y1 = m_flDmgX2;
-		int y2 = m_flDmgX2 + m_flDmgWide;
-		int x[4] = { m_flDmgY2, m_flDmgY2 + insetY, m_flDmgY2 + m_flDmgTall1 - insetY, m_flDmgY2 + m_flDmgTall1 };
+		int x[4] = { (iWidth / 2) - (m_flDmgOuterLength / 2), (iWidth / 2) - (m_flDmgInnerLength / 2), (iWidth / 2) + (m_flDmgInnerLength / 2), (iWidth / 2) + (m_flDmgOuterLength / 2) };
 		int alpha[4] = { 0.0f, 1.0f, 1.0f, 0.0f };
 
 		meshBuilder.Color4ub(r, g, b, a * alpha[0]);
@@ -271,11 +268,9 @@ void CHudDamageIndicator::DrawDamageIndicator(int side)
 	{
 		r = m_DmgColorBehind[0], g = m_DmgColorBehind[1], b = m_DmgColorBehind[2], a = m_DmgColorBehind[3];
 
-		int insetY = (m_flDmgTall1 - m_flDmgTall2) / 2;
-
-		int y1 = m_flDmgX2;
-		int y2 = m_flDmgX2 + m_flDmgWide;
-		int x[4] = { m_flDmgY2, m_flDmgY2 + insetY, m_flDmgY2 + m_flDmgTall1 - insetY, m_flDmgY2 + m_flDmgTall1 };
+		int y1 = m_flMarginY;
+		int y2 = m_flMarginY + m_flDmgDepth;
+		int x[4] = { (iWidth / 2) - (m_flDmgOuterLength / 2), (iWidth / 2) - (m_flDmgInnerLength / 2), (iWidth / 2) + (m_flDmgInnerLength / 2), (iWidth / 2) + (m_flDmgOuterLength / 2) };
 		int alpha[4] = { 0.0f, 1.0f, 1.0f, 0.0f };
 
 		// realign x coords

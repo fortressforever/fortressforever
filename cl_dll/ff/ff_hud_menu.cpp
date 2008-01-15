@@ -58,12 +58,6 @@ ConVar cm_defaultactiontime("cl_cmdefaultactiontime", "0.5", FCVAR_ARCHIVE, "Def
 
 ConVar cm_aimsentry( "cl_noradialaimsentry", "0", 0, "0 - Aim sentry when selecting option in context menu or 1 - aiming AFTER selecting option in context menu" );
 
-#define SCREEN_MIDDLE_X	320
-#define SCREEN_MIDDLE_Y	240
-
-#define SCREEN_MAX_X	640
-#define SCREEN_MAX_Y	480
-
 #define MAX_CMD_LEN		64
 
 DECLARE_HUDELEMENT(CHudContextMenu);
@@ -572,8 +566,11 @@ void CHudContextMenu::SetMenu()
 {
 	m_flSelectStart = gpGlobals->curtime;
 
-	float midx = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
-	float midy = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
+	int x, y, iWidth, iTall;
+	GetParent()->GetBounds(x, y, iWidth, iTall);
+
+	float midx = iWidth * 0.5f;
+	float midy = iTall * 0.5f;
 	float dist = scheme()->GetProportionalScaledValue(cm_size.GetInt());
 
 	m_flPosX = midx;
@@ -607,12 +604,10 @@ void CHudContextMenu::SetMenu()
 		return;
 	}
 
-	// Big enough to fit whole circle
-	SetWide(scheme()->GetProportionalScaledValue(SCREEN_MAX_X));
-	SetTall(scheme()->GetProportionalScaledValue(SCREEN_MAX_Y));
-
-	// Position in centre
-	SetPos(scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X) - GetWide() * 0.5f, scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y) - GetTall() * 0.5f);
+	// Put this over the entire screen
+	SetWide(iWidth);
+	SetTall(iTall);
+	SetPos(0, 0);
 }
 
 void CHudContextMenu::Paint() 
@@ -626,8 +621,12 @@ void CHudContextMenu::Paint()
 	Color highlighted(255, 0, 0, 255);
 	Color dimmed(100, 100, 100, 255);
 
-	float dx = m_flPosX - scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
-	float dy = m_flPosY - scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
+	// Get screen bounds sorted out
+	int x, y, iWidth, iTall;
+	GetParent()->GetBounds(x, y, iWidth, iTall);
+
+	float dx = m_flPosX - (iWidth * 0.5f);
+	float dy = m_flPosY - (iTall * 0.5f);
 	float py = scheme()->GetProportionalScaledValue(2.0f);
 
 	int newSelection = -1;
@@ -779,8 +778,11 @@ void CHudContextMenu::MouseMove(float *x, float *y)
 
 	float sensitivity_factor = 1.0f / (sensitivity.GetFloat() == 0 ? 0.001f : sensitivity.GetFloat());
 
-	float midx = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
-	float midy = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
+	int bx, by, iWidth, iTall;
+	GetParent()->GetBounds(bx, by, iWidth, iTall);
+
+	float midx = iWidth * 0.5f;
+	float midy = iTall * 0.5f;
 	float dist = scheme()->GetProportionalScaledValue(cm_bounds.GetInt());
 
 	// UNDONE: Now capturing within a sphere, not within a box
