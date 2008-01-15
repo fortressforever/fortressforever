@@ -151,6 +151,11 @@ void CHudHistoryResource::AddToHistory( int iType, int iId, int iCount )
 		if ( !iCount )
 			return;
 
+		// HACK HACK HACK Hide the addition of cells...
+		if (iId == 4 && iCount == 3)
+			return;
+
+
 		// clear out any ammo pickup denied icons, since we can obviously pickup again
 		for ( int i = 0; i < m_PickupHistory.Count(); i++ )
 		{

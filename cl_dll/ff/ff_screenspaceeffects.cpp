@@ -276,6 +276,7 @@ public:
 	void SetParameters(KeyValues *params) {}
 
 	void Render(int x, int y, int w, int h);
+	void VidInit();
 
 	void Enable(bool bEnable) {};
 	bool IsEnabled() { return true; }
@@ -298,6 +299,18 @@ CMotionBlur::CMotionBlur()
 	m_flNextSampleTime = 0.0f;
 }
 
+float flAccumulativeAccel = 0.0f;
+float flLastSpeed = 0.0f;
+float m_flLastBlurTime = 0.0f;
+
+//-----------------------------------------------------------------------------
+// Purpose: Reset on new map
+//-----------------------------------------------------------------------------
+void CMotionBlur::VidInit()
+{
+	flAccumulativeAccel = 0.0f;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Create a buffer in which to store our samples
 //-----------------------------------------------------------------------------
@@ -314,10 +327,6 @@ void CMotionBlur::Shutdown()
 {
 	m_BlurImage.Shutdown();
 }
-
-float flAccumulativeAccel = 0.0f;
-float flLastSpeed = 0.0f;
-float m_flLastBlurTime = 0.0f;
 
 extern float GetAssaultCannonCharge();
 
