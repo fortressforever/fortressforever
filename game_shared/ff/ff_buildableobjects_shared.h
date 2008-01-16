@@ -747,6 +747,7 @@ public:
 	float				m_flSabotageTime;
 	bool				m_bShootingTeammates;
 	bool				m_bSendNailGrenHint;	// Only send the "kill sgs with nail grens" hint once per sg
+	float				m_flNextSparkTime;
 
 	virtual bool CanSabotage() const;
 	virtual bool IsSabotaged() const;
