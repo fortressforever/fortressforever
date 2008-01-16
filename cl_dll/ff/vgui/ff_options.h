@@ -56,7 +56,8 @@ private:
 	vgui::PropertySheet		*m_pPropertyPages;
 	CFFOptionsPage			*m_pCrosshairOptions;
 	CFFOptionsPage			*m_pTimerOptions;
-	CFFOptionsPage			*m_pMiscOptions;
+	CFFOptionsPage			*m_pMiscOptions1;
+	CFFOptionsPage			*m_pMiscOptions2;
 
 	vgui::Button			*m_pOKButton;
 	vgui::Button			*m_pCancelButton;

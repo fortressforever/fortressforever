@@ -48,6 +48,39 @@ ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | 
 //=============================================================================
 
 #ifdef GAME_DLL
+
+	void CFFProjectilePipebomb::CreateProjectileEffects()
+	{
+		// Start up the eye glow
+		m_hMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
+
+		int nAttachment = LookupAttachment( "fuse" );
+
+		if ( m_hMainGlow != NULL )
+		{
+			m_hMainGlow->FollowEntity( this );
+			m_hMainGlow->SetAttachment( this, nAttachment );
+			m_hMainGlow->SetTransparency( kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation );
+			m_hMainGlow->SetScale( 0.2f );
+			m_hMainGlow->SetGlowProxySize( 4.0f );
+			m_hMainGlow->SetThink(&CBaseEntity::SUB_Remove);
+			m_hMainGlow->SetNextThink(gpGlobals->curtime + pipebomb_time_till_live.GetFloat());
+		}
+
+		// Start up the eye trail
+		m_hGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
+
+		if ( m_hGlowTrail != NULL )
+		{
+			m_hGlowTrail->FollowEntity( this );
+			m_hGlowTrail->SetAttachment( this, nAttachment );
+			m_hGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
+			m_hGlowTrail->SetStartWidth( 10.0f );
+			m_hGlowTrail->SetEndWidth( 5.0f );
+			m_hGlowTrail->SetLifeTime( 0.5f );
+		}
+	}
+
 	//----------------------------------------------------------------------------
 	// Purpose: Detonate the pipebomb(pOther = optional triggerer) 
 	//----------------------------------------------------------------------------
@@ -97,57 +130,7 @@ void CFFProjectilePipebomb::Spawn()
 		engine->GetPlayerInfo(C_BasePlayer::GetLocalPlayer()->entindex(), &pinfo);
 		fAltSkin = ! (pinfo.friendsID & 1);
 	}
-#else
-
-	// Start the armed light
-	//m_pArmedSprite = CSprite::SpriteCreate("sprites/redglow1.vmt", GetLocalOrigin(), false);
-
-	//int	nAttachment = LookupAttachment("glowsprite");
-
-	//if (m_pArmedSprite != NULL) 
-	//{
-	//	m_pArmedSprite->FollowEntity(this);
-	//	m_pArmedSprite->SetAttachment(this, nAttachment);
-	//	m_pArmedSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
-	//	m_pArmedSprite->SetScale(0.05f);
-	//	m_pArmedSprite->SetGlowProxySize(4.0f);
-
-	//	m_pArmedSprite->SetThink(&CBaseEntity::SUB_Remove);
-	//	m_pArmedSprite->SetNextThink(gpGlobals->curtime + pipebomb_time_till_live.GetFloat());
-	//}
-
-	// Start up the eye glow
-	m_pMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
-
-	int nAttachment = LookupAttachment( "fuse" );
-
-	if ( m_pMainGlow != NULL )
-	{
-		m_pMainGlow->FollowEntity( this );
-		m_pMainGlow->SetAttachment( this, nAttachment );
-		m_pMainGlow->SetTransparency( kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation );
-		m_pMainGlow->SetScale( 0.2f );
-		m_pMainGlow->SetGlowProxySize( 4.0f );
-		m_pMainGlow->SetThink(&CBaseEntity::SUB_Remove);
-		m_pMainGlow->SetNextThink(gpGlobals->curtime + pipebomb_time_till_live.GetFloat());
-	}
-
-	// Start up the eye trail
-	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
-
-	if ( m_pGlowTrail != NULL )
-	{
-		m_pGlowTrail->FollowEntity( this );
-		m_pGlowTrail->SetAttachment( this, nAttachment );
-		m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
-		m_pGlowTrail->SetStartWidth( 10.0f );
-		m_pGlowTrail->SetEndWidth( 5.0f );
-		m_pGlowTrail->SetLifeTime( 0.5f );
-	}
-	
-
-
-#endif	
+#endif
 }
 
 // Added so that grenades aren't using projectiles explode code.

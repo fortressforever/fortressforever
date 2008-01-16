@@ -18,6 +18,7 @@
 #endif
 
 #include "ff_projectile_base.h"
+#include "SpriteTrail.h"
 
 #ifdef CLIENT_DLL
 	#define CFFProjectileGrenade C_FFProjectileGrenade
@@ -26,8 +27,6 @@
 extern ConVar projectile_gren_friction;
 extern ConVar projectile_gren_elasticity;
 extern ConVar projectile_gren_gravity;
-
-class SmokeTrail;
 
 //=============================================================================
 // CFFProjectileGrenade
@@ -67,10 +66,10 @@ public:
 protected:
 
 	// Creates the smoke trail
-	void CreateSmokeTrail();
+	virtual void CreateProjectileEffects();
 	void SetDetonateTimerLength(float timer);
 
-	CHandle<SmokeTrail>	m_hSmokeTrail;
+	CHandle<CSpriteTrail>	m_hGlowTrail;
 
 	//Custom collision to allow for constant elasticity on hit surfaces
 	virtual void ResolveFlyCollisionCustom(trace_t &trace, Vector &vecVelocity);

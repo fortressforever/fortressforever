@@ -13,7 +13,7 @@
 #ifdef CLIENT_DLL
 	#include "c_ff_player.h"
 
-	ConVar auto_reload("cl_autoreload", "0", FCVAR_ARCHIVE, "Automatic weapon reload");
+	ConVar auto_reload("cl_autoreload", "1", FCVAR_ARCHIVE, "Automatic weapon reload");
 #else
 	#include "ff_player.h"
 #endif
