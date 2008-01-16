@@ -135,6 +135,7 @@ void C_LocalTempEntity::SetVelocity( const Vector &vecVelocity )
 	m_vecTempEntVelocity = vecVelocity;
 }
 
+void DrawSprite( const Vector &vecOrigin, float flWidth, float flHeight, color32 color );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -152,6 +153,15 @@ int C_LocalTempEntity::DrawStudioModel( int flags )
 	MDLCACHE_CRITICAL_SECTION();
 	if ( !GetModelPtr() )
 		return drawn;
+
+	/// TODO: Aftershock needs to do whatever he wants with this...
+	if (this->flags & FTENT_FFPROJECTILE)
+	{
+		color32 col = { 23, 34, 54, 255 };
+		IMaterial *pMaterial = materials->FindMaterial("sprites/redglow1.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
+		materials->Bind(pMaterial);
+		::DrawSprite(GetAbsOrigin(), 8.0f, 8.0f, col);
+	}
 
 	if ( m_pfnDrawHelper )
 	{
