@@ -2469,6 +2469,8 @@ inline float approach(float flInitial, float flDelta, float flTarget)
 	return flInitial;
 }
 
+ConVar cl_dynamicfov("cl_dynamicfov", "1");
+
 //-----------------------------------------------------------------------------
 // Purpose: Disable FOV and use weapon-specific stuff
 //-----------------------------------------------------------------------------
@@ -2484,6 +2486,9 @@ float C_FFPlayer::GetFOV()
 		if (flFOV > 0)
 			return flFOV;
 	}
+
+	if (!cl_dynamicfov.GetBool())
+		return default_fov.GetFloat();
 
 	const float flMaximum = 600.0f;
 

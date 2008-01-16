@@ -19,7 +19,6 @@
 
 #include "ff_projectile_grenade.h"
 #include "Sprite.h"
-#include "SpriteTrail.h"
 
 #ifdef GAME_DLL
 	#include "baseentity.h"
@@ -76,14 +75,15 @@ public:
 	// Override projectile_base so object isn't removed
 	int TakeEmp( void ) { return m_flDamage; } 
 
+	void CreateProjectileEffects();
+
 	DECLARE_DATADESC(); // Added anyway
 
 #else
 	bool fAltSkin;
 #endif
 
-	CHandle<CSprite>		m_pMainGlow;
-	CHandle<CSpriteTrail>	m_pGlowTrail;
+	CHandle<CSprite>		m_hMainGlow;
 };
 
 

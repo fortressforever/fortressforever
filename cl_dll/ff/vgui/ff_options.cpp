@@ -15,6 +15,7 @@
 
 #include "KeyValues.h"
 #include "filesystem.h"
+#include "utlmap.h"
 
 #include "ff_weapon_base.h"
 extern const char *s_WeaponAliasInfo[];
@@ -813,14 +814,122 @@ class CFFMiscOptions : public CFFOptionsPage
 {
 	DECLARE_CLASS_SIMPLE(CFFMiscOptions, CFFOptionsPage);
 
+private:
+
+	char	m_szSourceFile[128];
+
 public:
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Populate all the menu stuff
 	//-----------------------------------------------------------------------------
-	CFFMiscOptions(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
+	CFFMiscOptions(Panel *parent, char const *panelName, const char *pszSourceFile) : BaseClass(parent, panelName)
 	{
-		m_pHints = new CheckButton( this, "HintCheck", "Enable Hints" );
+		LoadControlSettings("resource/ui/FFOptionsSubMisc.res");
+
+		Q_strncpy(m_szSourceFile, pszSourceFile, 127);
+
+		int iYCoords = 5;
+
+		// Put all our options stuff in a keyfile now
+		KeyValues *kvOptions = new KeyValues("Options");
+		kvOptions->LoadFromFile(*pFilesystem, m_szSourceFile);
+
+		// Loop through creating new options for each one
+		for (KeyValues *kvOption = kvOptions->GetFirstSubKey(); kvOption != NULL; kvOption = kvOption->GetNextKey())
+		{
+			const char *pszType = kvOption->GetString("type", "boolean");
+
+			const char *pszName = kvOption->GetName();
+			const char *pszCaption = kvOption->GetString("caption");
+
+			// A little separator
+			if (Q_strncmp(pszName, "heading", 7) == 0)
+			{
+				Label *l = new Label(this, "label", pszCaption);
+
+				if (l)
+				{
+					l->SetPos(25, iYCoords + 10);
+					l->SetSize(250, 30);
+					iYCoords += 40;	// Add the extra 10 on
+				}
+			}
+
+			// Boolean is just a simple checkbox
+			else if (Q_strncmp(pszType, "boolean", 7) == 0)
+			{
+				CheckButton *cb = new CheckButton(this, pszName, pszCaption);
+
+				if (!cb)
+					continue;
+
+				cb->SetPos(30, iYCoords);
+				cb->SetSize(250, 30);
+
+				iYCoords += 30;
+			}
+			// Discrete is a combobox with a label
+			else if (Q_strncmp(pszType, "discrete", 8) == 0)
+			{
+				KeyValues *kvValues = kvOption->FindKey("values", false);
+				int nValues = 0;
+
+				if (!kvValues)
+					continue;
+
+				// First count all the values so we know how many lines are
+				// needed for the combobox
+				nValues = 0;
+				KeyValues *kvValue = kvValues->GetFirstSubKey();
+				while (kvValue)
+				{
+					nValues++;
+					kvValue = kvValue->GetNextKey();
+				}
+
+				ComboBox *cb = new ComboBox(this, pszName, nValues, false);
+
+				if (!cb)
+					continue;
+
+				kvValues = kvOption->FindKey("values", false);
+
+				if (!kvValues)
+					continue;
+
+				// Now go through all the values and add them to the combobox
+				kvValue = kvValues->GetFirstSubKey();
+				while (kvValue)
+				{
+					const char *pszValue = kvValue->GetName();
+					const char *pszCaption = kvValues->GetString(pszValue);
+					kvValue = kvValue->GetNextKey();
+
+					KeyValues *kvItem = new KeyValues("kvItem");
+					kvItem->SetString("value", pszValue);
+					cb->AddItem(pszCaption, kvItem);
+					kvItem->deleteThis();
+				}
+
+				cb->SetPos(30, iYCoords);
+				cb->SetSize(80, 26);
+				cb->ActivateItemByRow(0);
+
+				// Create a handy label too so we know what this is
+				Label *l = new Label(this, "label", pszCaption);
+
+				if (l)
+				{
+					l->SetPos(120, iYCoords);
+					l->SetSize(250, 30);
+				}
+
+				iYCoords += 30;
+			}
+		}
+
+		/*m_pHints = new CheckButton( this, "HintCheck", "Enable Hints" );
 		m_pHintsConVar = NULL;
 
 		m_pARCheck = new CheckButton( this, "ARCheck", "Enable Auto-Reload" );
@@ -832,7 +941,7 @@ public:
 		m_pBlurCheck = new CheckButton( this, "BlurCheck", "Enable Motion Blur" );
 		m_pBlurConVar = NULL;
 
-		LoadControlSettings("resource/ui/FFOptionsSubMisc.res");
+		LoadControlSettings("resource/ui/FFOptionsSubMisc.res");*/
 	}
 
 	//-----------------------------------------------------------------------------
@@ -841,7 +950,7 @@ public:
 	//-----------------------------------------------------------------------------
 	void Apply()
 	{
-		if ( m_pHintsConVar )
+		/*if ( m_pHintsConVar )
 			m_pHintsConVar->SetValue( m_pHints->IsSelected() );
 
 		if ( m_pAutoRLConVar )
@@ -851,7 +960,37 @@ public:
 			m_pAutoKillConVar->SetValue( m_pAutoKillCheck->IsSelected() );
 
 		if ( m_pBlurConVar )
-			m_pBlurConVar->SetValue( m_pBlurCheck->IsSelected() );
+			m_pBlurConVar->SetValue( m_pBlurCheck->IsSelected() );*/
+
+		KeyValues *kvOptions = new KeyValues("Options");
+		kvOptions->LoadFromFile(*pFilesystem, m_szSourceFile);
+
+		// Loop through creating new options for each one
+		for (KeyValues *kvOption = kvOptions->GetFirstSubKey(); kvOption != NULL; kvOption = kvOption->GetNextKey())
+		{
+			const char *pszCvar = kvOption->GetString("cvar");
+			const char *pszName = kvOption->GetName();
+
+			Panel *pChild = FindChildByName(pszName);
+
+			if (!pChild)
+				continue;
+
+			ConVar *pCvar = cvar->FindVar(pszCvar);
+
+			if (!pCvar)
+				continue;
+
+			// This is a bad show old chap
+			if (CheckButton *cb = dynamic_cast <CheckButton *> (pChild))
+			{
+				pCvar->SetValue(cb->IsSelected());
+			}
+			else if (ComboBox *cb = dynamic_cast <ComboBox *> (pChild))
+			{
+				pCvar->SetValue(cb->GetActiveItemUserData()->GetString("value"));
+			}
+		}
 	}
 
 	//-----------------------------------------------------------------------------
@@ -867,7 +1006,47 @@ public:
 	//-----------------------------------------------------------------------------
 	void Load()
 	{
-		if ( !m_pHintsConVar )
+		KeyValues *kvOptions = new KeyValues("Options");
+		kvOptions->LoadFromFile(*pFilesystem, m_szSourceFile);
+
+		// Loop through creating new options for each one
+		for (KeyValues *kvOption = kvOptions->GetFirstSubKey(); kvOption != NULL; kvOption = kvOption->GetNextKey())
+		{
+			const char *pszCvar = kvOption->GetString("cvar");
+			const char *pszName = kvOption->GetName();
+
+			Panel *pChild = FindChildByName(pszName);
+
+			if (!pChild)
+				continue;
+
+			ConVar *pCvar = cvar->FindVar(pszCvar);
+
+			if (!pCvar)
+				continue;
+
+			// This is a bad show old chap
+			if (CheckButton *cb = dynamic_cast <CheckButton *> (pChild))
+			{
+				cb->SetSelected(pCvar->GetBool());
+			}
+			else if (ComboBox *cb = dynamic_cast <ComboBox *> (pChild))
+			{
+				const char *pszCvarValue = pCvar->GetString();
+				for (int i = 0; i < cb->GetItemCount(); i++)
+				{
+					KeyValues *kvItem = cb->GetItemUserData(i);
+					const char *pszItemValue = kvItem->GetString("value");
+					if (kvItem && Q_strncmp(pszItemValue, pszCvarValue, 5) == 0) {
+						cb->ActivateItem(i);
+						break;
+					}
+				}
+			}
+		}
+
+
+		/*if ( !m_pHintsConVar )
 			m_pHintsConVar = cvar->FindVar( "cl_hints" );
 		if ( m_pHintsConVar )
 			m_pHints->SetSelected( m_pHintsConVar->GetBool() );
@@ -885,7 +1064,7 @@ public:
 		if ( !m_pBlurConVar )
 			m_pBlurConVar = cvar->FindVar( "ffdev_blur_enable" );
 		if ( m_pBlurConVar )
-			m_pBlurCheck->SetSelected( m_pBlurConVar->GetBool() );
+			m_pBlurCheck->SetSelected( m_pBlurConVar->GetBool() );*/
 	}
 
 private:
@@ -944,12 +1123,14 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 
 	m_pCrosshairOptions = new CFFCrosshairOptions(this, "CrosshairOptions");
 	m_pTimerOptions = new CFFTimerOptions(this, "TimerOptions");
-	m_pMiscOptions = new CFFMiscOptions(this, "MiscOptions");
+	m_pMiscOptions1 = new CFFMiscOptions(this, "MiscOptions", "resource/Options1.vdf");
+	m_pMiscOptions2 = new CFFMiscOptions(this, "MiscOptions", "resource/Options2.vdf");
 
 	m_pPropertyPages = new PropertySheet(this, "OptionsPages", true);
 	m_pPropertyPages->AddPage(m_pCrosshairOptions, "#GameUI_Crosshairs");
 	m_pPropertyPages->AddPage(m_pTimerOptions, "#GameUI_Timers");
-	m_pPropertyPages->AddPage(m_pMiscOptions, "#GameUI_Misc");
+	m_pPropertyPages->AddPage(m_pMiscOptions1, "#GameUI_Misc1");
+	m_pPropertyPages->AddPage(m_pMiscOptions2, "#GameUI_Misc2");
 	m_pPropertyPages->SetActivePage(m_pCrosshairOptions);
 	m_pPropertyPages->SetDragEnabled(false);
 
@@ -975,7 +1156,8 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 	{
 		m_pCrosshairOptions->Apply();
 		m_pTimerOptions->Apply();
-		m_pMiscOptions->Apply();
+		m_pMiscOptions1->Apply();
+		m_pMiscOptions2->Apply();
 
 		// Apply doesn't quit the menu
 		if (pszCommand[0] == 'A')
@@ -988,7 +1170,8 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		// Cancelled, so reset the settings
 		m_pCrosshairOptions->Reset();
 		m_pTimerOptions->Reset();
-		m_pMiscOptions->Reset();
+		m_pMiscOptions1->Reset();
+		m_pMiscOptions2->Reset();
 	}
 
 	// Now make invisible
@@ -1005,7 +1188,8 @@ void CFFOptionsPanel::SetVisible(bool state)
 	{
 		m_pCrosshairOptions->Load();
 		m_pTimerOptions->Load();
-		m_pMiscOptions->Load();
+		m_pMiscOptions1->Load();
+		m_pMiscOptions2->Load();
 
 		RequestFocus();
 		MoveToFront();

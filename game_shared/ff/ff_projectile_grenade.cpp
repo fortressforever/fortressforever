@@ -50,23 +50,21 @@ ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.1", FCVAR_R
 	//----------------------------------------------------------------------------
 	// Purpose: Creata a trail of smoke for the grenade
 	//----------------------------------------------------------------------------
-	void CFFProjectileGrenade::CreateSmokeTrail() 
+	void CFFProjectileGrenade::CreateProjectileEffects() 
 	{
-		if ((m_hSmokeTrail = SmokeTrail::CreateSmokeTrail()) != NULL) 
+		int nAttachment = LookupAttachment( "fuse" );
+
+		// Start up the eye trail
+		m_hGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
+
+		if ( m_hGlowTrail != NULL )
 		{
-			m_hSmokeTrail->m_Opacity = 0.2f;
-			m_hSmokeTrail->m_SpawnRate = 100;
-			m_hSmokeTrail->m_ParticleLifetime = 1.0f;
-			m_hSmokeTrail->m_StartColor.Init(0.75f, 0.75f , 0.95f);
-			m_hSmokeTrail->m_EndColor.Init(0.45f, 0.45f, 0.95f);
-			m_hSmokeTrail->m_StartSize = 4;	// 8
-			m_hSmokeTrail->m_EndSize = 6;	// 32
-			m_hSmokeTrail->m_SpawnRadius = 1;
-			m_hSmokeTrail->m_MinSpeed = 2;
-			m_hSmokeTrail->m_MaxSpeed = 16;
-			
-			m_hSmokeTrail->SetLifetime(999);
-			m_hSmokeTrail->FollowEntity(this, "0");
+			m_hGlowTrail->FollowEntity( this );
+			m_hGlowTrail->SetAttachment( this, nAttachment );
+			m_hGlowTrail->SetTransparency( kRenderTransAdd, 85, 95, 205, 255, kRenderFxNone );
+			m_hGlowTrail->SetStartWidth( 10.0f );
+			m_hGlowTrail->SetEndWidth( 5.0f );
+			m_hGlowTrail->SetLifeTime( 0.5f );
 		}
 	}
 
@@ -94,7 +92,7 @@ ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.1", FCVAR_R
 		SetNextThink(gpGlobals->curtime);
 
 		// Creates the smoke trail
-		CreateSmokeTrail();
+		CreateProjectileEffects();
 
 		BaseClass::Spawn();
 	}
@@ -185,7 +183,6 @@ ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.1", FCVAR_R
 				SetLocalAngularVelocity(vec3_angle);
 
 				// Remove smoke BUG #0000126: Pipes from Launcher keeps emitting smoke after they are at rest.
-				m_hSmokeTrail->SetEmit(false);
 
 				////align to the ground so we're not standing on end
 				//QAngle angle;
