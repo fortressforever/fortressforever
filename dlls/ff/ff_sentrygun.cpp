@@ -46,6 +46,7 @@
 #include "ff_projectile_rocket.h"
 #include "ff_utils.h"
 #include "ff_gamerules.h"
+#include "IEffects.h"
 
 #include "omnibot_interface.h"
 
@@ -128,7 +129,8 @@ const char *g_pszFFSentryGunSounds[] =
 	"Spanner.HitSG",
 	"Sentry.RocketFire",
 	"Sentry.SabotageActivate",
-	"Sentry.SabotageFinish",
+	//"Sentry.SabotageFinish",
+	"DoSpark",
 	NULL
 };
 
@@ -166,6 +168,8 @@ CFFSentryGun::CFFSentryGun()
 	m_hSaboteur = NULL;
 	m_bShootingTeammates = false;
 	m_bSendNailGrenHint = true;
+
+	m_flNextSparkTime = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -300,6 +304,14 @@ void CFFSentryGun::OnObjectThink( void )
 
 	// Animate
 	StudioFrameAdvance();
+
+	// Spark if at 50% or less health
+	if ( m_iHealth <= ( m_iMaxHealth / 2 ) && gpGlobals->curtime >= m_flNextSparkTime )
+	{
+		g_pEffects->Sparks( GetAbsOrigin() + Vector(0, 0, 32.0f) );
+		EmitSound( "DoSpark" );
+		m_flNextSparkTime = gpGlobals->curtime + random->RandomFloat( 0.5, 2.5 );
+	}
 
 	// We've just finished being maliciously sabotaged, so remove enemy here
 	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)
