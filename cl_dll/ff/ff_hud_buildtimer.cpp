@@ -130,9 +130,9 @@ void CHudBuildTimer::Paint()
 	}
 
 	// Draw background box
-	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-	surface()->DrawSetColor(255, 255, 255, 255);
-	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+//	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
+//	surface()->DrawSetColor(255, 255, 255, 255);
+//	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 
 	float amount = clamp((gpGlobals->curtime - m_flStartTime) / m_flDuration, 0, 1.0f);
 
