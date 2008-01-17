@@ -429,7 +429,7 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 	ConVar target_speed_max("ffdev_target_speed_min", "100");
 	ConVar target_speed_min("ffdev_target_speed_min", "20");
 
-	ConVar target_rotation("ffdev_target_rotation", "-200.0"); // -100
+	ConVar target_rotation("ffdev_target_rotation", "-118.2"); // -100
 
 	int CFFGrenadeBase::DrawModel(int flags)
 	{
@@ -491,7 +491,8 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 		//IMaterial *pMaterial = materials->FindMaterial("sprites/ff_target", TEXTURE_GROUP_CLIENT_EFFECTS);
 		IMaterial *pMaterialBlur = materials->FindMaterial("sprites/ff_target_blur", TEXTURE_GROUP_CLIENT_EFFECTS);
 
-		float flRotation = anglemod(m_flSpawnTime) + gpGlobals->curtime * target_rotation.GetFloat();
+//		float flRotation = gpGlobals->curtime * target_rotation.GetFloat() - anglemod(m_flSpawnTime);
+		float flRotation = anglemod(gpGlobals->curtime  - m_flSpawnTime) * target_rotation.GetFloat();
 
 		/*if (pMaterialBlur)
 		{
