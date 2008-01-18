@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2007-12-16 22:06:51 -0800 (Sun, 16 Dec 2007) $
-// $LastChangedRevision: 2270 $
+// $LastChangedDate: 2008-01-11 09:31:37 -0800 (Fri, 11 Jan 2008) $
+// $LastChangedRevision: 2322 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -680,8 +680,8 @@ typedef enum eEntityCategory
 //		Class values for generic entities.
 typedef enum eEntityClassGeneric
 {
-	ENT_CLASS_GENERIC_SPECTATOR = 10000,
-	ENT_CLASS_GENERIC_START,
+	ENT_CLASS_GENERIC_START = 10000,
+	ENT_CLASS_GENERIC_SPECTATOR,
 	ENT_CLASS_GENERIC_PLAYERSTART,
 	ENT_CLASS_GENERIC_PLAYERSTART_TEAM1,
 	ENT_CLASS_GENERIC_PLAYERSTART_TEAM2,
@@ -1038,14 +1038,14 @@ typedef struct TriggerInfo_t
 		for(int i = 0; i < TriggerBufferSize; ++i)
 			m_TagName[i] = m_Action[i] = 0;
 	}
-	TriggerInfo_t(TriggerInfo_t *_ti)
+	TriggerInfo_t(const TriggerInfo_t &_ti)
 	{
-		m_Entity = _ti->m_Entity;
-		m_Activator = _ti->m_Activator;
+		m_Entity = _ti.m_Entity;
+		m_Activator = _ti.m_Activator;
 		for(int i = 0; i < TriggerBufferSize; ++i)
 		{
-			m_TagName[i] = _ti->m_TagName[i];
-			m_Action[i] = _ti->m_Action[i];
+			m_TagName[i] = _ti.m_TagName[i];
+			m_Action[i] = _ti.m_Action[i];
 		}
 	}
 	TriggerInfo_t(GameEntity _ent, GameEntity _activator) : 
@@ -1056,6 +1056,31 @@ typedef struct TriggerInfo_t
 #endif
 } TriggerInfo;
 
+// struct: MapGoalDef
+typedef struct MapGoalDef_t
+{
+	enum { BufferSize = 64 };
+
+	GameEntity		m_Entity;
+	int				m_GoalType;
+	int				m_Team;
+	char			m_TagName[BufferSize];
+	obUserData		m_UserData;
+#ifdef __cplusplus
+	
+	void Reset()
+	{
+		m_Entity.Reset();
+		m_GoalType = 0;
+		m_Team = 0;
+		m_TagName[0] = 0;
+		m_UserData = obUserData();
+	}
+	MapGoalDef_t() { Reset(); }
+#endif
+} MapGoalDef;
+
+// struct: AutoNavFeature
 typedef struct AutoNavFeature_t
 {
 	int			m_Type;

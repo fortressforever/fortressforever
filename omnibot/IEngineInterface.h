@@ -163,8 +163,8 @@ public:
 	virtual int AddBot(const MessageHelper &_data) = 0;
 	
 	// Function: RemoveBot
-	//		This function should remove/kick a bot from the game by its name
-	virtual int RemoveBot(const char *_name) = 0;
+	//		This function should remove/kick a bot from the game by its name or id
+	virtual void RemoveBot(const MessageHelper &_data) = 0;
 
 	// Function: ChangeTeam
 	//		This function should force a bot to a certain team

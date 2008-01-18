@@ -226,6 +226,8 @@ public:
 	DECLARE_CLIENTCLASS();
 	DECLARE_PREDICTABLE();
 
+	void PrintDeleteInfo();
+
 									C_BaseEntity();
 	virtual							~C_BaseEntity();
 

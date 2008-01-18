@@ -824,7 +824,6 @@ C_BaseEntity::C_BaseEntity() :
 #endif
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : 
@@ -1081,6 +1080,7 @@ void C_BaseEntity::Release()
 
 	UpdateOnRemove();
 
+	PrintDeleteInfo();
 	delete this;
 }
 

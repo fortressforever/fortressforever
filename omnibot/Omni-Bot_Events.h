@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2007-12-05 09:20:04 -0800 (Wed, 05 Dec 2007) $
-// $LastChangedRevision: 2250 $
+// $LastChangedDate: 2008-01-16 09:41:57 -0800 (Wed, 16 Jan 2008) $
+// $LastChangedRevision: 2334 $
 //
 // about: Generic Bot Events
 //
@@ -121,6 +121,7 @@ typedef enum
 {
 	GEN_MSG_NONE = 0,
 	GEN_MSG_ADDBOT,
+	GEN_MSG_KICKBOT,
 	GEN_MSG_ISALIVE,
 	GEN_MSG_ISRELOADING,
 	GEN_MSG_ISREADYTOFIRE,
@@ -151,6 +152,7 @@ typedef enum
 
 	GEN_MSG_GOTOWAYPOINT,
 	GEN_MSG_VEHICLEINFO,
+	GEN_MSG_MOVERAT,
 
 	// This must stay last.
 	GEN_MSG_END

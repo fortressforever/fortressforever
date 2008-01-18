@@ -67,24 +67,83 @@ struct BotSpawnInfo
 BotSpawnInfo g_DeferredSpawn[MAX_PLAYERS] = {0};
 int g_DeferredBotSpawnIndex = 0;
 
-struct BotEntity
+//////////////////////////////////////////////////////////////////////////
+template <int NUM_ENTITIES = 2048>
+class BotEntityHandles
 {
-	obint16	m_HandleSerial;
-	bool	m_NewEntity : 1;
-	bool	m_Used : 1;
+public:
+	enum { NumEntities = NUM_ENTITIES, InvalidSerial = -1 };
+	obint16 SerialForIndex(obint16 index)
+	{
+		return m_EntSerials[index].m_Used ? m_EntSerials[index].m_HandleSerial : InvalidSerial;
+	}
+	void AllocForIndex(obint16 index)
+	{
+		m_EntSerials[index].m_NewEntity = false;
+		m_EntSerials[index].m_Used = true;
+		m_EntSerials[index].m_HandleSerial++;
+	}
+	void QueueForIndex(obint16 index)
+	{
+		m_EntSerials[index].m_NewEntity = true;
+		m_EntSerials[index].m_Used = false;
+		m_EntSerials[index].m_HandleSerial++;
+	}
+	void FreeForIndex(obint16 index)
+	{
+		while(++m_EntSerials[index].m_HandleSerial==0) {}
+		m_EntSerials[index].m_NewEntity = false;
+		m_EntSerials[index].m_Used = false;
+	}
+	bool IsIndexNew(obint16 index)
+	{
+		return m_EntSerials[index].m_NewEntity!=0;
+	}
+	void ClearIndexNew(obint16 index)
+	{
+		m_EntSerials[index].m_NewEntity = false;
+	}
+	void Reset()
+	{
+		for(int i = 0; i < NumEntities; ++i)
+			m_EntSerials[i] = EntSerial();
+	}
+private:
+	struct EntSerial
+	{
+		obint16	m_HandleSerial : 14;
+		obint16	m_NewEntity : 1;
+		obint16	m_Used : 1;
+
+		EntSerial() : m_HandleSerial(InvalidSerial), m_NewEntity(false), m_Used(false)
+		{
+		}
+	};	
+
+	EntSerial m_EntSerials[NUM_ENTITIES];
 };
+//////////////////////////////////////////////////////////////////////////
+//struct BotEntity
+//{
+//	obint16	m_HandleSerial;
+//	bool	m_NewEntity : 1;
+//	bool	m_Used : 1;
+//};
+//
+//BotEntity DefaultBotEntity()
+//{
+//	BotEntity e;
+//	e.m_HandleSerial = 1;
+//	e.m_NewEntity = false;
+//	e.m_Used = false;
+//	return e;
+//}
 
-BotEntity DefaultBotEntity()
-{
-	BotEntity e;
-	e.m_HandleSerial = 1;
-	e.m_NewEntity = false;
-	e.m_Used = false;
-	return e;
-}
+typedef BotEntityHandles<4096> EntSerials;
+EntSerials g_EntSerials;
 
-const int MAX_ENTITIES = 4096;
-BotEntity		m_EntityHandles[MAX_ENTITIES] = {DefaultBotEntity()};
+//const int MAX_ENTITIES = 4096;
+//BotEntity		m_EntityHandles[MAX_ENTITIES] = {DefaultBotEntity()};
 
 //////////////////////////////////////////////////////////////////////////
 void NormalizeAngles( QAngle& angles )
@@ -523,11 +582,10 @@ namespace Omnibot
 		return engine->IndexOfEdict(pEdict);
 	}
 
-
 	CBaseEntity *EntityFromHandle(GameEntity _ent)
 	{
 		obint16 index = _ent.GetIndex();
-		if(m_EntityHandles[index].m_HandleSerial == _ent.GetSerial())
+		if(g_EntSerials.SerialForIndex(index) == _ent.GetSerial())
 		{
 			edict_t *edict = INDEXEDICT(index);
 			return edict ? CBaseEntity::Instance(edict) : NULL;
@@ -540,7 +598,7 @@ namespace Omnibot
 		if(_ent)
 		{
 			int index = ENTINDEX(_ent->edict());
-			return GameEntity(index, m_EntityHandles[index].m_HandleSerial);
+			return GameEntity(index, g_EntSerials.SerialForIndex(index));
 		}
 		else
 			return GameEntity();
@@ -553,7 +611,8 @@ namespace Omnibot
 	public:
 		int AddBot(const MessageHelper &_data)
 		{
-			const Msg_Addbot *pMsg = _data.Get<Msg_Addbot>();
+			OB_GETMSG(Msg_Addbot);
+
 			int iClientNum = -1;
 
 			edict_t *pEdict = engine->CreateFakeClient( pMsg->m_Name );
@@ -586,14 +645,35 @@ namespace Omnibot
 			// Get the index of the bot.
 			iClientNum = engine->IndexOfEdict(pEdict);
 
+			//////////////////////////////////////////////////////////////////////////
+			if(g_EntSerials.IsIndexNew(iClientNum))
+			{
+				g_EntSerials.ClearIndexNew(iClientNum);
+				CBaseEntity *pEnt = CBaseEntity::Instance(iClientNum);
+				if(pEnt)
+					Bot_Event_EntityCreated(pEnt);
+			}
+			//////////////////////////////////////////////////////////////////////////
+
 			// Success!, return its client num.
 			return iClientNum;
 		}
 
-		int RemoveBot(const char *_name)
+		void RemoveBot(const MessageHelper &_data)
 		{
-			engine->ServerCommand(UTIL_VarArgs("kick %s\n", _name));
-			return -1;
+			OB_GETMSG(Msg_Kickbot);
+			if(pMsg->m_GameId != Msg_Kickbot::InvalidGameId)
+			{
+				CBasePlayer *ent = UTIL_PlayerByIndex(pMsg->m_GameId);
+				if(ent && ent->IsBot())					
+					engine->ServerCommand(UTIL_VarArgs("kick %s\n", ent->GetPlayerName()));
+			}
+			else
+			{
+				CBasePlayer *ent = UTIL_PlayerByName(pMsg->m_Name);
+				if(ent && ent->IsBot())
+					engine->ServerCommand(UTIL_VarArgs("kick %d\n", ENTINDEX(ent->edict())));
+			}
 		}
 
 		obResult ChangeTeam(int _client, int _newteam, const MessageHelper *_data)
@@ -1762,7 +1842,6 @@ namespace Omnibot
 
 		obResult InterfaceSendMessage(const MessageHelper &_data, const GameEntity _ent)
 		{
-#define GETMSG(msgtype) msgtype *pMsg = 0; _data.Get2(pMsg);
 			CBaseEntity *pEnt = EntityFromHandle(_ent);
 			CBasePlayer *pPlayer = pEnt ? pEnt->MyCharacterPointer() : 0;
 
@@ -1774,7 +1853,7 @@ namespace Omnibot
 				///////////////////////
 			case GEN_MSG_ISALIVE:
 				{
-					GETMSG(Msg_IsAlive);
+					OB_GETMSG(Msg_IsAlive);
 					if(pMsg)
 					{
 						pMsg->m_IsAlive = pEnt && pEnt->IsAlive() && pEnt->GetHealth() > 0 ? True : False;
@@ -1783,7 +1862,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_ISRELOADING:
 				{
-					GETMSG(Msg_Reloading);
+					OB_GETMSG(Msg_Reloading);
 					if(pMsg)
 					{
 						pMsg->m_Reloading = pPlayer && pPlayer->IsPlayingGesture(ACT_GESTURE_RELOAD) ? True : False;
@@ -1792,7 +1871,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_ISREADYTOFIRE:
 				{
-					GETMSG(Msg_ReadyToFire);
+					OB_GETMSG(Msg_ReadyToFire);
 					if(pMsg)
 					{
 						CBaseCombatWeapon *pWeapon = pPlayer ? pPlayer->GetActiveWeapon() : 0;
@@ -1802,7 +1881,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_ISALLIED:
 				{
-					GETMSG(Msg_IsAllied);
+					OB_GETMSG(Msg_IsAllied);
 					if(pMsg)
 					{
 						CBaseEntity *pEntOther = EntityFromHandle(pMsg->m_TargetEntity);
@@ -1821,7 +1900,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_GETEQUIPPEDWEAPON:
 				{
-					GETMSG(WeaponStatus);
+					OB_GETMSG(WeaponStatus);
 					if(pMsg)
 					{
 						CBaseCombatWeapon *pWeapon = pPlayer ? pPlayer->GetActiveWeapon() : 0;
@@ -1835,7 +1914,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_GETHEALTHARMOR:
 				{
-					GETMSG(Msg_PlayerHealthArmor);
+					OB_GETMSG(Msg_PlayerHealthArmor);
 					if(pMsg && pPlayer)
 					{
 						pMsg->m_CurrentHealth = pPlayer->GetHealth();
@@ -1847,7 +1926,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_GETFLAGSTATE:
 				{
-					GETMSG(Msg_FlagState);
+					OB_GETMSG(Msg_FlagState);
 					if(pMsg)
 					{
 						if(pEnt && pEnt->Classify() == CLASS_INFOSCRIPT)
@@ -1868,7 +1947,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_GAMESTATE:
 				{
-					GETMSG(Msg_GameState);
+					OB_GETMSG(Msg_GameState);
 					if(pMsg)
 					{
 						CFFGameRules *pRules = FFGameRules();
@@ -1904,7 +1983,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_GETMAXSPEED:
 				{
-					GETMSG(Msg_PlayerMaxSpeed);
+					OB_GETMSG(Msg_PlayerMaxSpeed);
 					if(pMsg && pPlayer)
 					{
 						pMsg->m_MaxSpeed = pPlayer->MaxSpeed();
@@ -1913,7 +1992,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_ENTITYSTAT:
 				{
-					GETMSG(Msg_EntityStat);
+					OB_GETMSG(Msg_EntityStat);
 					if(pMsg)
 					{
 						if(pPlayer && !Q_strcmp(pMsg->m_StatName, "kills"))
@@ -1927,7 +2006,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_TEAMSTAT:
 				{
-					GETMSG(Msg_TeamStat);
+					OB_GETMSG(Msg_TeamStat);
 					if(pMsg)
 					{
 						CTeam *pTeam = GetGlobalTeam( obUtilGetGameTeamFromBotTeam(pMsg->m_Team) );
@@ -1943,7 +2022,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_WPCHARGED:
 				{
-					GETMSG(WeaponCharged);
+					OB_GETMSG(WeaponCharged);
 					if(pMsg && pPlayer)
 					{
 						pMsg->m_IsCharged = True;
@@ -1952,7 +2031,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_WPHEATLEVEL:
 				{
-					GETMSG(WeaponHeatLevel);
+					OB_GETMSG(WeaponHeatLevel);
 					if(pMsg && pPlayer)
 					{
 						CBaseCombatWeapon *pWp = pPlayer->GetActiveWeapon();
@@ -1976,7 +2055,7 @@ namespace Omnibot
 					struct LastSound { char m_SoundName[64]; };
 					static LastSound m_LastPlayerSound[MAX_PLAYERS] = {};
 					
-					GETMSG(Event_PlaySound);
+					OB_GETMSG(Event_PlaySound);
 					if(pPlayer)
 						pPlayer->EmitSound(pMsg->m_SoundName);
 					/*else
@@ -1985,7 +2064,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_STOPSOUND:
 				{
-					GETMSG(Event_StopSound);
+					OB_GETMSG(Event_StopSound);
 					if(pPlayer)
 						pPlayer->StopSound(pMsg->m_SoundName);
 					/*else
@@ -1994,7 +2073,7 @@ namespace Omnibot
 				}
 			case GEN_MSG_SCRIPTEVENT:
 				{
-					GETMSG(Event_ScriptEvent);
+					OB_GETMSG(Event_ScriptEvent);
 					
 					CFFLuaSC hEvent;
 					if(pMsg->m_Param1[0])
@@ -2010,12 +2089,36 @@ namespace Omnibot
 					_scriptman.RunPredicates_LUA(pEnt, &hEvent, pMsg->m_FunctionName);
 					break;
 				}
+			case GEN_MSG_MOVERAT:
+				{
+					OB_GETMSG(Msg_MoverAt);
+					if(pMsg)
+					{
+						Vector org(
+							pMsg->m_Position[0],
+							pMsg->m_Position[1],
+							pMsg->m_Position[2]);
+						Vector under(
+							pMsg->m_Under[0],
+							pMsg->m_Under[1],
+							pMsg->m_Under[2]);
+
+						trace_t tr;
+						UTIL_TraceLine(org, under, MASK_SOLID, NULL, COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
+
+						if(tr.DidHitNonWorldEntity() && !tr.m_pEnt->IsPlayer())
+						{
+							pMsg->m_Entity = HandleFromEntity(tr.m_pEnt);
+						}
+					}
+					break;
+				}
 				//////////////////////////////////
 				// Game specific messages next. //
 				//////////////////////////////////
 			case TF_MSG_GETBUILDABLES:
 				{
-					GETMSG(TF_BuildInfo);
+					OB_GETMSG(TF_BuildInfo);
 					if(pMsg)
 					{
 						CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pPlayer);
@@ -2033,7 +2136,7 @@ namespace Omnibot
 				}		
 			case TF_MSG_PLAYERPIPECOUNT:
 				{
-					GETMSG(TF_PlayerPipeCount);
+					OB_GETMSG(TF_PlayerPipeCount);
 					if(pMsg && pEnt)
 					{
 						int iNumPipes = 0;
@@ -2051,7 +2154,7 @@ namespace Omnibot
 				}
 			case TF_MSG_TEAMPIPEINFO:
 				{
-					GETMSG(TF_TeamPipeInfo);
+					OB_GETMSG(TF_TeamPipeInfo);
 					if(pMsg)
 					{
 						pMsg->m_NumTeamPipes = 0;
@@ -2062,7 +2165,7 @@ namespace Omnibot
 				}
 			case TF_MSG_CANDISGUISE:
 				{
-					GETMSG(TF_DisguiseOptions);
+					OB_GETMSG(TF_DisguiseOptions);
 					if(pMsg)
 					{
 						const int iCheckTeam = obUtilGetGameTeamFromBotTeam(pMsg->m_CheckTeam);
@@ -2086,7 +2189,7 @@ namespace Omnibot
 				}
 			case TF_MSG_DISGUISE:
 				{
-					GETMSG(TF_Disguise);
+					OB_GETMSG(TF_Disguise);
 					if(pMsg)
 					{
 						int iTeam = obUtilGetGameTeamFromBotTeam(pMsg->m_DisguiseTeam);
@@ -2105,7 +2208,7 @@ namespace Omnibot
 				}
 			case TF_MSG_CLOAK:
 				{
-					GETMSG(TF_FeignDeath);
+					OB_GETMSG(TF_FeignDeath);
 					if(pMsg)
 					{
 						serverpluginhelpers->ClientCommand(pPlayer->edict(), 
@@ -2115,7 +2218,7 @@ namespace Omnibot
 				}
 			case TF_MSG_LOCKPOSITION:
 				{
-					GETMSG(TF_LockPosition);
+					OB_GETMSG(TF_LockPosition);
 					if(pMsg)
 					{
 						CBaseEntity *pEnt = EntityFromHandle(pMsg->m_TargetPlayer);
@@ -2132,7 +2235,7 @@ namespace Omnibot
 				}
 			case TF_MSG_HUDHINT:
 				{
-					GETMSG(TF_HudHint);
+					OB_GETMSG(TF_HudHint);
 					CBaseEntity *pEnt = EntityFromHandle(pMsg->m_TargetPlayer);
 					pPlayer = pEnt ? pEnt->MyCharacterPointer() : 0;
 					if(pMsg && ToFFPlayer(pPlayer))
@@ -2143,7 +2246,7 @@ namespace Omnibot
 				}
 			case TF_MSG_HUDMENU:
 				{
-					GETMSG(TF_HudMenu);
+					OB_GETMSG(TF_HudMenu);
 					pEnt = EntityFromHandle(pMsg->m_TargetPlayer);
 					pPlayer = pEnt ? pEnt->MyCharacterPointer() : 0;
 					if(pMsg && ToFFPlayer(pPlayer))
@@ -2187,7 +2290,7 @@ namespace Omnibot
 				}
 			case TF_MSG_HUDTEXT:
 				{
-					GETMSG(TF_HudText);
+					OB_GETMSG(TF_HudText);
 					pEnt = EntityFromHandle(pMsg->m_TargetPlayer);
 					pPlayer = pEnt ? pEnt->MyCharacterPointer() : 0;
 					if(pMsg && pMsg->m_Message[0])
@@ -2567,7 +2670,7 @@ namespace Omnibot
 				ti.m_Activator = HandleFromEntity(_activator);
 				Q_strncpy(ti.m_Action,_action,TriggerBufferSize);
 				Q_strncpy(ti.m_TagName,_tagname,TriggerBufferSize);
-				g_BotFunctions.pfnBotSendTrigger(&ti);
+				g_BotFunctions.pfnBotSendTrigger(ti);
 			}
 		}
 	}
@@ -2595,12 +2698,7 @@ namespace Omnibot
 	void omnibot_interface::LevelInit()
 	{
 		// done here because map loads before InitBotInterface is called.
-		for(int i = 0; i < MAX_ENTITIES; ++i)
-		{
-			m_EntityHandles[i].m_HandleSerial = 1;
-			m_EntityHandles[i].m_NewEntity = false;
-			m_EntityHandles[i].m_Used = false;
-		}
+		g_EntSerials.Reset();
 	}
 	bool omnibot_interface::InitBotInterface()
 	{
@@ -2704,12 +2802,12 @@ namespace Omnibot
 					CBaseEntity *pGoalEnt = CBaseEntity::Instance(g_DeferredGoals[i].m_Entity);
 					if(pGoalEnt)
 					{
-						g_BotFunctions.pfnBotAddGoal(
-							HandleFromEntity(pGoalEnt), 
-							g_DeferredGoals[i].m_GoalType, 
-							g_DeferredGoals[i].m_GoalTeam, 
-							g_DeferredGoals[i].m_GoalName, 
-							NULL);
+						MapGoalDef goaldef;
+						goaldef.m_Entity = HandleFromEntity(pGoalEnt);
+						goaldef.m_GoalType = g_DeferredGoals[i].m_GoalType;
+						goaldef.m_Team = g_DeferredGoals[i].m_GoalTeam;
+						V_strncpy(goaldef.m_TagName,g_DeferredGoals[i].m_GoalName,MapGoalDef::BufferSize);
+						g_BotFunctions.pfnBotAddGoal(goaldef);
 					}
 				}
 				g_DeferredGoalIndex = 0;
@@ -2730,11 +2828,11 @@ namespace Omnibot
 			
 			//////////////////////////////////////////////////////////////////////////
 			// Register any pending entity updates.
-			for(int i = 0; i < MAX_ENTITIES; ++i)
+			for(int i = 0; i < EntSerials::NumEntities; ++i)
 			{
-				if(m_EntityHandles[i].m_NewEntity)
+				if(g_EntSerials.IsIndexNew(i))
 				{
-					m_EntityHandles[i].m_NewEntity = false;
+					g_EntSerials.ClearIndexNew(i);
 
 					CBaseEntity *pEnt = CBaseEntity::Instance(i);
 					if(pEnt)
@@ -2791,7 +2889,7 @@ namespace Omnibot
 			CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
 
 			// Check player classes on this player's team
-			if (pPlayer && pPlayer->GetTeamNumber() == _player->GetTeamNumber())
+			if (pPlayer && pPlayer->IsBot() && pPlayer->GetTeamNumber() == _player->GetTeamNumber())
 			{
 				g_BotFunctions.pfnBotSendEvent(pPlayer->entindex(), 
 					MessageHelper(PERCEPT_HEAR_TEAMCHATMSG, &d, sizeof(d)));
@@ -3816,7 +3914,7 @@ namespace Omnibot
 	void Bot_Queue_EntityCreated(CBaseEntity *pEnt)
 	{
 		if(pEnt)
-			m_EntityHandles[ENTINDEX(pEnt)].m_NewEntity = true;
+			g_EntSerials.QueueForIndex(ENTINDEX(pEnt));
 	}
 
 	void Bot_Event_EntityCreated(CBaseEntity *pEnt)
@@ -3831,11 +3929,12 @@ namespace Omnibot
 				Event_EntityCreated d;
 
 				int index = ENTINDEX(pEnt);
-				d.m_Entity = GameEntity(index, m_EntityHandles[index].m_HandleSerial);
+				g_EntSerials.AllocForIndex(index);
+
+				d.m_Entity = GameEntity(index, g_EntSerials.SerialForIndex(index));
 				d.m_EntityClass = iClass;
 				g_InterfaceFunctions->GetEntityCategory(ent, d.m_EntityCategory);
 				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ENTITYCREATED, &d, sizeof(d)));
-				m_EntityHandles[index].m_Used = true;
 			}
 		}
 	}
@@ -3847,11 +3946,9 @@ namespace Omnibot
 			Event_EntityDeleted d;
 
 			int index = ENTINDEX(pEnt);
-			d.m_Entity = GameEntity(index, m_EntityHandles[index].m_HandleSerial);
+			d.m_Entity = GameEntity(index, g_EntSerials.SerialForIndex(index));
 			g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_ENTITYDELETED, &d, sizeof(d)));
-			m_EntityHandles[index].m_Used = false;
-			m_EntityHandles[index].m_NewEntity = false;
-			while(++m_EntityHandles[index].m_HandleSerial==0) {}
+			g_EntSerials.FreeForIndex(index);
 		}
 	}
 
