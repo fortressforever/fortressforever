@@ -392,6 +392,8 @@ public:
 	// data description
 	DECLARE_DATADESC();
 	
+	void PrintDeleteInfo();
+
 	// memory handling
     void *operator new( size_t stAllocateBlock );
     void *operator new( size_t stAllocateBlock, int nBlockUse, const char *pFileName, int nLine );

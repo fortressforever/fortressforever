@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-08-26 19:36:45 -0700 (Sun, 26 Aug 2007) $
-// $LastChangedRevision: 2137 $
+// $LastChangedBy: drevil $
+// $LastChangedDate: 2008-01-09 08:57:27 -0800 (Wed, 09 Jan 2008) $
+// $LastChangedRevision: 2311 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,8 +27,8 @@ typedef struct
 	void (*pfnBotUpdate)();
 	void (*pfnBotShutdown)();
 	void (*pfnBotConsoleCommand)(const Arguments &_args);
-	void (*pfnBotAddGoal)(const GameEntity _ent, int _goaltype, int _team, const char *_tag, obUserData *_bud);
-	void (*pfnBotSendTrigger)(TriggerInfo *_triggerInfo);
+	void (*pfnBotAddGoal)(const MapGoalDef &goaldef);
+	void (*pfnBotSendTrigger)(const TriggerInfo &_triggerInfo);
 	void (*pfnBotAddBBRecord)(BlackBoard_Key _type, int _posterID, int _targetID, obUserData *_data);
 	
 	void (*pfnBotEntityAdded)(GameEntity _ent, EntityInfo *_info);

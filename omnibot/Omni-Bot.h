@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-08-26 19:36:45 -0700 (Sun, 26 Aug 2007) $
-// $LastChangedRevision: 2137 $
+// $LastChangedBy: drevil $
+// $LastChangedDate: 2008-01-09 08:57:27 -0800 (Wed, 09 Jan 2008) $
+// $LastChangedRevision: 2311 $
 //
 // about: Exported function definitions
 //		In order for the game to call functions from the bot, we must export
@@ -35,13 +35,13 @@ void BotUpdate();
 void BotConsoleCommand(const Arguments &_args);
 // function: BotAddGoal
 //		Allows the game to register a goal with the bot that the bots can use
-void BotAddGoal(const GameEntity _ent, int _goaltype, int _team, const char *_tag, obUserData *_bud);
+void BotAddGoal(const MapGoalDef &goaldef);
 // function: BotAddBBRecord
 //		Allows the game to enter blackboard records into the bots knowledge database.
 void BotAddBBRecord(BlackBoard_Key _type, int _posterID, int _targetID, obUserData *_data);
 // function: BotSendTrigger
 //		Allows the game to notify the bot of triggered events.
-void BotSendTrigger(TriggerInfo *_triggerInfo);
+void BotSendTrigger(const TriggerInfo &_triggerInfo);
 // function: BotSendEvent
 //		New Messagehelper based event handler.
 void BotSendEvent(int _dest, const MessageHelper &_message);

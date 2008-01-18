@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2007-12-06 08:58:50 -0800 (Thu, 06 Dec 2007) $
-// $LastChangedRevision: 2251 $
+// $LastChangedDate: 2008-01-16 09:41:57 -0800 (Wed, 16 Jan 2008) $
+// $LastChangedRevision: 2334 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +31,19 @@ struct Msg_Addbot
 		, m_Class(RANDOM_CLASS_IF_NO_CLASS)
 	{
 		m_Name[0] = m_Model[0] = m_Skin[0] = m_SpawnPointName[0] = m_Profile[0] = 0;
+	}
+};
+
+struct Msg_Kickbot
+{
+	enum { BufferSize = 64, InvalidGameId = -1 };
+	char		m_Name[BufferSize];
+	int			m_GameId;
+
+	Msg_Kickbot()
+		: m_GameId(InvalidGameId)
+	{
+		m_Name[0] =  0;
 	}
 };
 
@@ -233,8 +246,20 @@ struct Event_ScriptEvent
 
 struct Msg_GotoWaypoint
 {
-	int			m_UID;
+	char		m_WaypointName[64];
 	float		m_Origin[3];
+};
+
+struct Msg_MoverAt
+{
+	float		m_Position[3];
+	float		m_Under[3];
+
+	GameEntity	m_Entity;
+
+	Msg_MoverAt()
+	{
+	}
 };
 
 //////////////////////////////////////////////////////////////////////////

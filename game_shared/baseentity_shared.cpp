@@ -18,6 +18,7 @@
 #include "mapentities_shared.h"
 #include "debugoverlay_shared.h"
 #include "coordsize.h"
+#include "filesystem.h"
 
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
@@ -63,7 +64,6 @@ bool CBaseEntity::m_bAllowPrecache = false;
 ConVar	ai_shot_bias_min( "ai_shot_bias_min", "-1.0", FCVAR_REPLICATED );
 ConVar	ai_shot_bias_max( "ai_shot_bias_max", "1.0", FCVAR_REPLICATED );
 ConVar	ai_debug_shoot_positions( "ai_debug_shoot_positions", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Spawn some blood particles
@@ -2179,3 +2179,42 @@ bool CBaseEntity::IsToolRecording() const
 #endif
 }
 #endif
+
+#ifdef CLIENT_DLL
+ConVar dump_deletes_cl( "dump_deletes_cl", "0" );
+#else
+ConVar dump_deletes_s( "dump_deletes_s", "0" );
+#endif
+ConVar dump_delete_flush( "dump_deletes_flush", "0" );
+
+
+void CBaseEntity::PrintDeleteInfo()
+{
+	static FileHandle_t m_hClassNameFile = NULL;
+
+#ifdef CLIENT_DLL
+	if(dump_deletes_cl.GetBool())
+#else
+	if(dump_deletes_s.GetBool())
+#endif
+	{
+		if(!m_hClassNameFile)
+		{
+#ifdef CLIENT_DLL
+			m_hClassNameFile = filesystem->Open("classdump_client.txt", "wt", "MOD");
+#else
+			m_hClassNameFile = filesystem->Open("classdump_server.txt", "wt", "MOD");
+#endif
+		}
+		if(m_hClassNameFile)
+		{
+			const char *classname = _GetClassName();
+			char buffer[1024] = {};
+			V_snprintf(buffer, 1024, "%.2f deleted %s, index %d\n", 
+				gpGlobals->curtime, classname?classname:"unknown",entindex());
+			filesystem->Write(buffer,V_strlen(buffer),m_hClassNameFile);
+			if(dump_delete_flush.GetBool())
+				filesystem->Flush(m_hClassNameFile);
+		}		
+	}
+}
