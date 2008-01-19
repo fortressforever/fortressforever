@@ -20,8 +20,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1000", FCVAR_NONE );
-ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "50", FCVAR_NONE );
+ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "200", FCVAR_NONE );
+ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "10", FCVAR_NONE );
 
 //=============================================================================
 //
@@ -121,6 +121,8 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	VectorNormalize( vecForward );
 
 	// Shoot forward & up-ish
+	// pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
+	vecForward.z = 0.f;
 	pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
 }
 
