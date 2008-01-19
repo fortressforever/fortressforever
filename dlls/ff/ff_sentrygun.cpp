@@ -308,7 +308,9 @@ void CFFSentryGun::OnObjectThink( void )
 	// Spark if at 50% or less health
 	if ( m_iHealth <= ( m_iMaxHealth / 2 ) && gpGlobals->curtime >= m_flNextSparkTime )
 	{
-		g_pEffects->Sparks( GetAbsOrigin() + Vector(0, 0, 32.0f) );
+		// Emit some sparks from a random location hopefully inside the SG's bounds :)
+		Vector vecUp(0, 0, 1.0f);
+		g_pEffects->Sparks( GetAbsOrigin() + Vector(random->RandomFloat( -16, 16 ), random->RandomFloat( -16, 16 ), random->RandomFloat( 5, 32 )), 2, 2, &vecUp );
 		EmitSound( "DoSpark" );
 		m_flNextSparkTime = gpGlobals->curtime + random->RandomFloat( 0.5, 2.5 );
 	}
