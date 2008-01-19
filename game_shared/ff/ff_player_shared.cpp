@@ -594,7 +594,7 @@ void CFFPlayer::ClassSpecificSkill()
 			break;
 
 		case CLASS_SCOUT:
-			engine->ClientCmd("radar");
+			engine->ClientCmd("mancannon");
 			break;
 
 #endif
