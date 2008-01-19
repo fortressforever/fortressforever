@@ -5282,10 +5282,13 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	//}
 
 	// if it's a pyro, they take half damage
+	// AfterShock: pyros now take full damage. They can't be lit on fire tho, and thats a big enough differnce!
+	/*
 	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN )
 	{
 		info.SetDamage(info.GetDamage()/1.3); //Instead of taking 50% damage, pyros now take 75% - AfterShock
 	}
+	*/
 
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = info.GetDamage();
