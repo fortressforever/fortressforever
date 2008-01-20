@@ -37,8 +37,8 @@ ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.10", FCVAR_REPLICATED | FC
 //#define FF_AC_SPREAD_MAX 0.10f // Assault Cannon Maximum spread
 ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.34", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
 
-#define FF_AC_ROF_MAX 0.12f // Assault Cannon maximum rate of fire
-#define FF_AC_ROF_MIN 0.06f // Assault Cannon minimum rate of fire
+#define FF_AC_ROF_MAX 0.15f // Assault Cannon maximum rate of fire
+#define FF_AC_ROF_MIN 0.05f // Assault Cannon minimum rate of fire
 
 #define FF_AC_BULLETPUSH 1.0 // Assault Cannon bullet push force
 
@@ -391,6 +391,12 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 	if (pOwner->m_afButtonReleased & IN_ATTACK)
 	{
 		m_flTriggerReleased = gpGlobals->curtime;
+
+		// AfterShock: IF we just released the button, and we are at max charge, change the triggerPressed time so the remaining code works
+		if (m_flChargeTime >= FF_AC_MAXCHARGETIME)
+		{
+			m_flTriggerPressed = gpGlobals->curtime - FF_AC_MAXCHARGETIME;
+		}
 	}
 
 	// If we're currently firing then the charge time is simply the time since the
@@ -409,6 +415,12 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 		float flTimeHeld = m_flTriggerReleased - m_flTriggerPressed;
 
 		m_flChargeTime = flTimeHeld - flTimeSinceRelease;
+	}
+
+	// AfterShock: no more overheat: stay at max charge if you hit the cap
+	if (m_flChargeTime > FF_AC_MAXCHARGETIME)
+	{
+		m_flChargeTime = FF_AC_MAXCHARGETIME;
 	}
 
 	// They might have overheated.
@@ -459,6 +471,8 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	// Player is holding down fire. Don't allow it if we're still recovering from an overheat though
 	if ((flTimeSinceRelease <= 0.5f || pOwner->m_nButtons & IN_ATTACK) && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
+
+		/* NO MORE OVERHEAT - AfterShock
 		// Oh no...
 		if (m_flChargeTime > FF_AC_MAXCHARGETIME)
 		{
@@ -484,9 +498,10 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 			m_bFiring = false;
 		}
+		*/
 
 		// Time for the next real fire think
-		else if ((m_flChargeTime > FF_AC_WINDUPTIME || m_bFiring) && m_flNextPrimaryAttack <= gpGlobals->curtime)
+		if ((m_flChargeTime > FF_AC_WINDUPTIME || m_bFiring) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
 			// Out of ammo
 			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
