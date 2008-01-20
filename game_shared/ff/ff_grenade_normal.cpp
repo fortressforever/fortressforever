@@ -32,9 +32,10 @@ public:
 	virtual const char *GetBounceSound() { return "NormalGrenade.Bounce"; }
 
 	// Jiggles: Lowered Frag damage from 180 to 126 (30% less), but kept the radius about the same
+	// AfterShock: back up to 145, 30% was too much. Radius still the same, and separated the values.
 #ifdef GAME_DLL
-	virtual float GetGrenadeDamage()		{ return 126.0f; }
-	virtual float GetGrenadeRadius()		{ return GetGrenadeDamage() * 2.15f/*1.5f*/; }
+	virtual float GetGrenadeDamage()		{ return 145.0f; }
+	virtual float GetGrenadeRadius()		{ return 270.0f; }
 #endif
 
 	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }

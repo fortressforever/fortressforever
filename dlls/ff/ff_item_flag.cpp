@@ -38,6 +38,7 @@ extern "C"
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		24
+ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_ARCHIVE );
 
 int ACT_INFO_RETURNED;
 int ACT_INFO_CARRIED;
@@ -693,8 +694,10 @@ void CFFInfoScript::Drop( float delay, float speed )
 	Vector vel = Vector( 0, 0, 30.0f ); // owner->GetAbsVelocity();
 
 	if( speed )
+	{
 		vel += vecForward * speed;
-
+		vel += vecUp * (speed / ffdev_flag_throwup.GetFloat());
+	}
 	// Mirv: Don't allow a downwards velocity as this will make it float instead
 	if( vel.z < 1.0f )
 		vel.z = 1.0f;
