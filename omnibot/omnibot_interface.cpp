@@ -654,7 +654,6 @@ namespace Omnibot
 					Bot_Event_EntityCreated(pEnt);
 			}
 			//////////////////////////////////////////////////////////////////////////
-
 			// Success!, return its client num.
 			return iClientNum;
 		}
@@ -2428,7 +2427,7 @@ namespace Omnibot
 				}
 				else
 				{
-					float fVertical = 0.5;
+					float fVertical = 0.75;
 
 					// Handle newlines
 					char buffer[1024] = {};
@@ -2441,7 +2440,7 @@ namespace Omnibot
 						if(buffer[i] == '\n' || buffer[i+1] == '\0')
 						{
 							buffer[i++] = 0;
-							debugoverlay->AddScreenTextOverlay(0.5f, fVertical, _duration,
+							debugoverlay->AddScreenTextOverlay(0.3f, fVertical, _duration,
 								_color.r(), _color.g(), _color.b(), _color.a(), pbufferstart);
 							fVertical += 0.02f;
 							pbufferstart = &buffer[i];
@@ -2901,7 +2900,7 @@ namespace Omnibot
 	{
 		if(!IsOmnibotLoaded())
 			return;
-		if(!_player->IsBot())
+		if(!_spectated->IsBot())
 			return;
 
 		if(_spectated && _spectated->IsBot())
