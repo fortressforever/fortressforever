@@ -35,7 +35,7 @@
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.10", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
 //#define FF_AC_SPREAD_MAX 0.10f // Assault Cannon Maximum spread
-ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.45", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
+ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.34", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
 
 #define FF_AC_ROF_MAX 0.12f // Assault Cannon maximum rate of fire
 #define FF_AC_ROF_MIN 0.06f // Assault Cannon minimum rate of fire

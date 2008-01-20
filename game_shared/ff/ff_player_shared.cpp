@@ -576,12 +576,14 @@ void CFFPlayer::ClassSpecificSkill()
 			SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
 			break;
 
+			// AfterShock: TODO: do some swap between IC and flamethrower. if weapon = IC, swaptoweapon flamer, etc.
 		case CLASS_PYRO:
 			SwapToWeapon(FF_WEAPON_FLAMETHROWER);
 			break;
 
+			// AfterShock: TODO: do some swap between shotgun + RPG. if weapon = rpg, swaptoweapon sshotgun, etc.
 		case CLASS_SOLDIER:
-			engine->ClientCmd("+reload");
+			engine->ClientCmd("lastinv");
 			break;
 
 		case CLASS_ENGINEER:
