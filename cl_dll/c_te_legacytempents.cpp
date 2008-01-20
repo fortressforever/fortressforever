@@ -155,7 +155,7 @@ int C_LocalTempEntity::DrawStudioModel( int flags )
 		return drawn;
 
 	/// TODO: Aftershock needs to do whatever he wants with this...
-	if (this->flags & FTENT_FFPROJECTILE)
+	if (this->flags & FTENT_FFPROJECTILE && m_vecTempEntVelocity != vec3_origin)
 	{
 		color32 col = { 255, 255, 255, 255 };
 		IMaterial *pMaterial = materials->FindMaterial("sprites/glow2.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);

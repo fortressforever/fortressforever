@@ -431,12 +431,17 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 	ConVar target_rotation("ffdev_target_rotation", "-118.2"); // -100
 
+	ConVar grenadetargets("cl_grenadetargets", "1", FCVAR_ARCHIVE);
+
 	int CFFGrenadeBase::DrawModel(int flags)
 	{
 		int ret = BaseClass::DrawModel(flags);
 
 		if (ret == 0)
 			return 0;
+
+		if (grenadetargets.GetBool() == false)
+			return ret;
 
 		float flSpeed = GetAbsVelocity().Length();
 		
