@@ -865,7 +865,7 @@ public:
 					continue;
 
 				cb->SetPos(30, iYCoords);
-				cb->SetSize(250, 30);
+				cb->SetSize(450, 30);
 
 				iYCoords += 30;
 			}
@@ -922,7 +922,7 @@ public:
 				if (l)
 				{
 					l->SetPos(120, iYCoords);
-					l->SetSize(250, 30);
+					l->SetSize(450, 30);
 				}
 
 				iYCoords += 30;
