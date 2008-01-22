@@ -25,17 +25,33 @@
 #endif
 
 #ifdef CLIENT_DLL
+#define CONC_GLOW_R 255
+#define CONC_GLOW_G 255
+#define CONC_GLOW_B 200
+#define CONC_GLOW_A 0.8f
+#define CONC_GLOW_SIZE 1.0f
+
+/* AfterShock: cvars to #defines for the win!
 	ConVar conc_glow_r("ffdev_conc_glow_r", "255", FCVAR_CHEAT, "Conc glow red(0-255) ");
 	ConVar conc_glow_g("ffdev_conc_glow_g", "255", FCVAR_CHEAT, "Conc glow green(0-255) ");
 	ConVar conc_glow_b("ffdev_conc_glow_b", "200", FCVAR_CHEAT, "Conc glow blue(0-255) ");
 	ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", FCVAR_CHEAT, "Conc glow alpha(0-1) ");
 	ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", FCVAR_CHEAT, "Conc glow size(0.0-10.0");
+	*/
 #endif
 
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag
 #ifdef GAME_DLL
+
+#define FFDEV_CONC_LATERAL_POWER 2.74f
+#define FFDEV_CONC_VERTICAL_POWER 4.10f
+#define FFDEV_CONC_NEWBCONC_UPPUSH 90
+
+/* AfterShock: cvars to #defines for the win!
 	static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_CHEAT, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
 	static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_CHEAT, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
+	static ConVar ffdev_conc_newbconc_uppush( "ffdev_conc_newbconc_uppush", "90", FCVAR_CHEAT, "Vertical movement boost value for newb-didnt-jump hh concs" );
+*/
 #endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
@@ -246,17 +262,30 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			// But we don't want to lose the trait of a hh-like jump with a drop conc
 			// So an extra flag here helps out.
 			// Remember that m_fIsHandheld only affects the grenade owner
-			if ((pEntity == GetThrower() && m_fIsHandheld) || flDistance < 16.0f)
+			if ((pEntity == GetThrower() && m_fIsHandheld) || (flDistance < 16.0f))
 			{
-				Vector vecVelocity = pPlayer->GetAbsVelocity();
-
 				// These values are close (~within 0.01) of TFC
-
 				// #0001629: Request: Dev variables for HH conc strength.  Default = 2.74f and 4.10f respectively ---> Defrag
-				float fLateral = ffdev_conc_lateral_power.GetFloat();
-				float fVertical = ffdev_conc_vertical_power.GetFloat();
+				float fLateral = FFDEV_CONC_LATERAL_POWER;
+				float fVertical = FFDEV_CONC_VERTICAL_POWER;
 
-				pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
+				Vector vecVelocity = pPlayer->GetAbsVelocity();
+				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+				float flHorizontalSpeed = vecLatVelocity.Length();
+				// if you're on the ground (forgot to jump or ur a noob), give a little push but not much
+				if ((pPlayer->GetFlags() & FL_ONGROUND) && (flHorizontalSpeed < 550))
+				{
+					// noob conc
+					pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral * 0.95, vecVelocity.y  * fLateral* 0.95, (vecVelocity.z + FFDEV_CONC_NEWBCONC_UPPUSH)* fVertical));
+				   DevMsg("[HH Conc] on the ground & slow (%f) so newb conc\n", flHorizontalSpeed);
+				}
+				else
+				{
+					pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
+					DevMsg("[HH Conc] Not on the ground or too fast (%f)\n", flHorizontalSpeed);
+				}
+
+				//DevMsg("[HH Conc] flDistance = %f\n",flDistance);
 			}
 			else
 			{
@@ -382,7 +411,7 @@ int CFFGrenadeConcussionGlow::DrawModel(int flags)
 	alpha = 1.0f - alpha;
 	alpha *= alpha;
 
-	alpha = conc_glow_a.GetFloat() * (54.0f + 200.0f * alpha);
+	alpha = CONC_GLOW_A * (54.0f + 200.0f * alpha);
 
 	int drawn = DrawSprite(
 		this, 
@@ -395,10 +424,10 @@ int CFFGrenadeConcussionGlow::DrawModel(int flags)
 		GetRenderMode(), 		// rendermode
 		m_nRenderFX, 
 		 (int) alpha, 		// alpha
-		/*m_clrRender->r */ conc_glow_r.GetInt(), 
-		/*m_clrRender->g */ conc_glow_g.GetInt(), 
-		/*m_clrRender->b */ conc_glow_b.GetInt(), 
-		conc_glow_size.GetFloat() + random->RandomFloat(-0.04f, 0.04f));			// sprite scale
+		/*m_clrRender->r */ CONC_GLOW_R, 
+		/*m_clrRender->g */ CONC_GLOW_G, 
+		/*m_clrRender->b */ CONC_GLOW_B, 
+		CONC_GLOW_SIZE + random->RandomFloat(-0.04f, 0.04f));			// sprite scale
 
 	return drawn;
 }
