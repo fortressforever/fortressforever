@@ -1510,6 +1510,8 @@ void CFFPlayer::SetupClassVariables()
 
 	m_bSpecialInfectedDeath = false;
 
+	m_flScreamTime = 0.0f;
+	m_flMancannonTime = 0.0f;
 	// Reset Spy stuff
 	m_iCloaked = 0;
 	m_flCloakTime = 0.0f;
@@ -4735,7 +4737,11 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	if (newburnlevel == 3)
 	{
 		m_flBurningDamage *= BURN_MULTIPLIER_3BURNS;
-		EmitSound("Player.Scream"); // haha
+		if (gpGlobals->curtime > m_flScreamTime + 3.0f)
+		{
+			EmitSound("Player.Scream"); // haha
+			m_flScreamTime = gpGlobals->curtime;
+		}
 		if (oldburnlevel == 2) 
 		{
 			UserMessageBegin(user, "StatusIconUpdate");
