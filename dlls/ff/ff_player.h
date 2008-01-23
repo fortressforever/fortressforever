@@ -634,7 +634,7 @@ public:
 	// --> Mirv: Various things
 	void Command_SetChannel( void );
 	int m_iChannel;
-    
+    float m_flMancannonTime;
 	// BEG: Spy cloak stuff
 private:
 	void SpyCloakFadeIn( bool bInstant = false );
@@ -651,6 +651,10 @@ private:
 	float m_flCloakTime;
 	// Time until player can cloak again
 	float m_flNextCloak;
+	
+	// time before allowed to scream again
+	float m_flScreamTime;
+	
 	// Shared stuffs:
 public:
 	void Command_SpyCloak( void );

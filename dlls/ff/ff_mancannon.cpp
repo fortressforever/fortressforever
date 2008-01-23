@@ -112,6 +112,14 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	if( !pPlayer )
 		return;
 	
+	// can only use it once per second
+	/*
+	if (gpGlobals->curtime < pPlayer->m_flMancannonTime + 1.0f)
+	{
+		DevMsg("Mancannon ready in %f\n", (gpGlobals->curtime - (pPlayer->m_flMancannonTime + 1.0f)));
+		return;
+	}
+	*/
 	// Launch the guy
 	QAngle vecAngles = pPlayer->EyeAngles();
 	vecAngles.z = 0.0f;
@@ -123,7 +131,17 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	// Shoot forward & up-ish
 	// pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
 	vecForward.z = 0.f;
-	pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
+	// add an amount to their horizontal + vertical velocity (dont multiply cos slow classes wouldnt go anywhere!)
+	pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
+
+	//Vector vecVelocity = pPlayer->GetAbsVelocity();
+	//Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+
+	//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.y  * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.z + ffdev_mancannon_push_up.GetFloat() ) );
+	//DevMsg("Mancannon boost! X vel: %f, Y vel: %f, Z vel: %f\n", vecVelocity.x * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.y  * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.z + ffdev_mancannon_push_up.GetFloat() );
+	   
+	pPlayer->m_flMancannonTime = gpGlobals->curtime;
+	//Detonate();
 }
 
 //-----------------------------------------------------------------------------
