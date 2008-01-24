@@ -48,6 +48,7 @@
 #else
 	#include "ff_player.h"
 	#include "ff_team.h"
+	#include "smoke_trail.h"
 #endif
 
 #define FF_DISPENSER_MODEL					"models/buildable/dispenser/dispenser.mdl"
@@ -101,7 +102,7 @@
 //#define FF_BUILD_DET_RAISE_VAL		48.0f
 //#define FF_BUILD_DET_DUCKED_RAISE_VAL	24.0f
 
-#define FF_BUILD_MC_BUILD_DIST		42.0f
+#define FF_BUILD_MC_BUILD_DIST		64.0f
 //#define FF_BUILD_MC_RAISE_VAL		48.0f
 //#define FF_BUILD_MC_DUCKED_RAISE_VAL	24.0f
 
@@ -748,6 +749,7 @@ public:
 	bool				m_bShootingTeammates;
 	bool				m_bSendNailGrenHint;	// Only send the "kill sgs with nail grens" hint once per sg
 	float				m_flNextSparkTime;
+	SmokeTrail			*m_pSmokeTrail;
 
 	virtual bool CanSabotage() const;
 	virtual bool IsSabotaged() const;

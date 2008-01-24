@@ -20,8 +20,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "200", FCVAR_NONE );
-ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "10", FCVAR_NONE );
+ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "600", FCVAR_NONE );
+ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "600", FCVAR_NONE );
 
 //=============================================================================
 //
@@ -82,6 +82,8 @@ void CFFManCannon::GoLive( void )
 
 	m_bBuilt = true;
 
+	AddSolidFlags(FSOLID_TRIGGER);
+	CollisionProp()->UseTriggerBounds(true, 10);
 	SetTouch( &CFFManCannon::OnObjectTouch );
 
 	// Take away what it cost to build
@@ -113,13 +115,12 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 		return;
 	
 	// can only use it once per second
-	/*
 	if (gpGlobals->curtime < pPlayer->m_flMancannonTime + 1.0f)
 	{
 		DevMsg("Mancannon ready in %f\n", (gpGlobals->curtime - (pPlayer->m_flMancannonTime + 1.0f)));
 		return;
 	}
-	*/
+
 	// Launch the guy
 	QAngle vecAngles = pPlayer->EyeAngles();
 	vecAngles.z = 0.0f;
