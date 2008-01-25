@@ -1202,7 +1202,7 @@ void CFFOptionsPanel::SetVisible(bool state)
 extern const char *MOD_CLIENT_VERSION;
 
 // This is the URL for checking updates.
-char *szSplashUrl = "http://www.madabouthats.org/misc/check.php?c=%s&s=%s";
+char *szSplashUrl = "http://www.fortress-forever.com/notifier/check.php?c=%s&s=%s";
 
 // Singleton for our splash panel
 static CFFSplashPanel *g_pSplashPanel = NULL;
