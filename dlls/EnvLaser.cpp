@@ -232,8 +232,6 @@ void CEnvLaser::FireAtPoint( trace_t &tr )
 //-----------------------------------------------------------------------------
 void CEnvLaser::StrikeThink( void )
 {
-	return; // |-- Mirv: Removed this because it is really REALLY slow
-
 	CBaseEntity *pEnd = RandomTargetname( STRING( m_iszLaserTarget ) );
 
 	Vector vecFireAt = GetAbsEndPos();
