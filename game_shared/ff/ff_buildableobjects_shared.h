@@ -737,7 +737,7 @@ protected:
 public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
-	const char *GetTracerType( void ) { return "SGTracer"; }
+	const char *GetTracerType( void ) { return "AR2Tracer"; }
 
 	virtual Vector EyePosition( void );
 	Vector MuzzlePosition( void );
