@@ -594,8 +594,6 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 	// Find our owner
 	CFFPlayer *pOwner = ToFFPlayer( m_hOwner.Get() );
 
-	return pOwner;
-
 	if( !pOwner ) 
 	{
 		Warning( "[SentryGun] Can't find our owner!\n" );
@@ -816,7 +814,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
-	info.m_iDamage = 0; //m_iShellDamage;
+	info.m_iDamage = m_iShellDamage;
 	info.m_flDamageForceScale = ffdev_sg_bulletpush.GetFloat();
 
 	// Introduce quite a big spread now if sabotaged
@@ -848,7 +846,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	// Change barrel
 	m_bLeftBarrel = !m_bLeftBarrel;	
 
-	//m_iShells--;
+	m_iShells--;
 }
 
 //-----------------------------------------------------------------------------
