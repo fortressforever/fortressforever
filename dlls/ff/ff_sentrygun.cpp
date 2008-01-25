@@ -808,7 +808,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 
 	info.m_vecSrc = vecSrc;
 	info.m_vecDirShooting = vecDir;
-	info.m_iTracerFreq = 1;
+	info.m_iTracerFreq = 0;	// Mirv: Doing tracers down below now
 	info.m_iShots = 1;
 	info.m_pAttacker = this;
 	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
@@ -835,13 +835,24 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 
 	int iAttachment = GetLevel() > 2 ? (m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment) : m_iMuzzleAttachment;
 
+	trace_t tr;
+	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
+
 	CEffectData data;
 	data.m_nEntIndex = GetBaseAnimating()->entindex();
 	data.m_nAttachmentIndex = iAttachment;
 	data.m_flScale = GetLevel() > 1 ? 8.0f : 1.0f;
 	data.m_fFlags = MUZZLEFLASH_TYPE_DEFAULT;
 
-	DispatchEffect( "MuzzleFlash", data );
+	DispatchEffect("MuzzleFlash", data);
+
+	CEffectData data2;
+	data2.m_vStart = vecSrc;
+	data2.m_vOrigin = tr.endpos;
+	data2.m_nEntIndex = GetBaseAnimating()->entindex();
+	data2.m_flScale = 0.0f;
+	data2.m_nAttachmentIndex = iAttachment;
+	DispatchEffect(GetLevel() == 1 ? "Tracer" : "AR2Tracer", data2);
 
 	// Change barrel
 	m_bLeftBarrel = !m_bLeftBarrel;	
