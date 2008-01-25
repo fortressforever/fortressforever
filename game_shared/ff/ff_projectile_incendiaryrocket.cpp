@@ -56,9 +56,12 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	Vector vecSrc = GetAbsOrigin();
 	vecSrc.z += 1;
 
+	CFFPlayer *pBurninator = ToFFPlayer( GetOwnerEntity() );
+	if ( !pBurninator )
+		return;
 	// Do normal radius damage then do a trace sphere to set things alight
 	Vector vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
-	CTakeDamageInfo info(this, GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, DMG_BURN, 0, &vecReported);
+	CTakeDamageInfo info(this, pBurninator, GetBlastForce(), GetAbsOrigin(), m_flDamage, DMG_BURN, 0, &vecReported);
 	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
 	
 	// Sorry, not fond of the BEGIN_ENTITY_SPHERE_QUERY macro
@@ -69,9 +72,9 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 			continue;
 
 		CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-		if( g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+		if( g_pGameRules->FCanTakeDamage( pPlayer, pBurninator ) )
 		{
-			pPlayer->ApplyBurning(pPlayer, 0.5f, 10.0f, BURNTYPE_ICCANNON);
+			pPlayer->ApplyBurning(pBurninator, 0.5f, 10.0f, BURNTYPE_ICCANNON);
 		}
 	}
 
