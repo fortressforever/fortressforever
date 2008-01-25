@@ -75,6 +75,8 @@ ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_CHEAT );
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
 ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "15.0", FCVAR_REPLICATED | FCVAR_CHEAT, "SG bullet push force");
+// Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
+ConVar ffdev_sg_groundpush_multiplier("ffdev_sg_groundpush_multiplier", "3.0", FCVAR_REPLICATED, "SG ground bullet push multiplier");
 ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED | FCVAR_CHEAT, "SG bullet damage");
 ConVar ffdev_sg_rof_lvl1("ffdev_sg_rof_lvl1", "0.200", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 1 SG rate of fire");
 ConVar ffdev_sg_rof_lvl2("ffdev_sg_rof_lvl2", "0.100", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 2 SG rate of fire");
@@ -816,6 +818,11 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_iAmmoType = m_iAmmoType;
 	info.m_iDamage = m_iShellDamage;
 	info.m_flDamageForceScale = ffdev_sg_bulletpush.GetFloat();
+	// Jiggles: A HACK to address the fact that it takes a lot more force to push players around on the ground than in the air
+	CFFPlayer *pEnemyTarget = ToFFPlayer( GetEnemy() );
+	if ( pEnemyTarget && (pEnemyTarget->GetFlags() & FL_ONGROUND) )
+		info.m_flDamageForceScale *= ffdev_sg_groundpush_multiplier.GetFloat();
+		
 
 	// Introduce quite a big spread now if sabotaged
 	// but not if we're in malicious mode
