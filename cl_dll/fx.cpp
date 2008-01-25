@@ -456,7 +456,11 @@ void MuzzleFlashCallback( const CEffectData &data )
 		if ( data.m_nAttachmentIndex )
 		{
 			//FIXME: We also need to allocate these particles into an attachment space setup
-			pRenderable->GetAttachment( data.m_nAttachmentIndex, vecOrigin, vecAngles );
+			//pRenderable->GetAttachment( data.m_nAttachmentIndex, vecOrigin, vecAngles );
+
+			// Mirv: Fix for SG muzzleflashes
+			tempents->MuzzleFlash(data.m_fFlags & (~MUZZLEFLASH_FIRSTPERSON), data.m_hEntity, data.m_nAttachmentIndex, (data.m_fFlags & MUZZLEFLASH_FIRSTPERSON) != 0);
+			return;
 		}
 		else
 		{
@@ -469,6 +473,7 @@ void MuzzleFlashCallback( const CEffectData &data )
 }
 
 DECLARE_CLIENT_EFFECT( "MuzzleFlash", MuzzleFlashCallback );
+
  
 //-----------------------------------------------------------------------------
 // Purpose: 

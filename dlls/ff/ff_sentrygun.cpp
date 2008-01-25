@@ -437,8 +437,25 @@ void CFFSentryGun::OnActiveThink( void )
 			SetEnemy(pNewTarget);
 	}
 
-	// Get our shot positions - lets try the center of the SG
-	Vector vecMid = WorldSpaceCenter(); /* MuzzlePosition();*/
+	// Get the approximate distance that we're firing
+	float flDistance = (enemy->GetAbsOrigin() - WorldSpaceCenter()).Length();
+
+	// Get our shot positions
+	Vector vecMid = MuzzlePosition();
+
+	// Actually we're a bit too close, so move further back
+	if (flDistance < 120.0f)
+	{
+		int iAttachment = GetLevel() > 2 ? (m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment) : m_iMuzzleAttachment;
+
+		Vector vecTemp;
+		QAngle angTemp;
+		GetAttachment(iAttachment, vecTemp, angTemp);
+		AngleVectors(angTemp, &vecTemp);
+
+		vecMid -= vecTemp * 50.0f;
+	}
+
 	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMid, false ); // false: not 'noisey', so no random z added on
 
 	// Update our goal directions
@@ -483,6 +500,11 @@ void CFFSentryGun::OnActiveThink( void )
 		// Fire shells
 		if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) ) 
 		{
+			Vector vecOrigin;
+			QAngle vecAngles;
+			GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
+			//AngleVectors(vecAngles, &vecAiming);
+
 			Shoot( MuzzlePosition(), vecAiming, true );
 
 			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
@@ -571,6 +593,8 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 
 	// Find our owner
 	CFFPlayer *pOwner = ToFFPlayer( m_hOwner.Get() );
+
+	return pOwner;
 
 	if( !pOwner ) 
 	{
@@ -792,7 +816,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
-	info.m_iDamage = m_iShellDamage;
+	info.m_iDamage = 0; //m_iShellDamage;
 	info.m_flDamageForceScale = ffdev_sg_bulletpush.GetFloat();
 
 	// Introduce quite a big spread now if sabotaged
@@ -811,12 +835,20 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	QAngle vecAngles;
 	VectorAngles( vecDir, vecAngles );
 
-	//DoMuzzleFlash( ( ( GetLevel() > 2 ) ? ( m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment ) : m_iMuzzleAttachment ), vecSrc, vecAngles );
+	int iAttachment = GetLevel() > 2 ? (m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment) : m_iMuzzleAttachment;
+
+	CEffectData data;
+	data.m_nEntIndex = GetBaseAnimating()->entindex();
+	data.m_nAttachmentIndex = iAttachment;
+	data.m_flScale = GetLevel() > 1 ? 8.0f : 1.0f;
+	data.m_fFlags = MUZZLEFLASH_TYPE_DEFAULT;
+
+	DispatchEffect( "MuzzleFlash", data );
 
 	// Change barrel
 	m_bLeftBarrel = !m_bLeftBarrel;	
 
-	m_iShells--;
+	//m_iShells--;
 }
 
 //-----------------------------------------------------------------------------
