@@ -63,8 +63,8 @@ LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 // Developer ConVars
 //========================================================================
 ConVar gren_grav("ffdev_gren_grav", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar gren_fric("ffdev_gren_fric", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT);
-ConVar gren_elas("ffdev_gren_elas", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar gren_fric("ffdev_gren_fric", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar gren_elas("ffdev_gren_elas", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT);
 ConVar gren_radius("ffdev_gren_radius", "180.0f", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of grenade explosions");
 ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | FCVAR_CHEAT);
 //ConVar gren_water_vel_dec("ffdev_gren_water_vel_dec", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -262,18 +262,87 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 			}
 		}
 
-		float flTotalElasticity = GetElasticity() * flSurfaceElasticity;
+		// HL1: float backoff = 2.0 - pmove->friction;
+		float backoff = 1.0 + GetElasticity();
+
+		Vector vecAbsVelocity;
+
+		//DevMsg("Pre: %f\n", GetAbsVelocity().z);
+
+		// HL1: PM_ClipVelocity (pmove->velocity, trace.plane.normal, pmove->velocity, backoff);
+		PhysicsClipVelocity(GetAbsVelocity(), trace.plane.normal, vecAbsVelocity, backoff);
+
+		if (trace.plane.normal.z > 0.7f)
+		{
+			vecAbsVelocity *= 1.0f - GetFriction();
+		}
+
+		//DevMsg("Post: %f\n", vecAbsVelocity.z);
+
+		/*float flTotalElasticity = GetElasticity() * flSurfaceElasticity;
 		flTotalElasticity = clamp(flTotalElasticity, 0.0f, 0.9f);
 
 		// NOTE: A backoff of 2.0f is a reflection
 		Vector vecAbsVelocity;
 		PhysicsClipVelocity(GetAbsVelocity(), trace.plane.normal, vecAbsVelocity, 2.0f);
-		vecAbsVelocity *= flTotalElasticity;
+
+		// 0 when hitting walls, 1 when hitting floor
+		float flDot = DotProduct(trace.plane.normal, Vector(0.0f, 0.0f, 1.0f));
+
+		const float flWallVerticalElasticity = 1.0f;
+		const float flWallHorizontalElasticity = 0.6f;
+
+		// Let's try a smooth scale from from max at vertical (dot:0) -> normal on flat (dot:1)
+		float flV = flDot * flTotalElasticity + (1.0f - flDot) * flWallVerticalElasticity;
+		float flH = flDot * flTotalElasticity + (1.0f - flDot) * flWallHorizontalElasticity;
+
+		// We'll only change the 
+		vecAbsVelocity.x *= flH;
+		vecAbsVelocity.y *= flH;
+		vecAbsVelocity.z *= flV;*/
 
 		// Get the total velocity (player + conveyors, etc.)
 		VectorAdd(vecAbsVelocity, GetBaseVelocity(), vecVelocity);
 
-		float flSpeedSqr = DotProduct(vecVelocity, vecVelocity);
+
+		// stop if on ground
+		if (trace.plane.normal[2] > 0.7)
+		{		
+			//if (vecVelocity[2] < 800 * gpGlobals->frametime && trace.m_pEnt->IsStandable())
+			//{
+			//	// we're rolling on the ground, add static friction.
+			//	//SetGroundEntity(trace.m_pEnt);	//pmove->onground = trace.ent;
+			//	vecVelocity[2] = 0;
+			//	SetLocalAngularVelocity(vec3_angle);
+			//}
+
+			float speed = DotProduct(vecVelocity, vecVelocity);
+
+			if (speed < (30 * 30))
+			{
+				SetGroundEntity(trace.m_pEnt);	// pmove->onground = trace.ent;
+				SetAbsVelocity(vec3_origin);	// VectorCopy(vec3_origin, pmove->velocity);
+				SetLocalAngularVelocity(vec3_angle);
+				
+			}
+			else
+			{
+				//VectorScale (pmove->velocity, (1.0 - trace.fraction) * pmove->frametime * 0.9, move);
+				//trace = PM_PushEntity (move);
+				SetAbsVelocity(vecVelocity);
+			}
+			//VectorSubtract( pmove->velocity, base, pmove->velocity )
+		}
+		else
+		{
+			SetAbsVelocity(vecVelocity);
+		}
+
+		BounceSound();
+
+
+
+/*		float flSpeedSqr = DotProduct(vecVelocity, vecVelocity);
 
 		// Stop if on ground.
 		if (trace.plane.normal.z > 0.7f)			// Floor
@@ -326,7 +395,7 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 				SetAbsVelocity(vecAbsVelocity);
 			}
 		}
-		BounceSound();
+		BounceSound();*/
 	}
 
 	//-----------------------------------------------------------------------------
