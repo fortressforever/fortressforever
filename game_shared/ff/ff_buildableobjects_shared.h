@@ -102,7 +102,7 @@
 //#define FF_BUILD_DET_RAISE_VAL		48.0f
 //#define FF_BUILD_DET_DUCKED_RAISE_VAL	24.0f
 
-#define FF_BUILD_MC_BUILD_DIST		64.0f
+#define FF_BUILD_MC_BUILD_DIST		80.0f
 //#define FF_BUILD_MC_RAISE_VAL		48.0f
 //#define FF_BUILD_MC_DUCKED_RAISE_VAL	24.0f
 
@@ -844,6 +844,7 @@ public:
 	virtual void GoLive( void );
 
 	void OnObjectTouch( CBaseEntity *pOther );
+	void OnJumpPadThink( void );
 
 	virtual bool CanSabotage( void ) const { return false; }
 	virtual bool IsSabotaged( void ) const { return false; }
@@ -854,6 +855,8 @@ public:
 	virtual void DoExplosionDamage( void );
 
 	static CFFManCannon *Create( const Vector& vecOrigin, const QAngle& vecAngles, CBaseEntity *pentOwner = NULL );
+
+	int m_iJumpPadState;
 #endif
 };
 
