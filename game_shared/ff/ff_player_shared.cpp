@@ -530,6 +530,8 @@ void CFFPlayer::ClassSpecificSkill()
 	if (m_flNextClassSpecificSkill > gpGlobals->curtime)
 		return;
 
+	CFFWeaponBase *pWeapon = GetActiveFFWeapon();		
+			
 	switch (GetClassSlot())
 	{
 #ifdef GAME_DLL
@@ -572,18 +574,31 @@ void CFFPlayer::ClassSpecificSkill()
 #endif
 
 #ifdef CLIENT_DLL
+	
 		case CLASS_HWGUY:
 			SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
 			break;
 
-			// AfterShock: TODO: do some swap between IC and flamethrower. if weapon = IC, swaptoweapon flamer, etc.
 		case CLASS_PYRO:
-			SwapToWeapon(FF_WEAPON_FLAMETHROWER);
+			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_IC) )
+			{
+				SwapToWeapon(FF_WEAPON_FLAMETHROWER);
+			}
+			else 
+			{
+				SwapToWeapon(FF_WEAPON_IC);
+			}
 			break;
 
-			// AfterShock: TODO: do some swap between shotgun + RPG. if weapon = rpg, swaptoweapon sshotgun, etc.
 		case CLASS_SOLDIER:
-			engine->ClientCmd("lastinv");
+			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_RPG) )
+			{
+				SwapToWeapon(FF_WEAPON_SUPERSHOTGUN);
+			}
+			else 
+			{
+				SwapToWeapon(FF_WEAPON_RPG);
+			}
 			break;
 
 		case CLASS_ENGINEER:
