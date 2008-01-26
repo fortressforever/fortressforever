@@ -20,8 +20,19 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "600", FCVAR_NONE );
-ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "600", FCVAR_NONE );
+ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "600", FCVAR_REPLICATED );
+ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "600", FCVAR_REPLICATED );
+
+// Jiggles: Sorry, but I'm not using the "mancannon" nomenclature; Bungie didn't invent the jump pad!
+#define JUMPPAD_INITIAL_DEPLOY	0	
+#define JUMPPAD_ACTIVATE		1
+#define JUMPPAD_POWERDOWN		2
+#define JUMPPAD_REMOVE			3
+
+#define JUMPPAD_WARMUP_TIME		5.0f
+ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
+#define JUMPPAD_LIFESPAN		ffdev_mancannon_lifetime.GetFloat()
+#define JUMPPAD_POWERDOWN_TIME	5.0f
 
 //=============================================================================
 //
@@ -37,6 +48,7 @@ END_SEND_TABLE()
 // Start of our data description for the class
 BEGIN_DATADESC( CFFManCannon )
 	DEFINE_ENTITYFUNC( OnObjectTouch ),
+	DEFINE_THINKFUNC( OnJumpPadThink ),
 END_DATADESC()
 
 // Array of char *'s to dispenser models
@@ -57,6 +69,7 @@ const char *g_pszFFManCannonSounds[] =
 {
 	FF_MANCANNON_BUILD_SOUND,
 	FF_MANCANNON_EXPLODE_SOUND,
+	"DoSpark",
 	NULL
 };
 
@@ -69,6 +82,7 @@ void CFFManCannon::Spawn( void )
 
 	Precache();
 	CFFBuildableObject::Spawn();
+	m_iJumpPadState = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -90,7 +104,48 @@ void CFFManCannon::GoLive( void )
 	CFFPlayer *pOwner = GetOwnerPlayer();
 	if( pOwner )
 		pOwner->RemoveAmmo( 1, AMMO_MANCANNON );
+
+	// start thinking
+	SetThink( &CFFManCannon::OnJumpPadThink );
+	// Stagger our starting times
+	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
 }
+
+
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Generic think function
+//-----------------------------------------------------------------------------
+void CFFManCannon::OnJumpPadThink( void )
+{
+	switch ( m_iJumpPadState )
+	{
+	case JUMPPAD_INITIAL_DEPLOY:
+		// Start warmup sound
+		EmitSound("DoSpark");
+		SetNextThink( gpGlobals->curtime + JUMPPAD_WARMUP_TIME );
+		m_iJumpPadState++;
+		break;
+	case JUMPPAD_ACTIVATE:
+		// Play activate sound
+		EmitSound("DoSpark");
+		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN );
+		m_iJumpPadState++;
+		break;
+	case JUMPPAD_POWERDOWN:
+		// Play powerdown sound
+		EmitSound("DoSpark");
+		SetNextThink( gpGlobals->curtime + JUMPPAD_POWERDOWN_TIME );
+		m_iJumpPadState++;
+		break;
+	case JUMPPAD_REMOVE:
+		Detonate();
+		break;
+	}
+
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Launch guy
@@ -102,6 +157,9 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	CheckForOwner();
 
 	if( !IsBuilt() )
+		return;
+
+	if ( m_iJumpPadState != JUMPPAD_ACTIVATE + 1 )
 		return;
 
 	if( !pOther )
@@ -117,7 +175,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	// can only use it once per second
 	if (gpGlobals->curtime < pPlayer->m_flMancannonTime + 1.0f)
 	{
-		DevMsg("Mancannon ready in %f\n", (gpGlobals->curtime - (pPlayer->m_flMancannonTime + 1.0f)));
+		//DevMsg("Mancannon ready in %f\n", (gpGlobals->curtime - (pPlayer->m_flMancannonTime + 1.0f)));
 		return;
 	}
 
