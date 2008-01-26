@@ -69,7 +69,9 @@ const char *g_pszFFManCannonSounds[] =
 {
 	FF_MANCANNON_BUILD_SOUND,
 	FF_MANCANNON_EXPLODE_SOUND,
-	"DoSpark",
+	"JumpPad.WarmUp",
+	"JumpPad.PowerDown",
+	"JumpPad.Fire",
 	NULL
 };
 
@@ -123,19 +125,19 @@ void CFFManCannon::OnJumpPadThink( void )
 	{
 	case JUMPPAD_INITIAL_DEPLOY:
 		// Start warmup sound
-		EmitSound("DoSpark");
+		EmitSound( "JumpPad.WarmUp" );
 		SetNextThink( gpGlobals->curtime + JUMPPAD_WARMUP_TIME );
 		m_iJumpPadState++;
 		break;
 	case JUMPPAD_ACTIVATE:
 		// Play activate sound
-		EmitSound("DoSpark");
+		//EmitSound("JumpPad.Activate");
 		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN );
 		m_iJumpPadState++;
 		break;
 	case JUMPPAD_POWERDOWN:
 		// Play powerdown sound
-		EmitSound("DoSpark");
+		EmitSound( "JumpPad.PowerDown" );
 		SetNextThink( gpGlobals->curtime + JUMPPAD_POWERDOWN_TIME );
 		m_iJumpPadState++;
 		break;
@@ -198,7 +200,8 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 
 	//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.y  * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.z + ffdev_mancannon_push_up.GetFloat() ) );
 	//DevMsg("Mancannon boost! X vel: %f, Y vel: %f, Z vel: %f\n", vecVelocity.x * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.y  * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.z + ffdev_mancannon_push_up.GetFloat() );
-	   
+	EmitSound("JumpPad.Fire");
+
 	pPlayer->m_flMancannonTime = gpGlobals->curtime;
 	//Detonate();
 }
