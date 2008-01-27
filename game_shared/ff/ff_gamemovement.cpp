@@ -67,9 +67,7 @@ public:
 };
 
 //static ConVar bhop_cap("ffdev_bhop_cap", "1", FCVAR_REPLICATED);
-#define BHOP_CAP 1.15f
-//static ConVar bhop_baseline("ffdev_bhop_baseline", "1", FCVAR_REPLICATED);
-#define BHOP_BASELINE 1.15f
+#define BHOP_CAP 1.2f
 //static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED);
 #define BHOP_PCFACTOR 0.65f
 
@@ -192,14 +190,13 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// This following dynamic cap is documented here:
 	//		http://www.madabouthats.org/code-tf2/viewtopic.php?t=2360
 
-	const float baseline = /*1.9f*/ /*1.52f*/ BHOP_BASELINE * mv->m_flMaxSpeed;
 	const float cap = /*2.0f*/ /*1.6f*/ BHOP_CAP * mv->m_flMaxSpeed;
 	const float pcfactor = /*0.5f*/ BHOP_PCFACTOR;
 	const float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
 	if (speed > cap)
 	{
-		float applied_cap = (speed - cap) * pcfactor + baseline;
+		float applied_cap = (speed - cap) * pcfactor + cap;
 		float multi = applied_cap / speed;
 
 		mv->m_vecVelocity[0] *= multi;

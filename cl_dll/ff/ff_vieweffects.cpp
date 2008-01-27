@@ -585,7 +585,7 @@ public:
 		// Actual value less than intended, so raise up to meet
 		if (m_flAmount < m_flTargetAmount)
 		{
-			m_flAmount += 1.0f;
+			m_flAmount += 2.0f;
 			m_flAmount = min(m_flAmount, m_flTargetAmount);
 		}
 		else
@@ -658,8 +658,8 @@ public:
 	{
 		m_flTargetAmount += (float) msg.ReadByte();
 
-		if (m_flTargetAmount > 255.0f)
-			m_flTargetAmount = 255.0f;
+		if (m_flTargetAmount > 64.0f)
+			m_flTargetAmount = 64.0f;
 	}
 
 private:
