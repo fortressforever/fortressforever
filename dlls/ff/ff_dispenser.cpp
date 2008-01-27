@@ -599,3 +599,40 @@ void CFFDispenser::DoExplosionDamage()
 		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
 	}
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Carry out the radius damage for this buildable
+//-----------------------------------------------------------------------------
+void CFFDispenser::PhysicsSimulate()
+{
+	BaseClass::PhysicsSimulate();
+
+	// Update the client every 0.2 seconds
+	if (gpGlobals->curtime > m_flLastClientUpdate + 0.2f)
+	{
+		m_flLastClientUpdate = gpGlobals->curtime;
+
+		CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (m_hOwner.Get());
+
+		if (!pPlayer)
+			return;
+
+		int iHealth = (int) (100.0f * GetHealth() / GetMaxHealth());
+		int iAmmo = m_iAmmoPercent;
+
+		// If things haven't changed then do nothing more
+		int iState = iHealth + (iAmmo << 8);
+		if (m_iLastState == iState)
+			return;
+
+		CSingleUserRecipientFilter user(pPlayer);
+		user.MakeReliable();
+
+		UserMessageBegin(user, "DispenserMsg");
+		WRITE_BYTE(iHealth);
+		WRITE_BYTE(iAmmo);
+		MessageEnd();
+
+		m_iLastState = iState;
+	}
+}
