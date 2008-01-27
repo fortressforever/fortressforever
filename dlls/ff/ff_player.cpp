@@ -96,7 +96,7 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
 // [integer] Time in seconds you will stay 'tagged' once hit by a radio tag rifle round
 //static ConVar radiotag_draw_duration( "ffdev_radiotag_draw_duration", "60" );
-#define RADIOTAG_DRAW_DURATION 60
+#define RADIOTAG_DRAW_DURATION 15
 
 // [float] Time between updating the players location
 //static ConVar location_update_frequency( "ffdev_location_update_frequency", "0.5" );
