@@ -29,7 +29,7 @@ ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "600", FCVAR_REPLICAT
 #define JUMPPAD_POWERDOWN		2
 #define JUMPPAD_REMOVE			3
 
-#define JUMPPAD_WARMUP_TIME		5.0f
+#define JUMPPAD_WARMUP_TIME		2.0f
 ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
 #define JUMPPAD_LIFESPAN		ffdev_mancannon_lifetime.GetFloat()
 #define JUMPPAD_POWERDOWN_TIME	5.0f
