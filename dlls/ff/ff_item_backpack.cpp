@@ -222,6 +222,7 @@ public:
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
 
 		SetModel(HEALTHDROP_MODEL);
+		SetSize(Vector(-10, -15, -0.1f), Vector(10, 15, 0.1f));
 	
 		CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT);
 

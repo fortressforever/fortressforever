@@ -550,18 +550,18 @@ void CFFPlayer::ClassSpecificSkill()
 			{
 				pHealthDrop->Spawn();
 				pHealthDrop->SetOwnerEntity(this);
-				pHealthDrop->SetLocalAngularVelocity(RandomAngle(-400, 400));
+				//pHealthDrop->SetLocalAngularVelocity(RandomAngle(-400, 400));
 
 				Vector vForward;
 				AngleVectors(EyeAngles(), &vForward);
 
-				vForward *= 420.0f;
+				vForward *= 620.0f;
 
 				// Bugfix: Floating objects
 				if (vForward.z < 1.0f)
 					vForward.z = 1.0f;
 
-				pHealthDrop->SetAbsVelocity(vForward);
+				pHealthDrop->SetAbsVelocity(vForward + Vector(0,0,100));
 				pHealthDrop->SetAbsOrigin(GetLegacyAbsOrigin());
 
 				// Play a sound
@@ -1364,7 +1364,7 @@ void CFFPlayer::Cloak( void )
 			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
 			if( pRagdoll )
 			{
-				pRagdoll->m_vecRagdollVelocity = GetLocalVelocity();
+				pRagdoll->m_vecRagdollVelocity = 100.0f * GetLocalVelocity();
 				pRagdoll->SetThink( NULL );
 			}
 		}		
