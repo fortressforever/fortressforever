@@ -85,6 +85,7 @@ void CFFManCannon::Spawn( void )
 	Precache();
 	CFFBuildableObject::Spawn();
 	m_iJumpPadState = 0;
+	m_bTakesDamage = false;
 }
 
 //-----------------------------------------------------------------------------
