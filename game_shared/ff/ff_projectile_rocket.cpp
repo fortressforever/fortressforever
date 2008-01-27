@@ -109,11 +109,12 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_rocket);
 	void CFFProjectileRocket::CleanUp()
 	{
 		// Brute for rocket trail destruction
+		/* AfterShock: commented this for an attempted fix for bug: CL_CopyExistingEntity crash (jan 2008)
 		if (m_hRocketTrail)
 		{
 			m_hRocketTrail->Remove();
 		}
-
+		*/
 		BaseClass::CleanUp();
 	}
 
