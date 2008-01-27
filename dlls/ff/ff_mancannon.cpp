@@ -100,7 +100,7 @@ void CFFManCannon::GoLive( void )
 	m_bBuilt = true;
 
 	AddSolidFlags(FSOLID_TRIGGER);
-	CollisionProp()->UseTriggerBounds(true, 10);
+	CollisionProp()->UseTriggerBounds(true, 5);
 	SetTouch( &CFFManCannon::OnObjectTouch );
 
 	// Take away what it cost to build
