@@ -550,18 +550,20 @@ void CFFPlayer::ClassSpecificSkill()
 			{
 				pHealthDrop->Spawn();
 				pHealthDrop->SetOwnerEntity(this);
+				QAngle angSpin = QAngle(0,450,0);
 				//pHealthDrop->SetLocalAngularVelocity(RandomAngle(-400, 400));
+				pHealthDrop->SetLocalAngularVelocity(angSpin);
 
 				Vector vForward;
 				AngleVectors(EyeAngles(), &vForward);
 
-				vForward *= 620.0f;
+				vForward *= 420.0f;
 
 				// Bugfix: Floating objects
 				if (vForward.z < 1.0f)
 					vForward.z = 1.0f;
 
-				pHealthDrop->SetAbsVelocity(vForward + Vector(0,0,100));
+				pHealthDrop->SetAbsVelocity(vForward + Vector(0,0,250));
 				pHealthDrop->SetAbsOrigin(GetLegacyAbsOrigin());
 
 				// Play a sound
@@ -571,13 +573,14 @@ void CFFPlayer::ClassSpecificSkill()
 			}
 		}
 		break;
+
+		case CLASS_HWGUY:
+			//CFFWeaponAssaultCannon::ToggleClamp();
+			break;
 #endif
 
 #ifdef CLIENT_DLL
 	
-		case CLASS_HWGUY:
-			SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
-			break;
 
 		case CLASS_PYRO:
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_IC) )
