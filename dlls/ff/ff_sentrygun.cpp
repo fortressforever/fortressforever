@@ -172,6 +172,8 @@ CFFSentryGun::CFFSentryGun()
 	m_bSendNailGrenHint = true;
 
 	m_flNextSparkTime = 0;
+	m_flLastClientUpdate = 0;
+	m_iLastState = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -1421,5 +1423,47 @@ void CFFSentryGun::DoExplosionDamage()
 		RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
 
 		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Carry out the radius damage for this buildable
+//-----------------------------------------------------------------------------
+void CFFSentryGun::PhysicsSimulate()
+{
+	BaseClass::PhysicsSimulate();
+
+	// Update the client every 0.2 seconds
+	if (gpGlobals->curtime > m_flLastClientUpdate + 0.2f)
+	{
+		m_flLastClientUpdate = gpGlobals->curtime;
+
+		CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (m_hOwner.Get());
+
+		if (!pPlayer)
+			return;
+
+		int iHealth = (int) (100.0f * GetHealth() / GetMaxHealth());
+		int iAmmo = (int) (100.0f * (float) m_iShells / m_iMaxShells);
+
+		// Last bit of ammo signifies whether the SG needs rockets
+		if (m_iMaxRockets && !m_iRockets) 
+			m_iAmmoPercent += 128;
+
+		// If things haven't changed then do nothing more
+		int iState = iHealth + (iAmmo << 8);
+		if (m_iLastState == iState)
+			return;
+
+		CSingleUserRecipientFilter user(pPlayer);
+		user.MakeReliable();
+
+		UserMessageBegin(user, "SentryMsg");
+		WRITE_BYTE(iHealth);
+		WRITE_BYTE(iAmmo);
+		WRITE_BYTE(GetLevel());
+		MessageEnd();
+
+		m_iLastState = iState;
 	}
 }

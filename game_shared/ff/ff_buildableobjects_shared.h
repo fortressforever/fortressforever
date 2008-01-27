@@ -612,6 +612,11 @@ public:
 
 	static CFFDispenser *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
+	// These are for updating the user
+	virtual void	PhysicsSimulate();
+	float			m_flLastClientUpdate;
+	int				m_iLastState;
+
 protected:
 	void SendStatsToBot( void );
 
@@ -712,6 +717,12 @@ public:
 	float MaxPitchSpeed( void ) const;
 
 	virtual void DoExplosionDamage();
+
+	// These are for updating the user
+	virtual void	PhysicsSimulate();
+	float			m_flLastClientUpdate;
+	int				m_iLastState;
+
 
 private:
 	bool IsTargetInAimingEllipse( const Vector& vecTarget ) const;

@@ -618,6 +618,9 @@ CFFDispenser::CFFDispenser( void )
 
 	// Store a value from the base class
 	m_flOrigExplosionMagnitude = m_flExplosionMagnitude;
+
+	m_flLastClientUpdate = 0;
+	m_iLastState = 0;
 #endif
 
 	// Initial values

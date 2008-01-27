@@ -67,6 +67,9 @@ private:
 	bool m_bDrawDispenser;
 	bool m_bDrawSentry;
 
+	void MsgFunc_DispenserMsg(bf_read &msg);
+	void MsgFunc_SentryMsg(bf_read &msg);
+
 public:
 	CHudBuildState(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudBuildState") 
 	{
@@ -86,6 +89,9 @@ public:
 CHudBuildState *g_pBuildState = NULL;
 
 DECLARE_HUDELEMENT(CHudBuildState);
+DECLARE_HUD_MESSAGE(CHudBuildState, DispenserMsg);
+DECLARE_HUD_MESSAGE(CHudBuildState, SentryMsg);
+
 
 CHudBuildState::~CHudBuildState() 
 {
@@ -135,6 +141,9 @@ void CHudBuildState::VidInit()
 void CHudBuildState::Init() 
 {
 	vgui::ivgui()->AddTickSignal(GetVPanel());
+
+	HOOK_HUD_MESSAGE(CHudBuildState, DispenserMsg);
+	HOOK_HUD_MESSAGE(CHudBuildState, SentryMsg);
 }
 
 void CHudBuildState::OnTick() 
@@ -151,51 +160,36 @@ void CHudBuildState::OnTick()
 		return;
 
 	C_FFDispenser *pDispenser = pPlayer->GetDispenser();
-
-	if (pDispenser) 
-	{
-		if (pDispenser->IsBuilt())
-		{
-			m_bDrawDispenser = true;
-			_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealthPercent(), m_szAmmo, pDispenser->GetAmmoPercent());
-		}
-	}
-
 	C_FFSentryGun *pSentryGun = pPlayer->GetSentryGun();
+
+	m_bDrawDispenser = pDispenser && pDispenser->IsBuilt();
+	m_bDrawSentry = pSentryGun && pSentryGun->m_iLevel > 0;
+}
+
+void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
+{
+    int iHealth = (int) msg.ReadByte();
+    int iAmmo = (int) msg.ReadByte();
+
+	_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, iHealth, m_szAmmo, iAmmo);
+}
+
+void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
+{
+    int iHealth = (int) msg.ReadByte();
+    int iAmmo = (int) msg.ReadByte();
+	int iLevel = (int) msg.ReadByte();
+
+	bool fNoRockets = false;
 	
-	if (pSentryGun) 
+	// Last bit of ammo is the rocket warning
+	if (iAmmo >= 128)
 	{
-		// Only want to show it once we actually have a level 1 built(or higher) 
-		// and we don't set the level until GoLive is called so this is perfect
-		// for not drawing our health status until we GoLive the first time
-		if (pSentryGun->m_iLevel > 0) 
-		{
-			m_bDrawSentry = true;
-
-			// We have at least a level 1 sg(ie. it isn't in the process of being built -
-			// it's built and operational) 
-
-			//int iHealthPerc = ((float) pSentryGun->GetHealth() / pSentryGun->GetMaxHealth()) * 100;	// |-- Mirv: BUG #0000104: Sentry gun health status goes to 0% the moment the sentry loses health
-			// Mulch: new function in buildables
-			int iHealthPerc = pSentryGun->GetHealthPercent();
-
-			// Get ammo percentage
-			int iAmmoPerc = pSentryGun->GetAmmoPercent();
-			bool fNoRockets = false;
-
-			// AfterShock - get level and display it
-			int iLevel = pSentryGun->GetLevel();
-			
-			// We store the lack of rockets in the highest significant bit
-			if (iAmmoPerc >= 128) 
-			{
-				iAmmoPerc -= 128;
-				fNoRockets = true;
-			}
-
-			_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% %s: %i%% %s", iLevel , m_szHealth, iHealthPerc, m_szAmmo, iAmmoPerc, fNoRockets ? m_szNoRockets : L"");
-		}
+		fNoRockets = true;
+		iAmmo -= 128;
 	}
+
+	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% %s: %i%% %s", iLevel , m_szHealth, iHealth, m_szAmmo, iAmmo, fNoRockets ? m_szNoRockets : L"");
 }
 
 void CHudBuildState::Paint() 

@@ -1367,6 +1367,9 @@ void CFFPlayer::Spawn( void )
 
 	BaseClass::Spawn();
 
+	// Make sure they don't spawn ducked
+	RemoveFlag(FL_DUCKING);
+
 	SetModel( FF_PLAYER_MODEL );
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
