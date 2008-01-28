@@ -12,6 +12,7 @@
 #include "shot_manipulator.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_weapon_sniperrifle.h"
+#include "ff_weapon_assaultcannon.h"
 
 #ifdef CLIENT_DLL
 	
@@ -573,9 +574,16 @@ void CFFPlayer::ClassSpecificSkill()
 			}
 		}
 		break;
-
 		case CLASS_HWGUY:
-			//CFFWeaponAssaultCannon::ToggleClamp();
+				//if(pWeapon->GetWeaponID() != FF_WEAPON_ASSAULTCANNON)
+				//	SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
+				//else
+				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
+				{
+					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
+					if(pAC)
+						pAC->ToggleClamp();
+				}
 			break;
 #endif
 

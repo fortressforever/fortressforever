@@ -10,23 +10,15 @@
 /// ---------
 /// Dec 21, 2004 Mirv: First creation logged
 
+
 #include "cbase.h"
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
 #include "in_buttons.h"
 
-#ifdef CLIENT_DLL 
-	#define CFFWeaponAssaultCannon C_FFWeaponAssaultCannon
-	#include "c_ff_player.h"
-	#include "ff_utils.h"
-	#include "soundenvelope.h"
-#else
-	#include "omnibot_interface.h"
-	#include "ff_player.h"
-#endif
+#include "ff_weapon_assaultcannon.h"
 
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
-#define FF_AC_MAXCHARGETIME 3.0f	// Assault Cannon Max Charge Time
 #define FF_AC_WINDUPTIME	0.5f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
@@ -66,75 +58,6 @@ ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.34", FCVAR_REPLICATED | FC
 #define FF_AC_CHARGETIMEBUFFERED_UPDATEINTERVAL 0.02f
 
 #endif
-
-//=============================================================================
-// CFFWeaponAssaultCannon
-//=============================================================================
-
-class CFFWeaponAssaultCannon : public CFFWeaponBase
-{
-public:
-	DECLARE_CLASS(CFFWeaponAssaultCannon, CFFWeaponBase);
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-	
-	CFFWeaponAssaultCannon();
-	~CFFWeaponAssaultCannon();
-
-	virtual void Precache();
-	virtual bool Deploy();
-	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
-	virtual void Drop( const Vector& vecVelocity );
-	virtual void ItemPostFrame();
-	virtual void PrimaryAttack();
-	//virtual void Fire();
-
-	void UpdateChargeTime();
-
-	virtual void GetHeatLevel(int _firemode, float &_current, float &_max) 
-	{
-		_current = m_flChargeTime; 
-		_max = FF_AC_MAXCHARGETIME;
-	}
-private:
-	virtual float GetFireRate();
-	Vector GetFireSpread();
-
-#ifdef CLIENT_DLL
-
-	void UpdateBarrelRotation();
-	void StopBarrelRotationSound();
-	int m_iBarrelRotation;
-	float m_flBarrelRotationValue;
-	float m_flBarrelRotationDelta;
-	float m_flBarrelRotationStopTimer;
-	CSoundPatch *m_sndBarrelRotation;
-
-	void StopLoopShotSound();
-	CSoundPatch *m_sndLoopShot;
-
-	float m_flChargeTimeBuffered;
-	float m_flChargeTimeBufferedNextUpdate;
-
-#endif
-
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_ASSAULTCANNON; }
-	const char *GetTracerType() { return "AR2Tracer"; }
-
-private:
-
-	CFFWeaponAssaultCannon(const CFFWeaponAssaultCannon &);
-
-public:	// temp while i expose m_flChargeTime to global function
-
-	float m_flLastTick;
-	float m_flDeployTick;
-	float m_flChargeTime;
-	CNetworkVar(float, m_flTriggerPressed);
-	CNetworkVar(float, m_flTriggerReleased);
-
-	bool m_bFiring;
-};
 
 //=============================================================================
 // CFFWeaponAssaultCannon tables
@@ -178,6 +101,8 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 	m_flTriggerPressed = 0.0f;
 
 	m_bFiring = false;
+	m_bClamped = false;
+	m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
 
 #ifdef CLIENT_DLL
 
@@ -226,6 +151,9 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 
 #endif
 
+	m_bClamped = false;
+	m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
+
 	//if (!m_fFireState) 
 	//	return BaseClass::Holster(pSwitchingTo);
 
@@ -273,6 +201,8 @@ void CFFWeaponAssaultCannon::Drop( const Vector& vecVelocity )
 		//else
 		//	WeaponSoundLocal(STOP);
 	}
+	m_bClamped = false;
+	m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
 
 #ifdef CLIENT_DLL
 	StopBarrelRotationSound();
@@ -280,6 +210,33 @@ void CFFWeaponAssaultCannon::Drop( const Vector& vecVelocity )
 #endif
 
 	return BaseClass::Drop( vecVelocity );
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Clamp the spin of the AC
+//----------------------------------------------------------------------------
+
+void CFFWeaponAssaultCannon::ToggleClamp()
+{
+//#ifdef GAME_DLL
+
+	// bool clamped = true
+	if (m_bClamped == true)
+	{
+		m_bClamped = false;
+		m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
+		//m_flTriggerPressed = gpGlobals->curtime() - (m_flClampPressed - m_flTriggerPressed);
+	}
+	else if (m_flChargeTime > 0)
+	{
+		m_bClamped = true;
+		m_flMaxChargeTime = m_flChargeTime;
+		//m_flClampPressed = gpGlobals->curtime();
+	}
+	// play anim or stop charge bar?
+	// timer to stop people clamping/unclamping too fast?
+
+//#endif
 }
 
 //----------------------------------------------------------------------------
@@ -292,6 +249,8 @@ bool CFFWeaponAssaultCannon::Deploy()
 	m_flDeployTick = gpGlobals->curtime;
 
 	m_bFiring = false;
+	m_bClamped = false;
+	m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
 
 	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
 	if (pOwner)
@@ -358,19 +317,21 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
 
 	// Firing has started
+	// If player is pressing fire for the first time i.e. only just pressed fire
 	if (pOwner->m_afButtonPressed & IN_ATTACK && m_flTriggerPressed < gpGlobals->curtime)
 	{
 		// We've logged the trigger having being released recently.
 		// If the trigger was held longer than the time since the release then there
 		// must be charge left on the AC.
 		// We will subtract this remaining charge from the curtime for the new charge.
+		// So this is what happens when FIRE->RELEASE->FIRE AGAIN:
 		if (m_flTriggerReleased > m_flTriggerPressed)
 		{
 			float flTimeSinceRelease = gpGlobals->curtime - m_flTriggerReleased;
 			float flTimeHeld = m_flTriggerReleased - m_flTriggerPressed;
 			float flTimeLeft = flTimeHeld - flTimeSinceRelease;
 
-			if (flTimeLeft > 0 && flTimeLeft < FF_AC_MAXCHARGETIME)
+			if (flTimeLeft > 0 && flTimeLeft < m_flMaxChargeTime)
 			{
 				m_flTriggerPressed = gpGlobals->curtime - flTimeLeft;
 			}
@@ -388,15 +349,16 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 	}
 
 	// If they have released the fire button, catch the release trigger time
+	// We just STOPPED firing
 	if (pOwner->m_afButtonReleased & IN_ATTACK)
 	{
 		m_flTriggerReleased = gpGlobals->curtime;
+	}
 
-		// AfterShock: IF we just released the button, and we are at max charge, change the triggerPressed time so the remaining code works
-		if (m_flChargeTime >= FF_AC_MAXCHARGETIME)
-		{
-			m_flTriggerPressed = gpGlobals->curtime - FF_AC_MAXCHARGETIME;
-		}
+	// AfterShock: IF we just released the button, and we are at max charge, change the triggerPressed time so the remaining code works
+	if (m_flChargeTime >= m_flMaxChargeTime)
+	{
+		m_flTriggerPressed = gpGlobals->curtime - m_flMaxChargeTime;
 	}
 
 	// If we're currently firing then the charge time is simply the time since the
@@ -406,6 +368,8 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 		// DrEvil: add a very small delta because bots can pulse the attack button every frame
 		// and keep the m_flChargeTime at 0 to avoid the move speed penalty.
 		m_flChargeTime = gpGlobals->curtime - m_flTriggerPressed + 0.0001f;
+		if (m_flChargeTime >= m_flMaxChargeTime)
+			m_flChargeTime = m_flMaxChargeTime;
 	}
 	// Otherwise the charge time is the amount it was held minus the amount of time
 	// that has elapsed since it was released.
@@ -418,16 +382,16 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 	}
 
 	// AfterShock: no more overheat: stay at max charge if you hit the cap
-	if (m_flChargeTime > FF_AC_MAXCHARGETIME)
+	if (m_flChargeTime > m_flMaxChargeTime)
 	{
-		m_flChargeTime = FF_AC_MAXCHARGETIME;
+		m_flChargeTime = m_flMaxChargeTime;
 	}
 
 	// They might have overheated.
 	// Manufacture a smooth chargetime reduction
 	if (m_flNextSecondaryAttack > gpGlobals->curtime)
 	{
-		m_flChargeTime = FF_AC_MAXCHARGETIME * ((m_flNextSecondaryAttack - gpGlobals->curtime) / FF_AC_OVERHEATDELAY);
+		m_flChargeTime = m_flMaxChargeTime * ((m_flNextSecondaryAttack - gpGlobals->curtime) / FF_AC_OVERHEATDELAY);
 	}
 
 	if (m_flChargeTime < 0)

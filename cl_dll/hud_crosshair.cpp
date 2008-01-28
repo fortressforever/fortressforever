@@ -213,7 +213,8 @@ void CHudCrosshair::Paint( void )
 
 	// Mulch: Draw charge bar!
 	// AfterShock: no more charge bar
-	if( (weaponID == FF_WEAPON_ASSAULTCANNON) && (cl_acchargebar.GetBool()) )
+	//if( (weaponID == FF_WEAPON_ASSAULTCANNON) && (cl_acchargebar.GetBool()) )
+	if (weaponID == FF_WEAPON_ASSAULTCANNON) 
 	{
 		extern float GetAssaultCannonCharge();
 		float flCharge = GetAssaultCannonCharge();
