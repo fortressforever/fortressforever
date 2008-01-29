@@ -20,16 +20,15 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "600", FCVAR_REPLICATED );
+ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1000", FCVAR_REPLICATED );
 ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "600", FCVAR_REPLICATED );
 
 // Jiggles: Sorry, but I'm not using the "mancannon" nomenclature; Bungie didn't invent the jump pad!
 #define JUMPPAD_INITIAL_DEPLOY	0	
 #define JUMPPAD_ACTIVATE		1
-#define JUMPPAD_POWERDOWN		2
-#define JUMPPAD_REMOVE			3
+#define JUMPPAD_REMOVE			2
 
-#define JUMPPAD_WARMUP_TIME		2.0f
+#define JUMPPAD_WARMUP_TIME		1.0f
 ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
 #define JUMPPAD_LIFESPAN		ffdev_mancannon_lifetime.GetFloat()
 #define JUMPPAD_POWERDOWN_TIME	5.0f
@@ -136,12 +135,6 @@ void CFFManCannon::OnJumpPadThink( void )
 		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN );
 		m_iJumpPadState++;
 		break;
-	case JUMPPAD_POWERDOWN:
-		// Play powerdown sound
-		EmitSound( "JumpPad.PowerDown" );
-		SetNextThink( gpGlobals->curtime + JUMPPAD_POWERDOWN_TIME );
-		m_iJumpPadState++;
-		break;
 	case JUMPPAD_REMOVE:
 		Detonate();
 		break;
@@ -194,8 +187,10 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	// pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
 	vecForward.z = 0.f;
 	// add an amount to their horizontal + vertical velocity (dont multiply cos slow classes wouldnt go anywhere!)
-	pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
+	//pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
 
+	pPlayer->SetAbsVelocity((vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
+	
 	//Vector vecVelocity = pPlayer->GetAbsVelocity();
 	//Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 
