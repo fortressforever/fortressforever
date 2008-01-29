@@ -177,15 +177,16 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 
 	// Launch the guy
 	QAngle vecAngles = pPlayer->EyeAngles();
-	vecAngles.z = 0.0f;
+	//vecAngles.z = 0.0f;
 
 	Vector vecForward;
 	AngleVectors( vecAngles, &vecForward );
+	vecForward.z = 0.f;
 	VectorNormalize( vecForward );
 
 	// Shoot forward & up-ish
 	// pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
-	vecForward.z = 0.f;
+
 	// add an amount to their horizontal + vertical velocity (dont multiply cos slow classes wouldnt go anywhere!)
 	//pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
 
