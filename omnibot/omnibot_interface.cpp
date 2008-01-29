@@ -1825,7 +1825,7 @@ namespace Omnibot
 				if(pTeam->GetTeamLimits()>0)
 					info.m_AvailableTeams |= (1<<obUtilGetBotTeamFromGameTeam(i));
 			}
-
+			info.m_MaxPlayers = gpGlobals->maxClients;
 			for(int i = 1; i <= gpGlobals->maxClients; ++i)
 			{
 				CBasePlayer	*pEnt = UTIL_PlayerByIndex(i);
@@ -1914,12 +1914,15 @@ namespace Omnibot
 			case GEN_MSG_GETHEALTHARMOR:
 				{
 					OB_GETMSG(Msg_PlayerHealthArmor);
-					if(pMsg && pPlayer)
+					if(pMsg)
 					{
-						pMsg->m_CurrentHealth = pPlayer->GetHealth();
-						pMsg->m_MaxHealth = pPlayer->GetMaxHealth();
-						pMsg->m_CurrentArmor = pPlayer->GetArmor();
-						pMsg->m_MaxArmor = pPlayer->GetMaxArmor();
+						if(pPlayer)
+						{
+							pMsg->m_CurrentHealth = pPlayer->GetHealth();
+							pMsg->m_MaxHealth = pPlayer->GetMaxHealth();
+							pMsg->m_CurrentArmor = pPlayer->GetArmor();
+							pMsg->m_MaxArmor = pPlayer->GetMaxArmor();
+						}						
 					}
 					break;
 				}
@@ -2772,11 +2775,10 @@ namespace Omnibot
 			{
 				for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 				{
-					CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-
-					if (pPlayer && 
-						(pPlayer->GetObserverMode() == OBS_MODE_IN_EYE || 
-						pPlayer->GetObserverMode() == OBS_MODE_CHASE))
+					CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
+					if (pPlayer && !pPlayer->IsBot() &&
+						(pPlayer->GetObserverMode() != OBS_MODE_ROAMING &&
+						pPlayer->GetObserverMode() != OBS_MODE_DEATHCAM))
 					{
 						CBasePlayer *pSpectatedPlayer = ToBasePlayer(pPlayer->GetObserverTarget());
 						if(pSpectatedPlayer)

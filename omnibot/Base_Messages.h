@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-01-16 09:41:57 -0800 (Wed, 16 Jan 2008) $
-// $LastChangedRevision: 2334 $
+// $LastChangedDate: 2008-01-24 09:26:29 -0800 (Thu, 24 Jan 2008) $
+// $LastChangedRevision: 2363 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +57,15 @@ struct Msg_PlayerChooseEquipment
 	enum { NumItems = 16 };
 	int			m_WeaponChoice[NumItems];
 	int			m_ItemChoice[NumItems];
+
+	Msg_PlayerChooseEquipment()
+	{
+		for(int i = 0; i < NumItems; ++i)
+		{
+			m_WeaponChoice[i] = 0;
+			m_ItemChoice[i] = 0;
+		}
+	}
 };
 
 struct Msg_PlayerHealthArmor
@@ -65,62 +74,110 @@ struct Msg_PlayerHealthArmor
 	int			m_MaxHealth;
 	int			m_CurrentArmor;
 	int			m_MaxArmor;
+
+	Msg_PlayerHealthArmor()
+		: m_CurrentHealth(0)
+		, m_MaxHealth(0)
+		, m_CurrentArmor(0)
+		, m_MaxArmor(0)
+	{
+	}
 };
 
 struct Msg_PlayerMaxSpeed
 {
 	float		m_MaxSpeed;
+
+	Msg_PlayerMaxSpeed() : m_MaxSpeed(0.f) {}
 };
 
 struct Msg_IsAlive
 {	
 	obBool		m_IsAlive;
+
+	Msg_IsAlive() : m_IsAlive(False) {}
 };
 
 struct Msg_IsAllied
 {
 	GameEntity	m_TargetEntity;
 	obBool		m_IsAllied;
+
+	Msg_IsAllied(GameEntity e) : m_TargetEntity(e), m_IsAllied(True) {}
 };
 
 struct Msg_IsOutside
 {
 	float		m_Position[3];
 	obBool		m_IsOutside;
+
+	Msg_IsOutside()
+		: m_IsOutside(False)
+	{
+		m_Position[0] = m_Position[1] = m_Position[2] = 0.f;
+	}
 };
 
 struct Msg_PointContents
 {
 	int			m_Contents;
 	float		x,y,z;
+
+	Msg_PointContents()
+		: m_Contents(0)
+		, x(0.f)
+		, y(0.f)
+		, z(0.f)
+	{
+	}
 };
 
 struct Msg_ReadyToFire
 {
 	obBool		m_Ready;
+	
+	Msg_ReadyToFire() : m_Ready(False) {}
 };
 
 struct Msg_Reloading
 {
 	obBool		m_Reloading;
+
+	Msg_Reloading() : m_Reloading(False) {}
 };
 
 struct Msg_FlagState
 {
 	FlagState	m_FlagState;
 	GameEntity	m_Owner;
+
+	Msg_FlagState()
+		: m_FlagState(S_FLAG_NOT_A_FLAG)
+	{
+	}
 };
 
 struct Msg_GameState
 {
 	GameState	m_GameState;
 	float		m_TimeLeft;
+
+	Msg_GameState()
+		: m_GameState(GAME_STATE_INVALID)
+		, m_TimeLeft(0.f)
+	{
+	}
 };
 
 struct Msg_EntityStat
 {
 	char		m_StatName[64];
-	obUserData m_Result;
+	obUserData	m_Result;
+
+	Msg_EntityStat()
+	{
+		m_StatName[0] = 0;
+	}
 };
 
 struct Msg_TeamStat
@@ -128,18 +185,22 @@ struct Msg_TeamStat
 	int			m_Team;
 	char		m_StatName[64];
 	obUserData	m_Result;
+
+	Msg_TeamStat()
+		: m_Team(0)
+	{
+		m_StatName[0] = 0;
+	}
 };
 
 struct Msg_ServerCommand
 {
 	char		m_Command[256];
-};
 
-struct WeaponCharging
-{
-	int			m_Weapon;
-	FireMode	m_FireMode;
-	obBool		m_IsCharged;
+	Msg_ServerCommand()
+	{
+		m_Command[0] = 0;
+	}
 };
 
 struct WeaponCharged
@@ -147,6 +208,15 @@ struct WeaponCharged
 	int			m_Weapon;
 	FireMode	m_FireMode;
 	obBool		m_IsCharged;
+	obBool		m_IsCharging;
+
+	WeaponCharged(int w = 0, FireMode m = Primary)
+		: m_Weapon(w)
+		, m_FireMode(m)
+		, m_IsCharged(False)
+		, m_IsCharging(False)
+	{
+	}
 };
 
 struct WeaponHeatLevel
@@ -154,17 +224,13 @@ struct WeaponHeatLevel
 	FireMode	m_FireMode;
 	float		m_CurrentHeat;
 	float		m_MaxHeat;
-};
 
-struct TurretProperties
-{
-	float		m_DefaultAimVector[3];
-	float		m_CurrentAimVector[3];
-	float		m_MinYaw;
-	float		m_MaxYaw;
-	float		m_MinPitch;
-	float		m_MaxPitch;
-	int			m_WeaponId;
+	WeaponHeatLevel(FireMode m = Primary)
+		: m_FireMode(m)
+		, m_CurrentHeat(0.f)
+		, m_MaxHeat(0.f)
+	{
+	}
 };
 
 struct VehicleInfo
@@ -192,6 +258,8 @@ struct VehicleInfo
 struct ControllingTeam
 {
 	int		m_ControllingTeam;
+
+	ControllingTeam() : m_ControllingTeam(0) {}
 };
 
 struct WeaponStatus
@@ -214,10 +282,25 @@ struct WeaponStatus
 struct WeaponLimits
 {
 	float		m_CenterFacing[3];
-	float		m_MinHorizontalArc, m_MaxHorizontalArc;
-	float		m_MinVerticalArc, m_MaxVerticalArc;
+	float		m_MinYaw;
+	float		m_MaxYaw;
+	float		m_MinPitch;
+	float		m_MaxPitch;
 	int			m_WeaponId;
 	obBool		m_Limited;
+
+	WeaponLimits()
+		: m_MinYaw(-45.f)
+		, m_MaxYaw( 45.f)
+		, m_MinPitch(-20.f)
+		, m_MaxPitch( 20.f)
+		, m_WeaponId(0)
+		, m_Limited(False)
+	{
+		m_CenterFacing[0] = 0.f;
+		m_CenterFacing[1] = 0.f;
+		m_CenterFacing[2] = 0.f;
+	}
 };
 
 struct Msg_KillEntity

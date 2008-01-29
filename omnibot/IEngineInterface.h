@@ -144,6 +144,7 @@ public:
 		for(int i = 0; i < MaxPlayers; ++i)
 			m_Players[i] = PInfo();
 		m_AvailableTeams = 0;
+		m_MaxPlayers = 0;
 	}
 };
 
