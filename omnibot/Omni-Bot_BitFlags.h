@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: DrEvil $
-// $LastChangedDate: 2007-07-15 13:06:41 -0700 (Sun, 15 Jul 2007) $
-// $LastChangedRevision: 2094 $
+// $LastChangedBy: drevil $
+// $LastChangedDate: 2008-01-24 09:26:29 -0800 (Thu, 24 Jan 2008) $
+// $LastChangedRevision: 2363 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,6 +50,23 @@ public:
 	{
 		BitFlag32 bf(*this);
 		bf &= rhs;
+		return bf;
+	}
+	BitFlag32& operator|=(const BitFlag32& rhs)
+	{
+		m_Flags |= rhs.m_Flags;
+		return *this;
+	}
+	BitFlag32 operator|(const BitFlag32& rhs) const
+	{
+		BitFlag32 bf(*this);
+		bf |= rhs;
+		return bf;
+	}
+	BitFlag32 operator~() const
+	{
+		BitFlag32 bf(*this);
+		bf.m_Flags = ~bf.m_Flags;
 		return bf;
 	}
 	bool operator<(obint32 _rhs) const
@@ -120,6 +137,12 @@ public:
 	{
 		BitFlag64 bf(*this);
 		bf |= rhs;
+		return bf;
+	}
+	BitFlag64 operator~() const
+	{
+		BitFlag64 bf(*this);
+		bf.m_Flags = ~bf.m_Flags;
 		return bf;
 	}
 	bool operator<(obint64 _rhs) const
