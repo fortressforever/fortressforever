@@ -980,6 +980,10 @@ ConVar mp_prematch( "mp_prematch",
 			return 9999;
 		}
 
+		// Jiggles: Scouts don't take fall damage; they're just cool like that
+		if ( pFFPlayer->GetClassSlot() == CLASS_SCOUT )
+			return 0;
+
 		float flMaxSafe = PLAYER_MAX_SAFE_FALL_SPEED;
 
 		bool bIsSpy = (pFFPlayer->GetClassSlot() == 8);
