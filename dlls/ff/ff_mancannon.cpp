@@ -245,14 +245,14 @@ void CFFManCannon::Detonate( void )
 void CFFManCannon::DoExplosionDamage( void )
 {
 	VPROF_BUDGET( "CFFManCannon::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
+	//Jiggles: Actually, we'd rather this not do any damage
 	float flDamage = 140.0f;
 
-	if( m_hOwner.Get() )
-	{
-		CTakeDamageInfo info( this, m_hOwner, vec3_origin, GetAbsOrigin(), flDamage, DMG_BLAST );
-		RadiusDamage( info, GetAbsOrigin(), 625, CLASS_NONE, NULL );
+	//if( m_hOwner.Get() )
+	//{
+	//	CTakeDamageInfo info( this, m_hOwner, vec3_origin, GetAbsOrigin(), flDamage, DMG_BLAST );
+	//	RadiusDamage( info, GetAbsOrigin(), 625, CLASS_NONE, NULL );
 		
 		UTIL_ScreenShake( GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START );
-	}
+	//}
 }
