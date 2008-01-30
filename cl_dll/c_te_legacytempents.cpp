@@ -136,6 +136,7 @@ void C_LocalTempEntity::SetVelocity( const Vector &vecVelocity )
 }
 
 void DrawSprite( const Vector &vecOrigin, float flWidth, float flHeight, color32 color );
+void BeamDraw(IMaterial *pMaterial, const Vector &vecstart, const Vector &vecend, float widthstart, float widthend, float alphastart, float alphaend, const Vector &colorstart, const Vector &colorend);
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -157,13 +158,23 @@ int C_LocalTempEntity::DrawStudioModel( int flags )
 	/// TODO: Aftershock needs to do whatever he wants with this...
 	if (this->flags & FTENT_FFPROJECTILE && m_vecTempEntVelocity != vec3_origin)
 	{
-		color32 col = { 255, 255, 255, 255 };
-		IMaterial *pMaterial = materials->FindMaterial("sprites/glow2.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
-		materials->Bind(pMaterial);
+		Vector vecDir = CurrentViewOrigin() - GetAbsOrigin();
+		float flLength = vecDir.LengthSqr();
 
-		Vector vecForward;
-		AngleVectors(GetAbsAngles(), &vecForward);
-		::DrawSprite( (GetAbsOrigin() - (vecForward * 2)) , 8.0f, 8.0f, col);
+		if (flLength > 2025.0f)
+		{
+			color32 col = { 255, 255, 255, 255 };
+			IMaterial *pMaterial = materials->FindMaterial(/*"sprites/glow2.vmt"*/ "sprites/ff_trail.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
+			materials->Bind(pMaterial);
+
+			Vector vecForward;
+			AngleVectors(GetAbsAngles(), &vecForward);
+			//::DrawSprite( (GetAbsOrigin() - (vecForward * 2)) , 8.0f, 8.0f, col);
+			::BeamDraw(pMaterial, GetAbsOrigin() - (vecForward * 2), GetAbsOrigin() - (vecForward * 40),
+						8.0f, 1.0f,
+						1.0f, 0.1f,
+						Vector(1.0f, 1.0f, 1.0f), Vector(0.6f, 0.6f, 0.6f));
+		}
 	}
 
 	if ( m_pfnDrawHelper )

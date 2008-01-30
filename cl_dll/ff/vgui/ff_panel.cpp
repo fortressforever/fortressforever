@@ -23,7 +23,7 @@
 #include "ff_panel.h"
 #include "ff_utils.h"
 
-ConVar cl_teamcolourhud("cl_teamcolourhud", "0");
+ConVar cl_teamcolourhud("cl_teamcolourhud", "0", FCVAR_ARCHIVE);
 
 namespace vgui
 {
@@ -58,8 +58,8 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	void FFPanel::PaintBackground()
 	{
-		Color &bg = m_HudBackgroundColour;
-		Color &fg = m_HudForegroundColour;
+		Color bg = m_HudBackgroundColour;
+		Color fg = m_HudForegroundColour;
 
 		C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 
