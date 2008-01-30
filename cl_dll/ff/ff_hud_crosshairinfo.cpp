@@ -252,10 +252,18 @@ void CHudCrosshairInfo::OnTick( void )
 
 				if( bBuildable )
 				{
-					if( tr.m_pEnt->Classify() == CLASS_SENTRYGUN )
+					switch( tr.m_pEnt->Classify() )
+					{
+					case CLASS_SENTRYGUN:
 						Q_strcpy( szClass, "#FF_PLAYER_SENTRYGUN" );
-					else
+						break;
+					case CLASS_DISPENSER:
 						Q_strcpy( szClass, "#FF_PLAYER_DISPENSER" );
+						break;
+					case CLASS_MANCANNON:
+						Q_strcpy( szClass, "#FF_PLAYER_MANCANNON" );
+						break;
+					}
 				}
 				else
 				{
