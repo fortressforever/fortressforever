@@ -120,8 +120,10 @@
 #define FF_DETPACK_MINS		Vector( -14, -14, 0 )
 #define FF_DETPACK_MAXS		Vector( 14, 14, 11 )
 
-#define FF_MANCANNON_MINS	Vector( -14, -14, 0 )
-#define FF_MANCANNON_MAXS	Vector( 14, 14, 11 )
+//#define FF_MANCANNON_MINS	Vector( -14, -14, 0 )
+//#define FF_MANCANNON_MAXS	Vector( 14, 14, 11 )
+#define FF_MANCANNON_MINS	Vector( -54, -54, 0 )
+#define FF_MANCANNON_MAXS	Vector( 54, 54, 48 )
 
 #define FF_SOUND_BUILD		0	// Don't change these two values
 #define FF_SOUND_EXPLODE	1

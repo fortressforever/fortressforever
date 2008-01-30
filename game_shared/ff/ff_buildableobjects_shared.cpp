@@ -138,7 +138,7 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 	// For the sg, because its so large, the hull (when doing the trace later) will stick
 	// into walls if we are near them [like having our back towards them] so we need to
 	// move the build origin further forward to remedy this
-	if( iBuildObject == FF_BUILD_SENTRYGUN )
+	if( iBuildObject == FF_BUILD_SENTRYGUN || iBuildObject == FF_BUILD_MANCANNON )
 	{
 		// Move forward an arbitrary amount... but don't go more
 		// than 32 otherwise that leaves a gap between the players

@@ -26,7 +26,8 @@ ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "600", FCVAR_REPLICAT
 // Jiggles: Sorry, but I'm not using the "mancannon" nomenclature; Bungie didn't invent the jump pad!
 #define JUMPPAD_INITIAL_DEPLOY	0	
 #define JUMPPAD_ACTIVATE		1
-#define JUMPPAD_REMOVE			2
+#define JUMPPAD_POWERDOWN		2
+#define JUMPPAD_REMOVE			3
 
 #define JUMPPAD_WARMUP_TIME		1.0f
 ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
@@ -135,6 +136,11 @@ void CFFManCannon::OnJumpPadThink( void )
 		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN );
 		m_iJumpPadState++;
 		break;
+	case JUMPPAD_POWERDOWN:
+		EmitSound("JumpPad.PowerDown");
+		SetNextThink( gpGlobals->curtime + JUMPPAD_POWERDOWN_TIME );
+		m_iJumpPadState++;
+		break;
 	case JUMPPAD_REMOVE:
 		Detonate();
 		break;
@@ -155,7 +161,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	if( !IsBuilt() )
 		return;
 
-	if ( m_iJumpPadState != JUMPPAD_ACTIVATE + 1 )
+	if ( m_iJumpPadState < JUMPPAD_ACTIVATE + 1 )
 		return;
 
 	if( !pOther )
