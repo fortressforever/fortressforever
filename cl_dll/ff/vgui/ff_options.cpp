@@ -806,6 +806,21 @@ private:
 	Button		*m_pPlayButton;
 };
 
+int GetComboBoxOption(ComboBox *cb, const char *value, const char *keyname = "value")
+{
+	int n = cb->GetItemCount();
+	int l = strlen(value);
+	for (int i = 0; i < n; i++)
+	{
+		KeyValues *kvItem = cb->GetItemUserData(i);
+		const char *pszItemValue = kvItem->GetString(keyname);
+		if (kvItem && Q_strncmp(pszItemValue, value, l) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 // Jiggles: Begin Miscellaneous Options Tab
 //=============================================================================
 // This Tab lets the player enable/disable various FF specific options
@@ -813,6 +828,9 @@ private:
 class CFFMiscOptions : public CFFOptionsPage
 {
 	DECLARE_CLASS_SIMPLE(CFFMiscOptions, CFFOptionsPage);
+
+#define	ROW_HEIGHT 24
+#define TITLE_SPACER 5
 
 private:
 
@@ -829,7 +847,7 @@ public:
 
 		Q_strncpy(m_szSourceFile, pszSourceFile, 127);
 
-		int iYCoords = 5;
+		int iYCoords = TITLE_SPACER;
 
 		// Put all our options stuff in a keyfile now
 		KeyValues *kvOptions = new KeyValues("Options");
@@ -850,9 +868,9 @@ public:
 
 				if (l)
 				{
-					l->SetPos(25, iYCoords + 10);
-					l->SetSize(250, 30);
-					iYCoords += 40;	// Add the extra 10 on
+					l->SetPos(25, iYCoords + TITLE_SPACER);
+					l->SetSize(250, ROW_HEIGHT);
+					iYCoords += ROW_HEIGHT + TITLE_SPACER;	// Add extra bit on
 				}
 			}
 
@@ -865,9 +883,9 @@ public:
 					continue;
 
 				cb->SetPos(30, iYCoords);
-				cb->SetSize(450, 30);
+				cb->SetSize(450, ROW_HEIGHT);
 
-				iYCoords += 30;
+				iYCoords += ROW_HEIGHT;
 			}
 			// Discrete is a combobox with a label
 			else if (Q_strncmp(pszType, "discrete", 8) == 0)
@@ -913,7 +931,7 @@ public:
 				}
 
 				cb->SetPos(30, iYCoords);
-				cb->SetSize(80, 26);
+				cb->SetSize(80, ROW_HEIGHT - 4);
 				cb->ActivateItemByRow(0);
 
 				// Create a handy label too so we know what this is
@@ -922,10 +940,10 @@ public:
 				if (l)
 				{
 					l->SetPos(120, iYCoords);
-					l->SetSize(450, 30);
+					l->SetSize(450, ROW_HEIGHT);
 				}
 
-				iYCoords += 30;
+				iYCoords += ROW_HEIGHT;
 			}
 		}
 
@@ -988,7 +1006,10 @@ public:
 			}
 			else if (ComboBox *cb = dynamic_cast <ComboBox *> (pChild))
 			{
-				pCvar->SetValue(cb->GetActiveItemUserData()->GetString("value"));
+				// Only replace the cvar with this option if it is not a custom one
+				const char *pszValue = cb->GetActiveItemUserData()->GetString("value");
+				if (Q_strncmp(pszValue, "custom", 6) != 0)
+					pCvar->SetValue(pszValue);
 			}
 		}
 	}
@@ -1032,7 +1053,38 @@ public:
 			}
 			else if (ComboBox *cb = dynamic_cast <ComboBox *> (pChild))
 			{
-				const char *pszCvarValue = pCvar->GetString();
+				int option = GetComboBoxOption(cb, pCvar->GetString());
+
+				// Option doesn't exist, so add a "custom field"
+				if (option == -1)
+				{
+					int custom = GetComboBoxOption(cb, "custom");
+
+					// Need to add the custom field
+					if (custom == -1)
+					{
+						KeyValues *kvItem = new KeyValues("kvItem");
+						kvItem->SetString("value", "custom");
+						cb->AddItem("custom", kvItem);
+						kvItem->deleteThis();
+					}
+
+					custom = GetComboBoxOption(cb, "custom");
+					cb->ActivateItem(custom);
+				}
+				else
+				{
+					// We've found this item, so activate it
+					cb->ActivateItem(option);
+
+					// However lets remove the custom row if it exists
+					int custom = GetComboBoxOption(cb, "custom");
+					if (custom != -1)
+						cb->DeleteItem(custom);
+				}
+
+				// Stuff below replaced by GetComboBoxOption()
+				/*const char *pszCvarValue = pCvar->GetString();
 				for (int i = 0; i < cb->GetItemCount(); i++)
 				{
 					KeyValues *kvItem = cb->GetItemUserData(i);
@@ -1041,7 +1093,7 @@ public:
 						cb->ActivateItem(i);
 						break;
 					}
-				}
+				}*/
 			}
 		}
 
@@ -1125,12 +1177,14 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pTimerOptions = new CFFTimerOptions(this, "TimerOptions");
 	m_pMiscOptions1 = new CFFMiscOptions(this, "MiscOptions", "resource/Options1.vdf");
 	m_pMiscOptions2 = new CFFMiscOptions(this, "MiscOptions", "resource/Options2.vdf");
+	m_pMiscOptions3 = new CFFMiscOptions(this, "MiscOptions", "resource/Options3.vdf");
 
 	m_pPropertyPages = new PropertySheet(this, "OptionsPages", true);
 	m_pPropertyPages->AddPage(m_pCrosshairOptions, "#GameUI_Crosshairs");
 	m_pPropertyPages->AddPage(m_pTimerOptions, "#GameUI_Timers");
 	m_pPropertyPages->AddPage(m_pMiscOptions1, "#GameUI_Misc1");
 	m_pPropertyPages->AddPage(m_pMiscOptions2, "#GameUI_Misc2");
+	m_pPropertyPages->AddPage(m_pMiscOptions3, "#GameUI_Misc3");
 	m_pPropertyPages->SetActivePage(m_pCrosshairOptions);
 	m_pPropertyPages->SetDragEnabled(false);
 
@@ -1158,6 +1212,7 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		m_pTimerOptions->Apply();
 		m_pMiscOptions1->Apply();
 		m_pMiscOptions2->Apply();
+		m_pMiscOptions3->Apply();
 
 		// Apply doesn't quit the menu
 		if (pszCommand[0] == 'A')
@@ -1172,6 +1227,7 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		m_pTimerOptions->Reset();
 		m_pMiscOptions1->Reset();
 		m_pMiscOptions2->Reset();
+		m_pMiscOptions3->Reset();
 	}
 
 	// Now make invisible
@@ -1190,6 +1246,7 @@ void CFFOptionsPanel::SetVisible(bool state)
 		m_pTimerOptions->Load();
 		m_pMiscOptions1->Load();
 		m_pMiscOptions2->Load();
+		m_pMiscOptions3->Load();
 
 		RequestFocus();
 		MoveToFront();
