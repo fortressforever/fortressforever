@@ -74,7 +74,7 @@ extern CHudGrenade2Timer *g_pGrenade2Timer;
 static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL );
 
 static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CHEAT );
-static ConVar gibcount("cl_gibcount", "6");
+static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
 static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Change class instantly");
@@ -794,6 +794,7 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 	m_pRagdoll->ResetRagdollSleepAfterTime();
 }
 
+static ConVar cl_ragdolltime("cl_ragdolltime", "25.0", FCVAR_ARCHIVE);
 
 void C_FFRagdoll::CreateRagdoll()
 {
@@ -930,7 +931,7 @@ void C_FFRagdoll::CreateRagdoll()
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 
 	m_pBloodStreamEmitter = CBloodStream::Create(this, "BloodStream");
-	m_pBloodStreamEmitter->SetDieTime(gpGlobals->curtime + 25.0f);
+	m_pBloodStreamEmitter->SetDieTime(gpGlobals->curtime + cl_ragdolltime.GetFloat());
 }
 
 
