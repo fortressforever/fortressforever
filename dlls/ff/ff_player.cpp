@@ -1515,6 +1515,7 @@ void CFFPlayer::SetupClassVariables()
 
 	m_flScreamTime = 0.0f;
 	m_flMancannonTime = 0.0f;
+	m_flMancannonDetTime = 0.0f;
 	// Reset Spy stuff
 	m_iCloaked = 0;
 	m_flCloakTime = 0.0f;
@@ -3222,7 +3223,24 @@ void CFFPlayer::PreBuildGenericThink( void )
 				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" ); break;
 				case FF_BUILD_SENTRYGUN: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_ALREADYBUILT" ); break;
 				case FF_BUILD_DETPACK: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYSET" ); break;
-				case FF_BUILD_MANCANNON: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_ALREADYBUILT" ); break;
+				case FF_BUILD_MANCANNON: 
+					// If the Scout right-clicks after has built a jump pad, he'll get the warning, and a message
+					// that he can click again to det it; this gives him 3 seconds to do so
+					if ( gpGlobals->curtime > m_flMancannonDetTime )
+					{
+						ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_ALREADYBUILT" ); 
+						m_flMancannonDetTime = gpGlobals->curtime + 3.f;
+					}
+					else
+					{
+						CFFManCannon *pJumpPadToDet = GetManCannon();
+						if ( pJumpPadToDet )
+						{
+							pJumpPadToDet->Detonate();
+							ClientPrint( this, HUD_PRINTCENTER, "#FF_MANCANNON_DESTROYED" );
+						}
+					}
+					break;
 			}
 
 			// Re-initialize
