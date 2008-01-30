@@ -258,8 +258,9 @@ void CBaseEffect::Render(int x, int y, int w, int h)
 }
 
 static ConVar ffdev_blur_enable("cl_dynamicblur", "1", FCVAR_ARCHIVE, "Enable/disable speed-based blur effect");
-static ConVar ffdev_blur_min("ffdev_blur_min", "400", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
-static ConVar ffdev_blur_range("ffdev_blur_range", "50", FCVAR_ARCHIVE);
+static ConVar ffdev_blur_min("ffdev_dynamicblur_min", "400", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
+static ConVar ffdev_blur_range("ffdev_dynamicblur_range", "50", FCVAR_ARCHIVE);
+static ConVar cl_dynamicblur_ac("cl_dynamicblur_ac", "0", FCVAR_ARCHIVE);
 
 //-----------------------------------------------------------------------------
 // Purpose: A motion blur for concs
@@ -299,16 +300,17 @@ CMotionBlur::CMotionBlur()
 	m_flNextSampleTime = 0.0f;
 }
 
-float flAccumulativeAccel = 0.0f;
-float flLastSpeed = 0.0f;
-float m_flLastBlurTime = 0.0f;
+float g_flAccumulativeAccel = 0.0f;
+float g_flLastSpeed = 0.0f;
+float g_flLastBlurTime = 0.0f;
 
 //-----------------------------------------------------------------------------
 // Purpose: Reset on new map
 //-----------------------------------------------------------------------------
 void CMotionBlur::VidInit()
 {
-	flAccumulativeAccel = 0.0f;
+	g_flAccumulativeAccel = 0.0f;
+	g_flLastBlurTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -316,6 +318,9 @@ void CMotionBlur::VidInit()
 //-----------------------------------------------------------------------------
 void CMotionBlur::Init()
 {
+	g_flAccumulativeAccel = 0.0f;
+	g_flLastBlurTime = 0.0f;
+
 	m_BlurImage.InitRenderTarget(256, 256, RT_SIZE_FULL_FRAME_BUFFER,
 		IMAGE_FORMAT_ARGB8888, MATERIAL_RT_DEPTH_NONE, false);
 }
@@ -346,38 +351,43 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	float flSpeed = vecVelocity.Length();
 
 	// Acceleration is change in speed over time :)
-	float flAcceleration = (flSpeed - flLastSpeed) / gpGlobals->frametime;
-	flLastSpeed = flSpeed;
+	float flAcceleration = (flSpeed - g_flLastSpeed) / gpGlobals->frametime;
+	g_flLastSpeed = flSpeed;
 
 	// Only care about acceleration, not decceleration
 	if (flAcceleration > 0.0f)
- 		flAccumulativeAccel += fabs(flAcceleration) * gpGlobals->frametime;
+ 		g_flAccumulativeAccel += fabs(flAcceleration) * gpGlobals->frametime;
 
 	// Manage our accumulative acceleration a bit
-	flAccumulativeAccel -= gpGlobals->frametime * 2500.0f;
-	flAccumulativeAccel = clamp(flAccumulativeAccel, 0.0f, 10000.0f);
+	g_flAccumulativeAccel -= gpGlobals->frametime * 2500.0f;
+	g_flAccumulativeAccel = clamp(g_flAccumulativeAccel, 0.0f, 10000.0f);
 
 	// Calculate the normalised blue now
-	float flBlur = (flAccumulativeAccel - ffdev_blur_min.GetFloat()) / ffdev_blur_range.GetFloat();
-	
+	float flBlur = (g_flAccumulativeAccel - ffdev_blur_min.GetFloat()) / ffdev_blur_range.GetFloat();
 
+	if (pPlayer->GetFlags() & FL_ONGROUND)
+		flBlur = 0.0f;
+	
 	// The assault cannon also blurs things when firing enough
 	// Take the largest blur from the two sources
-	float flCharge = GetAssaultCannonCharge();
-	if (flCharge > 50.0f)
+	if (cl_dynamicblur_ac.GetBool())
 	{
-		float flACBlur = (flCharge - 50.0f) / 50.0f;
-		flBlur = max(flBlur, flACBlur);
+		float flCharge = GetAssaultCannonCharge();
+		if (flCharge > 50.0f)
+		{
+			float flACBlur = (flCharge - 50.0f) / 100.0f;
+			flBlur = max(flBlur, flACBlur);
+		}
 	}
 
 	// We're going too slow for a blur effect and we've faded off our last blur
-	if (gpGlobals->curtime > m_flLastBlurTime + 0.75f && flBlur < 0.0f)
+	if (gpGlobals->curtime > g_flLastBlurTime + 0.75f && flBlur <= 0.0f)
 	{
 		m_flNextSampleTime = 0.0f;
 		return;
 	}
 
-	bool bFadeOff = flBlur < 0.0f;
+	bool bFadeOff = flBlur <= 0.0f;
 	flBlur = clamp(flBlur, 0.05f, 1.0f);
 
 	Assert(flBlur > 0.0f);
@@ -412,7 +422,7 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 		m_flNextSampleTime = gpGlobals->curtime + 0.01f;
 
 		if (!bFadeOff)
-			m_flLastBlurTime = gpGlobals->curtime;
+			g_flLastBlurTime = gpGlobals->curtime;
 	}
 
 	// Set the alpha for the screen

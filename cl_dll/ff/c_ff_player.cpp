@@ -2469,7 +2469,11 @@ inline float approach(float flInitial, float flDelta, float flTarget)
 	return flInitial;
 }
 
-ConVar cl_dynamicfov("cl_dynamicfov", "0", FCVAR_ARCHIVE);
+ConVar cl_dynamicfov("cl_dynamicfov", "1", FCVAR_ARCHIVE);
+
+ConVar ffdev_dynamicfov_min("ffdev_dynamicfov_min", "1.5");
+ConVar ffdev_dynamicfov_max("ffdev_dynamicfov_max", "2.0");
+ConVar ffdev_dynamicfov_range("ffdev_dynamicfov_range", "15");
 
 //-----------------------------------------------------------------------------
 // Purpose: Disable FOV and use weapon-specific stuff
@@ -2490,9 +2494,9 @@ float C_FFPlayer::GetFOV()
 	if (!cl_dynamicfov.GetBool())
 		return default_fov.GetFloat();
 
-	const float flMaximum = 600.0f;
+	float flMaximum = MaxSpeed() * ffdev_dynamicfov_max.GetFloat();
 
-	if (!IsLocalPlayer() || !IsAlive() || GetTeamNumber() < TEAM_BLUE)
+	if (IsLocalPlayer() && (!IsAlive() || GetTeamNumber() < TEAM_BLUE))
 	{
 		// This gives a neato zoom-in effect when you spawn
 		flFOVModifier = flMaximum * 0.75f;
@@ -2501,7 +2505,7 @@ float C_FFPlayer::GetFOV()
 
 	float flBaseFov = default_fov.GetFloat();
 
-	float flTargetModifier = GetLocalVelocity().Length2D() - (MaxSpeed() * 1.05f);
+	float flTargetModifier = GetLocalVelocity().Length2D() - (MaxSpeed() * ffdev_dynamicfov_min.GetFloat());
 
 	// No need for anything to change
 	if (flTargetModifier <= 0.0f && flFOVModifier == 0.0f)
@@ -2510,16 +2514,16 @@ float C_FFPlayer::GetFOV()
 	flTargetModifier = clamp(flTargetModifier, -flMaximum, flMaximum);
 
 	// Reduce faster than we increase
-	float flSpeed = flTargetModifier < 0.0f ? 2.0f : 1.0f;
+	float flSpeed = flTargetModifier < 0.0f ? 1.0f : 1.0f;
 
 	flFOVModifier = approach(flFOVModifier, flTargetModifier * gpGlobals->frametime * flSpeed, max(flTargetModifier, 0.0f));
 
 	// Just double check the clamping here...
 	flFOVModifier = clamp(flFOVModifier, 0.0f, flMaximum);
 
-	float flNormalisedFOVModifier = /*SimpleSpline*/(flFOVModifier / flMaximum);
+	float flNormalisedFOVModifier = SimpleSpline(flFOVModifier / flMaximum);
 
-	return default_fov.GetFloat() + (flNormalisedFOVModifier * 25.0f);
+	return default_fov.GetFloat() + (flNormalisedFOVModifier * ffdev_dynamicfov_range.GetFloat());
 }
 
 //CON_COMMAND(ffdev_hallucinate, "hallucination!")

@@ -1815,3 +1815,24 @@ void DrawBeamQuadratic( const Vector &start, const Vector &control, const Vector
 
 	beamDraw.End();
 }
+
+void BeamDraw(IMaterial *pMaterial, const Vector &vecstart, const Vector &vecend, float widthstart, float widthend, float alphastart, float alphaend, const Vector &colorstart, const Vector &colorend)
+{
+	CBeamSegDraw beamDraw;
+	beamDraw.Start(2, pMaterial);
+
+	CBeamSeg seg;
+	seg.m_flAlpha = alphastart;
+	seg.m_flWidth = widthstart;
+	seg.m_vPos = vecstart;
+	seg.m_vColor = colorstart;
+	beamDraw.NextSeg(&seg);
+
+	seg.m_flAlpha = alphaend;
+	seg.m_flWidth = widthend;
+	seg.m_vPos = vecend;
+	seg.m_vColor = colorend;
+	beamDraw.NextSeg(&seg);
+
+	beamDraw.End();
+}

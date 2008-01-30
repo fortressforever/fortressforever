@@ -242,8 +242,9 @@ public:
 
 	void RestockTouch(CBaseEntity *pEntity)
 	{
-		if (gpGlobals->curtime - m_flSpawnTime < 1.0f)
-			return;
+		// This is disabled while medics cannot pick up their own medkits
+		//if (gpGlobals->curtime - m_flSpawnTime < 1.0f)
+		//	return;
 
 		if (!pEntity->IsPlayer())
 			return;
