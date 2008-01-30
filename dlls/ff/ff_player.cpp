@@ -4758,7 +4758,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	if (newburnlevel == 3)
 	{
 		m_flBurningDamage *= BURN_MULTIPLIER_3BURNS;
-		if (gpGlobals->curtime > m_flScreamTime + 3.0f)
+		if (gpGlobals->curtime > m_flScreamTime + 1.7f)
 		{
 			EmitSound("Player.Scream"); // haha
 			m_flScreamTime = gpGlobals->curtime;
