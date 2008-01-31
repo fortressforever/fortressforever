@@ -12,6 +12,7 @@
 *********************************************************************/
 
 #include "cbase.h"
+#include "c_ff_player.h"
 #include "ff_hud_hint.h"
 #include "hudelement.h"
 #include "hud_macros.h"
@@ -129,8 +130,11 @@ void CHudGrenade2Timer::Paint()
 	float timer_height = bar_height / num_timers;
 	float bar_newypos = bar_ypos;
 
+	CFFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
 	for (int i = m_Timers.Head(); i != m_Timers.InvalidIndex(); i = m_Timers.Next(i)) 
 	{
+		bool bIsLastTimer = (m_Timers.Next(i) == m_Timers.InvalidIndex());
 		timer_t *timer = &m_Timers.Element(i);
 
 		// ted_maul: 0000614: Grenade timer issues
@@ -142,7 +146,11 @@ void CHudGrenade2Timer::Paint()
 			float amount = clamp((gpGlobals->curtime - timer->m_flStartTime) / timer->m_flDuration, 0, 1.0f);
 
 			// Draw progress bar
-			surface()->DrawSetColor(bar_color.r() - colour_mod, bar_color.g() - colour_mod, bar_color.b() - colour_mod, bar_color.a());
+			if (amount < 0.15f || (bIsLastTimer && pPlayer && pPlayer->m_iGrenadeState == FF_GREN_PRIMETWO))
+				surface()->DrawSetColor(bar_color.r() - colour_mod, bar_color.g() - colour_mod, bar_color.b() - colour_mod, bar_color.a());
+			else
+				surface()->DrawSetColor(bar_color.r() - colour_mod, bar_color.g() - colour_mod, bar_color.b() - colour_mod, bar_color.a() * 0.5f);
+
 			surface()->DrawFilledRect(bar_xpos, bar_newypos, bar_xpos + bar_width * amount, bar_newypos + timer_height);
 
 

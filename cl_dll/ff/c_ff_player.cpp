@@ -458,6 +458,8 @@ void CC_ThrowGren( void )
 	else  // Not an "unprimed" grenade -- the time between priming and throwing was > 0.5 seconds
 		pLocalPlayer->m_iUnprimedGrenCount = 0;
 	// End hint code
+
+	pLocalPlayer->m_iGrenadeState = 0;
 }
 /* Jiggles: Doesn't seem to be used for anything
 void CC_TestTimers( void )

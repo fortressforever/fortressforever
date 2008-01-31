@@ -18,6 +18,7 @@
 #include "fx_quad.h"
 #include "fx_line.h"
 #include "fx_water.h"
+#include "utlqueue.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -35,6 +36,14 @@ CLIENTEFFECT_MATERIAL( "particle/particle_smokegrenade1" )
 CLIENTEFFECT_MATERIAL( "effects/splash3" )
 CLIENTEFFECT_MATERIAL( "effects/splashwake1" )
 CLIENTEFFECT_REGISTER_END()
+
+CUtlQueue<float> m_QueueExplosions;
+static float g_flFractional = 1.0f;;
+
+void ClearExplosions()
+{
+	m_QueueExplosions.RemoveAll();
+}
 
 //
 // CExplosionParticle
@@ -162,6 +171,8 @@ float C_BaseExplosionEffect::ScaleForceByDeviation( Vector &deviant, Vector &sou
 	return dot;
 }
 
+static ConVar cl_reducedexplosions("cl_reducedexplosions", "0", FCVAR_ARCHIVE);
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : position - 
@@ -192,6 +203,20 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 	m_flScale = clamp(scale, 0.5f, 2.0f);
 	// <-- Mirv
 
+	while (m_QueueExplosions.Count() > 0 && m_QueueExplosions.Head() < gpGlobals->curtime)
+	{
+		m_QueueExplosions.RemoveAtHead();
+	}
+
+	// Yes using a global is shocking business, but nevermind I'm just testing this out...
+	if (cl_reducedexplosions.GetBool())
+	{
+		int c = m_QueueExplosions.Count();
+		g_flFractional = 1.0f - 0.2f * c;
+		if (g_flFractional < 0.01f)
+			g_flFractional = 0.01f;
+	}
+
 	if ( scale != 0 )
 	{
 		// UNDONE: Make core size parametric to scale or remove scale?
@@ -201,8 +226,11 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 	CreateDebris();
 	//FIXME: CreateDynamicLight();
 	// or let's try it anyways?
-	CreateDynamicLight();
+	//CreateDynamicLight();
 	CreateMisc();
+
+	// Now add this explosion to our tracker
+	m_QueueExplosions.Insert(gpGlobals->curtime + 0.8f);
 }
 
 //-----------------------------------------------------------------------------
@@ -215,6 +243,7 @@ void C_BaseExplosionEffect::CreateCore( void )
 
 	Vector	offset;
 	int		i;
+	int		number;
 
 	//Spread constricts as force rises
 	float force = m_flForce;
@@ -273,8 +302,9 @@ void C_BaseExplosionEffect::CreateCore( void )
 		// Smoke - basic internal filler
 		// Rises above afterwards
 		//
+		number = (int) ceil(4 * g_flFractional);
 
-		for ( i = 0; i < 4; i++ )
+		for ( i = 0; i < number; i++ )
 		{
 			pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_Smoke, m_vecOrigin );
 
@@ -336,7 +366,9 @@ void C_BaseExplosionEffect::CreateCore( void )
 
 #ifndef _XBOX
 
-		for ( i = 0; i < 8; i++ )
+		number = (int) ceil(8 * g_flFractional);
+
+		for ( i = 0; i < number; i++ )
 		{
 			offset.Random( -16.0f, 16.0f );
 			offset *= m_flScale;	// |-- Mirv: Scale offset
@@ -409,7 +441,9 @@ void C_BaseExplosionEffect::CreateCore( void )
 			m_Material_Embers[1] = pSimple->GetPMaterial( "effects/fire_embers2" );
 		}
 
-		for ( i = 0; i < 16; i++ )
+		number = (int) ceil(16 * g_flFractional);
+
+		for ( i = 0; i < number; i++ )
 		{
 			offset.Random( -32.0f, 32.0f );
 			offset *= m_flScale;	// |-- Mirv: Scale offset
@@ -473,7 +507,7 @@ void C_BaseExplosionEffect::CreateCore( void )
 		}
 
 	#ifndef _XBOX
-		int numFireballs = 32;
+		int numFireballs = (int) ceil(32 * g_flFractional);
 	#else
 		int numFireballs = 16;
 	#endif
@@ -545,7 +579,7 @@ void C_BaseExplosionEffect::CreateDebris( void )
 	// Sparks
 	//
 
-	CSmartPtr<CTrailParticles> pSparkEmitter	= CTrailParticles::Create( "CreateDebris 1" );
+	/*CSmartPtr<CTrailParticles> pSparkEmitter	= CTrailParticles::Create( "CreateDebris 1" );
 	if ( pSparkEmitter == NULL )
 	{
 		assert(0);
@@ -598,7 +632,10 @@ void C_BaseExplosionEffect::CreateDebris( void )
 		tParticle->m_vecVelocity	= dir * random->RandomFloat( 1500, 2500 );
 
 		Color32Init( tParticle->m_color, 255, 255, 255, 255 );
-	}
+	}*/
+
+	int i;
+	Vector	dir;
 
 #ifndef _XBOX
 	//
@@ -624,10 +661,12 @@ void C_BaseExplosionEffect::CreateDebris( void )
 	hMaterialArray[0] = fleckEmitter->GetPMaterial( "effects/fleck_cement1" );
 	hMaterialArray[1] = fleckEmitter->GetPMaterial( "effects/fleck_cement2" );
 
+	int number = (int) ceil(16 * g_flFractional);
+
 #ifdef _XBOX
 	int	numFlecks = random->RandomInt( 8, 16 );
 #else	
-	int	numFlecks = random->RandomInt( 16, 32 );
+	int	numFlecks = random->RandomInt( number, number * 2 );
 #endif // _XBOX
 
 
