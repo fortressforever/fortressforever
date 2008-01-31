@@ -15,7 +15,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar  r_drawflecks( "r_drawflecks", "1" );
+static ConVar  r_drawflecks( "r_drawflecks", "1", FCVAR_ARCHIVE );
 extern ConVar r_drawmodeldecals;
 
 ImpactSoundRouteFn g_pImpactSoundRouteFn = NULL;
