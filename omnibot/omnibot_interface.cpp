@@ -1983,6 +1983,10 @@ namespace Omnibot
 					}
 					break;
 				}
+			case GEN_MSG_GETWEAPONLIMITS:
+				{
+					break;
+				}
 			case GEN_MSG_GETMAXSPEED:
 				{
 					OB_GETMSG(Msg_PlayerMaxSpeed);
@@ -2769,7 +2773,6 @@ namespace Omnibot
 				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_GRAVITY, &d, sizeof(d)));
 				serverGravity = sv_gravity.GetFloat();
 			}
-
 			//////////////////////////////////////////////////////////////////////////
 			if(!engine->IsDedicatedServer())
 			{
@@ -2789,7 +2792,6 @@ namespace Omnibot
 				}
 			}
 			//////////////////////////////////////////////////////////////////////////
-
 			if(!g_Started)
 			{
 				Omnibot::Notify_GameStarted();
