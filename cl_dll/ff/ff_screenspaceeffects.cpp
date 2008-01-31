@@ -390,8 +390,6 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	bool bFadeOff = flBlur <= 0.0f;
 	flBlur = clamp(flBlur, 0.05f, 1.0f);
 
-	Assert(flBlur > 0.0f);
-
 	IMaterialVar *pVar = NULL;
 	bool	bFound;
 	IMaterial *pMatScreen = materials->FindMaterial("frontbuffer", TEXTURE_GROUP_OTHER, true);
