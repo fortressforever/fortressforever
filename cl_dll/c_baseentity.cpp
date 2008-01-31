@@ -4392,7 +4392,8 @@ C_BaseEntity *C_BaseEntity::CreatePredictedEntityByName( const char *classname, 
 			}
 		}
 
-		return NULL;
+		// Mirv: For predicted rockets...
+		//return NULL;
 	}
 
 	// Try to create it

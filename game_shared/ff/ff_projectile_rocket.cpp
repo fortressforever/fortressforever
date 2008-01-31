@@ -21,7 +21,10 @@
 #else
 	#define RocketTrail C_RocketTrail
 	#include "c_smoke_trail.h"
+	#include "tempentity.h"
 #endif
+
+//#define PREDICTED_ROCKETS
 
 //=============================================================================
 // CFFProjectileRocket tables
@@ -45,80 +48,159 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_rocket);
 //=============================================================================
 
 #ifdef GAME_DLL
-
 	// Bug #0000436: Need to truncate Rocket travel sound on impact.
 	BEGIN_DATADESC( CFFProjectileRocket )
 		// Function Pointers
 		DEFINE_ENTITYFUNC( ExplodeTouch ),
 	END_DATADESC()
+#endif
 
-	//----------------------------------------------------------------------------
-	// Purpose: Creata a trail of smoke for the rocket
-	//----------------------------------------------------------------------------
-	void CFFProjectileRocket::CreateSmokeTrail() 
-	{
-		// Smoke trail.
-		if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL) 
-		{
-			m_hRocketTrail->m_Opacity = 0.2f;
-			m_hRocketTrail->m_SpawnRate = 100;
-			m_hRocketTrail->m_ParticleLifetime = 0.5f;
-			m_hRocketTrail->m_StartColor.Init(0.65f, 0.65f , 0.65f);
-			m_hRocketTrail->m_EndColor.Init(0.45f, 0.45f, 0.45f);
-			m_hRocketTrail->m_StartSize = 6;
-			m_hRocketTrail->m_EndSize = 10; // 24; // 32; Reduced a bit now
-			m_hRocketTrail->m_SpawnRadius = 4;
-			m_hRocketTrail->m_MinSpeed = 2;
-			m_hRocketTrail->m_MaxSpeed = 16;
-			
-			m_hRocketTrail->SetLifetime(999);
-			m_hRocketTrail->FollowEntity(this, "0");
-		}
-	}
-
-	//----------------------------------------------------------------------------
-	// Purpose: Spawn a rocket, set up model, size, etc
-	//----------------------------------------------------------------------------
-	void CFFProjectileRocket::Spawn() 
-	{
-		// Setup
-		SetModel(ROCKET_MODEL);
-		SetMoveType(MOVETYPE_FLY);
-		SetSize(Vector(-2, -2, -2), Vector(2, 2, 2)); // smaller, cube bounding box so we rest on the ground
-		SetSolid(SOLID_BBOX);	// So it will collide with physics props!
-		SetSolidFlags(FSOLID_NOT_STANDABLE);
-
-		// Set the correct think & touch for the nail
-		SetTouch(&CFFProjectileRocket::ExplodeTouch); // No we're going to explode when we touch something
-		SetThink(NULL);		// no thinking!
-
-		// Next think
-		SetNextThink(gpGlobals->curtime);
-
-		// Creates the smoke trail
-		CreateSmokeTrail();
-
-		BaseClass::Spawn();
-	}
-
-#else
+#ifdef CLIENT_DLL
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Remove the rocket trail
 	//-----------------------------------------------------------------------------
 	void CFFProjectileRocket::CleanUp()
 	{
-		// Brute for rocket trail destruction
-		/* AfterShock: commented this for an attempted fix for bug: CL_CopyExistingEntity crash (jan 2008)
 		if (m_hRocketTrail)
-		{
-			m_hRocketTrail->Remove();
-		}
-		*/
+			m_hRocketTrail->m_bEmit = false;
+
 		BaseClass::CleanUp();
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: 
+	//-----------------------------------------------------------------------------
+	bool CFFProjectileRocket::ShouldPredict()
+	{
+#ifdef PREDICTED_ROCKETS
+		if (GetOwnerEntity() && GetOwnerEntity() == C_BasePlayer::GetLocalPlayer())
+			return true;
 #endif
+		return BaseClass::ShouldPredict();
+	}
+
+	extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
+	extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Client-side explosion stuff (since the rocket is predicted)
+	//-----------------------------------------------------------------------------
+	void CFFProjectileRocket::Explode(trace_t *pTrace, int bitsDamageType)
+	{
+		SetModelName( NULL_STRING );//invisible
+		AddSolidFlags( FSOLID_NOT_SOLID );
+		m_takedamage = DAMAGE_NO;
+
+		// Pull out of the wall a bit
+		if ( pTrace->fraction != 1.0 )
+		{
+			SetLocalOrigin( pTrace->endpos + (pTrace->plane.normal * 32.0f) );	// |-- Mirv: 32 units used in TFC
+		}
+
+		Vector vecAbsOrigin = GetAbsOrigin();
+		int contents = UTIL_PointContents ( vecAbsOrigin );
+
+		if ( pTrace->fraction != 1.0 )
+		{
+			Vector vecNormal = pTrace->plane.normal;
+			surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
+			CPASFilter filter( vecAbsOrigin );
+
+			te->Explosion( filter, -1.0, // don't apply cl_interp delay
+				&vecAbsOrigin,
+				!( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
+				/*m_DmgRadius * .03*/ m_flDamage / 128.0f, 
+				25,
+				TE_EXPLFLAG_NONE,
+				m_DmgRadius,
+				m_flDamage,
+				&vecNormal,
+				(char) pdata->game.material );
+		}
+		else
+		{
+			CPASFilter filter( vecAbsOrigin );
+			te->Explosion( filter, -1.0, // don't apply cl_interp delay
+				&vecAbsOrigin, 
+				!( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
+				/*m_DmgRadius * .03*/ m_flDamage / 128.0f, 
+				25,
+				TE_EXPLFLAG_NONE,
+				m_DmgRadius,
+				m_flDamage );
+		}
+
+		UTIL_DecalTrace( pTrace, "Scorch" );
+		EmitSound( "BaseGrenade.Explode" );
+
+		SetThink(NULL);
+		SetTouch(NULL);
+	
+		AddEffects( EF_NODRAW );
+		SetAbsVelocity( vec3_origin );
+		SetNextThink( gpGlobals->curtime );
+
+		// As good a time as ever to try and clean up sound effects, etc.
+		CleanUp();
+	}
+
+#endif
+
+//----------------------------------------------------------------------------
+// Purpose: Creata a trail of smoke for the rocket
+//----------------------------------------------------------------------------
+void CFFProjectileRocket::CreateSmokeTrail() 
+{
+#ifdef GAME_DLL
+	// Smoke trail.
+	if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL) 
+	{
+		m_hRocketTrail->m_Opacity = 0.2f;
+		m_hRocketTrail->m_SpawnRate = 100;
+		m_hRocketTrail->m_ParticleLifetime = 0.5f;
+		m_hRocketTrail->m_StartColor.Init(0.65f, 0.65f , 0.65f);
+		m_hRocketTrail->m_EndColor.Init(0.45f, 0.45f, 0.45f);
+		m_hRocketTrail->m_StartSize = 6;
+		m_hRocketTrail->m_EndSize = 10; // 24; // 32; Reduced a bit now
+		m_hRocketTrail->m_SpawnRadius = 4;
+		m_hRocketTrail->m_MinSpeed = 2;
+		m_hRocketTrail->m_MaxSpeed = 16;
+		
+		m_hRocketTrail->SetLifetime(999);
+		m_hRocketTrail->FollowEntity(this, "0");
+	}
+#endif
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Spawn a rocket, set up model, size, etc
+//----------------------------------------------------------------------------
+void CFFProjectileRocket::Spawn() 
+{
+	BaseClass::Spawn();
+
+#if defined(CLIENT_DLL) && !defined(PREDICTED_ROCKETS)
+	return;
+#endif
+
+	// Setup
+	SetModel(ROCKET_MODEL);
+	SetMoveType(MOVETYPE_FLY);
+	SetSize(Vector(-2, -2, -2), Vector(2, 2, 2)); // smaller, cube bounding box so we rest on the ground
+	SetSolid(SOLID_BBOX);	// So it will collide with physics props!
+	SetSolidFlags(FSOLID_NOT_STANDABLE);
+
+	// Set the correct think & touch for the nail
+	SetTouch(&CFFProjectileRocket::ExplodeTouch); // No we're going to explode when we touch something
+	SetThink(NULL);		// no thinking!
+
+	// Next think
+	SetNextThink(gpGlobals->curtime);
+
+	// Creates the smoke trail
+	CreateSmokeTrail();
+}
 
 //----------------------------------------------------------------------------
 // Purpose: Precache the rocket model
@@ -136,7 +218,19 @@ void CFFProjectileRocket::Precache()
 //----------------------------------------------------------------------------
 CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed) 
 {
-	CFFProjectileRocket *pRocket = (CFFProjectileRocket *) CreateEntityByName("ff_projectile_rocket");
+	CFFProjectileRocket *pRocket;
+	
+#ifdef PREDICTED_ROCKETS
+	if (pentOwner->IsPlayer()) 
+	{
+		pRocket = (CFFProjectileRocket *) CREATE_PREDICTED_ENTITY("ff_projectile_rocket");
+		pRocket->SetPlayerSimulated(ToBasePlayer(pentOwner));
+	}
+	else
+#endif
+	{
+		pRocket = (CFFProjectileRocket *) CreateEntityByName("ff_projectile_rocket");
+	}
 
 	UTIL_SetOrigin(pRocket, vecOrigin);
 	pRocket->SetAbsAngles(angAngles);
@@ -162,3 +256,4 @@ CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSour
 
 	return pRocket; 
 }
+

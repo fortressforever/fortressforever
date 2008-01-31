@@ -171,7 +171,7 @@ float C_BaseExplosionEffect::ScaleForceByDeviation( Vector &deviant, Vector &sou
 	return dot;
 }
 
-static ConVar cl_reducedexplosions("cl_reducedexplosions", "0", FCVAR_ARCHIVE);
+static ConVar cl_reducedexplosions("cl_reduced_explosions", "0", FCVAR_ARCHIVE);
 
 //-----------------------------------------------------------------------------
 // Purpose: 

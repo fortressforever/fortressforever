@@ -347,6 +347,10 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	if (!ffdev_blur_enable.GetBool() || !pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || !pPlayer->IsAlive() || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
 		return;
 
+	// Don't do anything here if the frametime is broken
+	if (gpGlobals->frametime == 0)
+		return;
+
 	Vector vecVelocity = pPlayer->GetAbsVelocity();
 	float flSpeed = vecVelocity.Length();
 
@@ -360,6 +364,10 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 
 	// Manage our accumulative acceleration a bit
 	g_flAccumulativeAccel -= gpGlobals->frametime * 2500.0f;
+
+	// This shouldn't be needed any more now that we're testing frametime, but i'll leave it in anyway.
+	if (g_flAccumulativeAccel != g_flAccumulativeAccel)
+		g_flAccumulativeAccel = 0.0f;
 	g_flAccumulativeAccel = clamp(g_flAccumulativeAccel, 0.0f, 10000.0f);
 
 	// Calculate the normalised blue now
