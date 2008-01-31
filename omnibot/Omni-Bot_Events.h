@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-01-16 09:41:57 -0800 (Wed, 16 Jan 2008) $
-// $LastChangedRevision: 2334 $
+// $LastChangedDate: 2008-01-29 09:32:54 -0800 (Tue, 29 Jan 2008) $
+// $LastChangedRevision: 2392 $
 //
 // about: Generic Bot Events
 //
@@ -82,6 +82,7 @@ typedef enum
 		PERCEPT_ID_FIRST,
 			PERCEPT_FEEL_PLAYER_USE,
 			PERCEPT_FEEL_PAIN,
+			PERCEPT_HEAR_VOICEMACRO,
 			PERCEPT_HEAR_GLOBALVOICEMACRO,
 			PERCEPT_HEAR_TEAMVOICEMACRO,
 			PERCEPT_HEAR_PRIVATEVOICEMACRO,
