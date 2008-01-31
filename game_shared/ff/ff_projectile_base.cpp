@@ -57,7 +57,7 @@ END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 
-	static ConVar ffdev_addinterpsamples("ffdev_addinterpsamples", "0", FCVAR_CHEAT, "");
+	static ConVar ffdev_addinterpsamples("ffdev_addinterpsamples", "1", 0, "");
 
 	//----------------------------------------------------------------------------
 	// Purpose: When the rocket enters the client's PVS, add the flight sound
@@ -93,13 +93,42 @@ END_NETWORK_TABLE()
 			interpolator.ClearHistory();
 			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
 
+/*			for (float i = -0.5f; i < 0.5f; i++)
+			{
+				Vector vecPosition = GetLocalOrigin() + GetAbsVelocity() * i;
+				interpolator.AddToHead(changeTime + i, &vecPosition, false);
+			}
+
+			return;*/
+
+			// Add a sample 2 seconds back.
+			Vector vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 0.75f;
+			interpolator.AddToHead(changeTime - 2.0f, &vecCurOrigin, false);
+
 			// Add a sample 1 second back.
-			Vector vecCurOrigin = GetLocalOrigin() - (/*m_vecInitialVelocity*/ GetAbsVelocity() * 1.0f);
+			vecCurOrigin = GetLocalOrigin() - (/*m_vecInitialVelocity*/ GetAbsVelocity() * 0.5f);
 			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
+
+/*			Vector vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 1.5f;
+			interpolator.AddToHead(changeTime - 1.5f, &vecCurOrigin, false);
+
+			vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 1.0f;
+			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
+
+			vecCurOrigin = GetLocalOrigin() - GetAbsVelocity() * 0.5f;
+			interpolator.AddToHead(changeTime - 0.5f, &vecCurOrigin, false);*/
 
 			// Add the current sample.
 			vecCurOrigin = GetLocalOrigin();
 			interpolator.AddToHead(changeTime, &vecCurOrigin, false);
+
+			vecCurOrigin = GetLocalOrigin() + GetAbsVelocity() * 0.5f;
+			interpolator.AddToHead(changeTime + 0.5f, &vecCurOrigin, false);
+
+			vecCurOrigin = GetLocalOrigin() + GetAbsVelocity() * 1.0f;
+			interpolator.AddToHead(changeTime + 1.0f, &vecCurOrigin, false);
+
+
 		}
 	}
 

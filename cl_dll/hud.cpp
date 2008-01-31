@@ -25,6 +25,7 @@
 #include "filesystem.h"
 #include <vgui_controls/AnimationController.h>
 #include <vgui/iSurface.h>
+#include "materialsystem/IMaterialSystemHardwareConfig.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -215,6 +216,8 @@ DECLARE_MESSAGE(gHUD, SendAudio);
 CHud::CHud()
 {
 }
+
+ConVar cl_reduced_quality_dx8("cl_reduced_quality_dx8", "1", FCVAR_ARCHIVE);
 
 //-----------------------------------------------------------------------------
 // Purpose: This is called every time the DLL is loaded
@@ -646,7 +649,17 @@ void CHud::VidInit( void )
 		m_HudList[i]->VidInit();
 	}
 
+	// If they are running dx8 and are using reduced quality, then set the material stuff here
+	if (cl_reduced_quality_dx8.GetBool() && g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
+	{
+		engine->ClientCmd("mat_bumpmap 0");
+		engine->ClientCmd("mat_fastnobump 1");
+		engine->ClientCmd("mat_specular 0");
+	}
 
+	// Clear any explosion reductions
+	extern void ClearExplosions();
+	ClearExplosions();
 	ResetHUD();
 }
 

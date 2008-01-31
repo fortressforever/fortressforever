@@ -42,6 +42,8 @@ public:
 	virtual void Precache();
 	virtual Class_T Classify() { return CLASS_ROCKET; }
 	static CFFProjectileRocket *CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed);
+	virtual void Spawn();
+	void CreateSmokeTrail();
 
 #ifdef CLIENT_DLL
 	CFFProjectileRocket() {}
@@ -49,16 +51,11 @@ public:
 
 	virtual const char *GetFlightSound() { return "rocket.fly"; }
 	virtual void CleanUp();
-
+	virtual bool ShouldPredict();
+	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 #else
 	DECLARE_DATADESC()
-
-	virtual void Spawn();
-
 protected:	
-
-	// Creates the smoke trail
-	void CreateSmokeTrail();
 
 private:	
 	
