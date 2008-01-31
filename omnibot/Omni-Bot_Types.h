@@ -642,7 +642,7 @@ typedef enum ePowerups
 	PWR_INVINCIBLE,
 
 	// THIS MUST BE LAST	
-	PWR_FIRST_USER		= 16,
+	PWR_FIRST_USER		= 8,
 } Powerups;
 
 // enumerations: EntityCategory
