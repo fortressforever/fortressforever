@@ -54,6 +54,8 @@ public:
 	virtual const char *GetBounceSound() { return "GrenadeProjectile.Bounce"; }
 	virtual Class_T Classify() { return CLASS_GLGRENADE; }
 
+	virtual bool ExplodeOnHitPlayer() { return true; }
+
 #ifdef CLIENT_DLL
 	CFFProjectileGrenade() {}
 	CFFProjectileGrenade(const CFFProjectileGrenade&) {}
