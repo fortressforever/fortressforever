@@ -671,6 +671,10 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	ConVar *cl_cmdrate = cvar->FindVar("cl_cmdrate");
 	cl_updaterate->SetValue(33);
 	cl_cmdrate->SetValue(33);
+
+	// Turn off r_dynamic until our wrapper sets it
+	ConVar *r_dynamic = cvar->FindVar("r_dynamic");
+	r_dynamic->SetValue(0);
 	// <-- Mirv
 
 	if (!ParticleMgr()->Init(MAX_TOTAL_PARTICLES, materials))
@@ -1800,3 +1804,13 @@ void CHLClient::RenderViewEx( const CViewSetup &setup, int nClearFlags, int what
 	VPROF("RenderViewEx");
 	view->RenderViewEx( setup, nClearFlags, whatToDraw );
 }
+
+// Wrapper CVAR for an archiveable r_dynamic
+void FF_Dynamic_Callback(ConVar *var, char const *pOldString)
+{
+	ConVar *c = cvar->FindVar("r_dynamic");
+	if (c)
+		c->SetValue(var->GetString());
+}
+
+ConVar r_dynamic_ff("r_dynamic_ff", "0", FCVAR_ARCHIVE, "", FF_Dynamic_Callback);
