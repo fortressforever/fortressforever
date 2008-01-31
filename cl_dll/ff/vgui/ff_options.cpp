@@ -16,6 +16,7 @@
 #include "KeyValues.h"
 #include "filesystem.h"
 #include "utlmap.h"
+#include "vstdlib/icommandline.h"
 
 #include "ff_weapon_base.h"
 extern const char *s_WeaponAliasInfo[];
@@ -29,6 +30,7 @@ extern const char *s_WeaponAliasInfo[];
 #include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/CheckButton.h>
+#include <vgui_controls/MessageBox.h>
 
 using namespace vgui;
 extern IFileSystem **pFilesystem;
@@ -1303,6 +1305,16 @@ CFFSplashPanel::CFFSplashPanel(vgui::VPANEL parent)
 	SetSizeable(false);
 
 	LoadControlSettings("resource/ui/FFSplash.res");
+
+	// Do our message box in here too
+	if (CommandLine()->FindParm("-showdxmsg"))
+	{
+		MessageBox *pMessageBox = new MessageBox("DirectX Changed", "DirectX level changed\nPlease now quit and load Fortress Forever normally for the settings to take effect.", 0);
+		pMessageBox->SetVisible(true);
+		pMessageBox->RequestFocus();
+		pMessageBox->MoveToFront();
+		pMessageBox->ShowWindow();
+	}
 
 	CheckUpdate();
 };

@@ -21,7 +21,7 @@
 ConVar	cl_phys_props_max( "cl_phys_props_max", "300", 0, "Maximum clientside physic props" );
 ConVar	r_propsmaxdist( "r_propsmaxdist", "1200", 0, "Maximum visible distance" );
 
-ConVar	cl_phys_props_enable( "cl_phys_props_enable", "1", 0, "Disable clientside physics props (must be set before loading a level)." );
+ConVar	cl_phys_props_enable( "cl_phys_props_enable", "1", FCVAR_ARCHIVE, "Disable clientside physics props (must be set before loading a level)." );
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
