@@ -117,7 +117,7 @@ ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.1", FCVAR_R
 		if (trace.m_pEnt && trace.m_pEnt->IsPlayer()) 
 		{
 			// Explode on contact with people	
-			if (m_bIsLive) 
+			if (ExplodeOnHitPlayer()) 
 				Detonate();
 			else
 				flSurfaceElasticity = 0.3;

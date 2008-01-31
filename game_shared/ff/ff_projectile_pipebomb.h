@@ -59,6 +59,8 @@ public:
 
 	void Precache( void );
 
+	virtual bool ExplodeOnHitPlayer() { return false; }
+
 #ifdef CLIENT_DLL
 	virtual int DrawModel(int flags);
 #endif
