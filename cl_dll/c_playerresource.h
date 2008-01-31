@@ -76,6 +76,9 @@ protected:
 	Color	m_Colors[MAX_TEAMS];
 	int		m_iClass[MAX_PLAYERS+1];	// |-- Mirv: Current class
 	int		m_iChannel[MAX_PLAYERS+1];	// |-- Mirv: For voice channels
+
+public:
+	bool	m_bIsIntermission;
 };
 
 extern C_PlayerResource *g_PR;
