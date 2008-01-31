@@ -28,6 +28,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_iClass), RecvPropInt( RECVINFO(m_iClass[0]))), // |-- Mirv: Current class
 	RecvPropArray3( RECVINFO_ARRAY(m_iChannel), RecvPropInt( RECVINFO(m_iChannel[0]))), // |-- Mirv: Channel information
 
+	RecvPropBool(RECVINFO(m_bIsIntermission)),
+
 END_RECV_TABLE()
 
 C_PlayerResource *g_PR;
@@ -386,3 +388,13 @@ int C_PlayerResource::GetChannel( int iIndex )
 		return m_iChannel[iIndex];
 }
 // <-- Mirv: Channel info
+
+#ifdef CLIENT_DLL
+bool Client_IsIntermission()
+{
+	C_PlayerResource *pr = dynamic_cast <C_PlayerResource *> (GameResources());
+	if (!pr)
+		return false;
+	return pr->m_bIsIntermission;
+}
+#endif

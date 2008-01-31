@@ -30,6 +30,9 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_iClass), SendPropInt( SENDINFO_ARRAY(m_iClass), 5 ) ),	// |-- Mirv: Current class
 	
 	SendPropArray3( SENDINFO_ARRAY3(m_iChannel), SendPropInt( SENDINFO_ARRAY(m_iChannel), 4 ) ), // |-- Mirv: Channel info
+
+	SendPropBool(SENDINFO(m_bIsIntermission)),
+
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CPlayerResource )
@@ -73,6 +76,8 @@ void CPlayerResource::Spawn( void )
 		m_iChannel.Set( i, 0 );	// |-- Mirv: Channel info
 	}
 
+	m_bIsIntermission = false;
+
 	SetThink( &CPlayerResource::ResourceThink );
 	SetNextThink( gpGlobals->curtime );
 	m_nUpdateCounter = 0;
@@ -87,6 +92,8 @@ int CPlayerResource::UpdateTransmitState()
 	return SetTransmitState( FL_EDICT_ALWAYS );
 }
 
+extern bool Server_IsIntermission();
+
 //-----------------------------------------------------------------------------
 // Purpose: Wrapper for the virtual GrabPlayerData Think function
 //-----------------------------------------------------------------------------
@@ -95,6 +102,8 @@ void CPlayerResource::ResourceThink( void )
 	m_nUpdateCounter++;
 
 	UpdatePlayerData();
+
+	m_bIsIntermission = Server_IsIntermission();
 
 	SetNextThink( gpGlobals->curtime + 0.1f );
 }

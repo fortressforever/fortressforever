@@ -854,6 +854,9 @@ void CInput::ComputeForwardMove( CUserCmd *cmd )
 	}	
 }
 
+extern bool Client_IsIntermission();
+extern void ForceScoreboard();
+
 /*
 ==============================
 ScaleMovements
@@ -868,6 +871,14 @@ void CInput::ScaleMovements( CUserCmd *cmd )
 	// FIXME FIXME:  This doesn't work
 
 	// --> Mirv: FIXED FIXED
+	if (Client_IsIntermission())
+	{
+		cmd->forwardmove = 0.0f;
+		cmd->sidemove    = 0.0f;
+		cmd->upmove      = 0.0f;
+
+		ForceScoreboard();
+	}
 
 	// We have to scale speeds this early on.
 	// This way we don't tell the server that we're trying to move faster than we

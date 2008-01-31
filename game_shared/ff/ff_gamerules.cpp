@@ -1940,3 +1940,13 @@ bool CFFGameRules::IsIntermission()
 
 	return false;
 }
+
+#ifdef GAME_DLL
+bool Server_IsIntermission()
+{
+	CFFGameRules *g = dynamic_cast <CFFGameRules *> (g_pGameRules);
+	if (!g)
+		return false;
+	return g->IsIntermission();
+}
+#endif

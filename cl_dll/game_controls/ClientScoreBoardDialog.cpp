@@ -267,6 +267,21 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	SetBorder(NULL);
 }
 
+extern bool Client_IsIntermission();
+
+void ForceScoreboard()
+{
+	if (!g_pScoreboard)
+		return;
+
+	// Force visible
+	if (!g_pScoreboard->IsVisible())
+		g_pScoreboard->ShowPanel(true);
+
+	// Force mouse control
+	if (!g_pScoreboard->IsMouseInputEnabled())
+		g_pScoreboard->SetMouseInputEnabled(true);
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -274,6 +289,10 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 void CClientScoreBoardDialog::ShowPanel(bool bShow)
 {
 	if ( BaseClass::IsVisible() == bShow )
+		return;
+
+	// Don't let them unshow the scoreboard
+	if (Client_IsIntermission() && !bShow)
 		return;
 
 	m_pViewPort->ShowBackGround(false);
