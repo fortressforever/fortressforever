@@ -138,6 +138,8 @@ void C_LocalTempEntity::SetVelocity( const Vector &vecVelocity )
 void DrawSprite( const Vector &vecOrigin, float flWidth, float flHeight, color32 color );
 void BeamDraw(IMaterial *pMaterial, const Vector &vecstart, const Vector &vecend, float widthstart, float widthend, float alphastart, float alphaend, const Vector &colorstart, const Vector &colorend);
 
+static ConVar cl_nail_trail("cl_nail_trail", "1", FCVAR_ARCHIVE);
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : int
@@ -156,7 +158,7 @@ int C_LocalTempEntity::DrawStudioModel( int flags )
 		return drawn;
 
 	/// TODO: Aftershock needs to do whatever he wants with this...
-	if (this->flags & FTENT_FFPROJECTILE && m_vecTempEntVelocity != vec3_origin)
+	if (this->flags & FTENT_FFPROJECTILE && m_vecTempEntVelocity != vec3_origin && cl_nail_trail.GetBool())
 	{
 		Vector vecDir = CurrentViewOrigin() - GetAbsOrigin();
 		float flLength = vecDir.LengthSqr();
