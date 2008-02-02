@@ -671,7 +671,7 @@ namespace Omnibot
 			{
 				CBasePlayer *ent = UTIL_PlayerByName(pMsg->m_Name);
 				if(ent && ent->IsBot())
-					engine->ServerCommand(UTIL_VarArgs("kick %d\n", ENTINDEX(ent->edict())));
+					engine->ServerCommand(UTIL_VarArgs("kick %s\n", ent->GetPlayerName()));
 			}
 		}
 
@@ -1985,6 +1985,9 @@ namespace Omnibot
 				}
 			case GEN_MSG_GETWEAPONLIMITS:
 				{
+					WeaponLimits *pMsg = _data.Get<WeaponLimits>();
+					if(pMsg)
+						pMsg->m_Limited = False;
 					break;
 				}
 			case GEN_MSG_GETMAXSPEED:
