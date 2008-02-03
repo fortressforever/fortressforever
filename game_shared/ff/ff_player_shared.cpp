@@ -574,10 +574,13 @@ void CFFPlayer::ClassSpecificSkill()
 			}
 		}
 		break;
+#endif
 		case CLASS_HWGUY:
-				//if(pWeapon->GetWeaponID() != FF_WEAPON_ASSAULTCANNON)
-				//	SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
-				//else
+#ifdef CLIENT_DLL
+				if(pWeapon->GetWeaponID() != FF_WEAPON_ASSAULTCANNON)
+					SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
+#endif
+#ifdef GAME_DLL
 				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
 				{
 					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;

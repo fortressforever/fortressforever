@@ -22,7 +22,8 @@
 #define FF_AC_WINDUPTIME	0.5f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
-#define FF_AC_MOVEMENTDELAY 0.6f	// Time the player has to wait after firing the AC before the speed penalty wears off.
+#define FF_AC_MOVEMENTDELAY 1.5f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
+									// AfterShock: I'm also using this for the 'charge down' time now also (time before bullets stop firing, after you stop pressing fire)
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.10", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
@@ -433,7 +434,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	float flTimeSinceRelease = gpGlobals->curtime - m_flTriggerReleased;
 
 	// Player is holding down fire. Don't allow it if we're still recovering from an overheat though
-	if ((flTimeSinceRelease <= 0.5f || pOwner->m_nButtons & IN_ATTACK) && m_flNextSecondaryAttack <= gpGlobals->curtime)
+	if ((flTimeSinceRelease <= m_flChargeTime || pOwner->m_nButtons & IN_ATTACK) && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
 
 		/* NO MORE OVERHEAT - AfterShock
@@ -558,7 +559,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 		if (pPlayer)
 		*/
-		pOwner->AddSpeedEffect(SE_ASSAULTCANNON, FF_AC_MOVEMENTDELAY, flSpeed, SEM_BOOLEAN);
+		pOwner->AddSpeedEffect(SE_ASSAULTCANNON, m_flChargeTime, flSpeed, SEM_BOOLEAN);
 	}
 #endif
 
