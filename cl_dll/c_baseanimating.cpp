@@ -52,6 +52,9 @@
 static ConVar cl_SetupAllBones( "cl_SetupAllBones", "0" );
 ConVar r_sequence_debug( "r_sequence_debug", "" );
 
+// dlight scale
+extern ConVar cl_ffdlight_muzzle;
+
 // If an NPC is moving faster than this, he should play the running footstep sound
 const float RUN_SPEED_ESTIMATE_SQR = 150.0f * 150.0f;
 
@@ -2637,20 +2640,25 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			QAngle dummyAngles;
 			GetAttachment( 1, vAttachment, dummyAngles );
 
-			// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
-			//dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
-			dlight_t *dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
-
-			if (dl) // I'm scared, daddy...of NULL pointers.
+			// dlight scale
+			float fDLightScale = cl_ffdlight_muzzle.GetFloat();
+			if (fDLightScale > 0.0f)
 			{
-				dl->origin = vAttachment;
-				dl->radius = random->RandomFloat( 56/*ffdev_muzzleflash_light_radius_min.GetFloat()*/, 72/*ffdev_muzzleflash_light_radius_max.GetFloat()*/ ); // sorta small radius for muzzle flash
-				dl->die = gpGlobals->curtime + 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // die = current time + life
-				dl->decay = dl->radius / 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // radius / life = good fade
-				dl->color.r = 255/*ffdev_muzzleflash_light_color_r.GetFloat()*/;
-				dl->color.g = 192/*ffdev_muzzleflash_light_color_g.GetFloat()*/;
-				dl->color.b = 64/*ffdev_muzzleflash_light_color_b.GetFloat()*/;
-				dl->color.exponent = 5/*ffdev_muzzleflash_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
+				// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
+				//dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+				dlight_t *dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
+
+				if (dl) // I'm scared, daddy...of NULL pointers.
+				{
+					dl->origin = vAttachment;
+					dl->radius = random->RandomFloat( 56/*ffdev_muzzleflash_light_radius_min.GetFloat()*/, 72/*ffdev_muzzleflash_light_radius_max.GetFloat()*/ ) * fDLightScale; // sorta small radius for muzzle flash
+					dl->die = gpGlobals->curtime + 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // die = current time + life
+					dl->decay = dl->radius / 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // radius / life = good fade
+					dl->color.r = 255/*ffdev_muzzleflash_light_color_r.GetFloat()*/;
+					dl->color.g = 192/*ffdev_muzzleflash_light_color_g.GetFloat()*/;
+					dl->color.b = 64/*ffdev_muzzleflash_light_color_b.GetFloat()*/;
+					dl->color.exponent = 5/*ffdev_muzzleflash_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
+				}
 			}
 		}
 	}

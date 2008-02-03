@@ -51,6 +51,9 @@
 extern CHudGrenade1Timer *g_pGrenade1Timer;
 extern CHudGrenade2Timer *g_pGrenade2Timer;
 
+// dlight scale
+extern ConVar cl_ffdlight_flashlight;
+
 #include "c_gib.h"
 
 #include "c_ff_timers.h"
@@ -2344,13 +2347,21 @@ void C_FFPlayer::AddEntity()
 
 				beams->UpdateBeamInfo(m_pFlashlightBeam, beamInfo);
 
-				dlight_t *el = effects->CL_AllocDlight(0);
-				el->origin = tr.endpos;
-				el->radius = 50; 
-				el->color.r = 200;
-				el->color.g = 200;
-				el->color.b = 200;
-				el->die = gpGlobals->curtime + 0.1;
+				// dlight scale
+				float fDLightScale = cl_ffdlight_flashlight.GetFloat();
+				if (fDLightScale > 0.0f)
+				{
+					dlight_t *dl = effects->CL_AllocDlight(0);
+					if (dl)
+					{
+						dl->origin = tr.endpos;
+						dl->radius = 50 * fDLightScale; 
+						dl->color.r = 200;
+						dl->color.g = 200;
+						dl->color.b = 200;
+						dl->die = gpGlobals->curtime + 0.1;
+					}
+				}
 			}
 		}
 

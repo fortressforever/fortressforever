@@ -59,6 +59,9 @@
 // Globals
 //=============================================================================
 
+// dlight scale
+extern ConVar cl_ffdlight_flamethrower;
+
 // Behaviour
 enum
 {
@@ -301,6 +304,8 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	m_StartSize		= 3/*ffdev_flame_startsize.GetInt()*/;		// 3;
 	m_EndSize		= 128/*ffdev_flame_endsize.GetInt()*/;		// 128;
 
+	// dlight scale
+	float fDLightScale = cl_ffdlight_flamethrower.GetFloat();
 
 	if (m_fEmit && m_ParticleEffect.WasDrawnPrevFrame()) 
 	{
@@ -314,19 +319,20 @@ void C_FFFlameJet::Update(float fTimeDelta)
 			m_pDLight->radius = random->RandomFloat(m_pDLight->radius * 0.9f, m_pDLight->radius * 1.1f);
 
 			// flicker within limits
-			if (m_pDLight->radius < 80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/)
-				m_pDLight->radius = 80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/;
-			else if (m_pDLight->radius > 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/)
-				m_pDLight->radius = 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/;
+			if (m_pDLight->radius < 80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/ * fDLightScale)
+				m_pDLight->radius = 80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/ * fDLightScale;
+			else if (m_pDLight->radius > 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/ * fDLightScale)
+				m_pDLight->radius = 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/ * fDLightScale;
 		}
 		else
 		{
 			// create the muzzle light
-			m_pDLight = effects->CL_AllocDlight( 0 );
+			if (fDLightScale > 0.0f)
+				m_pDLight = effects->CL_AllocDlight( 0 );
 			if ( m_pDLight )
 			{
 				m_pDLight->origin = vecStart;
-				m_pDLight->radius = random->RandomFloat(80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/, 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/);
+				m_pDLight->radius = random->RandomFloat(80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/, 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/) * fDLightScale;
 				m_pDLight->die = gpGlobals->curtime + (0.36f/*ffdev_flame_dietime_min.GetFloat()*/ * 0.5);
 				m_pDLight->color.r = 255;//ffdev_flame_dlight_color_r.GetInt();
 				m_pDLight->color.g = 144;//ffdev_flame_dlight_color_g.GetInt();
@@ -379,13 +385,14 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				if (gpGlobals->curtime - 0.2f/*ffdev_flame_dlight_rate.GetFloat()*/ > m_fLastParticleDLightTime )
 				{
 					pParticle->m_fDLightDieTime = gpGlobals->curtime + pParticle->m_Dietime;
-					pParticle->m_fDLightStartRadius = random->RandomFloat(80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/, 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/);
-					pParticle->m_fDLightEndRadius = random->RandomFloat(130.0f/*ffdev_flame_dlight_endradius_min.GetFloat()*/, 150.0f/*ffdev_flame_dlight_endradius_max.GetFloat()*/);
+					pParticle->m_fDLightStartRadius = random->RandomFloat(80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/, 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/) * fDLightScale;
+					pParticle->m_fDLightEndRadius = random->RandomFloat(130.0f/*ffdev_flame_dlight_endradius_min.GetFloat()*/, 150.0f/*ffdev_flame_dlight_endradius_max.GetFloat()*/) * fDLightScale;
 
 					// -------------------------------------
 					// Dynamic light stuff
 					// -------------------------------------
-					pParticle->m_pDLight = effects->CL_AllocDlight( 0 );
+					if (fDLightScale > 0.0f)
+						pParticle->m_pDLight = effects->CL_AllocDlight( 0 );
 
 					// don't want to start trying to access something that's not there
 					if (pParticle->m_pDLight)

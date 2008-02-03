@@ -60,7 +60,9 @@ ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR
 #ifdef CLIENT_DLL
 
 ConVar ffdev_rail_prate( "ffdev_rail_prate", "128", 0, "Amount of rail particles per second.", true, 0, true, 65536 );
-ConVar ffdev_rail_dlight( "ffdev_rail_dlight", "1", 0, "Rail light on/off." );
+
+// dlight scale
+extern ConVar cl_ffdlight_rail;
 
 #endif
 
@@ -488,15 +490,18 @@ void CFFProjectileRail::OnDataChanged( DataUpdateType_t updateType )
 		// make the crossbow bolt invisible (for some stupid reason, shit doesn't get interpolated properly without a model)
 		FindOverrideMaterial("effects/cloak", TEXTURE_GROUP_CLIENT_EFFECTS);
 
+		// dlight scale
+		float fDLightScale = cl_ffdlight_rail.GetFloat();
+
 		// create the rail light...maybe
-		if (ffdev_rail_dlight.GetBool())
+		if (fDLightScale > 0.0f)
 			m_pDLight = effects->CL_AllocDlight( 0 );
 
 		// setup the dlight
 		if (m_pDLight)
 		{
 			m_pDLight->origin = GetAbsOrigin();
-			m_pDLight->radius = 64;
+			m_pDLight->radius = 64 * fDLightScale;
 			m_pDLight->die = gpGlobals->curtime + 0.4;
 			m_pDLight->decay = m_pDLight->radius / 0.4;
 			m_pDLight->color.r = g_uchRailColors[m_iNumBounces][0];
@@ -532,7 +537,7 @@ void CFFProjectileRail::ClientThink( void )
 	if (m_pDLight)
 	{
 		m_pDLight->origin = GetAbsOrigin();
-		m_pDLight->radius = 64;
+		m_pDLight->radius = 64 * cl_ffdlight_rail.GetFloat(); // dlight scale
 		m_pDLight->die = gpGlobals->curtime + 0.4;
 		m_pDLight->decay = m_pDLight->radius / 0.4;
 		m_pDLight->color.r = g_uchRailColors[m_iNumBounces][0];
