@@ -40,6 +40,20 @@ extern IFileSystem **pFilesystem;
 
 extern ConVar cl_timerwav;
 
+// dlight cvarsesesesssssssesssssssssssssssssssssss
+ConVar cl_ffdlight_max( "cl_ffdlight_max", "32", FCVAR_ARCHIVE, "Sets the maximum dynamic lights allowed.", TRUE, 0, TRUE, 512 );
+ConVar cl_ffdlight_explosion( "cl_ffdlight_explosion", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an explosion (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_muzzle( "cl_ffdlight_muzzle", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a muzzle flash (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_flamethrower( "cl_ffdlight_flamethrower", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a flamethrower (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_ignited( "cl_ffdlight_ignited", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an ignited player or object (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_napalm( "cl_ffdlight_napalm", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from napalm flames (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_ic( "cl_ffdlight_ic", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an IC projectile (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_rocket( "cl_ffdlight_rocket", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a rocket (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_rail( "cl_ffdlight_rail", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a rail (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_conc( "cl_ffdlight_conc", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a concussion grenade (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_flashlight( "cl_ffdlight_flashlight", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a concussion grenade (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_generic( "cl_ffdlight_generic", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a generic source (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
 
@@ -697,6 +711,182 @@ void GetCrosshair(FFWeaponID iWeapon, char &innerChar, Color &innerCol, int &inn
 	g_pCrosshairOptions->GetCrosshair(iWeapon, innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 }
 
+//=============================================================================
+// Our dlight options page. This also is quite big.
+//=============================================================================
+class CFFDLightOptions : public CFFOptionsPage
+{
+	DECLARE_CLASS_SIMPLE(CFFDLightOptions, CFFOptionsPage);
+
+public:
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Populate all the menu stuff
+	//-----------------------------------------------------------------------------
+	CFFDLightOptions(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
+	{
+		m_pFFDLightMax = new CInputSlider(this, "FFDLightMax", "FFDLightMaxInput");
+		m_pFFDLightMax->SetRange(0, 512);
+		m_pFFDLightMax->SetValue(32);
+
+		m_pFFDLightExplosion = new CInputSlider(this, "FFDLightExplosion", "FFDLightExplosionInput");
+		m_pFFDLightExplosion->SetRange(0, 200);
+		m_pFFDLightExplosion->SetValue(1);
+
+		m_pFFDLightMuzzle = new CInputSlider(this, "FFDLightMuzzle", "FFDLightMuzzleInput");
+		m_pFFDLightMuzzle->SetRange(0, 200);
+		m_pFFDLightMuzzle->SetValue(1);
+
+		m_pFFDLightFlamethrower = new CInputSlider(this, "FFDLightFlamethrower", "FFDLightFlamethrowerInput");
+		m_pFFDLightFlamethrower->SetRange(0, 200);
+		m_pFFDLightFlamethrower->SetValue(1);
+
+		m_pFFDLightIgnited = new CInputSlider(this, "FFDLightIgnited", "FFDLightIgnitedInput");
+		m_pFFDLightIgnited->SetRange(0, 200);
+		m_pFFDLightIgnited->SetValue(1);
+
+		m_pFFDLightNapalm = new CInputSlider(this, "FFDLightNapalm", "FFDLightNapalmInput");
+		m_pFFDLightNapalm->SetRange(0, 200);
+		m_pFFDLightNapalm->SetValue(1);
+
+		m_pFFDLightIC = new CInputSlider(this, "FFDLightIC", "FFDLightICInput");
+		m_pFFDLightIC->SetRange(0, 200);
+		m_pFFDLightIC->SetValue(1);
+
+		m_pFFDLightRocket = new CInputSlider(this, "FFDLightRocket", "FFDLightRocketInput");
+		m_pFFDLightRocket->SetRange(0, 200);
+		m_pFFDLightRocket->SetValue(1);
+
+		m_pFFDLightRail = new CInputSlider(this, "FFDLightRail", "FFDLightRailInput");
+		m_pFFDLightRail->SetRange(0, 200);
+		m_pFFDLightRail->SetValue(1);
+
+		m_pFFDLightConc = new CInputSlider(this, "FFDLightConc", "FFDLightConcInput");
+		m_pFFDLightConc->SetRange(0, 200);
+		m_pFFDLightConc->SetValue(1);
+
+		m_pFFDLightFlashlight = new CInputSlider(this, "FFDLightFlashlight", "FFDLightFlashlightInput");
+		m_pFFDLightFlashlight->SetRange(0, 200);
+		m_pFFDLightFlashlight->SetValue(1);
+
+		m_pFFDLightGeneric = new CInputSlider(this, "FFDLightGeneric", "FFDLightGenericInput");
+		m_pFFDLightGeneric->SetRange(0, 200);
+		m_pFFDLightGeneric->SetValue(1);
+
+		LoadControlSettings("resource/ui/FFOptionsSubDLights.res");
+
+		// Now load settings
+		Load();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Load all the fonts we need
+	//-----------------------------------------------------------------------------
+	virtual void ApplySchemeSettings(IScheme *pScheme)
+	{
+		BaseClass::ApplySchemeSettings(pScheme);
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: This builds keyvalues for each weapon and puts them into an
+	//			all-conquering keyvalue that is then saved to file.
+	//-----------------------------------------------------------------------------
+	void Apply()
+	{
+		UpdateConVars();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Load all the settings from file into memory via keyvalues
+	//-----------------------------------------------------------------------------
+	void Load()
+	{
+		// Now update the sliders
+		UpdateSliders();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Reload the stuff from file for now
+	//-----------------------------------------------------------------------------
+	void Reset()
+	{
+		Load();
+	}
+
+private:
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Catch the slider moving
+	//-----------------------------------------------------------------------------
+	//MESSAGE_FUNC_PARAMS(OnUpdateSliders, "SliderMoved", data)
+	//{
+	//	UpdateConVars();
+	//}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Catch checkbox updating
+	//-----------------------------------------------------------------------------
+	//MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data)
+	//{
+	//	UpdateConVars();
+	//}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Update the ConVars
+	//-----------------------------------------------------------------------------
+	void UpdateConVars()
+	{
+		// divide by 100 because the sliders are 0 to 200 while the cvars are 0.0 to 2.0
+		cl_ffdlight_max.SetValue(m_pFFDLightMax->GetValue());
+		cl_ffdlight_explosion.SetValue(m_pFFDLightExplosion->GetValue() / 100.0f);
+		cl_ffdlight_muzzle.SetValue(m_pFFDLightMuzzle->GetValue() / 100.0f);
+		cl_ffdlight_flamethrower.SetValue(m_pFFDLightFlamethrower->GetValue() / 100.0f);
+		cl_ffdlight_ignited.SetValue(m_pFFDLightIgnited->GetValue() / 100.0f);
+		cl_ffdlight_napalm.SetValue(m_pFFDLightNapalm->GetValue() / 100.0f);
+		cl_ffdlight_ic.SetValue(m_pFFDLightIC->GetValue() / 100.0f);
+		cl_ffdlight_rocket.SetValue(m_pFFDLightRocket->GetValue() / 100.0f);
+		cl_ffdlight_rail.SetValue(m_pFFDLightRail->GetValue() / 100.0f);
+		cl_ffdlight_conc.SetValue(m_pFFDLightConc->GetValue() / 100.0f);
+		cl_ffdlight_flashlight.SetValue(m_pFFDLightFlashlight->GetValue() / 100.0f);
+		cl_ffdlight_generic.SetValue(m_pFFDLightGeneric->GetValue() / 100.0f);
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Update the sliders
+	//-----------------------------------------------------------------------------
+	void UpdateSliders()
+	{
+		// multiply by 100 because the sliders are 0 to 200 while the cvars are 0.0 to 2.0
+		m_pFFDLightMax->SetValue(cl_ffdlight_max.GetFloat(), false);
+		m_pFFDLightExplosion->SetValue(cl_ffdlight_explosion.GetFloat() * 100.0f, false);
+		m_pFFDLightMuzzle->SetValue(cl_ffdlight_muzzle.GetFloat() * 100.0f, false);
+		m_pFFDLightFlamethrower->SetValue(cl_ffdlight_flamethrower.GetFloat() * 100.0f, false);
+		m_pFFDLightIgnited->SetValue(cl_ffdlight_ignited.GetFloat() * 100.0f, false);
+		m_pFFDLightNapalm->SetValue(cl_ffdlight_napalm.GetFloat() * 100.0f, false);
+		m_pFFDLightIC->SetValue(cl_ffdlight_ic.GetFloat() * 100.0f, false);
+		m_pFFDLightRocket->SetValue(cl_ffdlight_rocket.GetFloat() * 100.0f, false);
+		m_pFFDLightRail->SetValue(cl_ffdlight_rail.GetFloat() * 100.0f, false);
+		m_pFFDLightConc->SetValue(cl_ffdlight_conc.GetFloat() * 100.0f, false);
+		m_pFFDLightFlashlight->SetValue(cl_ffdlight_flashlight.GetFloat() * 100.0f, false);
+		m_pFFDLightGeneric->SetValue(cl_ffdlight_generic.GetFloat() * 100.0f, false);
+	}
+
+private:
+
+	CInputSlider	*m_pFFDLightMax;
+	CInputSlider	*m_pFFDLightExplosion;
+	CInputSlider	*m_pFFDLightMuzzle;
+	CInputSlider	*m_pFFDLightFlamethrower;
+	CInputSlider	*m_pFFDLightIgnited;
+	CInputSlider	*m_pFFDLightNapalm;
+	CInputSlider	*m_pFFDLightIC;
+	CInputSlider	*m_pFFDLightRocket;
+	CInputSlider	*m_pFFDLightRail;
+	CInputSlider	*m_pFFDLightConc;
+	CInputSlider	*m_pFFDLightFlashlight;
+	CInputSlider	*m_pFFDLightGeneric;
+
+};
 
 //=============================================================================
 // This is a relatively simple timer select screen
@@ -1180,6 +1370,7 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pMiscOptions1 = new CFFMiscOptions(this, "MiscOptions", "resource/Options1.vdf");
 	m_pMiscOptions2 = new CFFMiscOptions(this, "MiscOptions", "resource/Options2.vdf");
 	m_pMiscOptions3 = new CFFMiscOptions(this, "MiscOptions", "resource/Options3.vdf");
+	m_pDLightOptions = new CFFDLightOptions(this, "DLightOptions");
 
 	m_pPropertyPages = new PropertySheet(this, "OptionsPages", true);
 	m_pPropertyPages->AddPage(m_pCrosshairOptions, "#GameUI_Crosshairs");
@@ -1187,6 +1378,7 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pPropertyPages->AddPage(m_pMiscOptions1, "#GameUI_Misc1");
 	m_pPropertyPages->AddPage(m_pMiscOptions2, "#GameUI_Misc2");
 	m_pPropertyPages->AddPage(m_pMiscOptions3, "#GameUI_Misc3");
+	m_pPropertyPages->AddPage(m_pDLightOptions, "#GameUI_DLights");
 	m_pPropertyPages->SetActivePage(m_pCrosshairOptions);
 	m_pPropertyPages->SetDragEnabled(false);
 
@@ -1215,6 +1407,7 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		m_pMiscOptions1->Apply();
 		m_pMiscOptions2->Apply();
 		m_pMiscOptions3->Apply();
+		m_pDLightOptions->Apply();
 
 		// Apply doesn't quit the menu
 		if (pszCommand[0] == 'A')
@@ -1230,6 +1423,7 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		m_pMiscOptions1->Reset();
 		m_pMiscOptions2->Reset();
 		m_pMiscOptions3->Reset();
+		m_pDLightOptions->Reset();
 	}
 
 	// Now make invisible
@@ -1249,6 +1443,7 @@ void CFFOptionsPanel::SetVisible(bool state)
 		m_pMiscOptions1->Load();
 		m_pMiscOptions2->Load();
 		m_pMiscOptions3->Load();
+		m_pDLightOptions->Load();
 
 		RequestFocus();
 		MoveToFront();

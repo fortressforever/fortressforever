@@ -37,6 +37,10 @@ CLIENTEFFECT_REGISTER_END()
 
 PMaterialHandle g_Material_Spark = NULL;
 
+// dlight scale
+extern ConVar cl_ffdlight_explosion;
+extern ConVar cl_ffdlight_generic;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : &pos - 
@@ -520,12 +524,22 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 	//
 
 	/*
-	dlight_t *dl= effects->CL_AllocDlight ( 0 );
 
-	dl->origin	= pos;
-	dl->color.r = dl->color.g = dl->color.b = 250;
-	dl->radius	= random->RandomFloat(16,32);
-	dl->die		= gpGlobals->curtime + 0.001;
+	// dlight scale
+	float fDLightScale = cl_ffdlight_generic.GetFloat();
+
+	if (fDLightScale > 0.0f)
+	{
+		dlight_t *dl= effects->CL_AllocDlight ( 0 );
+		if (dl)
+		{
+			dl->origin	= pos;
+			dl->color.r = dl->color.g = dl->color.b = 192;
+			dl->radius	= random->RandomFloat(24,32) * fDLightScale;
+			dl->die		= gpGlobals->curtime + 0.01;
+		}
+	}
+
 	*/
 
 #endif	// !_XBOX
@@ -1365,13 +1379,20 @@ void FX_ConcussiveExplosion( Vector &origin, Vector &normal )
 	// Dlight
 	//
 
-	dlight_t *dl= effects->CL_AllocDlight ( 0 );
+	// dlight scale
+	float fDLightScale = cl_ffdlight_explosion.GetFloat();
 
-	dl->origin	= offset;
-	dl->color.r = dl->color.g = dl->color.b = 64;
-	dl->radius	= random->RandomFloat(128,256);
-	dl->die		= gpGlobals->curtime + 0.1;
-
+	if (fDLightScale > 0.0f)
+	{
+		dlight_t *dl = effects->CL_AllocDlight ( 0 );
+		if (dl)
+		{
+			dl->origin	= offset;
+			dl->color.r = dl->color.g = dl->color.b = 64;
+			dl->radius	= random->RandomFloat(112,144) * fDLightScale;
+			dl->die		= gpGlobals->curtime + 0.1;
+		}
+	}
 
 	//
 	// Moving lines

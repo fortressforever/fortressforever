@@ -59,6 +59,8 @@ private:
 	CFFOptionsPage			*m_pMiscOptions1;
 	CFFOptionsPage			*m_pMiscOptions2;
 	CFFOptionsPage			*m_pMiscOptions3;
+	CFFOptionsPage			*m_pDLightOptions;
+
 
 	vgui::Button			*m_pOKButton;
 	vgui::Button			*m_pCancelButton;
