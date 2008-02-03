@@ -42,17 +42,17 @@ extern ConVar cl_timerwav;
 
 // dlight cvarsesesesssssssesssssssssssssssssssssss
 ConVar cl_ffdlight_max( "cl_ffdlight_max", "32", FCVAR_ARCHIVE, "Sets the maximum dynamic lights allowed.", TRUE, 0, TRUE, 512 );
-ConVar cl_ffdlight_explosion( "cl_ffdlight_explosion", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an explosion (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_muzzle( "cl_ffdlight_muzzle", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a muzzle flash (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_flamethrower( "cl_ffdlight_flamethrower", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a flamethrower (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_ignited( "cl_ffdlight_ignited", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an ignited player or object (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_napalm( "cl_ffdlight_napalm", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from napalm flames (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_ic( "cl_ffdlight_ic", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an IC projectile (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_rocket( "cl_ffdlight_rocket", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a rocket (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_rail( "cl_ffdlight_rail", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a rail (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_conc( "cl_ffdlight_conc", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a concussion grenade (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_flashlight( "cl_ffdlight_flashlight", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a concussion grenade (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
-ConVar cl_ffdlight_generic( "cl_ffdlight_generic", "1", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a generic source (0 disables this type of dlight).", TRUE, 0, TRUE, 2 );
+ConVar cl_ffdlight_explosion( "cl_ffdlight_explosion", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an explosion (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_muzzle( "cl_ffdlight_muzzle", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a muzzle flash (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_flamethrower( "cl_ffdlight_flamethrower", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a flamethrower (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_ignited( "cl_ffdlight_ignited", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an ignited player or object (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_napalm( "cl_ffdlight_napalm", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from napalm flames (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_ic( "cl_ffdlight_ic", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an IC projectile (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_rocket( "cl_ffdlight_rocket", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a rocket (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_rail( "cl_ffdlight_rail", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a rail (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_conc( "cl_ffdlight_conc", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a concussion grenade (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_flashlight( "cl_ffdlight_flashlight", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a concussion grenade (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+ConVar cl_ffdlight_generic( "cl_ffdlight_generic", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a generic source (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
 
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
@@ -838,17 +838,17 @@ private:
 	{
 		// divide by 100 because the sliders are 0 to 200 while the cvars are 0.0 to 2.0
 		cl_ffdlight_max.SetValue(m_pFFDLightMax->GetValue());
-		cl_ffdlight_explosion.SetValue(m_pFFDLightExplosion->GetValue() / 100.0f);
-		cl_ffdlight_muzzle.SetValue(m_pFFDLightMuzzle->GetValue() / 100.0f);
-		cl_ffdlight_flamethrower.SetValue(m_pFFDLightFlamethrower->GetValue() / 100.0f);
-		cl_ffdlight_ignited.SetValue(m_pFFDLightIgnited->GetValue() / 100.0f);
-		cl_ffdlight_napalm.SetValue(m_pFFDLightNapalm->GetValue() / 100.0f);
-		cl_ffdlight_ic.SetValue(m_pFFDLightIC->GetValue() / 100.0f);
-		cl_ffdlight_rocket.SetValue(m_pFFDLightRocket->GetValue() / 100.0f);
-		cl_ffdlight_rail.SetValue(m_pFFDLightRail->GetValue() / 100.0f);
-		cl_ffdlight_conc.SetValue(m_pFFDLightConc->GetValue() / 100.0f);
-		cl_ffdlight_flashlight.SetValue(m_pFFDLightFlashlight->GetValue() / 100.0f);
-		cl_ffdlight_generic.SetValue(m_pFFDLightGeneric->GetValue() / 100.0f);
+		cl_ffdlight_explosion.SetValue((float)m_pFFDLightExplosion->GetValue() / 100.0f);
+		cl_ffdlight_muzzle.SetValue((float)m_pFFDLightMuzzle->GetValue() / 100.0f);
+		cl_ffdlight_flamethrower.SetValue((float)m_pFFDLightFlamethrower->GetValue() / 100.0f);
+		cl_ffdlight_ignited.SetValue((float)m_pFFDLightIgnited->GetValue() / 100.0f);
+		cl_ffdlight_napalm.SetValue((float)m_pFFDLightNapalm->GetValue() / 100.0f);
+		cl_ffdlight_ic.SetValue((float)m_pFFDLightIC->GetValue() / 100.0f);
+		cl_ffdlight_rocket.SetValue((float)m_pFFDLightRocket->GetValue() / 100.0f);
+		cl_ffdlight_rail.SetValue((float)m_pFFDLightRail->GetValue() / 100.0f);
+		cl_ffdlight_conc.SetValue((float)m_pFFDLightConc->GetValue() / 100.0f);
+		cl_ffdlight_flashlight.SetValue((float)m_pFFDLightFlashlight->GetValue() / 100.0f);
+		cl_ffdlight_generic.SetValue((float)m_pFFDLightGeneric->GetValue() / 100.0f);
 	}
 
 	//-----------------------------------------------------------------------------
