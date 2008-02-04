@@ -47,6 +47,9 @@
 #define FFDEV_CONC_VERTICAL_POWER 4.10f
 #define FFDEV_CONC_NEWBCONC_UPPUSH 90
 
+ConVar ffdev_mancannon_conc_speed( "ffdev_mancannon_conc_speed", "1700.0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Max conc speed a player can attain after just using a jump pad." );
+#define MAX_JUMPPAD_TO_CONC_SPEED ffdev_mancannon_conc_speed.GetFloat()
+
 /* AfterShock: cvars to #defines for the win!
 	static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_CHEAT, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
 	static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_CHEAT, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
@@ -262,6 +265,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			// But we don't want to lose the trait of a hh-like jump with a drop conc
 			// So an extra flag here helps out.
 			// Remember that m_fIsHandheld only affects the grenade owner
+			Vector vecResult;
 			if ((pEntity == GetThrower() && m_fIsHandheld) || (flDistance < 16.0f))
 			{
 				// These values are close (~within 0.01) of TFC
@@ -276,12 +280,14 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				if ((pPlayer->GetFlags() & FL_ONGROUND) && (flHorizontalSpeed < 550))
 				{
 					// noob conc
-					pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral * 0.95, vecVelocity.y  * fLateral* 0.95, (vecVelocity.z + FFDEV_CONC_NEWBCONC_UPPUSH)* fVertical));
-				   DevMsg("[HH Conc] on the ground & slow (%f) so newb conc\n", flHorizontalSpeed);
+					//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral * 0.95, vecVelocity.y  * fLateral* 0.95, (vecVelocity.z + FFDEV_CONC_NEWBCONC_UPPUSH)* fVertical));
+					vecResult = Vector(vecVelocity.x * fLateral * 0.95, vecVelocity.y  * fLateral* 0.95, (vecVelocity.z + FFDEV_CONC_NEWBCONC_UPPUSH)* fVertical);
+					DevMsg("[HH Conc] on the ground & slow (%f) so newb conc\n", flHorizontalSpeed);
 				}
 				else
 				{
-					pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
+					//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
+					vecResult = Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical);
 					DevMsg("[HH Conc] Not on the ground or too fast (%f)\n", flHorizontalSpeed);
 				}
 
@@ -303,8 +309,20 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				vecDisplacement *= (horizontalDistance * (8.4f - 0.015f * flDistance));
 				vecDisplacement.z = (verticalDistance * (12.6f - 0.0225f * flDistance));
 
-				pPlayer->SetAbsVelocity(vecDisplacement);
-			}				
+				//pPlayer->SetAbsVelocity(vecDisplacement);
+				vecResult = vecDisplacement;
+			}
+
+			// Jiggles: players can easily get insane speeds by using a jump pad and then concing
+			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
+			{
+				if ( vecResult.Length() > MAX_JUMPPAD_TO_CONC_SPEED )
+				{
+					vecResult.NormalizeInPlace();
+					vecResult *= MAX_JUMPPAD_TO_CONC_SPEED;
+				}
+			}
+			pPlayer->SetAbsVelocity(vecResult);
 		}
 
 		// Now get rid of this
