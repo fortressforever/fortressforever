@@ -2113,7 +2113,8 @@ namespace Omnibot
 							pMsg->m_Under[2]);
 
 						trace_t tr;
-						UTIL_TraceLine(org, under, MASK_SOLID, NULL, COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
+						unsigned int iMask = MASK_PLAYERSOLID_BRUSHONLY;
+						UTIL_TraceLine(org, under, iMask, NULL, COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
 
 						if(tr.DidHitNonWorldEntity() && !tr.m_pEnt->IsPlayer())
 						{

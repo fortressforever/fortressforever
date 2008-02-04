@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-01-24 09:26:29 -0800 (Thu, 24 Jan 2008) $
-// $LastChangedRevision: 2363 $
+// $LastChangedDate: 2008-02-02 23:39:14 -0800 (Sat, 02 Feb 2008) $
+// $LastChangedRevision: 2417 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -508,6 +508,11 @@ struct Event_EntitySensed
 {
 	int			m_EntityClass;
 	GameEntity	m_Entity;
+};
+
+struct Event_DynamicPathsChanged
+{
+	int			m_TeamMask;
 };
 
 struct Event_ScriptMessage

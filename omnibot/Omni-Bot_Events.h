@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-01-29 09:32:54 -0800 (Tue, 29 Jan 2008) $
-// $LastChangedRevision: 2392 $
+// $LastChangedDate: 2008-02-03 22:28:54 -0800 (Sun, 03 Feb 2008) $
+// $LastChangedRevision: 2420 $
 //
 // about: Generic Bot Events
 //
@@ -76,6 +76,7 @@ typedef enum
 			MESSAGE_AIMCOMPLETED,
 			MESSAGE_SCRIPTMSG,
 			MESSAGE_PROXIMITY_TRIGGER,
+			MESSAGE_DYNAMIC_PATHS_CHANGED,
 		MESSAGE_ID_LAST,
 
 		// Percepts  (senses: feel, see, hear, smell, )
@@ -89,6 +90,7 @@ typedef enum
 			PERCEPT_HEAR_GLOBALCHATMSG,
 			PERCEPT_HEAR_TEAMCHATMSG,
 			PERCEPT_HEAR_PRIVCHATMSG,
+			PERCEPT_HEAR_GROUPCHATMSG,
 			PERCEPT_HEAR_SOUND,
 			PERCEPT_SENSE_ENTITY,
 		PERCEPT_ID_LAST,
