@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-01-30 22:20:14 -0800 (Wed, 30 Jan 2008) $
-// $LastChangedRevision: 2410 $
+// $LastChangedDate: 2008-02-02 09:34:06 -0800 (Sat, 02 Feb 2008) $
+// $LastChangedRevision: 2415 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1008,6 +1008,15 @@ typedef struct obUserData_t
 			_val[0] = GetVector()[0];
 			_val[1] = GetVector()[1];
 			_val[2] = GetVector()[2];
+			return true;
+		}
+		return false;
+	}
+	bool Get(bool &_val)
+	{
+		if(IsInt())
+		{
+			_val = GetInt()!=0;
 			return true;
 		}
 		return false;
