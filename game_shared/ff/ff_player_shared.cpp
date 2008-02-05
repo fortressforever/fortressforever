@@ -579,6 +579,7 @@ void CFFPlayer::ClassSpecificSkill()
 #ifdef CLIENT_DLL
 				if(pWeapon->GetWeaponID() != FF_WEAPON_ASSAULTCANNON)
 					SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
+				break;
 #endif
 #ifdef GAME_DLL
 				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
