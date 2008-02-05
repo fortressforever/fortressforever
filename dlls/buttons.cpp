@@ -13,6 +13,7 @@
 #include "vstdlib/strtools.h"
 #include "buttons.h"
 #include "eventqueue.h"
+#include "omnibot_interface.h"
 
 // --> Mirv: Temp test for triggers
 #include "ff_scriptman.h"
@@ -712,6 +713,13 @@ void CBaseButton::ButtonActivate( void )
 		LinearMove( m_vecPosition2, m_flSpeed);
 	else
 		AngularMove( m_vecAngle2, m_flSpeed);
+
+	{
+		// Omnibot notification
+		const char *n = GetName();
+		if(!n) n = UTIL_VarArgs("button_%d",entindex());
+		Omnibot::omnibot_interface::Trigger(this,m_hActivator.Get(),n,"button_activate");
+	}
 }
 
 
@@ -817,6 +825,13 @@ void CBaseButton::ButtonBackHome( void )
 	{
 		SetThink ( &CBaseButton::ButtonSpark );
 		SetNextThink( gpGlobals->curtime + 0.5f );// no hurry
+	}
+
+	{
+		// Omnibot notification
+		const char *n = GetName();
+		if(!n) n = UTIL_VarArgs("button_%d",entindex());
+		Omnibot::omnibot_interface::Trigger(this,NULL,n,"button_reset");
 	}
 }
 
