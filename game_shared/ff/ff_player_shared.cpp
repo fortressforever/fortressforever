@@ -576,6 +576,19 @@ void CFFPlayer::ClassSpecificSkill()
 		break;
 #endif
 		case CLASS_HWGUY:
+#ifdef GAME_DLL
+				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
+				{
+					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
+					if(pAC)
+					{
+						pAC->ToggleClamp();
+					}
+				}
+			break;
+#endif
+		/*
+		case CLASS_HWGUY:
 #ifdef CLIENT_DLL
 				if(pWeapon->GetWeaponID() != FF_WEAPON_ASSAULTCANNON)
 					SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
@@ -589,7 +602,9 @@ void CFFPlayer::ClassSpecificSkill()
 						pAC->ToggleClamp();
 				}
 			break;
+
 #endif
+			*/
 
 #ifdef CLIENT_DLL
 	
@@ -640,10 +655,10 @@ void CFFPlayer::ClassSpecificSkill()
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post()
 {
-#ifdef CLIENT_DLL
+				CFFWeaponBase *pWeapon = GetActiveFFWeapon();
 	switch (GetClassSlot())
 	{
-
+#ifdef CLIENT_DLL
 	case CLASS_SOLDIER:
 		engine->ClientCmd("-reload");
 		break;
@@ -652,11 +667,25 @@ void CFFPlayer::ClassSpecificSkill_Post()
 	case CLASS_SPY:
 		HudContextShow(false);
 		break;
-
+#endif
+#ifdef GAME_DLL
+		case CLASS_HWGUY:
+	
+				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
+				{
+					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
+					if(pAC)
+					{
+						pAC->ToggleClamp();
+					}
+				}
+			break;
+#endif
 	default:
 		break;
+
 	}
-#endif
+
 }
 
 //-----------------------------------------------------------------------------

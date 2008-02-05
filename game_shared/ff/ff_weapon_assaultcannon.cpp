@@ -227,6 +227,11 @@ void CFFWeaponAssaultCannon::ToggleClamp()
 		m_bClamped = false;
 		m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
 		//m_flTriggerPressed = gpGlobals->curtime() - (m_flClampPressed - m_flTriggerPressed);
+		// if they aren't firing (were holding mouse2 only and then just let go), catch release time and start de-charging
+		CFFPlayer *pOwner = ToFFPlayer(GetOwner());
+		if (!(pOwner->m_nButtons & IN_ATTACK))
+			m_flTriggerReleased = gpGlobals->curtime;
+
 	}
 	else if (m_flChargeTime > 0)
 	{
@@ -351,12 +356,17 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 
 	// If they have released the fire button, catch the release trigger time
 	// We just STOPPED firing
-	if (pOwner->m_afButtonReleased & IN_ATTACK)
+	if ((pOwner->m_afButtonReleased & IN_ATTACK) && m_bClamped == false)
 	{
 		m_flTriggerReleased = gpGlobals->curtime;
 	}
 
-	// AfterShock: IF we just released the button, and we are at max charge, change the triggerPressed time so the remaining code works
+	// AfterShock: If we're not pressing fire, but we're pressing mouse2 (clamp), then reset the triggerReleased
+	if ( !(pOwner->m_nButtons & IN_ATTACK) && (m_bClamped == true) )
+	{
+		m_flTriggerReleased = gpGlobals->curtime;
+	}
+	// AfterShock: If we just released the button, and we are at max charge, change the triggerPressed time so the remaining code works
 	if (m_flChargeTime >= m_flMaxChargeTime)
 	{
 		m_flTriggerPressed = gpGlobals->curtime - m_flMaxChargeTime;
@@ -486,6 +496,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 #endif
 
 				m_bFiring = false;
+				m_bClamped = false;
 			}
 			// Weapon should be firing now
 			else if(m_flDeployTick + 0.5f <= gpGlobals->curtime)
