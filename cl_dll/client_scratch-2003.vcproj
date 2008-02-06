@@ -1930,6 +1930,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				<File
 					RelativePath="..\game_shared\hl2\env_headcrabcanister_shared.h">
 				</File>
+				<File
+					RelativePath=".\hl2_hud\fx_hl2_tracers.cpp">
+				</File>
 			</Filter>
 			<Filter
 				Name="HL1 DLL"
@@ -2809,10 +2812,10 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath="..\public\vgui\IImage.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h">
+				RelativePath="iinput.h">
 			</File>
 			<File
-				RelativePath="iinput.h">
+				RelativePath="..\public\vgui\IInput.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui\IInputInternal.h">
@@ -3055,10 +3058,10 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath="..\public\tier1\mempool.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h">
+				RelativePath="menu.h">
 			</File>
 			<File
-				RelativePath="menu.h">
+				RelativePath="..\public\vgui_controls\Menu.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui_controls\MenuItem.h">
@@ -4200,6 +4203,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath="..\game_shared\ff\ff_weapon_assaultcannon.cpp">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_assaultcannon.h">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_autorifle.cpp">
 			</File>
 			<File
@@ -4625,6 +4631,7 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				</File>
 			</Filter>
 		</Filter>
+	
 		<File
 			RelativePath="..\lib-vc7\public\bitmap.lib">
 		</File>
