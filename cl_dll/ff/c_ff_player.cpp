@@ -2349,18 +2349,19 @@ void C_FFPlayer::AddEntity()
 
 				// dlight scale
 				float fDLightScale = cl_ffdlight_flashlight.GetFloat();
+
+				dlight_t *dl = NULL;
 				if (fDLightScale > 0.0f)
+					dl = effects->CL_AllocDlight(0);
+
+				if (dl)
 				{
-					dlight_t *dl = effects->CL_AllocDlight(0);
-					if (dl)
-					{
-						dl->origin = tr.endpos;
-						dl->radius = 50 * fDLightScale; 
-						dl->color.r = 200;
-						dl->color.g = 200;
-						dl->color.b = 200;
-						dl->die = gpGlobals->curtime + 0.1;
-					}
+					dl->origin = tr.endpos;
+					dl->radius = 50 * fDLightScale; 
+					dl->color.r = 200;
+					dl->color.g = 200;
+					dl->color.b = 200;
+					dl->die = gpGlobals->curtime + 0.1;
 				}
 			}
 		}

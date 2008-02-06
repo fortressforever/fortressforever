@@ -738,23 +738,23 @@ void C_BaseExplosionEffect::CreateDynamicLight( void )
 
 	// dlight scale
 	float fDLightScale = cl_ffdlight_explosion.GetFloat();
-	if (fDLightScale > 0.0f)
-	{
-		// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
-		//dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
-		dlight_t *dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
 
-		if (dl) // I'm scared, daddy...of NULL pointers.
-		{
-			dl->origin = m_vecOrigin;
-			dl->radius	= random->RandomFloat( 208/*ffdev_explosion_light_radius_min.GetFloat()*/, 224/*ffdev_explosion_light_radius_max.GetFloat()*/ ) * fDLightScale; // kinda big radius for explosion
-			dl->die = gpGlobals->curtime + 0.25/*ffdev_explosion_light_life.GetFloat()*/; // die = current time + life
-			dl->decay = dl->radius / 0.25/*ffdev_explosion_light_life.GetFloat()*/; // radius / life = good fade
-			dl->color.r = 255/*ffdev_explosion_light_color_r.GetFloat()*/;
-			dl->color.g = 254/*ffdev_explosion_light_color_g.GetFloat()*/;
-			dl->color.b = 128/*ffdev_explosion_light_color_b.GetFloat()*/;
-			dl->color.exponent = 5/*ffdev_explosion_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
-		}
+	dlight_t *dl = NULL;
+	if (fDLightScale > 0.0f)
+		// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
+		//dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
+		dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
+
+	if (dl) // I'm scared, daddy...of NULL pointers.
+	{
+		dl->origin = m_vecOrigin;
+		dl->radius	= random->RandomFloat( 208/*ffdev_explosion_light_radius_min.GetFloat()*/, 224/*ffdev_explosion_light_radius_max.GetFloat()*/ ) * fDLightScale; // kinda big radius for explosion
+		dl->die = gpGlobals->curtime + 0.25/*ffdev_explosion_light_life.GetFloat()*/; // die = current time + life
+		dl->decay = dl->radius / 0.25/*ffdev_explosion_light_life.GetFloat()*/; // radius / life = good fade
+		dl->color.r = 255/*ffdev_explosion_light_color_r.GetFloat()*/;
+		dl->color.g = 254/*ffdev_explosion_light_color_g.GetFloat()*/;
+		dl->color.b = 128/*ffdev_explosion_light_color_b.GetFloat()*/;
+		dl->color.exponent = 5/*ffdev_explosion_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
 	}
 }
 

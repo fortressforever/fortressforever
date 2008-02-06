@@ -41,7 +41,6 @@ extern IFileSystem **pFilesystem;
 extern ConVar cl_timerwav;
 
 // dlight cvarsesesesssssssesssssssssssssssssssssss
-ConVar cl_ffdlight_max( "cl_ffdlight_max", "32", FCVAR_ARCHIVE, "Sets the maximum dynamic lights allowed.", TRUE, 0, TRUE, 512 );
 ConVar cl_ffdlight_explosion( "cl_ffdlight_explosion", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an explosion (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
 ConVar cl_ffdlight_muzzle( "cl_ffdlight_muzzle", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a muzzle flash (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
 ConVar cl_ffdlight_flamethrower( "cl_ffdlight_flamethrower", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a flamethrower (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
@@ -53,6 +52,23 @@ ConVar cl_ffdlight_rail( "cl_ffdlight_rail", "1.0", FCVAR_ARCHIVE, "Radius scale
 ConVar cl_ffdlight_conc( "cl_ffdlight_conc", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a concussion grenade (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
 ConVar cl_ffdlight_flashlight( "cl_ffdlight_flashlight", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a concussion grenade (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
 ConVar cl_ffdlight_generic( "cl_ffdlight_generic", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a generic source (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
+
+#define FF_MAXDLIGHTS 512
+
+// Wrapper CVAR for an archiveable r_maxdlights -- thanks, mirv
+void FF_MaxDLights_Callback(ConVar *var, char const *pOldString)
+{
+	// have to manually do limits because of the callback
+	if (var->GetInt() < 0)
+		var->SetValue(0);
+	if (var->GetInt() > FF_MAXDLIGHTS)
+		var->SetValue(FF_MAXDLIGHTS);
+
+	ConVar *c = cvar->FindVar("r_maxdlights");
+	if (c)
+		c->SetValue(var->GetString());
+}
+ConVar r_maxdlights_ff( "r_maxdlights_ff", "32", FCVAR_ARCHIVE, "Sets the maximum number of dynamic lights allowed.", FF_MaxDLights_Callback );
 
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
@@ -726,7 +742,7 @@ public:
 	CFFDLightOptions(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
 	{
 		m_pFFDLightMax = new CInputSlider(this, "FFDLightMax", "FFDLightMaxInput");
-		m_pFFDLightMax->SetRange(0, 512);
+		m_pFFDLightMax->SetRange(0, FF_MAXDLIGHTS);
 		m_pFFDLightMax->SetValue(32);
 
 		m_pFFDLightExplosion = new CInputSlider(this, "FFDLightExplosion", "FFDLightExplosionInput");
@@ -836,8 +852,9 @@ private:
 	//-----------------------------------------------------------------------------
 	void UpdateConVars()
 	{
+		r_maxdlights_ff.SetValue(m_pFFDLightMax->GetValue());
+
 		// divide by 100 because the sliders are 0 to 200 while the cvars are 0.0 to 2.0
-		cl_ffdlight_max.SetValue(m_pFFDLightMax->GetValue());
 		cl_ffdlight_explosion.SetValue((float)m_pFFDLightExplosion->GetValue() / 100.0f);
 		cl_ffdlight_muzzle.SetValue((float)m_pFFDLightMuzzle->GetValue() / 100.0f);
 		cl_ffdlight_flamethrower.SetValue((float)m_pFFDLightFlamethrower->GetValue() / 100.0f);
@@ -856,8 +873,9 @@ private:
 	//-----------------------------------------------------------------------------
 	void UpdateSliders()
 	{
+		m_pFFDLightMax->SetValue(r_maxdlights_ff.GetFloat(), false);
+
 		// multiply by 100 because the sliders are 0 to 200 while the cvars are 0.0 to 2.0
-		m_pFFDLightMax->SetValue(cl_ffdlight_max.GetFloat(), false);
 		m_pFFDLightExplosion->SetValue(cl_ffdlight_explosion.GetFloat() * 100.0f, false);
 		m_pFFDLightMuzzle->SetValue(cl_ffdlight_muzzle.GetFloat() * 100.0f, false);
 		m_pFFDLightFlamethrower->SetValue(cl_ffdlight_flamethrower.GetFloat() * 100.0f, false);

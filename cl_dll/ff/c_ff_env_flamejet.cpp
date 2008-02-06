@@ -329,6 +329,9 @@ void C_FFFlameJet::Update(float fTimeDelta)
 			// create the muzzle light
 			if (fDLightScale > 0.0f)
 				m_pDLight = effects->CL_AllocDlight( 0 );
+			else
+				m_pDLight = NULL;
+
 			if ( m_pDLight )
 			{
 				m_pDLight->origin = vecStart;
@@ -393,6 +396,8 @@ void C_FFFlameJet::Update(float fTimeDelta)
 					// -------------------------------------
 					if (fDLightScale > 0.0f)
 						pParticle->m_pDLight = effects->CL_AllocDlight( 0 );
+					else
+						pParticle->m_pDLight = NULL;
 
 					// don't want to start trying to access something that's not there
 					if (pParticle->m_pDLight)
