@@ -496,6 +496,8 @@ void CFFProjectileRail::OnDataChanged( DataUpdateType_t updateType )
 		// create the rail light...maybe
 		if (fDLightScale > 0.0f)
 			m_pDLight = effects->CL_AllocDlight( 0 );
+		else
+			m_pDLight = NULL;
 
 		// setup the dlight
 		if (m_pDLight)

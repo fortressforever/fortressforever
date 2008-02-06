@@ -2642,23 +2642,23 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 
 			// dlight scale
 			float fDLightScale = cl_ffdlight_muzzle.GetFloat();
-			if (fDLightScale > 0.0f)
-			{
-				// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
-				//dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
-				dlight_t *dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
 
-				if (dl) // I'm scared, daddy...of NULL pointers.
-				{
-					dl->origin = vAttachment;
-					dl->radius = random->RandomFloat( 56/*ffdev_muzzleflash_light_radius_min.GetFloat()*/, 72/*ffdev_muzzleflash_light_radius_max.GetFloat()*/ ) * fDLightScale; // sorta small radius for muzzle flash
-					dl->die = gpGlobals->curtime + 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // die = current time + life
-					dl->decay = dl->radius / 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // radius / life = good fade
-					dl->color.r = 255/*ffdev_muzzleflash_light_color_r.GetFloat()*/;
-					dl->color.g = 192/*ffdev_muzzleflash_light_color_g.GetFloat()*/;
-					dl->color.b = 64/*ffdev_muzzleflash_light_color_b.GetFloat()*/;
-					dl->color.exponent = 5/*ffdev_muzzleflash_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
-				}
+			dlight_t *dl = NULL;
+			if (fDLightScale > 0.0f)
+				// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
+				//dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+				dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
+
+			if (dl) // I'm scared, daddy...of NULL pointers.
+			{
+				dl->origin = vAttachment;
+				dl->radius = random->RandomFloat( 56/*ffdev_muzzleflash_light_radius_min.GetFloat()*/, 72/*ffdev_muzzleflash_light_radius_max.GetFloat()*/ ) * fDLightScale; // sorta small radius for muzzle flash
+				dl->die = gpGlobals->curtime + 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // die = current time + life
+				dl->decay = dl->radius / 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // radius / life = good fade
+				dl->color.r = 255/*ffdev_muzzleflash_light_color_r.GetFloat()*/;
+				dl->color.g = 192/*ffdev_muzzleflash_light_color_g.GetFloat()*/;
+				dl->color.b = 64/*ffdev_muzzleflash_light_color_b.GetFloat()*/;
+				dl->color.exponent = 5/*ffdev_muzzleflash_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
 			}
 		}
 	}

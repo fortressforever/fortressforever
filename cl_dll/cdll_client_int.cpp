@@ -1813,4 +1813,4 @@ void FF_Dynamic_Callback(ConVar *var, char const *pOldString)
 		c->SetValue(var->GetString());
 }
 
-ConVar r_dynamic_ff("r_dynamic_ff", "0", FCVAR_ARCHIVE, "", FF_Dynamic_Callback);
+ConVar r_dynamic_ff("r_dynamic_ff", "1", FCVAR_ARCHIVE, "", FF_Dynamic_Callback);
