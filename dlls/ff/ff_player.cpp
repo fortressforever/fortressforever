@@ -6943,6 +6943,10 @@ void CFFPlayer::SpyCloakFadeThink( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::SpySabotageThink()
 {
+	// We don't want dead spies sabotaging
+	if (!IsAlive() )
+		return;
+
 	if (m_flNextSpySabotageThink > gpGlobals->curtime)
 		return;
 
