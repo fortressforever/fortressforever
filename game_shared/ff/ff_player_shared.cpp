@@ -582,7 +582,7 @@ void CFFPlayer::ClassSpecificSkill()
 					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
 					if(pAC)
 					{
-						pAC->ToggleClamp();
+						pAC->ClampOn();
 					}
 				}
 			break;
@@ -676,7 +676,7 @@ void CFFPlayer::ClassSpecificSkill_Post()
 					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
 					if(pAC)
 					{
-						pAC->ToggleClamp();
+						pAC->ClampOff();
 					}
 				}
 			break;

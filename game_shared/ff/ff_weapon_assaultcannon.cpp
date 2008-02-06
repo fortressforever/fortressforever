@@ -22,8 +22,9 @@
 #define FF_AC_WINDUPTIME	0.5f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
-#define FF_AC_MOVEMENTDELAY 1.5f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
+#define FF_AC_MOVEMENTDELAY 0.1f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
 									// AfterShock: I'm also using this for the 'charge down' time now also (time before bullets stop firing, after you stop pressing fire)
+#define FF_AC_MINCLAMPTIME 0.5f		// minimum charge on the AC before you can clamp
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.10", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
@@ -217,11 +218,25 @@ void CFFWeaponAssaultCannon::Drop( const Vector& vecVelocity )
 // Purpose: Clamp the spin of the AC
 //----------------------------------------------------------------------------
 
-void CFFWeaponAssaultCannon::ToggleClamp()
+void CFFWeaponAssaultCannon::ClampOn()
 {
-//#ifdef GAME_DLL
+	if (m_flChargeTime > FF_AC_MINCLAMPTIME)
+	{
+		m_bClamped = true;
+		m_flMaxChargeTime = m_flChargeTime;
+	}
+	// play anim or stop charge bar?
+	// timer to stop people clamping/unclamping too fast?
 
-	// bool clamped = true
+//#endif
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Remove the clamp of the AC spin
+//----------------------------------------------------------------------------
+
+void CFFWeaponAssaultCannon::ClampOff()
+{
 	if (m_bClamped == true)
 	{
 		m_bClamped = false;
@@ -231,18 +246,7 @@ void CFFWeaponAssaultCannon::ToggleClamp()
 		CFFPlayer *pOwner = ToFFPlayer(GetOwner());
 		if (!(pOwner->m_nButtons & IN_ATTACK))
 			m_flTriggerReleased = gpGlobals->curtime;
-
 	}
-	else if (m_flChargeTime > 0)
-	{
-		m_bClamped = true;
-		m_flMaxChargeTime = m_flChargeTime;
-		//m_flClampPressed = gpGlobals->curtime();
-	}
-	// play anim or stop charge bar?
-	// timer to stop people clamping/unclamping too fast?
-
-//#endif
 }
 
 //----------------------------------------------------------------------------
@@ -557,7 +561,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	// if there's a charge on the bar and the duder is firing, then keep making sure the speed penalty is implemented
 	// This makes it so that if there's a charge on the bar but the player is not attacking, the player can move around 
 	// after a certain period of time has passed (whereas it may take another few seconds for the bar to fully drain)
-	if( m_flChargeTime > 0.0f && ( pOwner->m_nButtons & IN_ATTACK ))
+	if( m_flChargeTime > 0.0f && (( pOwner->m_nButtons & IN_ATTACK ) || (m_bClamped == true)))
 	{
 		// base the speed effect on how charged the ac is
 		//float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );

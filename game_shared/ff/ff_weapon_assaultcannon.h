@@ -49,7 +49,8 @@ public:
 	virtual bool Deploy();
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual void Drop( const Vector& vecVelocity );
-	virtual void ToggleClamp();
+	virtual void ClampOn();
+	virtual void ClampOff();
 	virtual void ItemPostFrame();
 	virtual void PrimaryAttack();
 	//virtual void Fire();
