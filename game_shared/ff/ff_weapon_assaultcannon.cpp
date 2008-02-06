@@ -561,7 +561,8 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	// if there's a charge on the bar and the duder is firing, then keep making sure the speed penalty is implemented
 	// This makes it so that if there's a charge on the bar but the player is not attacking, the player can move around 
 	// after a certain period of time has passed (whereas it may take another few seconds for the bar to fully drain)
-	if( m_flChargeTime > 0.0f && (( pOwner->m_nButtons & IN_ATTACK ) || (m_bClamped == true)))
+	//if( m_flChargeTime > 0.0f && (( pOwner->m_nButtons & IN_ATTACK ) || (m_bClamped == true)))
+	if( m_flChargeTime > FF_AC_MINCLAMPTIME)
 	{
 		// base the speed effect on how charged the ac is
 		//float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
@@ -574,8 +575,10 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 		if (pPlayer)
 		*/
-		pOwner->AddSpeedEffect(SE_ASSAULTCANNON, m_flChargeTime, flSpeed, SEM_BOOLEAN);
+		pOwner->AddSpeedEffect(SE_ASSAULTCANNON, FF_AC_MOVEMENTDELAY, flSpeed, SEM_BOOLEAN);
 	}
+	else
+		pOwner->RemoveSpeedEffect(SE_ASSAULTCANNON);
 #endif
 
 	m_flLastTick = gpGlobals->curtime;
