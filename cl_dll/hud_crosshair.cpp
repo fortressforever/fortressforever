@@ -22,7 +22,10 @@
 
 ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE );
 ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE );
-ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE);
+//ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE);
+ConVar cl_acchargecircle("cl_acchargecircle", "1", FCVAR_ARCHIVE, "Enable the AC's dynamic crosshair");
+
+#define AC_CROSSHAIR_CIRCLE		"glyphs/HW_circle"
 	
 using namespace vgui;
 
@@ -37,6 +40,7 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 	SetParent( pParent );
 
 	m_pCrosshair = 0;
+	m_pHWCircle = NULL;
 
 	m_clrCrosshair = Color( 0, 0, 0, 0 );
 
@@ -64,6 +68,16 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 
 
     SetSize( ScreenWidth(), ScreenHeight() );
+}
+
+void CHudCrosshair::Init()
+{
+	if ( !m_pHWCircle )
+	{
+		m_pHWCircle = new CHudTexture();
+		m_pHWCircle->textureId = vgui::surface()->CreateNewTextureID();
+		PrecacheMaterial( AC_CROSSHAIR_CIRCLE );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -211,27 +225,34 @@ void CHudCrosshair::Paint( void )
 	surface()->DrawUnicodeChar(unicode[0]);
 	// <-- Mirv
 
-	// Mulch: Draw charge bar!
-	// AfterShock: no more charge bar
-	//if( (weaponID == FF_WEAPON_ASSAULTCANNON) && (cl_acchargebar.GetBool()) )
-	if (weaponID == FF_WEAPON_ASSAULTCANNON) 
+	// Jiggles: Draws a circle over the crosshair to represent the AC's "cone of fire"
+	if (weaponID == FF_WEAPON_ASSAULTCANNON && cl_acchargecircle.GetBool()) 
 	{
 		extern float GetAssaultCannonCharge();
 		float flCharge = GetAssaultCannonCharge();
 
-		if( flCharge <= 0.0f )
-			return;
+		if ( m_pHWCircle )
+		{
+			surface()->DrawSetTextureFile( m_pHWCircle->textureId, AC_CROSSHAIR_CIRCLE, true, false );
+			surface()->DrawSetTexture( m_pHWCircle->textureId );
+			surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 255 );
+			float flRadius = (flCharge / 2) + charOffsetX * 2;
+			surface()->DrawTexturedRect( x - flRadius, y - flRadius, x + flRadius, y + flRadius );
+		}
+		// Jiggles: Old charge bar
+		//if( flCharge <= 0.0f )
+		//	return;
 
-		int iLeft = x - charOffsetX;
-		int iTop = y + charOffsetY;
-		int iRight = iLeft + (charOffsetX * 2);
-		int iBottom = iTop + 10;
+		//int iLeft = x - charOffsetX;
+		//int iTop = y + charOffsetY;
+		//int iRight = iLeft + (charOffsetX * 2);
+		//int iBottom = iTop + 10;
 
-		surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
-		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge / 100.0f)), iBottom );
+		//surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
+		//surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge / 100.0f)), iBottom );
 
-		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
-		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+		//surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
+		//surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
 	}
 	else if( weaponID == FF_WEAPON_SNIPERRIFLE )
 	{
