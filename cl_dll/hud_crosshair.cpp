@@ -24,8 +24,6 @@ ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE );
 ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE );
 //ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE);
 ConVar cl_acchargecircle("cl_acchargecircle", "1", FCVAR_ARCHIVE, "Enable the AC's dynamic crosshair");
-
-#define AC_CROSSHAIR_CIRCLE		"glyphs/HW_circle"
 	
 using namespace vgui;
 
@@ -40,7 +38,6 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 	SetParent( pParent );
 
 	m_pCrosshair = 0;
-	m_pHWCircle = NULL;
 
 	m_clrCrosshair = Color( 0, 0, 0, 0 );
 
@@ -68,16 +65,6 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 
 
     SetSize( ScreenWidth(), ScreenHeight() );
-}
-
-void CHudCrosshair::Init()
-{
-	if ( !m_pHWCircle )
-	{
-		m_pHWCircle = new CHudTexture();
-		m_pHWCircle->textureId = vgui::surface()->CreateNewTextureID();
-		PrecacheMaterial( AC_CROSSHAIR_CIRCLE );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -231,14 +218,10 @@ void CHudCrosshair::Paint( void )
 		extern float GetAssaultCannonCharge();
 		float flCharge = GetAssaultCannonCharge();
 
-		if ( m_pHWCircle )
-		{
-			surface()->DrawSetTextureFile( m_pHWCircle->textureId, AC_CROSSHAIR_CIRCLE, true, false );
-			surface()->DrawSetTexture( m_pHWCircle->textureId );
-			surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 255 );
-			float flRadius = (flCharge / 2) + charOffsetX * 2;
-			surface()->DrawTexturedRect( x - flRadius, y - flRadius, x + flRadius, y + flRadius );
-		}
+		float flRadius = (flCharge / 2) + (charOffsetX * 2);
+		surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 255 );
+		surface()->DrawOutlinedCircle( x, y, flRadius, 40 );
+
 		// Jiggles: Old charge bar
 		//if( flCharge <= 0.0f )
 		//	return;
