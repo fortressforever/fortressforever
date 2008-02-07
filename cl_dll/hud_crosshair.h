@@ -36,7 +36,6 @@ public:
 	void			DrawCrosshair( void );
   	bool			HasCrosshair( void ) { return ( m_pCrosshair != NULL ); }
 	bool			ShouldDraw();
-	void			Init();
 
 protected:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
@@ -46,7 +45,6 @@ private:
 	// Crosshair sprite and colors
 	CHudTexture		*m_pCrosshair;
 	CHudTexture		*m_pDefaultCrosshair;
-	CHudTexture		*m_pHWCircle;
 	Color			m_clrCrosshair;
 	QAngle			m_vecCrossHairOffsetAngle;
 
