@@ -34,7 +34,7 @@
 
 ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Flame bbox");
 ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "17.5", FCVAR_REPLICATED | FCVAR_CHEAT, "Force of backwards push when shooting while off ground");
-ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "100.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Force of upwards push when shooting while off ground");
+ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "110.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Force of upwards push when shooting while off ground");
 ConVar ffdev_flame_boostcap("ffdev_flame_boostcap", "850.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Speed at which the flamethrower will stop boosting you");
 
 #ifdef GAME_DLL
