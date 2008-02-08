@@ -22,8 +22,7 @@
 
 ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE );
 ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE );
-//ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE);
-ConVar cl_acchargecircle("cl_acchargecircle", "1", FCVAR_ARCHIVE, "Enable the AC's dynamic crosshair");
+ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE);
 	
 using namespace vgui;
 
@@ -212,30 +211,27 @@ void CHudCrosshair::Paint( void )
 	surface()->DrawUnicodeChar(unicode[0]);
 	// <-- Mirv
 
-	// Jiggles: Draws a circle over the crosshair to represent the AC's "cone of fire"
-	if (weaponID == FF_WEAPON_ASSAULTCANNON && cl_acchargecircle.GetBool()) 
+	// Mulch: Draw charge bar!
+	// AfterShock: no more charge bar
+	//if( (weaponID == FF_WEAPON_ASSAULTCANNON) && (cl_acchargebar.GetBool()) )
+	if (weaponID == FF_WEAPON_ASSAULTCANNON) 
 	{
 		extern float GetAssaultCannonCharge();
 		float flCharge = GetAssaultCannonCharge();
 
-		float flRadius = (flCharge / 2) + (charOffsetX * 2);
-		surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 255 );
-		surface()->DrawOutlinedCircle( x, y, flRadius, 40 );
+		if( flCharge <= 0.0f )
+			return;
 
-		// Jiggles: Old charge bar
-		//if( flCharge <= 0.0f )
-		//	return;
+		int iLeft = x - charOffsetX;
+		int iTop = y + charOffsetY;
+		int iRight = iLeft + (charOffsetX * 2);
+		int iBottom = iTop + 10;
 
-		//int iLeft = x - charOffsetX;
-		//int iTop = y + charOffsetY;
-		//int iRight = iLeft + (charOffsetX * 2);
-		//int iBottom = iTop + 10;
+		surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
+		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge / 100.0f)), iBottom );
 
-		//surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
-		//surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge / 100.0f)), iBottom );
-
-		//surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
-		//surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
+		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
 	}
 	else if( weaponID == FF_WEAPON_SNIPERRIFLE )
 	{
