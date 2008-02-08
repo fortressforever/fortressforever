@@ -11,7 +11,7 @@
 NAME=server
 
 # the location of the vcproj that builds the mod
-MOD_PROJ=../dlls/server_scratch-2003.vcproj
+MOD_PROJ=../dlls/server_scratch-2005.vcproj
 # the name of the mod configuration (typically <proj name>_<build type><build target>)
 MOD_CONFIG=server_ff_ReleaseFFWin32
 
