@@ -48,6 +48,16 @@ enum FF_AllowFlags
 	kAllowRedTeam		= 1 << 2,
 	kAllowYellowTeam	= 1 << 3,
 	kAllowGreenTeam		= 1 << 4,
+	kAllowScout			= 1 << 5,
+	kAllowSniper		= 1 << 6,
+	kAllowSoldier		= 1 << 7,
+	kAllowDemoman		= 1 << 8,
+	kAllowMedic			= 1 << 9,
+	kAllowHwguy			= 1 << 10,
+	kAllowPyro			= 1 << 11,
+	kAllowSpy			= 1 << 12,
+	kAllowEngineer		= 1 << 13,
+	kAllowCivilian		= 1 << 14,
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -135,9 +145,13 @@ public:
 
 	// returns the criteria necessary for another entity to "touch" this entity
 	int GetTouchFlags( void ) const { return m_allowTouchFlags; }
+	// returns the criteria necessary for another entity to NOT "touch" this entity
+	int GetDisallowTouchFlags( void ) const { return m_disallowTouchFlags; }
 
 	// sets criteria for another entity to touch this entity
 	void SetTouchFlags(const luabind::adl::object& table);
+	// sets criteria for another entity to NOT touch this entity
+	void SetDisallowTouchFlags(const luabind::adl::object& table);
 
 	// returns true if a specified is allowed to touch this entity
 	bool CanEntityTouch(CBaseEntity* pEntity);
@@ -194,6 +208,7 @@ protected:
 	// indicates some criteria limiting what will
 	// be allowed to "touch" this entity
 	int		m_allowTouchFlags;
+	int		m_disallowTouchFlags;
 
 	// cached information for bot use
 	int		m_BotTeamFlags;

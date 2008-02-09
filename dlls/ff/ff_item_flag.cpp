@@ -119,6 +119,7 @@ CFFInfoScript::CFFInfoScript( void )
 	m_iPosState = PS_RETURNED;
 
 	m_allowTouchFlags = 0;
+	m_disallowTouchFlags = 0;
 
 	// bot info
 	m_BotTeamFlags = 0;
@@ -331,31 +332,89 @@ bool CFFInfoScript::CanEntityTouch(CBaseEntity* pEntity)
 		if(!pEntity->IsPlayer())
 			return false;
 	}
+	if(m_disallowTouchFlags & kAllowOnlyPlayers)
+	{
+		if(pEntity->IsPlayer())
+			return false;
+	}
 
 	bool bCanTouch = false;
 
-	// check if any of the team flags have been marked
+	// first check the team touch flags
 	int teamMask = kAllowRedTeam|kAllowBlueTeam|kAllowYellowTeam|kAllowGreenTeam;
-
-	if(teamMask & m_allowTouchFlags)
+	if(teamMask & m_allowTouchFlags || teamMask & m_disallowTouchFlags)
 	{
 		int iTeam = pEntity->GetTeamNumber();
 		switch(iTeam)
 		{
 		case TEAM_BLUE:
-			bCanTouch = (m_allowTouchFlags & kAllowBlueTeam) == kAllowBlueTeam;
+			bCanTouch = (m_allowTouchFlags & kAllowBlueTeam) == kAllowBlueTeam
+				&& (m_disallowTouchFlags & kAllowBlueTeam) != kAllowBlueTeam;
 			break;
 
 		case TEAM_RED:
-			bCanTouch = (m_allowTouchFlags & kAllowRedTeam) == kAllowRedTeam;
+			bCanTouch = (m_allowTouchFlags & kAllowRedTeam) == kAllowRedTeam
+				&& (m_disallowTouchFlags & kAllowRedTeam) != kAllowRedTeam;
 			break;
 
 		case TEAM_GREEN:
-			bCanTouch = (m_allowTouchFlags & kAllowGreenTeam) == kAllowGreenTeam;
+			bCanTouch = (m_allowTouchFlags & kAllowGreenTeam) == kAllowGreenTeam
+				&& (m_disallowTouchFlags & kAllowGreenTeam) != kAllowGreenTeam;
 			break;
 
 		case TEAM_YELLOW:
-			bCanTouch = (m_allowTouchFlags & kAllowYellowTeam) == kAllowYellowTeam;
+			bCanTouch = (m_allowTouchFlags & kAllowYellowTeam) == kAllowYellowTeam
+				&& (m_disallowTouchFlags & kAllowYellowTeam) != kAllowYellowTeam;
+			break;
+		}
+	}
+
+	// now check the class touch flags
+	int classMask = kAllowScout|kAllowSniper|kAllowSoldier|kAllowDemoman|kAllowMedic|kAllowHwguy|kAllowPyro|kAllowSpy|kAllowEngineer|kAllowCivilian;
+	if(classMask & m_disallowTouchFlags && pEntity->IsPlayer() )
+	{
+		CFFPlayer *pPlayer = dynamic_cast< CFFPlayer* > ( pEntity );
+		int iClass = pPlayer->GetClassSlot();
+		switch(iClass)
+		{
+		case CLASS_SCOUT:
+			bCanTouch = (m_disallowTouchFlags & kAllowScout) != kAllowScout;
+			break;
+
+		case CLASS_SNIPER:
+			bCanTouch = (m_disallowTouchFlags & kAllowSniper) != kAllowSniper;
+			break;
+
+		case CLASS_SOLDIER:
+			bCanTouch = (m_disallowTouchFlags & kAllowSoldier) != kAllowSoldier;
+			break;
+
+		case CLASS_DEMOMAN:
+			bCanTouch = (m_disallowTouchFlags & kAllowDemoman) != kAllowDemoman;
+			break;
+
+		case CLASS_MEDIC:
+			bCanTouch = (m_disallowTouchFlags & kAllowMedic) != kAllowMedic;
+			break;
+
+		case CLASS_HWGUY:
+			bCanTouch = (m_disallowTouchFlags & kAllowHwguy) != kAllowHwguy;
+			break;
+
+		case CLASS_PYRO:
+			bCanTouch = (m_disallowTouchFlags & kAllowPyro) != kAllowPyro;
+			break;
+
+		case CLASS_SPY:
+			bCanTouch = (m_disallowTouchFlags & kAllowSpy) != kAllowSpy;
+			break;
+
+		case CLASS_ENGINEER:
+			bCanTouch = (m_disallowTouchFlags & kAllowEngineer) != kAllowEngineer;
+			break;
+
+		case CLASS_CIVILIAN:
+			bCanTouch = (m_disallowTouchFlags & kAllowCivilian) != kAllowCivilian;
 			break;
 		}
 	}
@@ -380,7 +439,9 @@ void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Set the allow touch flags.
+// All teams are disallowed by default, so they are allowed like this.
+// All classes are allowed by default, so they aren't allowed like this.
 //-----------------------------------------------------------------------------
 void CFFInfoScript::SetTouchFlags(const luabind::adl::object& table)
 {
@@ -400,6 +461,10 @@ void CFFInfoScript::SetTouchFlags(const luabind::adl::object& table)
 					int flag = luabind::object_cast<int>(val);
 					switch(flag)
 					{
+					case kAllowOnlyPlayers:
+						m_allowTouchFlags |= kAllowOnlyPlayers;
+						break;
+
 					case kAllowBlueTeam:
 						m_allowTouchFlags |= kAllowBlueTeam;
 						break;
@@ -415,10 +480,100 @@ void CFFInfoScript::SetTouchFlags(const luabind::adl::object& table)
 					case kAllowGreenTeam:
 						m_allowTouchFlags |= kAllowGreenTeam;
 						break;
+					}
+				}
+				catch(...)
+				{
+					// throw out exception
+					// an invalid cast is not exceptional!!
+				}
+			}
+		}
+	}
+}
 
+//-----------------------------------------------------------------------------
+// Purpose: Set the disallow touch flags, so scripts can be simpler, e.g.
+// ff_waterpolo.lua disallows goalies from using ALL packs with 1 line.
+//-----------------------------------------------------------------------------
+void CFFInfoScript::SetDisallowTouchFlags(const luabind::adl::object& table)
+{
+	m_disallowTouchFlags = 0;
+
+	if(table.is_valid() && (luabind::type(table) == LUA_TTABLE))
+	{
+		// Iterate through the table
+		for(luabind::iterator ib(table), ie; ib != ie; ++ib)
+		{
+			luabind::adl::object val = *ib;
+
+			if(luabind::type(val) == LUA_TNUMBER)
+			{
+				try
+				{
+					int flag = luabind::object_cast<int>(val);
+					switch(flag)
+					{
 					case kAllowOnlyPlayers:
-						m_allowTouchFlags |= kAllowOnlyPlayers;
+						m_disallowTouchFlags |= kAllowOnlyPlayers;
 						break;
+
+					case kAllowBlueTeam:
+						m_disallowTouchFlags |= kAllowBlueTeam;
+						break;
+
+					case kAllowRedTeam:
+						m_disallowTouchFlags |= kAllowRedTeam;
+						break;
+
+					case kAllowYellowTeam:
+						m_disallowTouchFlags |= kAllowYellowTeam;
+						break;
+
+					case kAllowGreenTeam:
+						m_disallowTouchFlags |= kAllowGreenTeam;
+						break;
+
+					case kAllowScout:
+						m_disallowTouchFlags |= kAllowScout;
+						break;
+
+					case kAllowSniper:
+						m_disallowTouchFlags |= kAllowSniper;
+						break;
+
+					case kAllowSoldier:
+						m_disallowTouchFlags |= kAllowSoldier;
+						break;
+
+					case kAllowDemoman:
+						m_disallowTouchFlags |= kAllowDemoman;
+						break;
+
+					case kAllowMedic:
+						m_disallowTouchFlags |= kAllowMedic;
+						break;
+
+					case kAllowHwguy:
+						m_disallowTouchFlags |= kAllowHwguy;
+						break;
+
+					case kAllowPyro:
+						m_disallowTouchFlags |= kAllowPyro;
+						break;
+
+					case kAllowSpy:
+						m_disallowTouchFlags |= kAllowSpy;
+						break;
+
+					case kAllowEngineer:
+						m_disallowTouchFlags |= kAllowEngineer;
+						break;
+
+					case kAllowCivilian:
+						m_disallowTouchFlags |= kAllowCivilian;
+						break;
+
 					}
 				}
 				catch(...)
@@ -949,14 +1104,15 @@ void CFFInfoScript::SetBotGoalInfo(int _type)
 {
 	m_BotGoalType = _type;
 	m_BotTeamFlags = 0;
-	if(m_allowTouchFlags & kAllowBlueTeam)
+	if(m_allowTouchFlags & kAllowBlueTeam && !(m_disallowTouchFlags & kAllowBlueTeam))
 		m_BotTeamFlags |= (1<<Omnibot::TF_TEAM_BLUE);
-	if(m_allowTouchFlags & kAllowRedTeam)
+	if(m_allowTouchFlags & kAllowRedTeam && !(m_disallowTouchFlags & kAllowRedTeam))
 		m_BotTeamFlags |= (1<<Omnibot::TF_TEAM_RED);
-	if(m_allowTouchFlags & kAllowYellowTeam)
+	if(m_allowTouchFlags & kAllowYellowTeam && !(m_disallowTouchFlags & kAllowYellowTeam))
 		m_BotTeamFlags |= (1<<Omnibot::TF_TEAM_YELLOW);
-	if(m_allowTouchFlags & kAllowGreenTeam)
+	if(m_allowTouchFlags & kAllowGreenTeam && !(m_disallowTouchFlags & kAllowGreenTeam))
 		m_BotTeamFlags |= (1<<Omnibot::TF_TEAM_GREEN);
+	// FF TODO: Sorry DrEvil, I'm too tired right now to add the class touch flags as well. - Jon
 	Omnibot::Notify_GoalInfo(this, m_BotGoalType, m_BotTeamFlags);
 }
 
