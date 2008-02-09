@@ -112,6 +112,7 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("SetStartOrigin",		&CFFInfoScript::LUA_SetStartOrigin)
 			.def("SetStartAngles",		&CFFInfoScript::LUA_SetStartAngles)
 			.def("SetTouchFlags",		&CFFInfoScript::SetTouchFlags)
+			.def("SetDisallowTouchFlags",&CFFInfoScript::SetDisallowTouchFlags)
 			.def("GetAngularVelocity",	&CFFInfoScript::GetLocalAngularVelocity)
 			.def("SetAngularVelocity",	&CFFInfoScript::SetLocalAngularVelocity),
 

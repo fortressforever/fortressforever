@@ -197,7 +197,17 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kBlue",			kAllowBlueTeam),
 				value("kRed",			kAllowRedTeam),
 				value("kYellow",		kAllowYellowTeam),
-				value("kGreen",			kAllowGreenTeam)
+				value("kGreen",			kAllowGreenTeam),
+				value("kScout",			kAllowScout),
+				value("kSniper",		kAllowSniper),
+				value("kSoldier",		kAllowSoldier),
+				value("kDemoman",		kAllowDemoman),
+				value("kMedic",			kAllowMedic),
+				value("kHwguy",			kAllowHwguy),
+				value("kPyro",			kAllowPyro),
+				value("kSpy",			kAllowSpy),
+				value("kEngineer",		kAllowEngineer),
+				value("kCivilian",		kAllowCivilian)
 			],
 		class_<CFFEntity_ClipFlags>("ClipFlags")
 			.enum_("ClipFlags")
