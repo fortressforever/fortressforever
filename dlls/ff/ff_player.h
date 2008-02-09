@@ -490,6 +490,13 @@ public:
 	void LuaAddEffect( int iEffect, float flEffectDuration = 0.0f, float flIconDuration = 0.0f, float flSpeed = 0.0f );
 	bool LuaIsEffectActive( int iEffect );
 	void LuaRemoveEffect( int iEffect );
+	void LuaFreezePlayer(bool _freeze) 
+	{
+		if(_freeze)
+			AddFlag( FL_FROZEN ); 
+		else
+			RemoveFlag( FL_FROZEN );
+	}
 
 	void ReloadClips( void );
  
