@@ -500,7 +500,7 @@ void CFFGameMovement::CheckVelocity( void )
 	if( !pPlayer->IsCloaked() )
 		return;
 
-	float flMaxCloakSpeed = ffdev_spy_maxcloakspeed;
+	float flMaxCloakSpeed = ffdev_spy_maxcloakspeed.GetFloat();
 
 	// Going over speed limit, need to clamp so we don't uncloak
 	if( mv->m_vecVelocity.LengthSqr() > ( flMaxCloakSpeed * flMaxCloakSpeed ) )
