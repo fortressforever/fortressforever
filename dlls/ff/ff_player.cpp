@@ -692,7 +692,7 @@ void CFFPlayer::PreThink(void)
 		  ( ( vecCloakVelocity.z * FFDEV_SPY_CLOAKZVEL ) * ( vecCloakVelocity.z * FFDEV_SPY_CLOAKZVEL ) ) );
 
 		// If going faster than spies walk speed, reset
-		if( IsCloaked() && ( flSpeed > ffdev_spy_maxcloakspeed.GetFloat() ) )
+		if( IsCloaked() && ( flSpeed > 220 /* ffdev_spy_maxcloakspeed */ ) )
 		{
 			// If it was a regular cloak, verify we haven't JUST cloaked
 			// and are still within the ffdev_spy_speedenforcewait period
