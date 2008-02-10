@@ -25,7 +25,7 @@
 //#define FF_BETA_TEST_COMPILE
 #define FF_BASTARD_HACKERS true
 
-extern ConVar ffdev_spy_maxcloakspeed;
+//extern ConVar ffdev_spy_maxcloakspeed;
 
 enum FFPlayerGrenadeState
 {

@@ -76,7 +76,7 @@ ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_CHEAT );
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
 ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "15.0", FCVAR_REPLICATED | FCVAR_CHEAT, "SG bullet push force");
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
-ConVar ffdev_sg_groundpush_multiplier("ffdev_sg_groundpush_multiplier", "4.0", FCVAR_REPLICATED, "SG ground bullet push multiplier");
+ConVar ffdev_sg_groundpush_multiplier("ffdev_sg_groundpush_multiplier", "4.0", FCVAR_REPLICATED | FCVAR_CHEAT, "SG ground bullet push multiplier");
 ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED | FCVAR_CHEAT, "SG bullet damage");
 ConVar ffdev_sg_rof_lvl1("ffdev_sg_rof_lvl1", "0.200", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 1 SG rate of fire");
 ConVar ffdev_sg_rof_lvl2("ffdev_sg_rof_lvl2", "0.100", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 2 SG rate of fire");

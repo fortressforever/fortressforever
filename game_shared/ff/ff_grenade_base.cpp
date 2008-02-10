@@ -62,12 +62,19 @@ LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 //========================================================================
 // Developer ConVars
 //========================================================================
-ConVar gren_grav("ffdev_gren_grav", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar gren_fric("ffdev_gren_fric", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
-ConVar gren_elas("ffdev_gren_elas", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT);
-ConVar gren_radius("ffdev_gren_radius", "180.0f", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of grenade explosions");
-ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | FCVAR_CHEAT);
+//ConVar gren_grav("ffdev_gren_grav", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT );
+//ConVar gren_fric("ffdev_gren_fric", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
+//ConVar gren_elas("ffdev_gren_elas", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT);
+//ConVar gren_radius("ffdev_gren_radius", "180.0f", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of grenade explosions");
+//ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | FCVAR_CHEAT);
 //ConVar gren_water_vel_dec("ffdev_gren_water_vel_dec", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define gren_grav 0.8
+#define gren_fric 0.3
+#define gren_elas 0.7
+#define gren_radius 180.f
+#define gren_water_sink_rate 64.0
+#define gren_water_vel_dec 0.5
+
 #define GREN_WATER_VEL_DEC 0.5f
 //ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_REPLICATED);
 #define GREN_WATER_REDUCE_THINK 0.2f
@@ -489,16 +496,22 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 	void DrawSpriteRotated( const Vector &vecOrigin, float flWidth, float flHeight, color32 color, float rotation );
 
-	ConVar target_clamp_min("ffdev_target_clamp_min", "5.0");
-	ConVar target_clamp_max("ffdev_target_clamp_max", "60.0"); // 30
-	ConVar target_size_base("ffdev_target_size_base", "1.0");	// 15
-	ConVar target_size_multiplier("ffdev_target_size_multiplier", "6.0"); // 15
-	ConVar target_time_remaining("ffdev_target_time_remaining", "3.0");
-
-	ConVar target_speed_max("ffdev_target_speed_min", "100");
-	ConVar target_speed_min("ffdev_target_speed_min", "20");
-
-	ConVar target_rotation("ffdev_target_rotation", "-118.2"); // -100
+	//ConVar target_clamp_min("ffdev_target_clamp_min", "5.0");
+	//ConVar target_clamp_max("ffdev_target_clamp_max", "60.0"); // 30
+	//ConVar target_size_base("ffdev_target_size_base", "1.0");	// 15
+	//ConVar target_size_multiplier("ffdev_target_size_multiplier", "6.0"); // 15
+	//ConVar target_time_remaining("ffdev_target_time_remaining", "3.0");
+	//ConVar target_speed_max("ffdev_target_speed_min", "100");
+	//ConVar target_speed_min("ffdev_target_speed_min", "20");
+	//ConVar target_rotation("ffdev_target_rotation", "-118.2"); // -100
+#define target_clamp_min 5.0
+#define target_clamp_max 60.0
+#define target_size_base 1.0
+#define target_size_multiplier 6.0 
+#define target_time_remaining 3.0
+#define target_speed_max 100.0
+#define target_speed_min 20.0
+#define target_rotation -118.2
 
 	ConVar grenadetargets("cl_grenadetargets", "1", FCVAR_ARCHIVE);
 
@@ -514,8 +527,8 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 		float flSpeed = GetAbsVelocity().Length();
 		
-		float speed_max = target_speed_max.GetFloat();
-		float speed_min = target_speed_min.GetFloat();
+		float speed_max = target_speed_max;
+		float speed_min = target_speed_min;
 
 		// Safety check...
 		if (speed_max == speed_min)
@@ -552,13 +565,13 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 			col.a *= 1.0f - flScale;
 		}
 
-		float flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
+		float flRemaining = target_time_remaining - (gpGlobals->curtime - m_flSpawnTime);
 
 		if (flRemaining < -0.1f)
 			return ret;
 
-		float flSize = m_flModelSize * target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
-		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());
+		float flSize = m_flModelSize * target_size_base + target_size_multiplier * flRemaining;
+		flSize = clamp(flSize, target_clamp_min, target_clamp_max);
 
 		// The blur graphic now has everything all in one
 		// TODO: Stop doing this every frame.
@@ -566,7 +579,7 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 		IMaterial *pMaterialBlur = materials->FindMaterial("sprites/ff_target_blur", TEXTURE_GROUP_CLIENT_EFFECTS);
 
 //		float flRotation = gpGlobals->curtime * target_rotation.GetFloat() - anglemod(m_flSpawnTime);
-		float flRotation = anglemod(gpGlobals->curtime  - m_flSpawnTime) * target_rotation.GetFloat();
+		float flRotation = anglemod(gpGlobals->curtime  - m_flSpawnTime) * target_rotation;
 
 		/*if (pMaterialBlur)
 		{
