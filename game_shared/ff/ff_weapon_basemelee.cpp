@@ -124,7 +124,7 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 			VectorNormalize(hitDirection);
 
 			CFFWeaponInfo wpndata = GetFFWpnData();
-			CTakeDamageInfo info(GetOwner(), GetOwner(), wpndata.m_iDamage, DMG_CLUB);
+			CTakeDamageInfo info(this, GetOwner(), wpndata.m_iDamage, DMG_CLUB);
 			info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 
 			if (!pHitEntity->IsPlayer())
@@ -294,7 +294,7 @@ void CFFWeaponMeleeBase::Swing()
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
 	// Like bullets, melee traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
+	CTakeDamageInfo triggerInfo(this, GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
 
 #ifdef GAME_DLL
 	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin);

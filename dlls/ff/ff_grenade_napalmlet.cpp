@@ -106,7 +106,7 @@ void CFFGrenadeNapalmlet::ResolveFlyCollisionCustom( trace_t &trace, Vector &vec
 
 	if (breakthrough)
 	{
-		CTakeDamageInfo info( this, this, 10, DMG_CLUB );
+		CTakeDamageInfo info( this, GetOwnerEntity(), 10, DMG_CLUB );
 		trace.m_pEnt->DispatchTraceAttack( info, GetAbsVelocity(), &trace );
 
 		ApplyMultiDamage();

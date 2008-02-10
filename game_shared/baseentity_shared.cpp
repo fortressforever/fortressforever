@@ -1551,7 +1551,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 		// Now hit all triggers along the ray that respond to shots...
 		// Clip the ray to the first collided solid returned from traceline
-		CTakeDamageInfo triggerInfo( pAttacker, pAttacker, /*info.m_iDamage*/flDmg, nDamageType ); // |-- Mirv: Split damage into shots
+		CTakeDamageInfo triggerInfo( this, pAttacker, /*info.m_iDamage*/flDmg, nDamageType ); // |-- Mirv: Split damage into shots
 		CalculateBulletDamageForce( &triggerInfo, info.m_iAmmoType, vecFinalDir, tr.endpos );
 		triggerInfo.ScaleDamageForce( info.m_flDamageForceScale );
 		triggerInfo.SetAmmoType( info.m_iAmmoType );

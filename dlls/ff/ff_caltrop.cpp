@@ -96,7 +96,7 @@ void CFFCaltropGib::ResolveFlyCollisionCustom( trace_t& trace, Vector& vecVeloci
 
 	if (breakthrough)
 	{
-		CTakeDamageInfo info( this, this, 15, DMG_CLUB );
+		CTakeDamageInfo info( this, GetOwnerEntity(), 15, DMG_CLUB );
 		trace.m_pEnt->DispatchTraceAttack( info, GetAbsVelocity(), &trace );
 
 		ApplyMultiDamage();
@@ -312,7 +312,7 @@ void CFFCaltrop::ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity 
 
 	if (breakthrough)
 	{
-		CTakeDamageInfo info( this, this, 10, DMG_CLUB );
+		CTakeDamageInfo info( this, GetOwnerEntity(), 10, DMG_CLUB );
 		trace.m_pEnt->DispatchTraceAttack( info, GetAbsVelocity(), &trace );
 
 		ApplyMultiDamage();

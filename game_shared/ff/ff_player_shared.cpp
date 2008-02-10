@@ -962,7 +962,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 		// Now hit all triggers along the ray that respond to shots...
 		// Clip the ray to the first collided solid returned from traceline
-		CTakeDamageInfo triggerInfo(pAttacker, pAttacker, /*info.m_iDamage */flDmg, nDamageType); // |-- Mirv: Split damage into shots
+		CTakeDamageInfo triggerInfo(ToFFPlayer(pAttacker)->GetActiveFFWeapon(), pAttacker, /*info.m_iDamage */flDmg, nDamageType); // |-- Mirv: Split damage into shots
 		CalculateBulletDamageForce(&triggerInfo, info.m_iAmmoType, vecDir, tr.endpos);
 		triggerInfo.ScaleDamageForce(info.m_flDamageForceScale);
 		triggerInfo.SetAmmoType(info.m_iAmmoType);
@@ -1038,7 +1038,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 			if (!bHitWater || ((info.m_nFlags & FIRE_BULLETS_DONT_HIT_UNDERWATER) == 0))
 			{
 				// Damage specified by function parameter
-				CTakeDamageInfo dmgInfo(this, pAttacker, flActualDamage, nActualDamageType);
+				CTakeDamageInfo dmgInfo(ToFFPlayer(pAttacker)->GetActiveFFWeapon(), pAttacker, flActualDamage, nActualDamageType);
 				CalculateBulletDamageForce(&dmgInfo, info.m_iAmmoType, vecDir, tr.endpos);
 				dmgInfo.SetAmmoType(info.m_iAmmoType);
 				dmgInfo.ScaleDamageForce(info.m_flDamageForceScale);
