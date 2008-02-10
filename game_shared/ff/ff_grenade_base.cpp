@@ -245,7 +245,7 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 		if (breakthrough)
 		{
-			CTakeDamageInfo info(this, this, 10, DMG_CLUB);
+			CTakeDamageInfo info(this, GetThrower(), 10, DMG_CLUB);
 			trace.m_pEnt->DispatchTraceAttack(info, GetAbsVelocity(), &trace);
 
 			ApplyMultiDamage();
