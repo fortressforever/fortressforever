@@ -31,13 +31,13 @@
 #define CONC_GLOW_A 0.8f
 #define CONC_GLOW_SIZE 1.0f
 
-/* AfterShock: cvars to #defines for the win!
-	ConVar conc_glow_r("ffdev_conc_glow_r", "255", FCVAR_CHEAT, "Conc glow red(0-255) ");
-	ConVar conc_glow_g("ffdev_conc_glow_g", "255", FCVAR_CHEAT, "Conc glow green(0-255) ");
-	ConVar conc_glow_b("ffdev_conc_glow_b", "200", FCVAR_CHEAT, "Conc glow blue(0-255) ");
-	ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", FCVAR_CHEAT, "Conc glow alpha(0-1) ");
-	ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", FCVAR_CHEAT, "Conc glow size(0.0-10.0");
-	*/
+// AfterShock: cvars to #defines for the win!
+//	ConVar conc_glow_r("ffdev_conc_glow_r", "255", FCVAR_CHEAT, "Conc glow red(0-255) ");
+//	ConVar conc_glow_g("ffdev_conc_glow_g", "255", FCVAR_CHEAT, "Conc glow green(0-255) ");
+//	ConVar conc_glow_b("ffdev_conc_glow_b", "200", FCVAR_CHEAT, "Conc glow blue(0-255) ");
+//	ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", FCVAR_CHEAT, "Conc glow alpha(0-1) ");
+//	ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", FCVAR_CHEAT, "Conc glow size(0.0-10.0");
+
 #endif
 
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag
@@ -47,14 +47,14 @@
 #define FFDEV_CONC_VERTICAL_POWER 4.10f
 #define FFDEV_CONC_NEWBCONC_UPPUSH 90
 
-ConVar ffdev_mancannon_conc_speed( "ffdev_mancannon_conc_speed", "1700.0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Max conc speed a player can attain after just using a jump pad." );
-#define MAX_JUMPPAD_TO_CONC_SPEED ffdev_mancannon_conc_speed.GetFloat()
+//ConVar ffdev_mancannon_conc_speed( "ffdev_mancannon_conc_speed", "1700.0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Max conc speed a player can attain after just using a jump pad." );
+#define MAX_JUMPPAD_TO_CONC_SPEED 1700.0
 
-/* AfterShock: cvars to #defines for the win!
-	static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_CHEAT, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
-	static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_CHEAT, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
-	static ConVar ffdev_conc_newbconc_uppush( "ffdev_conc_newbconc_uppush", "90", FCVAR_CHEAT, "Vertical movement boost value for newb-didnt-jump hh concs" );
-*/
+// AfterShock: cvars to #defines for the win!
+//	static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_CHEAT, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
+//	static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_CHEAT, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
+//	static ConVar ffdev_conc_newbconc_uppush( "ffdev_conc_newbconc_uppush", "90", FCVAR_CHEAT, "Vertical movement boost value for newb-didnt-jump hh concs" );
+
 #endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");

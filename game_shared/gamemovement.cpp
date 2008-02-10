@@ -994,7 +994,7 @@ void CGameMovement::WaterMove( void )
 	// --> Jon: cap swimming speed if cloaked
 	float flMaxSpeed = mv->m_flMaxSpeed;
 	if (ToFFPlayer(player)->IsCloaked())
-		flMaxSpeed = ffdev_spy_maxcloakspeed.GetFloat();
+		flMaxSpeed = ffdev_spy_maxcloakspeed;
 
 	// Cap speed.
 	if (wishspeed > flMaxSpeed)
