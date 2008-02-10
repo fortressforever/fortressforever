@@ -155,6 +155,7 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 
 	m_bClamped = false;
 	m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
+	m_flTriggerReleased = 0;
 
 	//if (!m_fFireState) 
 	//	return BaseClass::Holster(pSwitchingTo);
@@ -205,6 +206,7 @@ void CFFWeaponAssaultCannon::Drop( const Vector& vecVelocity )
 	}
 	m_bClamped = false;
 	m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
+	m_flTriggerReleased = 0;
 
 #ifdef CLIENT_DLL
 	StopBarrelRotationSound();
@@ -261,6 +263,7 @@ bool CFFWeaponAssaultCannon::Deploy()
 	m_bFiring = false;
 	m_bClamped = false;
 	m_flMaxChargeTime = FF_AC_MAXCHARGETIME;
+	m_flTriggerReleased = 0;
 
 	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
 	if (pOwner)
