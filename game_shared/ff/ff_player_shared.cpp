@@ -577,6 +577,8 @@ void CFFPlayer::ClassSpecificSkill()
 #endif
 		case CLASS_HWGUY:
 #ifdef GAME_DLL
+			if (pWeapon)
+			{
 				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
 				{
 					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
@@ -585,6 +587,7 @@ void CFFPlayer::ClassSpecificSkill()
 						pAC->ClampOn();
 					}
 				}
+			}		
 			break;
 #endif
 		/*
@@ -670,13 +673,15 @@ void CFFPlayer::ClassSpecificSkill_Post()
 #endif
 #ifdef GAME_DLL
 		case CLASS_HWGUY:
-	
-				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
+				if (pWeapon)
 				{
-					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
-					if(pAC)
+					if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
 					{
-						pAC->ClampOff();
+						CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
+						if(pAC)
+						{
+							pAC->ClampOff();
+						}
 					}
 				}
 			break;
