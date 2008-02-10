@@ -29,10 +29,10 @@
 // Development convers
 //========================================================================
 #ifdef GAME_DLL
-	extern ConVar gren_radius;
-	extern ConVar gren_grav;
-	extern ConVar gren_fric;
-	extern ConVar gren_elas;
+	//extern ConVar gren_radius;
+	//extern ConVar gren_grav;
+	//extern ConVar gren_fric;
+	//extern ConVar gren_elas;
 #endif
 
 //=============================================================================
@@ -45,13 +45,14 @@ public:
 	DECLARE_NETWORKCLASS(); 
 
 #ifdef GAME_DLL
-	virtual float GetGrenadeGravity()		{ return gren_grav.GetFloat(); }
-	virtual float GetGrenadeFriction()		{ return gren_fric.GetFloat(); }
-	virtual float GetGrenadeElasticity()	{ return gren_elas.GetFloat(); }
+	/*
+	virtual float GetGrenadeGravity()		{ return gren_grav; }
+	virtual float GetGrenadeFriction()		{ return gren_fric; }
+	virtual float GetGrenadeElasticity()	{ return gren_elas; }
 	virtual float GetGrenadeDamage()		{ return 180.0f; }
 	virtual float GetGrenadeRadius()		{ return GetGrenadeDamage() * 1.5f; }
 	virtual float GetShakeAmplitude()		{ return 2.5f; }
-
+*/
 	bool m_fIsHandheld;
 #endif
 
