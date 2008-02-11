@@ -383,7 +383,7 @@ void CFFBuildableObject::GoLive( void )
 		if( Classify() == CLASS_DETPACK )
 			pPhysics->SetMass( 500.0f );
 		else if( Classify() == CLASS_MANCANNON)
-			pPhysics->SetMass( 500.0f );
+			pPhysics->SetMass( 5000.0f );
 	}
 	//*/
 }
