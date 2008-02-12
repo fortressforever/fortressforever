@@ -22,9 +22,9 @@
 #define FF_AC_WINDUPTIME	0.5f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
-#define FF_AC_MOVEMENTDELAY 0.1f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
+#define FF_AC_MOVEMENTDELAY 0.4f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
 									// AfterShock: I'm also using this for the 'charge down' time now also (time before bullets stop firing, after you stop pressing fire)
-#define FF_AC_MINCLAMPTIME 0.5f		// minimum charge on the AC before you can clamp
+#define FF_AC_MINCLAMPTIME 0.1f		// minimum charge on the AC before you can clamp
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.05", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
@@ -226,6 +226,7 @@ void CFFWeaponAssaultCannon::ClampOn()
 	{
 		m_bClamped = true;
 		m_flMaxChargeTime = m_flChargeTime;
+		DevMsg("Clamped: charge is %f",m_flChargeTime);
 	}
 	// play anim or stop charge bar?
 	// timer to stop people clamping/unclamping too fast?
@@ -387,7 +388,10 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 		// and keep the m_flChargeTime at 0 to avoid the move speed penalty.
 		m_flChargeTime = gpGlobals->curtime - m_flTriggerPressed + 0.0001f;
 		if (m_flChargeTime >= m_flMaxChargeTime)
+		{
+			DevMsg("Max charge");
 			m_flChargeTime = m_flMaxChargeTime;
+		}
 	}
 	// Otherwise the charge time is the amount it was held minus the amount of time
 	// that has elapsed since it was released.
@@ -451,7 +455,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	float flTimeSinceRelease = gpGlobals->curtime - m_flTriggerReleased;
 
 	// Player is holding down fire. Don't allow it if we're still recovering from an overheat though
-	if ((flTimeSinceRelease <= m_flChargeTime || pOwner->m_nButtons & IN_ATTACK) && m_flNextSecondaryAttack <= gpGlobals->curtime)
+	if ((flTimeSinceRelease <= FF_AC_MOVEMENTDELAY || pOwner->m_nButtons & IN_ATTACK) && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
 
 		/* NO MORE OVERHEAT - AfterShock
@@ -564,8 +568,8 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	// if there's a charge on the bar and the duder is firing, then keep making sure the speed penalty is implemented
 	// This makes it so that if there's a charge on the bar but the player is not attacking, the player can move around 
 	// after a certain period of time has passed (whereas it may take another few seconds for the bar to fully drain)
-	//if( m_flChargeTime > 0.0f && (( pOwner->m_nButtons & IN_ATTACK ) || (m_bClamped == true)))
-	if( m_flChargeTime > FF_AC_MINCLAMPTIME)
+	if( m_flChargeTime > 0.0f && (( pOwner->m_nButtons & IN_ATTACK ) || (m_bClamped == true)))
+	//if( m_flChargeTime > FF_AC_MINCLAMPTIME)
 	{
 		// base the speed effect on how charged the ac is
 		//float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
@@ -580,8 +584,8 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 		*/
 		pOwner->AddSpeedEffect(SE_ASSAULTCANNON, FF_AC_MOVEMENTDELAY, flSpeed, SEM_BOOLEAN);
 	}
-	else
-		pOwner->RemoveSpeedEffect(SE_ASSAULTCANNON);
+	//else
+	//	pOwner->RemoveSpeedEffect(SE_ASSAULTCANNON);
 #endif
 
 	m_flLastTick = gpGlobals->curtime;
@@ -1013,9 +1017,9 @@ float GetAssaultCannonCharge()
 	CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *) pWeapon;
 
 	// gotta take into account the spinup before we start displaying heat.
-	float fCharge = ( pAC->m_flChargeTime - FF_AC_WINDUPTIME ) / ( FF_AC_MAXCHARGETIME - FF_AC_WINDUPTIME );
+	float fCharge = ( pAC->m_flChargeTime ) / ( FF_AC_MAXCHARGETIME );
 	
-	fCharge = clamp( fCharge, 0.0f, 1.0f );
+	fCharge = clamp( fCharge, 0.01f, 1.0f );
 
 	return 100 * fCharge;
 }
