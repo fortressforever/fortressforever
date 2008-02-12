@@ -650,13 +650,14 @@ void CHud::VidInit( void )
 	}
 
 	// If they are running dx8 and are using reduced quality, then set the material stuff here
+/* AfterShock: commented this because it's causing crashes on create server <dx9, guess this stuff needs to be set in configs rather than ingame
 	if (cl_reduced_quality_dx8.GetBool() && g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
 	{
 		engine->ClientCmd("mat_bumpmap 0");
 		engine->ClientCmd("mat_fastnobump 1");
 		engine->ClientCmd("mat_specular 0");
 	}
-
+*/
 	// Clear any explosion reductions
 	extern void ClearExplosions();
 	ClearExplosions();
