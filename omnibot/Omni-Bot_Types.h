@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-02-02 09:34:06 -0800 (Sat, 02 Feb 2008) $
-// $LastChangedRevision: 2415 $
+// $LastChangedDate: 2008-02-11 20:03:50 -0800 (Mon, 11 Feb 2008) $
+// $LastChangedRevision: 2438 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,9 +94,9 @@ private:
 //		A numeric value for an entities game id. Usually an array index of some sort.
 typedef int GameId;
 
-// typedef: NavigationFlags
+// typedef: NavFlags
 //		This is the type waypoint flags, and should be a 64 bit type
-typedef obuint64 NavigationFlags;
+typedef obuint64 NavFlags;
 
 // enum: obBool
 //		Since theres no promise that we're running in C or C++, and therefor no
