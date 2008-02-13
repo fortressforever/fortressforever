@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-01-04 23:04:02 -0800 (Fri, 04 Jan 2008) $
-// $LastChangedRevision: 2272 $
+// $LastChangedDate: 2008-02-11 20:03:50 -0800 (Mon, 11 Feb 2008) $
+// $LastChangedRevision: 2438 $
 //
 // Title: TF Config
 //
@@ -154,6 +154,7 @@ typedef enum eTF_EntityClass
 	TF_CLASSEX_GLGRENADE,
 	TF_CLASSEX_ROCKET,
 	TF_CLASSEX_TURRET,
+	TF_CLASSEX_HUNTEDESCAPE,
 
 	// THIS MUST STAY LAST
 	TF_NUM_CLASSES
@@ -566,6 +567,7 @@ typedef enum eTF_GoalType
 	TF_GOAL_DETPACKPOINT,
 	TF_GOAL_RJ,
 	TF_GOAL_CJ,
+	TF_GOAL_HUNTEDESCAPE,
 } TF_GoalType;
 
 // typedef: TF_Goals

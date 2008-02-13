@@ -1130,6 +1130,8 @@ namespace Omnibot
 								return ENT_CLASS_GENERIC_FLAG;
 							case Omnibot::kFlagCap:
 								return ENT_CLASS_GENERIC_FLAGCAPPOINT;
+							case Omnibot::kHuntedEscape:
+								return TF_CLASSEX_HUNTEDESCAPE;								
 							}
 						}
 						break;
@@ -1153,6 +1155,8 @@ namespace Omnibot
 								return ENT_CLASS_GENERIC_FLAG;
 							case Omnibot::kFlagCap:
 								return ENT_CLASS_GENERIC_FLAGCAPPOINT;
+							case Omnibot::kHuntedEscape:
+								return TF_CLASSEX_HUNTEDESCAPE;
 							}
 						}
 						break;
@@ -1228,6 +1232,8 @@ namespace Omnibot
 							case Omnibot::kFlagCap:
 								_category.SetFlag(ENT_CAT_TRIGGER);
 								break;
+							case Omnibot::kHuntedEscape:
+								_category.SetFlag(ENT_CAT_TRIGGER);
 							}
 						}
 						break;
@@ -1248,6 +1254,9 @@ namespace Omnibot
 								_category.SetFlag(ENT_CAT_STATIC);
 								break;
 							case Omnibot::kFlagCap:
+								_category.SetFlag(ENT_CAT_TRIGGER);
+								break;
+							case Omnibot::kHuntedEscape:
 								_category.SetFlag(ENT_CAT_TRIGGER);
 								break;
 							}
@@ -3781,6 +3790,11 @@ namespace Omnibot
 			case Omnibot::kTrainerSpawn:
 				{
 					gi.m_GoalType = GOAL_TRAININGSPAWN;
+					break;
+				}
+			case Omnibot::kHuntedEscape:
+				{
+					gi.m_GoalType = TF_GOAL_HUNTEDESCAPE;
 					break;
 				}
 			default:

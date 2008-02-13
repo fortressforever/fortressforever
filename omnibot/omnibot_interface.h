@@ -126,6 +126,7 @@ namespace Omnibot
 		kBackPack_Grenades,
 		kFlag,
 		kFlagCap,
+		kHuntedEscape,
 		kTrainerSpawn
 	};
 	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _teamflags);
