@@ -201,6 +201,9 @@ public:
 	C_FFBuildableObject *GetBuildable( int iBuildable ) const;
 	// End: Added by Mulchman for building objects and such
 
+	// Gets the entity at player's current objective (set by Lua)
+	CBaseEntity *GetCurrObjectiveEntity( void ) { return dynamic_cast< CBaseEntity * >( m_hObjectiveEntity.Get() ); }
+
 	bool IsInfected( void ) const	{ return m_bInfected != 0; }
 	// Two girls for every boy?
 	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter1;
@@ -492,6 +495,9 @@ private:
 private:
 	QAngle m_vecInfoIntermission;
 	// ----------------------------------
+	
+	// Entity at player's current objective (set by Lua)
+	CNetworkHandle( CBaseEntity, m_hObjectiveEntity );
 };
 
 // Just straight up copying the server version. Tired

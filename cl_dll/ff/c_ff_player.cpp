@@ -625,6 +625,8 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_bCloakable ) ),
 	RecvPropInt( RECVINFO( m_bDisguisable ) ),
 	RecvPropQAngles( RECVINFO( m_vecInfoIntermission ) ),
+	// Entity at player's current objective (set by Lua)
+	RecvPropEHandle( RECVINFO( m_hObjectiveEntity ) ),
 END_RECV_TABLE( )
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
