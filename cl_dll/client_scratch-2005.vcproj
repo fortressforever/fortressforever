@@ -4747,6 +4747,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_objectiveicon.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_radar.cpp"
 				>
 			</File>

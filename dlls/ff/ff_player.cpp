@@ -372,6 +372,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_bCloakable ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bDisguisable ), 1, SPROP_UNSIGNED ),
 	SendPropQAngles( SENDINFO( m_vecInfoIntermission ), 13 ),
+	// Entity at player's current objective (set by Lua)
+	SendPropEHandle( SENDINFO( m_hObjectiveEntity ) ),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -1596,6 +1598,7 @@ void CFFPlayer::InitialSpawn( void )
 	
 	// Reset to 0
 	m_vecInfoIntermission.Init();
+	m_hObjectiveEntity = NULL;
 
 	BaseClass::InitialSpawn();
 

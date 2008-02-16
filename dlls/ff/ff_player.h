@@ -406,6 +406,7 @@ public:
 	void SetRespawnable( bool bValue ) { m_bRespawnable = bValue; }
 	bool IsRespawnable( void ) const { return m_bRespawnable; }
 	bool CanRespawn( void ) const { return IsRespawnable(); }
+	void SetObjectiveEntity( const CBaseEntity *pEntity ){ m_hObjectiveEntity = pEntity; }
 private:
 	bool m_bRespawnable;
 	bool m_bACDamageHint; // For triggering the "Pyro takes damage from HWGuy" hint only once
@@ -926,6 +927,8 @@ private:
 private:
 	CNetworkQAngle( m_vecInfoIntermission );
 	// ----------------------------------
+	// Entity at player's current objective (set by Lua)
+	CNetworkHandle( CBaseEntity, m_hObjectiveEntity );
 };
 
 

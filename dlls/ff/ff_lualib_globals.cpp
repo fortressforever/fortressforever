@@ -839,6 +839,32 @@ namespace FFLib
 		}
 	}
 
+	// Updates the position of the Objective Icon (the entity it's attached to)
+	void UpdateObjectiveIcon( CFFPlayer *pPlayer, CBaseEntity *pEntity )
+	{
+		if ( pPlayer )
+			pPlayer->SetObjectiveEntity( pEntity );
+	}
+
+	// Updates the position of the Objective Icon (the entity it's attached to) for a whole team
+	void UpdateTeamObjectiveIcon( CFFTeam *pTeam, CBaseEntity *pEntity )
+	{
+		if( !pTeam )
+			return;
+
+		// set the objective entity for each player on the team
+		for( int i = 1 ; i <= gpGlobals->maxClients; i++ )
+		{
+			CFFPlayer* pPlayer = GetPlayer( UTIL_EntityByIndex(i) );
+
+			if( !pPlayer )
+				continue;
+
+			if( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+				pPlayer->SetObjectiveEntity( pEntity );
+		}
+	}
+
 
 	CFFPlayer *GetPlayerByID( int player_id )
 	{
@@ -1533,6 +1559,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SpeakAll",					&FFLib::SpeakAll),
 		def("SpeakPlayer",				&FFLib::SpeakPlayer),
 		def("SpeakTeam",				&FFLib::SpeakTeam),
-		def("LogLuaEvent",				&FFLib::LogLuaEvent)
+		def("LogLuaEvent",				&FFLib::LogLuaEvent),
+		def("UpdateObjectiveIcon",		&FFLib::UpdateObjectiveIcon),
+		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon)
 	];
 }
