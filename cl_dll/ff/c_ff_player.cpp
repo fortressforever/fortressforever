@@ -1886,7 +1886,7 @@ const QAngle& C_FFPlayer::GetRenderAngles( void )
 //-----------------------------------------------------------------------------
 void C_FFPlayer::UpdateClientSideAnimation()
 {
-	// Jiggles: Removed Mirv's removal of not updating animations for non-drawn players b/c,
+	// Jiggles: Removed Mirv's removal of updating animations for non-drawn players b/c,
 	//			since the last patch (2.0), we've been seeing the occasional player in the "reference" pose
 	//if (!ShouldDraw())
 	//	return;

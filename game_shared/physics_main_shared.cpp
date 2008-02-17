@@ -1526,9 +1526,13 @@ void CBaseEntity::PhysicsToss( void )
 	{	
 		// entity is trapped in another solid
 		// UNDONE: does this entity needs to be removed?
-		SetAbsVelocity(vec3_origin);
-		SetLocalAngularVelocity(vec3_angle);
-		return;
+		// Jiggles: Added this conditional to "fix" the "pipes don't always explode when they hit a player" bug
+		if ( Classify() != CLASS_GLGRENADE )
+		{
+			SetAbsVelocity(vec3_origin);
+			SetLocalAngularVelocity(vec3_angle);
+			return;
+		}
 	}
 	
 #if !defined( CLIENT_DLL )
