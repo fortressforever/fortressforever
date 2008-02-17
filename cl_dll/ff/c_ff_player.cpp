@@ -1886,8 +1886,10 @@ const QAngle& C_FFPlayer::GetRenderAngles( void )
 //-----------------------------------------------------------------------------
 void C_FFPlayer::UpdateClientSideAnimation()
 {
-	if (!ShouldDraw())
-		return;
+	// Jiggles: Removed Mirv's removal of not updating animations for non-drawn players b/c,
+	//			since the last patch (2.0), we've been seeing the occasional player in the "reference" pose
+	//if (!ShouldDraw())
+	//	return;
 
 	// Update the animation data. It does the local check here so this works when using
 	// a third-person camera (and we don't have valid player angles).
