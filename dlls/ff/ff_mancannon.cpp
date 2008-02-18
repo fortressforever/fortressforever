@@ -142,6 +142,9 @@ void CFFManCannon::OnJumpPadThink( void )
 		m_iJumpPadState++;
 		break;
 	case JUMPPAD_REMOVE:
+		CFFPlayer *pOwner = GetOwnerPlayer();
+		if ( pOwner )
+			ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_MANCANNON_TIMEOUT" );
 		Detonate();
 		break;
 	}
@@ -180,6 +183,10 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 		//DevMsg("Mancannon ready in %f\n", (gpGlobals->curtime - (pPlayer->m_flMancannonTime + 1.0f)));
 		return;
 	}
+
+	// Only trigger when the player hits his jump key
+	if ( !(pPlayer->m_nButtons & IN_JUMP) )
+		return;
 
 	// Launch the guy
 	QAngle vecAngles = pPlayer->EyeAngles();
