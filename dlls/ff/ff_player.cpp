@@ -4871,6 +4871,11 @@ void CFFPlayer::Command_PrimeOne(void)
 			// ax1
 			EmitSound("Grenade.Prime");
 
+			// Jiggles: Added lua callback for squeek's training map
+			CFFLuaSC hContext( 1, this );
+			_scriptman.RunPredicates_LUA( NULL, &hContext, "player_onprimegren1" );
+			// End callback
+
 			m_iGrenadeState = FF_GREN_PRIMEONE;
 			m_flServerPrimeTime = gpGlobals->curtime;
 #ifndef _DEBUG
@@ -4910,7 +4915,12 @@ void CFFPlayer::Command_PrimeTwo(void)
 		{
 			// ax1
 			EmitSound("Grenade.Prime");
-			
+
+			// Jiggles: Added lua callback for squeek's training map
+			CFFLuaSC hContext( 1, this );
+			_scriptman.RunPredicates_LUA( NULL, &hContext, "player_onprimegren2" );
+			// End callback
+
 			// Hint Code
 			//Msg("\nSecondary Class Name: %s\n", pPlayerClassInfo.m_szSecondaryClassName );
 			//if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_nail" ) == 0 )
