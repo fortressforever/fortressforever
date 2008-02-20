@@ -1696,7 +1696,8 @@ void C_BasePlayer::PhysicsSimulate( void )
 		ctx->cmd.forwardmove = 0;
 		ctx->cmd.sidemove = 0;
 		ctx->cmd.upmove = 0;
-		ctx->cmd.buttons = 0;
+		// Jiggles: Don't block the USE key b/c we need it for squeek's training map (but still block everything else)
+		ctx->cmd.buttons &= IN_USE;
 		ctx->cmd.impulse = 0;
 		//VectorCopy ( pl.v_angle, ctx->cmd.viewangles );
 	}
