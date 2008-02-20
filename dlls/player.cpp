@@ -3326,7 +3326,8 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->forwardmove = 0;
 		ucmd->sidemove = 0;
 		ucmd->upmove = 0;
-		ucmd->buttons = 0;
+		// Jiggles: Don't block the USE key b/c we need it for squeek's training map (but still block everything else)
+		ucmd->buttons &= IN_USE;
 		ucmd->impulse = 0;
 		VectorCopy ( pl.v_angle, ucmd->viewangles );
 	}
