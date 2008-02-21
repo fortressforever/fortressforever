@@ -337,6 +337,7 @@ enum Collision_Group_t
 	COLLISION_GROUP_BREAKABLE_GLASS,
 	COLLISION_GROUP_VEHICLE,
 	COLLISION_GROUP_PLAYER_MOVEMENT,  // For HL2, same as Collision_Group_Player
+	COLLISION_GROUP_BUILDABLE_BUILDING,	// Jiggles: We want buildables that are being built to block player movement, but pretty much nothing else
 										
 	COLLISION_GROUP_NPC,			// Generic NPC group
 	COLLISION_GROUP_IN_VEHICLE,		// for any entity inside a vehicle

@@ -1610,6 +1610,15 @@ bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return true;
 	}
 
+	// We want buildables that are being built to block players trying to move into them, but pretty much nothing else
+	if ( collisionGroup1 == COLLISION_GROUP_BUILDABLE_BUILDING )
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT )
+			return true;
+		// Ok this is kinda hacky but we want projectiles, shots, etc to pass through to harm the builder
+		collisionGroup1 = COLLISION_GROUP_DEBRIS;
+	}
+
 	if ( collisionGroup0 > collisionGroup1 )
 	{
 		// swap so that lowest is always first
