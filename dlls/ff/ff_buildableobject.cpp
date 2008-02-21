@@ -280,7 +280,7 @@ void CFFBuildableObject::Spawn( void )
 		VPhysicsInitStatic();
 	}
 
-	SetCollisionGroup( COLLISION_GROUP_PLAYER );
+	SetCollisionGroup( COLLISION_GROUP_BUILDABLE_BUILDING );
 		
 	// Make sure it has a model
 	Assert( m_ppszModels[ 0 ] != NULL );
@@ -342,6 +342,7 @@ void CFFBuildableObject::GoLive( void )
 
 	// Object is now built
 	m_bBuilt = true;
+	SetCollisionGroup( COLLISION_GROUP_PLAYER );
 
 	// Object is built and can take damage if it is supposed to
 	if( m_bTakesDamage )
