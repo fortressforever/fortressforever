@@ -825,20 +825,41 @@ namespace Omnibot
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DROPAMMO))
 					serverpluginhelpers->ClientCommand(pEdict, "discard");
 
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDSENTRY))
-					serverpluginhelpers->ClientCommand(pEdict, "sentrygun");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_AIMSENTRY))
-					serverpluginhelpers->ClientCommand(pEdict, "aimsentry");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDISPENSER))
-					serverpluginhelpers->ClientCommand(pEdict, "dispenser");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDETPACK_5))
-					serverpluginhelpers->ClientCommand(pEdict, "detpack 5");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDETPACK_10))
-					serverpluginhelpers->ClientCommand(pEdict, "detpack 10");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDETPACK_20))
-					serverpluginhelpers->ClientCommand(pEdict, "detpack 20");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDETPACK_30))
-					serverpluginhelpers->ClientCommand(pEdict, "detpack 30");
+				if(!pPlayer->IsBuilding())
+				{
+					if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDSENTRY))
+						serverpluginhelpers->ClientCommand(pEdict, "sentrygun");
+					if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_AIMSENTRY))
+						serverpluginhelpers->ClientCommand(pEdict, "aimsentry");
+					if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDISPENSER))
+						serverpluginhelpers->ClientCommand(pEdict, "dispenser");
+					if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDETPACK_5))
+						serverpluginhelpers->ClientCommand(pEdict, "detpack 5");
+					if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDETPACK_10))
+						serverpluginhelpers->ClientCommand(pEdict, "detpack 10");
+					if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDETPACK_20))
+						serverpluginhelpers->ClientCommand(pEdict, "detpack 20");
+					if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_BUILDDETPACK_30))
+						serverpluginhelpers->ClientCommand(pEdict, "detpack 30");
+				}
+				else
+				{
+					if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_CANCELBUILD))
+					{
+						if(pPlayer->IsBuilding())
+						{
+							switch(pPlayer->GetCurBuild())
+							{
+							case FF_BUILD_DISPENSER: pPlayer->Command_BuildDispenser(); break;
+							case FF_BUILD_SENTRYGUN: pPlayer->Command_BuildSentryGun(); break;
+							case FF_BUILD_DETPACK: pPlayer->Command_BuildDetpack(); break; break;
+							case FF_BUILD_MANCANNON: pPlayer->Command_BuildManCannon(); break;
+							}
+							return;
+						}
+					}
+				}
+
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DETSENTRY))
 					serverpluginhelpers->ClientCommand(pEdict, "detsentry");
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DETDISPENSER))

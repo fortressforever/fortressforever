@@ -3728,11 +3728,11 @@ void CFFPlayer::Command_Discard( void )
 
 		// Bug #0001682: Scout discard drops cells
 		// Scout has no weapon that uses cells, but the radar needs them.  Add explicit check -> Defrag
-		if( GetClassSlot() == CLASS_SCOUT )
-		{
-			// Keep our cells if we're scout, bitches.  4 = AMMO_CELLS (pain in balls)
-			bKeepAmmo[ 4 ] = true;
-		}
+		//if( GetClassSlot() == CLASS_SCOUT )
+		//{
+		//	// Keep our cells if we're scout, bitches.  4 = AMMO_CELLS (pain in balls)
+		//	bKeepAmmo[ 4 ] = true;
+		//}
 
 		// Add ammo if they have any
 		for( int iAmmoNum = 0; iAmmoNum < MAX_AMMO_TYPES; iAmmoNum++ )
