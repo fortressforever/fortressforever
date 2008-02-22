@@ -810,6 +810,9 @@ namespace Omnibot
 				if(_input.m_ButtonFlags.CheckFlag(BOT_BUTTON_RESPAWN))
 					cmd.buttons |= IN_ATTACK;
 
+				if(_input.m_ButtonFlags.CheckFlag(BOT_BUTTON_AIM))
+					cmd.buttons |= IN_ZOOM;
+
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN1))
 					serverpluginhelpers->ClientCommand(pEdict, "primeone");
 				else if(pPlayer->IsGrenade1Primed())
