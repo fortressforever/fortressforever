@@ -268,7 +268,6 @@ public:
 	int GetHealthPercent( void ) const;
 	unsigned int GetAmmoPercent( void ) const { return m_iAmmoPercent; }
 
-
 protected:
 	CNetworkVarForDerived( unsigned int, m_iAmmoPercent );
 	// <-- shared

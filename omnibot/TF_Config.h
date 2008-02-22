@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-02-11 20:03:50 -0800 (Mon, 11 Feb 2008) $
-// $LastChangedRevision: 2438 $
+// $LastChangedDate: 2008-02-22 12:27:36 -0800 (Fri, 22 Feb 2008) $
+// $LastChangedRevision: 2452 $
 //
 // Title: TF Config
 //
@@ -72,6 +72,7 @@ typedef enum eTF_ButtonFlags
 	TF_BOT_BUTTON_CLOAK,
 	TF_BOT_BUTTON_SILENT_CLOAK,
 	TF_BOT_BUTTON_RADAR,
+	TF_BOT_BUTTON_CANCELBUILD,
 
 	// THIS MUST BE LAST
 	TF_BOT_BUTTON_FIRSTUSER
