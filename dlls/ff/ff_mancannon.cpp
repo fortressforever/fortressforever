@@ -24,7 +24,7 @@ ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1000", FCVA
 ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "500", FCVAR_REPLICATED );
 
 // Jiggles: Sorry, but I'm not using the "mancannon" nomenclature; Bungie didn't invent the jump pad!
-#define JUMPPAD_INITIAL_DEPLOY	0	
+//#define JUMPPAD_INITIAL_DEPLOY	0	
 #define JUMPPAD_ACTIVATE		1
 #define JUMPPAD_POWERDOWN		2
 #define JUMPPAD_REMOVE			3
@@ -69,7 +69,7 @@ const char *g_pszFFManCannonSounds[] =
 {
 	FF_MANCANNON_BUILD_SOUND,
 	FF_MANCANNON_EXPLODE_SOUND,
-	"JumpPad.WarmUp",
+	//"JumpPad.WarmUp",
 	"JumpPad.PowerDown",
 	"JumpPad.Fire",
 	NULL
@@ -84,7 +84,7 @@ void CFFManCannon::Spawn( void )
 
 	Precache();
 	CFFBuildableObject::Spawn();
-	m_iJumpPadState = 0;
+	m_iJumpPadState = JUMPPAD_ACTIVATE;
 	m_bTakesDamage = false;
 }
 
@@ -124,12 +124,12 @@ void CFFManCannon::OnJumpPadThink( void )
 {
 	switch ( m_iJumpPadState )
 	{
-	case JUMPPAD_INITIAL_DEPLOY:
-		// Start warmup sound
-		EmitSound( "JumpPad.WarmUp" );
-		SetNextThink( gpGlobals->curtime + JUMPPAD_WARMUP_TIME );
-		m_iJumpPadState++;
-		break;
+	//case JUMPPAD_INITIAL_DEPLOY:
+	//	// Start warmup sound
+	//	EmitSound( "JumpPad.WarmUp" );
+	//	SetNextThink( gpGlobals->curtime + JUMPPAD_WARMUP_TIME );
+	//	m_iJumpPadState++;
+	//	break;
 	case JUMPPAD_ACTIVATE:
 		// Play activate sound
 		//EmitSound("JumpPad.Activate");
