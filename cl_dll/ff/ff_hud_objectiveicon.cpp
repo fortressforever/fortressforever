@@ -32,6 +32,12 @@ using namespace vgui;
 #include "c_playerresource.h"
 #include "ff_hud_chat.h"
 
+#define OBJECTIVE_ICON_TEXTURE			"glyphs/objective_icon"
+#define OBJECTIVE_ICON_TEXTURE_OBSCURED	"glyphs/objective_icon_obscured"
+
+//ConVar cl_objectiveicon_minsize( "cl_objectiveicon_minsize", "350.0f", FCVAR_ARCHIVE, "Minimum size of the objective icon");
+#define OBJECTIVE_ICON_MINIMUM_SIZE		350.0f/*cl_objectiveicon_minsize.GetFloat()*/
+
 ConVar cl_objectiveicon("cl_objectiveicon", "0", FCVAR_ARCHIVE, "Displays an icon showing the current objective");
 
 class CHudObjectiveIcon : public CHudElement, public vgui::Panel
@@ -48,7 +54,7 @@ private:
 	CHudTexture *m_pObscuredIconTexture;
 
 	void	CacheTextures( void );
-	void	GetObjectiveAngle(const Vector &vecDelta, float &flRotation);
+	float	GetObjectiveAngle( const Vector &vecDelta );
 
 public:
 
@@ -114,14 +120,14 @@ void CHudObjectiveIcon::CacheTextures( void )
 	{
 		m_pIconTexture = new CHudTexture( );
 		m_pIconTexture->textureId = vgui::surface( )->CreateNewTextureID( );
-		PrecacheMaterial( "glyphs/objective_icon" );
+		PrecacheMaterial( OBJECTIVE_ICON_TEXTURE );
 	}
 
 	if ( !m_pObscuredIconTexture )
 	{
 		m_pObscuredIconTexture = new CHudTexture( );
 		m_pObscuredIconTexture->textureId = vgui::surface( )->CreateNewTextureID( );
-		PrecacheMaterial( "glyphs/objective_icon_obscured" );
+		PrecacheMaterial( OBJECTIVE_ICON_TEXTURE_OBSCURED );
 	}
 }
 
@@ -181,10 +187,14 @@ void CHudObjectiveIcon::Paint( void )
 			// Modify based on FOV
 			flDist *= ( pPlayer->GetFOVDistanceAdjustFactor() );
 
+			// We don't want the icon getting too small on the screen
+			if ( flDist > OBJECTIVE_ICON_MINIMUM_SIZE )
+				flDist = OBJECTIVE_ICON_MINIMUM_SIZE;
+
 			int iWidthAdj = 30;
 			int iAdjX = ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) * ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) / flDist ) );
 			int iYTop = iTopScreenY;
-			int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
+			//int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
 
 			// Let's see if the objective is visible (ha ha!)
 			trace_t		tr;
@@ -192,17 +202,18 @@ void CHudObjectiveIcon::Paint( void )
 			
 			if( tr.fraction != 1.0 )  // Trace hit something -- the objective is not visible (hopefully!)
 			{
-				surface()->DrawSetTextureFile( m_pObscuredIconTexture->textureId, "glyphs/objective_icon_obscured", true, false );
+				surface()->DrawSetTextureFile( m_pObscuredIconTexture->textureId, OBJECTIVE_ICON_TEXTURE_OBSCURED, true, false );
 				surface()->DrawSetTexture( m_pObscuredIconTexture->textureId );
 				surface()->DrawSetColor( cColor );
 				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
 			}
 			else
 			{
-				surface()->DrawSetTextureFile( m_pIconTexture->textureId, "glyphs/objective_icon", true, false );
+				surface()->DrawSetTextureFile( m_pIconTexture->textureId, OBJECTIVE_ICON_TEXTURE, true, false );
 				surface()->DrawSetTexture( m_pIconTexture->textureId );
 				surface()->DrawSetColor( cColor );
-				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				//surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
 			}
 		}
 		else  // If the objective isn't on the screen, draw an arrow pointing to it
@@ -211,8 +222,7 @@ void CHudObjectiveIcon::Paint( void )
 			VectorNormalize(vecDelta);
 
 			// Calculate the angle the objective is from the player
-			float angle;
-			GetObjectiveAngle(vecDelta, angle);
+			float angle = GetObjectiveAngle( vecDelta );
 
 			//char szBuf[64];
 			//Q_snprintf( szBuf, 64, "%f", angle );
@@ -250,7 +260,7 @@ void CHudObjectiveIcon::Paint( void )
 //-----------------------------------------------------------------------------
 // Purpose: Convert an objective position in world units to the screen's units
 //-----------------------------------------------------------------------------
-void CHudObjectiveIcon::GetObjectiveAngle( const Vector &vecDelta, float &flRotation )
+float CHudObjectiveIcon::GetObjectiveAngle( const Vector &vecDelta )
 {
 	Vector playerPosition = MainViewOrigin();
 	QAngle playerAngles = MainViewAngles();
@@ -266,7 +276,9 @@ void CHudObjectiveIcon::GetObjectiveAngle( const Vector &vecDelta, float &flRota
 	float ypos = 360.0f * -front;
 
 	// Get the rotation(yaw)
-	flRotation = atan2(xpos, ypos) + M_PI;
+	float flRotation = atan2(xpos, ypos) + M_PI;
 	flRotation *= 180 / M_PI;
+	
+	return flRotation;
 
 }
