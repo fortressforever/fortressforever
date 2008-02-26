@@ -94,12 +94,13 @@
 #define FL_ATCONTROLS			(1<<6) // Player can't move, but keeps key inputs for controlling another entity
 #define	FL_CLIENT				(1<<7)	// Is a player
 #define FL_FAKECLIENT			(1<<8)	// Fake client, simulated server side; don't send network messages to them
+// Jiggles: I moved the INWATER flag up because the client needs to know for setting the swim animations
+#define	FL_INWATER				(1<<9)	// In water
 
 // NOTE if you move things up, make sure to change this value
-#define PLAYER_FLAG_BITS		9
+#define PLAYER_FLAG_BITS		10
 
 // NON-PLAYER SPECIFIC (i.e., not used by GameMovement or the client .dll ) -- Can still be applied to players, though
-#define	FL_INWATER				(1<<9)	// In water
 #define	FL_FLY					(1<<10)	// Changes the SV_Movestep() behavior to not need to be on ground
 #define	FL_SWIM					(1<<11)	// Changes the SV_Movestep() behavior to not need to be on ground (but stay in water)
 #define	FL_CONVEYOR				(1<<12)
