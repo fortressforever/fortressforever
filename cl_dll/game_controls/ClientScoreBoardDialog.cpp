@@ -92,7 +92,10 @@ inline char *GetFormattedMapName( void )
 
 bool ActivateScoreboard()
 {
-	if (!g_pScoreboard || !g_pScoreboard->IsVisible())
+	if (!g_pScoreboard)
+		return false;
+
+	if (!g_pScoreboard->IsVisible())
 		return false;
 
 	// If not enabled, set mouse input as enabled and return true to swallow +attack
