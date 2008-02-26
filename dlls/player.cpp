@@ -1892,6 +1892,7 @@ void CBasePlayer::WaterMove()
 		if ( IsPlayerUnderwater() )
 		{
 			SetPlayerUnderwater( false );
+			RemoveFlag( FL_INWATER );	// Jiggles: Added for swim animations
 		}
 	}
 	else if ( GetWaterLevel() < WL_Waist )
@@ -1912,6 +1913,12 @@ void CBasePlayer::WaterMove()
 		{
 			SetPlayerUnderwater( true );
 		}
+		// Jiggles: Added for swim animations
+		if (!(GetFlags() & FL_INWATER))
+		{
+			AddFlag( FL_INWATER );
+		}
+		// END ADD
 		return;
 	}
 	
@@ -1941,8 +1948,8 @@ void CBasePlayer::WaterMove()
 		{
 			EmitSound( "Player.Wade" );
 		}
-	
-		AddFlag( FL_INWATER );
+		// Jiggles: Removed this line.  This line added the INWATER flag right away on player spawn...umm...what?
+		//AddFlag( FL_INWATER );
 	}
 }
 
