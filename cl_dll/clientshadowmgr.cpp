@@ -1966,9 +1966,6 @@ inline ShadowType_t CClientShadowMgr::GetActualShadowCastType( IClientRenderable
 void CClientShadowMgr::BuildOrthoShadow( IClientRenderable* pRenderable, 
 		ClientShadowHandle_t handle, const Vector& mins, const Vector& maxs)
 {
-	// FF TODO: make/use a better shadow system and then enable shadows by default
-	return;
-
 	// Get the object's basis
 	Vector vec[3];
 	AngleVectors( pRenderable->GetRenderAngles(), &vec[0], &vec[1], &vec[2] );
@@ -2139,9 +2136,6 @@ void CClientShadowMgr::DrawRenderToTextureDebugInfo( IClientRenderable* pRendera
 void CClientShadowMgr::BuildRenderToTextureShadow( IClientRenderable* pRenderable, 
 		ClientShadowHandle_t handle, const Vector& mins, const Vector& maxs)
 {
-	// FF TODO: make/use a better shadow system and then enable shadows by default
-	return;
-
 //	DrawRenderToTextureDebugInfo( pRenderable, mins, maxs );
 
 	// Get the object's basis
