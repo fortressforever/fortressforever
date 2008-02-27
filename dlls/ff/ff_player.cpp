@@ -3421,7 +3421,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					pManCannon->SetGroundAngles( hBuildInfo.GetBuildAngles() );
 
 					m_hManCannon = pManCannon;
-					m_flBuildTime = gpGlobals->curtime + 1.5f; // 1.5 seconds to build?
+					m_flBuildTime = gpGlobals->curtime + 3.5f; // 3.5 seconds to build?
 
 					// TODO: Omnibot::Notify_ManCannonBuilding( this, pManCannon );
 				}
