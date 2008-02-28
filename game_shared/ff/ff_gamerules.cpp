@@ -568,6 +568,11 @@ ConVar mp_prematch( "mp_prematch",
 						pPlayer->GetActiveFFWeapon()->WeaponSound( STOP );
 						*/
 
+					// Jiggles: ff_restartround didn't reset the m_bDisguisable flag
+					//			which meant that Spies holding a flag when the restart was called
+					//			weren't able to disguise until they grabbed and dropped another flag!
+					pPlayer->SetDisguisable( true );
+					// End fix
 					pPlayer->Spawn();
 					pPlayer->ResetFragCount();
 					pPlayer->ResetFortPointsCount();
