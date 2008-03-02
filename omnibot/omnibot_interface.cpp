@@ -1369,7 +1369,7 @@ namespace Omnibot
 						CFFInfoScript *pFFScript = static_cast<CFFInfoScript*>(pEntity);
 						if(pFFScript)
 						{
-							if(pFFScript->IsEffectActive( EF_NODRAW ))
+							if(pFFScript->IsEffectActive(EF_NODRAW) || pFFScript->IsRemoved())
 								_flags.SetFlag(ENT_FLAG_DISABLED);
 
 							/*switch(pFFScript->GetBotGoalType())
@@ -1389,7 +1389,7 @@ namespace Omnibot
 						CFuncFFScript *pFFScript = static_cast<CFuncFFScript*>(pEntity);
 						if(pFFScript)
 						{
-							if(pFFScript->IsEffectActive( EF_NODRAW ))
+							if(pFFScript->IsEffectActive(EF_NODRAW) || pFFScript->IsRemoved())
 								_flags.SetFlag(ENT_FLAG_DISABLED);
 
 							/*switch(pFFScript->GetBotGoalType())
