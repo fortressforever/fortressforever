@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-02-11 20:03:50 -0800 (Mon, 11 Feb 2008) $
-// $LastChangedRevision: 2438 $
+// $LastChangedDate: 2008-03-01 21:10:13 -0800 (Sat, 01 Mar 2008) $
+// $LastChangedRevision: 2468 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -158,6 +158,13 @@ typedef enum eFireMode
 	// Cept for this
 	InvalidFireMode
 } FireMode;
+
+typedef enum eStance
+{
+	StanceStand,
+	StanceCrouch,
+	StanceProne,
+} Stance;
 
 // enumerations: WeaponType
 //		INVALID_WEAPON - Used for invalid weapon id.

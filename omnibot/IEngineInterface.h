@@ -196,6 +196,10 @@ public:
 	//		Gets the content bitflags for a location.
 	virtual int GetPointContents(const float _pos[3]) = 0;
 
+	// Function: GetLocalGameEntity
+	//		Gets the game entity of the local client. For listen servers only.
+	virtual GameEntity GetLocalGameEntity() = 0;
+
 	// Function: FindEntityInSphere
 	//		This function should return entities matching the class id, and in a radius, and should be
 	//		compatible with a while loop using the _pStart and returning 0 at the end of search
