@@ -1056,6 +1056,14 @@ namespace Omnibot
 			return obUtilBotContentsFromGameContents(iContents);
 		}
 
+		GameEntity GetLocalGameEntity()
+		{
+			CBasePlayer *localPlayer = UTIL_GetLocalPlayer();
+			if(localPlayer)
+				return HandleFromEntity(localPlayer);
+			return GameEntity();
+		}
+
 		GameEntity FindEntityInSphere(const float _pos[3], float _radius, GameEntity _pStart, int classId)
 		{
 			Vector start(_pos[0], _pos[1], _pos[2]);
