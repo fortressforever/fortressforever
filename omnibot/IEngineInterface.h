@@ -292,6 +292,11 @@ public:
 	virtual bool DebugRadius(const float _pos[3], const float _radius, const obColor &_color, float _time)
 	{ _pos; _radius; _color; _time; return false; }
 
+	// Function: DebugPolygon
+	//		Draw a shaded polygon.
+	virtual bool DebugPolygon(const obVec3 *_verts, const int _numverts, const obColor &_color, float _time)
+	{ _verts; _numverts; _color; _time; return false; }
+
 	// Function: PrintError
 	//		This function should print an error the the game however desired,
 	//		whether it be to the console, messagebox,...

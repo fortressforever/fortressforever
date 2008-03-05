@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-03-01 21:10:13 -0800 (Sat, 01 Mar 2008) $
-// $LastChangedRevision: 2468 $
+// $LastChangedDate: 2008-03-03 21:35:30 -0800 (Mon, 03 Mar 2008) $
+// $LastChangedRevision: 2484 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -204,6 +204,10 @@ typedef enum eTeamBase
 	OB_TEAM_ALL = -2,
 	OB_TEAM_SPECTATOR = -1,
 	OB_TEAM_NONE,
+	OB_TEAM_1,
+	OB_TEAM_2,
+	OB_TEAM_3,
+	OB_TEAM_4,
 } TeamBase;
 
 // enumerations: Helpers
@@ -1184,11 +1188,14 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 
+struct obVec3 { float x,y,z; };
+
 typedef enum
 {
 	DRAW_LINE,
 	DRAW_RADIUS,
 	DRAW_BOUNDS,
+	DRAW_POLYGON,
 } DebugMsgType;
 
 typedef float vector_t;
@@ -1196,23 +1203,31 @@ typedef vector_t vector3_t[3];
 
 typedef struct
 {
-	vector3_t		m_Start, m_End;	
+	obVec3			m_Start, m_End;	
 	int				m_Color;
 } IPC_DebugLineMessage;
 
 typedef struct
 {
-	vector3_t		m_Pos;
+	obVec3			m_Pos;
 	float			m_Radius;
 	int				m_Color;
 } IPC_DebugRadiusMessage;
 
 typedef struct
 {
-	vector3_t		m_Mins, m_Maxs;	
+	obVec3			m_Mins, m_Maxs;	
 	int				m_Color;
 	int				m_Sides;
 } IPC_DebugAABBMessage;
+
+typedef struct
+{
+	enum { MaxPolyVerts=32 };
+	obVec3			m_Verts[MaxPolyVerts];	
+	int				m_NumVerts;
+	int				m_Color;	
+} IPC_DebugPolygonMessage;
 
 typedef struct
 {
@@ -1221,6 +1236,7 @@ typedef struct
 		IPC_DebugLineMessage	m_Line;
 		IPC_DebugRadiusMessage	m_Radius;
 		IPC_DebugAABBMessage	m_AABB;
+		IPC_DebugPolygonMessage m_Polygon;
 	} data;
 
 	int				m_Duration;
