@@ -2422,34 +2422,34 @@ namespace Omnibot
 			return true;
 		}
 
-		bool DebugPolygon(const float **_pts, int _numpts, const obColor &_color, float _time)
+		bool DebugPolygon(const obVec3 *_verts, const int _numverts, const obColor &_color, float _time, int _flags)
 		{
 			if(debugoverlay)
 			{
-				if(_numpts >= 3)
+				if(_numverts >= 3)
 				{
 					Vector 
-						p1(_pts[0][0], _pts[0][1], _pts[0][2]), 
-						p2(_pts[1][0], _pts[1][1], _pts[1][2]), 
-						p3(_pts[2][0], _pts[2][1], _pts[2][2]);
+						p1(_verts[0].x, _verts[0].y, _verts[0].z), 
+						p2(_verts[1].x, _verts[1].y, _verts[1].z), 
+						p3(_verts[2].x, _verts[2].y, _verts[2].z);
 
-					debugoverlay->AddTriangleOverlay(p1, p2, p3, 
+					debugoverlay->AddTriangleOverlay(p3, p2, p1, 
 						_color.r(), 
 						_color.g(), 
 						_color.b(), 
-						255, false, _time);
+						255, _flags&IEngineInterface::DR_NODEPTHTEST, _time);
 
-					for(int p = 3; p < _numpts; ++p)
+					for(int p = 3; p < _numverts; ++p)
 					{
 						p2 = p3;
 
-						p3 = Vector(_pts[p][0], _pts[p][1], _pts[p][2]);
+						p3 = Vector(_verts[p].x, _verts[p].y, _verts[p].z);
 
-						debugoverlay->AddTriangleOverlay(p1, p2, p3, 
+						debugoverlay->AddTriangleOverlay(p3, p2, p1, 
 							_color.r(), 
 							_color.g(), 
 							_color.b(), 
-							255, false, _time);
+							255, _flags&IEngineInterface::DR_NODEPTHTEST, _time);
 					}
 				}
 			}
