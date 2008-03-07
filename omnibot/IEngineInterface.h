@@ -158,6 +158,11 @@ public:
 class IEngineInterface
 {
 public:
+	enum DebugRenderFlags
+	{
+		DR_NODEPTHTEST = (1<<0),
+	};
+
 	// Function: AddBot
 	//		This function should add a bot to the game with the name specified,
 	//		and return the bots GameID
@@ -294,8 +299,8 @@ public:
 
 	// Function: DebugPolygon
 	//		Draw a shaded polygon.
-	virtual bool DebugPolygon(const obVec3 *_verts, const int _numverts, const obColor &_color, float _time)
-	{ _verts; _numverts; _color; _time; return false; }
+	virtual bool DebugPolygon(const obVec3 *_verts, const int _numverts, const obColor &_color, float _time, int _flags)
+	{ _verts; _numverts; _color; _time; _flags; return false; }
 
 	// Function: PrintError
 	//		This function should print an error the the game however desired,
