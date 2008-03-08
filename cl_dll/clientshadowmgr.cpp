@@ -1431,8 +1431,14 @@ float CClientShadowMgr::GetShadowDistance( IClientRenderable *pRenderable ) cons
 const Vector &CClientShadowMgr::GetShadowDirection( IClientRenderable *pRenderable ) const
 {
 	Vector &vecResult = AllocTempVector();
-	vecResult = GetShadowDirection();
-
+	
+	// BEGIN Jiggles: Shadows seem to project in nonsensical directions; maybe having them always point down will look better
+	// TODO: If we like it this way, we should remove the networked direction vector
+	//vecResult = GetShadowDirection();
+	static Vector s_vecDown( 0, 0, -1 );
+	vecResult = s_vecDown;
+	// END
+	
 	// Allow the renderable to override the default
 	pRenderable->GetShadowCastDirection( &vecResult, GetActualShadowCastType( pRenderable ) );
 
