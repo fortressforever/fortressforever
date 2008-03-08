@@ -427,7 +427,7 @@ bool CFFPlayerAnimState::HandleJumping()
 		// on-ground flag set right when the message comes in.
 		if ( gpGlobals->curtime - m_flJumpStartTime > 0.2f )
 		{
-			if ( m_pOuter->GetFlags() & FL_ONGROUND )
+			if ( m_pOuter->GetFlags() & FL_ONGROUND || m_pOuter->GetFlags() & FL_INWATER )
 			{
 				m_bJumping = false;
 				RestartMainSequence();	// Reset the animation.
@@ -452,7 +452,7 @@ Activity CFFPlayerAnimState::CalcMainActivity()
 	{
 		Activity idealActivity = ACT_IDLE;
 
-		if ( m_pOuter->GetFlags() & FL_DUCKING )
+		if ( m_pOuter->GetFlags() & FL_DUCKING && !( m_pOuter->GetFlags() & FL_INWATER ) )
 		{
 			if ( flOuterSpeed > MOVING_MINIMUM_SPEED )
 				idealActivity = ACT_RUN_CROUCH;
