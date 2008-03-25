@@ -2098,6 +2098,11 @@ namespace Omnibot
 				}
 			case GEN_MSG_SERVERCOMMAND:
 				{
+					OB_GETMSG(Msg_ServerCommand);
+					if(pMsg && pMsg->m_Command[0] && sv_cheats->GetBool())
+					{
+						engine->ServerCommand(pMsg->m_Command);
+					}
 					break;
 				}
 			case GEN_MSG_PLAYSOUND:
@@ -2437,7 +2442,12 @@ namespace Omnibot
 						_color.r(), 
 						_color.g(), 
 						_color.b(), 
-						255, _flags&IEngineInterface::DR_NODEPTHTEST, _time);
+						_color.a(), _flags&IEngineInterface::DR_NODEPTHTEST, _time);
+					debugoverlay->AddTriangleOverlay(p1, p2, p3, 
+						_color.r(), 
+						_color.g(), 
+						_color.b(), 
+						_color.a(), _flags&IEngineInterface::DR_NODEPTHTEST, _time);
 
 					for(int p = 3; p < _numverts; ++p)
 					{
@@ -2449,7 +2459,12 @@ namespace Omnibot
 							_color.r(), 
 							_color.g(), 
 							_color.b(), 
-							255, _flags&IEngineInterface::DR_NODEPTHTEST, _time);
+							_color.a(), _flags&IEngineInterface::DR_NODEPTHTEST, _time);
+						debugoverlay->AddTriangleOverlay(p1, p2, p3, 
+							_color.r(), 
+							_color.g(), 
+							_color.b(), 
+							_color.a(), _flags&IEngineInterface::DR_NODEPTHTEST, _time);
 					}
 				}
 			}
@@ -2817,6 +2832,13 @@ namespace Omnibot
 				Event_SystemGravity d = { -sv_gravity.GetFloat() };
 				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_GRAVITY, &d, sizeof(d)));
 				serverGravity = sv_gravity.GetFloat();
+			}
+			static bool cheatsEnabled = false;
+			if(sv_cheats->GetBool() != cheatsEnabled)
+			{
+				Event_SystemCheats d = { sv_cheats->GetBool()?True:False };
+				g_BotFunctions.pfnBotSendGlobalEvent(MessageHelper(GAME_CHEATS, &d, sizeof(d)));
+				cheatsEnabled = sv_cheats->GetBool();
 			}
 			//////////////////////////////////////////////////////////////////////////
 			if(!engine->IsDedicatedServer())
