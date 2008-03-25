@@ -188,7 +188,7 @@ public:
 	virtual void			Unload( void ) {}
 	virtual void			Pause( void ) {}
 	virtual void			UnPause( void ) {}
-	virtual const char     *GetPluginDescription( void ) { return "Blah"; }      
+	virtual const char     *GetPluginDescription( void ) { return "Omni-bot Internal Interface"; }      
 	virtual void			LevelInit( char const *pMapName ) { }
 	virtual void			ServerActivate( edict_t *pEdictList, int edictCount, int clientMax ) {}
 	virtual void			GameFrame( bool simulating ) {}
@@ -2101,7 +2101,13 @@ namespace Omnibot
 					OB_GETMSG(Msg_ServerCommand);
 					if(pMsg && pMsg->m_Command[0] && sv_cheats->GetBool())
 					{
-						engine->ServerCommand(pMsg->m_Command);
+						const char *cmd = pMsg->m_Command;
+						while(*cmd && *cmd==' ')
+							++cmd;
+						if(cmd && *cmd)
+						{
+							engine->ServerCommand(UTIL_VarArgs("%s\n", cmd));
+						}
 					}
 					break;
 				}
