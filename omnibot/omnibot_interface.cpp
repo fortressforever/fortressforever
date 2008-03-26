@@ -2752,7 +2752,10 @@ namespace Omnibot
 	{
 		virtual void OnEntityCreated( CBaseEntity *pEntity )
 		{
-			Bot_Queue_EntityCreated(pEntity);
+			if(!IsOmnibotLoaded())
+				Bot_Queue_EntityCreated(pEntity);
+			else
+				Bot_Event_EntityCreated(pEntity);
 		}
 		virtual void OnEntitySpawned( CBaseEntity *pEntity )
 		{
@@ -3637,6 +3640,15 @@ namespace Omnibot
 			return;
 		if(!_player->IsBot())
 			return;
+		
+		//////////////////////////////////////////////////////////////////////////
+		// send the created event if not sent already
+		if(_projectile && g_EntSerials.IsIndexNew(_projectile->entindex()))
+		{
+			g_EntSerials.ClearIndexNew(_projectile->entindex());
+			Bot_Event_EntityCreated(_projectile);
+		}
+		//////////////////////////////////////////////////////////////////////////
 
 		int iGameId = _player->entindex();
 		Event_WeaponFire d = { };
