@@ -2168,7 +2168,9 @@ namespace Omnibot
 						unsigned int iMask = MASK_PLAYERSOLID_BRUSHONLY;
 						UTIL_TraceLine(org, under, iMask, NULL, COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
 
-						if(tr.DidHitNonWorldEntity() && !tr.m_pEnt->IsPlayer())
+						if(tr.DidHitNonWorldEntity() && 
+							!tr.m_pEnt->IsPlayer() &&
+							!tr.startsolid)
 						{
 							pMsg->m_Entity = HandleFromEntity(tr.m_pEnt);
 						}
