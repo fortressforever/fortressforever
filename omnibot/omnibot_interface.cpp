@@ -1718,6 +1718,19 @@ namespace Omnibot
 			return InvalidEntity;
 		}
 
+		obResult GetEntityGroundEntity(const GameEntity _ent, GameEntity &moveent)
+		{
+			CBaseEntity *pEntity = EntityFromHandle(_ent);
+			if(pEntity)
+			{
+				CBaseEntity *pEnt = pEntity->GetGroundEntity();
+				if(pEnt && pEnt != GetWorldEntity())
+					moveent = HandleFromEntity(pEnt);
+				return Success;
+			}
+			return InvalidEntity;
+		}
+
 		GameEntity GetEntityOwner(const GameEntity _ent)
 		{
 			GameEntity owner;

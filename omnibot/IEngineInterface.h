@@ -250,6 +250,10 @@ public:
 	//		This function should return the axis aligned box of a <GameEntity> in world space
 	virtual obResult GetEntityWorldAABB(const GameEntity _ent, AABB &_aabb) = 0;
 
+	// Function: GetEntityGroundEntity
+	//		This function should return any entity being rested/stood on.
+	virtual obResult GetEntityGroundEntity(const GameEntity _ent, GameEntity &moveent) = 0;
+
 	// Function: GetEntityOwner
 	//		This function should return the <GameID> of a client that owns this item
 	virtual GameEntity GetEntityOwner(const GameEntity _ent) = 0;
