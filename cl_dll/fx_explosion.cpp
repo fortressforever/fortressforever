@@ -752,8 +752,8 @@ void C_BaseExplosionEffect::CreateDynamicLight( void )
 		dl->die = gpGlobals->curtime + 0.25/*ffdev_explosion_light_life.GetFloat()*/; // die = current time + life
 		dl->decay = dl->radius / 0.25/*ffdev_explosion_light_life.GetFloat()*/; // radius / life = good fade
 		dl->color.r = 255/*ffdev_explosion_light_color_r.GetFloat()*/;
-		dl->color.g = 254/*ffdev_explosion_light_color_g.GetFloat()*/;
-		dl->color.b = 128/*ffdev_explosion_light_color_b.GetFloat()*/;
+		dl->color.g = 160/*ffdev_explosion_light_color_g.GetFloat()*/;
+		dl->color.b = 64/*ffdev_explosion_light_color_b.GetFloat()*/;
 		dl->color.exponent = 5/*ffdev_explosion_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
 	}
 }
