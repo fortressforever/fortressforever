@@ -22,6 +22,7 @@
 #ifdef CLIENT_DLL
 	#define CFFProjectileRocket C_FFProjectileRocket
 	#define RocketTrail C_RocketTrail
+	#include "dlight.h"
 #endif
 
 class RocketTrail;
@@ -46,13 +47,29 @@ public:
 	void CreateSmokeTrail();
 
 #ifdef CLIENT_DLL
-	CFFProjectileRocket() {}
-	CFFProjectileRocket(const CFFProjectileRocket&) {}
+	CFFProjectileRocket();
+	CFFProjectileRocket(const CFFProjectileRocket&) { CFFProjectileRocket(); }
+
+	virtual void OnDataChanged(DataUpdateType_t type);
+	virtual void ClientThink( void );
 
 	virtual const char *GetFlightSound() { return "rocket.fly"; }
 	virtual void CleanUp();
 	virtual bool ShouldPredict();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
+
+	// create the dynamic light
+	virtual void CreateDLight();
+
+	// update the dynamic light
+	virtual void UpdateDLight();
+
+private:
+	// dynamic light
+	dlight_t *m_pDLight;
+	float m_flDLightRadiusMin;
+	float m_flDLightRadiusMax;
+
 #else
 	DECLARE_DATADESC()
 protected:	

@@ -491,10 +491,10 @@ void CFFProjectileRail::OnDataChanged( DataUpdateType_t updateType )
 		FindOverrideMaterial("effects/cloak", TEXTURE_GROUP_CLIENT_EFFECTS);
 
 		// dlight scale
-		float fDLightScale = cl_ffdlight_rail.GetFloat();
+		float flDLightScale = cl_ffdlight_rail.GetFloat();
 
 		// create the rail light...maybe
-		if (fDLightScale > 0.0f)
+		if (flDLightScale > 0.0f)
 			m_pDLight = effects->CL_AllocDlight( 0 );
 		else
 			m_pDLight = NULL;
@@ -503,7 +503,7 @@ void CFFProjectileRail::OnDataChanged( DataUpdateType_t updateType )
 		if (m_pDLight)
 		{
 			m_pDLight->origin = GetAbsOrigin();
-			m_pDLight->radius = 64 * fDLightScale;
+			m_pDLight->radius = 64 * flDLightScale;
 			m_pDLight->die = gpGlobals->curtime + 0.4;
 			m_pDLight->decay = m_pDLight->radius / 0.4;
 			m_pDLight->color.r = g_uchRailColors[m_iNumBounces][0];

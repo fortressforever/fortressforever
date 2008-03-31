@@ -2352,16 +2352,16 @@ void C_FFPlayer::AddEntity()
 				beams->UpdateBeamInfo(m_pFlashlightBeam, beamInfo);
 
 				// dlight scale
-				float fDLightScale = cl_ffdlight_flashlight.GetFloat();
+				float flDLightScale = cl_ffdlight_flashlight.GetFloat();
 
 				dlight_t *dl = NULL;
-				if (fDLightScale > 0.0f)
+				if (flDLightScale > 0.0f)
 					dl = effects->CL_AllocDlight(0);
 
 				if (dl)
 				{
 					dl->origin = tr.endpos;
-					dl->radius = 50 * fDLightScale; 
+					dl->radius = 50 * flDLightScale; 
 					dl->color.r = 200;
 					dl->color.g = 200;
 					dl->color.b = 200;

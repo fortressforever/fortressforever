@@ -737,10 +737,10 @@ void C_BaseExplosionEffect::CreateDynamicLight( void )
 		return;
 
 	// dlight scale
-	float fDLightScale = cl_ffdlight_explosion.GetFloat();
+	float flDLightScale = cl_ffdlight_explosion.GetFloat();
 
 	dlight_t *dl = NULL;
-	if (fDLightScale > 0.0f)
+	if (flDLightScale > 0.0f)
 		// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
 		//dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
 		dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
@@ -748,7 +748,7 @@ void C_BaseExplosionEffect::CreateDynamicLight( void )
 	if (dl) // I'm scared, daddy...of NULL pointers.
 	{
 		dl->origin = m_vecOrigin;
-		dl->radius	= random->RandomFloat( 208/*ffdev_explosion_light_radius_min.GetFloat()*/, 224/*ffdev_explosion_light_radius_max.GetFloat()*/ ) * fDLightScale; // kinda big radius for explosion
+		dl->radius	= random->RandomFloat( 208/*ffdev_explosion_light_radius_min.GetFloat()*/, 224/*ffdev_explosion_light_radius_max.GetFloat()*/ ) * flDLightScale; // kinda big radius for explosion
 		dl->die = gpGlobals->curtime + 0.25/*ffdev_explosion_light_life.GetFloat()*/; // die = current time + life
 		dl->decay = dl->radius / 0.25/*ffdev_explosion_light_life.GetFloat()*/; // radius / life = good fade
 		dl->color.r = 255/*ffdev_explosion_light_color_r.GetFloat()*/;
