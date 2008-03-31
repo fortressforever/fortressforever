@@ -2641,10 +2641,10 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			GetAttachment( 1, vAttachment, dummyAngles );
 
 			// dlight scale
-			float fDLightScale = cl_ffdlight_muzzle.GetFloat();
+			float flDLightScale = cl_ffdlight_muzzle.GetFloat();
 
 			dlight_t *dl = NULL;
-			if (fDLightScale > 0.0f)
+			if (flDLightScale > 0.0f)
 				// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
 				//dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
 				dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
@@ -2652,7 +2652,7 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			if (dl) // I'm scared, daddy...of NULL pointers.
 			{
 				dl->origin = vAttachment;
-				dl->radius = random->RandomFloat( 56/*ffdev_muzzleflash_light_radius_min.GetFloat()*/, 72/*ffdev_muzzleflash_light_radius_max.GetFloat()*/ ) * fDLightScale; // sorta small radius for muzzle flash
+				dl->radius = random->RandomFloat( 56/*ffdev_muzzleflash_light_radius_min.GetFloat()*/, 72/*ffdev_muzzleflash_light_radius_max.GetFloat()*/ ) * flDLightScale; // sorta small radius for muzzle flash
 				dl->die = gpGlobals->curtime + 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // die = current time + life
 				dl->decay = dl->radius / 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // radius / life = good fade
 				dl->color.r = 255/*ffdev_muzzleflash_light_color_r.GetFloat()*/;

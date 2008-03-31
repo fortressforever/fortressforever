@@ -22,6 +22,10 @@
 	#define RocketTrail C_RocketTrail
 	#include "c_smoke_trail.h"
 	#include "tempentity.h"
+	#include "iefx.h"
+
+	// dlight scale
+	extern ConVar cl_ffdlight_rocket;
 #endif
 
 //#define PREDICTED_ROCKETS
@@ -57,6 +61,17 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_rocket);
 
 #ifdef CLIENT_DLL
 
+	//----------------------------------------------------------------------------
+	// Purpose: Client constructor
+	//----------------------------------------------------------------------------
+	CFFProjectileRocket::CFFProjectileRocket()
+	{
+		// by default, no dynamic lights for projectiles
+		m_pDLight = NULL;
+		m_flDLightRadiusMin = 0.0f;
+		m_flDLightRadiusMax = 0.0f;
+	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Remove the rocket trail
 	//-----------------------------------------------------------------------------
@@ -82,6 +97,32 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_rocket);
 
 	extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
 	extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Called when data changes on the server
+	//-----------------------------------------------------------------------------
+	void CFFProjectileRocket::OnDataChanged( DataUpdateType_t updateType )
+	{
+		// NOTE: We MUST call the base classes' implementation of this function
+		BaseClass::OnDataChanged( updateType );
+
+		// Setup our entity's particle system on creation
+		if ( updateType == DATA_UPDATE_CREATED )
+		{
+			CreateDLight();
+
+			// Call our ClientThink() function once every client frame
+			SetNextClientThink( CLIENT_THINK_ALWAYS );
+		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Client-side think function for the entity
+	//-----------------------------------------------------------------------------
+	void CFFProjectileRocket::ClientThink( void )
+	{
+		UpdateDLight();
+	}
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Client-side explosion stuff (since the rocket is predicted)
@@ -172,6 +213,42 @@ void CFFProjectileRocket::CreateSmokeTrail()
 	}
 #endif
 }
+
+#ifdef CLIENT_DLL
+	void CFFProjectileRocket::CreateDLight()
+	{
+		// dlight scale
+		float flDLightScale = cl_ffdlight_rocket.GetFloat();
+		if (flDLightScale > 0.0f)
+		{
+			m_pDLight = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
+			if (m_pDLight) // I'm scared, daddy...of NULL pointers.
+			{
+				m_pDLight->origin = GetAbsOrigin();
+				m_pDLight->radius = 144.0f * flDLightScale;
+				m_pDLight->die = gpGlobals->curtime + 0.1;
+				m_pDLight->decay = m_pDLight->radius / 0.1;
+				m_pDLight->color.r = 255;
+				m_pDLight->color.g = 160;
+				m_pDLight->color.b = 64;
+				m_pDLight->color.exponent = 4;
+				m_pDLight->style = 6; // 0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker);
+			}
+		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: update the dynamic light
+	//-----------------------------------------------------------------------------
+	void CFFProjectileRocket::UpdateDLight()
+	{
+		// keep the light attached and alive
+		m_pDLight->origin = GetAbsOrigin();
+		m_pDLight->radius = 144.0f * cl_ffdlight_rocket.GetFloat(); // dlight scale
+		m_pDLight->die = gpGlobals->curtime + 0.1;
+	}
+
+#endif
 
 //----------------------------------------------------------------------------
 // Purpose: Spawn a rocket, set up model, size, etc

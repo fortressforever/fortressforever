@@ -526,17 +526,17 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 	/*
 
 	// dlight scale
-	float fDLightScale = cl_ffdlight_generic.GetFloat();
+	float flDLightScale = cl_ffdlight_generic.GetFloat();
 
 	dlight_t *dl = NULL;
-	if (fDLightScale > 0.0f)
+	if (flDLightScale > 0.0f)
 		dl= effects->CL_AllocDlight ( 0 );
 
 	if (dl)
 	{
 		dl->origin	= pos;
 		dl->color.r = dl->color.g = dl->color.b = 192;
-		dl->radius	= random->RandomFloat(24,32) * fDLightScale;
+		dl->radius	= random->RandomFloat(24,32) * flDLightScale;
 		dl->die		= gpGlobals->curtime + 0.01;
 	}
 
@@ -1380,17 +1380,17 @@ void FX_ConcussiveExplosion( Vector &origin, Vector &normal )
 	//
 
 	// dlight scale
-	float fDLightScale = cl_ffdlight_explosion.GetFloat();
+	float flDLightScale = cl_ffdlight_explosion.GetFloat();
 
 	dlight_t *dl = NULL;
-	if (fDLightScale > 0.0f)
+	if (flDLightScale > 0.0f)
 		dl = effects->CL_AllocDlight ( 0 );
 
 	if (dl)
 	{
 		dl->origin	= offset;
 		dl->color.r = dl->color.g = dl->color.b = 64;
-		dl->radius	= random->RandomFloat(112,144) * fDLightScale;
+		dl->radius	= random->RandomFloat(112,144) * flDLightScale;
 		dl->die		= gpGlobals->curtime + 0.1;
 	}
 
