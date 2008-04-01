@@ -793,13 +793,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	if( m_pFlickerer )
 		m_pFlickerer->Flicker();
 	
-	// Just extending this to send events to the bots.
-	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
-	if( pOwner )
-	{
-		Omnibot::Notify_BuildableDamaged( pOwner, Classify(), this );
-		SendStatsToBot();
-	}
+	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
 
 	// Jiggles: Added hint event for buildables taking damage
 	//				There's a 10-second delay to avoid spamming the hint
@@ -823,7 +817,15 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// This will force an update of this variable for the client	
 	NetworkStateChanged( ( int * )&m_iHealth );
 
-	return CBaseEntity::OnTakeDamage( adjustedDamage );
+	int res = CBaseEntity::OnTakeDamage( adjustedDamage );
+
+	// Just extending this to send events to the bots.
+	if(pOwner)
+	{
+		Omnibot::Notify_BuildableDamaged(pOwner, Classify(), this);
+		SendStatsToBot();
+	}
+	return res;
 }
 
 void CFFBuildableObject::SetLocation(const char *_loc)
