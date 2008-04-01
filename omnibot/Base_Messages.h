@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: drevil $
-// $LastChangedDate: 2008-02-02 23:39:14 -0800 (Sat, 02 Feb 2008) $
-// $LastChangedRevision: 2417 $
+// $LastChangedDate: 2008-04-01 07:43:46 -0700 (Tue, 01 Apr 2008) $
+// $LastChangedRevision: 2534 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,14 +68,14 @@ struct Msg_PlayerChooseEquipment
 	}
 };
 
-struct Msg_PlayerHealthArmor
+struct Msg_HealthArmor
 {
 	int			m_CurrentHealth;
 	int			m_MaxHealth;
 	int			m_CurrentArmor;
 	int			m_MaxArmor;
 
-	Msg_PlayerHealthArmor()
+	Msg_HealthArmor()
 		: m_CurrentHealth(0)
 		, m_MaxHealth(0)
 		, m_CurrentArmor(0)

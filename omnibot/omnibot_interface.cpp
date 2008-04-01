@@ -1967,15 +1967,16 @@ namespace Omnibot
 				}
 			case GEN_MSG_GETHEALTHARMOR:
 				{
-					OB_GETMSG(Msg_PlayerHealthArmor);
+					OB_GETMSG(Msg_HealthArmor);
 					if(pMsg)
 					{
-						if(pPlayer)
+						//if(pPlayer)
+						if(pEnt)
 						{
-							pMsg->m_CurrentHealth = pPlayer->GetHealth();
-							pMsg->m_MaxHealth = pPlayer->GetMaxHealth();
-							pMsg->m_CurrentArmor = pPlayer->GetArmor();
-							pMsg->m_MaxArmor = pPlayer->GetMaxArmor();
+							pMsg->m_CurrentHealth = pEnt->GetHealth();
+							pMsg->m_MaxHealth = pEnt->GetMaxHealth();
+							pMsg->m_CurrentArmor = pEnt->GetArmor();
+							pMsg->m_MaxArmor = pEnt->GetMaxArmor();
 						}						
 					}
 					break;
