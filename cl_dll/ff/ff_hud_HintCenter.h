@@ -105,7 +105,8 @@ private:
 	CHudTexture		*m_pHudIconGlow;
 
 	float		m_flLastHintDuration;	// Duration of the hint
-	short		m_iLastHintPriority;		// How important was the last hint?
+	short		m_iLastHintPriority;	// How important was the last hint?
+	short		m_iLastHintID;			// What was the last hint?
 
 	vgui::RichText	*m_pRichText;				// Stores the hint text for display
 	vgui::Button		*m_pNextHintButton;			// Click to display the next hint
