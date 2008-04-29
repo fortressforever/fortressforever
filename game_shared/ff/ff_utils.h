@@ -135,7 +135,7 @@ enum HintPriority
 // -- Yeah, this is lengthy, but it works :)
 enum HintType
 { 	
-	//MAP_HINT,			// TODO: Have maps send their messages using the hint system
+	MAP_HINT,			// Generic!  Maps send their messages using the hint system
 
 	// SCOUT
 	SCOUT_SPAWN,		// Event: First spawn +5 seconds

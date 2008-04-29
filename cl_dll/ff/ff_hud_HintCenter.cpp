@@ -72,6 +72,7 @@ CHudHintCenter::CHudHintCenter( const char *pElementName ) : CHudElement( pEleme
 	SetTitleBarVisible( false );
 
 	m_iCurrentHintIndex = -1;
+	m_iLastHintID = -1;
 
 
 }
@@ -142,19 +143,22 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 	}
 	
 	// Now, let's see if this hint has been shown yet
-	HintInfo structHintInfo( hintID, NumShow );
-	int foundIndex = m_HintVector.Find( structHintInfo );
-	if (  foundIndex < 0 )  // Hint not shown yet
+	int foundIndex = -1;
+	if ( hintID ) // Zero is reserved for MAP hints, which we're gonna show all the time anyway
 	{
-		if ( structHintInfo.m_ShowCount != -1 ) // -1 is reserved for "infinite" hints
-			structHintInfo.m_ShowCount--;
-		m_HintVector.AddToTail( structHintInfo );
+		HintInfo structHintInfo( hintID, NumShow );
+		foundIndex = m_HintVector.Find( structHintInfo );
+		if (  foundIndex < 0 )  // Hint not shown yet
+		{
+			if ( structHintInfo.m_ShowCount != -1 ) // -1 is reserved for "infinite" hints
+				structHintInfo.m_ShowCount--;
+			m_HintVector.AddToTail( structHintInfo );
+		}
+		else if ( m_HintVector[ foundIndex ].m_ShowCount > 0 )
+			m_HintVector[ foundIndex ].m_ShowCount--;
+		else if (  m_HintVector[ foundIndex ].m_ShowCount != -1 )  // Hint has been shown enough times -- ignore it
+			return;
 	}
-	else if ( m_HintVector[ foundIndex ].m_ShowCount > 0 )
-		m_HintVector[ foundIndex ].m_ShowCount--;
-	else if (  m_HintVector[ foundIndex ].m_ShowCount != -1 )  // Hint has been shown enough times -- ignore it
-		return;
-
 	m_iLastHintPriority = hintPriority;
 	m_flLastHintDuration = gpGlobals->curtime + HINTCENTER_TIMEOUT_THRESHOLD + HINTCENTER_FADEOUT_TIME;
 	
@@ -171,11 +175,15 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hin
 	m_pRichText->SetText( "" );
 	TranslateKeyCommand( pszTemp );
 
-	m_HintStringsVector.AddToTail( pszTemp );
+	// We don't want multiple copies of the same hint in a row
+	// But we will allow this for map hints, because each map hint could be different
+	if ( hintID != m_iLastHintID || !hintID )
+		m_HintStringsVector.AddToTail( pszTemp );
 	if ( m_HintStringsVector.Count() > HINT_HISTORY ) 
 		m_HintStringsVector.Remove( 0 );  // Remove the oldest hint
 
 	m_iCurrentHintIndex = m_HintStringsVector.Count() - 1;
+	m_iLastHintID = hintID;	
 
 	// There's probably a better way to do this
 	// Create the "current # / total #" string, then convert it to Unicode so Surface() can have its way with it :)

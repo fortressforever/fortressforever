@@ -839,6 +839,13 @@ namespace FFLib
 		}
 	}
 
+	// Displays a string in the hint box
+	void DisplayMessage( CFFPlayer *pPlayer, const char* message )
+	{
+		if ( pPlayer )
+			FF_SendHint( pPlayer, MAP_HINT, -1, PRIORITY_HIGH, message );
+	}
+
 	// Updates the position of the Objective Icon (the entity it's attached to)
 	void UpdateObjectiveIcon( CFFPlayer *pPlayer, CBaseEntity *pEntity )
 	{
@@ -1561,6 +1568,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SpeakTeam",				&FFLib::SpeakTeam),
 		def("LogLuaEvent",				&FFLib::LogLuaEvent),
 		def("UpdateObjectiveIcon",		&FFLib::UpdateObjectiveIcon),
-		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon)
+		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon),
+		def("DisplayMessage",			&FFLib::DisplayMessage)
 	];
 }
