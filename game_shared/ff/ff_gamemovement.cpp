@@ -66,10 +66,10 @@ public:
 	CFFGameMovement() {};
 };
 
-//static ConVar bhop_cap("ffdev_bhop_cap", "1", FCVAR_REPLICATED);
-#define BHOP_CAP 1.2f
-//static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED);
-#define BHOP_PCFACTOR 0.65f
+static ConVar bhop_cap("ffdev_bhop_cap", "1.2", FCVAR_REPLICATED);
+#define BHOP_CAP bhop_cap.GetFloat()
+static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED);
+#define BHOP_PCFACTOR bhop_pcfactor.GetFloat()
 
 //-----------------------------------------------------------------------------
 // Purpose: Provides TFC jump heights, trimping, doublejumps
@@ -190,8 +190,8 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// This following dynamic cap is documented here:
 	//		http://www.madabouthats.org/code-tf2/viewtopic.php?t=2360
 
-	const float cap = /*2.0f*/ /*1.6f*/ BHOP_CAP * mv->m_flMaxSpeed;
-	const float pcfactor = /*0.5f*/ BHOP_PCFACTOR;
+	const float cap = BHOP_CAP * mv->m_flMaxSpeed;
+	const float pcfactor = BHOP_PCFACTOR;
 	const float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
 	if (speed > cap)
