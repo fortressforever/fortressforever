@@ -216,18 +216,18 @@ void CHudObjectiveIcon::Paint( void )
 				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
 			}
 		}
-		else  // If the objective isn't on the screen, draw an arrow pointing to it
+		
+		// Calculate the angle the objective is from the player
+		Vector vecDelta = ( vecObjectiveOrigin - MainViewOrigin() );
+		VectorNormalize( vecDelta );	
+		float angle = GetObjectiveAngle( vecDelta );
+		//char szBuf[64];
+		//Q_snprintf( szBuf, 64, "%f", angle );
+		//ClientPrintMsg( pPlayer, HUD_PRINTCENTER, szBuf );
+
+		// If the objective isn't on the screen, draw an arrow pointing to it
+		if ( angle >= 45 && angle <= 315 )  
 		{
-			Vector vecDelta = (vecObjectiveOrigin - MainViewOrigin());
-			VectorNormalize(vecDelta);
-
-			// Calculate the angle the objective is from the player
-			float angle = GetObjectiveAngle( vecDelta );
-
-			//char szBuf[64];
-			//Q_snprintf( szBuf, 64, "%f", angle );
-			//ClientPrintMsg( pPlayer, HUD_PRINTCENTER, szBuf );
-
 			// Let's draw a triangle pointing toward the objective that is off the screen
 			float yawRadians1 = - (angle) * M_PI / 180.0f;
 			float yawRadians2 = - (angle - 5.0f) * M_PI / 180.0f;

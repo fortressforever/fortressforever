@@ -19,17 +19,20 @@
 #include "ff_weapon_assaultcannon.h"
 
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
-#define FF_AC_WINDUPTIME	0.5f	// Assault Cannon Wind Up Time
+#define FF_AC_WINDUPTIME	0.4f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
 #define FF_AC_MOVEMENTDELAY 0.4f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
 									// AfterShock: I'm also using this for the 'charge down' time now also (time before bullets stop firing, after you stop pressing fire)
-#define FF_AC_MINCLAMPTIME 0.1f		// minimum charge on the AC before you can clamp
+#define FF_AC_MINCLAMPTIME 0.43f	// minimum charge on the AC before you can clamp
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
-ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.05", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
+ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.05", FCVAR_REPLICATED, "The minimum cone of fire spread for the AC" );
 //#define FF_AC_SPREAD_MAX 0.10f // Assault Cannon Maximum spread
-ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.26", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
+ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.26", FCVAR_REPLICATED, "The maximum cone of fire spread for the AC" );
+
+ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "12.0", FCVAR_REPLICATED, "Damage per bullet" );
+#define BULLET_DAMAGE	ffdev_ac_bullet_damage.GetFloat()
 
 #define FF_AC_ROF_MAX 0.15f // Assault Cannon maximum rate of fire
 #define FF_AC_ROF_MIN 0.05f // Assault Cannon minimum rate of fire
@@ -666,7 +669,7 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 		MAX_TRACE_LENGTH, 
 		m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
-	info.m_iDamage = (iBulletsToFire * pWeaponInfo.m_iBullets) * pWeaponInfo.m_iDamage;
+	info.m_iDamage = (iBulletsToFire * pWeaponInfo.m_iBullets) * /*pWeaponInfo.m_iDamage*/BULLET_DAMAGE;
 
 	Vector vecTest = info.m_vecSrc;
 
