@@ -66,8 +66,10 @@ public:
 	CFFGameMovement() {};
 };
 
-static ConVar bhop_cap("ffdev_bhop_cap", "1.2", FCVAR_REPLICATED);
-#define BHOP_CAP bhop_cap.GetFloat()
+static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.2", FCVAR_REPLICATED);
+#define BHOP_CAP_SOFT bhop_cap_soft.GetFloat()
+static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "1.6", FCVAR_REPLICATED);
+#define BHOP_CAP_HARD bhop_cap_hard.GetFloat()
 static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED);
 #define BHOP_PCFACTOR bhop_pcfactor.GetFloat()
 
@@ -190,13 +192,24 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// This following dynamic cap is documented here:
 	//		http://www.madabouthats.org/code-tf2/viewtopic.php?t=2360
 
-	const float cap = BHOP_CAP * mv->m_flMaxSpeed;
+	const float cap_soft = BHOP_CAP_SOFT * mv->m_flMaxSpeed;
+	const float cap_hard = BHOP_CAP_HARD * mv->m_flMaxSpeed;
 	const float pcfactor = BHOP_PCFACTOR;
 	const float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
-	if (speed > cap)
+	if (speed > cap_hard)
 	{
-		float applied_cap = (speed - cap) * pcfactor + cap;
+		float applied_cap = cap_hard;
+		float multi = applied_cap / speed;
+
+		mv->m_vecVelocity[0] *= multi;
+		mv->m_vecVelocity[1] *= multi;
+
+		Assert(multi <= 1.0f);
+	}
+	else if (speed > cap_soft)
+	{
+		float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
 		float multi = applied_cap / speed;
 
 		mv->m_vecVelocity[0] *= multi;

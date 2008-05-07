@@ -658,7 +658,9 @@ void CFFPlayer::ClassSpecificSkill()
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post()
 {
-				CFFWeaponBase *pWeapon = GetActiveFFWeapon();
+#ifdef GAME_DLL
+	CFFWeaponBase *pWeapon = GetActiveFFWeapon();
+#endif
 	switch (GetClassSlot())
 	{
 #ifdef CLIENT_DLL

@@ -20,7 +20,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1000", FCVAR_REPLICATED );
+ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "800", FCVAR_REPLICATED );
 ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "500", FCVAR_REPLICATED );
 
 // Jiggles: Sorry, but I'm not using the "mancannon" nomenclature; Bungie didn't invent the jump pad!

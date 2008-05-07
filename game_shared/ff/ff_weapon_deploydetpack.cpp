@@ -130,7 +130,7 @@ void CFFWeaponDeployDetpack::PrimaryAttack( void )
 #ifdef CLIENT_DLL
 		// By holding down the attack button, the player brings up a radial menu
 		// to choose the timer length
-		if (!m_bInSetTimerMenu)
+		if (!m_bInSetTimerMenu && ToFFPlayer(GetOwner())->IsLocalPlayer() )
 		{
 			m_bInSetTimerMenu = true;
 			HudContextShow(true);
@@ -178,7 +178,7 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 			Cleanup();
 
 		// The player just released the attack button
-		if( m_bInSetTimerMenu /* pPlayer->m_afButtonReleased & IN_ATTACK */ )
+		if( m_bInSetTimerMenu && pPlayer && pPlayer->IsLocalPlayer()/* pPlayer->m_afButtonReleased & IN_ATTACK */ )
 		{
 			HudContextShow(false);
 			m_bInSetTimerMenu = false;
