@@ -1141,6 +1141,14 @@ ConVar mp_prematch( "mp_prematch",
 			{
 				CTraceFilterIgnoreSingleFlag traceFilter( FL_GRENADE );
 				UTIL_TraceLine( vecSrc, vecSpot, MASK_SHOT, &traceFilter, &tr );
+				
+				// Jiggles: This is the case where an EMP triggered a backpack to explode.
+				//			We don't want the backpack to block the trace, so let's trace again ignoring it
+				if ( tr.fraction == 0.0 && tr.m_pEnt && tr.m_pEnt->Classify() == CLASS_BACKPACK )
+				{
+					CTraceFilterSimple passBackpack( tr.m_pEnt, COLLISION_GROUP_NONE );
+					UTIL_TraceLine( vecSrc, vecSpot, MASK_SHOT, &passBackpack, &tr );
+				}
 			}
 			else
 				UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
