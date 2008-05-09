@@ -6014,10 +6014,13 @@ int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	return hp;
 }
 
+ConVar emp_celldamage("ffdev_emp_celldamagecap", "150", FCVAR_REPLICATED);
+#define MAX_CELLDAMAGE emp_celldamage.GetInt()
+
 int CFFPlayer::TakeEmp()
 {
-	// Only rockets and shells explode from EMPs, unless you are a pyro
-	// in which case cells will do too!
+	// Rockets, shells, and cells explode from EMPs, unless you are an engineer
+	// in which case cells do not
 	// EMPs also reduce your ammo store by 25%!
 	// Values calculated  from TFC
 
@@ -6037,7 +6040,8 @@ int CFFPlayer::TakeEmp()
 	// the pyro just has so many cells, that they destroy him - Jon - 2/9/2007
 	if (GetClassSlot() != CLASS_ENGINEER)
 	{
-		ammodmg += GetAmmoCount(iCells) * 1.3f;
+		// Jiggles: Actually, we don't really want to insta-gib Pyros...
+		ammodmg += clamp( GetAmmoCount(iCells) * 1.3f, 0, MAX_CELLDAMAGE );
 		SetAmmoCount(GetAmmoCount(iCells) * 0.75f, iCells);
 	}
 
