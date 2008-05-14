@@ -104,6 +104,8 @@ bool CFFPlayer::FFAnim_CanMove()
 {
 	return true;
 }
+ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "45", FCVAR_REPLICATED, "Base Damage for Sniper Rifle" );
+#define	SR_BASE_DAMAGE	sniperrifle_basedamage.GetFloat()
 
 void CFFPlayer::FireBullet(
 						   Vector vecSrc, 	// shooting postion
@@ -120,7 +122,7 @@ void CFFPlayer::FireBullet(
 {
 	// NOTE NOTE NOTE: Only sniper rifle uses this anymore!
 
-	float fCurrentDamage = flDamage;   // damage of the bullet at it's current trajectory
+	float fCurrentDamage = SR_BASE_DAMAGE/*flDamage*/;   // damage of the bullet at it's current trajectory
 	float fScale = 1.0f;			// scale the force
 	//float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
 	float flMaxRange = MAX_TRACE_LENGTH;

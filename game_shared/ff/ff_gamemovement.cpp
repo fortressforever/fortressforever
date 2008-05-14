@@ -68,10 +68,13 @@ public:
 
 static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.2", FCVAR_REPLICATED);
 #define BHOP_CAP_SOFT bhop_cap_soft.GetFloat()
-static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "1.6", FCVAR_REPLICATED);
+static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "1.8", FCVAR_REPLICATED);
 #define BHOP_CAP_HARD bhop_cap_hard.GetFloat()
+static ConVar bhop_cap_hard_degen("ffdev_bhop_cap_hard_degen", "0.65", FCVAR_REPLICATED);
+#define	BHOP_CAP_HARD_DEGEN bhop_cap_hard_degen.GetFloat()
 static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED);
 #define BHOP_PCFACTOR bhop_pcfactor.GetFloat()
+ConVar bhop_needs_more_convar("ffdev_bhop_needs_more_convar", "99", FCVAR_REPLICATED | FCVAR_NOTIFY );
 
 //-----------------------------------------------------------------------------
 // Purpose: Provides TFC jump heights, trimping, doublejumps
@@ -199,7 +202,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 
 	if (speed > cap_hard)
 	{
-		float applied_cap = cap_hard;
+		float applied_cap = cap_hard * BHOP_CAP_HARD_DEGEN; 
 		float multi = applied_cap / speed;
 
 		mv->m_vecVelocity[0] *= multi;

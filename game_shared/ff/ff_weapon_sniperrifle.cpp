@@ -764,7 +764,7 @@ float CFFWeaponSniperRifle::GetFOV()
 //-----------------------------------------------------------------------------
 float CFFWeaponSniperRifle::GetRecoilMultiplier()
 {
-	return clamp(gpGlobals->curtime - m_flFireStartTime, 1, 7);
+	return clamp(gpGlobals->curtime - m_flFireStartTime, 1, FF_SNIPER_MAXCHARGE);
 }
 
 #ifdef CLIENT_DLL
@@ -790,5 +790,5 @@ float GetSniperRifleCharge( CFFPlayer *pPlayer )
 	if( !pSniperRifle->IsInFire() )
 		return 0.0;
 
-	return 100.0f * ( clamp( gpGlobals->curtime - pSniperRifle->GetFireStartTime(), 1.0f, 7.0f ) / 7.0f );
+	return 100.0f * ( clamp( gpGlobals->curtime - pSniperRifle->GetFireStartTime(), 1.0f, FF_SNIPER_MAXCHARGE ) / FF_SNIPER_MAXCHARGE );
 }
