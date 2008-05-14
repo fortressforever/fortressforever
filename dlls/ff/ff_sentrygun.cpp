@@ -67,20 +67,26 @@
 
 // Debug visualization
 ConVar	sg_debug( "ffdev_sg_debug", "1", FCVAR_CHEAT );
-ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_CHEAT );
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0", FCVAR_CHEAT );
-ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0", FCVAR_CHEAT );
-ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_CHEAT );
+ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0", FCVAR_REPLICATED );
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0", FCVAR_REPLICATED );
+ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
-ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "15.0", FCVAR_REPLICATED | FCVAR_CHEAT, "SG bullet push force");
+ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "15.0", FCVAR_REPLICATED, "SG bullet push force");
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
 ConVar ffdev_sg_groundpush_multiplier("ffdev_sg_groundpush_multiplier", "4.0", FCVAR_REPLICATED, "SG ground bullet push multiplier");
-ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED | FCVAR_CHEAT, "SG bullet damage");
-ConVar ffdev_sg_rof_lvl1("ffdev_sg_rof_lvl1", "0.200", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 1 SG rate of fire");
-ConVar ffdev_sg_rof_lvl2("ffdev_sg_rof_lvl2", "0.100", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 2 SG rate of fire");
-ConVar ffdev_sg_rof_lvl3("ffdev_sg_rof_lvl3", "0.100", FCVAR_REPLICATED | FCVAR_CHEAT, "Level 3 SG rate of fire");
+ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED, "SG bullet damage");
+
+ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.200", FCVAR_REPLICATED, "Level 1 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL1	sg_shotcycletime_lvl1.GetFloat()
+ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.100", FCVAR_REPLICATED, "Level 2 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL2	sg_shotcycletime_lvl2.GetFloat()
+ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.100", FCVAR_REPLICATED, "Level 3 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL3	sg_shotcycletime_lvl3.GetFloat()
+
+ConVar i_love_the_betas("ffdev_sg_convars_are_serious_business", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Level of Seriousness");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -155,6 +161,7 @@ CFFSentryGun::CFFSentryGun()
 	m_flPingTime = 0;
 	m_flNextActivateSoundTime = 0;
 	m_flNextShell = 0;
+	m_flShotAccumulator = 0;
 	m_flNextRocket = 0;
 	m_flLastSight = 0;
 	m_iMaxShells = 200; // TODO: Get Number
@@ -814,6 +821,14 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_vecDirShooting = vecDir;
 	info.m_iTracerFreq = 0;	// Mirv: Doing tracers down below now
 	info.m_iShots = 1;
+	// Jiggles: We want to fire more than 1 shot if the SG's think rate is too slow to keep up with the cycle time value
+	//			Since we can't fire partial bullets, we have to accumulate them
+	m_flShotAccumulator += (gpGlobals->curtime - m_flNextShell) / m_flShellCycleTime;
+	if ( m_flShotAccumulator >= 1 )
+	{
+		info.m_iShots += m_flShotAccumulator;
+		m_flShotAccumulator -= (info.m_iShots - 1); // Remove the whole numbers (shots); leave the remainder
+	}
 	info.m_pAttacker = this;
 	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
 	info.m_flDistance = MAX_COORD_RANGE;
@@ -1139,7 +1154,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
 
 			//m_flShellCycleTime = 0.2f;
-			m_flShellCycleTime = ffdev_sg_rof_lvl1.GetFloat();
+			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL1;
 
 			m_iMaxHealth = SG_HEALTH_LEVEL1;
 			m_iHealth = SG_HEALTH_LEVEL1;
@@ -1160,7 +1175,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
 
 			//m_flShellCycleTime = 0.1f;
-			m_flShellCycleTime = ffdev_sg_rof_lvl2.GetFloat();
+			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL2;
 
 			m_iMaxHealth = SG_HEALTH_LEVEL2;
 			m_iHealth = SG_HEALTH_LEVEL2;
@@ -1185,7 +1200,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
 
 			//m_flShellCycleTime = 0.1f;
-			m_flShellCycleTime = ffdev_sg_rof_lvl3.GetFloat();
+			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL3;
 			m_flRocketCycleTime = 3.0f;
 
 			m_iMaxHealth = SG_HEALTH_LEVEL3;
