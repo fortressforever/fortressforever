@@ -793,6 +793,7 @@ public:
 	int		m_iAmmoType;
 	float	m_flNextShell;
 	float	m_flNextRocket;
+	float	m_flShotAccumulator;
 
 	float	m_flLastSight;
 	float	m_flPingTime;
