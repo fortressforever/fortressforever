@@ -26,7 +26,8 @@
 	#include "ff_player.h"
 #endif
 
-
+ConVar pipe_damage_radius( "ffdev_pipe_damage_radius", "150", FCVAR_REPLICATED, "Pipe explosion radius" );
+#define PIPE_DAMAGERADIUS	pipe_damage_radius.GetInt()
 
 //----------------------------------------------------------------------------
 // Purpose: Send special hint on firing first pipe
@@ -123,7 +124,7 @@ void CFFWeaponPipeLauncher::Fire()
 	else if( tr.fraction != 1.0f )
 		vecSrc += ( vForward * -24.0f );
 
-	CFFProjectilePipebomb *pPipe = CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, pPlayer->EyeAngles() - QAngle(12.0f, 0.0f, 0.0f), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
+	CFFProjectilePipebomb *pPipe = CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, pPlayer->EyeAngles() - QAngle(12.0f, 0.0f, 0.0f), pPlayer, pWeaponInfo.m_iDamage, PIPE_DAMAGERADIUS/*pWeaponInfo.m_iDamageRadius*/, pWeaponInfo.m_iSpeed);
 	pPipe;
 
 #ifdef GAME_DLL

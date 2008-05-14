@@ -24,6 +24,9 @@
 	#include "ff_player.h"
 #endif
 
+ConVar rpg_damage_radius( "ffdev_rpg_damage_radius", "125", FCVAR_REPLICATED, "RPG explosion radius" );
+#define RPG_DAMAGERADIUS	rpg_damage_radius.GetInt()
+
 //=============================================================================
 // CFFWeaponRPG
 //=============================================================================
@@ -88,7 +91,7 @@ void CFFWeaponRPG::Fire()
 	//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
 	Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
 
-	CFFProjectileRocket *pRocket = CFFProjectileRocket::CreateRocket(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iDamageRadius, pWeaponInfo.m_iSpeed);
+	CFFProjectileRocket *pRocket = CFFProjectileRocket::CreateRocket(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, RPG_DAMAGERADIUS/*pWeaponInfo.m_iDamageRadius*/, pWeaponInfo.m_iSpeed);
 	pRocket;
 
 #ifdef GAME_DLL

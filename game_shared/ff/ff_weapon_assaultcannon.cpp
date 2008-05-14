@@ -19,12 +19,12 @@
 #include "ff_weapon_assaultcannon.h"
 
 // please keep some values exposed to cvars so non programmers can tweak them, even if the code isn't final
-#define FF_AC_WINDUPTIME	0.4f	// Assault Cannon Wind Up Time
+#define FF_AC_WINDUPTIME	0.5f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
 #define FF_AC_MOVEMENTDELAY 0.4f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
 									// AfterShock: I'm also using this for the 'charge down' time now also (time before bullets stop firing, after you stop pressing fire)
-#define FF_AC_MINCLAMPTIME 0.43f	// minimum charge on the AC before you can clamp
+#define FF_AC_MINCLAMPTIME 0.53f	// minimum charge on the AC before you can clamp
 
 //#define FF_AC_SPREAD_MIN 0.01f // Assault Cannon Minimum spread
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.05", FCVAR_REPLICATED, "The minimum cone of fire spread for the AC" );
@@ -34,10 +34,13 @@ ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.26", FCVAR_REPLICATED, "Th
 ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "12.0", FCVAR_REPLICATED, "Damage per bullet" );
 #define BULLET_DAMAGE	ffdev_ac_bullet_damage.GetFloat()
 
-#define FF_AC_ROF_MAX 0.15f // Assault Cannon maximum rate of fire
-#define FF_AC_ROF_MIN 0.05f // Assault Cannon minimum rate of fire
+ConVar ac_rof_max( "ffdev_ac_rof_max", "0.15", FCVAR_REPLICATED, "Assault Cannon maximum rate of fire" );
+#define FF_AC_ROF_MAX	ac_rof_max.GetFloat()	// Assault Cannon maximum rate of fire
+ConVar ac_rof_min( "ffdev_ac_rof_min", "0.05", FCVAR_REPLICATED, "Assault Cannon minimum rate of fire" );
+#define FF_AC_ROF_MIN ac_rof_min.GetFloat()		// Assault Cannon minimum rate of fire
 
-#define FF_AC_BULLETPUSH 1.0 // Assault Cannon bullet push force
+ConVar ac_bulletpush( "ffdev_ac_bulletpush", "1.0", FCVAR_REPLICATED, "Assault Cannon bullet push force" );
+#define FF_AC_BULLETPUSH ac_bulletpush.GetFloat() // Assault Cannon bullet push force
 
 //#define FF_AC_SPEEDEFFECT_MAX 0.6f
 
