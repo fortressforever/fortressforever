@@ -52,12 +52,12 @@
 #define SG_MIN_PITCH		-90.0f
 #define SG_SCAN_HALFWIDTH	40.0f
 
-static ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "160", FCVAR_REPLICATED, "Level 1 SG health");
-#define SG_HEALTH_LEVEL1	sg_health_lvl1.GetInt()
-static ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "192", FCVAR_REPLICATED, "Level 2 SG health");
-#define SG_HEALTH_LEVEL2	sg_health_lvl2.GetInt()
-static ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "236", FCVAR_REPLICATED, "Level 3 SG health");
-#define SG_HEALTH_LEVEL3	sg_health_lvl3.GetInt()
+//extern ConVar sg_health_lvl1;
+//#define SG_HEALTH_LEVEL1	sg_health_lvl1.GetInt()
+//extern ConVar sg_health_lvl2;
+//#define SG_HEALTH_LEVEL2	sg_health_lvl2.GetInt()
+//extern ConVar sg_health_lvl3;
+//#define SG_HEALTH_LEVEL3	sg_health_lvl3.GetInt()
 
 
 #endif // FF_SENTRYGUN_H

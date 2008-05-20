@@ -120,7 +120,7 @@ enum KillTypes_t
 	KILLTYPE_GASSED
 };
 
-static ConVar sniperrifle_chargetime( "ffdev_sniperrifle_chargetime", "7.0", FCVAR_REPLICATED, "Max charge time on Sniper Rifle" );
+extern ConVar sniperrifle_chargetime;
 #define FF_SNIPER_MAXCHARGE sniperrifle_chargetime.GetFloat()
 
 #endif // FF_SHAREDDEFS_H

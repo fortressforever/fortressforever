@@ -22,6 +22,7 @@ using namespace vgui;
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <vgui/IVGui.h>
+#include "VGUI_BitmapImage.h"
 
 #include "cliententitylist.h"
 
@@ -34,6 +35,7 @@ using namespace vgui;
 
 #define OBJECTIVE_ICON_TEXTURE			"glyphs/objective_icon"
 #define OBJECTIVE_ICON_TEXTURE_OBSCURED	"glyphs/objective_icon_obscured"
+#define	OBJECTIVE_ICON_ARROW			"glyphs/ff_damage_pitt"
 
 //ConVar cl_objectiveicon_minsize( "cl_objectiveicon_minsize", "350.0f", FCVAR_ARCHIVE, "Minimum size of the objective icon");
 #define OBJECTIVE_ICON_MINIMUM_SIZE		350.0f/*cl_objectiveicon_minsize.GetFloat()*/
@@ -53,6 +55,8 @@ private:
 	CHudTexture	*m_pIconTexture;
 	CHudTexture *m_pObscuredIconTexture;
 
+	BitmapImage *m_pArrow;
+
 	void	CacheTextures( void );
 	float	GetObjectiveAngle( const Vector &vecDelta );
 
@@ -68,6 +72,7 @@ public:
 		
 		m_pIconTexture = NULL;
 		m_pObscuredIconTexture = NULL;
+		m_pArrow = NULL;
 
 		m_iTextureWide = 256;
 		m_iTextureTall = 512;
@@ -107,6 +112,8 @@ void CHudObjectiveIcon::VidInit( void )
 
 	// Cache the glyphs!
 	CacheTextures();
+
+
 }
 
 void CHudObjectiveIcon::Init( void )
@@ -129,6 +136,14 @@ void CHudObjectiveIcon::CacheTextures( void )
 		m_pObscuredIconTexture->textureId = vgui::surface( )->CreateNewTextureID( );
 		PrecacheMaterial( OBJECTIVE_ICON_TEXTURE_OBSCURED );
 	}
+
+	if ( !m_pArrow )
+	{
+		PrecacheMaterial( OBJECTIVE_ICON_ARROW );
+		m_pArrow = new BitmapImage();
+		m_pArrow->Init( NULL, OBJECTIVE_ICON_ARROW );
+		m_pArrow->SetColor( Color(255, 255, 255, 255) );
+	}
 }
 
 CHudObjectiveIcon::~CHudObjectiveIcon( void )
@@ -142,6 +157,11 @@ CHudObjectiveIcon::~CHudObjectiveIcon( void )
 	{
 		delete m_pObscuredIconTexture;
 		m_pObscuredIconTexture = NULL;
+	}
+	if ( m_pArrow )
+	{
+		delete m_pArrow;
+		m_pArrow = NULL;
 	}
 }
 
@@ -229,9 +249,9 @@ void CHudObjectiveIcon::Paint( void )
 		if ( angle >= 45 && angle <= 315 )  
 		{
 			// Let's draw a triangle pointing toward the objective that is off the screen
-			float yawRadians1 = - (angle) * M_PI / 180.0f;
+			//float yawRadians1 = - (angle) * M_PI / 180.0f;
 			float yawRadians2 = - (angle - 5.0f) * M_PI / 180.0f;
-			float yawRadians3 = - (angle + 5.0f) * M_PI / 180.0f;
+			//float yawRadians3 = - (angle + 5.0f) * M_PI / 180.0f;
 
 			// Rotate it around the circle
 			int iXCenter = ScreenWidth() / 2;
@@ -240,17 +260,20 @@ void CHudObjectiveIcon::Paint( void )
 			int xposLeft = (int) ( iXCenter + ( 360.0f * sin(yawRadians2) ) );
 			int yposLeft = (int) ( iYCenter - ( 360.0f * cos(yawRadians2) ) );
 			
-			int xposRight = (int) ( iXCenter + ( 360.0f * sin(yawRadians3) ) );
-			int yposRight = (int) ( iYCenter - ( 360.0f * cos(yawRadians3) ) );
+			//int xposRight = (int) ( iXCenter + ( 360.0f * sin(yawRadians3) ) );
+			//int yposRight = (int) ( iYCenter - ( 360.0f * cos(yawRadians3) ) );
+			//
+			//int xposMiddle = (int) ( iXCenter + ( (360.0f * 1.05f) * sin(yawRadians1) ) );
+			//int yposMiddle = (int) ( iYCenter - ( (360.0f * 1.05f) * cos(yawRadians1) ) );
+			//
+			//// Let's actually draw the triangle now...
+			//int xcoords[] = { xposLeft, xposRight, xposMiddle };
+			//int ycoords[] = { yposLeft, yposRight, yposMiddle };
+			//surface()->DrawSetColor( cColor );
+			//surface()->DrawPolyLine( xcoords, ycoords, 3 );
+
+			m_pArrow->DoPaint(xposLeft, yposLeft, 100, 100, angle); 
 			
-			int xposMiddle = (int) ( iXCenter + ( (360.0f * 1.05f) * sin(yawRadians1) ) );
-			int yposMiddle = (int) ( iYCenter - ( (360.0f * 1.05f) * cos(yawRadians1) ) );
-			
-			// Let's actually draw the triangle now...
-			int xcoords[] = { xposLeft, xposRight, xposMiddle };
-			int ycoords[] = { yposLeft, yposRight, yposMiddle };
-			surface()->DrawSetColor( cColor );
-			surface()->DrawPolyLine( xcoords, ycoords, 3 );
 
 		}
 	}
