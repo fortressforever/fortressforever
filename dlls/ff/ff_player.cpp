@@ -3174,6 +3174,9 @@ void CFFPlayer::Command_BuildManCannon( void )
 	PreBuildGenericThink();
 }
 
+ConVar sg_buildtime("ffdev_sg_buildtime", "5.0", FCVAR_REPLICATED, "Sentry Gun build time");
+#define SG_BUILDTIME	sg_buildtime.GetFloat()
+
 void CFFPlayer::PreBuildGenericThink( void )
 {
 	//
@@ -3378,7 +3381,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					m_hSentryGun = pSentryGun;
 
 					// Set the time it takes to build
-					m_flBuildTime = gpGlobals->curtime + 5.0f;	// |-- Mirv: Bug #0000127: when building a sentry gun the build finishes before the sound
+					m_flBuildTime = gpGlobals->curtime + SG_BUILDTIME/*5.0f*/;	// |-- Mirv: Bug #0000127: when building a sentry gun the build finishes before the sound
 
 					// Bug #0001558: exploit to get instant lvl2 SG
 					// Moved code to remove cells from CFFSentryGun::GoLive() to here -> Defrag

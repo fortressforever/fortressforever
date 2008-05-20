@@ -86,6 +86,13 @@ ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.100", FCVAR_REPLI
 ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.100", FCVAR_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3	sg_shotcycletime_lvl3.GetFloat()
 
+ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "160", FCVAR_REPLICATED, "Level 1 SG health");
+#define SG_HEALTH_LEVEL1	sg_health_lvl1.GetInt()
+ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "192", FCVAR_REPLICATED, "Level 2 SG health");
+#define SG_HEALTH_LEVEL2	sg_health_lvl2.GetInt()
+ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "236", FCVAR_REPLICATED, "Level 3 SG health");
+#define SG_HEALTH_LEVEL3	sg_health_lvl3.GetInt()
+
 ConVar i_love_the_betas("ffdev_sg_convars_are_serious_business", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Level of Seriousness");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
