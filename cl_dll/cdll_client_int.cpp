@@ -673,9 +673,10 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	cl_cmdrate->SetValue(33);
 
 	// Turn off r_dynamic until our wrapper sets it
-	ConVar *r_dynamic = cvar->FindVar("r_dynamic");
-	r_dynamic->SetValue(0);
+	// ConVar *r_dynamic = cvar->FindVar("r_dynamic");
+	// r_dynamic->SetValue(0);
 	// <-- Mirv
+	// there are lots of dlight options now, so nevermind -- Jon
 
 	if (!ParticleMgr()->Init(MAX_TOTAL_PARTICLES, materials))
 		return false;
