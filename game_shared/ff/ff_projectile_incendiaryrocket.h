@@ -49,23 +49,6 @@ public:
 	void ArcThink();
 
 #ifdef CLIENT_DLL
-	CFFProjectileIncendiaryRocket();
-	CFFProjectileIncendiaryRocket(const CFFProjectileIncendiaryRocket&) { CFFProjectileIncendiaryRocket(); }
-
-	virtual void OnDataChanged(DataUpdateType_t type);
-	virtual void ClientThink( void );
-
-	// create the dynamic light
-	virtual void CreateDLight();
-
-	// update the dynamic light
-	virtual void UpdateDLight();
-
-private:
-	// dynamic light
-	dlight_t *m_pDLight;
-	float m_flDLightRadiusMin;
-	float m_flDLightRadiusMax;
 
 #else
 

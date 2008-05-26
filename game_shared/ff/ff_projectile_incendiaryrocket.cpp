@@ -22,10 +22,7 @@
 	#include "ff_buildableobjects_shared.h"
 	#include "soundent.h"
 #else
-	#include "iefx.h"
 
-	// dlight scale
-	extern ConVar cl_ffdlight_ic;
 #endif
 
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
@@ -49,83 +46,6 @@ END_DATADESC()
 //=============================================================================
 // CFFProjectileIncendiaryRocket implementation
 //=============================================================================
-
-#ifdef CLIENT_DLL
-
-	//----------------------------------------------------------------------------
-	// Purpose: Client constructor
-	//----------------------------------------------------------------------------
-	CFFProjectileIncendiaryRocket::CFFProjectileIncendiaryRocket()
-	{
-		// by default, no dynamic lights for projectiles
-		m_pDLight = NULL;
-		m_flDLightRadiusMin = 0.0f;
-		m_flDLightRadiusMax = 0.0f;
-	}
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Called when data changes on the server
-	//-----------------------------------------------------------------------------
-	void CFFProjectileIncendiaryRocket::OnDataChanged( DataUpdateType_t updateType )
-	{
-		// NOTE: We MUST call the base classes' implementation of this function
-		BaseClass::OnDataChanged( updateType );
-
-		// Setup our entity's particle system on creation
-		if ( updateType == DATA_UPDATE_CREATED )
-		{
-			CreateDLight();
-
-			// Call our ClientThink() function once every client frame
-			SetNextClientThink( CLIENT_THINK_ALWAYS );
-		}
-	}
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Client-side think function for the entity
-	//-----------------------------------------------------------------------------
-	void CFFProjectileIncendiaryRocket::ClientThink( void )
-	{
-		UpdateDLight();
-	}
-
-	void CFFProjectileIncendiaryRocket::CreateDLight()
-	{
-		// dlight scale
-		float flDLightScale = cl_ffdlight_ic.GetFloat();
-		if (flDLightScale > 0.0f)
-		{
-			m_pDLight = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
-			if (m_pDLight) // I'm scared, daddy...of NULL pointers.
-			{
-				m_pDLight->origin = GetAbsOrigin();
-				m_pDLight->radius = 144.0f * flDLightScale;
-				m_pDLight->die = gpGlobals->curtime + 0.1;
-				m_pDLight->decay = m_pDLight->radius / 0.1;
-				m_pDLight->color.r = 255;
-				m_pDLight->color.g = 144;
-				m_pDLight->color.b = 48;
-				m_pDLight->color.exponent = 4;
-				m_pDLight->style = 6; // 0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker);
-			}
-		}
-	}
-
-	//-----------------------------------------------------------------------------
-	// Purpose: update the dynamic light
-	//-----------------------------------------------------------------------------
-	void CFFProjectileIncendiaryRocket::UpdateDLight()
-	{
-		if (m_pDLight) // I'm scared, daddy...of NULL pointers.
-		{
-			// keep the light attached and alive
-			m_pDLight->origin = GetAbsOrigin();
-			m_pDLight->radius = 144.0f * cl_ffdlight_ic.GetFloat(); // dlight scale
-			m_pDLight->die = gpGlobals->curtime + 0.1;
-		}
-	}
-
-#endif
 
 void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 {
