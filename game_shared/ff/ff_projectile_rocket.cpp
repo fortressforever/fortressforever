@@ -242,10 +242,13 @@ void CFFProjectileRocket::CreateSmokeTrail()
 	//-----------------------------------------------------------------------------
 	void CFFProjectileRocket::UpdateDLight()
 	{
-		// keep the light attached and alive
-		m_pDLight->origin = GetAbsOrigin();
-		m_pDLight->radius = 144.0f * cl_ffdlight_rocket.GetFloat(); // dlight scale
-		m_pDLight->die = gpGlobals->curtime + 0.1;
+		if (m_pDLight) // I'm scared, daddy...of NULL pointers.
+		{
+			// keep the light attached and alive
+			m_pDLight->origin = GetAbsOrigin();
+			m_pDLight->radius = 144.0f * cl_ffdlight_rocket.GetFloat(); // dlight scale
+			m_pDLight->die = gpGlobals->curtime + 0.1;
+		}
 	}
 
 #endif
