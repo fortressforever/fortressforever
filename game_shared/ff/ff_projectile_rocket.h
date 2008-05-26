@@ -67,8 +67,6 @@ public:
 private:
 	// dynamic light
 	dlight_t *m_pDLight;
-	float m_flDLightRadiusMin;
-	float m_flDLightRadiusMax;
 
 #else
 	DECLARE_DATADESC()

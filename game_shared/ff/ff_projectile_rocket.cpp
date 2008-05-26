@@ -68,8 +68,6 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_rocket);
 	{
 		// by default, no dynamic lights for projectiles
 		m_pDLight = NULL;
-		m_flDLightRadiusMin = 0.0f;
-		m_flDLightRadiusMax = 0.0f;
 	}
 
 	//-----------------------------------------------------------------------------
