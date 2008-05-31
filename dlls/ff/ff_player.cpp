@@ -6970,6 +6970,10 @@ void CFFPlayer::SpySabotageThink()
 	if (m_flNextSpySabotageThink > gpGlobals->curtime)
 		return;
 
+	// No sabotaging while cloaked
+	if( IsCloaked() )
+		return;
+
 	m_flNextSpySabotageThink = gpGlobals->curtime + 0.2f;
 
 	// We have to be under a particular speed to sabotage
