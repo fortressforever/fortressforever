@@ -1323,6 +1323,23 @@ void SENTENCEG_Init()
 	engine->PrecacheSentenceFile( scriptName );
 #else
 	engine->PrecacheSentenceFile( "scripts/sentences.txt" );
+
+	// begin jon: ability to use "maps\mapname_sentences.txt" as well
+	Msg( "SENTENCEG_Init: precached scripts/sentences.txt\n" );
+	const char *mapname = STRING( gpGlobals->mapname );
+	if ( mapname && *mapname )
+	{
+		if ( filesystem->FileExists( UTIL_VarArgs( "maps/%s_sentences.txt", mapname ) ) )
+		{
+			char mapSentencesFilename[256] = {0};
+			Q_snprintf(mapSentencesFilename, sizeof(mapSentencesFilename), "maps/%s_sentences.txt", mapname);
+			engine->PrecacheSentenceFile( mapSentencesFilename );
+
+			Msg( "SENTENCEG_Init: precached maps/%s_sentences.txt\n", mapname );
+		}
+	}
+	// end jon: ability to use "maps\mapname_sentences.txt" as well
+
 #endif
 	fSentencesInit = true;
 }
