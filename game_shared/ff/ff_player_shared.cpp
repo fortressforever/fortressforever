@@ -58,10 +58,11 @@ ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "5", FCVAR_REPLICATED | FCVAR
 
 ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED | FCVAR_CHEAT, "Spy must be moving at least this slow to scloak." );
 
-// ConVar sniper_minpush( "ffdev_sniper_minpush", "3.5", FCVAR_REPLICATED );
-// ConVar sniper_maxpush( "ffdev_sniper_maxpush", "6.7", FCVAR_REPLICATED );
-#define FF_SNIPER_MINPUSH 3.5f
-#define FF_SNIPER_MAXPUSH 6.7f
+ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "4.2", FCVAR_REPLICATED );
+#define FF_SNIPER_MINPUSH sniperrifle_pushmin.GetFloat()
+
+ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "8.4", FCVAR_REPLICATED );
+#define FF_SNIPER_MAXPUSH sniperrifle_pushmax.GetFloat()
 
 //0001279: Need convar for pipe det delay
 extern ConVar pipebomb_time_till_live;
@@ -104,8 +105,12 @@ bool CFFPlayer::FFAnim_CanMove()
 {
 	return true;
 }
-ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "45", FCVAR_REPLICATED, "Base Damage for Sniper Rifle" );
+
+ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "42", FCVAR_REPLICATED, "Base Damage for Sniper Rifle" );
 #define	SR_BASE_DAMAGE	sniperrifle_basedamage.GetFloat()
+
+ConVar sniperrifle_basedamagemax( "ffdev_sniperrifle_basedamagemax", "273", FCVAR_REPLICATED, "Base Max Damage for Sniper Rifle" );
+#define	SR_BASE_DAMAGE_MAX	sniperrifle_basedamagemax.GetFloat()
 
 void CFFPlayer::FireBullet(
 						   Vector vecSrc, 	// shooting postion
@@ -122,8 +127,8 @@ void CFFPlayer::FireBullet(
 {
 	// NOTE NOTE NOTE: Only sniper rifle uses this anymore!
 
-	float fCurrentDamage = SR_BASE_DAMAGE/*flDamage*/;   // damage of the bullet at it's current trajectory
-	float fScale = 1.0f;			// scale the force
+	float flCurrentDamage = SR_BASE_DAMAGE/*flDamage*/;   // damage of the bullet at it's current trajectory
+	float flScale = 1.0f;			// scale the force
 	//float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
 	float flMaxRange = MAX_TRACE_LENGTH;
 
@@ -193,19 +198,23 @@ void CFFPlayer::FireBullet(
 	//flCurrentDistance += tr.fraction * flMaxRange;
 
 	// damage get weaker of distance
-	//fCurrentDamage *= pow(0.85f, (flCurrentDistance / 500));	// |-- Mirv: Distance doesnt affect sniper rifle
+	//flCurrentDamage *= pow(0.85f, (flCurrentDistance / 500));	// |-- Mirv: Distance doesnt affect sniper rifle
 
 	// --> Mirv: Locational damage
 
 	// Only if this is a charged shot
 	if (flSniperRifleCharge)
 	{
-		float fBaseDamage = fCurrentDamage;
-		fCurrentDamage = fBaseDamage + fBaseDamage * (FF_SNIPER_MAXCHARGE - 1) * ( flSniperRifleCharge / FF_SNIPER_MAXCHARGE);
+		//float flBaseDamage = flCurrentDamage;
+		//flCurrentDamage = flBaseDamage + flBaseDamage * (FF_SNIPER_MAXCHARGE - 1) * ( flSniperRifleCharge / FF_SNIPER_MAXCHARGE);
+
+		// what was the old code?  seriously...
+		float flChargePercentage = ( flSniperRifleCharge / FF_SNIPER_MAXCHARGE);
+		flCurrentDamage = SR_BASE_DAMAGE + ( flChargePercentage * (SR_BASE_DAMAGE_MAX - SR_BASE_DAMAGE) );
 		
-		/*float fOldDamage = fBaseDamage * flSniperRifleCharge;
-		if (fOldDamage < fBaseDamage)
-			fOldDamage = fBaseDamage;
+		/*float fOldDamage = flBaseDamage * flSniperRifleCharge;
+		if (fOldDamage < flBaseDamage)
+			fOldDamage = flBaseDamage;
 		DevMsg("Sniper damage: %.1f. Old damage: %.1f.",fCurrentDamage,fOldDamage);
 		*/
 
@@ -214,12 +223,14 @@ void CFFPlayer::FireBullet(
 		// and 8.5 seemed to be about TFC's full charge shot
 		//fScale = clamp( flSniperRifleCharge + 3.5f, 4.5f, 8.5f );
 		// NOTE: New phish scale!
-		fScale = FF_SNIPER_MINPUSH + ( ( flSniperRifleCharge * ( FF_SNIPER_MAXPUSH - FF_SNIPER_MINPUSH ) ) / FF_SNIPER_MAXCHARGE );
+		//flScale = FF_SNIPER_MINPUSH + ( ( flSniperRifleCharge * ( FF_SNIPER_MAXPUSH - FF_SNIPER_MINPUSH ) ) / FF_SNIPER_MAXCHARGE );
+		// what was the old code?  seriously...
+		flScale = FF_SNIPER_MINPUSH + ( flChargePercentage * (FF_SNIPER_MAXPUSH - FF_SNIPER_MINPUSH) );
 
 		if (tr.hitgroup == HITGROUP_HEAD)
 		{
 			DevMsg("Headshot, damage multiplied by %f\n", ffdev_sniper_headshotmod.GetFloat());
-			fCurrentDamage *= ffdev_sniper_headshotmod.GetFloat();
+			flCurrentDamage *= ffdev_sniper_headshotmod.GetFloat();
 
 			bHeadshot = true;
 
@@ -230,7 +241,7 @@ void CFFPlayer::FireBullet(
 		else if (tr.hitgroup == HITGROUP_LEFTLEG || tr.hitgroup == HITGROUP_RIGHTLEG)
 		{
 			DevMsg("Legshot\n");
-			fCurrentDamage *= ffdev_sniper_legshotmod.GetFloat();
+			flCurrentDamage *= ffdev_sniper_legshotmod.GetFloat();
 #ifdef CLIENT_DLL
 			FF_SendHint( SNIPER_LEGSHOT, 3, PRIORITY_NORMAL, "#FF_HINT_SNIPER_LEGSHOT" );
 #endif
@@ -317,7 +328,7 @@ void CFFPlayer::FireBullet(
 	// add damage to entity that we hit
 
 	ClearMultiDamage();
-	CTakeDamageInfo info( ToFFPlayer(pevAttacker)->GetActiveFFWeapon(), pevAttacker, fCurrentDamage, iDamageType );	// |-- Mirv: Modified this
+	CTakeDamageInfo info( ToFFPlayer(pevAttacker)->GetActiveFFWeapon(), pevAttacker, flCurrentDamage, iDamageType );	// |-- Mirv: Modified this
 
 	// for radio tagging and to make ammo type work in the DamageFunctions
 	info.SetAmmoType( iBulletType );
@@ -328,8 +339,8 @@ void CFFPlayer::FireBullet(
 //		info.SetAmmoType( m_iRadioTaggedAmmoIndex );
 //#endif
 
-	CalculateBulletDamageForce(&info, iBulletType, vecDir, tr.endpos, fScale);
-	info.ScaleDamageForce(fScale * fScale * fScale);
+	CalculateBulletDamageForce(&info, iBulletType, vecDir, tr.endpos, flScale);
+	info.ScaleDamageForce(flScale * flScale * flScale);
 
 	if (tr.m_pEnt->IsPlayer())
 	{

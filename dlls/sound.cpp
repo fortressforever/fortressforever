@@ -1324,8 +1324,12 @@ void SENTENCEG_Init()
 #else
 	engine->PrecacheSentenceFile( "scripts/sentences.txt" );
 
-	// begin jon: ability to use "maps\mapname_sentences.txt" as well
+	// begin jon: ability to use "maps\mapname_sentences.txt" and "scripts/sentences_common.txt" as well
 	Msg( "SENTENCEG_Init: precached scripts/sentences.txt\n" );
+
+	engine->PrecacheSentenceFile( "scripts/sentences_common.txt" );
+	Msg( "SENTENCEG_Init: precached scripts/sentences_common.txt\n" );
+
 	const char *mapname = STRING( gpGlobals->mapname );
 	if ( mapname && *mapname )
 	{
@@ -1338,7 +1342,7 @@ void SENTENCEG_Init()
 			Msg( "SENTENCEG_Init: precached maps/%s_sentences.txt\n", mapname );
 		}
 	}
-	// end jon: ability to use "maps\mapname_sentences.txt" as well
+	// end jon: ability to use "maps\mapname_sentences.txt" and "scripts/sentences_common.txt" as well
 
 #endif
 	fSentencesInit = true;
