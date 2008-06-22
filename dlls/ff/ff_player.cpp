@@ -6403,15 +6403,18 @@ int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 	return iDispensed;
 }
 
-int CFFPlayer::LuaAddHealth(int iAmount)
-{
-	iAmount = min( iAmount, m_iMaxHealth - m_iHealth );
-	if (iAmount <= 0)
-		return 0;
+int CFFPlayer::LuaAddHealth(int iAmount) 
+{ 
+   if (iAmount > 0) 
+      m_iHealth += iAmount; 
+   else 
+   { 
+      CTakeDamageInfo info( this, this, -iAmount, DMG_GENERIC ); 
+      info.SetCustomKill(KILLTYPE_INFECTION); 
+      TakeDamage( info ); 
+   } 
 
-	m_iHealth += iAmount;
-
-	return iAmount;
+   return iAmount; 
 }
 
 //-----------------------------------------------------------------------------
