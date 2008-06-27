@@ -203,6 +203,8 @@ public:
 
 	// Gets the entity at player's current objective (set by Lua)
 	CBaseEntity *GetCurrObjectiveEntity( void ) { return dynamic_cast< CBaseEntity * >( m_hObjectiveEntity.Get() ); }
+	// Gets the origin of player's current objective (set by Lua)
+	Vector GetCurrObjectiveOrigin( void ) { return m_vecObjectiveOrigin.Get(); }
 
 	bool IsInfected( void ) const	{ return m_bInfected != 0; }
 	// Two girls for every boy?
@@ -498,6 +500,8 @@ private:
 	
 	// Entity at player's current objective (set by Lua)
 	CNetworkHandle( CBaseEntity, m_hObjectiveEntity );
+	// Location of player's current objective (also set by Lua)
+	CNetworkVector( m_vecObjectiveOrigin );
 };
 
 // Just straight up copying the server version. Tired

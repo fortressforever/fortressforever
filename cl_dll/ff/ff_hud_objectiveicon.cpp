@@ -33,6 +33,8 @@ using namespace vgui;
 #include "c_playerresource.h"
 #include "ff_hud_chat.h"
 
+#define INVALID_OBJECTIVE_LOCATION -9515.2f // If you change this, also change it in ff_player.h
+
 #define OBJECTIVE_ICON_TEXTURE			"glyphs/objective_icon"
 #define OBJECTIVE_ICON_TEXTURE_OBSCURED	"glyphs/objective_icon_obscured"
 #define	OBJECTIVE_ICON_ARROW			"glyphs/ff_damage_pitt"
@@ -181,12 +183,20 @@ void CHudObjectiveIcon::Paint( void )
 			return;
 		
 		// Get the current objective entity
+		// Unfortunately, it seems certain entities (like trigger_scripts) do not network properly (they have invalid indexes)
+		// So, we also have to network the entity's position as a fallback
 		CBaseEntity *pObjectiveEntity = pPlayer->GetCurrObjectiveEntity();
+		Vector vecObjectiveOrigin;
 		if ( !pObjectiveEntity )
-			return;
-
+		{
+			vecObjectiveOrigin = pPlayer->GetCurrObjectiveOrigin();
+			// Reserved an arbitrary large negative z value as "invalid"
+			if ( vecObjectiveOrigin.z == INVALID_OBJECTIVE_LOCATION )
+				return;
+		}
 		// Get the current objective's location
-		Vector vecObjectiveOrigin = pObjectiveEntity->GetAbsOrigin();
+		else
+			vecObjectiveOrigin = pObjectiveEntity->GetAbsOrigin();
 		// Get the player's feet origin
 		Vector vecOrigin = pPlayer->GetFeetOrigin();
 

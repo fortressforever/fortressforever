@@ -374,6 +374,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropQAngles( SENDINFO( m_vecInfoIntermission ), 13 ),
 	// Entity at player's current objective (set by Lua)
 	SendPropEHandle( SENDINFO( m_hObjectiveEntity ) ),
+	// Location of player's current objective (also set by Lua)
+	SendPropVector( SENDINFO( m_vecObjectiveOrigin ), SPROP_COORD ),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -1599,6 +1601,7 @@ void CFFPlayer::InitialSpawn( void )
 	// Reset to 0
 	m_vecInfoIntermission.Init();
 	m_hObjectiveEntity = NULL;
+	m_vecObjectiveOrigin.SetZ( INVALID_OBJECTIVE_LOCATION );
 
 	BaseClass::InitialSpawn();
 

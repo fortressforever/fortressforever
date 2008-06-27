@@ -846,11 +846,21 @@ namespace FFLib
 			FF_SendHint( pPlayer, MAP_HINT, -1, PRIORITY_HIGH, message );
 	}
 
-	// Updates the position of the Objective Icon (the entity it's attached to)
+	// Updates which entity the HUD objective icon is attached to
+	// Unfortunately, it seems certain entities (like trigger_scripts) do not network properly (they have invalid indexes)
+	// So, we also have to network the entity's position as a fallback
 	void UpdateObjectiveIcon( CFFPlayer *pPlayer, CBaseEntity *pEntity )
 	{
 		if ( pPlayer )
+		{
 			pPlayer->SetObjectiveEntity( pEntity );
+			if ( pEntity )
+				pPlayer->SetObjectiveOrigin( pEntity->GetAbsOrigin() );
+			else
+				pPlayer->SetObjectiveOrigin( Vector( 0, 0, INVALID_OBJECTIVE_LOCATION ) );
+		}
+		else
+			pPlayer->SetObjectiveOrigin( Vector( 0, 0, INVALID_OBJECTIVE_LOCATION ) );
 	}
 
 	// Updates the position of the Objective Icon (the entity it's attached to) for a whole team
