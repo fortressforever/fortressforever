@@ -627,6 +627,8 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropQAngles( RECVINFO( m_vecInfoIntermission ) ),
 	// Entity at player's current objective (set by Lua)
 	RecvPropEHandle( RECVINFO( m_hObjectiveEntity ) ),
+	// Location of player's current objective (also set by Lua)
+	RecvPropVector( RECVINFO( m_vecObjectiveOrigin ) ),
 END_RECV_TABLE( )
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY

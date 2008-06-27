@@ -35,6 +35,8 @@ class CFFManCannon;
 
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
+#define INVALID_OBJECTIVE_LOCATION -9515.2f
+
 #define FF_BUILD_DISP_STRING_LEN	256
 
 // BEG: Added by Mulchman for team junk
@@ -407,6 +409,7 @@ public:
 	bool IsRespawnable( void ) const { return m_bRespawnable; }
 	bool CanRespawn( void ) const { return IsRespawnable(); }
 	void SetObjectiveEntity( const CBaseEntity *pEntity ){ m_hObjectiveEntity = pEntity; }
+	void SetObjectiveOrigin( const Vector &vecObjOrigin ){ m_vecObjectiveOrigin = vecObjOrigin; }
 private:
 	bool m_bRespawnable;
 	bool m_bACDamageHint; // For triggering the "Pyro takes damage from HWGuy" hint only once
@@ -929,6 +932,8 @@ private:
 	// ----------------------------------
 	// Entity at player's current objective (set by Lua)
 	CNetworkHandle( CBaseEntity, m_hObjectiveEntity );
+	// Location of player's current objective (also set by Lua)
+	CNetworkVector( m_vecObjectiveOrigin );
 };
 
 
