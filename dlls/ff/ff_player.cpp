@@ -5375,6 +5375,57 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !fTookDamage )
 		return 0;
 
+
+
+
+
+/* COMMENTED - NOT READY YET (not fully tested)
+	// AfterShock: slow the player depending on how much damage they took, down to a minimum of standard run speed - mostly useful for slowing bhoppers and concers
+
+	// get damage that they took
+	// get their current velocity vector and horizontal speed
+	// get their class max run speed
+	// get the maxdamage cvar 
+	// if their horizontal speed is less than max run speed then skipfunction
+
+	//Vector vecVelocity = pPlayer->GetAbsVelocity();
+	Vector vecVelocity = GetAbsVelocity();
+	Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+	float flHorizontalSpeed = vecLatVelocity.Length();
+	//float flMaxSpeed = pPlayer->MaxSpeed();
+	float flMaxSpeed = MaxSpeed();
+	int DMGFORFULLSLOW = 100;
+
+
+	if (flHorizontalSpeed > flMaxSpeed)
+	{
+		// excess speed is the speed over the maxrunspeed 
+		// e.g. hit for 50 dmg, maxdmg is 100, speed is 1000, maxrun is 300
+		// so we want 50/100 = 0.5 * 1000-300 = 350, take that away from current speed = 650 speed after shot
+		float fLateral;
+		if (fTookDamage > DMGFORFULLSLOW)
+		{
+			// this is more complex than before since we need to work out multipliers for each direction
+			// something like 
+			// just set their speed to max run speed
+			fLateral = flMaxSpeed / flHorizontalSpeed;
+		}
+		else
+		{
+			// new speed is current speed minus a fraction of the speed above the cap
+			fLateral = flHorizontalSpeed - ((flHorizontalSpeed - flMaxSpeed) * (fTookDamage / DMGFORFULLSLOW));
+			fLateral = fLateral / flHorizontalSpeed;
+			//flHorizontalSpeed = flHorizontalSpeed - (flHorizontalSpeed - flMaxSpeed) * (fTookDamge / DMGFORFULLSLOW)
+		}
+		// set player velocity
+		//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
+		SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z));
+					
+	}
+*/
+
+
+
 	// add to the damage total for clients, which will be sent as a single
 	// message at the end of the frame
 	// todo: remove after combining shotgun blasts?
@@ -6372,7 +6423,7 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 int CFFPlayer::AddHealth(unsigned int amount)
 {
 	int left = TakeHealth( amount, DMG_GENERIC );
-    return left;
+	return left;
 }
 
 //-----------------------------------------------------------------------------
@@ -6406,18 +6457,24 @@ int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 	return iDispensed;
 }
 
-int CFFPlayer::LuaAddHealth(int iAmount) 
-{ 
-   if (iAmount > 0) 
-      m_iHealth += iAmount; 
-   else 
-   { 
-      CTakeDamageInfo info( this, this, -iAmount, DMG_GENERIC ); 
-      info.SetCustomKill(KILLTYPE_INFECTION); 
-      TakeDamage( info ); 
-   } 
+int CFFPlayer::LuaAddHealth(int iAmount)
+{
+		iAmount = min( iAmount, m_iMaxHealth - m_iHealth ); // dont give more health than their max
+		//if (iAmount == 0)
+		//	return 0;
+	if (iAmount > 0)
+		m_iHealth += iAmount;
+	else
+	{
+		CTakeDamageInfo info( this, this, -iAmount, DMG_GENERIC );
+		//info.SetDamageForce( Vector( 0, 0, -1 ) );
+		//info.SetDamagePosition( Vector( 0, 0, 1 ) );
+		info.SetCustomKill(KILLTYPE_INFECTION);
 
-   return iAmount; 
+		TakeDamage( info );
+	}
+
+	return iAmount;
 }
 
 //-----------------------------------------------------------------------------
