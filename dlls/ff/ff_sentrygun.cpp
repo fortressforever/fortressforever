@@ -68,32 +68,30 @@
 // Debug visualization
 ConVar	sg_debug( "ffdev_sg_debug", "1", FCVAR_CHEAT );
 ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0", FCVAR_REPLICATED );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "18.0", FCVAR_REPLICATED );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0", FCVAR_REPLICATED );
 ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
-ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "15.0", FCVAR_REPLICATED, "SG bullet push force");
+ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "2.0", FCVAR_REPLICATED, "SG bullet push force");
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
 ConVar ffdev_sg_groundpush_multiplier("ffdev_sg_groundpush_multiplier", "4.0", FCVAR_REPLICATED, "SG ground bullet push multiplier");
-ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "15", FCVAR_REPLICATED, "SG bullet damage");
+ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "8", FCVAR_REPLICATED, "SG bullet damage");
 
 ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.200", FCVAR_REPLICATED, "Level 1 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL1	sg_shotcycletime_lvl1.GetFloat()
-ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.100", FCVAR_REPLICATED, "Level 2 SG time between shots");
+ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.050", FCVAR_REPLICATED, "Level 2 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL2	sg_shotcycletime_lvl2.GetFloat()
-ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.100", FCVAR_REPLICATED, "Level 3 SG time between shots");
+ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.050", FCVAR_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3	sg_shotcycletime_lvl3.GetFloat()
 
-ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "160", FCVAR_REPLICATED, "Level 1 SG health");
+ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
 #define SG_HEALTH_LEVEL1	sg_health_lvl1.GetInt()
-ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "192", FCVAR_REPLICATED, "Level 2 SG health");
+ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG health");
 #define SG_HEALTH_LEVEL2	sg_health_lvl2.GetInt()
-ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "236", FCVAR_REPLICATED, "Level 3 SG health");
+ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
 #define SG_HEALTH_LEVEL3	sg_health_lvl3.GetInt()
-
-ConVar i_love_the_betas("ffdev_sg_convars_are_serious_business", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Level of Seriousness");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -835,11 +833,16 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_iShots = 1;
 	// Jiggles: We want to fire more than 1 shot if the SG's think rate is too slow to keep up with the cycle time value
 	//			Since we can't fire partial bullets, we have to accumulate them
-	m_flShotAccumulator += (gpGlobals->curtime - m_flNextShell) / m_flShellCycleTime;
-	if ( m_flShotAccumulator >= 1 )
+	// But don't do it if it has been longer than the SG's think time
+	float flLastShellDelta = gpGlobals->curtime - m_flNextShell;
+	if ( flLastShellDelta <= 0.1f )
 	{
-		info.m_iShots += m_flShotAccumulator;
-		m_flShotAccumulator -= (info.m_iShots - 1); // Remove the whole numbers (shots); leave the remainder
+		m_flShotAccumulator += (flLastShellDelta / m_flShellCycleTime);
+		if ( m_flShotAccumulator >= 1 )
+		{
+			info.m_iShots += m_flShotAccumulator;
+			m_flShotAccumulator -= (info.m_iShots - 1); // Remove the whole numbers (shots); leave the remainder
+		}
 	}
 	info.m_pAttacker = this;
 	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;

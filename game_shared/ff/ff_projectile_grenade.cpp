@@ -43,7 +43,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_gl);
 ConVar projectile_gren_friction("ffdev_projectile_gren_friction", "0.375", FCVAR_REPLICATED | FCVAR_CHEAT, "");
 ConVar projectile_gren_elasticity("ffdev_projectile_gren_elasticity", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT, "");
 ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT, "");
-ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.1", FCVAR_REPLICATED | FCVAR_CHEAT, "");
+ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.3", FCVAR_REPLICATED | FCVAR_CHEAT, "");
 
 #ifdef GAME_DLL
 
