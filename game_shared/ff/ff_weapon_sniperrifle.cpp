@@ -21,7 +21,7 @@ static int g_iBeam, g_iHalo;
 	#include "omnibot_interface.h"
 #endif
 
-ConVar sniperrifle_chargetime( "ffdev_sniperrifle_chargetime", "4.0", FCVAR_REPLICATED, "Max charge time on Sniper Rifle" );
+ConVar sniperrifle_chargetime( "ffdev_sniperrifle_chargetime", "5.0", FCVAR_REPLICATED, "Max charge time on Sniper Rifle" );
 ConVar sniperrifle_laserdot_scale("ffdev_sniperrifle_laserdot_scale", "0.15", FCVAR_REPLICATED | FCVAR_CHEAT, "Scale of the sniper rifle laser dot");
 ConVar sniperrifle_zoomfov("ffdev_sniperrifle_zoomfov", "25", FCVAR_REPLICATED | FCVAR_CHEAT, "fov of the sniper zoom (+attack2). smaller value = more zoomed in.");
 

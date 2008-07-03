@@ -48,7 +48,7 @@ ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Al
 //ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_REPLICATED);
 ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_sniper_radiotag_time( "ffdev_sniper_radiotag_time", "10.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_sniper_radiotag_time( "ffdev_sniper_radiotag_time", "30.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 //ConVar ffdev_sniperrifle_legshot_minslowdownspeed( "ffdev_sniperrifle_legshot_minslowdownspeed", "0.7", FCVAR_REPLICATED, "Player speed when hit with a minimum charge sniper rifle shot (0.7 would mean player speed at 70% after being legshot)" );
 //ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
@@ -58,10 +58,10 @@ ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "5", FCVAR_REPLICATED | FCVAR
 
 ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED | FCVAR_CHEAT, "Spy must be moving at least this slow to scloak." );
 
-ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "4.2", FCVAR_REPLICATED );
+ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_REPLICATED );
 #define FF_SNIPER_MINPUSH sniperrifle_pushmin.GetFloat()
 
-ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "8.4", FCVAR_REPLICATED );
+ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "5.5", FCVAR_REPLICATED );
 #define FF_SNIPER_MAXPUSH sniperrifle_pushmax.GetFloat()
 
 //0001279: Need convar for pipe det delay
@@ -106,10 +106,10 @@ bool CFFPlayer::FFAnim_CanMove()
 	return true;
 }
 
-ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "42", FCVAR_REPLICATED, "Base Damage for Sniper Rifle" );
+ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "45", FCVAR_REPLICATED, "Base Damage for Sniper Rifle" );
 #define	SR_BASE_DAMAGE	sniperrifle_basedamage.GetFloat()
 
-ConVar sniperrifle_basedamagemax( "ffdev_sniperrifle_basedamagemax", "273", FCVAR_REPLICATED, "Base Max Damage for Sniper Rifle" );
+ConVar sniperrifle_basedamagemax( "ffdev_sniperrifle_basedamagemax", "275", FCVAR_REPLICATED, "Base Max Damage for Sniper Rifle" );
 #define	SR_BASE_DAMAGE_MAX	sniperrifle_basedamagemax.GetFloat()
 
 void CFFPlayer::FireBullet(
