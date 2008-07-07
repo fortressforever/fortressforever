@@ -859,8 +859,6 @@ namespace FFLib
 			else
 				pPlayer->SetObjectiveOrigin( Vector( 0, 0, INVALID_OBJECTIVE_LOCATION ) );
 		}
-		else
-			pPlayer->SetObjectiveOrigin( Vector( 0, 0, INVALID_OBJECTIVE_LOCATION ) );
 	}
 
 	// Updates the position of the Objective Icon (the entity it's attached to) for a whole team
@@ -878,7 +876,13 @@ namespace FFLib
 				continue;
 
 			if( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+			{
 				pPlayer->SetObjectiveEntity( pEntity );
+				if ( pEntity )
+					pPlayer->SetObjectiveOrigin( pEntity->GetAbsOrigin() );
+				else
+					pPlayer->SetObjectiveOrigin( Vector( 0, 0, INVALID_OBJECTIVE_LOCATION ) );
+			}
 		}
 	}
 
