@@ -32,6 +32,9 @@
 	#include "te_effect_dispatch.h"
 #endif
 
+//ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum charge for railgun" );
+#define FFDEV_RAILGUN_MAXCHARGETIME 2.0f // ffdev_railgun_maxchargetime.GetFloat()
+
 //=============================================================================
 // CFFProjectileRail
 //=============================================================================
