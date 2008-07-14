@@ -35,35 +35,57 @@
 	#include "te_effect_dispatch.h"
 #endif
 
-#define RAILGUN_AMMOAMOUNT_HALFCHARGE 3
-#define RAILGUN_AMMOAMOUNT_FULLCHARGE 5
+//ConVar ffdev_railgun_ammoamount_halfcharge( "ffdev_railgun_ammoamount_halfcharge", "2", FCVAR_REPLICATED | FCVAR_CHEAT, "How much total ammo is lost for a half charge." );
+#define FFDEV_RAILGUN_AMMOAMOUNT_HALFCHARGE 2 // ffdev_railgun_ammoamount_halfcharge.GetInt()
+//ConVar ffdev_railgun_ammoamount_fullcharge( "ffdev_railgun_ammoamount_fullcharge", "3", FCVAR_REPLICATED | FCVAR_CHEAT, "How much total ammo is lost for a full charge." );
+#define FFDEV_RAILGUN_AMMOAMOUNT_FULLCHARGE 3 // ffdev_railgun_ammoamount_fullcharge.GetInt()
 
-ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum charge for railgun" );
+//ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "6.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun overcharges at this time, stops charging, and damages player." );
+#define FFDEV_RAILGUN_OVERCHARGETIME 6.0f // ffdev_railgun_overchargetime.GetFloat()
+//ConVar ffdev_railgun_overchargedamage( "ffdev_railgun_overchargedamage", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Amount of damage an overcharge gives to the player (doubled on full charge)." );
+#define FFDEV_RAILGUN_OVERCHARGEDAMAGE 0.0f // ffdev_railgun_overchargedamage.GetFloat()
 
-ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "6.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun overcharges at this time, stops charging, and damages player." );
-ConVar ffdev_railgun_overchargedamage( "ffdev_railgun_overchargedamage", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Amount of damage an overcharge gives to the player (doubled on full charge)." );
+//ConVar ffdev_railgun_cooldowntime_zerocharge( "ffdev_railgun_cooldowntime_zerocharge", "0.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a non-charged shot." );
+#define FFDEV_RAILGUN_COOLDOWNTIME_ZEROCHARGE 0.2f // ffdev_railgun_cooldowntime_zerocharge.GetFloat()
+//ConVar ffdev_railgun_cooldowntime_halfcharge( "ffdev_railgun_cooldowntime_halfcharge", "0.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a half-charged shot." );
+#define FFDEV_RAILGUN_COOLDOWNTIME_HALFCHARGE 0.2f // ffdev_railgun_cooldowntime_halfcharge.GetFloat()
+//ConVar ffdev_railgun_cooldowntime_fullcharge( "ffdev_railgun_cooldowntime_fullcharge", "0.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a full-charged shot." );
+#define FFDEV_RAILGUN_COOLDOWNTIME_FULLCHARGE 0.2f // ffdev_railgun_cooldowntime_fullcharge.GetFloat()
+//ConVar ffdev_railgun_cooldowntime_overcharge( "ffdev_railgun_cooldowntime_overcharge", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after overcharging." );
+#define FFDEV_RAILGUN_COOLDOWNTIME_OVERCHARGE 2.0f // ffdev_railgun_cooldowntime_overcharge.GetFloat()
 
-ConVar ffdev_railgun_cooldowntime_zerocharge( "ffdev_railgun_cooldowntime_zerocharge", "0.30", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a non-charged shot." );
-ConVar ffdev_railgun_cooldowntime_halfcharge( "ffdev_railgun_cooldowntime_halfcharge", "0.30", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a half-charged shot." );
-ConVar ffdev_railgun_cooldowntime_fullcharge( "ffdev_railgun_cooldowntime_fullcharge", "0.30", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a full-charged shot." );
-ConVar ffdev_railgun_cooldowntime_overcharge( "ffdev_railgun_cooldowntime_overcharge", "2.80", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after overcharging." );
+//ConVar ffdev_railgun_revsound_volume_high("ffdev_railgun_revsound_volume_high", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound High Volume");
+#define FFDEV_RAILGUN_REVSOUND_VOLUME_HIGH 1.0f // ffdev_railgun_revsound_volume_high.GetFloat()
+//ConVar ffdev_railgun_revsound_volume_low("ffdev_railgun_revsound_volume_low", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound Low Volume");
+#define FFDEV_RAILGUN_REVSOUND_VOLUME_LOW 0.0f // ffdev_railgun_revsound_volume_low.GetFloat()
+//ConVar ffdev_railgun_revsound_pitch_high("ffdev_railgun_revsound_pitch_high", "208", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound High Pitch");
+#define FFDEV_RAILGUN_REVSOUND_PITCH_HIGH 208 // ffdev_railgun_revsound_pitch_high.GetInt()
+//ConVar ffdev_railgun_revsound_pitch_low("ffdev_railgun_revsound_pitch_low", "64", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound Low Pitch");
+#define FFDEV_RAILGUN_REVSOUND_PITCH_LOW 64 // ffdev_railgun_revsound_pitch_low.GetInt()
+//ConVar ffdev_railgun_revsound_updateinterval("ffdev_railgun_revsound_updateinterval", "0.01", FCVAR_REPLICATED | FCVAR_CHEAT, "How much time to wait before updating");
+#define FFDEV_RAILGUN_REVSOUND_UPDATEINTERVAL 0.01f // ffdev_railgun_revsound_updateinterval.GetFloat()
 
-ConVar ffdev_railgun_revsound_volume_high("ffdev_railgun_revsound_volume_high", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound High Volume");
-ConVar ffdev_railgun_revsound_volume_low("ffdev_railgun_revsound_volume_low", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound Low Volume");
-ConVar ffdev_railgun_revsound_pitch_high("ffdev_railgun_revsound_pitch_high", "208", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound High Pitch");
-ConVar ffdev_railgun_revsound_pitch_low("ffdev_railgun_revsound_pitch_low", "64", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound Low Pitch");
-ConVar ffdev_railgun_revsound_updateinterval("ffdev_railgun_revsound_updateinterval", "0.01", FCVAR_REPLICATED | FCVAR_CHEAT, "How much time to wait before updating");
+//ConVar ffdev_rail_speed_min( "ffdev_rail_speed_min", "1800.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum speed of rail" );
+#define FFDEV_RAIL_SPEED_MIN 1800.0f // ffdev_rail_speed_min.GetFloat()
+//ConVar ffdev_rail_speed_max( "ffdev_rail_speed_max", "3000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum speed of rail" );
+#define FFDEV_RAIL_SPEED_MAX 3000.0f // ffdev_rail_speed_max.GetFloat()
+//ConVar ffdev_rail_damage_min( "ffdev_rail_damage_min", "35.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum damage dealt by rail" );
+#define FFDEV_RAIL_DAMAGE_MIN 35.0f // ffdev_rail_damage_min.GetFloat()
+//ConVar ffdev_rail_damage_max( "ffdev_rail_damage_max", "60.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum damage dealt by rail" );
+#define FFDEV_RAIL_DAMAGE_MAX 60.0f // ffdev_rail_damage_max.GetFloat()
 
-ConVar ffdev_rail_speed_min( "ffdev_rail_speed_min", "1800.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum speed of rail" );
-ConVar ffdev_rail_speed_max( "ffdev_rail_speed_max", "3000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum speed of rail" );
-ConVar ffdev_rail_damage_min( "ffdev_rail_damage_min", "35.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum damage dealt by rail" );
-ConVar ffdev_rail_damage_max( "ffdev_rail_damage_max", "60.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum damage dealt by rail" );
+//ConVar ffdev_railgun_pushforce_min("ffdev_railgun_pushforce_min", "32.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
+#define FFDEV_RAILGUN_PUSHFORCE_MIN 32.0f // ffdev_railgun_pushforce_min.GetFloat()
+//ConVar ffdev_railgun_pushforce_max("ffdev_railgun_pushforce_max", "64.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
+#define FFDEV_RAILGUN_PUSHFORCE_MAX 64.0f // ffdev_railgun_pushforce_max.GetFloat()
 
-ConVar ffdev_railgun_pushforce_min("ffdev_railgun_pushforce_min", "32.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
-ConVar ffdev_railgun_pushforce_max("ffdev_railgun_pushforce_max", "64.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
+//ConVar ffdev_railgun_recoil_min("ffdev_railgun_recoil_min", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
+#define FFDEV_RAILGUN_RECOIL_MIN 1 // ffdev_railgun_recoil_min.GetInt()
+//ConVar ffdev_railgun_recoil_max("ffdev_railgun_recoil_max", "5", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
+#define FFDEV_RAILGUN_RECOIL_MAX 5 // ffdev_railgun_recoil_max.GetInt()
 
-ConVar ffdev_railgun_recoil_min("ffdev_railgun_recoil_min", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
-ConVar ffdev_railgun_recoil_max("ffdev_railgun_recoil_max", "5", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
+//ConVar ffdev_railgun_resupply_sound("ffdev_railgun_resupply_sound", "Weapon_Crossbow.BoltFly", FCVAR_REPLICATED | FCVAR_CHEAT, "The sound script you hear when the railgun resupplies.");
+#define FFDEV_RAILGUN_RESUPPLY_SOUND "Weapon_Crossbow.BoltFly" // ffdev_railgun_resupply_sound.GetString()
 
 #ifdef CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStunstick )
@@ -109,10 +131,15 @@ public:
 	int m_nRevSound;
 	bool m_bPlayRevSound;
 	float m_flRevSoundNextUpdate;
+	EmitSound_t m_paramsRevSound;
 
 	float m_flStartTime;
 	float m_flLastUpdate;
 	int m_iAmmoUsed;
+
+#ifdef GAME_DLL
+	float m_flNextResupply;
+#endif
 
 private:
 	CFFWeaponRailgun( const CFFWeaponRailgun & );
@@ -164,6 +191,11 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 	m_bPlayRevSound = false;
 	m_flRevSoundNextUpdate = 0.0f;
 
+#ifdef GAME_DLL
+	// only resupply when the player both has rails and doesn't do anything for X seconds
+	m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_OVERCHARGETIME;
+#endif
+
 #ifdef CLIENT_DLL
 	m_iAttachment1 = m_iAttachment2 = -1;
 #endif
@@ -179,6 +211,11 @@ bool CFFWeaponRailgun::Deploy( void )
 	m_iAmmoUsed = 0;
 
 	m_flRevSoundNextUpdate = 0.0f;
+
+#ifdef GAME_DLL
+	// only resupply when the player both has rails and doesn't do anything for X seconds
+	m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_OVERCHARGETIME;
+#endif
 
 	StopRevSound();
 
@@ -196,6 +233,11 @@ bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 	m_flRevSoundNextUpdate = 0.0f;
 
+#ifdef GAME_DLL
+	// only resupply when the player both has rails and doesn't do anything for X seconds
+	m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_OVERCHARGETIME;
+#endif
+
 	StopRevSound();
 
 	return BaseClass::Holster( pSwitchingTo );
@@ -209,9 +251,10 @@ void CFFWeaponRailgun::Precache( void )
 	PrecacheScriptSound( "railgun.single_shot" );		// SINGLE
 	PrecacheScriptSound( "railgun.charged_shot" );		// WPN_DOUBLE
 	PrecacheScriptSound( "railgun.chargeloop" );		// SPECIAL1
-	PrecacheScriptSound( "ambient.electrical_zap_9" );	// SPECIAL2 - half charge notification
-	PrecacheScriptSound( "ambient.electrical_zap_9" );	// SPECIAL3 - full charge notification
-	PrecacheScriptSound( "ambient.electrical_zap_5" );	// BURST - overcharge
+	PrecacheScriptSound( "railgun.halfcharge" );		// SPECIAL2 - half charge notification
+	PrecacheScriptSound( "railgun.fullcharge" );		// SPECIAL3 - full charge notification
+	PrecacheScriptSound( "railgun.overcharge" );		// BURST - overcharge
+	PrecacheScriptSound( FFDEV_RAILGUN_RESUPPLY_SOUND );// resupply
 
 	BaseClass::Precache();
 }
@@ -269,16 +312,16 @@ void CFFWeaponRailgun::Fire( void )
 	//	vecSrc = tr2.endpos;
 	//}
 
-	float flPercent = m_flClampedChargeTime / ffdev_railgun_maxchargetime.GetFloat();
+	float flPercent = m_flClampedChargeTime / FFDEV_RAILGUN_MAXCHARGETIME;
 
 	// Push them backwards
-	pPlayer->ApplyAbsVelocityImpulse(vecForward * -(ffdev_railgun_pushforce_min.GetFloat() + ( (ffdev_railgun_pushforce_max.GetFloat() - ffdev_railgun_pushforce_min.GetFloat()) * flPercent )));
+	pPlayer->ApplyAbsVelocityImpulse(vecForward * -(FFDEV_RAILGUN_PUSHFORCE_MIN + ( (FFDEV_RAILGUN_PUSHFORCE_MAX - FFDEV_RAILGUN_PUSHFORCE_MIN) * flPercent )));
 
 	// Determine Speed of rail projectile by: railspeed = min + [ ( ( max - min ) * chargetime ) / maxchargetime ] 
-	float flSpeed = ffdev_rail_speed_min.GetFloat() + ( (ffdev_rail_speed_max.GetFloat() - ffdev_rail_speed_min.GetFloat()) * flPercent );
+	float flSpeed = FFDEV_RAIL_SPEED_MIN + ( (FFDEV_RAIL_SPEED_MAX - FFDEV_RAIL_SPEED_MIN) * flPercent );
 
 	// Now determine damage the same way
-	float flDamage = ffdev_rail_damage_min.GetFloat() + ( (ffdev_rail_damage_max.GetFloat() - ffdev_rail_damage_min.GetFloat()) * flPercent );
+	float flDamage = FFDEV_RAIL_DAMAGE_MIN + ( (FFDEV_RAIL_DAMAGE_MAX - FFDEV_RAIL_DAMAGE_MIN) * flPercent );
 
 	const int iDamageRadius = 100;
 	CFFProjectileRail *pRail = CFFProjectileRail::CreateRail( this, vecSrc, pPlayer->EyeAngles(), pPlayer, flDamage, iDamageRadius, flSpeed, m_flClampedChargeTime );	
@@ -289,7 +332,7 @@ void CFFWeaponRailgun::Fire( void )
 #endif
 
 	// play a different sound for a fully charged shot
-	if ( m_flClampedChargeTime < ffdev_railgun_maxchargetime.GetFloat() )
+	if ( m_flClampedChargeTime < FFDEV_RAILGUN_MAXCHARGETIME )
 		WeaponSound( SINGLE );
 	else
 		WeaponSound( WPN_DOUBLE );
@@ -302,15 +345,20 @@ void CFFWeaponRailgun::Fire( void )
 	// Player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
-	pPlayer->ViewPunch( -QAngle( ffdev_railgun_recoil_min.GetFloat() + ((ffdev_railgun_recoil_max.GetFloat() - ffdev_railgun_recoil_min.GetFloat()) * m_flClampedChargeTime), 0, 0 ) );
+	pPlayer->ViewPunch( -QAngle( FFDEV_RAILGUN_RECOIL_MIN + ((FFDEV_RAILGUN_RECOIL_MAX - FFDEV_RAILGUN_RECOIL_MIN) * m_flClampedChargeTime), 0, 0 ) );
 
 	// cycletime is based on charge level
-	if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE || pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0)
-		m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_railgun_cooldowntime_zerocharge.GetFloat();
-	else if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE)
-		m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_railgun_cooldowntime_halfcharge.GetFloat();
+	if (m_iAmmoUsed < FFDEV_RAILGUN_AMMOAMOUNT_HALFCHARGE || pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0)
+		m_flNextPrimaryAttack = gpGlobals->curtime + FFDEV_RAILGUN_COOLDOWNTIME_ZEROCHARGE;
+	else if (m_iAmmoUsed < FFDEV_RAILGUN_AMMOAMOUNT_FULLCHARGE)
+		m_flNextPrimaryAttack = gpGlobals->curtime + FFDEV_RAILGUN_COOLDOWNTIME_HALFCHARGE;
 	else
-		m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_railgun_cooldowntime_fullcharge.GetFloat();
+		m_flNextPrimaryAttack = gpGlobals->curtime + FFDEV_RAILGUN_COOLDOWNTIME_FULLCHARGE;
+
+#ifdef GAME_DLL
+	// only resupply when the player both has rails and doesn't do anything for X seconds
+	m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_OVERCHARGETIME;
+#endif
 
 	// reset these variables
 	m_flStartTime = m_flLastUpdate = -1.0f;
@@ -344,6 +392,9 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 #ifdef GAME_DLL
 			// remove ammo immediately
 			pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
+
+			// only resupply when the player both has rails and doesn't do anything for X seconds
+			m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_OVERCHARGETIME;
 #endif
 			// client needs to know, too
 			m_iAmmoUsed++;
@@ -356,13 +407,13 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 			m_flTotalChargeTime += gpGlobals->curtime - m_flLastUpdate;
 			m_flLastUpdate = gpGlobals->curtime;
 
-			float flMaxChargeTime = ffdev_railgun_maxchargetime.GetFloat();
+			float flMaxChargeTime = FFDEV_RAILGUN_MAXCHARGETIME;
 			m_flClampedChargeTime = clamp(gpGlobals->curtime - m_flStartTime, 0, flMaxChargeTime);
 
 			if ( pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0 )
 			{
 
-				if ( (m_flClampedChargeTime >= flMaxChargeTime / 2 && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE ) || (m_flClampedChargeTime >= flMaxChargeTime && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE ) )
+				if ( (m_flClampedChargeTime >= flMaxChargeTime * 0.5f && m_iAmmoUsed < FFDEV_RAILGUN_AMMOAMOUNT_HALFCHARGE ) || (m_flClampedChargeTime >= flMaxChargeTime && m_iAmmoUsed < FFDEV_RAILGUN_AMMOAMOUNT_FULLCHARGE ) )
 				{
 					// play a charge sound
 					// it's very important that half-charge is SPECIAL2 and full-charge is SPECIAL3
@@ -370,15 +421,18 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 #ifdef GAME_DLL
 					// remove additional ammo at each charge level
 					pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
+
+					// only resupply when the player both has rails and doesn't do anything for X seconds
+					m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_OVERCHARGETIME;
 #endif
 					// client needs to know, too
 					m_iAmmoUsed++;
 				}
 			}
 			// autofire if we have no ammo to charge with and aren't already halfway charged (so players can still try to get a good charged shot)
-			else if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE)
+			else if (m_iAmmoUsed < FFDEV_RAILGUN_AMMOAMOUNT_HALFCHARGE)
 				Fire();
-			else if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE)
+			else if (m_iAmmoUsed < FFDEV_RAILGUN_AMMOAMOUNT_FULLCHARGE)
 			{
 				// doing this so you can have 2 ammo and get halfway charged, but won't instantly become fully charged when you get more ammo
 				m_flClampedChargeTime = flMaxChargeTime / 2;
@@ -386,11 +440,14 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 			}
 
 			// check if it's been overcharged
-			if (ffdev_railgun_overchargetime.GetFloat() < m_flTotalChargeTime )
+			if (FFDEV_RAILGUN_OVERCHARGETIME < m_flTotalChargeTime )
 			{
 #ifdef GAME_DLL
 				// deal damage
-				pPlayer->TakeDamage( CTakeDamageInfo( this, pPlayer, ffdev_railgun_overchargedamage.GetFloat() * int(m_flClampedChargeTime), DMG_SHOCK ) );
+				//pPlayer->TakeDamage( CTakeDamageInfo( this, pPlayer, FFDEV_RAILGUN_OVERCHARGEDAMAGE * int(m_flClampedChargeTime), DMG_SHOCK ) );
+
+				// only resupply when the player both has rails and doesn't do anything for X seconds
+				m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_OVERCHARGETIME;
 #endif
 
 				StopRevSound();
@@ -403,7 +460,7 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
 				m_iAmmoUsed = 0;
 
-				m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_railgun_cooldowntime_overcharge.GetFloat();
+				m_flNextPrimaryAttack = gpGlobals->curtime + FFDEV_RAILGUN_COOLDOWNTIME_OVERCHARGE;
 			}
 		}
 		// just a little extra fail-safe shit
@@ -415,8 +472,26 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 
 	// allow players to continue to charge if they've hit the halfway mark
 	// and don't make it immediately switch, causing shot sounds to stop
-	if (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0 && m_flNextPrimaryAttack < gpGlobals->curtime && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE)
+	if (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0 && m_flNextPrimaryAttack < gpGlobals->curtime && m_iAmmoUsed < FFDEV_RAILGUN_AMMOAMOUNT_HALFCHARGE)
 		HandleFireOnEmpty();
+
+#ifdef GAME_DLL
+	// time to resupply?
+	if (m_flNextResupply <= gpGlobals->curtime)
+	{
+		int iAmmoGiven = 0;
+		// give cells and ammo already, GOSH!
+		iAmmoGiven += pPlayer->GiveAmmo( 15, AMMO_CELLS, true );
+		iAmmoGiven += pPlayer->GiveAmmo( 3, m_iPrimaryAmmoType, true );
+
+		// Play a sound if ammo was given
+		if (iAmmoGiven > 0)
+			EmitSound(FFDEV_RAILGUN_RESUPPLY_SOUND);
+
+		// only resupply when the weapon has ammo and the player doesn't do anything for X seconds
+		m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_OVERCHARGETIME;
+	}
+#endif
 }
 
 void CFFWeaponRailgun::PlayRevSound()
@@ -430,31 +505,34 @@ void CFFWeaponRailgun::PlayRevSound()
 	// wait a little while so we're not constantly calling EmitSound
 	if (gpGlobals->curtime < m_flRevSoundNextUpdate)
 		return;
-	m_flRevSoundNextUpdate = gpGlobals->curtime + ffdev_railgun_revsound_updateinterval.GetFloat();
+	m_flRevSoundNextUpdate = gpGlobals->curtime + FFDEV_RAILGUN_REVSOUND_UPDATEINTERVAL;
 
 	const char *shootsound = GetShootSound( m_nRevSound );
 	if (!shootsound || !shootsound[0])
 		return;
 
-	float flPercent = m_flClampedChargeTime / ffdev_railgun_maxchargetime.GetFloat();
+	if (!m_paramsRevSound.m_pSoundName)
+	{
+		m_paramsRevSound.m_pSoundName = shootsound;
+		m_paramsRevSound.m_flSoundTime = 0.0f;
+		m_paramsRevSound.m_pOrigin = NULL;
+		m_paramsRevSound.m_pflSoundDuration = NULL;
+		m_paramsRevSound.m_bWarnOnDirectWaveReference = true;
+		m_paramsRevSound.m_SoundLevel = SNDLVL_NORM;
+		m_paramsRevSound.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL;
+	}
 
-	EmitSound_t params;
-	params.m_pSoundName = shootsound;
-	params.m_flSoundTime = 0.0f;
-	params.m_pOrigin = NULL;
-	params.m_pflSoundDuration = NULL;
-	params.m_bWarnOnDirectWaveReference = true;
-	params.m_SoundLevel = SNDLVL_NORM;
-	params.m_flVolume = ffdev_railgun_revsound_volume_low.GetFloat() + ((ffdev_railgun_revsound_volume_high.GetFloat() - ffdev_railgun_revsound_volume_low.GetFloat()) * flPercent);
-	params.m_nPitch = ffdev_railgun_revsound_pitch_low.GetFloat() + ((ffdev_railgun_revsound_pitch_high.GetFloat() - ffdev_railgun_revsound_pitch_low.GetFloat()) * flPercent);
-	params.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL;
+	float flPercent = m_flClampedChargeTime / FFDEV_RAILGUN_MAXCHARGETIME;
 
-	CPASAttenuationFilter filter( GetOwner(), params.m_SoundLevel );
+	m_paramsRevSound.m_flVolume = FFDEV_RAILGUN_REVSOUND_VOLUME_LOW + ((FFDEV_RAILGUN_REVSOUND_VOLUME_HIGH - FFDEV_RAILGUN_REVSOUND_VOLUME_LOW) * flPercent);
+	m_paramsRevSound.m_nPitch = FFDEV_RAILGUN_REVSOUND_PITCH_LOW + ((FFDEV_RAILGUN_REVSOUND_PITCH_HIGH - FFDEV_RAILGUN_REVSOUND_PITCH_LOW) * flPercent);
+
+	CPASAttenuationFilter filter( GetOwner(), m_paramsRevSound.m_SoundLevel );
 	if ( IsPredicted() )
 	{
 		filter.UsePredictionRules();
 	}
-	EmitSound( filter, entindex(), params, params.m_hSoundScriptHandle );
+	EmitSound( filter, entindex(), m_paramsRevSound, m_paramsRevSound.m_hSoundScriptHandle );
 
 	m_bPlayRevSound = true;
 }
@@ -525,7 +603,7 @@ void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 	::FormatViewModelAttachment(vecEnd, true);
 	::FormatViewModelAttachment(vecMuzzle, true);
 
-	float flChargeAmount = clamp( m_flClampedChargeTime / ffdev_railgun_maxchargetime.GetFloat(), 0.0f, 1.0f);
+	float flChargeAmount = clamp( m_flClampedChargeTime / FFDEV_RAILGUN_MAXCHARGETIME, 0.0f, 1.0f);
 	flChargeAmount = sqrtf( flChargeAmount );
 
 #define FLUTTER_AMOUNT	(1.0f * flChargeAmount)
