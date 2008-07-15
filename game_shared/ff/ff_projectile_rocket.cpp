@@ -227,7 +227,7 @@ void CFFProjectileRocket::CreateSmokeTrail()
 				m_pDLight->die = gpGlobals->curtime + 0.1;
 				m_pDLight->decay = m_pDLight->radius / 0.1;
 				m_pDLight->color.r = 255;
-				m_pDLight->color.g = 160;
+				m_pDLight->color.g = 192;
 				m_pDLight->color.b = 64;
 				m_pDLight->color.exponent = 4;
 				m_pDLight->style = 6; // 0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker);
