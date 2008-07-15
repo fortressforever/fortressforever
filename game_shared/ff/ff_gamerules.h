@@ -149,6 +149,9 @@ public:
 
 	virtual void	ResetUsingCriteria( bool *pbFlags, int iTeam = TEAM_UNASSIGNED, CFFPlayer *pFFPlayer = NULL, bool bFullReset = false );
 
+	virtual void	UpdateSpawnPoints();
+	CUtlVector<CBaseEntity*> m_SpawnPoints;
+
 	virtual bool	IsSpawnPointClear( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 	virtual bool	IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 	virtual bool	FPlayerCanRespawn( CBasePlayer *pPlayer );

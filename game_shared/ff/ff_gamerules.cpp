@@ -547,6 +547,10 @@ ConVar mp_prematch( "mp_prematch",
 			CFFLuaSC hStartup;
 			_scriptman.RunPredicates_LUA(NULL, &hStartup, "startup");
 
+			// FF TODO: do this stuff when UpdateSpawnPoints checks lua properly
+			// update the list of valid spawn points
+			// UpdateSpawnPoints();
+
 			// Respawn/Reset all players
 			for( int i = 1; i <= gpGlobals->maxClients; i++ )
 			{
@@ -849,6 +853,31 @@ ConVar mp_prematch( "mp_prematch",
 		if( pbFlags[ AT_END_MAP ] )
 		{
 			GoToIntermission();
+		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: creates a list of valid spawn points
+	//-----------------------------------------------------------------------------
+	void CFFGameRules::UpdateSpawnPoints()
+	{
+		// start from scratch every time this function is called
+		m_SpawnPoints.Purge();
+
+		CBaseEntity	*pEntity = NULL;
+		// Add all the entities with the matching class type
+		while ( (pEntity = gEntList.FindEntityByClassT( pEntity, CLASS_TEAMSPAWN )) != NULL )
+		{
+			// FF TODO: check lua properly
+/*
+			// See if lua says the spawn point is active
+			CFFLuaSC hIsActive;
+			_scriptman.RunPredicates_LUA( pEntity, &hIsActive, "isactive" );
+
+			// add this spawn point to the list oif valid spawns
+			if (hIsActive.GetBool())
+*/
+				m_SpawnPoints.AddToTail( pEntity );
 		}
 	}
 
