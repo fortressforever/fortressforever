@@ -77,6 +77,7 @@
 #include "sceneentity.h"
 #include "appframework/IAppSystemGroup.h"
 #include "scenefilecache/ISceneFileCache.h"
+#include "ff_gamerules.h"
 #include "ff_scriptman.h"
 #include "ff_luacontext.h"
 #include "ff_scheduleman.h"
@@ -902,6 +903,8 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	CFFLuaSC hStartup;
 	_scriptman.RunPredicates_LUA(NULL, &hStartup, "startup");
+
+	FFGameRules()->UpdateSpawnPoints();
 
 	// --> Mirv: Automatically execute map config
 	char szExecMapConfig[128];

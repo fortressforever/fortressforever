@@ -84,14 +84,12 @@
 //ConVar ffdev_railgun_recoil_max("ffdev_railgun_recoil_max", "5", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
 #define FFDEV_RAILGUN_RECOIL_MAX 5 // ffdev_railgun_recoil_max.GetInt()
 
-ConVar ffdev_railgun_resupply_interval("ffdev_railgun_resupply_interval", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X seconds.");
+ConVar ffdev_railgun_resupply_interval("ffdev_railgun_resupply_interval", "6.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X seconds.");
 #define FFDEV_RAILGUN_RESUPPLY_INTERVAL ffdev_railgun_resupply_interval.GetFloat()
-ConVar ffdev_railgun_resupply_cells("ffdev_railgun_resupply_cells", "15", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X cells.");
+ConVar ffdev_railgun_resupply_cells("ffdev_railgun_resupply_cells", "20", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X cells.");
 #define FFDEV_RAILGUN_RESUPPLY_CELLS ffdev_railgun_resupply_cells.GetInt()
 ConVar ffdev_railgun_resupply_rails("ffdev_railgun_resupply_rails", "3", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X cells.");
 #define FFDEV_RAILGUN_RESUPPLY_RAILS ffdev_railgun_resupply_rails.GetInt()
-ConVar ffdev_railgun_resupply_sound("ffdev_railgun_resupply_sound", "Weapon_Crossbow.BoltFly", FCVAR_REPLICATED | FCVAR_CHEAT, "The sound script you hear when the railgun resupplies.");
-#define FFDEV_RAILGUN_RESUPPLY_SOUND ffdev_railgun_resupply_sound.GetString()
 
 #ifdef CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStunstick )
@@ -198,8 +196,7 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 	m_flRevSoundNextUpdate = 0.0f;
 
 #ifdef GAME_DLL
-	// resupply every X seconds with the railgun out
-	m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_RESUPPLY_INTERVAL;
+	m_flNextResupply = 0.0f;
 #endif
 
 #ifdef CLIENT_DLL
@@ -219,10 +216,8 @@ bool CFFWeaponRailgun::Deploy( void )
 	m_flRevSoundNextUpdate = 0.0f;
 
 #ifdef GAME_DLL
-	// safety (if someone sets the dev variable too high and then back to normal, this will fix it)
-	if (m_flNextResupply > gpGlobals->curtime + FFDEV_RAILGUN_RESUPPLY_INTERVAL)
-		// resupply every X seconds with the railgun out
-		m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_RESUPPLY_INTERVAL;
+	// resupply every X seconds with the railgun out
+	m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_RESUPPLY_INTERVAL;
 #endif
 
 	StopRevSound();
@@ -257,7 +252,6 @@ void CFFWeaponRailgun::Precache( void )
 	PrecacheScriptSound( "railgun.halfcharge" );		// SPECIAL2 - half charge notification
 	PrecacheScriptSound( "railgun.fullcharge" );		// SPECIAL3 - full charge notification
 	PrecacheScriptSound( "railgun.overcharge" );		// BURST - overcharge
-	PrecacheScriptSound( FFDEV_RAILGUN_RESUPPLY_SOUND );// resupply
 
 	BaseClass::Precache();
 }
@@ -473,14 +467,8 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 		iAmmoGiven += pPlayer->GiveAmmo( FFDEV_RAILGUN_RESUPPLY_RAILS, m_iPrimaryAmmoType, true );
 		iAmmoGiven += pPlayer->GiveAmmo( FFDEV_RAILGUN_RESUPPLY_CELLS, AMMO_CELLS, true );
 
-		if (iAmmoGiven > 0)
-		{
-			// Play a sound if ammo was given
-			EmitSound(FFDEV_RAILGUN_RESUPPLY_SOUND);
-
-			// resupply every X seconds with the railgun out
-			m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_RESUPPLY_INTERVAL;
-		}
+		// resupply every X seconds with the railgun out
+		m_flNextResupply = gpGlobals->curtime + FFDEV_RAILGUN_RESUPPLY_INTERVAL;
 	}
 #endif
 }

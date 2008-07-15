@@ -998,8 +998,60 @@ ReturnSpot:
 		return m_SpawnPointOverride;
 	//////////////////////////////////////////////////////////////////////////
 
-	CBaseEntity *pSpot = NULL, *pGibSpot = NULL;
+// --> Jon: new spawn method
 
+	CBaseEntity *pSpot = NULL, *pGibSpot = NULL, *pFirstSpot = NULL;
+
+	CUtlVector<CBaseEntity*> spawns;
+	spawns.EnsureCapacity( FFGameRules()->m_SpawnPoints.Count() );
+	spawns.CopyArray( FFGameRules()->m_SpawnPoints.Base(), FFGameRules()->m_SpawnPoints.Count() );
+
+	// loop until there are no more spawn points to loop through
+	while( spawns.Count() > 0 )
+	{
+		// pick a random number
+		int iRand = random->RandomInt(0, spawns.Count());
+
+		// let's check this random spot
+		pSpot = spawns[iRand];
+
+		// as long as there's something to check, that is
+		if(pSpot)
+		{
+			// initialize the first spot
+			if (!pFirstSpot)
+			{
+				pFirstSpot = pSpot;
+				pGibSpot = pFirstSpot;
+			}
+
+			// If we got a spawn spot and we're spec, it's valid
+			if( GetTeamNumber() < TEAM_BLUE )
+			{
+				goto ReturnSpot;
+			}
+
+			// is this spot valid according to the game rules?
+			if( FFGameRules()->IsSpawnPointValid( pSpot, ( CBasePlayer * )this ) )
+			{
+				// See if the spot is clear
+				if( FFGameRules()->IsSpawnPointClear( pSpot, ( CBasePlayer * )this ) )
+				{
+					goto ReturnSpot;
+				}
+				else
+				{
+					// Not clear, so perhaps later we'll gib the guy here
+					pGibSpot = pSpot;
+				}
+			}
+		}
+
+		// remove this spawn point from the list, reducing the count as well
+		spawns.FastRemove(iRand);
+	}
+
+/*
 	// I think this was one of the main sources of the not-so-randomness - Jon
 	//pSpot = g_pLastSpawn;
 	pSpot = g_pLastSpawnRandomizer;
@@ -1048,31 +1100,10 @@ ReturnSpot:
 				// See if the spot is clear
 				if( FFGameRules()->IsSpawnPointClear( pSpot, ( CBasePlayer * )this ) )
 				{
-					/*
-#ifdef _DEBUG
-					// Some debug listenserver visualization
-					if( !engine->IsDedicatedServer() )
-					{
-						NDebugOverlay::Box( vecOrigin, vecMins, vecMaxs, 0, 0, 255, 100, 10.0f );
-						NDebugOverlay::Line( vecOrigin, vecOrigin + vecMaxs.z, 0, 0, 255, false, 10.0f );
-					}
-#endif
-					*/
-
 					goto ReturnSpot;
 				}
 				else
 				{
-					/*
-#ifdef _DEBUG
-					// Some debug listenserver visualization
-					if( !engine->IsDedicatedServer() )
-					{
-						NDebugOverlay::Box( vecOrigin, vecMins, vecMaxs, 0, 0, 255, 100, 10.0f );
-						NDebugOverlay::Line( vecOrigin, vecOrigin + Vector( 0, 0, 70 ), 255, 0, 0, false, 10.0f );
-					}
-#endif
-					*/
 					// Not clear, so perhaps later we'll gib the guy here
 					pGibSpot = pSpot;
 				}
@@ -1083,6 +1114,8 @@ ReturnSpot:
 		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
 	} 
 	while( pSpot != pFirstSpot ); // loop if we're not back to the start
+*/
+	// <-- Jon: new spawn method
 
 	// At this point, we've checked all ff specific team spawns. If we
 	// have a gib spot then kill people in that spot. Otherwise, we'll
@@ -4002,7 +4035,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			}
 
 			// Give te medic some cells to generate health packs with...!
-			GiveAmmo(3, AMMO_CELLS, true);
+			GiveAmmo(5, AMMO_CELLS, true);
 		}
 		else if( GetClassSlot() == CLASS_ENGINEER )
 		{
