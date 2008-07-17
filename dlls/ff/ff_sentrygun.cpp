@@ -71,6 +71,7 @@ ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "18.0", FCVAR_REPLICATED );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0", FCVAR_REPLICATED );
 ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
+ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_REPLICATED );
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
@@ -442,7 +443,7 @@ void CFFSentryGun::OnActiveThink( void )
 	}
 
 	// Enemy is no longer targettable
-	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive() /* || ( ( enemy->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr() > ( SG_RANGE * SG_RANGE ) )*/ )
+	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive() || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > sg_range_untarget.GetFloat() ) )
 	{
 		SetEnemy( NULL );
 		SetThink( &CFFSentryGun::OnSearchThink );
