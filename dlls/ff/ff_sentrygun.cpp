@@ -83,9 +83,9 @@ ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2"
 #define SG_GROUNDPUSH_MULTIPLIER_LVL2 ffdev_sg_groundpush_multiplier_lvl2.GetFloat()
 ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_REPLICATED, "SG level 3 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL3 ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
-ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "8", FCVAR_REPLICATED, "SG bullet damage");
+ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "12", FCVAR_REPLICATED, "SG bullet damage");
 
-ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.200", FCVAR_REPLICATED, "Level 1 SG time between shots");
+ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.125", FCVAR_REPLICATED, "Level 1 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL1	sg_shotcycletime_lvl1.GetFloat()
 ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.050", FCVAR_REPLICATED, "Level 2 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL2	sg_shotcycletime_lvl2.GetFloat()
@@ -98,6 +98,13 @@ ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 
 #define SG_HEALTH_LEVEL2	sg_health_lvl2.GetInt()
 ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
 #define SG_HEALTH_LEVEL3	sg_health_lvl3.GetInt()
+
+ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "1.00", FCVAR_REPLICATED, "Level 1 SG lock on time");
+#define SG_LOCKONTIME_LVL1	sg_lockontime_lvl1.GetInt()
+ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.50", FCVAR_REPLICATED, "Level 2 SG lock on time");
+#define SG_LOCKONTIME_LVL2	sg_lockontime_lvl2.GetInt()
+ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.50", FCVAR_REPLICATED, "Level 3 SG lock on time");
+#define SG_LOCKONTIME_LVL3	sg_lockontime_lvl3.GetInt()
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -379,7 +386,7 @@ void CFFSentryGun::OnSearchThink( void )
 	if( GetEnemy() )
 	{
 		// Pause for the lock-on time
-		m_flNextShell = m_flNextRocket = gpGlobals->curtime + m_flLockTime;
+		m_flNextShell = gpGlobals->curtime + m_flLockTime;
 
 		m_flLastSight = 0;
 		SetThink( &CFFSentryGun::OnActiveThink );
@@ -1193,7 +1200,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			m_iMaxHealth = SG_HEALTH_LEVEL1;
 			m_iHealth = SG_HEALTH_LEVEL1;
 
-			m_flLockTime = 1.0f;
+			m_flLockTime = SG_LOCKONTIME_LVL1;
 			//m_flTurnSpeed = 4.0f;
 			m_flTurnSpeed = sg_turnspeed.GetFloat();
 
@@ -1214,7 +1221,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			m_iMaxHealth = SG_HEALTH_LEVEL2;
 			m_iHealth = SG_HEALTH_LEVEL2;
 
-			m_flLockTime = 0.5f;
+			m_flLockTime = SG_LOCKONTIME_LVL2;
 			//m_flTurnSpeed = 7.0f;
 			m_flTurnSpeed = sg_turnspeed.GetFloat();
 
@@ -1240,7 +1247,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			m_iMaxHealth = SG_HEALTH_LEVEL3;
 			m_iHealth = SG_HEALTH_LEVEL3;
 
-			m_flLockTime = 0.5f;
+			m_flLockTime = SG_LOCKONTIME_LVL3;
 			//m_flTurnSpeed = 7.0f;
 			m_flTurnSpeed = sg_turnspeed.GetFloat();
 			
