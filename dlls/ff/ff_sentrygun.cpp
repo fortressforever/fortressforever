@@ -76,7 +76,12 @@ ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
 ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "2.0", FCVAR_REPLICATED, "SG bullet push force");
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
-ConVar ffdev_sg_groundpush_multiplier("ffdev_sg_groundpush_multiplier", "4.0", FCVAR_REPLICATED, "SG ground bullet push multiplier");
+ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "4.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL1 ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
+ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "4.0", FCVAR_REPLICATED, "SG level 2 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL2 ffdev_sg_groundpush_multiplier_lvl2.GetFloat()
+ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_REPLICATED, "SG level 3 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL3 ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
 ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "8", FCVAR_REPLICATED, "SG bullet damage");
 
 ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.200", FCVAR_REPLICATED, "Level 1 SG time between shots");
@@ -853,7 +858,20 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	// Jiggles: A HACK to address the fact that it takes a lot more force to push players around on the ground than in the air
 	CFFPlayer *pEnemyTarget = ToFFPlayer( GetEnemy() );
 	if ( pEnemyTarget && (pEnemyTarget->GetFlags() & FL_ONGROUND) )
-		info.m_flDamageForceScale *= ffdev_sg_groundpush_multiplier.GetFloat();
+	{
+		switch (m_iLevel)
+		{
+		case 1:
+			info.m_flDamageForceScale *= SG_GROUNDPUSH_MULTIPLIER_LVL1;
+			break;
+		case 2:
+			info.m_flDamageForceScale *= SG_GROUNDPUSH_MULTIPLIER_LVL2;
+			break;
+		case 3:
+			info.m_flDamageForceScale *= SG_GROUNDPUSH_MULTIPLIER_LVL3;
+			break;
+		}
+	}
 		
 
 	// Introduce quite a big spread now if sabotaged

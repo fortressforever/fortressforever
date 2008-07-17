@@ -49,20 +49,22 @@ END_NETWORK_TABLE()
 LINK_ENTITY_TO_CLASS( ff_projectile_rail, CFFProjectileRail );
 PRECACHE_WEAPON_REGISTER( ff_projectile_rail );
 
-//ConVar ffdev_rail_maxbounceangle( "ffdev_rail_maxbounceangle", "45.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum angle for a rail to bounce" );
-#define FFDEV_RAIL_MAXBOUNCEANGLE 45.0f // ffdev_rail_maxbounceangle.GetFloat()
-//ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Damage multiplier per bounce" );
-#define FFDEV_RAIL_BOUNCEDAMAGEFACTOR 1.4f // ffdev_rail_bouncedamagefactor.GetFloat()
+extern ConVar ffdev_railgun_maxchargetime;
 
-//ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a half-charge shot." );
-#define FFDEV_RAIL_EXPLODEDAMAGE_MIN 20.0f // ffdev_rail_explodedamage_min.GetFloat()
-//ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a full-charge shot." );
-#define FFDEV_RAIL_EXPLODEDAMAGE_MAX 40.0f // ffdev_rail_explodedamage_max.GetFloat()
+ConVar ffdev_rail_maxbounceangle( "ffdev_rail_maxbounceangle", "45.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum angle for a rail to bounce" );
+#define RAIL_MAXBOUNCEANGLE ffdev_rail_maxbounceangle.GetFloat()
+ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Damage multiplier per bounce" );
+#define RAIL_BOUNCEDAMAGEFACTOR ffdev_rail_bouncedamagefactor.GetFloat()
+
+ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a half-charge shot." );
+#define RAIL_EXPLODEDAMAGE_MIN ffdev_rail_explodedamage_min.GetFloat()
+ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a full-charge shot." );
+#define RAIL_EXPLODEDAMAGE_MAX ffdev_rail_explodedamage_max.GetFloat()
 
 #ifdef CLIENT_DLL
 
-//ConVar ffdev_rail_prate( "ffdev_rail_prate", "128", 0, "Amount of rail particles per second.", true, 0, true, 65536 );
-#define FFDEV_RAIL_PRATE 128.0f // ffdev_rail_prate.GetFloat()
+ConVar ffdev_rail_prate( "ffdev_rail_prate", "128", 0, "Amount of rail particles per second.", true, 0, true, 65536 );
+#define RAIL_PRATE ffdev_rail_prate.GetFloat()
 
 // dlight scale
 extern ConVar cl_ffdlight_rail;
@@ -118,7 +120,7 @@ CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, co
 {
 	CFFProjectileRail *pRail = ( CFFProjectileRail * )CreateEntityByName( "ff_projectile_rail" );
 
-	float flMaxChargeTime = FFDEV_RAILGUN_MAXCHARGETIME;
+	float flMaxChargeTime = ffdev_railgun_maxchargetime.GetFloat();
 
 	UTIL_SetOrigin( pRail, vecOrigin );
 	pRail->SetAbsAngles( angAngles );
@@ -245,11 +247,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		if ( m_iMaxBounces == 1 )
 		{
 			// half charge explosion damage
-			m_flDamage = FFDEV_RAIL_EXPLODEDAMAGE_MIN;
+			m_flDamage = RAIL_EXPLODEDAMAGE_MIN;
 
 			// bounced, so multiply by specified bounce damage factor
 			if (m_iNumBounces > 0)
-				m_flDamage *= FFDEV_RAIL_BOUNCEDAMAGEFACTOR;
+				m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
 			Detonate();
 		}
@@ -257,11 +259,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		else if ( m_iMaxBounces == 2 )
 		{
 			// full charge explosion damage
-			m_flDamage = FFDEV_RAIL_EXPLODEDAMAGE_MAX;
+			m_flDamage = RAIL_EXPLODEDAMAGE_MAX;
 
 			// for each bounce, multiply by specified bounce damage factor
 			for (int i = 0; i < m_iNumBounces; i++)
-				m_flDamage *= FFDEV_RAIL_BOUNCEDAMAGEFACTOR;
+				m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
 			Detonate();
 		}
@@ -300,7 +302,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				float flAngle = RAD2DEG(flDot);
 
 				// If angle is too shallow, don't bounce
-				if( flAngle <= FFDEV_RAIL_MAXBOUNCEANGLE )
+				if( flAngle <= RAIL_MAXBOUNCEANGLE )
 				{
 					// we're bouncing!
 					bBounced = true;
@@ -309,7 +311,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 					++m_iNumBounces;
 
 					// BOUNCE BONUS DAMAGE!
-					m_flDamage *= FFDEV_RAIL_BOUNCEDAMAGEFACTOR;
+					m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
 					Vector vecReflect = 2 * tr.plane.normal * flDot + vecDir;
 					Vector vecReflectNorm = vecReflect;
@@ -345,11 +347,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				if ( m_iMaxBounces == 2 )
 				{
 					// full charge explosion damage
-					m_flDamage = FFDEV_RAIL_EXPLODEDAMAGE_MAX;
+					m_flDamage = RAIL_EXPLODEDAMAGE_MAX;
 
 					// for each bounce, multiply by specified bounce damage factor
 					for (int i = 0; i < m_iNumBounces; i++)
-						m_flDamage *= FFDEV_RAIL_BOUNCEDAMAGEFACTOR;
+						m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
 					Detonate();
 				}
@@ -377,11 +379,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 			if ( m_iMaxBounces == 2 )
 			{
 				// full charge explosion damage
-				m_flDamage = FFDEV_RAIL_EXPLODEDAMAGE_MAX;
+				m_flDamage = RAIL_EXPLODEDAMAGE_MAX;
 
 				// for each bounce, multiply by specified bounce damage factor
 				for (int i = 0; i < m_iNumBounces; i++)
-					m_flDamage *= FFDEV_RAIL_BOUNCEDAMAGEFACTOR;
+					m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
 				Detonate();
 			}
@@ -438,11 +440,11 @@ void CFFProjectileRail::RailThink( void )
 			if ( m_iMaxBounces == 2 )
 			{
 				// full charge explosion damage
-				m_flDamage = FFDEV_RAIL_EXPLODEDAMAGE_MAX;
+				m_flDamage = RAIL_EXPLODEDAMAGE_MAX;
 
 				// for each bounce, multiply by specified bounce damage factor
 				for (int i = 0; i < m_iNumBounces; i++)
-					m_flDamage *= FFDEV_RAIL_BOUNCEDAMAGEFACTOR;
+					m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
 				Detonate();
 			}
@@ -524,7 +526,7 @@ void CFFProjectileRail::OnDataChanged( DataUpdateType_t updateType )
 			m_hMaterial = m_hEmitter->GetPMaterial( "effects/rail_glow" );
 
 		// Spawn 128 particles per second
-		m_tParticleTimer.Init( FFDEV_RAIL_PRATE );
+		m_tParticleTimer.Init( RAIL_PRATE );
 
 		// Call our ClientThink() function once every client frame
 		SetNextClientThink( CLIENT_THINK_ALWAYS );

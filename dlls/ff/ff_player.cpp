@@ -1010,7 +1010,7 @@ ReturnSpot:
 	while( spawns.Count() > 0 )
 	{
 		// pick a random number
-		int iRand = random->RandomInt(0, spawns.Count());
+		int iRand = random->RandomInt(0, spawns.Count() - 1);
 
 		// let's check this random spot
 		pSpot = spawns[iRand];
