@@ -71,7 +71,7 @@ ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "18.0", FCVAR_REPLICATED );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0", FCVAR_REPLICATED );
 ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
-ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_REPLICATED );
+ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1575.0", FCVAR_REPLICATED );
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
