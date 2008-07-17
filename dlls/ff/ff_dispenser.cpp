@@ -352,8 +352,8 @@ void CFFDispenser::OnObjectThink( void )
 	m_iCells = clamp( m_iCells + 40, 0, m_iMaxCells );
 	m_iNails = clamp( m_iNails + 60, 0, m_iMaxNails );
 	m_iShells = clamp( m_iShells + 40, 0, m_iMaxShells );
-	m_iRockets = clamp( m_iRockets + 20, 0, m_iMaxRockets );
-	m_iArmor = clamp( m_iArmor + 100, 0, m_iMaxArmor );
+	m_iRockets = clamp( m_iRockets + 30, 0, m_iMaxRockets );
+	m_iArmor = clamp( m_iArmor + 50, 0, m_iMaxArmor );
 
 	// Update ammo percentage
 	UpdateAmmoPercentage();	

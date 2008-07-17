@@ -624,23 +624,23 @@ CFFDispenser::CFFDispenser( void )
 #endif
 
 	// Initial values
-	m_iCells = 40;
-	m_iNails = 60;
+	m_iCells = 30;
+	m_iNails = 40;
 	m_iShells = 40;
 	m_iRockets = 20;
-	m_iArmor = 100;
+	m_iArmor = 40;
 
 	// Max values
 	m_iMaxCells		= 400;
-	m_iMaxShells	= 400;
 	m_iMaxNails		= 600;
+	m_iMaxShells	= 400;
 	m_iMaxRockets	= 300;
 	m_iMaxArmor		= 500;
 
 	// Give values - values to give a player when they touch us
 	m_iGiveCells	= 20; // Give engies 75, though
-	m_iGiveShells	= 40;
 	m_iGiveNails	= 40;
+	m_iGiveShells	= 40;
 	m_iGiveRockets	= 20;
 	m_iGiveArmor	= 40;
 
