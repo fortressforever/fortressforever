@@ -39,8 +39,8 @@ using namespace vgui;
 #define OBJECTIVE_ICON_TEXTURE_OBSCURED	"glyphs/objective_icon_obscured"
 #define	OBJECTIVE_ICON_ARROW			"glyphs/ff_damage_pitt"
 
-//ConVar cl_objectiveicon_minsize( "cl_objectiveicon_minsize", "350.0f", FCVAR_ARCHIVE, "Minimum size of the objective icon");
-#define OBJECTIVE_ICON_MINIMUM_SIZE		350.0f/*cl_objectiveicon_minsize.GetFloat()*/
+ConVar cl_objectiveicon_dist( "cl_objectiveicon_dist", "600.0f", FCVAR_ARCHIVE, "Distance beyond which the objective icon won't get any smaller on the screen", true, 100.0f, true, 2000.0f );
+#define OBJECTIVE_ICON_MINIMUM_SIZE		/*350.0f*/cl_objectiveicon_dist.GetFloat()
 
 ConVar cl_objectiveicon("cl_objectiveicon", "0", FCVAR_ARCHIVE, "Displays an icon showing the current objective");
 
