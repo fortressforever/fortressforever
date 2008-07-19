@@ -1669,6 +1669,19 @@ int C_FFPlayer::DrawModel( int flags )
 			return 1;
 	}
 
+	if ( !IsCloaked() )
+	{
+		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
+	}
+	else
+	{
+		// don't draw if cloaked and basically not moving
+		if ( GetLocalVelocity().Length() < 1.0f )
+			return 1;
+
+		FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
+	}
+
 	// If we're hallucinating, players intermittently get swapped.  But only for
 	// enemy players because we don't want the teamkills
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
@@ -1707,11 +1720,6 @@ int C_FFPlayer::DrawModel( int flags )
 			m_nSkin = nRealSkin;
 		}
 	}
-
-	if ( !IsCloaked() )
-		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
-	else
-		FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
 
 	return BaseClass::DrawModel( flags );
 }
@@ -2168,10 +2176,6 @@ bool C_FFPlayer::ShouldDraw( void )
 
 	if( IsLocalPlayer() && IsRagdoll() )
 		return true;
-
-	// don't draw if cloaked and basically not moving
-	if ( IsCloaked() && GetLocalVelocity().Length() < 1.0f )
-		return false;
 
 	return BaseClass::ShouldDraw();
 }
