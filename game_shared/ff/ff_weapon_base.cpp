@@ -465,6 +465,9 @@ int CFFWeaponBase::DrawModel( int flags )
 	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
 	if( pPlayer )
 	{
+		if ( !pPlayer->ShouldDraw() )
+			return 1;
+
 		if( !pPlayer->IsCloaked() )
 			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
 		else

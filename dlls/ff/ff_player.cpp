@@ -1015,6 +1015,11 @@ ReturnSpot:
 		// let's check this random spot
 		pSpot = spawns[iRand];
 
+		// Jon: this is just for testing purposes
+		//Class_T classtype = pSpot->Classify();
+		//if (classtype != CLASS_TEAMSPAWN)
+		//	classtype = classtype;
+
 		// as long as there's something to check, that is
 		if(pSpot)
 		{
