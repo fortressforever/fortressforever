@@ -32,8 +32,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//ConVar ffdev_spy_mincloakness( "ffdev_spy_mincloakness", "0.01" );
-#define SPY_MINCLOAKNESS 0.01f
+//ConVar ffdev_spy_mincloakness( "ffdev_spy_mincloakness", "0.05" );
+#define SPY_MINCLOAKNESS 0.05f
 //ConVar ffdev_spy_maxrefractval( "ffdev_spy_maxrefractval", "0.5" );
 #define SPY_MAXREFRACTVAL 0.5f
 

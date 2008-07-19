@@ -314,7 +314,7 @@ int C_BaseViewModel::DrawOverriddenViewmodel( int flags )
 	if( pPlayer )
 	{
 		// don't draw if cloaked and basically not moving
-		if ( pPlayer->IsCloaked() && pPlayer->GetLocalVelocity().Length() == 0.0f )
+		if ( pPlayer->IsCloaked() && pPlayer->GetLocalVelocity().Length() < 1.0f )
 			return 1;
 
 		if( !pPlayer->IsCloaked() )
