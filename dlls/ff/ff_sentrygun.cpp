@@ -651,14 +651,8 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || ( g_pGameRules->PlayerRelationship(pOwner, pPlayer) != iTypeToTarget ) )
 			continue;
 
-
 		// Spy check - but don't let valid radio tagged targets sneak by!
-
-		//	Disregard cloaked players who arnt tagged
-		if( pPlayer->IsCloaked() && !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) )
-			continue;
-
-		if( pPlayer->IsDisguised() /*&& !pPlayer->IsCloaked() */ )
+		if( pPlayer->IsDisguised() )
 		{
 			// Spy disguised as owners team
 			if( ( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() ) && ( !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) ) )
@@ -669,7 +663,6 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 			if( FFGameRules()->IsTeam1AlliedToTeam2( pOwner->GetTeamNumber(), pPlayer->GetDisguisedTeam() ) && !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) )
 				continue;
 		}
-		//*/
 
 		// IsTargetVisible checks for NULL so these are all safe...
 
