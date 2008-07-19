@@ -2170,7 +2170,7 @@ bool C_FFPlayer::ShouldDraw( void )
 		return true;
 
 	// don't draw if cloaked and basically not moving
-	if ( IsCloaked() && GetLocalVelocity().Length() == 0.0f )
+	if ( IsCloaked() && GetLocalVelocity().Length() < 1.0f )
 		return false;
 
 	return BaseClass::ShouldDraw();
