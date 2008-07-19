@@ -313,6 +313,10 @@ int C_BaseViewModel::DrawOverriddenViewmodel( int flags )
 	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
 	if( pPlayer )
 	{
+		// don't draw if cloaked and basically not moving
+		if ( pPlayer->IsCloaked() && pPlayer->GetLocalVelocity().Length() == 0.0f )
+			return 1;
+
 		if( !pPlayer->IsCloaked() )
 			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
 		else

@@ -2169,6 +2169,10 @@ bool C_FFPlayer::ShouldDraw( void )
 	if( IsLocalPlayer() && IsRagdoll() )
 		return true;
 
+	// don't draw if cloaked and basically not moving
+	if ( IsCloaked() && GetLocalVelocity().Length() == 0.0f )
+		return false;
+
 	return BaseClass::ShouldDraw();
 }
 
