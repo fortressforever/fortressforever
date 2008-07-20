@@ -86,12 +86,12 @@ ConVar ffdev_railgun_recoil_min("ffdev_railgun_recoil_min", "1", FCVAR_REPLICATE
 ConVar ffdev_railgun_recoil_max("ffdev_railgun_recoil_max", "5", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
 #define RAILGUN_RECOIL_MAX ffdev_railgun_recoil_max.GetInt()
 
-ConVar ffdev_railgun_resupply_interval("ffdev_railgun_resupply_interval", "6.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X seconds.");
+ConVar ffdev_railgun_resupply_interval("ffdev_railgun_resupply_interval", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X seconds.");
 #define RAILGUN_RESUPPLY_INTERVAL ffdev_railgun_resupply_interval.GetFloat()
-ConVar ffdev_railgun_resupply_cells("ffdev_railgun_resupply_cells", "20", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X cells.");
-#define RAILGUN_RESUPPLY_CELLS ffdev_railgun_resupply_cells.GetInt()
-ConVar ffdev_railgun_resupply_rails("ffdev_railgun_resupply_rails", "3", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X cells.");
+ConVar ffdev_railgun_resupply_rails("ffdev_railgun_resupply_rails", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply X rails");
 #define RAILGUN_RESUPPLY_RAILS ffdev_railgun_resupply_rails.GetInt()
+ConVar ffdev_railgun_resupply_cells("ffdev_railgun_resupply_cells", "50", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply X cells on overcharge");
+#define RAILGUN_RESUPPLY_CELLS ffdev_railgun_resupply_cells.GetInt()
 
 #ifdef CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStunstick )
@@ -433,6 +433,9 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 #ifdef GAME_DLL
 				// deal damage
 				//pPlayer->TakeDamage( CTakeDamageInfo( this, pPlayer, RAILGUN_OVERCHARGEDAMAGE * int(m_flClampedChargeTime), DMG_SHOCK ) );
+
+				// give cells
+				pPlayer->GiveAmmo( RAILGUN_RESUPPLY_CELLS, AMMO_CELLS, true );
 #endif
 
 				StopRevSound();
@@ -464,10 +467,8 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 	// time to resupply?
 	if (m_flNextResupply <= gpGlobals->curtime)
 	{
-		int iAmmoGiven = 0;
 		// give ammo already, GOSH!
-		iAmmoGiven += pPlayer->GiveAmmo( RAILGUN_RESUPPLY_RAILS, m_iPrimaryAmmoType, true );
-		iAmmoGiven += pPlayer->GiveAmmo( RAILGUN_RESUPPLY_CELLS, AMMO_CELLS, true );
+		pPlayer->GiveAmmo( RAILGUN_RESUPPLY_RAILS, m_iPrimaryAmmoType, true );
 
 		// resupply every X seconds with the railgun out
 		m_flNextResupply = gpGlobals->curtime + RAILGUN_RESUPPLY_INTERVAL;
