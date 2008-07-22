@@ -30,6 +30,8 @@
 #include "cdll_int.h"
 #include <vgui/IPanel.h>
 
+#include "c_ff_player.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -212,12 +214,12 @@ void CVoiceStatus::DrawHeadLabels()
 		if ( !pClient || pClient->IsDormant() )
 			continue;
 
-		C_BasePlayer *pPlayer = dynamic_cast<C_BasePlayer*>(pClient);
+		C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer*>(pClient);
 		if( !pPlayer )
 			continue;
 
-		// Don't show an icon for dead or spectating players (ie: invisible entities).
-		if( pPlayer->IsPlayerDead() )
+		// Don't show an icon for dead, spectating, or cloaked players (ie: invisible entities).
+		if( pPlayer->IsPlayerDead() || pPlayer->IsCloaked() )
 			continue;
 
 		// Place it 20 units above his head.
