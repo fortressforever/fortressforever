@@ -42,7 +42,7 @@ using namespace vgui;
 ConVar cl_objectiveicon_dist( "cl_objectiveicon_dist", "600.0f", FCVAR_ARCHIVE, "Distance beyond which the objective icon won't get any smaller on the screen", true, 100.0f, true, 2000.0f );
 #define OBJECTIVE_ICON_MINIMUM_SIZE		/*350.0f*/cl_objectiveicon_dist.GetFloat()
 
-ConVar cl_objectiveicon("cl_objectiveicon", "0", FCVAR_ARCHIVE, "Displays an icon showing the current objective");
+ConVar cl_objectiveicon("cl_objectiveicon", "1", FCVAR_ARCHIVE, "Displays an icon showing the current objective");
 
 class CHudObjectiveIcon : public CHudElement, public vgui::Panel
 {

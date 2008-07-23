@@ -31,6 +31,7 @@
 #include <vgui/IPanel.h>
 
 #include "c_ff_player.h"
+#include "ff_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -218,8 +219,16 @@ void CVoiceStatus::DrawHeadLabels()
 		if( !pPlayer )
 			continue;
 
-		// Don't show an icon for dead, spectating, or cloaked players (ie: invisible entities).
-		if( pPlayer->IsPlayerDead() || pPlayer->IsCloaked() )
+		// Don't show an icon for dead or spectating players (ie: invisible entities).
+		if( pPlayer->IsPlayerDead() )
+			continue;
+		
+		C_FFPlayer *pLocalPlayer = dynamic_cast<C_FFPlayer*>(C_BasePlayer::GetLocalPlayer());
+		if( !pLocalPlayer )
+			continue;
+
+		// Don't show an icon for cloaked enemies
+		if ( pPlayer->IsCloaked() && ( FFGameRules()->PlayerRelationship( pPlayer, pLocalPlayer ) == GR_NOTTEAMMATE ) )
 			continue;
 
 		// Place it 20 units above his head.

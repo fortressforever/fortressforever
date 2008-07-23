@@ -47,13 +47,13 @@ ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "6.0", FCVA
 ConVar ffdev_railgun_overchargedamage( "ffdev_railgun_overchargedamage", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Amount of damage an overcharge gives to the player (doubled on full charge)." );
 #define RAILGUN_OVERCHARGEDAMAGE ffdev_railgun_overchargedamage.GetFloat()
 
-ConVar ffdev_railgun_cooldowntime_zerocharge( "ffdev_railgun_cooldowntime_zerocharge", "0.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a non-charged shot." );
+ConVar ffdev_railgun_cooldowntime_zerocharge( "ffdev_railgun_cooldowntime_zerocharge", "0.333", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a non-charged shot." );
 #define RAILGUN_COOLDOWNTIME_ZEROCHARGE ffdev_railgun_cooldowntime_zerocharge.GetFloat()
-ConVar ffdev_railgun_cooldowntime_halfcharge( "ffdev_railgun_cooldowntime_halfcharge", "0.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a half-charged shot." );
+ConVar ffdev_railgun_cooldowntime_halfcharge( "ffdev_railgun_cooldowntime_halfcharge", "0.333", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a half-charged shot." );
 #define RAILGUN_COOLDOWNTIME_HALFCHARGE ffdev_railgun_cooldowntime_halfcharge.GetFloat()
-ConVar ffdev_railgun_cooldowntime_fullcharge( "ffdev_railgun_cooldowntime_fullcharge", "0.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a full-charged shot." );
+ConVar ffdev_railgun_cooldowntime_fullcharge( "ffdev_railgun_cooldowntime_fullcharge", "0.333", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a full-charged shot." );
 #define RAILGUN_COOLDOWNTIME_FULLCHARGE ffdev_railgun_cooldowntime_fullcharge.GetFloat()
-ConVar ffdev_railgun_cooldowntime_overcharge( "ffdev_railgun_cooldowntime_overcharge", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after overcharging." );
+ConVar ffdev_railgun_cooldowntime_overcharge( "ffdev_railgun_cooldowntime_overcharge", "2.333", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after overcharging." );
 #define RAILGUN_COOLDOWNTIME_OVERCHARGE ffdev_railgun_cooldowntime_overcharge.GetFloat()
 
 ConVar ffdev_railgun_revsound_volume_high("ffdev_railgun_revsound_volume_high", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound High Volume");
