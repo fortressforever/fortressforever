@@ -37,6 +37,7 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 
 		// CFFPlayer
 		class_<CFFPlayer, CBasePlayer>("Player")
+			.def("MaxSpeed",			&CFFPlayer::MaxSpeed)
 			.def("AddAmmo",				&CFFPlayer::LuaAddAmmo)
 			.def("AddArmor",			&CFFPlayer::AddArmor)
 			.def("AddFrags",			&CFFPlayer::IncrementFragCount)
