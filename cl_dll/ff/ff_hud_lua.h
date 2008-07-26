@@ -23,7 +23,7 @@
 
 #include <vgui_controls/Panel.h>
 
-#define MAX_HUD_ELEMENTS	30
+#define MAX_HUD_ELEMENTS	128
 #define	DONT_CREATE_NEW		false
 
 //using namespace vgui;
