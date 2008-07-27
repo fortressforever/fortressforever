@@ -526,6 +526,18 @@ void CFFSentryGun::OnActiveThink( void )
 
 	if( bCanFire )
 	{
+		// Fire rockets
+		if( GetLevel() >= 3 )
+		{
+			if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) && ( gpGlobals->curtime > m_flNextShell ) )
+			{
+				ShootRockets( RocketPosition(), vecAiming, true );
+
+				m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
+				bFired = true;
+			}
+		}
+
 		// Fire shells
 		if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) ) 
 		{
@@ -538,18 +550,6 @@ void CFFSentryGun::OnActiveThink( void )
 
 			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
 			bFired = true;
-		}
-
-		// Fire rockets
-		if( GetLevel() >= 3 )
-		{
-			if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) && ( gpGlobals->curtime > m_flNextShell ) )
-			{
-				ShootRockets( RocketPosition(), vecAiming, true );
-
-				m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
-				bFired = true;
-			}
 		}		
 	}	
 
