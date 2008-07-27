@@ -99,7 +99,7 @@ ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 
 ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
 #define SG_HEALTH_LEVEL3	sg_health_lvl3.GetInt()
 
-ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "1.00", FCVAR_REPLICATED, "Level 1 SG lock on time");
+ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.50", FCVAR_REPLICATED, "Level 1 SG lock on time");
 #define SG_LOCKONTIME_LVL1	sg_lockontime_lvl1.GetFloat()
 ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.50", FCVAR_REPLICATED, "Level 2 SG lock on time");
 #define SG_LOCKONTIME_LVL2	sg_lockontime_lvl2.GetFloat()
@@ -543,7 +543,7 @@ void CFFSentryGun::OnActiveThink( void )
 		// Fire rockets
 		if( GetLevel() >= 3 )
 		{
-			if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) )
+			if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) && ( gpGlobals->curtime > m_flNextShell ) )
 			{
 				ShootRockets( RocketPosition(), vecAiming, true );
 

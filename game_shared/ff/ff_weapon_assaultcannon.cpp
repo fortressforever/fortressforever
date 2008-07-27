@@ -33,7 +33,7 @@ ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.06", FCVAR_REPLICATED, "Th
 
 ConVar ffdev_ac_maxchargetime( "ffdev_ac_maxchargetime", "1.5", FCVAR_REPLICATED, "Time AC takes to reach full firing rate.", true, 1.0f, true, 3.0f );
 
-ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "7.0", FCVAR_REPLICATED, "Damage per bullet" );
+ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "6.5", FCVAR_REPLICATED, "Damage per bullet" );
 #define FF_AC_BULLET_DAMAGE	ffdev_ac_bullet_damage.GetFloat()
 
 ConVar ac_rof_max( "ffdev_ac_cycletime_max", "0.08", FCVAR_REPLICATED, "Assault Cannon maximum time between shots (min ROF)" );
