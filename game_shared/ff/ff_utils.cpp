@@ -639,6 +639,49 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Set some text on the hud
+//-----------------------------------------------------------------------------
+void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText, int iAlign)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+	WRITE_BYTE(5);	// HUD_TEXT_ALIGN
+	WRITE_STRING(pszIdentifier);
+	WRITE_SHORT(x);
+	WRITE_SHORT(y);
+	WRITE_STRING(pszText);
+	WRITE_SHORT(iAlign);
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set some text on the hud
+//-----------------------------------------------------------------------------
+void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText, int iAlignX, int iAlignY)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+	WRITE_BYTE(6);	// HUD_TEXT_ALIGNXY
+	WRITE_STRING(pszIdentifier);
+	WRITE_SHORT(x);
+	WRITE_SHORT(y);
+	WRITE_STRING(pszText);
+	WRITE_SHORT(iAlignX);
+	WRITE_SHORT(iAlignY);
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Set a timer on the hud
 //-----------------------------------------------------------------------------
 void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed)
@@ -656,6 +699,51 @@ void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y,
 		WRITE_SHORT(y);
 		WRITE_SHORT(iStartValue);
 		WRITE_FLOAT(flSpeed);
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set a timer on the hud
+//-----------------------------------------------------------------------------
+void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed, int iAlign)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+	WRITE_BYTE(7);	// HUD_TIMER_ALIGN
+	WRITE_STRING(pszIdentifier);
+	WRITE_SHORT(x);
+	WRITE_SHORT(y);
+	WRITE_SHORT(iStartValue);
+	WRITE_FLOAT(flSpeed);
+	WRITE_SHORT(iAlign);
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set a timer on the hud
+//-----------------------------------------------------------------------------
+void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed, int iAlignX, int iAlignY)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+	WRITE_BYTE(8);	// HUD_TIMER_ALIGNXY
+	WRITE_STRING(pszIdentifier);
+	WRITE_SHORT(x);
+	WRITE_SHORT(y);
+	WRITE_SHORT(iStartValue);
+	WRITE_FLOAT(flSpeed);
+	WRITE_SHORT(iAlignX);
+	WRITE_SHORT(iAlignY);
 	MessageEnd();
 }
 

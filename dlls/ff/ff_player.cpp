@@ -6112,6 +6112,9 @@ int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 ConVar emp_celldamage("ffdev_emp_celldamagecap", "150", FCVAR_REPLICATED);
 #define MAX_CELLDAMAGE emp_celldamage.GetInt()
 
+ConVar emp_hwguy_shells_multi("ffdev_emp_hwguy_shells_multi", "0.666", FCVAR_REPLICATED);
+#define EMP_HWGUY_SHELLS_MULTI emp_hwguy_shells_multi.GetInt()
+
 int CFFPlayer::TakeEmp()
 {
 	// Rockets, shells, and cells explode from EMPs, unless you are an engineer
@@ -6125,7 +6128,12 @@ int CFFPlayer::TakeEmp()
 	int iRockets = GetAmmoDef()->Index(AMMO_ROCKETS);
 	int iCells = GetAmmoDef()->Index(AMMO_CELLS);
 
-	ammodmg += GetAmmoCount(iShells) * 0.5f;
+	float flShellsMultiplier = 1.0f;
+
+	if (GetClassSlot() == CLASS_HWGUY)
+		flShellsMultiplier = EMP_HWGUY_SHELLS_MULTI;
+
+	ammodmg += GetAmmoCount(iShells) * 0.5f * flShellsMultiplier;
 	SetAmmoCount(GetAmmoCount(iShells) * 0.75f, iShells);
 
 	ammodmg += GetAmmoCount(iRockets) * 1.3f;

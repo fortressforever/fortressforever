@@ -163,6 +163,39 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 			break;
 		}
 
+	case HUD_TEXT_ALIGN:
+		{
+			if (xPos < 0 || yPos < 0)
+				return;
+
+			char szText[256];
+			if (!msg.ReadString(szText, 255))
+				return;
+
+			int iAlign = msg.ReadShort();
+
+			HudText(szIdentifier, xPos, yPos, szText, iAlign);
+
+			break;
+		}
+
+	case HUD_TEXT_ALIGNXY:
+		{
+			if (xPos < 0 || yPos < 0)
+				return;
+
+			char szText[256];
+			if (!msg.ReadString(szText, 255))
+				return;
+
+			int iAlignX = msg.ReadShort();
+			int iAlignY = msg.ReadShort();
+
+			HudText(szIdentifier, xPos, yPos, szText, iAlignX, iAlignY);
+
+			break;
+		}
+
 	case HUD_TIMER:
 		{
 			if (xPos < 0 || yPos < 0)
@@ -172,6 +205,37 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 			float	flSpeed = msg.ReadFloat();
 
 			HudTimer(szIdentifier, xPos, yPos, iValue, flSpeed);
+
+			break;
+		}
+
+	case HUD_TIMER_ALIGN:
+		{
+			if (xPos < 0 || yPos < 0)
+				return;
+
+			int		iValue = msg.ReadShort();
+			float	flSpeed = msg.ReadFloat();
+
+			int iAlign = msg.ReadShort();
+
+			HudTimer(szIdentifier, xPos, yPos, iValue, flSpeed, iAlign);
+
+			break;
+		}
+
+	case HUD_TIMER_ALIGNXY:
+		{
+			if (xPos < 0 || yPos < 0)
+				return;
+
+			int		iValue = msg.ReadShort();
+			float	flSpeed = msg.ReadFloat();
+
+			int iAlignX = msg.ReadShort();
+			int iAlignY = msg.ReadShort();
+
+			HudTimer(szIdentifier, xPos, yPos, iValue, flSpeed, iAlignX, iAlignY);
 
 			break;
 		}
@@ -346,6 +410,95 @@ void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *psz
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Create a new text box on the hud - X alignment
+//-----------------------------------------------------------------------------
+void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlign)
+{
+	int iWidth = 0;
+
+	int iProperXPosition = 0;
+	int scaledX = scheme()->GetProportionalScaledValue( iX );
+	int scaledW = scheme()->GetProportionalScaledValue( iWidth );
+	switch (iAlign)
+	{
+	case 1 : //HUD_ALIGNX_RIGHT :
+		iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
+		break;
+	case 2 : //HUD_ALIGNX_CENTERLEFT :
+		iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
+		break;
+	case 3 : //HUD_ALIGNX_CENTERRIGHT :
+		iProperXPosition = (ScreenWidth() / 2) + scaledX;
+		break;
+	case 4 : //HUD_ALIGNX_CENTER :
+		iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
+		break;
+	case 0 : //HUD_ALIGNX_LEFT : 
+	default :
+		iProperXPosition = scaledX;
+		break;
+	}
+
+	HudText(pszIdentifier, iProperXPosition, iY, pszText);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a new text box on the hud - X & Y alignment
+//-----------------------------------------------------------------------------
+void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY)
+{
+	int iWidth = 0;
+	int iHeight = 0;
+
+	int iProperXPosition = 0;
+	int iProperYPosition = 0;
+	int scaledX = scheme()->GetProportionalScaledValue( iX );
+	int scaledY = scheme()->GetProportionalScaledValue( iY );
+	int scaledW = scheme()->GetProportionalScaledValue( iWidth );
+	int scaledH = scheme()->GetProportionalScaledValue( iHeight );
+	switch (iAlignX)
+	{
+	case 1 : //HUD_ALIGNX_RIGHT :
+		iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
+		break;
+	case 2 : //HUD_ALIGNX_CENTERLEFT :
+		iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
+		break;
+	case 3 : //HUD_ALIGNX_CENTERRIGHT :
+		iProperXPosition = (ScreenWidth() / 2) + scaledX;
+		break;
+	case 4 : //HUD_ALIGNX_CENTER :
+		iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
+		break;
+	case 0 : //HUD_ALIGNX_LEFT : 
+	default :
+		iProperXPosition = scaledX;
+		break;
+	}
+	switch (iAlignY)
+	{
+	case 1 : //HUD_ALIGNY_BOTTOM :
+		iProperYPosition = ( ScreenHeight() - scaledY ) - scaledH;
+		break;
+	case 2 : //HUD_ALIGNY_CENTERUP :
+		iProperYPosition = ((ScreenHeight() / 2) - scaledY) - scaledH;
+		break;
+	case 3 : //HUD_ALIGNY_CENTERDOWN :
+		iProperYPosition = (ScreenHeight() / 2) + scaledY;
+		break;
+	case 4 : //HUD_ALIGNY_CENTER :
+		iProperYPosition = (ScreenHeight() / 2) - (scaledH / 2) + scaledY;
+		break;
+	case 0 : //HUD_ALIGNY_TOP : 
+	default :
+		iProperYPosition = scaledY;
+		break;
+	}
+
+	HudText(pszIdentifier, iProperXPosition, iProperYPosition, pszText);
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Create a new timer on the hud
 //-----------------------------------------------------------------------------
 void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed)
@@ -363,6 +516,95 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 	pTimer->StartTimer(true);
 
 	pTimer->SetVisible(true);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a new timer on the hud - X alignment
+//-----------------------------------------------------------------------------
+void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlign)
+{
+	int iWidth = 0;
+
+	int iProperXPosition = 0;
+	int scaledX = scheme()->GetProportionalScaledValue( iX );
+	int scaledW = scheme()->GetProportionalScaledValue( iWidth );
+	switch (iAlign)
+	{
+	case 1 : //HUD_ALIGNX_RIGHT :
+		iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
+		break;
+	case 2 : //HUD_ALIGNX_CENTERLEFT :
+		iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
+		break;
+	case 3 : //HUD_ALIGNX_CENTERRIGHT :
+		iProperXPosition = (ScreenWidth() / 2) + scaledX;
+		break;
+	case 4 : //HUD_ALIGNX_CENTER :
+		iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
+		break;
+	case 0 : //HUD_ALIGNX_LEFT : 
+	default :
+		iProperXPosition = scaledX;
+		break;
+	}
+
+	HudTimer(pszIdentifier, iProperXPosition, iY, flValue, flSpeed);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a new timer on the hud - X & Y alignment
+//-----------------------------------------------------------------------------
+void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY)
+{
+	int iWidth = 0;
+	int iHeight = 0;
+
+	int iProperXPosition = 0;
+	int iProperYPosition = 0;
+	int scaledX = scheme()->GetProportionalScaledValue( iX );
+	int scaledY = scheme()->GetProportionalScaledValue( iY );
+	int scaledW = scheme()->GetProportionalScaledValue( iWidth );
+	int scaledH = scheme()->GetProportionalScaledValue( iHeight );
+	switch (iAlignX)
+	{
+	case 1 : //HUD_ALIGNX_RIGHT :
+		iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
+		break;
+	case 2 : //HUD_ALIGNX_CENTERLEFT :
+		iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
+		break;
+	case 3 : //HUD_ALIGNX_CENTERRIGHT :
+		iProperXPosition = (ScreenWidth() / 2) + scaledX;
+		break;
+	case 4 : //HUD_ALIGNX_CENTER :
+		iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
+		break;
+	case 0 : //HUD_ALIGNX_LEFT : 
+	default :
+		iProperXPosition = scaledX;
+		break;
+	}
+	switch (iAlignY)
+	{
+	case 1 : //HUD_ALIGNY_BOTTOM :
+		iProperYPosition = ( ScreenHeight() - scaledY ) - scaledH;
+		break;
+	case 2 : //HUD_ALIGNY_CENTERUP :
+		iProperYPosition = ((ScreenHeight() / 2) - scaledY) - scaledH;
+		break;
+	case 3 : //HUD_ALIGNY_CENTERDOWN :
+		iProperYPosition = (ScreenHeight() / 2) + scaledY;
+		break;
+	case 4 : //HUD_ALIGNY_CENTER :
+		iProperYPosition = (ScreenHeight() / 2) - (scaledH / 2) + scaledY;
+		break;
+	case 0 : //HUD_ALIGNY_TOP : 
+	default :
+		iProperYPosition = scaledY;
+		break;
+	}
+
+	HudTimer(pszIdentifier, iProperXPosition, iProperYPosition, flValue, flSpeed);
 }
 
 //-----------------------------------------------------------------------------
