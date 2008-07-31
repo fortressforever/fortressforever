@@ -205,6 +205,26 @@ bool CFFGameMovement::CheckJumpButton(void)
 		fGroundFactor = player->m_pSurfaceData->game.jumpFactor; 
 	}
 
+	// This following dynamic cap is documented here:
+	//		http://www.madabouthats.org/code-tf2/viewtopic.php?t=2360
+
+	const float cap_soft = BHOP_CAP_SOFT * mv->m_flMaxSpeed;
+	const float cap_hard = BHOP_CAP_HARD * mv->m_flMaxSpeed;
+	const float pcfactor = BHOP_PCFACTOR;
+	float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
+
+	// apply soft cap
+	if (speed > cap_soft)
+	{
+		float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
+		float multi = applied_cap / speed;
+
+		mv->m_vecVelocity[0] *= multi;
+		mv->m_vecVelocity[1] *= multi;
+
+		Assert(multi <= 1.0f);
+	}
+
 	// --> Mirv: Trimp code v2.0!
 	//float fMul = FF_MUL_CONSTANT;
 	//float fMul = 268.3281573;
@@ -296,33 +316,21 @@ bool CFFGameMovement::CheckJumpButton(void)
 	}
 	// <-- Mirv: Trimp code v2.0!
 
-	// This following dynamic cap is documented here:
-	//		http://www.madabouthats.org/code-tf2/viewtopic.php?t=2360
-
-	const float cap_soft = BHOP_CAP_SOFT * mv->m_flMaxSpeed;
-	const float cap_hard = BHOP_CAP_HARD * mv->m_flMaxSpeed;
-	const float pcfactor = BHOP_PCFACTOR;
-	const float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
-
-	if (speed > cap_hard && !bTrimped)
+	if (!bTrimped)
 	{
-		float applied_cap = cap_hard * BHOP_CAP_HARD_DEGEN; 
-		float multi = applied_cap / speed;
+		speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
-		mv->m_vecVelocity[0] *= multi;
-		mv->m_vecVelocity[1] *= multi;
+		// apply skim cap
+		if (speed > cap_hard )
+		{
+			float applied_cap = cap_hard * BHOP_CAP_HARD_DEGEN; 
+			float multi = applied_cap / speed;
 
-		Assert(multi <= 1.0f);
-	}
-	else if (speed > cap_soft)
-	{
-		float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
-		float multi = applied_cap / speed;
+			mv->m_vecVelocity[0] *= multi;
+			mv->m_vecVelocity[1] *= multi;
 
-		mv->m_vecVelocity[0] *= multi;
-		mv->m_vecVelocity[1] *= multi;
-
-		Assert(multi <= 1.0f);
+			Assert(multi <= 1.0f);
+		}
 	}
 
 	//// Acclerate upward
