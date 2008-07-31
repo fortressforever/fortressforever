@@ -414,11 +414,14 @@ void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *psz
 //-----------------------------------------------------------------------------
 void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlign)
 {
-	int iWidth = 0;
+	Label *pLabel = dynamic_cast<Label *> (GetHudElement(pszIdentifier, HUD_TEXT));
+
+	if (!pLabel)
+		return;
 
 	int iProperXPosition = 0;
 	int scaledX = scheme()->GetProportionalScaledValue( iX );
-	int scaledW = scheme()->GetProportionalScaledValue( iWidth );
+	int scaledW = surface()->GetCharacterWidth(pLabel->GetFont(), '0' ) * Q_strlen(pszText);
 	switch (iAlign)
 	{
 	case 1 : //HUD_ALIGNX_RIGHT :
@@ -439,7 +442,12 @@ void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *psz
 		break;
 	}
 
-	HudText(pszIdentifier, iProperXPosition, iY, pszText);
+	// Now set this label up
+	pLabel->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
+	pLabel->SetText(pszText);
+	pLabel->SizeToContents();
+
+	pLabel->SetVisible(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -447,15 +455,17 @@ void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *psz
 //-----------------------------------------------------------------------------
 void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY)
 {
-	int iWidth = 0;
-	int iHeight = 0;
+	Label *pLabel = dynamic_cast<Label *> (GetHudElement(pszIdentifier, HUD_TEXT));
+
+	if (!pLabel)
+		return;
 
 	int iProperXPosition = 0;
 	int iProperYPosition = 0;
 	int scaledX = scheme()->GetProportionalScaledValue( iX );
 	int scaledY = scheme()->GetProportionalScaledValue( iY );
-	int scaledW = scheme()->GetProportionalScaledValue( iWidth );
-	int scaledH = scheme()->GetProportionalScaledValue( iHeight );
+	int scaledW = surface()->GetCharacterWidth(pLabel->GetFont(), '0' ) * Q_strlen(pszText);
+	int scaledH = surface()->GetFontTall( pLabel->GetFont() );
 	switch (iAlignX)
 	{
 	case 1 : //HUD_ALIGNX_RIGHT :
@@ -495,7 +505,12 @@ void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *psz
 		break;
 	}
 
-	HudText(pszIdentifier, iProperXPosition, iProperYPosition, pszText);
+	// Now set this label up
+	pLabel->SetPos( iProperXPosition, iProperYPosition );
+	pLabel->SetText(pszText);
+	pLabel->SizeToContents();
+
+	pLabel->SetVisible(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -523,11 +538,14 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 //-----------------------------------------------------------------------------
 void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlign)
 {
-	int iWidth = 0;
+	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(pszIdentifier, HUD_TIMER));
+
+	if (!pTimer)
+		return;
 
 	int iProperXPosition = 0;
 	int scaledX = scheme()->GetProportionalScaledValue( iX );
-	int scaledW = scheme()->GetProportionalScaledValue( iWidth );
+	int scaledW = 0; // surface()->GetCharacterWidth(pTimer->GetFont(), '0' ) * 5;
 	switch (iAlign)
 	{
 	case 1 : //HUD_ALIGNX_RIGHT :
@@ -548,7 +566,14 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 		break;
 	}
 
-	HudTimer(pszIdentifier, iProperXPosition, iY, flValue, flSpeed);
+	// Now set this label up
+	pTimer->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
+	pTimer->SetTimerValue(flValue);
+	pTimer->SetTimerSpeed(flSpeed);
+	pTimer->SetTimerDrawClockStyle(true);
+	pTimer->StartTimer(true);
+
+	pTimer->SetVisible(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -556,15 +581,17 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 //-----------------------------------------------------------------------------
 void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY)
 {
-	int iWidth = 0;
-	int iHeight = 0;
+	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(pszIdentifier, HUD_TIMER));
+
+	if (!pTimer)
+		return;
 
 	int iProperXPosition = 0;
 	int iProperYPosition = 0;
 	int scaledX = scheme()->GetProportionalScaledValue( iX );
 	int scaledY = scheme()->GetProportionalScaledValue( iY );
-	int scaledW = scheme()->GetProportionalScaledValue( iWidth );
-	int scaledH = scheme()->GetProportionalScaledValue( iHeight );
+	int scaledW = 0; // surface()->GetCharacterWidth(pTimer->GetFont(), '0' ) * 5;
+	int scaledH = surface()->GetFontTall( pTimer->GetFont() );
 	switch (iAlignX)
 	{
 	case 1 : //HUD_ALIGNX_RIGHT :
@@ -604,7 +631,14 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 		break;
 	}
 
-	HudTimer(pszIdentifier, iProperXPosition, iProperYPosition, flValue, flSpeed);
+	// Now set this label up
+	pTimer->SetPos( iProperXPosition, iProperYPosition );
+	pTimer->SetTimerValue(flValue);
+	pTimer->SetTimerSpeed(flSpeed);
+	pTimer->SetTimerDrawClockStyle(true);
+	pTimer->StartTimer(true);
+
+	pTimer->SetVisible(true);
 }
 
 //-----------------------------------------------------------------------------
