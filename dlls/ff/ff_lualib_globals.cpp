@@ -1142,8 +1142,85 @@ namespace FFLib
 		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlignX, iAlignY );
 	}
 
+	void AddHudIconToTeam( CFFTeam *pTeam, const char *pszImage, const char *pszIdentifier, int x, int y )
+	{
+		if( !pszImage || !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 1);
+			}
+		}
+	}
+
+	// default alignment
+	void AddHudIconToTeam( CFFTeam *pTeam, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight )
+	{
+		if( !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, 1);
+			}
+		}
+	}
+
+	void AddHudIconToTeam( CFFTeam *pTeam, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlign )
+	{
+		if( !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlign);
+			}
+		}
+	}
+
+	// added y alignment
+	void AddHudIconToTeam( CFFTeam *pTeam, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlignX, int iAlignY )
+	{
+		if( !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlignX, iAlignY);
+			}
+		}
+	}
+
 	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y )
 	{
+		if( !pszImage || !pszIdentifier )
+			return;
+
 		// loop through each player
 		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
@@ -1159,6 +1236,9 @@ namespace FFLib
 	// default alignment
 	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight )
 	{
+		if( !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
+			return;
+
 		// loop through each player
 		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
@@ -1173,6 +1253,9 @@ namespace FFLib
 
 	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlign )
 	{
+		if( !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
+			return;
+
 		// loop through each player
 		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
@@ -1188,6 +1271,9 @@ namespace FFLib
 	// added y alignment
 	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlignX, int iAlignY )
 	{
+		if( !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
+			return;
+
 		// loop through each player
 		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
@@ -1199,7 +1285,7 @@ namespace FFLib
 			}
 		}
 	}
-	
+
 	void AddHudText( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszText, int x, int y )
 	{
 		if( !pPlayer || !pszIdentifier || !pszText )
@@ -1208,12 +1294,254 @@ namespace FFLib
 		FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText );
 	}
 
+	void AddHudText( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszText, int x, int y, int iAlign )
+	{
+		if( !pPlayer || !pszIdentifier || !pszText )
+			return;
+
+		FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText, iAlign );
+	}
+
+	void AddHudText( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszText, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pPlayer || !pszIdentifier || !pszText )
+			return;
+
+		FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText, iAlignX, iAlignY );
+	}
+
+	void AddHudTextToTeam( CFFTeam *pTeam, const char *pszIdentifier, const char *pszText, int x, int y )
+	{
+		if( !pszIdentifier || !pszText )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText );
+			}
+		}
+	}
+
+	void AddHudTextToTeam( CFFTeam *pTeam, const char *pszIdentifier, const char *pszText, int x, int y, int iAlign )
+	{
+		if( !pszIdentifier || !pszText )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText, iAlign );
+			}
+		}
+	}
+
+	void AddHudTextToTeam( CFFTeam *pTeam, const char *pszIdentifier, const char *pszText, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pszIdentifier || !pszText )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText, iAlignX, iAlignY );
+			}
+		}
+	}
+
+	void AddHudTextToAll( const char *pszIdentifier, const char *pszText, int x, int y )
+	{
+		if( !pszIdentifier || !pszText )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText );
+			}
+		}
+	}
+
+	void AddHudTextToAll( const char *pszIdentifier, const char *pszText, int x, int y, int iAlign )
+	{
+		if( !pszIdentifier || !pszText )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText, iAlign );
+			}
+		}
+	}
+
+	void AddHudTextToAll( const char *pszIdentifier, const char *pszText, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pszIdentifier || !pszText )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText, iAlignX, iAlignY );
+			}
+		}
+	}
+
 	void AddHudTimer( CFFPlayer *pPlayer, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y )
 	{
-		if( !pszIdentifier || !pszIdentifier )
+		if( !pPlayer || !pszIdentifier )
 			return;
 
 		FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed );
+	}
+
+	void AddHudTimer( CFFPlayer *pPlayer, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y, int iAlign )
+	{
+		if( !pPlayer || !pszIdentifier )
+			return;
+
+		FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed, iAlign );
+	}
+
+	void AddHudTimer( CFFPlayer *pPlayer, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pPlayer || !pszIdentifier )
+			return;
+
+		FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed, iAlignX, iAlignY );
+	}
+
+	void AddHudTimerToTeam( CFFTeam *pTeam, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed );
+			}
+		}
+	}
+
+	void AddHudTimerToTeam( CFFTeam *pTeam, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y, int iAlign )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed, iAlign );
+			}
+		}
+	}
+
+	void AddHudTimerToTeam( CFFTeam *pTeam, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed, iAlignX, iAlignY );
+			}
+		}
+	}
+
+	void AddHudTimerToAll( const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed );
+			}
+		}
+	}
+
+	void AddHudTimerToAll( const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y, int iAlign )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed, iAlign );
+			}
+		}
+	}
+
+	void AddHudTimerToAll( const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed, iAlignX, iAlignY );
+			}
+		}
 	}
 
 	void RemoveHudItem( CFFPlayer *pPlayer, const char *pszIdentifier )
@@ -1222,6 +1550,21 @@ namespace FFLib
 			return;
 
 		FF_LuaHudRemove( pPlayer, pszIdentifier );
+	}
+
+	void RemoveHudItemFromTeam( CFFTeam *pTeam, const char *pszIdentifier )
+	{
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudRemove( pPlayer, pszIdentifier );
+			}
+		}
 	}
 
 	void RemoveHudItemFromAll( const char *pszIdentifier )
@@ -1480,12 +1823,32 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int))&FFLib::AddHudIcon),
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int, int))&FFLib::AddHudIcon),
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int, int, int))&FFLib::AddHudIcon),
+		def("AddHudIconToTeam",			(void(*)(CFFTeam *, const char *, const char *, int, int))&FFLib::AddHudIconToTeam),
+		def("AddHudIconToTeam",			(void(*)(CFFTeam *, const char *, const char *, int, int, int, int))&FFLib::AddHudIconToTeam),
+		def("AddHudIconToTeam",			(void(*)(CFFTeam *, const char *, const char *, int, int, int, int, int))&FFLib::AddHudIconToTeam),
+		def("AddHudIconToTeam",			(void(*)(CFFTeam *, const char *, const char *, int, int, int, int, int, int))&FFLib::AddHudIconToTeam),
 		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int))&FFLib::AddHudIconToAll),
 		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int, int, int))&FFLib::AddHudIconToAll),
 		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int, int, int, int))&FFLib::AddHudIconToAll),
 		def("AddHudIconToAll",			(void(*)(const char *, const char *, int, int, int, int, int, int))&FFLib::AddHudIconToAll),
-		def("AddHudText",				&FFLib::AddHudText),
-		def("AddHudTimer",				&FFLib::AddHudTimer),
+		def("AddHudText",				(void(*)(CFFPlayer *, const char *, const char *, int, int))&FFLib::AddHudText),
+		def("AddHudText",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int))&FFLib::AddHudText),
+		def("AddHudText",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int))&FFLib::AddHudText),
+		def("AddHudTextToTeam",			(void(*)(CFFTeam *, const char *, const char *, int, int))&FFLib::AddHudTextToTeam),
+		def("AddHudTextToTeam",			(void(*)(CFFTeam *, const char *, const char *, int, int, int))&FFLib::AddHudTextToTeam),
+		def("AddHudTextToTeam",			(void(*)(CFFTeam *, const char *, const char *, int, int, int, int))&FFLib::AddHudTextToTeam),
+		def("AddHudTextToAll",			(void(*)(const char *, const char *, int, int))&FFLib::AddHudTextToAll),
+		def("AddHudTextToAll",			(void(*)(const char *, const char *, int, int, int))&FFLib::AddHudTextToAll),
+		def("AddHudTextToAll",			(void(*)(const char *, const char *, int, int, int, int))&FFLib::AddHudTextToAll),
+		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, int, float, int, int))&FFLib::AddHudTimer),
+		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, int, float, int, int, int))&FFLib::AddHudTimer),
+		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, int, float, int, int, int, int))&FFLib::AddHudTimer),
+		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, int, float, int, int))&FFLib::AddHudTimerToTeam),
+		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, int, float, int, int, int))&FFLib::AddHudTimerToTeam),
+		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, int, float, int, int, int, int))&FFLib::AddHudTimerToTeam),
+		def("AddHudTimerToAll",			(void(*)(const char *, int, float, int, int))&FFLib::AddHudTimerToAll),
+		def("AddHudTimerToAll",			(void(*)(const char *, int, float, int, int, int))&FFLib::AddHudTimerToAll),
+		def("AddHudTimerToAll",			(void(*)(const char *, int, float, int, int, int, int))&FFLib::AddHudTimerToAll),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
@@ -1561,7 +1924,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("RandomInt",				&FFLib::RandomInt),
 		def("RemoveEntity",				&FFLib::RemoveEntity),
 		def("RemoveHudItem",			&FFLib::RemoveHudItem),
-		def("RemoveHudItemFromAll",			&FFLib::RemoveHudItemFromAll),
+		def("RemoveHudItemFromTeam",	&FFLib::RemoveHudItemFromTeam),
+		def("RemoveHudItemFromAll",		&FFLib::RemoveHudItemFromAll),
 		def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
 		def("ResetMap",					&FFLib::ResetMap),
 		def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),

@@ -48,6 +48,7 @@
 #include "ff_weapon_base.h"
 #include "ff_gamerules.h"
 #include "ff_utils.h"
+#include "ff_item_backpack.h"
 //#include "ff_sevtest.h"
 
 #include "omnibot_interface.h"
@@ -247,7 +248,7 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 					if( pPlayer == m_pLastTouch )
 					{
 						// If the player hasn't touched us within some time...
-						if( ( m_flLastTouch + 1.0f ) < gpGlobals->curtime )
+						if( ( m_flLastTouch + 0.5f ) < gpGlobals->curtime )
 						{
 							bDispense = true;
 						}
@@ -348,11 +349,44 @@ void CFFDispenser::OnObjectThink( void )
 	// Do any thinking that needs to be done for _this_ class
 	CheckForOwner();
 
+	int iCells = 40;
+	int iNails = 60;
+	int iShells = 40;
+	int iRockets = 30;
+	bool bAteBag = false;
+
+	// eat backpacks
+	CBaseEntity *pEntity = NULL;
+	for ( CEntitySphereQuery sphere( GetAbsOrigin(), 64 ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
+		// Don't care about ourselves or non-backpacks
+		if( pEntity == this || pEntity->Classify() != CLASS_BACKPACK)
+			continue;
+
+		CFFItemBackpack *pBackpack = dynamic_cast< CFFItemBackpack* > (pEntity);
+
+		if ( pBackpack->GetSpawnFlags() & SF_NORESPAWN )
+		{
+			iCells += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ) );
+			iNails += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ) );
+			iShells += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ) );
+			iRockets += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ) );
+
+			if ( !bAteBag )
+				bAteBag = true;
+
+			UTIL_Remove( pBackpack );
+		}
+	}
+
+	if ( bAteBag )
+		EmitSound( "Backpack.Touch" );
+
 	// Generate stock
-	m_iCells = clamp( m_iCells + 40, 0, m_iMaxCells );
-	m_iNails = clamp( m_iNails + 60, 0, m_iMaxNails );
-	m_iShells = clamp( m_iShells + 40, 0, m_iMaxShells );
-	m_iRockets = clamp( m_iRockets + 30, 0, m_iMaxRockets );
+	m_iCells = clamp( m_iCells + iCells, 0, m_iMaxCells );
+	m_iNails = clamp( m_iNails + iNails, 0, m_iMaxNails );
+	m_iShells = clamp( m_iShells + iShells, 0, m_iMaxShells );
+	m_iRockets = clamp( m_iRockets + iRockets, 0, m_iMaxRockets );
 	m_iArmor = clamp( m_iArmor + 50, 0, m_iMaxArmor );
 
 	// Update ammo percentage

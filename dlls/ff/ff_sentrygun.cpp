@@ -106,6 +106,13 @@ ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.50", FCVAR_REPLICATED, 
 ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.50", FCVAR_REPLICATED, "Level 3 SG lock on time");
 #define SG_LOCKONTIME_LVL3	sg_lockontime_lvl3.GetFloat()
 
+ConVar sg_empdmg_base("ffdev_sg_empdmg_base", "100", FCVAR_REPLICATED, "Base damage a sentry takes from an emp.");
+#define SG_EMPDMG_BASE	sg_empdmg_base.GetFloat()
+ConVar sg_empdmg_shells_multi("ffdev_sg_empdmg_shells_multi", "0.5", FCVAR_REPLICATED, "Base emp damage plus the sentry's shell count times this");
+#define SG_EMPDMG_SHELLS_MULTI	sg_empdmg_shells_multi.GetFloat()
+ConVar sg_empdmg_rockets_multi("ffdev_sg_empdmg_rockets_multi", "0.9", FCVAR_REPLICATED, "Base emp damage plus the sentry's rocket count times this");
+#define SG_EMPDMG_ROCKETS_MULTI	sg_empdmg_rockets_multi.GetFloat()
+
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
 	SendPropFloat( SENDINFO( m_flRange ) ), 
@@ -1353,11 +1360,11 @@ int CFFSentryGun::TakeEmp( void )
 	VPROF_BUDGET( "CFFSentryGun::TakeEmp", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	// This base damage matches up the total damage with tfc
-	int ammodmg = 100;
+	int ammodmg = SG_EMPDMG_BASE;
 
 	// These values are from tfc.
-	ammodmg += m_iShells * 0.5f;
-	ammodmg += m_iRockets * 1.3f;
+	ammodmg += m_iShells * SG_EMPDMG_SHELLS_MULTI;
+	ammodmg += m_iRockets * SG_EMPDMG_ROCKETS_MULTI;
 
 	return ammodmg;
 }

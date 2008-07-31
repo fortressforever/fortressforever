@@ -35,6 +35,10 @@ enum HudElementType_t
 	HUD_TIMER,
 	HUD_REMOVE,
 	HUD_ICON_ALIGNXY,
+	HUD_TEXT_ALIGN,
+	HUD_TEXT_ALIGNXY,
+	HUD_TIMER_ALIGN,
+	HUD_TIMER_ALIGNXY,
 };
 
 typedef struct HudElement_s
@@ -64,7 +68,11 @@ public:
 	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlign);
 	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY); // added y alignment
 	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText);
+	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlign);
+	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY);
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed);
+	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlign);
+	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY);
 
 	void	FireGameEvent( IGameEvent *pEvent );
 

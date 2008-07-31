@@ -33,6 +33,8 @@
 	extern ConVar gren_grav;
 	extern ConVar gren_fric;
 	extern ConVar gren_elas;
+	extern ConVar gren_fric_conc;
+	extern ConVar gren_elas_conc;
 #endif
 
 //=============================================================================

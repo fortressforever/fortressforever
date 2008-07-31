@@ -136,6 +136,8 @@ public:
 #else
 	virtual void Spawn();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
+	virtual float GetGrenadeFriction()		{ return gren_fric_conc.GetFloat(); }
+	virtual float GetGrenadeElasticity()	{ return gren_elas_conc.GetFloat(); }
 #endif
 
 	CHandle<CFFGrenadeConcussionGlow> m_hGlowSprite;
