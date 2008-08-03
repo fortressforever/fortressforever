@@ -54,7 +54,7 @@ ConVar mp_chattime(
 		true, 120 );
 
 ConVar	mp_timelimit( "mp_timelimit",
-					  "30",
+					  "20",
 					  FCVAR_NOTIFY|FCVAR_REPLICATED,
 					  "game time per map in minutes" );
 
