@@ -40,9 +40,12 @@ using namespace vgui;
 #define	OBJECTIVE_ICON_ARROW			"glyphs/ff_damage_pitt"
 
 ConVar cl_objectiveicon_dist( "cl_objectiveicon_dist", "600.0f", FCVAR_ARCHIVE, "Distance beyond which the objective icon won't get any smaller on the screen", true, 100.0f, true, 2000.0f );
-#define OBJECTIVE_ICON_MINIMUM_SIZE		/*350.0f*/cl_objectiveicon_dist.GetFloat()
+#define OBJECTIVE_ICON_MINIMUM_SIZE		/*600.0f*/cl_objectiveicon_dist.GetFloat()
 
-ConVar cl_objectiveicon("cl_objectiveicon", "1", FCVAR_ARCHIVE, "Displays an icon showing the current objective");
+ConVar cl_objectiveicon("cl_objectiveicon", "1", FCVAR_ARCHIVE, "Draws an objective icon and/or arrow | 0 = disables | 1 = icon and arrow | 2 = icon only", true, 0, true, 2);
+ConVar cl_objectiveicon_arrow_size("cl_objectiveicon_arrow_size", "96", FCVAR_ARCHIVE, "The size of the objective arrow", true, 4, true, 256);
+ConVar cl_objectiveicon_teamcolor("cl_objectiveicon_teamcolor", "1", FCVAR_ARCHIVE, "Team colors the objective icon if the objective has a team", true, 0, true, 1);
+ConVar cl_objectiveicon_arrow_teamcolor("cl_objectiveicon_arrow_teamcolor", "0", FCVAR_ARCHIVE, "Team colors the objective arrow if the objective has a team", true, 0, true, 1);
 
 class CHudObjectiveIcon : public CHudElement, public vgui::Panel
 {
@@ -206,8 +209,12 @@ void CHudObjectiveIcon::Paint( void )
 
 		// Draw a box around the objective if it's on the player's screen
 		int iScreenX, iScreenY;
+		bool bIconDrawn = false;
 		if( GetVectorInScreenSpace( vecObjectiveOrigin, iScreenX, iScreenY ) )
 		{
+			if ( iScreenX > 0 && iScreenX < ScreenWidth() && iScreenY > 0 && iScreenY < ScreenHeight() )
+				bIconDrawn = true;
+
 			int iTopScreenX, iTopScreenY;
 			GetVectorInScreenSpace( vecObjectiveOrigin + Vector( 0, 0, 80 ), iTopScreenX, iTopScreenY );
 
@@ -234,18 +241,24 @@ void CHudObjectiveIcon::Paint( void )
 			{
 				surface()->DrawSetTextureFile( m_pObscuredIconTexture->textureId, OBJECTIVE_ICON_TEXTURE_OBSCURED, true, false );
 				surface()->DrawSetTexture( m_pObscuredIconTexture->textureId );
-				surface()->DrawSetColor( cColor );
+				if ( cl_objectiveicon_teamcolor.GetBool() )
+					surface()->DrawSetColor( cColor );
 				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
 			}
 			else
 			{
 				surface()->DrawSetTextureFile( m_pIconTexture->textureId, OBJECTIVE_ICON_TEXTURE, true, false );
 				surface()->DrawSetTexture( m_pIconTexture->textureId );
-				surface()->DrawSetColor( cColor );
+				if ( cl_objectiveicon_teamcolor.GetBool() )
+					surface()->DrawSetColor( cColor );
 				//surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
 			}
 		}
+
+		// don't draw the arrow if the cvar isn't set to 1 or if the icon was drawn
+		if ( cl_objectiveicon.GetInt() != 1 || bIconDrawn )
+			return;
 		
 		// Calculate the angle the objective is from the player
 		Vector vecDelta = ( vecObjectiveOrigin - MainViewOrigin() );
@@ -256,15 +269,17 @@ void CHudObjectiveIcon::Paint( void )
 		//ClientPrintMsg( pPlayer, HUD_PRINTCENTER, szBuf );
 
 		// If the objective isn't on the screen, draw an arrow pointing to it
-		if ( angle >= 45 && angle <= 315 )  
+		//if ( angle >= 45 && angle <= 315 )  
 		{
 			// Let's draw a triangle pointing toward the objective that is off the screen
 			//float yawRadians1 = - (angle) * M_PI / 180.0f;
 			float yawRadians2 = - (angle - 5.0f) * M_PI / 180.0f;
 			//float yawRadians3 = - (angle + 5.0f) * M_PI / 180.0f;
 
+			int iArrowSize = cl_objectiveicon_arrow_size.GetInt();
+
 			// Rotate it around the circle
-			int iXCenter = ScreenWidth() / 2;
+			int iXCenter = ScreenWidth() / 2 - (iArrowSize / 2);
 			int iYCenter = ScreenHeight() / 2;
 
 			int xposLeft = (int) ( iXCenter + ( 360.0f * sin(yawRadians2) ) );
@@ -282,7 +297,9 @@ void CHudObjectiveIcon::Paint( void )
 			//surface()->DrawSetColor( cColor );
 			//surface()->DrawPolyLine( xcoords, ycoords, 3 );
 
-			m_pArrow->DoPaint(xposLeft, yposLeft, 100, 100, angle); 
+			if ( cl_objectiveicon_arrow_teamcolor.GetBool() )
+				m_pArrow->SetColor(cColor);
+			m_pArrow->DoPaint(xposLeft, yposLeft, iArrowSize, iArrowSize, angle); 
 			
 
 		}

@@ -1941,16 +1941,17 @@ void CBasePlayer::WaterMove()
 	}
 #endif
 	
-	if (!(GetFlags() & FL_INWATER))
-	{
-		// player enter water sound
-		if (GetWaterType() == CONTENTS_WATER)
-		{
-			EmitSound( "Player.Wade" );
-		}
-		// Jiggles: Removed this line.  This line added the INWATER flag right away on player spawn...umm...what?
-		//AddFlag( FL_INWATER );
-	}
+	// Jon: this was causing the wade sound to loop while in water, getting rid of all footsteps and just being annoying in general
+//	if (!(GetFlags() & FL_INWATER))
+//	{
+//		// player enter water sound
+//		if (GetWaterType() == CONTENTS_WATER)
+//		{
+//			EmitSound( "Player.Wade" );
+//		}
+//		// Jiggles: Removed this line.  This line added the INWATER flag right away on player spawn...umm...what?
+//		//AddFlag( FL_INWATER );
+//	}
 }
 
 

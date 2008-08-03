@@ -218,7 +218,7 @@ ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'S', "qsentry")
 	if( ff->IsBuilding() && ( ff->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
-	if (ff->GetDispenser())
+	if (ff->GetSentryGun())
 		return MENU_DIM;
 
 	return MENU_SHOW;
