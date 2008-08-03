@@ -6113,7 +6113,7 @@ ConVar emp_celldamage("ffdev_emp_celldamagecap", "150", FCVAR_REPLICATED);
 #define MAX_CELLDAMAGE emp_celldamage.GetInt()
 
 ConVar emp_hwguy_shells_multi("ffdev_emp_hwguy_shells_multi", "0.666", FCVAR_REPLICATED);
-#define EMP_HWGUY_SHELLS_MULTI emp_hwguy_shells_multi.GetInt()
+#define EMP_HWGUY_SHELLS_MULTI emp_hwguy_shells_multi.GetFloat()
 
 int CFFPlayer::TakeEmp()
 {

@@ -63,8 +63,8 @@ LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 // Developer ConVars
 //========================================================================
 ConVar gren_grav("ffdev_gren_grav", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar gren_fric("ffdev_gren_fric", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT);
-ConVar gren_elas("ffdev_gren_elas", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar gren_fric("ffdev_gren_fric", "0.25", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar gren_elas("ffdev_gren_elas", "0.4", FCVAR_REPLICATED | FCVAR_CHEAT);
 ConVar gren_fric_conc("ffdev_gren_fric_conc", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
 ConVar gren_elas_conc("ffdev_gren_elas_conc", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT);
 ConVar gren_radius("ffdev_gren_radius", "180.0f", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of grenade explosions");
