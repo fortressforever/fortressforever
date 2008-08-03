@@ -242,8 +242,8 @@ void CClassMenu::Update()
 		switch (nSpacesRemaining[iClassIndex])
 		{
 		case -1:
-			pClassButton->SetVisible(false);
-			break;
+//			pClassButton->SetVisible(false);
+//			break;
 		case 0:
 			pClassButton->SetVisible(true);
 			pClassButton->SetEnabled(false);

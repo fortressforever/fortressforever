@@ -263,6 +263,7 @@ private:
 	virtual void	OnDataChanged(DataUpdateType_t type);
 	virtual int		DrawModel( int flags );
 	virtual RenderGroup_t GetRenderGroup( void );
+	virtual ShadowType_t ShadowCastType( void );
 #endif
 };
 

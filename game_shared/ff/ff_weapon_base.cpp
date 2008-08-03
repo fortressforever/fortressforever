@@ -500,6 +500,34 @@ RenderGroup_t CFFWeaponBase::GetRenderGroup()
 	return BaseClass::GetRenderGroup();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Bug #0000508: Carried objects cast a shadow for the carrying player
+//-----------------------------------------------------------------------------
+ShadowType_t CFFWeaponBase::ShadowCastType( void )
+{
+	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
+	if( pPlayer )
+	{
+		// Cloaked players have no shadows
+		if( pPlayer->IsCloaked() )
+			return SHADOWS_NONE;
+
+		if( pPlayer == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )
+		{
+			if( r_selfshadows.GetInt() )
+				return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
+
+			return SHADOWS_NONE;
+		}
+		else
+		{
+			return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
+		}
+	}
+
+	return BaseClass::ShadowCastType();
+}
+
 #endif
 
 //-----------------------------------------------------------------------------
