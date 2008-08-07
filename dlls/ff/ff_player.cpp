@@ -7149,6 +7149,7 @@ void CFFPlayer::SpySabotageThink()
 
 			m_hSabotaging->Sabotage(this);
 			m_hSabotaging = NULL;
+			SetCloakable( true );
 		}
 	}
 }
