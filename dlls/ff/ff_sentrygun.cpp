@@ -66,16 +66,25 @@
 #define TO_YAW(x) ((x) < -180 ? ((x) + 360) : ((x) > 180) ? ((x) - 360) : (x)) 
 
 // Debug visualization
-ConVar	sg_debug( "ffdev_sg_debug", "1", FCVAR_CHEAT );
+//ConVar	sg_debug( "ffdev_sg_debug", "1", FCVAR_CHEAT );
+//#define SG_DEBUG sg_debug.GetBool()
 ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
+#define SG_USEPVS sg_usepvs.GetBool()
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "18.0", FCVAR_REPLICATED );
+#define SG_TURNSPEED sg_turnspeed.GetFloat()
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0", FCVAR_REPLICATED );
+#define SG_PITCHSPEED sg_pitchspeed.GetFloat()
 ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
+#define SG_RANGE sg_range.GetFloat()
 ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_REPLICATED );
+#define SG_RANGE_UNTARGET sg_range_untarget.GetFloat()
+ConVar  sg_range_cloak_multi( "ffdev_sg_range_cloak_multi", "0.25", FCVAR_REPLICATED );
+#define SG_RANGE_CLOAK_MULTI sg_range_cloak_multi.GetFloat()
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
 ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "2.0", FCVAR_REPLICATED, "SG bullet push force");
+#define SG_BULLETPUSH ffdev_sg_bulletpush.GetFloat()
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
 ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "4.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL1 ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
@@ -84,6 +93,7 @@ ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2"
 ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_REPLICATED, "SG level 3 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL3 ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
 ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "12", FCVAR_REPLICATED, "SG bullet damage");
+#define SG_BULLETDAMAGE ffdev_sg_bulletdamage.GetInt()
 
 ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.125", FCVAR_REPLICATED, "Level 1 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL1	sg_shotcycletime_lvl1.GetFloat()
@@ -456,8 +466,12 @@ void CFFSentryGun::OnActiveThink( void )
 		enemy = NULL;
 	}
 
+	float flDistToEnemy = WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() );
+
 	// Enemy is no longer targettable
-	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive() || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > sg_range_untarget.GetFloat() ) )
+	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive()
+			|| ( flDistToEnemy > SG_RANGE_UNTARGET )
+			|| ( flDistToEnemy > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAK_MULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{
 		SetEnemy( NULL );
 		SetThink( &CFFSentryGun::OnSearchThink );
@@ -497,7 +511,7 @@ void CFFSentryGun::OnActiveThink( void )
 	// Update our goal directions
 	Vector vecDirToEnemy = vecMidEnemy - vecMid;
 
-	/*if ( sg_debug.GetBool() )
+	/*if ( SG_DEBUG )
 	{
 		debugoverlay->AddLineOverlay(vecMid, vecMidEnemy, 255, 0, 255, false, 0.1f);
 	}*/
@@ -510,7 +524,7 @@ void CFFSentryGun::OnActiveThink( void )
 		vecDirToEnemy = vecMidEnemy - vecMid;
 	}
 
-	if ( sg_debug.GetBool() )
+	if ( SG_DEBUG )
 	{
 		debugoverlay->AddLineOverlay(vecMid, vecMidEnemy, 255, 255, 0, false, 0.1f);
 	}*/
@@ -659,7 +673,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 			continue;
 
 		// Spy check - but don't let valid radio tagged targets sneak by!
-		if( pPlayer->IsDisguised() )
+		if( pPlayer->IsDisguised() && !pPlayer->IsCloaked() )
 		{
 			// Spy disguised as owners team
 			if( ( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() ) && ( !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) ) )
@@ -687,7 +701,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 
 		/*
 		// Check a couple more locations to check as technically they could be visible whereas others wouldn't be
-		if( ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) && ( vecOrigin.DistTo( pPlayer->GetAbsOrigin() ) <= sg_range.GetFloat() ) ) 
+		if( ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) && ( vecOrigin.DistTo( pPlayer->GetAbsOrigin() ) <= SG_RANGE ) ) 
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
 		// Add sentry guns
@@ -696,7 +710,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 			CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
 			if( pSentryGun != this )
 			{
-				if( ( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) ) && ( vecOrigin.DistTo( pSentryGun->GetAbsOrigin() ) <= sg_range.GetFloat() ) )
+				if( ( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) ) && ( vecOrigin.DistTo( pSentryGun->GetAbsOrigin() ) <= SG_RANGE ) )
 					target = SG_IsBetterTarget( target, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 			}
 		}
@@ -705,7 +719,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		if( pPlayer->GetDispenser() )
 		{
 			CFFDispenser *pDispenser = pPlayer->GetDispenser();
-			if( ( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) ) && ( vecOrigin.DistTo( pDispenser->GetAbsOrigin() ) <= sg_range.GetFloat() ) )
+			if( ( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) ) && ( vecOrigin.DistTo( pDispenser->GetAbsOrigin() ) <= SG_RANGE ) )
 				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
 		*/
@@ -721,7 +735,7 @@ float CFFSentryGun::MaxYawSpeed( void ) const
 	VPROF_BUDGET( "CFFSentryGun::MaxYawSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if( GetEnemy() )
-		return sg_turnspeed.GetFloat();
+		return SG_TURNSPEED;
 		
 	return 1.0f;
 }
@@ -734,7 +748,7 @@ float CFFSentryGun::MaxPitchSpeed( void ) const
 	VPROF_BUDGET( "CFFSentryGun::MaxPitchSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if( GetEnemy() )
-		return sg_pitchspeed.GetFloat();
+		return SG_PITCHSPEED;
 
 	return 1.0f;
 }
@@ -753,12 +767,18 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget ) const
 	// Get a position on the target
 	Vector vecTarget = pTarget->BodyTarget( vecOrigin, false );
 
+	float flDistToTarget = vecOrigin.DistTo( vecTarget );
+
 	// Check for out of range
-	if( vecOrigin.DistTo( vecTarget ) > sg_range.GetFloat() )
+	if( flDistToTarget > SG_RANGE )
+		return false;
+
+	CFFPlayer *pFFPlayer = ToFFPlayer( pTarget );
+	if ( flDistToTarget > ( SG_RANGE * SG_RANGE_CLOAK_MULTI ) && pFFPlayer && pFFPlayer->IsCloaked() )
 		return false;
 
 	// Check PVS for early out
-	if(sg_usepvs.GetBool())
+	if(SG_USEPVS)
 	{
 		byte pvs[ MAX_MAP_CLUSTERS/8 ];
 		int iPVSCluster = engine->GetClusterForOrigin(vecOrigin);
@@ -771,7 +791,7 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget ) const
 	trace_t tr;
 	UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
 
-	/*if ( sg_debug.GetBool() )
+	/*if ( SG_DEBUG )
 	{
 		int r = 0, g = 0, b = 0;
 		if(tr.fraction < 1.f)
@@ -862,7 +882,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
 	info.m_iDamage = m_iShellDamage;
-	info.m_flDamageForceScale = ffdev_sg_bulletpush.GetFloat();
+	info.m_flDamageForceScale = SG_BULLETPUSH;
 	// Jiggles: A HACK to address the fact that it takes a lot more force to push players around on the ground than in the air
 	CFFPlayer *pEnemyTarget = ToFFPlayer( GetEnemy() );
 	if ( pEnemyTarget && (pEnemyTarget->GetFlags() & FL_ONGROUND) )
@@ -887,7 +907,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	if (IsSabotaged()&& !IsShootingTeammates())
 		info.m_vecSpread = VECTOR_CONE_10DEGREES;
 
-	/*if ( sg_debug.GetBool() )
+	/*if ( SG_DEBUG )
 	{
 		debugoverlay->AddLineOverlay(vecSrc, vecSrc+vecDir*1024.f, 0, 255, 0, false, 0.2f);
 	}*/
@@ -947,7 +967,7 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 	QAngle vecAngles;
 	VectorAngles( vecDir, vecAngles );
 
-	/*if ( sg_debug.GetBool() )
+	/*if ( SG_DEBUG )
 	{
 		debugoverlay->AddLineOverlay(vecSrc, vecSrc+vecDir*1024.f, 0, 255, 0, false, 0.2f);
 	}*/
@@ -1076,7 +1096,7 @@ bool CFFSentryGun::UpdateFacing( void )
 #ifdef _DEBUG
 	/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
 		util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
-	//if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
+	//if( SG_DEBUG && !engine->IsDedicatedServer()) 
 	//{
 	//	NDebugOverlay::Line(EyePosition(), EyePosition() + dir * 300.0f, 40, 40, 40, false, 0.05f);
 	//	NDebugOverlay::Line(EyePosition(), EyePosition() + vecBaseUp * 300.0f, 110, 110, 110, false, 0.05f);
@@ -1192,7 +1212,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxShells = 100;
 			m_iMaxRockets = 0;
-			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
+			m_iShellDamage = SG_BULLETDAMAGE;
 
 			//m_flShellCycleTime = 0.2f;
 			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL1;
@@ -1202,7 +1222,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_flLockTime = SG_LOCKONTIME_LVL1;
 			//m_flTurnSpeed = 4.0f;
-			m_flTurnSpeed = sg_turnspeed.GetFloat();
+			m_flTurnSpeed = SG_TURNSPEED;
 
 			break;
 
@@ -1213,7 +1233,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxShells = 125;
 			m_iMaxRockets = 0;
-			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
+			m_iShellDamage = SG_BULLETDAMAGE;
 
 			//m_flShellCycleTime = 0.1f;
 			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL2;
@@ -1223,7 +1243,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_flLockTime = SG_LOCKONTIME_LVL2;
 			//m_flTurnSpeed = 7.0f;
-			m_flTurnSpeed = sg_turnspeed.GetFloat();
+			m_flTurnSpeed = SG_TURNSPEED;
 
 			// Update attachments
 			m_iMuzzleAttachment = LookupAttachment( "barrel01" );
@@ -1238,7 +1258,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxShells = 150;
 			m_iMaxRockets = 20;
-			m_iShellDamage = ffdev_sg_bulletdamage.GetInt();
+			m_iShellDamage = SG_BULLETDAMAGE;
 
 			//m_flShellCycleTime = 0.1f;
 			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL3;
@@ -1249,7 +1269,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_flLockTime = SG_LOCKONTIME_LVL3;
 			//m_flTurnSpeed = 7.0f;
-			m_flTurnSpeed = sg_turnspeed.GetFloat();
+			m_flTurnSpeed = SG_TURNSPEED;
 			
 			m_iEyeAttachment = LookupAttachment( "eyes" );
 			m_iLBarrelAttachment = LookupAttachment( "barrel01" );
@@ -1343,7 +1363,7 @@ void CFFSentryGun::SetFocusPoint( Vector &origin )
 #ifdef _DEBUG
 	/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
 		util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
-	//if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
+	//if( SG_DEBUG && !engine->IsDedicatedServer()) 
 	//	NDebugOverlay::Line( EyePosition(), origin, 255, 0, 255, false, 5.0f );
 #endif
 
