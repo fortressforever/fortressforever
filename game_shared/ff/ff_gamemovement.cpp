@@ -214,7 +214,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 	float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
 #ifdef GAME_DLL
-	if (!ffplayer->m_bMancannonUsed && gpGlobals->curtime < ffplayer->m_flMancannonTime + 1.0f)
+	if ( ffplayer->m_flMancannonTime + 0.5f <= gpGlobals->curtime )
 	{
 #endif
 		// apply soft cap
@@ -324,7 +324,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// <-- Mirv: Trimp code v2.0!
 
 #ifdef GAME_DLL
-	if (!ffplayer->m_bMancannonUsed && gpGlobals->curtime < ffplayer->m_flMancannonTime + 1.0f)
+	if ( ffplayer->m_flMancannonTime + 0.5f <= gpGlobals->curtime )
 	{
 #endif
 		if (!bTrimped)
@@ -345,7 +345,6 @@ bool CFFGameMovement::CheckJumpButton(void)
 		}
 #ifdef GAME_DLL
 	}
-	ffplayer->m_bMancannonUsed = false;
 #endif
 
 	//// Acclerate upward
