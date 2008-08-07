@@ -43,9 +43,10 @@ ConVar cl_objectiveicon_dist( "cl_objectiveicon_dist", "600.0f", FCVAR_ARCHIVE, 
 #define OBJECTIVE_ICON_MINIMUM_SIZE		/*600.0f*/cl_objectiveicon_dist.GetFloat()
 
 ConVar cl_objectiveicon("cl_objectiveicon", "1", FCVAR_ARCHIVE, "Draws an objective icon and/or arrow | 0 = disables | 1 = icon and arrow | 2 = icon only", true, 0, true, 2);
-ConVar cl_objectiveicon_arrow_size("cl_objectiveicon_arrow_size", "96", FCVAR_ARCHIVE, "The size of the objective arrow", true, 4, true, 256);
-ConVar cl_objectiveicon_teamcolor("cl_objectiveicon_teamcolor", "1", FCVAR_ARCHIVE, "Team colors the objective icon if the objective has a team", true, 0, true, 1);
-ConVar cl_objectiveicon_arrow_teamcolor("cl_objectiveicon_arrow_teamcolor", "0", FCVAR_ARCHIVE, "Team colors the objective arrow if the objective has a team", true, 0, true, 1);
+ConVar cl_objectiveicon_arrow_size("cl_objectiveicon_arrow_size", "96", FCVAR_ARCHIVE, "Size of the objective arrow", true, 4, true, 256);
+ConVar cl_objectiveicon_arrow_method("cl_objectiveicon_arrow_method", "1", FCVAR_ARCHIVE, "Objective arrow calculation method | 1 = forward vector | 2 = right & up vectors", true, 1, true, 2);
+ConVar cl_objectiveicon_teamcolor("cl_objectiveicon_teamcolor", "1", FCVAR_ARCHIVE, "Team colors the objective icon", true, 0, true, 1);
+ConVar cl_objectiveicon_arrow_teamcolor("cl_objectiveicon_arrow_teamcolor", "0", FCVAR_ARCHIVE, "Team colors the objective arrow", true, 0, true, 1);
 
 class CHudObjectiveIcon : public CHudElement, public vgui::Panel
 {
@@ -241,17 +242,24 @@ void CHudObjectiveIcon::Paint( void )
 			{
 				surface()->DrawSetTextureFile( m_pObscuredIconTexture->textureId, OBJECTIVE_ICON_TEXTURE_OBSCURED, true, false );
 				surface()->DrawSetTexture( m_pObscuredIconTexture->textureId );
+
 				if ( cl_objectiveicon_teamcolor.GetBool() )
 					surface()->DrawSetColor( cColor );
+				else
+					surface()->DrawSetColor( Color( 255, 255, 255, 255 ) );
+
 				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
 			}
 			else
 			{
 				surface()->DrawSetTextureFile( m_pIconTexture->textureId, OBJECTIVE_ICON_TEXTURE, true, false );
 				surface()->DrawSetTexture( m_pIconTexture->textureId );
+
 				if ( cl_objectiveicon_teamcolor.GetBool() )
 					surface()->DrawSetColor( cColor );
-				//surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				else
+					surface()->DrawSetColor( Color( 255, 255, 255, 255 ) );
+
 				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
 			}
 		}
@@ -299,6 +307,9 @@ void CHudObjectiveIcon::Paint( void )
 
 			if ( cl_objectiveicon_arrow_teamcolor.GetBool() )
 				m_pArrow->SetColor(cColor);
+			else
+				m_pArrow->SetColor( Color( 255, 255, 255, 255 ) );
+
 			m_pArrow->DoPaint(xposLeft, yposLeft, iArrowSize, iArrowSize, angle); 
 			
 
@@ -314,21 +325,41 @@ float CHudObjectiveIcon::GetObjectiveAngle( const Vector &vecDelta )
 {
 	Vector playerPosition = MainViewOrigin();
 	QAngle playerAngles = MainViewAngles();
+	float xpos = 0.0f;
+	float ypos = 0.0f;
 
-	Vector forward, right, up(0, 0, 1);
-	AngleVectors(playerAngles, &forward, NULL, NULL);
-	forward.z = 0;
-	VectorNormalize(forward);
-	CrossProduct(up, forward, right);
-	float front = DotProduct(vecDelta, forward);
-	float side = DotProduct(vecDelta, right);
-	float xpos = 360.0f * -side;
-	float ypos = 360.0f * -front;
+	if ( cl_objectiveicon_arrow_method.GetInt() == 2 )
+	{
+		Vector forward, right, up;
+		AngleVectors(playerAngles, &forward, &right, &up);
+		//forward.z = 0;
+		//VectorNormalize(forward);
+		VectorNormalize(right);
+		VectorNormalize(up);
+		//CrossProduct(up, forward, right);
+		//float front = DotProduct(vecDelta, forward);
+		float side = DotProduct(vecDelta, right);
+		float top = DotProduct(vecDelta, up);
+		xpos = 360.0f * side;
+		ypos = 360.0f * -top;
+	}
+	else
+	{
+		Vector forward, right, up(0, 0, 1);
+		AngleVectors(playerAngles, &forward, NULL, NULL);
+		forward.z = 0;
+		VectorNormalize(forward);
+		CrossProduct(up, forward, right);
+		float front = DotProduct(vecDelta, forward);
+		float side = DotProduct(vecDelta, right);
+		xpos = 360.0f * -side;
+		ypos = 360.0f * -front;
+	}
 
 	// Get the rotation(yaw)
 	float flRotation = atan2(xpos, ypos) + M_PI;
 	flRotation *= 180 / M_PI;
-	
+
 	return flRotation;
 
 }

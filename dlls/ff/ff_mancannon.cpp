@@ -213,6 +213,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	EmitSound("JumpPad.Fire");
 
 	pPlayer->m_flMancannonTime = gpGlobals->curtime;
+	pPlayer->m_bMancannonUsed = true;
 	//Detonate();
 }
 

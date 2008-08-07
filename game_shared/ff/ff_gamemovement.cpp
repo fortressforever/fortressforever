@@ -213,17 +213,24 @@ bool CFFGameMovement::CheckJumpButton(void)
 	const float pcfactor = BHOP_PCFACTOR;
 	float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
-	// apply soft cap
-	if (speed > cap_soft)
+#ifdef GAME_DLL
+	if (!ffplayer->m_bMancannonUsed && gpGlobals->curtime < ffplayer->m_flMancannonTime + 1.0f)
 	{
-		float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
-		float multi = applied_cap / speed;
+#endif
+		// apply soft cap
+		if (speed > cap_soft)
+		{
+			float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
+			float multi = applied_cap / speed;
 
-		mv->m_vecVelocity[0] *= multi;
-		mv->m_vecVelocity[1] *= multi;
+			mv->m_vecVelocity[0] *= multi;
+			mv->m_vecVelocity[1] *= multi;
 
-		Assert(multi <= 1.0f);
+			Assert(multi <= 1.0f);
+		}
+#ifdef GAME_DLL
 	}
+#endif
 
 	// --> Mirv: Trimp code v2.0!
 	//float fMul = FF_MUL_CONSTANT;
@@ -316,22 +323,30 @@ bool CFFGameMovement::CheckJumpButton(void)
 	}
 	// <-- Mirv: Trimp code v2.0!
 
-	if (!bTrimped)
+#ifdef GAME_DLL
+	if (!ffplayer->m_bMancannonUsed && gpGlobals->curtime < ffplayer->m_flMancannonTime + 1.0f)
 	{
-		speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
-
-		// apply skim cap
-		if (speed > cap_hard )
+#endif
+		if (!bTrimped)
 		{
-			float applied_cap = cap_hard * BHOP_CAP_HARD_DEGEN; 
-			float multi = applied_cap / speed;
+			speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
-			mv->m_vecVelocity[0] *= multi;
-			mv->m_vecVelocity[1] *= multi;
+			// apply skim cap
+			if (speed > cap_hard )
+			{
+				float applied_cap = cap_hard * BHOP_CAP_HARD_DEGEN; 
+				float multi = applied_cap / speed;
 
-			Assert(multi <= 1.0f);
+				mv->m_vecVelocity[0] *= multi;
+				mv->m_vecVelocity[1] *= multi;
+
+				Assert(multi <= 1.0f);
+			}
 		}
+#ifdef GAME_DLL
 	}
+	ffplayer->m_bMancannonUsed = false;
+#endif
 
 	//// Acclerate upward
 	//// If we are ducking...

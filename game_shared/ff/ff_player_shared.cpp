@@ -1321,7 +1321,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
 	{
 		// Reset next cloak time since player technically didn't cloak yet
-		m_flNextCloak = gpGlobals->curtime;
+		m_flNextCloak = gpGlobals->curtime + 0.2;
 
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_SILENTCLOAK_MUSTBESTILL" );
 		return;

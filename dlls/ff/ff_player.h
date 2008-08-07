@@ -647,6 +647,7 @@ public:
 	int m_iChannel;
     float m_flMancannonTime;		// Last time the player was affected (pushed) by a jump pad
 	float m_flMancannonDetTime;		// Used to allow the Scout to det his jump pad
+	bool m_bMancannonUsed;
 	// BEG: Spy cloak stuff
 private:
 	void SpyCloakFadeIn( bool bInstant = false );
@@ -876,7 +877,8 @@ public:
 
 	void		SpySabotageThink();
 	void		SpySabotageRelease();
-
+	void		SpyStartSabotaging(CFFBuildableObject *pBuildable);
+	void		SpyStopSabotaging();
 
 	float		m_flNextSpySabotageThink;
 	float		m_flSpySabotageFinish;
