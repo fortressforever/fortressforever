@@ -1558,6 +1558,7 @@ void CFFPlayer::SetupClassVariables()
 	m_flScreamTime = 0.0f;
 	m_flMancannonTime = 0.0f;
 	m_flMancannonDetTime = 0.0f;
+	m_bMancannonUsed = false;
 	// Reset Spy stuff
 	m_iCloaked = 0;
 	m_flCloakTime = 0.0f;
@@ -5322,17 +5323,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	}
 
 	// AfterShock - Reset sabotage timer on getting shot
-	if (m_hSabotaging)
-	{
-			CSingleUserRecipientFilter user(this);
-			user.MakeReliable();
-			UserMessageBegin(user, "FF_BuildTimer");
-			WRITE_SHORT(0);
-			WRITE_FLOAT(0);
-			MessageEnd();
-			m_hSabotaging = NULL;
-	}
-		
+	SpyStopSabotaging();
 
 	// Check for radio tag shots
 	if( inputInfo.GetInflictor() )
@@ -7088,18 +7079,7 @@ void CFFPlayer::SpySabotageThink()
 	// We have to be under a particular speed to sabotage
 	if (GetAbsVelocity().LengthSqr() > 100 * 100)
 	{
-		// Cancel anything currently going on
-		if (m_hSabotaging)
-		{
-			CSingleUserRecipientFilter user(this);
-			user.MakeReliable();
-			UserMessageBegin(user, "FF_BuildTimer");
-			WRITE_SHORT(0);
-			WRITE_FLOAT(0);
-			MessageEnd();
-		}
-
-		m_hSabotaging = NULL;
+		SpyStopSabotaging();
 		return;
 	}
 
@@ -7119,43 +7099,15 @@ void CFFPlayer::SpySabotageThink()
 		if (pBuildable == NULL || !pBuildable->CanSabotage() || pBuildable->GetTeamNumber() == GetTeamNumber() || GetDisguisedTeam() != pBuildable->GetTeamNumber())
 		{
 			// Not something we can sabotage, stop 
-			if (m_hSabotaging)
-			{
-				CSingleUserRecipientFilter user(this);
-				user.MakeReliable();
-				UserMessageBegin(user, "FF_BuildTimer");
-				WRITE_SHORT(0);
-				WRITE_FLOAT(0);
-				MessageEnd();
-			}
-
-			// Remember that we aren't sabotaging
-			m_hSabotaging = NULL;
-
+			SpyStopSabotaging();
 			return;
 		}
-
-		int iBuildableType;
-
-		// Determine the correct item that'll be shown on the menu
-		if (pBuildable->Classify() == CLASS_SENTRYGUN)
-			iBuildableType = FF_BUILD_SENTRYGUN;
-		else
-			iBuildableType = FF_BUILD_DISPENSER;
 
 		// Reset the time left until the sabotage is finished
 		m_flSpySabotageFinish = gpGlobals->curtime + 3.0f;
 
 		// Now send off the timer
-		CSingleUserRecipientFilter user(this);
-		user.MakeReliable();
-		UserMessageBegin(user, "FF_BuildTimer");
-		WRITE_SHORT(iBuildableType);
-		WRITE_FLOAT(3.0f);
-		MessageEnd();
-
-		// Now remember what we're sabotaging
-		m_hSabotaging = pBuildable;
+		SpyStartSabotaging(pBuildable);
 	}
 	// Sabotage state has not changed
 	else
@@ -7200,6 +7152,59 @@ void CFFPlayer::SpySabotageThink()
 			m_hSabotaging = NULL;
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: sends the start sabotage timer message
+//-----------------------------------------------------------------------------
+void CFFPlayer::SpyStartSabotaging(CFFBuildableObject *pBuildable)
+{
+	if (m_hSabotaging)
+	{
+		SpyStopSabotaging();
+		return;
+	}
+
+	int iBuildableType;
+
+	// Determine the correct item that'll be shown on the menu
+	if (pBuildable->Classify() == CLASS_SENTRYGUN)
+		iBuildableType = FF_BUILD_SENTRYGUN;
+	else
+		iBuildableType = FF_BUILD_DISPENSER;
+
+	CSingleUserRecipientFilter user(this);
+	user.MakeReliable();
+	UserMessageBegin(user, "FF_BuildTimer");
+	WRITE_SHORT(iBuildableType);
+	WRITE_FLOAT(3.0f);
+	MessageEnd();
+
+	// Now remember what we're sabotaging
+	m_hSabotaging = pBuildable;
+
+	SetCloakable( false );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: sends the start sabotage timer message
+//-----------------------------------------------------------------------------
+void CFFPlayer::SpyStopSabotaging()
+{
+	if (!m_hSabotaging)
+		return;
+
+	CSingleUserRecipientFilter user(this);
+	user.MakeReliable();
+	UserMessageBegin(user, "FF_BuildTimer");
+	WRITE_SHORT(0);
+	WRITE_FLOAT(0);
+	MessageEnd();
+
+	// Remember that we aren't sabotaging
+	m_hSabotaging = NULL;
+
+	SetCloakable( true );
 }
 
 //-----------------------------------------------------------------------------
