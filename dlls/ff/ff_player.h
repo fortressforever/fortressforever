@@ -161,6 +161,8 @@ public:
 	CFFPlayer();
 	~CFFPlayer();
 
+	virtual int UpdateTransmitState();
+
 	static CFFPlayer *CreatePlayer( const char *className, edict_t *ed );
 	static CFFPlayer* Instance( int iEnt );
 
@@ -408,8 +410,9 @@ public:
 	void SetRespawnable( bool bValue ) { m_bRespawnable = bValue; }
 	bool IsRespawnable( void ) const { return m_bRespawnable; }
 	bool CanRespawn( void ) const { return IsRespawnable(); }
-	void SetObjectiveEntity( const CBaseEntity *pEntity ){ m_hObjectiveEntity = pEntity; }
+	void SetObjectiveEntity( const CBaseEntity *pEntity );
 	void SetObjectiveOrigin( const Vector &vecObjOrigin ){ m_vecObjectiveOrigin = vecObjOrigin; }
+	CUtlVector<CFFPlayer *> m_ObjectiveRefs;
 private:
 	bool m_bRespawnable;
 	bool m_bACDamageHint; // For triggering the "Pyro takes damage from HWGuy" hint only once

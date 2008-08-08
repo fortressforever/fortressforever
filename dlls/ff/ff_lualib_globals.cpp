@@ -854,10 +854,6 @@ namespace FFLib
 		if ( pPlayer )
 		{
 			pPlayer->SetObjectiveEntity( pEntity );
-			if ( pEntity )
-				pPlayer->SetObjectiveOrigin( pEntity->GetAbsOrigin() );
-			else
-				pPlayer->SetObjectiveOrigin( Vector( 0, 0, INVALID_OBJECTIVE_LOCATION ) );
 		}
 	}
 
@@ -878,10 +874,6 @@ namespace FFLib
 			if( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
 			{
 				pPlayer->SetObjectiveEntity( pEntity );
-				if ( pEntity )
-					pPlayer->SetObjectiveOrigin( pEntity->GetAbsOrigin() );
-				else
-					pPlayer->SetObjectiveOrigin( Vector( 0, 0, INVALID_OBJECTIVE_LOCATION ) );
 			}
 		}
 	}
