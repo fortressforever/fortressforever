@@ -403,6 +403,13 @@ ConVar mp_prematch( "mp_prematch",
 			pPlayer->RemoveBackpacks();
 			pPlayer->RemoveBuildables();
 
+			pPlayer->SetObjectiveEntity(NULL);
+			int iObjectiveRefs = pPlayer->m_ObjectiveRefs.Count();
+			for ( int i = 0; i < iObjectiveRefs; i++ )
+			{
+				pPlayer->m_ObjectiveRefs.Element(i)->SetObjectiveEntity(NULL);
+			}
+
 			// TODO: Possibly loop through and find CLASS_INFOSCRIPTS
 			// and tell them OnOwnerDied()?
 			CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );

@@ -537,8 +537,11 @@ CFFPlayer::CFFPlayer()
 	m_flNextGas = 0;
 	m_flGasTime = 0;
 
-	m_Locations.RemoveAll();
+	m_Locations.Purge();
 	m_iClientLocation = 0;
+
+	m_ObjectiveRefs.Purge();
+	SetObjectiveEntity(NULL);
 
 	m_pBuildLastWeapon = NULL;
 
@@ -563,6 +566,16 @@ CFFPlayer::~CFFPlayer()
 	}
 
 	m_PlayerAnimState->Release();
+}
+
+int	CFFPlayer::UpdateTransmitState()
+{
+	// always transmit if you're an objective
+	if ( m_ObjectiveRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+
+	// basey base
+	return BaseClass::UpdateTransmitState();
 }
 
 // --------------------------------------------------------------------------------
@@ -1577,8 +1590,11 @@ void CFFPlayer::SetupClassVariables()
 	m_flSpySabotageFinish = 0.0f;
 	m_hSabotaging = NULL;
 
-	m_Locations.RemoveAll();
+	m_Locations.Purge();
 	m_iClientLocation = 0;
+
+	m_ObjectiveRefs.Purge();
+	SetObjectiveEntity(NULL);
 
 	// Class system
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
@@ -1635,11 +1651,15 @@ void CFFPlayer::InitialSpawn( void )
 	// Make sure they are dead
 	m_lifeState = LIFE_DEAD;
 	pl.deadflag = true;
+
+	m_Locations.Purge();
+	m_iClientLocation = 0;
+
+	m_ObjectiveRefs.Purge();
+	SetObjectiveEntity(NULL);
 	
 	// Reset to 0
 	m_vecInfoIntermission.Init();
-	m_hObjectiveEntity = NULL;
-	m_vecObjectiveOrigin.SetZ( INVALID_OBJECTIVE_LOCATION );
 
 	BaseClass::InitialSpawn();
 
@@ -2223,6 +2243,35 @@ bool CFFPlayer::PlayerHasSkillCommand(const char *szCommand)
 	}
 
 	return false;
+}
+
+//Set a player's objective
+void CFFPlayer::SetObjectiveEntity( const CBaseEntity *pEntity )
+{
+	CFFPlayer *pObjectivePlayer = NULL;
+
+	if ( m_hObjectiveEntity && m_hObjectiveEntity->IsPlayer() )
+	{
+		pObjectivePlayer = ToFFPlayer( m_hObjectiveEntity );
+		pObjectivePlayer->m_ObjectiveRefs.FindAndRemove(this);
+	}
+
+	m_hObjectiveEntity = pEntity;
+
+	if ( m_hObjectiveEntity )
+	{
+		SetObjectiveOrigin( m_hObjectiveEntity->GetAbsOrigin() );
+
+		if (m_hObjectiveEntity->IsPlayer())
+		{
+			pObjectivePlayer = ToFFPlayer( m_hObjectiveEntity );
+			pObjectivePlayer->m_ObjectiveRefs.AddToHead(this);
+		}
+	}
+	else
+	{
+		SetObjectiveOrigin( Vector( 0, 0, INVALID_OBJECTIVE_LOCATION ) );
+	}
 }
 
 //Set a player's location.
