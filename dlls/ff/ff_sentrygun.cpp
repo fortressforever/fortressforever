@@ -482,8 +482,6 @@ void CFFSentryGun::OnActiveThink( void )
 		enemy = NULL;
 	}
 
-	float flDistToEnemy = WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() );
-
 	float flCloakRangeMulti = 0.0f;
 	switch (m_iLevel)
 	{
@@ -500,8 +498,8 @@ void CFFSentryGun::OnActiveThink( void )
 
 	// Enemy is no longer targettable
 	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive()
-			|| ( flDistToEnemy > SG_RANGE_UNTARGET ) )
-			// || ( flDistToEnemy > ( SG_RANGE_UNTARGET * flCloakRangeMulti ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
+			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
+			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * flCloakRangeMulti ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{
 		SetEnemy( NULL );
 		SetThink( &CFFSentryGun::OnSearchThink );
