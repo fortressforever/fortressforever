@@ -78,8 +78,13 @@ ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 #define SG_RANGE sg_range.GetFloat()
 ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_REPLICATED );
 #define SG_RANGE_UNTARGET sg_range_untarget.GetFloat()
-ConVar  sg_range_cloak_multi( "ffdev_sg_range_cloak_multi", "0.25", FCVAR_REPLICATED );
-#define SG_RANGE_CLOAK_MULTI sg_range_cloak_multi.GetFloat()
+
+ConVar  sg_range_cloak_multi_lvl1( "ffdev_sg_range_cloak_multi_lvl1", "0.25", FCVAR_REPLICATED );
+#define SG_RANGE_CLOAK_MULTI_LVL1 sg_range_cloak_multi_lvl1.GetFloat()
+ConVar  sg_range_cloak_multi_lvl2( "ffdev_sg_range_cloak_multi_lvl2", "0.50", FCVAR_REPLICATED );
+#define SG_RANGE_CLOAK_MULTI_LVL2 sg_range_cloak_multi_lvl2.GetFloat()
+ConVar  sg_range_cloak_multi_lvl3( "ffdev_sg_range_cloak_multi_lvl3", "0.75", FCVAR_REPLICATED );
+#define SG_RANGE_CLOAK_MULTI_LVL3 sg_range_cloak_multi_lvl3.GetFloat()
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
@@ -173,6 +178,7 @@ const char *g_pszFFSentryGunSounds[] =
 	"Sentry.RocketFire",
 	"Sentry.SabotageActivate",
 	//"Sentry.SabotageFinish",
+	"Sentry.CloakDetection",
 	"DoSpark",
 	NULL
 };
@@ -213,6 +219,9 @@ CFFSentryGun::CFFSentryGun()
 	m_bShootingTeammates = false;
 	m_bSendNailGrenHint = true;
 
+	m_iCloakCount = 0;
+	m_bCloakDetectionSound = false;
+
 	m_flNextSparkTime = 0;
 	m_flLastClientUpdate = 0;
 	m_iLastState = 0;
@@ -223,6 +232,13 @@ CFFSentryGun::CFFSentryGun()
 //-----------------------------------------------------------------------------
 CFFSentryGun::~CFFSentryGun( void ) 
 {
+	StopCloakDetectionSound();
+}
+
+void CFFSentryGun::UpdateOnRemove( void ) 
+{
+	StopCloakDetectionSound();
+	BaseClass::UpdateOnRemove();
 }
 
 //-----------------------------------------------------------------------------
@@ -468,10 +484,24 @@ void CFFSentryGun::OnActiveThink( void )
 
 	float flDistToEnemy = WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() );
 
+	float flCloakRangeMulti = 0.0f;
+	switch (m_iLevel)
+	{
+	case 1:
+		flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL1;
+		break;
+	case 2:
+		flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL2;
+		break;
+	case 3:
+		flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL3;
+		break;
+	}
+
 	// Enemy is no longer targettable
 	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive()
-			|| ( flDistToEnemy > SG_RANGE_UNTARGET )
-			|| ( flDistToEnemy > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAK_MULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
+			|| ( flDistToEnemy > SG_RANGE_UNTARGET ) )
+			// || ( flDistToEnemy > ( SG_RANGE_UNTARGET * flCloakRangeMulti ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{
 		SetEnemy( NULL );
 		SetThink( &CFFSentryGun::OnSearchThink );
@@ -654,6 +684,9 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 	Vector vecOrigin = GetAbsOrigin();
 	CBaseEntity *target = NULL;
 
+	// reset to 0 every time through
+	m_iCloakCount = 0;
+
 	for( int i = 1; i <= gpGlobals->maxClients; i++ ) 
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
@@ -672,8 +705,15 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || ( g_pGameRules->PlayerRelationship(pOwner, pPlayer) != iTypeToTarget ) )
 			continue;
 
+		if ( pPlayer->IsCloaked() )
+		{
+			// the player won't be visible, but m_iCloakCount will go up if within range
+			IsTargetVisible( pPlayer );
+			continue;
+		}
+
 		// Spy check - but don't let valid radio tagged targets sneak by!
-		if( pPlayer->IsDisguised() && !pPlayer->IsCloaked() )
+		if( pPlayer->IsDisguised() ) // && !pPlayer->IsCloaked() )
 		{
 			// Spy disguised as owners team
 			if( ( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() ) && ( !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) ) )
@@ -724,6 +764,12 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		}
 		*/
 	}
+
+	if ( m_iCloakCount > 0 )
+		PlayCloakDetectionSound();
+	else
+		StopCloakDetectionSound();
+
 	return target;
 }
 
@@ -756,7 +802,7 @@ float CFFSentryGun::MaxPitchSpeed( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: See if a target is visible
 //-----------------------------------------------------------------------------
-bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget ) const
+bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 {
 	if( !pTarget )
 		return false;
@@ -774,8 +820,27 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget ) const
 		return false;
 
 	CFFPlayer *pFFPlayer = ToFFPlayer( pTarget );
-	if ( flDistToTarget > ( SG_RANGE * SG_RANGE_CLOAK_MULTI ) && pFFPlayer && pFFPlayer->IsCloaked() )
+	if ( pFFPlayer && pFFPlayer->IsCloaked() )
+	{
+		float flCloakRangeMulti = 0.0f;
+		switch (m_iLevel)
+		{
+		case 1:
+			flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL1;
+			break;
+		case 2:
+			flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL2;
+			break;
+		case 3:
+			flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL3;
+			break;
+		}
+
+		if (flDistToTarget <= ( SG_RANGE * flCloakRangeMulti ) )
+			m_iCloakCount += 1;
+
 		return false;
+	}
 
 	// Check PVS for early out
 	if(SG_USEPVS)
@@ -1387,6 +1452,24 @@ int CFFSentryGun::TakeEmp( void )
 	ammodmg += m_iRockets * SG_EMPDMG_ROCKETS_MULTI;
 
 	return ammodmg;
+}
+
+void CFFSentryGun::PlayCloakDetectionSound()
+{
+	if ( !m_bCloakDetectionSound )
+	{
+		EmitSound( "Sentry.CloakDetection" );
+		m_bCloakDetectionSound = true;
+	}
+}
+
+void CFFSentryGun::StopCloakDetectionSound()
+{
+	if ( m_bCloakDetectionSound )
+	{
+		StopSound( "Sentry.CloakDetection" );
+		m_bCloakDetectionSound = false;
+	}
 }
 
 //-----------------------------------------------------------------------------

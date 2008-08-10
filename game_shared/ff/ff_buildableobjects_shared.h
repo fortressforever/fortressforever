@@ -702,6 +702,7 @@ public:
 #else
 	virtual void Precache( void );
 	virtual void Spawn( void );
+	virtual void UpdateOnRemove( void );
 	void GoLive( void );
 
 	int TakeEmp( void );
@@ -727,7 +728,7 @@ public:
 
 private:
 	bool IsTargetInAimingEllipse( const Vector& vecTarget ) const;
-	bool IsTargetVisible( CBaseEntity *pTarget ) const;
+	bool IsTargetVisible( CBaseEntity *pTarget );
 	bool IsTargetClassTValid( Class_T cT ) const;
 
 public:
@@ -762,6 +763,11 @@ public:
 	bool				m_bSendNailGrenHint;	// Only send the "kill sgs with nail grens" hint once per sg
 	float				m_flNextSparkTime;
 	SmokeTrail			*m_pSmokeTrail;
+
+	void PlayCloakDetectionSound();
+	void StopCloakDetectionSound();
+	int		m_iCloakCount;
+	bool	m_bCloakDetectionSound;
 
 	virtual bool CanSabotage() const;
 	virtual bool IsSabotaged() const;
