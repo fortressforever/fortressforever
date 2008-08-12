@@ -764,10 +764,8 @@ public:
 	float				m_flNextSparkTime;
 	SmokeTrail			*m_pSmokeTrail;
 
-	void PlayCloakDetectionSound();
-	void StopCloakDetectionSound();
-	int		m_iCloakCount;
-	bool	m_bCloakDetectionSound;
+	float	m_flLastCloakSonarSound;
+	float	m_flCloakDistance;
 
 	virtual bool CanSabotage() const;
 	virtual bool IsSabotaged() const;
