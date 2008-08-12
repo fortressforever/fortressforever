@@ -79,12 +79,18 @@ ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_REPLICATED );
 #define SG_RANGE_UNTARGET sg_range_untarget.GetFloat()
 
-ConVar  sg_range_cloak_multi_lvl1( "ffdev_sg_range_cloak_multi_lvl1", "0.25", FCVAR_REPLICATED );
-#define SG_RANGE_CLOAK_MULTI_LVL1 sg_range_cloak_multi_lvl1.GetFloat()
-ConVar  sg_range_cloak_multi_lvl2( "ffdev_sg_range_cloak_multi_lvl2", "0.50", FCVAR_REPLICATED );
-#define SG_RANGE_CLOAK_MULTI_LVL2 sg_range_cloak_multi_lvl2.GetFloat()
-ConVar  sg_range_cloak_multi_lvl3( "ffdev_sg_range_cloak_multi_lvl3", "0.75", FCVAR_REPLICATED );
-#define SG_RANGE_CLOAK_MULTI_LVL3 sg_range_cloak_multi_lvl3.GetFloat()
+ConVar  sg_range_cloakmulti( "ffdev_sg_range_cloakmulti", "0.666", FCVAR_REPLICATED );
+#define SG_RANGE_CLOAKMULTI sg_range_cloakmulti.GetFloat()
+
+ConVar  sg_cloaksonar_interval_near( "ffdev_sg_cloaksonar_interval_near", "2.02", FCVAR_REPLICATED );
+#define SG_CLOAKSONAR_INTERVAL_NEAR sg_cloaksonar_interval_near.GetFloat()
+ConVar  sg_cloaksonar_interval_far( "ffdev_sg_cloaksonar_interval_far", "3.03", FCVAR_REPLICATED );
+#define SG_CLOAKSONAR_INTERVAL_FAR sg_cloaksonar_interval_far.GetFloat()
+
+ConVar  sg_cloaksonar_pitch_near( "ffdev_sg_cloaksonar_pitch_near", "92", FCVAR_REPLICATED );
+#define SG_CLOAKSONAR_PITCH_NEAR sg_cloaksonar_pitch_near.GetInt()
+ConVar  sg_cloaksonar_pitch_far( "ffdev_sg_cloaksonar_pitch_far", "108", FCVAR_REPLICATED );
+#define SG_CLOAKSONAR_PITCH_FAR sg_cloaksonar_pitch_far.GetInt()
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f
@@ -179,6 +185,7 @@ const char *g_pszFFSentryGunSounds[] =
 	"Sentry.SabotageActivate",
 	//"Sentry.SabotageFinish",
 	"Sentry.CloakDetection",
+	"Sentry.CloakSonar",
 	"DoSpark",
 	NULL
 };
@@ -219,8 +226,8 @@ CFFSentryGun::CFFSentryGun()
 	m_bShootingTeammates = false;
 	m_bSendNailGrenHint = true;
 
-	m_iCloakCount = 0;
-	m_bCloakDetectionSound = false;
+	m_flLastCloakSonarSound = 0.0f;
+	m_flCloakDistance = 65536.0f;
 
 	m_flNextSparkTime = 0;
 	m_flLastClientUpdate = 0;
@@ -232,12 +239,10 @@ CFFSentryGun::CFFSentryGun()
 //-----------------------------------------------------------------------------
 CFFSentryGun::~CFFSentryGun( void ) 
 {
-	StopCloakDetectionSound();
 }
 
 void CFFSentryGun::UpdateOnRemove( void ) 
 {
-	StopCloakDetectionSound();
 	BaseClass::UpdateOnRemove();
 }
 
@@ -482,24 +487,10 @@ void CFFSentryGun::OnActiveThink( void )
 		enemy = NULL;
 	}
 
-	float flCloakRangeMulti = 0.0f;
-	switch (m_iLevel)
-	{
-	case 1:
-		flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL1;
-		break;
-	case 2:
-		flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL2;
-		break;
-	case 3:
-		flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL3;
-		break;
-	}
-
 	// Enemy is no longer targettable
 	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive()
 			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
-			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * flCloakRangeMulti ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
+			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAKMULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{
 		SetEnemy( NULL );
 		SetThink( &CFFSentryGun::OnSearchThink );
@@ -682,8 +673,8 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 	Vector vecOrigin = GetAbsOrigin();
 	CBaseEntity *target = NULL;
 
-	// reset to 0 every time through
-	m_iCloakCount = 0;
+	// reset every single time through
+	m_flCloakDistance = 65536.0f;
 
 	for( int i = 1; i <= gpGlobals->maxClients; i++ ) 
 	{
@@ -705,7 +696,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 
 		if ( pPlayer->IsCloaked() )
 		{
-			// the player won't be visible, but m_iCloakCount will go up if within range
+			// the player won't be visible, but m_flCloakDistance may change and cause the sonar sound to emit
 			IsTargetVisible( pPlayer );
 			continue;
 		}
@@ -763,10 +754,34 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		*/
 	}
 
-	if ( m_iCloakCount > 0 )
-		PlayCloakDetectionSound();
-	else
-		StopCloakDetectionSound();
+	if ( m_flCloakDistance < 65536.0f )
+	{
+		float flPercent = clamp( m_flCloakDistance / ( SG_RANGE_UNTARGET * SG_RANGE_CLOAKMULTI ), 0.0f, 1.0f );
+		float flInterval = SG_CLOAKSONAR_INTERVAL_NEAR + ( ( SG_CLOAKSONAR_INTERVAL_FAR - SG_CLOAKSONAR_INTERVAL_NEAR ) * flPercent );
+
+		if ( m_flLastCloakSonarSound + flInterval <= gpGlobals->curtime )
+		{
+			CSoundParameters params;
+			if ( GetParametersForSound( "Sentry.CloakSonar", params, NULL ) )
+			{
+				CPASAttenuationFilter filter( this, params.soundlevel );
+
+				EmitSound_t ep;
+				ep.m_nChannel = params.channel;
+				ep.m_pSoundName = params.soundname;
+				ep.m_SoundLevel = params.soundlevel;
+				ep.m_pOrigin = &GetAbsOrigin();
+
+				ep.m_flVolume = params.volume;
+				ep.m_nPitch = SG_CLOAKSONAR_PITCH_FAR + ( ( SG_CLOAKSONAR_PITCH_NEAR - SG_CLOAKSONAR_PITCH_FAR ) * flPercent ); // far and near are swapped right here
+
+				EmitSound( filter, entindex(), ep );
+				g_pEffects->EnergySplash(GetAbsOrigin(), Vector(0, 0, 1.0f), false);
+
+				m_flLastCloakSonarSound = gpGlobals->curtime;
+			}
+		}
+	}
 
 	return target;
 }
@@ -817,29 +832,6 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 	if( flDistToTarget > SG_RANGE )
 		return false;
 
-	CFFPlayer *pFFPlayer = ToFFPlayer( pTarget );
-	if ( pFFPlayer && pFFPlayer->IsCloaked() )
-	{
-		float flCloakRangeMulti = 0.0f;
-		switch (m_iLevel)
-		{
-		case 1:
-			flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL1;
-			break;
-		case 2:
-			flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL2;
-			break;
-		case 3:
-			flCloakRangeMulti = SG_RANGE_CLOAK_MULTI_LVL3;
-			break;
-		}
-
-		if (flDistToTarget <= ( SG_RANGE * flCloakRangeMulti ) )
-			m_iCloakCount += 1;
-
-		return false;
-	}
-
 	// Check PVS for early out
 	if(SG_USEPVS)
 	{
@@ -874,6 +866,16 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 	// Is the trace hit entity a valid sg target
 	if( !IsTargetClassTValid( tr.m_pEnt->Classify() ) )
 		return false;
+
+	CFFPlayer *pFFPlayer = ToFFPlayer( pTarget );
+	if ( pFFPlayer && pFFPlayer->IsCloaked() )
+	{
+
+		if (flDistToTarget <= ( SG_RANGE * SG_RANGE_CLOAKMULTI ) && flDistToTarget < m_flCloakDistance )
+			m_flCloakDistance = flDistToTarget;
+
+		return false;
+	}
 	
 	// Finally, is that target even in our aim ellipse?
 	return IsTargetInAimingEllipse( vecTarget );
@@ -1450,24 +1452,6 @@ int CFFSentryGun::TakeEmp( void )
 	ammodmg += m_iRockets * SG_EMPDMG_ROCKETS_MULTI;
 
 	return ammodmg;
-}
-
-void CFFSentryGun::PlayCloakDetectionSound()
-{
-	if ( !m_bCloakDetectionSound )
-	{
-		EmitSound( "Sentry.CloakDetection" );
-		m_bCloakDetectionSound = true;
-	}
-}
-
-void CFFSentryGun::StopCloakDetectionSound()
-{
-	if ( m_bCloakDetectionSound )
-	{
-		StopSound( "Sentry.CloakDetection" );
-		m_bCloakDetectionSound = false;
-	}
 }
 
 //-----------------------------------------------------------------------------
