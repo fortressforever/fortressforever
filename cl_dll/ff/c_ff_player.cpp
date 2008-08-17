@@ -1092,7 +1092,7 @@ C_FFPlayer::C_FFPlayer() :
 	
 
 	//Loop through all classes.
-	for (int i=1; i < 10; i++)
+	for (int i=1; i < 11; i++)
 	{
 		PLAYERCLASS_FILE_INFO_HANDLE PlayerClassInfo;
 
@@ -1157,6 +1157,19 @@ C_FFPlayer::C_FFPlayer() :
 
 							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
 								m_DisguisedWeapons[iPlayerClass].szAnimExt[2], 
+								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
+							bDone = true;
+						}
+						break;
+					case 10:
+						if(iSlot > 0) // always use umbrella
+						{
+							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
+								m_DisguisedWeapons[iPlayerClass].szWeaponModel[0], 
+								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
+
+							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
+								m_DisguisedWeapons[iPlayerClass].szAnimExt[0], 
 								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
 							bDone = true;
 						}

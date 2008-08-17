@@ -43,6 +43,17 @@
 #include "effect_dispatch_data.h"
 #include "engine/ivdebugoverlay.h"
 
+// Wrapper CVAR for letting sv_shadows alter r_shadows_gamecontrol
+void SV_Shadows_Callback(ConVar *var, char const *pOldString)
+{
+	ConVar *c = cvar->FindVar("r_shadows_gamecontrol");
+	if (c)
+		c->SetValue(var->GetString());
+}
+ConVar sv_shadows("sv_shadows", "-1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggle shadows on and off | 0 disables | any other number enables", SV_Shadows_Callback );
+
+ConVar sv_voice_inputfromfile("sv_voice_inputfromfile", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggle voice_inputfromfile");
+
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Shows client(red) and server(blue) bullet impact point");
 ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allows spectators to talk to players");
 //ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_REPLICATED);
