@@ -7144,7 +7144,7 @@ void CFFPlayer::SpySabotageThink()
 	if (pBuildable != m_hSabotaging)
 	{
 		// If it's not a valid thing to sabotage
-		if (pBuildable == NULL || !pBuildable->CanSabotage() || pBuildable->GetTeamNumber() == GetTeamNumber() || GetDisguisedTeam() != pBuildable->GetTeamNumber())
+		if ( pBuildable == NULL || !pBuildable->CanSabotage() || pBuildable->GetTeamNumber() == GetTeamNumber() || FFGameRules()->IsTeam1AlliedToTeam2( pBuildable->GetTeamNumber(), GetDisguisedTeam() ) != GR_TEAMMATE )
 		{
 			// Not something we can sabotage, stop 
 			SpyStopSabotaging();

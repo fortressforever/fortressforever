@@ -245,6 +245,8 @@ const char *CFFWeaponBase::GetWorldModel( void ) const
 		{
 			if(pFFPlayer->m_DisguisedWeapons[iClass].szWeaponModel[iSlot][0] != NULL)
 				return pFFPlayer->m_DisguisedWeapons[iClass].szWeaponModel[iSlot];
+			else if (pFFPlayer->GetDisguisedClass() == CLASS_CIVILIAN && pFFPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szWeaponModel[0] != NULL)
+				return pFFPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szWeaponModel[0]; // always use umbrella
 		}
 	}
 #endif

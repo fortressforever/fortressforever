@@ -350,6 +350,8 @@ const char* CFFPlayerAnimState::GetWeaponSuffix()
 	{
 		if(pFFPlayer->m_DisguisedWeapons[pFFPlayer->GetDisguisedClass()].szAnimExt[pWeapon->GetFFWpnData().iSlot][0] != NULL)
 			pSuffix = pFFPlayer->m_DisguisedWeapons[pFFPlayer->GetDisguisedClass()].szAnimExt[pWeapon->GetFFWpnData().iSlot];
+		else if (pFFPlayer->GetDisguisedClass() == CLASS_CIVILIAN && pFFPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szAnimExt[0] != NULL)
+			pSuffix = pFFPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szAnimExt[0]; // always use umbrella
 	}
 #endif
 	return pSuffix;
@@ -412,6 +414,8 @@ float CFFPlayerAnimState::GetCurrentMaxGroundSpeed()
 		return 0;
 }
 
+ConVar ff_jimmy_legs_time( "ffdev_jimmy_legs_time", "1.333", FCVAR_REPLICATED, "Amount of time after jump when jimmy legs kick in." );
+#define FF_JIMMY_LEGS_TIME ff_jimmy_legs_time.GetFloat() // jimmy legs
 
 bool CFFPlayerAnimState::HandleJumping()
 {
@@ -427,7 +431,7 @@ bool CFFPlayerAnimState::HandleJumping()
 		// on-ground flag set right when the message comes in.
 		if ( gpGlobals->curtime - m_flJumpStartTime > 0.2f )
 		{
-			if ( m_pOuter->GetFlags() & FL_ONGROUND || m_pOuter->GetFlags() & FL_INWATER )
+			if ( m_pOuter->GetFlags() & FL_ONGROUND || m_pOuter->GetFlags() & FL_INWATER || gpGlobals->curtime - m_flJumpStartTime > FF_JIMMY_LEGS_TIME )
 			{
 				m_bJumping = false;
 				RestartMainSequence();	// Reset the animation.
