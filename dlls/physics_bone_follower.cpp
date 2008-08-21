@@ -238,6 +238,14 @@ bool CBoneFollower::Init( CBaseEntity *pOwner, const char *pModelName, solid_t &
 
 int CBoneFollower::UpdateTransmitState()
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	// We want to visualize our bonefollowers, so send them to the client
 	if ( vcollide_wireframe.GetBool() )
 		return SetTransmitState( FL_EDICT_ALWAYS );

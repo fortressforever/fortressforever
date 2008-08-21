@@ -476,6 +476,14 @@ void CInfoLadderDismount::DrawDebugGeometryOverlays()
 #if defined( GAME_DLL )
 int CFuncLadder::UpdateTransmitState()
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	// transmit if in PVS for clientside prediction
 	return SetTransmitState( FL_EDICT_PVSCHECK );
 }

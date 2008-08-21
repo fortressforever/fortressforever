@@ -44,7 +44,7 @@ ConVar cl_objectiveicon_dist( "cl_objectiveicon_dist", "600.0f", FCVAR_ARCHIVE, 
 
 ConVar cl_objectiveicon("cl_objectiveicon", "1", FCVAR_ARCHIVE, "Draws an objective icon and/or arrow | 0 = disables | 1 = icon and arrow | 2 = icon only", true, 0, true, 2);
 ConVar cl_objectiveicon_arrow_size("cl_objectiveicon_arrow_size", "96", FCVAR_ARCHIVE, "Size of the objective arrow", true, 4, true, 256);
-ConVar cl_objectiveicon_arrow_method("cl_objectiveicon_arrow_method", "1", FCVAR_ARCHIVE, "Objective arrow calculation method | 1 = forward vector | 2 = right & up vectors", true, 1, true, 2);
+ConVar cl_objectiveicon_arrow_method("cl_objectiveicon_arrow_method", "1", FCVAR_ARCHIVE, "Objective arrow calculation method | 1 = right & up vectors | 2 = forward vector", true, 1, true, 2);
 ConVar cl_objectiveicon_teamcolor("cl_objectiveicon_teamcolor", "1", FCVAR_ARCHIVE, "Team colors the objective icon", true, 0, true, 1);
 ConVar cl_objectiveicon_arrow_teamcolor("cl_objectiveicon_arrow_teamcolor", "0", FCVAR_ARCHIVE, "Team colors the objective arrow", true, 0, true, 1);
 
@@ -328,7 +328,7 @@ float CHudObjectiveIcon::GetObjectiveAngle( const Vector &vecDelta )
 	float xpos = 0.0f;
 	float ypos = 0.0f;
 
-	if ( cl_objectiveicon_arrow_method.GetInt() == 2 )
+	if ( cl_objectiveicon_arrow_method.GetInt() == 1 )
 	{
 		Vector forward, right, up;
 		AngleVectors(playerAngles, &forward, &right, &up);

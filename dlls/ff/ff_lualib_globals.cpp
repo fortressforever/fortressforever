@@ -1105,7 +1105,7 @@ namespace FFLib
 		if( !pPlayer || !pszImage || !pszIdentifier )
 			return;
 
-		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 1 );
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, 0, 0 );
 	}
 
 	// default alignment
@@ -1114,7 +1114,7 @@ namespace FFLib
 		if( !pPlayer || !pszImage || !pszIdentifier )
 			return;
 
-		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, 1 );
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight );
 	}
 
 	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlign )
@@ -1147,7 +1147,7 @@ namespace FFLib
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
 				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
-					FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 1);
+					FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, 0, 0);
 			}
 		}
 	}
@@ -1166,7 +1166,7 @@ namespace FFLib
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
 				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
-					FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, 1);
+					FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight);
 			}
 		}
 	}
@@ -1220,7 +1220,7 @@ namespace FFLib
 			if (ent && ent->IsPlayer())
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
-				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, 0, 0, 1);
+				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, 0, 0);
 			}
 		}
 	}
@@ -1238,7 +1238,7 @@ namespace FFLib
 			if (ent && ent->IsPlayer())
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
-				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, 1);
+				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight);
 			}
 		}
 	}

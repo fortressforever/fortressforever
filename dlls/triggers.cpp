@@ -3109,6 +3109,14 @@ void CTriggerCamera::Spawn( void )
 
 int CTriggerCamera::UpdateTransmitState()
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	// always tranmit if currently used by a monitor
 	if ( m_state == USE_ON )
 	{

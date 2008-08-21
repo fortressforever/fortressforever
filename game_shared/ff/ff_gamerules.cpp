@@ -404,10 +404,11 @@ ConVar mp_prematch( "mp_prematch",
 			pPlayer->RemoveBuildables();
 
 			pPlayer->SetObjectiveEntity(NULL);
-			int iObjectiveRefs = pPlayer->m_ObjectiveRefs.Count();
-			for ( int i = 0; i < iObjectiveRefs; i++ )
+			int iObjectivePlayerRefs = pPlayer->m_ObjectivePlayerRefs.Count();
+			for ( int i = 0; i < iObjectivePlayerRefs; i++ )
 			{
-				pPlayer->m_ObjectiveRefs.Element(i)->SetObjectiveEntity(NULL);
+				CFFPlayer *pRefPlayer = ToFFPlayer( pPlayer->m_ObjectivePlayerRefs.Element(i) );
+				pRefPlayer->SetObjectiveEntity(NULL);
 			}
 
 			// TODO: Possibly loop through and find CLASS_INFOSCRIPTS

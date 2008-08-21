@@ -540,7 +540,6 @@ CFFPlayer::CFFPlayer()
 	m_Locations.Purge();
 	m_iClientLocation = 0;
 
-	m_ObjectiveRefs.Purge();
 	SetObjectiveEntity(NULL);
 
 	m_pBuildLastWeapon = NULL;
@@ -566,16 +565,6 @@ CFFPlayer::~CFFPlayer()
 	}
 
 	m_PlayerAnimState->Release();
-}
-
-int	CFFPlayer::UpdateTransmitState()
-{
-	// always transmit if you're an objective
-	if ( m_ObjectiveRefs.Count() > 0 )
-		return SetTransmitState( FL_EDICT_ALWAYS );
-
-	// basey base
-	return BaseClass::UpdateTransmitState();
 }
 
 // --------------------------------------------------------------------------------
@@ -1593,7 +1582,6 @@ void CFFPlayer::SetupClassVariables()
 	m_Locations.Purge();
 	m_iClientLocation = 0;
 
-	m_ObjectiveRefs.Purge();
 	SetObjectiveEntity(NULL);
 
 	// Class system
@@ -1655,7 +1643,6 @@ void CFFPlayer::InitialSpawn( void )
 	m_Locations.Purge();
 	m_iClientLocation = 0;
 
-	m_ObjectiveRefs.Purge();
 	SetObjectiveEntity(NULL);
 	
 	// Reset to 0
@@ -2248,12 +2235,9 @@ bool CFFPlayer::PlayerHasSkillCommand(const char *szCommand)
 //Set a player's objective
 void CFFPlayer::SetObjectiveEntity( const CBaseEntity *pEntity )
 {
-	CFFPlayer *pObjectivePlayer = NULL;
-
-	if ( m_hObjectiveEntity && m_hObjectiveEntity->IsPlayer() )
+	if ( m_hObjectiveEntity )
 	{
-		pObjectivePlayer = ToFFPlayer( m_hObjectiveEntity );
-		pObjectivePlayer->m_ObjectiveRefs.FindAndRemove(this);
+		m_hObjectiveEntity->m_ObjectivePlayerRefs.FindAndRemove(this);
 	}
 
 	m_hObjectiveEntity = pEntity;
@@ -2261,12 +2245,7 @@ void CFFPlayer::SetObjectiveEntity( const CBaseEntity *pEntity )
 	if ( m_hObjectiveEntity )
 	{
 		SetObjectiveOrigin( m_hObjectiveEntity->GetAbsOrigin() );
-
-		if (m_hObjectiveEntity->IsPlayer())
-		{
-			pObjectivePlayer = ToFFPlayer( m_hObjectiveEntity );
-			pObjectivePlayer->m_ObjectiveRefs.AddToHead(this);
-		}
+		m_hObjectiveEntity->m_ObjectivePlayerRefs.AddToHead(this);
 	}
 	else
 	{

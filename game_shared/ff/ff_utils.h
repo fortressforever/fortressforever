@@ -61,6 +61,20 @@
 // trying to hit solids for placing scorch marks
 #define FF_DECALTRACE_TRACE_DIST	48.0f
 
+enum HudElementType_t
+{
+	HUD_ICON = 0,
+	HUD_TEXT,
+	HUD_TIMER,
+	HUD_REMOVE,
+	HUD_ICON_ALIGN,
+	HUD_ICON_ALIGNXY,
+	HUD_TEXT_ALIGN,
+	HUD_TEXT_ALIGNXY,
+	HUD_TIMER_ALIGN,
+	HUD_TIMER_ALIGNXY,
+};
+
 int Class_StringToInt( const char *szClassName );
 const char *Class_IntToString( int iClassIndex );
 const char *Class_IntToResourceString( int iClassIndex );
@@ -85,6 +99,7 @@ bool IsPlayerRadioTagTarget( CFFPlayer *pPlayer, int iTeamDoingTargetting );
 void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalName );
 
 #ifdef GAME_DLL
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight);
 void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlign);
 void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlignX, int iAlignY); // added y alignment
 void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText);

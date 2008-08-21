@@ -781,6 +781,14 @@ void CBeam::InputNoise( inputdata_t &inputdata )
 
 int CBeam::UpdateTransmitState( void )
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	// we must call ShouldTransmit() if we have a move parent
 	if ( GetMoveParent() )
 		return SetTransmitState( FL_EDICT_FULLCHECK );

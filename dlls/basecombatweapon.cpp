@@ -90,6 +90,14 @@ void W_Precache(void)
 //-----------------------------------------------------------------------------
 int CBaseCombatWeapon::UpdateTransmitState( void)
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	// If the weapon is being carried by a CBaseCombatCharacter, let the combat character do the logic
 	// about whether or not to transmit it.
 	if ( GetOwner() )
