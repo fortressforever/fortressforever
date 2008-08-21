@@ -83,6 +83,14 @@ void CPointCamera::Spawn( void )
 //-----------------------------------------------------------------------------
 int CPointCamera::UpdateTransmitState()
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	if ( m_bActive )
 	{
 		return SetTransmitState( FL_EDICT_ALWAYS );

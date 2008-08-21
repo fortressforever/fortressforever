@@ -303,6 +303,14 @@ void CSprite::SpriteInit( const char *pSpriteName, const Vector &origin )
 
 int CSprite::UpdateTransmitState( void )
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	if ( GetMoveParent() )
 	{
 		// we must call ShouldTransmit() if we have a move parent

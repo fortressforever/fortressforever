@@ -66,6 +66,17 @@ void CFFLuaLib::InitMath(lua_State* L)
 			.def_readwrite("z",			&QAngle::z)
 			.def("IsValid",				&QAngle::IsValid)
 			.def("Length",				&QAngle::Length)
-			.def("LengthSqr",			&QAngle::LengthSqr)
+			.def("LengthSqr",			&QAngle::LengthSqr),
+
+		class_<Color>("Color")
+			.def(constructor<>())
+			.def(constructor<int, int, int>())
+			.def(constructor<int, int, int, int>())
+			.def("r",					&Color::r)
+			.def("g",					&Color::g)
+			.def("b",					&Color::b)
+			.def("a",					&Color::a)
+			.def("SetColor",			&Color::SetColor)
+			.def("GetColor",			&Color::GetColor)
 	];
 };

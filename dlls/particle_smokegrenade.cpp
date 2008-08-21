@@ -45,6 +45,14 @@ ParticleSmokeGrenade::ParticleSmokeGrenade()
 // enters the PVS late will see the smoke start billowing from then, allowing better vision.
 int ParticleSmokeGrenade::UpdateTransmitState( void )
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	if ( IsEffectActive( EF_NODRAW ) )
 		return SetTransmitState( FL_EDICT_DONTSEND );
 

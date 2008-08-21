@@ -46,6 +46,7 @@ extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 // void DuckMessage(const char *str); // from vgui_teamfortressviewport.cpp
 
+extern ConVar cl_drawhud;
 ConVar spec_scoreboard( "spec_scoreboard", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 
 CSpectatorGUI *g_pSpectatorGUI = NULL;
@@ -217,7 +218,7 @@ void CSpectatorMenu::OnKeyCodePressed(KeyCode code)
 
 void CSpectatorMenu::ShowPanel(bool bShow)
 {
-	if ( BaseClass::IsVisible() == bShow )
+	if ( IsVisible() == bShow )
 		return;
 
 	if ( bShow )
@@ -363,11 +364,22 @@ void CSpectatorGUI::PerformLayout()
 	m_pBottomBarBlank->SetSize( w, h - y );
 }
 
+bool CSpectatorGUI::IsVisible()
+{
+	if ( !cl_drawhud.GetBool() )
+		return false;
+
+	return BaseClass::IsVisible();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: checks spec_scoreboard cvar to see if the scoreboard should be displayed
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::OnThink()
 {
+	if ( !cl_drawhud.GetBool() )
+		return;
+
 	BaseClass::OnThink();
 
 	if ( IsVisible() )
@@ -699,8 +711,19 @@ void CSpectatorMenu::Update( void )
 	}
 }
 
+bool CSpectatorMenu::IsVisible()
+{
+	if ( !cl_drawhud.GetBool() )
+		return false;
+
+	return BaseClass::IsVisible();
+}
+
 void CSpectatorMenu::OnThink()
 {
+	if ( !cl_drawhud.GetBool() )
+		return;
+	
 	BaseClass::OnThink();
 
 	IGameResources *gr = GameResources();

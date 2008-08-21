@@ -3090,6 +3090,12 @@ int	CBaseEntity::SetTransmitState( int nFlag)
 
 int CBaseEntity::UpdateTransmitState()
 {
+	// --> FF
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+	// <-- FF
+
 	// If you get this assert, you should be calling DispatchUpdateTransmitState
 	// instead of UpdateTransmitState.
 	Assert( g_nInsideDispatchUpdateTransmitState > 0 );

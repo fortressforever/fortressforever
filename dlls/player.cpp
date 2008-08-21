@@ -595,6 +595,14 @@ void CBasePlayer::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs,
 
 int	CBasePlayer::UpdateTransmitState()
 {
+	// --> FF
+#ifdef GAME_DLL
+	// always transmit if you're an objective
+	if ( m_ObjectivePlayerRefs.Count() > 0 )
+		return SetTransmitState( FL_EDICT_ALWAYS );
+#endif // GAME_DLL
+	// <-- FF
+
 	// always call ShouldTransmit() for players
 	return SetTransmitState( FL_EDICT_FULLCHECK );
 }

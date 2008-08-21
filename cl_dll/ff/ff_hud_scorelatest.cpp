@@ -35,7 +35,7 @@
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
-static ConVar hud_fortpoints_latest("hud_fortpoints_latest", "1", 0, "Toggle visible team scores on the HUD.");
+static ConVar hud_fortpoints_latest("hud_fortpoints_latest", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Toggle visible team scores on the HUD.");
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current disguised class

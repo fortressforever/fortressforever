@@ -32,7 +32,7 @@
 
 using namespace vgui;
 
-static ConVar hud_fortpoints_total("hud_fortpoints_total", "1", 0, "Toggle visible team scores on the HUD.");
+static ConVar hud_fortpoints_total("hud_fortpoints_total", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Toggle visible team scores on the HUD.");
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current disguised class

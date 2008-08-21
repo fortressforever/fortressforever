@@ -21,25 +21,17 @@
 #include "hudelement.h"
 #include "iclientmode.h"
 
+#include "ff_utils.h"
+
 #include <vgui_controls/Panel.h>
+#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/Label.h>
+#include "vgui/ff_vgui_timer.h"
 
 #define MAX_HUD_ELEMENTS	128
 #define	DONT_CREATE_NEW		false
 
-//using namespace vgui;
-
-enum HudElementType_t
-{
-	HUD_ICON = 0,
-	HUD_TEXT,
-	HUD_TIMER,
-	HUD_REMOVE,
-	HUD_ICON_ALIGNXY,
-	HUD_TEXT_ALIGN,
-	HUD_TEXT_ALIGNXY,
-	HUD_TIMER_ALIGN,
-	HUD_TIMER_ALIGNXY,
-};
+using namespace vgui;
 
 typedef struct HudElement_s
 {
@@ -63,16 +55,23 @@ public:
 
 	void	MsgFunc_FF_HudLua(bf_read &msg);
 
-	Panel	*GetHudElement(const char *pszIdentifier, HudElementType_t iType, bool bCreateNew = true);
+	Panel	*GetHudElement(const char *pszIdentifier, HudElementType_t iType);
 	void	RemoveElement(const char *pszIdentifier);
+
+	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight);
 	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlign);
-	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY); // added y alignment
+	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY);
+	void	HudIcon(ImagePanel *pImagePanel, const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY);
+
 	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText);
 	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlign);
 	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY);
+	void	HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY);
+
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed);
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlign);
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY);
+	void	HudTimer(Timer *pTimer, const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY);
 
 	void	FireGameEvent( IGameEvent *pEvent );
 

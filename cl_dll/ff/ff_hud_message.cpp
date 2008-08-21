@@ -18,6 +18,8 @@ using namespace vgui;
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 
+extern ConVar cl_drawhud;
+static ConVar hud_messages("hud_messages", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Toggle visible FF messages on the HUD.");
 
 class CHudGameMessage : public CHudElement, public vgui::Panel
 {
@@ -97,6 +99,9 @@ void CHudGameMessage::Paint( void )
 {	
 	//if ( !m_pIcon )
 	//	return;
+
+	if ( !cl_drawhud.GetBool() || !hud_messages.GetBool() )
+		return;
 
 	if (m_flStartTime + m_flDuration < gpGlobals->curtime)
 		return;

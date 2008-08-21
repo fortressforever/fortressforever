@@ -372,6 +372,10 @@ public:
 	static bool				m_bInDebugSelect;
 	static int				m_nDebugPlayer;
 
+	// --> FF
+	CUtlVector<CBaseEntity *> m_ObjectivePlayerRefs;
+	// <-- FF
+
 protected:
 
 	static bool				m_bDebugPause;		// Whether entity i/o is paused for debugging.

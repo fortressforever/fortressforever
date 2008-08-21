@@ -571,6 +571,28 @@ bool FF_IsGrenade( CBaseEntity *pEntity )
 
 #ifdef GAME_DLL
 //-----------------------------------------------------------------------------
+// Purpose: Set an icon on the hud - default alignment
+//-----------------------------------------------------------------------------
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+	WRITE_BYTE(HUD_ICON);	// HUD_ICON
+	WRITE_STRING(pszIdentifier);
+	WRITE_SHORT(x);
+	WRITE_SHORT(y);
+	WRITE_STRING(pszImage);
+	WRITE_SHORT(iWidth);
+	WRITE_SHORT(iHeight);
+
+	MessageEnd();
+}
+//-----------------------------------------------------------------------------
 // Purpose: Set an icon on the hud
 //-----------------------------------------------------------------------------
 void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlign)
@@ -582,7 +604,7 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(0);	// HUD_ICON
+	WRITE_BYTE(HUD_ICON_ALIGN);	// HUD_ICON_ALIGN
 	WRITE_STRING(pszIdentifier);
 	WRITE_SHORT(x);
 	WRITE_SHORT(y);
@@ -606,7 +628,7 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(4);	// HUD_ICON_ALIGNXY
+		WRITE_BYTE(HUD_ICON_ALIGNXY);	// HUD_ICON_ALIGNXY
 		WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
@@ -630,7 +652,7 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(1);	// HUD_TEXT
+		WRITE_BYTE(HUD_TEXT);	// HUD_TEXT
 		WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
@@ -650,7 +672,7 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(5);	// HUD_TEXT_ALIGN
+	WRITE_BYTE(HUD_TEXT_ALIGN);	// HUD_TEXT_ALIGN
 	WRITE_STRING(pszIdentifier);
 	WRITE_SHORT(x);
 	WRITE_SHORT(y);
@@ -671,7 +693,7 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(6);	// HUD_TEXT_ALIGNXY
+	WRITE_BYTE(HUD_TEXT_ALIGNXY);	// HUD_TEXT_ALIGNXY
 	WRITE_STRING(pszIdentifier);
 	WRITE_SHORT(x);
 	WRITE_SHORT(y);
@@ -693,7 +715,7 @@ void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y,
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(2);	// HUD_TIMER
+		WRITE_BYTE(HUD_TIMER);	// HUD_TIMER
 		WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
@@ -714,7 +736,7 @@ void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y,
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(7);	// HUD_TIMER_ALIGN
+	WRITE_BYTE(HUD_TIMER_ALIGN);	// HUD_TIMER_ALIGN
 	WRITE_STRING(pszIdentifier);
 	WRITE_SHORT(x);
 	WRITE_SHORT(y);
@@ -736,7 +758,7 @@ void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y,
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(8);	// HUD_TIMER_ALIGNXY
+	WRITE_BYTE(HUD_TIMER_ALIGNXY);	// HUD_TIMER_ALIGNXY
 	WRITE_STRING(pszIdentifier);
 	WRITE_SHORT(x);
 	WRITE_SHORT(y);
@@ -756,7 +778,7 @@ void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier)
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(3);	// HUD_REMOVE
+		WRITE_BYTE(HUD_REMOVE);	// HUD_REMOVE
 		WRITE_STRING(pszIdentifier);
 	MessageEnd();
 }

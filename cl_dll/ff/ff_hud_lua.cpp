@@ -36,10 +36,6 @@
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 
-#include <vgui_controls/Label.h>
-#include <vgui_controls/ImagePanel.h>
-#include "vgui/ff_vgui_timer.h"
-
 using namespace vgui;
 
 DECLARE_HUDELEMENT(CHudLua);
@@ -119,6 +115,20 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 	switch (wType)
 	{
 	case HUD_ICON:
+		{
+			char szSource[256];
+			if (!msg.ReadString(szSource, 255))
+				return;
+
+			int iWidth = msg.ReadShort();
+			int iHeight = msg.ReadShort();
+
+			HudIcon(szIdentifier, xPos, yPos, szSource, iWidth, iHeight);
+
+			break;
+		}
+
+	case HUD_ICON_ALIGN:
 		{
 			char szSource[256];
 			if (!msg.ReadString(szSource, 255))
@@ -243,76 +253,40 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Create a new icon on the hud
+// Purpose: Create a new icon on the hud - default alignment
+//-----------------------------------------------------------------------------
+void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight)
+{
+	// Create or find the correct hud element
+	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(pszIdentifier, HUD_ICON));
+	HudIcon( pImagePanel, pszIdentifier, iX, iY, pszSource, iWidth, iHeight, 1, 0);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a new icon on the hud - x alignment
 //-----------------------------------------------------------------------------
 void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlign)
 {
 	// Create or find the correct hud element
-	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(pszIdentifier, HUD_ICON));
-
-	if (!pImagePanel)
-		return;
-
-	// Yo mirv: Think this is a good idea?
-	// Assume x & y are in 640 x 480 so we need to scale so
-	// use the proportional scale thingy
-
-	// Now set this label up
-	//pImagePanel->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
-	
-	// Jiggles: The above line displays the flag icon incorrectly on non 4:3 display resolutions
-	// -- See: Mantis issue 0001144 -- http://beta.fortress-forever.com/bugtracker/view.php?id=1144
-	// Instead, I scale the CHudLua container to the current display resolution, then calculate an x-position
-	// 5 pixels to the right of the screen.
-	// This solution has a minor problem, though: If the player changes screen resolution while carrying a flag,
-	// the flag icon will not be repositioned until he/she picks up a new one.
-
-	if( ( iWidth > 0 ) && ( iHeight > 0 ) )
-	{
-		SetSize(ScreenWidth(), ScreenHeight());
-		int iProperXPosition = 0;
-		int scaledX = scheme()->GetProportionalScaledValue( iX );
-		int scaledW = scheme()->GetProportionalScaledValue( iWidth );
-		switch (iAlign)
-		{
-			case 1 : //HUD_ALIGNX_RIGHT :
-				iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
-				break;
-			case 2 : //HUD_ALIGNX_CENTERLEFT :
-				iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
-				break;
-			case 3 : //HUD_ALIGNX_CENTERRIGHT :
-				iProperXPosition = (ScreenWidth() / 2) + scaledX;
-				break;
-			case 4 : //HUD_ALIGNX_CENTER :
-				iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
-				break;
-			case 0 : //HUD_ALIGNX_LEFT : 
-			default :
-				iProperXPosition = scaledX;
-				break;
-		}
-
-		//int iProperXPosition = ScreenWidth() - scheme()->GetProportionalScaledValue( iWidth ) - 5;
-		pImagePanel->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
-		
-		pImagePanel->SetShouldScaleImage( true );
-		pImagePanel->SetWide( scheme()->GetProportionalScaledValue( iWidth ) );
-		pImagePanel->SetTall( scheme()->GetProportionalScaledValue( iHeight ) );
-	}
-
-	pImagePanel->SetImage(pszSource);
-	pImagePanel->SetVisible(true);
+	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(pszIdentifier, HUD_ICON_ALIGN));
+	HudIcon( pImagePanel, pszIdentifier, iX, iY, pszSource, iWidth, iHeight, iAlign, 0);
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Create a new icon on the hud (added y alignment)
+// Purpose: Create a new icon on the hud - x & y alignment
 //-----------------------------------------------------------------------------
 void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY)
 {
 	// Create or find the correct hud element
 	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(pszIdentifier, HUD_ICON_ALIGNXY));
+	HudIcon( pImagePanel, pszIdentifier, iX, iY, pszSource, iWidth, iHeight, iAlignX, iAlignY);
+}
 
+//-----------------------------------------------------------------------------
+// Purpose: Create a new icon on the hud
+//-----------------------------------------------------------------------------
+void CHudLua::HudIcon(ImagePanel *pImagePanel, const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY)
+{
 	if (!pImagePanel)
 		return;
 
@@ -392,80 +366,55 @@ void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *psz
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Create a new text box on the hud
+// Purpose: Create a new text box on the hud - default alignment
 //-----------------------------------------------------------------------------
 void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *pszText)
 {
+	// Create or find the correct hud element
 	Label *pLabel = dynamic_cast<Label *> (GetHudElement(pszIdentifier, HUD_TEXT));
-
-	if (!pLabel)
-		return;
-
-	// Now set this label up
-	pLabel->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
-	pLabel->SetText(pszText);
-	pLabel->SizeToContents();
-
-	pLabel->SetVisible(true);
+	HudText( pLabel, pszIdentifier, iX, iY, pszText, 0, 0 );
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Create a new text box on the hud - X alignment
+// Purpose: Create a new text box on the hud - y alignment
 //-----------------------------------------------------------------------------
 void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlign)
 {
-	Label *pLabel = dynamic_cast<Label *> (GetHudElement(pszIdentifier, HUD_TEXT));
-
-	if (!pLabel)
-		return;
-
-	int iProperXPosition = 0;
-	int scaledX = scheme()->GetProportionalScaledValue( iX );
-	int scaledW = surface()->GetCharacterWidth(pLabel->GetFont(), '0' ) * Q_strlen(pszText);
-	switch (iAlign)
-	{
-	case 1 : //HUD_ALIGNX_RIGHT :
-		iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
-		break;
-	case 2 : //HUD_ALIGNX_CENTERLEFT :
-		iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
-		break;
-	case 3 : //HUD_ALIGNX_CENTERRIGHT :
-		iProperXPosition = (ScreenWidth() / 2) + scaledX;
-		break;
-	case 4 : //HUD_ALIGNX_CENTER :
-		iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
-		break;
-	case 0 : //HUD_ALIGNX_LEFT : 
-	default :
-		iProperXPosition = scaledX;
-		break;
-	}
-
-	// Now set this label up
-	pLabel->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
-	pLabel->SetText(pszText);
-	pLabel->SizeToContents();
-
-	pLabel->SetVisible(true);
+	// Create or find the correct hud element
+	Label *pLabel = dynamic_cast<Label *> (GetHudElement(pszIdentifier, HUD_TEXT_ALIGN));
+	HudText( pLabel, pszIdentifier, iX, iY, pszText, iAlign, 0 );
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Create a new text box on the hud - X & Y alignment
+// Purpose: Create a new text box on the hud - x & y alignment
 //-----------------------------------------------------------------------------
 void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY)
 {
-	Label *pLabel = dynamic_cast<Label *> (GetHudElement(pszIdentifier, HUD_TEXT));
+	// Create or find the correct hud element
+	Label *pLabel = dynamic_cast<Label *> (GetHudElement(pszIdentifier, HUD_TEXT_ALIGNXY));
+	HudText( pLabel, pszIdentifier, iX, iY, pszText, iAlignX, iAlignY );
+}
 
+//-----------------------------------------------------------------------------
+// Purpose: Create a new text box on the hud - x & y alignment
+//-----------------------------------------------------------------------------
+void CHudLua::HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY)
+{
 	if (!pLabel)
 		return;
+
+	// Now set this label up
+	pLabel->SetText(pszText);
+	pLabel->SizeToContents();
 
 	int iProperXPosition = 0;
 	int iProperYPosition = 0;
 	int scaledX = scheme()->GetProportionalScaledValue( iX );
 	int scaledY = scheme()->GetProportionalScaledValue( iY );
-	int scaledW = surface()->GetCharacterWidth(pLabel->GetFont(), '0' ) * Q_strlen(pszText);
-	int scaledH = surface()->GetFontTall( pLabel->GetFont() );
+	int scaledW = 0; // surface()->GetCharacterWidth(pTimer->GetFont(), '0' ) * 5;
+	int scaledH = 0; // surface()->GetFontTall( pTimer->GetFont() );
+	pLabel->GetContentSize( scaledW, scaledH );
+
 	switch (iAlignX)
 	{
 	case 1 : //HUD_ALIGNX_RIGHT :
@@ -505,93 +454,62 @@ void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *psz
 		break;
 	}
 
-	// Now set this label up
 	pLabel->SetPos( iProperXPosition, iProperYPosition );
-	pLabel->SetText(pszText);
-	pLabel->SizeToContents();
 
 	pLabel->SetVisible(true);
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Create a new timer on the hud
+// Purpose: Create a new timer on the hud - default alignment
 //-----------------------------------------------------------------------------
 void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed)
 {
+	// Create or find the correct hud element
 	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(pszIdentifier, HUD_TIMER));
-
-	if (!pTimer)
-		return;
-
-	// Now set this label up
-	pTimer->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
-	pTimer->SetTimerValue(flValue);
-	pTimer->SetTimerSpeed(flSpeed);
-	pTimer->SetTimerDrawClockStyle(true);
-	pTimer->StartTimer(true);
-
-	pTimer->SetVisible(true);
+	HudTimer( pTimer, pszIdentifier, iX, iY, flValue, flSpeed, 0, 0 );
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Create a new timer on the hud - X alignment
+// Purpose: Create a new timer on the hud - x alignment
 //-----------------------------------------------------------------------------
 void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlign)
 {
-	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(pszIdentifier, HUD_TIMER));
+	// Create or find the correct hud element
+	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(pszIdentifier, HUD_TIMER_ALIGN));
+	HudTimer( pTimer, pszIdentifier, iX, iY, flValue, flSpeed, iAlign, 0 );
+}
 
+//-----------------------------------------------------------------------------
+// Purpose: Create a new timer on the hud - x & y alignment
+//-----------------------------------------------------------------------------
+void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY)
+{
+	// Create or find the correct hud element
+	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(pszIdentifier, HUD_TIMER_ALIGNXY));
+	HudTimer( pTimer, pszIdentifier, iX, iY, flValue, flSpeed, iAlignX, iAlignY );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a new timer on the hud - x & y alignment
+//-----------------------------------------------------------------------------
+void CHudLua::HudTimer(Timer *pTimer, const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY)
+{
 	if (!pTimer)
 		return;
 
-	int iProperXPosition = 0;
-	int scaledX = scheme()->GetProportionalScaledValue( iX );
-	int scaledW = 0; // surface()->GetCharacterWidth(pTimer->GetFont(), '0' ) * 5;
-	switch (iAlign)
-	{
-	case 1 : //HUD_ALIGNX_RIGHT :
-		iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
-		break;
-	case 2 : //HUD_ALIGNX_CENTERLEFT :
-		iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
-		break;
-	case 3 : //HUD_ALIGNX_CENTERRIGHT :
-		iProperXPosition = (ScreenWidth() / 2) + scaledX;
-		break;
-	case 4 : //HUD_ALIGNX_CENTER :
-		iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
-		break;
-	case 0 : //HUD_ALIGNX_LEFT : 
-	default :
-		iProperXPosition = scaledX;
-		break;
-	}
-
-	// Now set this label up
-	pTimer->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
 	pTimer->SetTimerValue(flValue);
 	pTimer->SetTimerSpeed(flSpeed);
 	pTimer->SetTimerDrawClockStyle(true);
 	pTimer->StartTimer(true);
-
-	pTimer->SetVisible(true);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Create a new timer on the hud - X & Y alignment
-//-----------------------------------------------------------------------------
-void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY)
-{
-	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(pszIdentifier, HUD_TIMER));
-
-	if (!pTimer)
-		return;
 
 	int iProperXPosition = 0;
 	int iProperYPosition = 0;
 	int scaledX = scheme()->GetProportionalScaledValue( iX );
 	int scaledY = scheme()->GetProportionalScaledValue( iY );
 	int scaledW = 0; // surface()->GetCharacterWidth(pTimer->GetFont(), '0' ) * 5;
-	int scaledH = surface()->GetFontTall( pTimer->GetFont() );
+	int scaledH = 0; // surface()->GetFontTall( pTimer->GetFont() );
+	pTimer->GetContentSize( scaledW, scaledH );
+
 	switch (iAlignX)
 	{
 	case 1 : //HUD_ALIGNX_RIGHT :
@@ -633,10 +551,6 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 
 	// Now set this label up
 	pTimer->SetPos( iProperXPosition, iProperYPosition );
-	pTimer->SetTimerValue(flValue);
-	pTimer->SetTimerSpeed(flSpeed);
-	pTimer->SetTimerDrawClockStyle(true);
-	pTimer->StartTimer(true);
 
 	pTimer->SetVisible(true);
 }
@@ -644,7 +558,7 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 //-----------------------------------------------------------------------------
 // Purpose: Find a hud element for a particular identifier
 //-----------------------------------------------------------------------------
-Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType, bool bCreateNew)
+Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType)
 {
 	// Return existing one
 	for (int i = 0; i < m_nHudElements; i++)
@@ -652,10 +566,6 @@ Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType,
 		if (iType == m_sHudElements[i].iType && Q_strcmp(pszIdentifier, m_sHudElements[i].szIdentifier) == 0)
 			return m_sHudElements[i].pPanel;
 	}
-
-	// We don't want to create a new one
-	if (!bCreateNew)
-		return NULL;
 
 	// Don't create a new one if we've reached max elements
 	if (m_nHudElements == MAX_HUD_ELEMENTS)
@@ -669,20 +579,52 @@ Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType,
 	// Return a new one of the correct type
 	switch (iType)
 	{
-	case HUD_ICON:
-		pPanel = new ImagePanel(this, pszIdentifier);
+		case HUD_ICON:
+		case HUD_ICON_ALIGN:
+		case HUD_ICON_ALIGNXY:
+		{
+			pPanel = new ImagePanel(this, pszIdentifier);
+		}
 		break;
 
-	case HUD_ICON_ALIGNXY:
-		pPanel = new ImagePanel(this, pszIdentifier);
+		case HUD_TEXT:
+		case HUD_TEXT_ALIGN:
+		case HUD_TEXT_ALIGNXY:
+		{
+			pPanel = new Label(this, pszIdentifier, "");
+
+			Label *pLabel = dynamic_cast<Label *>(pPanel);
+			if (pLabel)
+			{
+				IScheme *pScheme = scheme()->GetIScheme( pLabel->GetScheme() );
+				if ( pScheme )
+				{
+					HFont font = pScheme->GetFont( "Default_Shadow", pLabel->IsProportional() );
+						if ( font != INVALID_FONT )
+							pLabel->SetFont( font );
+				}
+			}
+		}
 		break;
 
-	case HUD_TEXT:
-		pPanel = new Label(this, pszIdentifier, "");
-		break;
+		case HUD_TIMER:
+		case HUD_TIMER_ALIGN:
+		case HUD_TIMER_ALIGNXY:
+		{
+			pPanel = new Timer(this, pszIdentifier);
 
-	case HUD_TIMER:
-		pPanel = new Timer(this, pszIdentifier);
+			Timer *pTimer = dynamic_cast<Timer *>(pPanel);
+			if (pTimer)
+			{
+				IScheme *pScheme = scheme()->GetIScheme( pTimer->GetScheme() );
+				if ( pScheme )
+				{
+					HFont font = pScheme->GetFont( "Default_Shadow", pTimer->IsProportional() );
+					if ( font != INVALID_FONT )
+						pTimer->SetFont( font );
+				}
+			}
+		}
 		break;
 	}
 
