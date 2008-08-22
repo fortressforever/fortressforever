@@ -146,6 +146,14 @@ void CFFInfoScript::Precache( void )
 	_scriptman.RunPredicates_LUA( this, &hPrecache, "precache" );
 }
 
+void CFFInfoScript::UpdateOnRemove( void )
+{
+	if (m_pAnimator)
+		m_pAnimator->Remove();
+
+	BaseClass::UpdateOnRemove();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -931,6 +939,17 @@ int CFFInfoScript::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+int	CFFInfoScript::UpdateTransmitState()
+{
+	if ( IsRemoved() )
+		return SetTransmitState( FL_EDICT_DONTSEND );
+
+	return BaseClass::UpdateTransmitState();
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Is this info_ff_script currently carried?
 //-----------------------------------------------------------------------------
 bool CFFInfoScript::IsCarried( void )
@@ -984,6 +1003,7 @@ bool CFFInfoScript::IsRemoved( void )
 void CFFInfoScript::SetActive( void )
 {
 	m_iGoalState = GS_ACTIVE;
+	DispatchUpdateTransmitState();
 
 	CFFLuaSC hContext;
 	_scriptman.RunPredicates_LUA( this, &hContext, "onactive" );
@@ -995,6 +1015,7 @@ void CFFInfoScript::SetActive( void )
 void CFFInfoScript::SetInactive( void )
 {
 	m_iGoalState = GS_INACTIVE;
+	DispatchUpdateTransmitState();
 
 	CFFLuaSC hContext;
 	_scriptman.RunPredicates_LUA( this, &hContext, "oninactive" );
@@ -1007,6 +1028,7 @@ void CFFInfoScript::SetRemoved( void )
 {
 	m_iGoalState = GS_REMOVED;
 	m_iPosState = PS_REMOVED;
+	DispatchUpdateTransmitState();
 
 	CFFLuaSC hContext;
 	_scriptman.RunPredicates_LUA( this, &hContext, "onremoved" );
@@ -1034,6 +1056,7 @@ void CFFInfoScript::SetDropped( void )
 void CFFInfoScript::SetReturned( void )
 {
 	m_iPosState = PS_RETURNED;
+	DispatchUpdateTransmitState();
 }
 
 //-----------------------------------------------------------------------------

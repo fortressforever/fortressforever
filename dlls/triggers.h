@@ -174,6 +174,7 @@ public:
 	virtual bool	IsRemoved( void ) const		{ return m_iGoalState == GS_REMOVED; }
 
 	virtual void	Spawn( void );
+	virtual int		UpdateTransmitState( void );
 
 	void SetBotGoalInfo(int _type, int _team);
 

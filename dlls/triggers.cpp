@@ -1137,6 +1137,7 @@ CFuncFFScript::CFuncFFScript()
 void CFuncFFScript::SetActive( void )
 {
 	m_iGoalState = GS_ACTIVE;
+	DispatchUpdateTransmitState();
 
 	CFFLuaSC hContext;
 	_scriptman.RunPredicates_LUA( this, &hContext, "onactive" );
@@ -1148,6 +1149,7 @@ void CFuncFFScript::SetActive( void )
 void CFuncFFScript::SetInactive( void )
 {
 	m_iGoalState = GS_INACTIVE;
+	DispatchUpdateTransmitState();
 
 	CFFLuaSC hContext;
 	_scriptman.RunPredicates_LUA( this, &hContext, "oninactive" );
@@ -1159,6 +1161,7 @@ void CFuncFFScript::SetInactive( void )
 void CFuncFFScript::SetRemoved( void )
 {
 	m_iGoalState = GS_REMOVED;
+	DispatchUpdateTransmitState();
 
 	CFFLuaSC hContext;
 	_scriptman.RunPredicates_LUA( this, &hContext, "onremoved" );
@@ -1182,6 +1185,17 @@ void CFuncFFScript::Spawn( void )
 
 	CFFLuaSC hContext;
 	_scriptman.RunPredicates_LUA( this, &hContext, "spawn" );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+int	CFuncFFScript::UpdateTransmitState()
+{
+	if ( IsRemoved() )
+		return SetTransmitState( FL_EDICT_DONTSEND );
+
+	return BaseClass::UpdateTransmitState();
 }
 
 void CFuncFFScript::LuaSetLocation()
