@@ -2238,6 +2238,7 @@ void CFFPlayer::SetObjectiveEntity( const CBaseEntity *pEntity )
 	if ( m_hObjectiveEntity )
 	{
 		m_hObjectiveEntity->m_ObjectivePlayerRefs.FindAndRemove(this);
+		m_hObjectiveEntity->DispatchUpdateTransmitState();
 	}
 
 	m_hObjectiveEntity = pEntity;
@@ -2246,6 +2247,7 @@ void CFFPlayer::SetObjectiveEntity( const CBaseEntity *pEntity )
 	{
 		SetObjectiveOrigin( m_hObjectiveEntity->GetAbsOrigin() );
 		m_hObjectiveEntity->m_ObjectivePlayerRefs.AddToHead(this);
+		m_hObjectiveEntity->DispatchUpdateTransmitState();
 	}
 	else
 	{

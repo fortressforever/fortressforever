@@ -85,6 +85,7 @@ public:
 
 	virtual void	Spawn( void );
 	virtual void	Precache( void );
+	virtual void	UpdateOnRemove( void );
 	void			OnTouch( CBaseEntity *pEntity );
 	void			OnOwnerDied( CBaseEntity *pEntity );
 	void			OnOwnerForceRespawn( CBaseEntity *pEntity );
@@ -96,6 +97,7 @@ public:
 	virtual bool	IsAlive( void ) { return false; }
 
 	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
+	virtual int		UpdateTransmitState( void );
 
 	// An info_ff_script's position state
 	virtual bool	IsCarried( void );
