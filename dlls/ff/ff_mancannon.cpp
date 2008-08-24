@@ -20,8 +20,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1024", FCVAR_REPLICATED );
-ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED );
+ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1024", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 // Jiggles: Sorry, but I'm not using the "mancannon" nomenclature; Bungie didn't invent the jump pad!
 //#define JUMPPAD_INITIAL_DEPLOY	0	
@@ -30,8 +30,8 @@ ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICAT
 #define JUMPPAD_REMOVE			3
 
 #define JUMPPAD_WARMUP_TIME		1.0f
-ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
-#define JUMPPAD_LIFESPAN		ffdev_mancannon_lifetime.GetFloat()
+//ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
+#define JUMPPAD_LIFESPAN		60.0f // ffdev_mancannon_lifetime.GetFloat()
 #define JUMPPAD_POWERDOWN_TIME	5.0f
 
 //=============================================================================

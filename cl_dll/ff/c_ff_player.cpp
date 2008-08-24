@@ -74,9 +74,9 @@ extern ConVar cl_ffdlight_flashlight;
 //static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
-static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL );
+//static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
+static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
 
-static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CHEAT );
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
@@ -2513,9 +2513,9 @@ inline float approach(float flInitial, float flDelta, float flTarget)
 
 ConVar cl_dynamicfov("cl_dynamicfov", "1", FCVAR_ARCHIVE);
 
-ConVar ffdev_dynamicfov_min("ffdev_dynamicfov_min", "1.5");
-ConVar ffdev_dynamicfov_max("ffdev_dynamicfov_max", "2.0");
-ConVar ffdev_dynamicfov_range("ffdev_dynamicfov_range", "15");
+ConVar ffdev_dynamicfov_min("ffdev_dynamicfov_min", "1.5", FCVAR_CHEAT);
+ConVar ffdev_dynamicfov_max("ffdev_dynamicfov_max", "2.0", FCVAR_CHEAT);
+ConVar ffdev_dynamicfov_range("ffdev_dynamicfov_range", "15", FCVAR_CHEAT);
 
 //-----------------------------------------------------------------------------
 // Purpose: Disable FOV and use weapon-specific stuff

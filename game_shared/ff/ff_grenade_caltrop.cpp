@@ -27,25 +27,25 @@
 #endif
 
 #ifdef GAME_DLL
-	//ConVar caltrop_vel_min( "ffdev_caltrop_vel_min","100");
+	//ConVar caltrop_vel_min( "ffdev_caltrop_vel_min","100",FCVAR_CHEAT);
 	#define CALTROP_VEL_MIN 100.0f
-	//ConVar caltrop_vel_max( "ffdev_caltrop_vel_max","250");
+	//ConVar caltrop_vel_max( "ffdev_caltrop_vel_max","250",FCVAR_CHEAT);
 	#define CALTROP_VEL_MAX 250.0f
-	//ConVar caltrop_ang_x_min("ffdev_caltrop_ang_x_min","30.0",0,"Minimum pitch angle for caltroplets");
+	//ConVar caltrop_ang_x_min("ffdev_caltrop_ang_x_min","30.0",FCVAR_CHEAT,"Minimum pitch angle for caltroplets");
 	#define CALTROP_ANG_X_MIN 30.0f
-	//ConVar caltrop_ang_x_max("ffdev_caltrop_ang_x_max","60.0",0,"Maximum pitch angle for caltroplets");
+	//ConVar caltrop_ang_x_max("ffdev_caltrop_ang_x_max","60.0",FCVAR_CHEAT,"Maximum pitch angle for caltroplets");
 	#define CALTROP_ANG_X_MAX 60.0f
-	//ConVar caltrop_ang_y_seed("ffdev_caltrop_ang_y_seed","0",0,"");
-	//ConVar caltrop_ang_y_min("ffdev_caltrop_ang_y_min","0",0,"Minimum yaw angle for caltroplets");
+	//ConVar caltrop_ang_y_seed("ffdev_caltrop_ang_y_seed","0",FCVAR_CHEAT,"");
+	//ConVar caltrop_ang_y_min("ffdev_caltrop_ang_y_min","0",FCVAR_CHEAT,"Minimum yaw angle for caltroplets");
 	#define CALTROP_ANG_Y_MIN 0
-	//ConVar caltrop_ang_y_max("ffdev_caltrop_ang_y_max","360",0,"Maximum yaw angle for caltroplets");
+	//ConVar caltrop_ang_y_max("ffdev_caltrop_ang_y_max","360",FCVAR_CHEAT,"Maximum yaw angle for caltroplets");
 	#define CALTROP_ANG_Y_MAX 360.0f
-	//ConVar caltrop_ang_z_min("ffdev_caltrop_ang_z_min","0",0,"Minimum z spawn angle for caltroplets");
+	//ConVar caltrop_ang_z_min("ffdev_caltrop_ang_z_min","0",FCVAR_CHEAT,"Minimum z spawn angle for caltroplets");
 	#define CALTROP_ANG_Z_MIN 0
-	//ConVar caltrop_ang_z_max("ffdev_caltrop_ang_z_max","0",0,"Maximum z spawn angle for caltroplets");
+	//ConVar caltrop_ang_z_max("ffdev_caltrop_ang_z_max","0",FCVAR_CHEAT,"Maximum z spawn angle for caltroplets");
 	#define CALTROP_ANG_Z_MAX 0
 
-	//ConVar caltrop_number("ffdef_caltrop_number", "6");
+	//ConVar caltrop_number("ffdef_caltrop_number", "6", FCVAR_CHEAT);
 	#define CALTROP_NUMBER 6
 #endif
 

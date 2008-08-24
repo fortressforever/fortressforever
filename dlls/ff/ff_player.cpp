@@ -3260,8 +3260,8 @@ void CFFPlayer::Command_BuildManCannon( void )
 	PreBuildGenericThink();
 }
 
-ConVar sg_buildtime("ffdev_sg_buildtime", "3.0", FCVAR_REPLICATED, "Sentry Gun build time");
-#define SG_BUILDTIME	sg_buildtime.GetFloat()
+//ConVar sg_buildtime("ffdev_sg_buildtime", "3.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Sentry Gun build time");
+#define SG_BUILDTIME 3.0f // sg_buildtime.GetFloat()
 
 void CFFPlayer::PreBuildGenericThink( void )
 {
@@ -6144,11 +6144,11 @@ int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	return hp;
 }
 
-ConVar emp_celldamage("ffdev_emp_celldamagecap", "150", FCVAR_REPLICATED);
-#define MAX_CELLDAMAGE emp_celldamage.GetInt()
+// ConVar emp_celldamage("ffdev_emp_celldamagecap", "150", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define MAX_CELLDAMAGE 150 // emp_celldamage.GetInt()
 
-ConVar emp_hwguy_shells_multi("ffdev_emp_hwguy_shells_multi", "0.666", FCVAR_REPLICATED);
-#define EMP_HWGUY_SHELLS_MULTI emp_hwguy_shells_multi.GetFloat()
+//ConVar emp_hwguy_shells_multi("ffdev_emp_hwguy_shells_multi", "0.666", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define EMP_HWGUY_SHELLS_MULTI 0.666f // emp_hwguy_shells_multi.GetFloat()
 
 int CFFPlayer::TakeEmp()
 {
