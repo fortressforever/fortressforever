@@ -221,9 +221,6 @@ CFFSentryGun::CFFSentryGun()
 
 	m_angGoal.Init();
 
-	m_flSabotageTime = 0;
-	m_hSaboteur = NULL;
-	m_bShootingTeammates = false;
 	m_bSendNailGrenHint = true;
 
 	m_flLastCloakSonarSound = 0.0f;
@@ -349,7 +346,7 @@ void CFFSentryGun::GoLive( void )
 
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
-	m_bShootingTeammates = false;
+	m_bMaliciouslySabotaged = false;
 
 	// Figure out if we're under water or not
 	if( UTIL_PointContents( GetAbsOrigin() + Vector( 0, 0, 48 ) ) & CONTENTS_WATER )
@@ -383,7 +380,7 @@ void CFFSentryGun::OnObjectThink( void )
 	}
 
 	// We've just finished being maliciously sabotaged, so remove enemy here
-	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)
+	if (m_bMaliciouslySabotaged && m_flSabotageTime <= gpGlobals->curtime)
 	{
 		// Jiggles: No real point in playing this since we're blowing up the sg now
 		//EmitSound( "Sentry.SabotageFinish" );
@@ -481,9 +478,9 @@ void CFFSentryGun::OnActiveThink( void )
 	// End hint code
 
 	// We've just finished being maliciously sabotaged, so remove enemy here
-	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)
+	if (m_bMaliciouslySabotaged && m_flSabotageTime <= gpGlobals->curtime)
 	{
-		m_bShootingTeammates = false;
+		m_bMaliciouslySabotaged = false;
 		enemy = NULL;
 	}
 
@@ -679,20 +676,33 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 	for( int i = 1; i <= gpGlobals->maxClients; i++ ) 
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
-
-		/*
-		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() )
+		if( !pPlayer )
 			continue;
-			*/
-		//* // Disabled temporarily
+		if( pPlayer->IsObserver() )
+			continue;
+
+		bool bIsSentryVisible = false;
+		bool bIsSentryMaliciouslySabotaged = false;
+		CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
+		if( IsTargetVisible( pSentryGun ) )
+		{
+				bIsSentryVisible = true;
+				if ( pSentryGun->IsMaliciouslySabotaged() && g_pGameRules->PlayerRelationship( pOwner, pSentryGun->m_hSaboteur ) != GR_TEAMMATE )
+					bIsSentryMaliciouslySabotaged = true;
+		}
+
 		// Mirv: If we are maliciously sabotaged, then shoot teammates instead.
-		int iTypeToTarget = IsShootingTeammates() ? GR_TEAMMATE : GR_NOTTEAMMATE;
+		int iTypeToTarget = IsMaliciouslySabotaged() ? GR_TEAMMATE : GR_NOTTEAMMATE;
 
 		// Changed a line for
 		// Bug #0000526: Sentry gun stays locked onto teammates if mp_friendlyfire is changed
 		// Don't bother
-		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || ( g_pGameRules->PlayerRelationship(pOwner, pPlayer) != iTypeToTarget ) )
-			continue;
+		if( g_pGameRules->PlayerRelationship(pOwner, pPlayer) != iTypeToTarget )
+		{
+			// if a teammate's maliciously sabotaged sentry is spotted, try to target it
+			if ( !bIsSentryMaliciouslySabotaged )
+				continue;
+		}
 
 		if ( pPlayer->IsCloaked() )
 		{
@@ -716,17 +726,21 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 
 		// IsTargetVisible checks for NULL so these are all safe...
 
-		if( IsTargetVisible( pPlayer ) )
+		if( IsTargetVisible( pPlayer ) && !bIsSentryMaliciouslySabotaged )
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
-		CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
-		if( IsTargetVisible( pSentryGun ) )
-			target = SG_IsBetterTarget( target, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+		if( bIsSentryVisible )
+		{
+			if ( !( pSentryGun->IsMaliciouslySabotaged() && g_pGameRules->PlayerRelationship( pSentryGun->m_hSaboteur, m_hSaboteur ) == GR_TEAMMATE ) )
+				target = SG_IsBetterTarget( target, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+		}
 
 		CFFDispenser *pDispenser = pPlayer->GetDispenser();
-		if( IsTargetVisible( pDispenser ) )
-			target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
-
+		if( IsTargetVisible( pDispenser ) && !bIsSentryMaliciouslySabotaged )
+		{
+			if ( !( pDispenser->IsMaliciouslySabotaged() && g_pGameRules->PlayerRelationship( pDispenser->m_hSaboteur, m_hSaboteur ) == GR_TEAMMATE ) )
+				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+		}
 
 		/*
 		// Check a couple more locations to check as technically they could be visible whereas others wouldn't be
@@ -776,7 +790,11 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 				ep.m_nPitch = SG_CLOAKSONAR_PITCH_FAR + ( ( SG_CLOAKSONAR_PITCH_NEAR - SG_CLOAKSONAR_PITCH_FAR ) * flPercent ); // far and near are swapped right here
 
 				EmitSound( filter, entindex(), ep );
-				g_pEffects->EnergySplash(GetAbsOrigin(), Vector(0, 0, 1.0f), false);
+
+				Vector vecUp;
+				QAngle qAngles = GetAbsAngles();
+				AngleVectors(qAngles, NULL, NULL, &vecUp);
+				g_pEffects->EnergySplash(GetAbsOrigin(), vecUp, false);
 
 				m_flLastCloakSonarSound = gpGlobals->curtime;
 			}
@@ -818,6 +836,12 @@ float CFFSentryGun::MaxPitchSpeed( void ) const
 bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 {
 	if( !pTarget )
+		return false;
+
+	CFFPlayer *pFFPlayer = ToFFPlayer( pTarget );
+
+	// early out if player's not even alive
+	if ( pFFPlayer && !pFFPlayer->IsAlive() )
 		return false;
 
 	// Get our aiming position
@@ -867,10 +891,8 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 	if( !IsTargetClassTValid( tr.m_pEnt->Classify() ) )
 		return false;
 
-	CFFPlayer *pFFPlayer = ToFFPlayer( pTarget );
 	if ( pFFPlayer && pFFPlayer->IsCloaked() )
 	{
-
 		if (flDistToTarget <= ( SG_RANGE * SG_RANGE_CLOAKMULTI ) && flDistToTarget < m_flCloakDistance )
 			m_flCloakDistance = flDistToTarget;
 
@@ -969,7 +991,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 
 	// Introduce quite a big spread now if sabotaged
 	// but not if we're in malicious mode
-	if (IsSabotaged()&& !IsShootingTeammates())
+	if (IsSabotaged()&& !IsMaliciouslySabotaged())
 		info.m_vecSpread = VECTOR_CONE_10DEGREES;
 
 	/*if ( SG_DEBUG )
@@ -1455,39 +1477,6 @@ int CFFSentryGun::TakeEmp( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: If already sabotaged then don't try and sabotage again
-//-----------------------------------------------------------------------------
-bool CFFSentryGun::CanSabotage() const
-{
-	VPROF_BUDGET( "CFFSentryGun::CanSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	if (!m_bBuilt)
-		return false;
-
-	return !IsSabotaged();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Is this building in level 1 sabotage
-//-----------------------------------------------------------------------------
-bool CFFSentryGun::IsSabotaged() const
-{
-	VPROF_BUDGET( "CFFSentryGun::IsSabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	return (m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Is the SG in level 2 sabotage (shooting teammates mode)
-//-----------------------------------------------------------------------------
-bool CFFSentryGun::IsShootingTeammates() const
-{
-	VPROF_BUDGET( "CFFSentryGun::IsShootingTeammates", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	return (m_hSaboteur && m_bShootingTeammates && m_flSabotageTime > gpGlobals->curtime);
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Sabotaged results in SG doing less damage (to simulate being
 //			less accurate). Need to keep track of saboteur so that they can
 //			trigger the malicious sabotage via their menu.
@@ -1498,8 +1487,6 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 
 	m_flSabotageTime = gpGlobals->curtime + 120.0f;
 	m_hSaboteur = pSaboteur;
-	// AfterShock - don't need this - it might hide bugs having this line in.
-	//m_bShootingTeammates = false;
 
 	// AfterShock - scoring system: 100 points for sabotage SG
 	pSaboteur->AddFortPoints(100, "#FF_FORTPOINTS_SABOTAGESG");
@@ -1512,15 +1499,18 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 //			To differentiate between normal and malicious sabotage, we're
 //			just going to set m_hSaboteur to NULL (cheap, I know)
 //-----------------------------------------------------------------------------
-void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
+void CFFSentryGun::MaliciouslySabotage(CFFPlayer *pSaboteur)
 {
 	VPROF_BUDGET( "CFFSentryGun::MaliciousSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	m_flSabotageTime = gpGlobals->curtime + 8.0f;
-	m_bShootingTeammates = true;
+	BaseClass::MaliciouslySabotage( pSaboteur );
+
 	EmitSound( "Sentry.SabotageActivate" );
+
 	// Cancel target so it searchs for a new (friendly one)
 	SetEnemy(NULL);
+
+	m_nSkin = clamp( pSaboteur->GetTeamNumber() - TEAM_BLUE, 0, 3 );
 
 	Warning("SG maliciously sabotaged\n");
 }

@@ -426,7 +426,7 @@ bool CBasePlayerAnimState::ShouldBlendAimSequenceToIdle()
 {
 	Activity act = GetCurrentMainSequenceActivity();
 
-	return (act == ACT_RUN || act == ACT_WALK || act == ACT_RUNTOIDLE || act == ACT_RUN_CROUCH);
+	return (act == ACT_RUN || act == ACT_WALK || act == ACT_RUNTOIDLE || act == ACT_RUN_CROUCH || act == ACT_HOP); // FF: added ACT_HOP
 }
 
 void CBasePlayerAnimState::ComputeAimSequence()

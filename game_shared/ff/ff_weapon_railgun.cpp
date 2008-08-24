@@ -35,6 +35,8 @@
 	#include "te_effect_dispatch.h"
 #endif
 
+extern unsigned char g_uchRailColors[3][3];
+
 ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum charge for railgun" );
 
 ConVar ffdev_railgun_ammoamount_halfcharge( "ffdev_railgun_ammoamount_halfcharge", "2", FCVAR_REPLICATED | FCVAR_CHEAT, "How much total ammo is lost for a half charge." );
@@ -203,6 +205,10 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 
 #ifdef CLIENT_DLL
 	m_iAttachment1 = m_iAttachment2 = -1;
+
+	m_colorMuzzleDLight.r = g_uchRailColors[0][0];
+	m_colorMuzzleDLight.g = g_uchRailColors[0][1];
+	m_colorMuzzleDLight.b = g_uchRailColors[0][2];
 #endif
 }
 
@@ -222,6 +228,8 @@ bool CFFWeaponRailgun::Deploy( void )
 	m_flNextResupply = gpGlobals->curtime + RAILGUN_RESUPPLY_INTERVAL;
 #endif
 
+	m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_ZEROCHARGE;
+
 	StopRevSound();
 
 	return BaseClass::Deploy();
@@ -237,6 +245,8 @@ bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 	m_iAmmoUsed = 0;
 
 	m_flRevSoundNextUpdate = 0.0f;
+
+	m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_ZEROCHARGE;
 
 	StopRevSound();
 
@@ -263,9 +273,6 @@ void CFFWeaponRailgun::Precache( void )
 //----------------------------------------------------------------------------
 void CFFWeaponRailgun::Fire( void )
 {
-	// stop the rev sound immediately
-	StopRevSound();
-
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	//const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();  
 	// Jiggles: Above line removed until we decide on a good base damage value
@@ -354,6 +361,9 @@ void CFFWeaponRailgun::Fire( void )
 	else
 		m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_FULLCHARGE;
 
+	// stop the rev sound immediately
+	StopRevSound();
+
 	// reset these variables
 	m_flStartTime = m_flLastUpdate = -1.0f;
 	m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
@@ -440,9 +450,6 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				// give cells on overcharge
 				pPlayer->GiveAmmo( RAILGUN_RESUPPLY_CELLS, AMMO_CELLS, true );
 #endif
-
-				StopRevSound();
-
 				// play an overcharge sound
 				WeaponSound(BURST); // this might have to stay as EmitSound so it plays even if you die from overcharging
 				//EmitSound(GetFFWpnData().aShootSounds[BURST]);
@@ -452,6 +459,8 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				m_iAmmoUsed = 0;
 
 				m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_OVERCHARGE;
+
+				StopRevSound();
 			}
 		}
 		// just a little extra fail-safe shit
@@ -530,7 +539,7 @@ void CFFWeaponRailgun::StopRevSound()
 
 	StopSound( entindex(), shootsound );
 	m_bPlayRevSound = false;
-	m_flRevSoundNextUpdate = 0.0f;
+	m_flRevSoundNextUpdate = m_flNextPrimaryAttack - RAILGUN_REVSOUND_UPDATEINTERVAL;
 }
 
 /*

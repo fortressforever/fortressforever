@@ -518,9 +518,12 @@ bool CMultiplayRules::IsMultiplayer( void )
 		// Jiggles: Maybe not the best spot to put this, but...
 		// If the gun killed someone while in malicious sabotage mode
 		// we want to give credit to the Spy who did it
-		CFFSentryGun *pSentryGun = FF_ToSentrygun( info.GetInflictor() );
-		if ( pSentryGun && pSentryGun->IsShootingTeammates() )
-			pKiller = pSentryGun->m_hSaboteur;
+		CFFBuildableObject *pSabotagedBuildable = CFFBuildableObject::AttackerInflictorBuildable(pKiller, pInflictor);
+		if ( pSabotagedBuildable )
+		{
+			if ( pSabotagedBuildable->IsMaliciouslySabotaged() )
+				pKiller = pSabotagedBuildable->m_hSaboteur;
+		}
 
 		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
 		
@@ -596,9 +599,12 @@ bool CMultiplayRules::IsMultiplayer( void )
 		// Jiggles: Maybe not the best spot to put this, but...
 		// If the gun killed someone while in malicious sabotage mode
 		// we want to give credit to the Spy who did it
-		CFFSentryGun *pSentryGun = FF_ToSentrygun( info.GetInflictor() );
-		if ( pSentryGun && pSentryGun->IsShootingTeammates() )
-			pKiller = pSentryGun->m_hSaboteur;
+		CFFBuildableObject *pSabotagedBuildable = CFFBuildableObject::AttackerInflictorBuildable(pKiller, pInflictor);
+		if ( pSabotagedBuildable )
+		{
+			if ( pSabotagedBuildable->IsMaliciouslySabotaged() )
+				pKiller = pSabotagedBuildable->m_hSaboteur;
+		}
 
 		/*
 		// HACK: Check for special infection deaths

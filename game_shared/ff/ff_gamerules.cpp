@@ -1441,14 +1441,34 @@ ConVar mp_prematch( "mp_prematch",
 		// Find the killer & the scorer
 		CBaseEntity *pInflictor = info.GetInflictor();
 		CBaseEntity *pKiller = info.GetAttacker();
+
+		// Jiggles: Maybe not the best spot to put this, but...
+		// If the gun killed someone while in malicious sabotage mode
+		// we want to give credit to the Spy who did it
+		CFFBuildableObject *pSabotagedBuildable = CFFBuildableObject::AttackerInflictorBuildable(pKiller, pInflictor);
+		if ( pSabotagedBuildable )
+		{
+			if ( pSabotagedBuildable->IsMaliciouslySabotaged() )
+				pKiller = pSabotagedBuildable->m_hSaboteur;
+		}
+
 		CBasePlayer *pScorer = pScorer = GetDeathScorer( pKiller, pInflictor );
 
 		// pVictim is the buildables owner
-		CFFPlayer *pVictim = NULL;
-		if( pObject->Classify() == CLASS_SENTRYGUN )
-			pVictim = ToFFPlayer( ( ( CFFSentryGun * )pObject )->m_hOwner.Get() );
-		else if( pObject->Classify() == CLASS_DISPENSER )
-			pVictim = ToFFPlayer( ( ( CFFDispenser * )pObject )->m_hOwner.Get() );
+		CFFPlayer *pVictim = NULL, *pOwner = NULL;
+		if( pObject->Classify() == CLASS_SENTRYGUN || pObject->Classify() == CLASS_DISPENSER )
+		{
+			pOwner = ToFFPlayer( ( pObject )->m_hOwner.Get() );
+			if ( !pObject->IsMaliciouslySabotaged() )
+				pVictim = pOwner;
+			else
+			{
+				pVictim = ToFFPlayer( ( pObject )->m_hSaboteur.Get() );
+				// try not to teamkill your other sabotaged buildables
+				if ( g_pGameRules->PlayerRelationship( pVictim, pKiller ) == GR_TEAMMATE )
+					pVictim = pOwner;
+			}
+		}
 
 		// Custom kill type?
 		//if( info.GetCustomKill() )
@@ -1825,7 +1845,7 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 	{
 		CFFSentryGun *pSentry = dynamic_cast< CFFSentryGun* > (pAttacker);
 
-		if (pSentry && pSentry->IsShootingTeammates())
+		if (pSentry && pSentry->IsMaliciouslySabotaged())
 			return true;
 	}
 	

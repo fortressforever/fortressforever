@@ -634,6 +634,11 @@ C_BaseAnimating::C_BaseAnimating() :
 #ifdef _DEBUG
 	m_vecForce.Init();
 #endif
+
+	m_colorMuzzleDLight.r = 255;
+	m_colorMuzzleDLight.g = 192;
+	m_colorMuzzleDLight.b = 64;
+	m_colorMuzzleDLight.exponent = 5;
 	
 	m_ClientSideAnimationListHandle = INVALID_CLIENTSIDEANIMATION_LIST_HANDLE;
 
@@ -2655,10 +2660,26 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 				dl->radius = random->RandomFloat( 56/*ffdev_muzzleflash_light_radius_min.GetFloat()*/, 72/*ffdev_muzzleflash_light_radius_max.GetFloat()*/ ) * flDLightScale; // sorta small radius for muzzle flash
 				dl->die = gpGlobals->curtime + 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // die = current time + life
 				dl->decay = dl->radius / 0.05/*ffdev_muzzleflash_light_life.GetFloat()*/; // radius / life = good fade
-				dl->color.r = 255/*ffdev_muzzleflash_light_color_r.GetFloat()*/;
-				dl->color.g = 192/*ffdev_muzzleflash_light_color_g.GetFloat()*/;
-				dl->color.b = 64/*ffdev_muzzleflash_light_color_b.GetFloat()*/;
-				dl->color.exponent = 5/*ffdev_muzzleflash_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
+
+				C_BasePlayer *pPlayer = NULL;
+				if ( IsPlayer() )
+					pPlayer = dynamic_cast<C_BasePlayer *>( this );
+				else if ( IsViewModel() )
+					pPlayer = C_BasePlayer::GetLocalPlayer();
+
+				ColorRGBExp32 colorDLight = m_colorMuzzleDLight;
+				if (pPlayer)
+				{
+					C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
+					if (pWeapon)
+						colorDLight = pWeapon->m_colorMuzzleDLight;
+				}
+
+				//dl->color.r = colorDLight.r;// 255/*ffdev_muzzleflash_light_color_r.GetFloat()*/;
+				//dl->color.g = colorDLight.g;// 192/*ffdev_muzzleflash_light_color_g.GetFloat()*/;
+				//dl->color.b = colorDLight.b;// 64/*ffdev_muzzleflash_light_color_b.GetFloat()*/;
+				//dl->color.exponent = colorDLight.exponent;// 5/*ffdev_muzzleflash_light_color_e.GetFloat()*/; // essentially the brightness...also determines the gradient, basically
+				dl->color = colorDLight;
 			}
 		}
 	}

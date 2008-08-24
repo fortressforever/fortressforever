@@ -78,6 +78,9 @@ public:
 
 	CNetworkVar( int, m_iNumBounces );
 
+	CHandle<CSprite>	m_pGlow;
+	CHandle<CSpriteTrail>	m_pTrail;
+
 #endif
 
 	int m_iMaxBounces;

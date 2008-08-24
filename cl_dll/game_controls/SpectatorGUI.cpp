@@ -218,10 +218,10 @@ void CSpectatorMenu::OnKeyCodePressed(KeyCode code)
 
 void CSpectatorMenu::ShowPanel(bool bShow)
 {
-	if ( IsVisible() == bShow )
-		return;
+	//if ( IsVisible() == bShow )
+	//	return;
 
-	if ( bShow )
+	if ( bShow && cl_drawhud.GetBool() )
 	{
 		Activate();
 		SetMouseInputEnabled( true );
@@ -234,18 +234,19 @@ void CSpectatorMenu::ShowPanel(bool bShow)
 		SetKeyBoardInputEnabled( false );
 	}
 
-	bool bIsEnabled = true;
+	//bool bIsEnabled = true;
 	
-	 if ( engine->IsHLTV() && HLTVCamera()->IsPVSLocked() )
+	 if ( engine->IsHLTV() && HLTVCamera()->IsPVSLocked() || !cl_drawhud.GetBool() )
 	 {
 		 // when wattching HLTV with a locked PVS, some elements are disabled
-		 bIsEnabled = false;
+		 //bIsEnabled = false;
+		 bShow = false;
 	 }
 	
-	m_pLeftButton->SetVisible( bIsEnabled );
-	m_pRightButton->SetVisible( bIsEnabled );
-	m_pPlayerList->SetVisible( bIsEnabled );
-	m_pViewOptions->SetVisible( bIsEnabled );
+	m_pLeftButton->SetVisible( bShow ); // bIsEnabled );
+	m_pRightButton->SetVisible( bShow ); // bIsEnabled );
+	m_pPlayerList->SetVisible( bShow ); // bIsEnabled );
+	m_pViewOptions->SetVisible( bShow ); // bIsEnabled );
 }
 
 

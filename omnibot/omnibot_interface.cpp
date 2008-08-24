@@ -1944,7 +1944,7 @@ namespace Omnibot
 							if(pMsg->m_IsAllied && pEntOther->Classify() == CLASS_SENTRYGUN)
 							{
 								CFFSentryGun *pSentry = static_cast<CFFSentryGun*>(pEntOther);
-								if(pSentry->IsShootingTeammates())
+								if(pSentry->IsMaliciouslySabotaged())
 									pMsg->m_IsAllied = False;
 							}
 						}

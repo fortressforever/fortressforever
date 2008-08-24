@@ -24,6 +24,8 @@ extern void RecvProxy_LocalVelocityY(const CRecvProxyData *pData, void *pStruct,
 extern void RecvProxy_LocalVelocityZ(const CRecvProxyData *pData, void *pStruct, void *pOut);
 
 #define RAIL_MODEL "models/crossbow_bolt.mdl"
+#define RAIL_GLOW "effects/rail_glow.vmt"
+#define RAIL_TRAIL "effects/rail_beam.vmt"
 
 IMPLEMENT_NETWORKCLASS_ALIASED( FFProjectileRail, DT_FFProjectileRail )
 
@@ -48,6 +50,9 @@ END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_projectile_rail, CFFProjectileRail );
 PRECACHE_WEAPON_REGISTER( ff_projectile_rail );
+
+// default, bounce1, bounce2
+unsigned char g_uchRailColors[3][3] = { {64, 128, 192}, {32, 192, 160}, {0, 255, 128} };
 
 extern ConVar ffdev_railgun_maxchargetime;
 
@@ -106,6 +111,9 @@ CFFProjectileRail::CFFProjectileRail()
 void CFFProjectileRail::Precache( void ) 
 {
 	PrecacheModel(RAIL_MODEL);
+
+	PrecacheModel( RAIL_GLOW );
+	PrecacheModel( RAIL_TRAIL );
 
 	PrecacheScriptSound( "Rail.HitBody" );
 	PrecacheScriptSound( "Rail.HitWorld" );
@@ -174,6 +182,29 @@ void CFFProjectileRail::Spawn( void )
 	UpdateWaterState();
 
 	m_iNumBounces = 0;
+
+	// create the glow
+	m_pGlow = CSprite::SpriteCreate(RAIL_GLOW, GetLocalOrigin(), false);
+	if (m_pGlow != NULL) 
+	{
+		m_pGlow->FollowEntity(this);
+		m_pGlow->SetTransparency(kRenderWorldGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+		m_pGlow->EnableWorldSpaceScale(true);
+		m_pGlow->SetSpriteScale(5.0f);
+		m_pGlow->SetGlowProxySize(5.0f);
+	}
+
+	// create the trail
+	m_pTrail = CSpriteTrail::SpriteTrailCreate(RAIL_TRAIL , GetLocalOrigin(), false);
+	if (m_pTrail)
+	{
+		m_pTrail->FollowEntity(this);
+		//m_pTrail->SetAttachment(this, nAttachment);
+		m_pTrail->SetTransparency(kRenderTransAdd, g_uchRailColors[0][0], g_uchRailColors[0][1], g_uchRailColors[0][2], 255, kRenderFxNone);
+		m_pTrail->SetStartWidth(5.0f);
+		m_pTrail->SetEndWidth(0.0f);
+		m_pTrail->SetLifeTime(0.2f);
+	}
 
 	BaseClass::Spawn();
 }
@@ -310,6 +341,12 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 					// Increment bounces
 					++m_iNumBounces;
 
+					// update the trail
+					if (m_pTrail)
+					{
+						m_pTrail->SetColor(g_uchRailColors[m_iNumBounces][0], g_uchRailColors[m_iNumBounces][1], g_uchRailColors[m_iNumBounces][2]);
+					}
+
 					// BOUNCE BONUS DAMAGE!
 					m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
@@ -404,8 +441,10 @@ void CFFProjectileRail::SetupEnd( Vector end )
 	SetTouch(NULL);
 	SetThink(&CFFProjectileRail::DieThink);
 
+	m_pGlow->FadeAndDie( 0.25f );
+
 	// give just enough time for the client to interpolate to the end?
-	SetNextThink(gpGlobals->curtime + 0.1f);
+	SetNextThink(gpGlobals->curtime + 0.25f);
 }
 
 //----------------------------------------------------------------------------
@@ -478,9 +517,6 @@ void CFFProjectileRail::RailThink( void )
 #else 
 //  v  CLIENT_DLL  v
 
-// default, bounce1, bounce2
-unsigned char g_uchRailColors[3][3] = { {64, 128, 192}, {32, 192, 160}, {0, 255, 128} };
-
 //-----------------------------------------------------------------------------
 // Purpose: Called when data changes on the server
 //-----------------------------------------------------------------------------
@@ -518,12 +554,12 @@ void CFFProjectileRail::OnDataChanged( DataUpdateType_t updateType )
 			m_pDLight->style = 6; // 0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker);
 		}
 
-		// Creat the emitter
+		// Create the emitter
 		m_hEmitter = CSimpleEmitter::Create( "RailTrail" );
 
 		// Obtain a reference handle to our particle's desired material
 		if ( m_hEmitter.IsValid() )
-			m_hMaterial = m_hEmitter->GetPMaterial( "effects/rail_glow" );
+			m_hMaterial = m_hEmitter->GetPMaterial( RAIL_GLOW );
 
 		// Spawn 128 particles per second
 		m_tParticleTimer.Init( RAIL_PRATE );
@@ -541,12 +577,13 @@ void CFFProjectileRail::ClientThink( void )
 	if ( !m_hEmitter )
 		return;
 
+	// update the dlight
 	if (m_pDLight)
 	{
 		m_pDLight->origin = GetAbsOrigin();
 		m_pDLight->radius = 64 * cl_ffdlight_rail.GetFloat(); // dlight scale
-		m_pDLight->die = gpGlobals->curtime + 0.4;
-		m_pDLight->decay = m_pDLight->radius / 0.4;
+		m_pDLight->die = gpGlobals->curtime + 0.333;
+		m_pDLight->decay = m_pDLight->radius / 0.333;
 		m_pDLight->color.r = g_uchRailColors[m_iNumBounces][0];
 		m_pDLight->color.g = g_uchRailColors[m_iNumBounces][1];
 		m_pDLight->color.b = g_uchRailColors[m_iNumBounces][2];
@@ -565,7 +602,7 @@ void CFFProjectileRail::ClientThink( void )
 			return;
 
 		// Setup our size
-		pParticle->m_uchStartSize = random->RandomFloat( 3, 4 );
+		pParticle->m_uchStartSize = random->RandomFloat( 1, 2 );
 		pParticle->m_uchEndSize = 0;
 
 		// Setup our roll
@@ -584,13 +621,13 @@ void CFFProjectileRail::ClientThink( void )
 		VectorNormalize( velocity );
 
 		// Obtain a random speed
-		float speed = random->RandomFloat( 0.5f, 5.0f );
+		float speed = random->RandomFloat( 1.0f, 20.0f );
 
 		// Set our velocity
 		pParticle->m_vecVelocity = velocity * speed;
 
 		// Die in a short range of time
-		pParticle->m_flDieTime = random->RandomFloat( 0.2f, 0.4f );
+		pParticle->m_flDieTime = random->RandomFloat( 0.25f, 0.50f );
 	}
 }
 

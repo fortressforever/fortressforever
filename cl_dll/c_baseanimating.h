@@ -411,6 +411,10 @@ public:
 
 	CSequenceTransitioner			m_SequenceTransitioner;
 
+	// --> FF
+	ColorRGBExp32					m_colorMuzzleDLight;
+	// <-- FF
+
 protected:
 	CIKContext						*m_pIk;
 

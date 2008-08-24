@@ -535,6 +535,10 @@ public:
 	
 	bool GetSpecialInfectedDeath( void ) const { return m_bSpecialInfectedDeath; }
 	void SetSpecialInfectedDeath( void ) { m_bSpecialInfectedDeath = true; }
+
+	int m_iSabotagedSentries;
+	int m_iSabotagedDispensers;
+
 private:
 	SpeedEffect m_vSpeedEffects[NUM_SPEED_EFFECTS];	// All speed effects impairing the player
 	float m_fLastHealTick;							// When the last time the medic was healed
