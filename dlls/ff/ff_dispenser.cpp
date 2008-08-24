@@ -205,6 +205,7 @@ void CFFDispenser::GoLive( void )
 
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
+	m_bMaliciouslySabotaged = false;
 
 	// Figure out if we're under water or not
 	if( UTIL_PointContents( GetAbsOrigin() + Vector( 0, 0, 48 ) ) & CONTENTS_WATER )
@@ -380,7 +381,7 @@ void CFFDispenser::OnObjectThink( void )
 	}
 
 	if ( bAteBag )
-		EmitSound( "Backpack.Touch" );
+		EmitSound( "Dispenser.omnomnomnom" );
 
 	// Generate stock
 	m_iCells = clamp( m_iCells + iCells, 0, m_iMaxCells );
@@ -538,29 +539,6 @@ void CFFDispenser::UpdateAmmoPercentage( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: If already sabotaged then don't try and sabotage again
-//-----------------------------------------------------------------------------
-bool CFFDispenser::CanSabotage() const
-{
-	VPROF_BUDGET( "CFFDispenser::CanSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	if (!m_bBuilt)
-		return false;
-
-	return !IsSabotaged();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Is this building in level 1 sabotage
-//-----------------------------------------------------------------------------
-bool CFFDispenser::IsSabotaged() const
-{
-	VPROF_BUDGET( "CFFDispenser::IsSabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	return (m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Flags the dispenser as sabotaged.
 //			This results in:
 //				· Reducing armour types
@@ -582,9 +560,11 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 //-----------------------------------------------------------------------------
 // Purpose: This blows up the sentry a la detdispenser (nice and simple)
 //-----------------------------------------------------------------------------
-void CFFDispenser::MaliciousSabotage(CFFPlayer *pSaboteur)
+void CFFDispenser::MaliciouslySabotage(CFFPlayer *pSaboteur)
 {
 	VPROF_BUDGET( "CFFDispenser::MaliciousSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	BaseClass::MaliciouslySabotage( pSaboteur );
 
 	Detonate();
 

@@ -43,6 +43,7 @@
 #include "world.h"
 #include "ff_luacontext.h"
 #include "ff_scriptman.h"
+#include "ff_entity_system.h"
 
 #ifdef _DEBUG
 #include "Color.h"
@@ -235,6 +236,10 @@ CFFBuildableObject::CFFBuildableObject( void )
 	m_pFlickerer = NULL;
 
 	m_BuildableLocation[0] = 0;
+
+	m_flSabotageTime = 0;
+	m_hSaboteur = NULL;
+	m_bMaliciouslySabotaged = false;
 }
 
 /**
@@ -387,6 +392,10 @@ void CFFBuildableObject::GoLive( void )
 			pPhysics->SetMass( 5000.0f );
 	}
 	//*/
+
+	m_flSabotageTime = 0;
+	m_hSaboteur = NULL;
+	m_bMaliciouslySabotaged = false;
 }
 
 /**
@@ -459,6 +468,46 @@ void CFFBuildableObject::Detonate( void )
 	Explode();
 }
 
+void  CFFBuildableObject::UpdateOnRemove( void )
+{
+	RemoveSaboteur();
+	BaseClass::UpdateOnRemove();
+}
+
+void CFFBuildableObject::RemoveSaboteur( bool bSuppressNotification )
+{
+	if ( !m_hSaboteur )
+		return;
+
+	if ( m_bMaliciouslySabotaged )
+		bSuppressNotification = true;
+
+	if ( !bSuppressNotification )
+	{
+		CSingleUserRecipientFilter filter(m_hSaboteur);
+		CFFEntitySystemHelper* pHelperInst = CFFEntitySystemHelper::GetInstance();
+		if(pHelperInst)
+			pHelperInst->EmitSound( filter, pHelperInst->entindex(), "Player.SabotageTimedOut" );
+	}
+
+	if( Classify() == CLASS_SENTRYGUN )
+	{
+		if ( !bSuppressNotification )
+			ClientPrint(m_hSaboteur, HUD_PRINTCENTER, "#FF_SENTRYSABOTAGERESET");
+		m_hSaboteur->m_iSabotagedSentries--;
+	}
+	else if( Classify() == CLASS_DISPENSER )
+	{
+		if ( !bSuppressNotification )
+			ClientPrint(m_hSaboteur, HUD_PRINTCENTER, "#FF_DISPENSERSABOTAGERESET");
+		m_hSaboteur->m_iSabotagedDispensers--;
+	}
+
+	m_flSabotageTime = 0;
+	m_hSaboteur = NULL;
+	m_bMaliciouslySabotaged = false;
+}
+
 /**
 @fn void RemoveQuietly( )
 @brief The user died during build process
@@ -493,6 +542,56 @@ void CFFBuildableObject::RemoveQuietly( void )
 	UTIL_Remove( this );
 }
 
+CFFBuildableObject *CFFBuildableObject::AttackerInflictorBuildable(CBaseEntity *pAttacker, CBaseEntity *pInflictor)
+{
+	if ( FF_IsBuildableObject( pAttacker ) )
+		return FF_ToBuildableObject( pAttacker );
+
+	if ( FF_IsBuildableObject( pInflictor ) )
+		return FF_ToBuildableObject( pInflictor );
+
+	if ( pInflictor && FF_IsBuildableObject( pInflictor->GetOwnerEntity() ) )
+		return FF_ToBuildableObject( pInflictor->GetOwnerEntity() );
+
+	if ( pAttacker && FF_IsBuildableObject( pAttacker->GetOwnerEntity() ) )
+		return FF_ToBuildableObject( pAttacker->GetOwnerEntity() );
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: If already sabotaged then don't try and sabotage again
+//-----------------------------------------------------------------------------
+bool CFFBuildableObject::CanSabotage() const
+{
+	VPROF_BUDGET( "CFFBuildableObject::CanSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if (!m_bBuilt)
+		return false;
+
+	return !IsSabotaged();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this buildable in level 1 sabotage (not maliciously)
+//-----------------------------------------------------------------------------
+bool CFFBuildableObject::IsSabotaged() const
+{
+	VPROF_BUDGET( "CFFBuildableObject::IsSabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	return (m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this buildable in level 2 sabotage (maliciously)
+//-----------------------------------------------------------------------------
+bool CFFBuildableObject::IsMaliciouslySabotaged() const
+{
+	VPROF_BUDGET( "CFFBuildableObject::IsMaliciouslySabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	return (IsSabotaged() && m_bMaliciouslySabotaged);
+}
+
 /**
 @fn void OnThink
 @brief Think function (modifies our network health var for now)
@@ -501,6 +600,9 @@ void CFFBuildableObject::RemoveQuietly( void )
 void CFFBuildableObject::OnObjectThink( void )
 {
 	VPROF_BUDGET( "CFFBuildableObject::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if ( m_flSabotageTime <= gpGlobals->curtime )
+		RemoveSaboteur(); // don't worry , this function checks if saboteur even exists
 
 	// Check for "malfunctions"
 	if( HasMalfunctioned() )

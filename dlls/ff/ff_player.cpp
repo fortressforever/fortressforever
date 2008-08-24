@@ -520,6 +520,8 @@ CFFPlayer::CFFPlayer()
 	m_flImmuneTime = 0.0f;
 	m_flLastOverHealthTick = 0.0f;
 	m_iActiveSabotages = 0;
+	m_iSabotagedSentries = 0;
+	m_iSabotagedDispensers = 0;
 
 	// Map guide stuff
 	m_hNextMapGuide = NULL;
@@ -740,6 +742,11 @@ void CFFPlayer::PreThink(void)
 	else if (m_afButtonReleased & IN_ATTACK2)
 		ClassSpecificSkill_Post();
 
+	if (m_iSabotagedSentries == 0)
+		m_iActiveSabotages &= ~2;
+	if (m_iSabotagedDispensers == 0)
+		m_iActiveSabotages &= ~1;
+
 	BaseClass::PreThink();
 #endif // FF_BETA_TEST_COMPILE
 }
@@ -816,6 +823,10 @@ void CFFPlayer::Precache()
 
 	// Special case
 	PrecacheScriptSound( EMP_SOUND );
+
+	// Precache sabotage sounds
+	PrecacheScriptSound( "Player.Sabotage" );
+	PrecacheScriptSound( "Player.SabotageTimedOut" );
 
 	// Flashlight - Bug #0000679: flashlight sound isn't precached
 	PrecacheScriptSound( "HL2Player.FlashLightOn" );
@@ -1298,6 +1309,8 @@ void CFFPlayer::Spawn( void )
 	m_flSpeedModifierChangeTime	= 0;
 
 	m_iActiveSabotages = 0;
+	m_iSabotagedSentries = 0;
+	m_iSabotagedDispensers = 0;
 
 	// If we get spawned, kill any primed grenades!
 	m_flServerPrimeTime = 0.0f;
@@ -1949,6 +1962,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_bInfected = 0;
 
 	m_iActiveSabotages = 0;
+	m_iSabotagedSentries = 0;
+	m_iSabotagedDispensers = 0;
 
 	//stop gas
 	m_bGassed = false;
@@ -7144,19 +7159,26 @@ void CFFPlayer::SpySabotageThink()
 		// If we are sabotaging then check if we've timed out
 		if (m_hSabotaging && m_flSpySabotageFinish <= gpGlobals->curtime)
 		{
-			ClientPrint(this, HUD_PRINTCENTER, "#FF_BUILDINGSABOTAGED");
+			CSingleUserRecipientFilter filter(this);
+			CFFEntitySystemHelper* pHelperInst = CFFEntitySystemHelper::GetInstance();
+			if(pHelperInst)
+				pHelperInst->EmitSound( filter, pHelperInst->entindex(), "Player.Sabotage" );
 
 			// Fire an event.
 			IGameEvent *pEvent = NULL;
 			if(m_hSabotaging->Classify() == CLASS_SENTRYGUN)
 			{
+				ClientPrint(this, HUD_PRINTCENTER, "#FF_SENTRYSABOTAGEREADY");
 				pEvent = gameeventmanager->CreateEvent("sentry_sabotaged");
 				m_iActiveSabotages |= 2;	// Magic numbers, I know!
+				m_iSabotagedSentries++;
 			}
 			else if(m_hSabotaging->Classify() == CLASS_DISPENSER)
 			{
+				ClientPrint(this, HUD_PRINTCENTER, "#FF_DISPENSERSABOTAGEREADY");
 				pEvent = gameeventmanager->CreateEvent("dispenser_sabotaged");
 				m_iActiveSabotages |= 1;
+				m_iSabotagedDispensers++;
 			}
 			if(pEvent)
 			{
@@ -7309,7 +7331,7 @@ void CFFPlayer::Command_SabotageSentry()
 	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassT(pSentry, CLASS_SENTRYGUN)) != NULL) //FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
 	{
 		if (pSentry->IsSabotaged() && pSentry->m_hSaboteur == this) 
-			pSentry->MaliciousSabotage(this);
+			pSentry->MaliciouslySabotage(this);
 	}
 	m_iActiveSabotages &= ~2;
 }
@@ -7325,7 +7347,7 @@ void CFFPlayer::Command_SabotageDispenser()
 	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassT(pDispenser, CLASS_DISPENSER)) != NULL) //FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
 	{
 		if (pDispenser->IsSabotaged() && pDispenser->m_hSaboteur == this) 
-			pDispenser->MaliciousSabotage(this);
+			pDispenser->MaliciouslySabotage(this);
 	}
 	m_iActiveSabotages &= ~1;
 }
@@ -7342,8 +7364,7 @@ void CFFPlayer::SpySabotageRelease()
 	//{
 	//	if (pDispenser->m_hSaboteur == this) 
 	//	{
-	//		pDispenser->m_hSaboteur = NULL;
-	//		pDispenser->m_flSabotageTime = 0;
+	//		pDispenser->RemoveSaboteur(true);
 	//	}
 	//}
 
@@ -7354,8 +7375,7 @@ void CFFPlayer::SpySabotageRelease()
 	{
 		if (pDispenser->m_hSaboteur == this) 
 		{
-			pDispenser->m_hSaboteur = NULL;
-			pDispenser->m_flSabotageTime = 0;
+			pDispenser->RemoveSaboteur(true);
 		}
 		// Next!
 		pDispenser = (CFFDispenser*)gEntList.FindEntityByClassT( pDispenser, CLASS_DISPENSER );
@@ -7371,8 +7391,7 @@ void CFFPlayer::SpySabotageRelease()
 	//	//          The SG will die after the "shooting teammates" period ends anyway.
 	//	if ( (pSentry->m_hSaboteur == this) && !pSentry->m_bShootingTeammates ) 
 	//	{
-	//		pSentry->m_hSaboteur = NULL;
-	//		pSentry->m_flSabotageTime = 0;
+	//		pSentry->RemoveSaboteur(true);
 	//	}
 	//}
 
@@ -7383,10 +7402,9 @@ void CFFPlayer::SpySabotageRelease()
 	{
 		// Jiggles: Don't remove the Saboteur if he's already triggered Malicious Sabotage mode!
 		//          The SG will die after the "shooting teammates" period ends anyway.
-		if ( (pSentry->m_hSaboteur == this) && !pSentry->m_bShootingTeammates ) 
+		if ( (pSentry->m_hSaboteur == this) && !pSentry->m_bMaliciouslySabotaged ) 
 		{
-			pSentry->m_hSaboteur = NULL;
-			pSentry->m_flSabotageTime = 0;
+			pSentry->RemoveSaboteur(true);
 		}
 		// Next!
 		pSentry = (CFFSentryGun*)gEntList.FindEntityByClassT( pSentry, CLASS_SENTRYGUN );

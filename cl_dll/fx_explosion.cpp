@@ -227,7 +227,8 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 	}
 
 	CreateDebris();
-	CreateDynamicLight();
+	if ( !(UTIL_PointContents( m_vecOrigin ) & CONTENTS_WATER) )
+		CreateDynamicLight();
 	CreateMisc();
 
 	// Now add this explosion to our tracker

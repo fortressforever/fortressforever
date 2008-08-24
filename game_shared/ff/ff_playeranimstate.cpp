@@ -279,10 +279,11 @@ int CFFPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequen
 	if ( bForceIdle )
 	{
 		// New jump animations
-		if (m_bJumping)
-		{
-			return CalcSequenceIndex("%s%s", DEFAULT_JUMP_NAME, pSuffix);
-		}
+		// jon: don't change to an upper body jump animation
+		//if (m_bJumping)
+		//{
+		//	return CalcSequenceIndex("%s%s", DEFAULT_JUMP_NAME, pSuffix);
+		//}
 
 		switch ( GetCurrentMainSequenceActivity() )
 		{
@@ -414,7 +415,7 @@ float CFFPlayerAnimState::GetCurrentMaxGroundSpeed()
 		return 0;
 }
 
-ConVar ff_jimmy_legs_time( "ffdev_jimmy_legs_time", "1.0", FCVAR_REPLICATED, "Amount of time after jump when jimmy legs kick in." );
+ConVar ff_jimmy_legs_time( "ffdev_jimmy_legs_time", "0.333", FCVAR_REPLICATED, "Amount of time after jump when jimmy legs kick in." );
 #define FF_JIMMY_LEGS_TIME ff_jimmy_legs_time.GetFloat() // jimmy legs
 
 bool CFFPlayerAnimState::HandleJumping()
@@ -431,7 +432,7 @@ bool CFFPlayerAnimState::HandleJumping()
 		// on-ground flag set right when the message comes in.
 		if ( gpGlobals->curtime - m_flJumpStartTime > 0.2f )
 		{
-			if ( m_pOuter->GetFlags() & FL_ONGROUND || m_pOuter->GetFlags() & FL_INWATER || gpGlobals->curtime - m_flJumpStartTime > FF_JIMMY_LEGS_TIME )
+			if ( m_pOuter->GetFlags() & FL_ONGROUND || m_pOuter->GetFlags() & FL_INWATER || gpGlobals->curtime - m_flJumpStartTime > FF_JIMMY_LEGS_TIME ) // FF: added FL_INWATER and jimmy legs
 			{
 				m_bJumping = false;
 				RestartMainSequence();	// Reset the animation.

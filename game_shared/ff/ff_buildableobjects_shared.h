@@ -300,12 +300,21 @@ public:
 	
 	virtual void GoLive( void );
 	virtual void Detonate( void );
+	virtual void UpdateOnRemove( void );
+	virtual void RemoveSaboteur( bool bSuppressNotification = false );
 	virtual void RemoveQuietly( void );
 
-	virtual bool CanSabotage() const { return false; }
-	virtual bool IsSabotaged() const { return false; }
-	virtual void Sabotage(CFFPlayer *pSaboteur) {};
-	virtual void MaliciousSabotage(CFFPlayer *pSaboteur) {};
+	static CFFBuildableObject *AttackerInflictorBuildable(CBaseEntity *pAttacker, CBaseEntity *pInflictor);
+
+	CHandle<CFFPlayer>	m_hSaboteur;
+	float				m_flSabotageTime;
+	bool				m_bMaliciouslySabotaged;
+
+	virtual bool CanSabotage() const;
+	virtual bool IsSabotaged() const;
+	virtual bool IsMaliciouslySabotaged() const;
+	virtual void Sabotage( CFFPlayer *pSaboteur ) {};
+	virtual void MaliciouslySabotage( CFFPlayer *pSaboteur ) { m_bMaliciouslySabotaged = true; m_flSabotageTime = gpGlobals->curtime + 8.0f; }
 	
 	virtual void Cancel( void ) 
 	{
@@ -499,7 +508,7 @@ public:
 	virtual void Spawn( void );
 	void GoLive( void );
 
-	void Detonate();
+	virtual void Detonate();
 
 	virtual Vector EyePosition( void ) { return GetAbsOrigin() + Vector( 0, 0, 4.0f ); }
 
@@ -594,14 +603,9 @@ public:
 
 	virtual void DoExplosionDamage();
 
-	CHandle<CFFPlayer>	m_hSaboteur;
-	float				m_flSabotageTime;
-
-	virtual bool CanSabotage() const;
-	virtual bool IsSabotaged() const;
 	virtual void Sabotage(CFFPlayer *pSaboteur);
-	void MaliciousSabotage(CFFPlayer *pSaboteur);
-	void Detonate();
+	virtual void MaliciouslySabotage(CFFPlayer *pSaboteur);
+	virtual void Detonate();
 
 	CNetworkVar( unsigned int, m_iAmmoPercent );
 
@@ -756,10 +760,7 @@ public:
 	Vector MuzzlePosition( void );
 	Vector RocketPosition( void );
 	Vector EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
-	
-	CHandle<CFFPlayer>	m_hSaboteur;
-	float				m_flSabotageTime;
-	bool				m_bShootingTeammates;
+
 	bool				m_bSendNailGrenHint;	// Only send the "kill sgs with nail grens" hint once per sg
 	float				m_flNextSparkTime;
 	SmokeTrail			*m_pSmokeTrail;
@@ -767,12 +768,9 @@ public:
 	float	m_flLastCloakSonarSound;
 	float	m_flCloakDistance;
 
-	virtual bool CanSabotage() const;
-	virtual bool IsSabotaged() const;
-	virtual bool IsShootingTeammates() const;
 	virtual void Sabotage(CFFPlayer *pSaboteur);
-	void MaliciousSabotage(CFFPlayer *pSaboteur);
-	void Detonate();
+	virtual void MaliciouslySabotage(CFFPlayer *pSaboteur);
+	virtual void Detonate();
 
 	static CFFSentryGun *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
@@ -865,8 +863,9 @@ public:
 
 	virtual bool CanSabotage( void ) const { return false; }
 	virtual bool IsSabotaged( void ) const { return false; }
-	virtual void Sabotage( CFFPlayer *pSaboteur ) { }
-	virtual void MaliciousSabotage( CFFPlayer *pSaboteur ) { }
+	virtual bool IsMaliciouslySabotaged( void ) const { return false; }
+	virtual void Sabotage( CFFPlayer *pSaboteur ) {};
+	virtual void MaliciouslySabotage( CFFPlayer *pSaboteur ) { m_bMaliciouslySabotaged = true; m_flSabotageTime = gpGlobals->curtime + 8.0f; }
 
 	virtual void Detonate( void );
 	virtual void DoExplosionDamage( void );

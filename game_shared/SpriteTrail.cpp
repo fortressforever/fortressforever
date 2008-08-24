@@ -413,7 +413,8 @@ void CSpriteTrail::UpdateTrail( void )
 	m_flUpdateTime = gpGlobals->curtime + ( m_flLifeTime / (float) MAX_SPRITE_TRAIL_POINTS );
 }
 
-ConVar grenadetrails("cl_grenadetrails", "1", FCVAR_ARCHIVE);
+ConVar grenadetrails("cl_grenadetrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar pipetrails("cl_pipetrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -434,6 +435,10 @@ int CSpriteTrail::DrawModel( int flags )
 
 	if (grenadetrails.GetBool() == false && 
 			pParent && pParent->Classify() >= CLASS_GREN && pParent->Classify() <= CLASS_GREN_CALTROP)
+		return 0;
+
+	if (pipetrails.GetBool() == false && 
+		pParent && pParent->Classify() >= CLASS_PIPEBOMB && pParent->Classify() <= CLASS_GLGRENADE)
 		return 0;
 
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( GetModel(), m_flFrame, GetRenderMode() );
