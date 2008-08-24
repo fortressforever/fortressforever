@@ -61,7 +61,7 @@ CLIENTEFFECT_REGISTER_END()
 //Whether or not to eject brass from weapons
 ConVar cl_ejectbrass("cl_ejectbrass", "1", FCVAR_ARCHIVE);
 
-ConVar ffdev_disablemuzzleflashes("ffdev_disablemuzzleflashes", "0", FCVAR_ARCHIVE );
+ConVar cl_disablemuzzleflashes("cl_disablemuzzleflashes", "0", FCVAR_ARCHIVE );
 
 ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED );
 
@@ -1660,7 +1660,7 @@ C_LocalTempEntity * CTempEnts::SpawnTempModel( model_t *pModel, const Vector &ve
 void CTempEnts::MuzzleFlash( int type, ClientEntityHandle_t hEntity, int attachmentIndex, bool firstPerson )
 {
 	// Mirv: Optionally disable'd muzzle flashes
-	if (ffdev_disablemuzzleflashes.GetBool())
+	if (cl_disablemuzzleflashes.GetBool())
 		return;
 
 	//DevMsg("[muzzleflash] type: %d, ent: %d, attachment: %d fp: %d\n", type, entityIndex, attachmentIndex, firstPerson );
@@ -1757,7 +1757,7 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 #else
 
 	// Mirv: Optionally disable'd muzzle flashes
-	if (ffdev_disablemuzzleflashes.GetBool())
+	if (cl_disablemuzzleflashes.GetBool())
 		return;
 
 	//DevMsg("[muzzleflash] type: %d, ent: %d, fp: %d\n", type, entityIndex, firstPerson );

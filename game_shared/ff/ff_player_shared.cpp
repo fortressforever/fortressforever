@@ -69,11 +69,11 @@ ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "5", FCVAR_REPLICATED | FCVAR
 
 ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED | FCVAR_CHEAT, "Spy must be moving at least this slow to scloak." );
 
-ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_REPLICATED );
-#define FF_SNIPER_MINPUSH sniperrifle_pushmin.GetFloat()
+//ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define FF_SNIPER_MINPUSH 2.5f // sniperrifle_pushmin.GetFloat()
 
-ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "5.5", FCVAR_REPLICATED );
-#define FF_SNIPER_MAXPUSH sniperrifle_pushmax.GetFloat()
+//ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "5.5", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define FF_SNIPER_MAXPUSH 5.5f // sniperrifle_pushmax.GetFloat()
 
 //0001279: Need convar for pipe det delay
 extern ConVar pipebomb_time_till_live;
@@ -117,11 +117,11 @@ bool CFFPlayer::FFAnim_CanMove()
 	return true;
 }
 
-ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "45", FCVAR_REPLICATED, "Base Damage for Sniper Rifle" );
-#define	SR_BASE_DAMAGE	sniperrifle_basedamage.GetFloat()
+//ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "45", FCVAR_REPLICATED | FCVAR_CHEAT, "Base Damage for Sniper Rifle" );
+#define	SR_BASE_DAMAGE 45.0f // sniperrifle_basedamage.GetFloat()
 
-ConVar sniperrifle_basedamagemax( "ffdev_sniperrifle_basedamagemax", "275", FCVAR_REPLICATED, "Base Max Damage for Sniper Rifle" );
-#define	SR_BASE_DAMAGE_MAX	sniperrifle_basedamagemax.GetFloat()
+//ConVar sniperrifle_basedamagemax( "ffdev_sniperrifle_basedamagemax", "275", FCVAR_REPLICATED | FCVAR_CHEAT, "Base Max Damage for Sniper Rifle" );
+#define	SR_BASE_DAMAGE_MAX 275.0f // sniperrifle_basedamagemax.GetFloat()
 
 void CFFPlayer::FireBullet(
 						   Vector vecSrc, 	// shooting postion

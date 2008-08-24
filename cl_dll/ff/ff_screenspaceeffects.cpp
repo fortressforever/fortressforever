@@ -257,10 +257,11 @@ void CBaseEffect::Render(int x, int y, int w, int h)
 	}
 }
 
-static ConVar ffdev_blur_enable("cl_dynamicblur", "1", FCVAR_ARCHIVE, "Enable/disable speed-based blur effect");
-static ConVar ffdev_blur_min("ffdev_dynamicblur_min", "400", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
-static ConVar ffdev_blur_range("ffdev_dynamicblur_range", "50", FCVAR_ARCHIVE);
-static ConVar cl_dynamicblur_ac("cl_dynamicblur_ac", "0", FCVAR_ARCHIVE);
+static ConVar cl_dynamicblur_ac("cl_dynamicblur_ac", "0", FCVAR_ARCHIVE, "Enable/disable assault cannon blur effect");
+
+static ConVar cl_dynamicblur("cl_dynamicblur", "1", FCVAR_ARCHIVE, "Enable/disable speed-based blur effect");
+static ConVar cl_dynamicblur_min("cl_dynamicblur_min", "400", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
+static ConVar cl_dynamicblur_range("cl_dynamicblur_range", "50", FCVAR_ARCHIVE);
 
 //-----------------------------------------------------------------------------
 // Purpose: A motion blur for concs
@@ -344,7 +345,7 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
 
 	// Must be valid, on a team and not no-clipping and alive
-	if (!ffdev_blur_enable.GetBool() || !pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || !pPlayer->IsAlive() || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
+	if (!cl_dynamicblur.GetBool() || !pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || !pPlayer->IsAlive() || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
 		return;
 
 	// Don't do anything here if the frametime is broken
@@ -371,7 +372,7 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	g_flAccumulativeAccel = clamp(g_flAccumulativeAccel, 0.0f, 10000.0f);
 
 	// Calculate the normalised blue now
-	float flBlur = (g_flAccumulativeAccel - ffdev_blur_min.GetFloat()) / ffdev_blur_range.GetFloat();
+	float flBlur = (g_flAccumulativeAccel - cl_dynamicblur_min.GetFloat()) / cl_dynamicblur_range.GetFloat();
 
 	if (pPlayer->GetFlags() & FL_ONGROUND)
 		flBlur = 0.0f;

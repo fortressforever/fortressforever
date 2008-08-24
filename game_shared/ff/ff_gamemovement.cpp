@@ -31,17 +31,17 @@
 // When changing jump height, recalculate the FF_MUL_CONSTANT!!!
 #define FF_JUMP_HEIGHT 27.5f // Modified by Mulch 10/20/2005 so we could jump on 63 but not 64 unit high stuff
 #define FF_MUL_CONSTANT 209.76177f //sqrt(2.0f * 800.0f * FF_JUMP_HEIGHT);
-//static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5" );
+//static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5", FCVAR_CHEAT );
 
-//static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED);
+//static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPMULTIPLIER 1.4f
-//static ConVar sv_trimpdownmultiplier("sv_trimpdownmultiplier", "1.2", FCVAR_REPLICATED);
+//static ConVar sv_trimpdownmultiplier("sv_trimpdownmultiplier", "1.2", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPDOWNMULTIPLIER 1.2f
 //static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
 #define SV_TRIMPMAX 5000.0f
-//static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED);
+//static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEED 550.0f
-//static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED);
+//static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
 class CBasePlayer;
@@ -66,14 +66,14 @@ public:
 	CFFGameMovement() {};
 };
 
-static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.4", FCVAR_REPLICATED);
-#define BHOP_CAP_SOFT bhop_cap_soft.GetFloat()
-static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "2.0", FCVAR_REPLICATED);
-#define BHOP_CAP_HARD bhop_cap_hard.GetFloat()
-static ConVar bhop_cap_hard_degen("ffdev_bhop_cap_hard_degen", "0.9", FCVAR_REPLICATED);
-#define	BHOP_CAP_HARD_DEGEN bhop_cap_hard_degen.GetFloat()
-static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED);
-#define BHOP_PCFACTOR bhop_pcfactor.GetFloat()
+//static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define BHOP_CAP_SOFT 1.4f // bhop_cap_soft.GetFloat()
+//static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define BHOP_CAP_HARD 2.0f // bhop_cap_hard.GetFloat()
+//static ConVar bhop_cap_hard_degen("ffdev_bhop_cap_hard_degen", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define	BHOP_CAP_HARD_DEGEN 0.9 // bhop_cap_hard_degen.GetFloat()
+//static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define BHOP_PCFACTOR 0.65 // bhop_pcfactor.GetFloat()
 
 //-----------------------------------------------------------------------------
 // Purpose: Provides TFC jump heights, trimping, doublejumps

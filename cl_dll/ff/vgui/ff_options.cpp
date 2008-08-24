@@ -1324,7 +1324,7 @@ public:
 			m_pAutoKillCheck->SetSelected( m_pAutoKillConVar->GetBool() );
 
 		if ( !m_pBlurConVar )
-			m_pBlurConVar = cvar->FindVar( "ffdev_blur_enable" );
+			m_pBlurConVar = cvar->FindVar( "cl_dynamicblur" );
 		if ( m_pBlurConVar )
 			m_pBlurCheck->SetSelected( m_pBlurConVar->GetBool() );*/
 	}
@@ -1348,7 +1348,7 @@ private:
 	ConVar			*m_pAutoKillConVar;	// Pointer to the cl_classautokill convar
 
 	CheckButton		*m_pBlurCheck;		// The enable/disable speed blur check box
-	ConVar			*m_pBlurConVar;		// Pointer to the ffdev_blur_enable convar
+	ConVar			*m_pBlurConVar;		// Pointer to the cl_dynamicblur convar
 };
 
 // Jiggles: End Miscellaneous Options Tab

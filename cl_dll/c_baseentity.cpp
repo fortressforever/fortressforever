@@ -1488,7 +1488,7 @@ void C_BaseEntity::GetShadowRenderBounds( Vector &mins, Vector &maxs, ShadowType
 // Purpose: Last received origin
 // Output : const float
 //-----------------------------------------------------------------------------
-ConVar sDebugAbsQueriesValid("ffdev_debugabsqueriesvalid", "0");
+ConVar sDebugAbsQueriesValid("ffdev_debugabsqueriesvalid", "0", FCVAR_CHEAT);
 
 const Vector& C_BaseEntity::GetAbsOrigin( void ) const
 {

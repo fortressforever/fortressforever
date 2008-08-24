@@ -29,8 +29,8 @@
 	#include "ff_player.h"
 #endif
 
-extern ConVar ffdev_ac_maxchargetime;
-#define FF_AC_MAXCHARGETIME ffdev_ac_maxchargetime.GetFloat()	// Assault Cannon Max Charge Time
+//ConVar ffdev_ac_maxchargetime( "ffdev_ac_maxchargetime", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT, "Time AC takes to reach full firing rate.", true, 1.0f, true, 3.0f );
+#define FF_AC_MAXCHARGETIME 1.5f // ffdev_ac_maxchargetime.GetFloat()
 
 //=============================================================================
 // CFFWeaponAssaultCannon
