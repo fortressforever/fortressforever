@@ -81,10 +81,10 @@ extern unsigned char g_uchRailColors[3][3];
 //ConVar ffdev_railgun_pushforce_max("ffdev_railgun_pushforce_max", "64.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
 #define RAILGUN_PUSHFORCE_MAX 64.0f // ffdev_railgun_pushforce_max.GetFloat()
 
-//ConVar ffdev_railgun_recoil_min("ffdev_railgun_recoil_min", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
-#define RAILGUN_RECOIL_MIN 1 // ffdev_railgun_recoil_min.GetInt()
-//ConVar ffdev_railgun_recoil_max("ffdev_railgun_recoil_max", "5", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
-#define RAILGUN_RECOIL_MAX 5 // ffdev_railgun_recoil_max.GetInt()
+//ConVar ffdev_railgun_recoil_min("ffdev_railgun_recoil_min", "2", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
+#define RAILGUN_RECOIL_MIN 2 // ffdev_railgun_recoil_min.GetInt()
+//ConVar ffdev_railgun_recoil_max("ffdev_railgun_recoil_max", "10", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
+#define RAILGUN_RECOIL_MAX 10 // ffdev_railgun_recoil_max.GetInt()
 
 //ConVar ffdev_railgun_resupply_interval("ffdev_railgun_resupply_interval", "4.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X seconds.");
 #define RAILGUN_RESUPPLY_INTERVAL 4.0f // ffdev_railgun_resupply_interval.GetFloat()
@@ -94,9 +94,13 @@ extern unsigned char g_uchRailColors[3][3];
 #define RAILGUN_RESUPPLY_CELLS 40 // ffdev_railgun_resupply_cells.GetInt()
 
 #ifdef CLIENT_DLL
+
+#define RAILGUN_CHARGETIMEBUFFERED_UPDATEINTERVAL 0.02f
+
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStunstick )
 CLIENTEFFECT_MATERIAL( "effects/stunstick" )
 CLIENTEFFECT_REGISTER_END()
+
 #endif
 
 //=============================================================================
@@ -123,10 +127,12 @@ public:
 	virtual void	ViewModelDrawn( C_BaseViewModel *pBaseViewModel );
 	virtual RenderGroup_t GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
 	virtual bool IsTranslucent( void )			 { return true; }
-
 private:
 	int	m_iAttachment1;
 	int m_iAttachment2;
+	float m_flTotalChargeTimeBuffered;
+	float m_flClampedChargeTimeBuffered;
+	float m_flChargeTimeBufferedNextUpdate;
 #endif	
 
 public:
@@ -199,10 +205,11 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 
 #ifdef GAME_DLL
 	m_flNextResupply = 0.0f;
-#endif
-
-#ifdef CLIENT_DLL
+#else
 	m_iAttachment1 = m_iAttachment2 = -1;
+
+	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
+	m_flChargeTimeBufferedNextUpdate = 0.0f;
 
 	m_colorMuzzleDLight.r = g_uchRailColors[0][0];
 	m_colorMuzzleDLight.g = g_uchRailColors[0][1];
@@ -224,6 +231,9 @@ bool CFFWeaponRailgun::Deploy( void )
 #ifdef GAME_DLL
 	// resupply every X seconds with the railgun out
 	m_flNextResupply = gpGlobals->curtime + RAILGUN_RESUPPLY_INTERVAL;
+#else
+	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
+	m_flChargeTimeBufferedNextUpdate = 0.0f;
 #endif
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_ZEROCHARGE;
@@ -243,6 +253,11 @@ bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 	m_iAmmoUsed = 0;
 
 	m_flRevSoundNextUpdate = 0.0f;
+
+#ifdef CLIENT_DLL
+	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
+	m_flChargeTimeBufferedNextUpdate = 0.0f;
+#endif
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_ZEROCHARGE;
 
@@ -329,10 +344,11 @@ void CFFWeaponRailgun::Fire( void )
 
 	const int iDamageRadius = 100;
 	CFFProjectileRail *pRail = CFFProjectileRail::CreateRail( this, vecSrc, pPlayer->EyeAngles(), pPlayer, flDamage, iDamageRadius, flSpeed, m_flClampedChargeTime );	
-	pRail;
 
 #ifdef GAME_DLL
 	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_RAILGUN, pRail);
+#else
+	pRail = NULL;
 #endif
 
 	// play a different sound for a fully charged shot
@@ -349,7 +365,7 @@ void CFFWeaponRailgun::Fire( void )
 	// Player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
-	pPlayer->ViewPunch( -QAngle( RAILGUN_RECOIL_MIN + ((RAILGUN_RECOIL_MAX - RAILGUN_RECOIL_MIN) * m_flClampedChargeTime), 0, 0 ) );
+	pPlayer->ViewPunch( -QAngle( RAILGUN_RECOIL_MIN + ((RAILGUN_RECOIL_MAX - RAILGUN_RECOIL_MIN) * flPercent), 0, 0 ) );
 
 	// cycletime is based on charge level
 	if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE || pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0)
@@ -365,6 +381,10 @@ void CFFWeaponRailgun::Fire( void )
 	// reset these variables
 	m_flStartTime = m_flLastUpdate = -1.0f;
 	m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
+#ifdef CLIENT_DLL
+	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
+	m_flChargeTimeBufferedNextUpdate = 0.0f;
+#endif
 	m_iAmmoUsed = 0;
 }
 
@@ -373,7 +393,7 @@ void CFFWeaponRailgun::Fire( void )
 //----------------------------------------------------------------------------
 void CFFWeaponRailgun::ItemPostFrame( void )
 {
-	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
+	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if (!pPlayer)
 		return;
@@ -385,11 +405,14 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 		CANCEL_IF_BUILDING();
 
 		// Not currently charging, but wanting to start it up
-		if (m_iAmmoUsed < 1 && m_flNextPrimaryAttack < gpGlobals->curtime && pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0)
+		if (m_iAmmoUsed < 1 && m_flNextPrimaryAttack <= gpGlobals->curtime && pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0)
 		{
 			m_flStartTime = m_flLastUpdate = gpGlobals->curtime;
 			m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
-			m_bPlayRevSound = true;
+#ifdef CLIENT_DLL
+			m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
+			m_flChargeTimeBufferedNextUpdate = 0.0f;
+#endif
 
 #ifdef GAME_DLL
 			// remove ammo immediately
@@ -401,22 +424,40 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 
 		if (m_iAmmoUsed > 0)
 		{
-			PlayRevSound();
-
 			m_flTotalChargeTime += gpGlobals->curtime - m_flLastUpdate;
 			m_flLastUpdate = gpGlobals->curtime;
 
-			float flMaxChargeTime = RAILGUN_MAXCHARGETIME;
-			m_flClampedChargeTime = clamp(gpGlobals->curtime - m_flStartTime, 0, flMaxChargeTime);
+			// curtime - start time instead of total time, because start time can change if you don't have enough ammo to get to full charge
+			m_flClampedChargeTime = clamp(gpGlobals->curtime - m_flStartTime, 0, RAILGUN_MAXCHARGETIME);
+
+			float flTempTotalChargeTime = 0.0f;
+			float flTempClampedChargeTime = 0.0f;
+
+#ifdef GAME_DLL
+			flTempTotalChargeTime = m_flTotalChargeTime;
+			flTempClampedChargeTime = m_flClampedChargeTime;
+#else
+			// create a little buffer so some client stuff can be more smooth
+			if (m_flChargeTimeBufferedNextUpdate <= gpGlobals->curtime)
+			{
+				m_flChargeTimeBufferedNextUpdate = gpGlobals->curtime + RAILGUN_CHARGETIMEBUFFERED_UPDATEINTERVAL;
+				flTempTotalChargeTime = m_flTotalChargeTimeBuffered = m_flTotalChargeTime;
+				flTempClampedChargeTime = m_flClampedChargeTimeBuffered = m_flClampedChargeTime;
+			}
+#endif
+
+			if (flTempClampedChargeTime > 0.0f && !m_bPlayRevSound)
+				m_bPlayRevSound = true;
+
+			PlayRevSound();
 
 			if ( pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0 )
 			{
-
-				if ( (m_flClampedChargeTime >= flMaxChargeTime * 0.5f && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE ) || (m_flClampedChargeTime >= flMaxChargeTime && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE ) )
+				if ( (flTempClampedChargeTime >= RAILGUN_MAXCHARGETIME * 0.5f && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE) || (flTempClampedChargeTime >= RAILGUN_MAXCHARGETIME && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE) )
 				{
 					// play a charge sound
-					// it's very important that half-charge is SPECIAL2 and full-charge is SPECIAL3
-					WeaponSound(WeaponSound_t(SPECIAL1 + int(m_flClampedChargeTime)));
+					// it's very important that half-charge is SPECIAL2 and full-charge is SPECIAL3 ( as in right after SPECIAL1 [as in 1, 2, 3] )
+					WeaponSound(WeaponSound_t(SPECIAL1 + int(flTempClampedChargeTime)));
 #ifdef GAME_DLL
 					// remove additional ammo at each charge level
 					pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
@@ -431,12 +472,12 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 			else if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE)
 			{
 				// doing this so you can have 2 ammo and get halfway charged, but won't instantly become fully charged when you get more ammo
-				m_flClampedChargeTime = flMaxChargeTime / 2;
+				m_flClampedChargeTime = RAILGUN_MAXCHARGETIME * 0.5f;
 				m_flStartTime = gpGlobals->curtime - m_flClampedChargeTime;
 			}
 
 			// check if it's been overcharged
-			if (RAILGUN_OVERCHARGETIME < m_flTotalChargeTime )
+			if (RAILGUN_OVERCHARGETIME <= flTempTotalChargeTime )
 			{
 #ifdef GAME_DLL
 				// deal damage
@@ -448,17 +489,23 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				// give cells on overcharge
 				pPlayer->GiveAmmo( RAILGUN_RESUPPLY_CELLS, AMMO_CELLS, true );
 #endif
-				// play an overcharge sound
-				WeaponSound(BURST); // this might have to stay as EmitSound so it plays even if you die from overcharging
-				//EmitSound(GetFFWpnData().aShootSounds[BURST]);
-
 				m_flStartTime = m_flLastUpdate = -1.0f;
 				m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
+
+#ifdef CLIENT_DLL
+				m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
+				m_flChargeTimeBufferedNextUpdate = 0.0f;
+#endif
+
 				m_iAmmoUsed = 0;
 
 				m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_OVERCHARGE;
 
 				StopRevSound();
+
+				// play an overcharge sound
+				WeaponSound(BURST); // this might have to stay as EmitSound so it plays even if you die from overcharging
+				//EmitSound(GetFFWpnData().aShootSounds[BURST]);
 			}
 		}
 		// just a little extra fail-safe shit
@@ -514,12 +561,18 @@ void CFFWeaponRailgun::PlayRevSound()
 		m_paramsRevSound.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL;
 	}
 
-	float flPercent = m_flClampedChargeTime / RAILGUN_MAXCHARGETIME;
+	float flPercent = 0.0f;
+#ifdef GAME_DLL
+	flPercent = m_flClampedChargeTime / RAILGUN_MAXCHARGETIME;
+#else
+	flPercent = m_flClampedChargeTimeBuffered / RAILGUN_MAXCHARGETIME;
+#endif
+
 
 	m_paramsRevSound.m_flVolume = RAILGUN_REVSOUND_VOLUME_LOW + ((RAILGUN_REVSOUND_VOLUME_HIGH - RAILGUN_REVSOUND_VOLUME_LOW) * flPercent);
 	m_paramsRevSound.m_nPitch = RAILGUN_REVSOUND_PITCH_LOW + ((RAILGUN_REVSOUND_PITCH_HIGH - RAILGUN_REVSOUND_PITCH_LOW) * flPercent);
 
-	CPASAttenuationFilter filter( GetOwner(), m_paramsRevSound.m_SoundLevel );
+	CPASAttenuationFilter filter( this, m_paramsRevSound.m_SoundLevel );
 	if ( IsPredicted() )
 	{
 		filter.UsePredictionRules();
@@ -537,7 +590,7 @@ void CFFWeaponRailgun::StopRevSound()
 
 	StopSound( entindex(), shootsound );
 	m_bPlayRevSound = false;
-	m_flRevSoundNextUpdate = m_flNextPrimaryAttack - RAILGUN_REVSOUND_UPDATEINTERVAL;
+	m_flRevSoundNextUpdate = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_ZEROCHARGE - RAILGUN_REVSOUND_UPDATEINTERVAL;
 }
 
 /*
@@ -573,8 +626,13 @@ void CFFWeaponRailgun::RailBeamEffect( void )
 //-----------------------------------------------------------------------------
 void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 {
+	float flTempClampedChargeTime = m_flClampedChargeTime;
+#ifdef CLIENT_DLL
+	flTempClampedChargeTime = m_flClampedChargeTimeBuffered;
+#endif
+
 	// Not charging at all or even much, so no need to draw shit
-	if (m_iAmmoUsed < 1 && m_flClampedChargeTime < 0.1)
+	if (m_iAmmoUsed < 1 && flTempClampedChargeTime < 0.1)
 		return;
 
 	// We'll get these done and out of the way
@@ -595,7 +653,7 @@ void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 	::FormatViewModelAttachment(vecEnd, true);
 	::FormatViewModelAttachment(vecMuzzle, true);
 
-	float flChargeAmount = clamp( m_flClampedChargeTime / RAILGUN_MAXCHARGETIME, 0.0f, 1.0f);
+	float flChargeAmount = clamp( flTempClampedChargeTime / RAILGUN_MAXCHARGETIME, 0.0f, 1.0f);
 	flChargeAmount = sqrtf( flChargeAmount );
 
 #define FLUTTER_AMOUNT	(1.0f * flChargeAmount)
