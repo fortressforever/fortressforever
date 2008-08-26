@@ -136,6 +136,8 @@ public:
 
 #ifdef GAME_DLL
 
+	void RailgunEmitSound( const char* szSoundName );
+
 	bool m_bPlayRevSound;
 	float m_flRevSoundNextUpdate;
 	EmitSound_t m_paramsRevSound;
@@ -323,7 +325,7 @@ void CFFWeaponRailgun::Fire( void )
 	VectorNormalizeFast( vecForward );
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	//Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vecForward * 16.0f + vecRight * 5.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
+	//Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vecForward * 8.0f + vecRight * 5.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 22.0f);
 
 //#ifdef CLIENT_DLL
 //	// For now, fake the bullet source on the client
@@ -373,9 +375,9 @@ void CFFWeaponRailgun::Fire( void )
 
 	// play a different sound for a fully charged shot
 	if ( m_flClampedChargeTime < RAILGUN_MAXCHARGETIME )
-		EmitSound(GetFFWpnData().aShootSounds[SINGLE]);
+		RailgunEmitSound(GetFFWpnData().aShootSounds[SINGLE]);
 	else
-		EmitSound(GetFFWpnData().aShootSounds[WPN_DOUBLE]);
+		RailgunEmitSound(GetFFWpnData().aShootSounds[WPN_DOUBLE]);
 
 	if (m_bMuzzleFlash)
 		pPlayer->DoMuzzleFlash();
@@ -462,7 +464,7 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				{
 					// play a charge sound
 					// it's very important that half-charge is SPECIAL2 and full-charge is SPECIAL3 ( as in right after SPECIAL1 [as in 1, 2, 3] )
-					EmitSound(GetFFWpnData().aShootSounds[WeaponSound_t(SPECIAL1 + int(m_flClampedChargeTime))]);
+					RailgunEmitSound(GetFFWpnData().aShootSounds[WeaponSound_t(SPECIAL1 + int(m_flClampedChargeTime))]);
 
 					// remove additional ammo at each charge level
 					pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
@@ -503,7 +505,7 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				StopRevSound();
 
 				// play an overcharge sound
-				EmitSound(GetFFWpnData().aShootSounds[BURST]);
+				RailgunEmitSound(GetFFWpnData().aShootSounds[BURST]);
 			}
 		}
 		// just a little extra fail-safe shit
@@ -547,6 +549,23 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 
 #endif
 }
+
+#ifdef GAME_DLL
+void CFFWeaponRailgun::RailgunEmitSound( const char *szSoundName )
+{
+	CSoundParameters params;
+	if ( !CBaseEntity::GetParametersForSound( szSoundName, params, NULL ) || !GetOwner() )
+		return;
+
+	CPASAttenuationFilter filter( GetOwner(), params.soundlevel );
+	EmitSound_t ep;
+	ep.m_pSoundName = params.soundname;
+	ep.m_flVolume = params.volume;
+	ep.m_SoundLevel = params.soundlevel;
+	ep.m_nPitch = params.pitch;
+	GetOwner()->EmitSound( filter, GetOwner()->entindex(), ep );
+}
+#endif
 
 void CFFWeaponRailgun::PlayRevSound()
 {
