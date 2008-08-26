@@ -479,10 +479,7 @@ void CFFSentryGun::OnActiveThink( void )
 
 	// We've just finished being maliciously sabotaged, so remove enemy here
 	if (m_bMaliciouslySabotaged && m_flSabotageTime <= gpGlobals->curtime)
-	{
-		m_bMaliciouslySabotaged = false;
 		enemy = NULL;
-	}
 
 	// Enemy is no longer targettable
 	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive()
@@ -1485,7 +1482,7 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 {
 	VPROF_BUDGET( "CFFSentryGun::Sabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	m_flSabotageTime = gpGlobals->curtime + 120.0f;
+	m_flSabotageTime = gpGlobals->curtime + 60.0f;
 	m_hSaboteur = pSaboteur;
 
 	// AfterShock - scoring system: 100 points for sabotage SG

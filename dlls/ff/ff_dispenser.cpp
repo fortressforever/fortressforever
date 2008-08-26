@@ -548,7 +548,7 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 {
 	VPROF_BUDGET( "CFFDispenser::Sabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	m_flSabotageTime = gpGlobals->curtime + 120.0f;
+	m_flSabotageTime = gpGlobals->curtime + 60.0f;
 	m_hSaboteur = pSaboteur;
 
 	// AfterShock - scoring system: 25 points for sabotage dispenser
@@ -566,7 +566,16 @@ void CFFDispenser::MaliciouslySabotage(CFFPlayer *pSaboteur)
 
 	BaseClass::MaliciouslySabotage( pSaboteur );
 
-	Detonate();
+	// Explode SG on sabotage finish
+	// TODO: create custom death message for it
+	if ( m_hSaboteur )
+		TakeDamage( CTakeDamageInfo( this, m_hSaboteur, 10000, DMG_GENERIC ) );
+	else	// Jiggles: I'm not sure what would happen if the Saboteur leaves the server before this
+	{
+		CFFPlayer *pOwner = ToFFPlayer( m_hOwner.Get() );
+		if ( pOwner )
+			TakeDamage( CTakeDamageInfo( this, pOwner, 10000, DMG_GENERIC ) );
+	}
 
 	Warning("Dispenser maliciously sabotaged\n");
 }

@@ -879,7 +879,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	//	return 0;
 
 	// we now pass the buildable itself instead of the owner.  The FCanTakeDamage function sorts it all out for us.
-	if( !FFGameRules()->FCanTakeDamage( this, adjustedDamage.GetAttacker() ) )
+	if( !FFGameRules()->FCanTakeDamage( this, adjustedDamage.GetAttacker() ) && !FFGameRules()->FCanTakeDamage( this, adjustedDamage.GetInflictor() ) )
 		return 0;
 
 	// DrEvil: The following is fucking wrong, don't add it back.
