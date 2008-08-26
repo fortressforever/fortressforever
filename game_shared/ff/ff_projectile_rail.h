@@ -56,7 +56,7 @@ public:
 	virtual void OnDataChanged(DataUpdateType_t type);
 	virtual void ClientThink( void );
 
-	virtual const char *GetFlightSound() { return "Rail.Fly"; }
+	//virtual const char *GetFlightSound() { return "Rail.Fly"; }
 
 	CSmartPtr<CSimpleEmitter> m_hEmitter; // particle emitter
 	PMaterialHandle m_hMaterial; // material handle for the particles
