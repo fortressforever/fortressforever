@@ -115,6 +115,8 @@ void CFFProjectileRail::Precache( void )
 
 	PrecacheScriptSound( "Rail.HitBody" );
 	PrecacheScriptSound( "Rail.HitWorld" );
+	PrecacheScriptSound( "Rail.Bounce1" );
+	PrecacheScriptSound( "Rail.Bounce2" );
 
 	BaseClass::Precache();
 }
@@ -366,12 +368,14 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 					if( m_iNumBounces == 1 )
 					{
 						//DispatchEffect("RailBounce1", data);
+						EmitSound( "Rail.Bounce1" );
 					}
 					else if ( m_iNumBounces == 2 )
 					{
 						//DispatchEffect("RailBounce2", data);
+						EmitSound( "Rail.Bounce2" );
 					}
-				}				
+				}
 			}
 
 			// we didn't bounce, so it's time to die
