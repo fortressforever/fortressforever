@@ -606,8 +606,6 @@ void CFFBuildableObject::OnObjectThink( void )
 {
 	VPROF_BUDGET( "CFFBuildableObject::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	SetNextThink( gpGlobals->curtime + 0.1f );
-
 	float flTimeLeft = m_flSabotageTime - gpGlobals->curtime;
 
 	if ( m_flSabotageTime <= gpGlobals->curtime )
