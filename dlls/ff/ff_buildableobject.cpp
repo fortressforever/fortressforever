@@ -154,6 +154,8 @@ IMPLEMENT_SERVERCLASS_ST( CFFBuildableObject, DT_FFBuildableObject )
 	SendPropInt( SENDINFO( m_iHealth ) ),
 	SendPropInt( SENDINFO( m_iMaxHealth ) ),
 	SendPropInt( SENDINFO( m_bBuilt ) ),
+	SendPropFloat( SENDINFO( m_flSabotageTime ) ),
+	SendPropInt( SENDINFO( m_iSaboteurTeamNumber ) ),
 END_SEND_TABLE( )
 
 // Start of our data description for the class
@@ -240,6 +242,7 @@ CFFBuildableObject::CFFBuildableObject( void )
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
 	m_bMaliciouslySabotaged = false;
+	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
 }
 
 /**
@@ -396,6 +399,7 @@ void CFFBuildableObject::GoLive( void )
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
 	m_bMaliciouslySabotaged = false;
+	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
 }
 
 /**
@@ -506,6 +510,7 @@ void CFFBuildableObject::RemoveSaboteur( bool bSuppressNotification )
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
 	m_bMaliciouslySabotaged = false;
+	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
 }
 
 /**
@@ -601,8 +606,28 @@ void CFFBuildableObject::OnObjectThink( void )
 {
 	VPROF_BUDGET( "CFFBuildableObject::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
+	SetNextThink( gpGlobals->curtime + 0.1f );
+
+	float flTimeLeft = m_flSabotageTime - gpGlobals->curtime;
+
 	if ( m_flSabotageTime <= gpGlobals->curtime )
 		RemoveSaboteur(); // don't worry , this function checks if saboteur even exists
+	else if ( m_hSaboteur && flTimeLeft > 0.0f && flTimeLeft <= 6.66f && !IsMaliciouslySabotaged() )
+	{
+		char sztimeleft[10];
+		Q_snprintf( sztimeleft, sizeof( sztimeleft ), "%.2f", flTimeLeft );
+
+		switch( Classify() )
+		{
+		case CLASS_DISPENSER:
+			ClientPrint( m_hSaboteur, HUD_PRINTCENTER, "#FF_DISPENSERSABOTAGERESETTING", sztimeleft );
+			break;
+
+		case CLASS_SENTRYGUN:
+			ClientPrint( m_hSaboteur, HUD_PRINTCENTER, "#FF_SENTRYSABOTAGERESETTING", sztimeleft );
+			break;
+		}
+	}
 
 	// Check for "malfunctions"
 	if( HasMalfunctioned() )
@@ -879,7 +904,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	//	return 0;
 
 	// we now pass the buildable itself instead of the owner.  The FCanTakeDamage function sorts it all out for us.
-	if( !FFGameRules()->FCanTakeDamage( this, adjustedDamage.GetAttacker() ) && !FFGameRules()->FCanTakeDamage( this, adjustedDamage.GetInflictor() ) )
+	if( !FFGameRules()->FCanTakeDamage( this, adjustedDamage.GetAttacker() ) )
 		return 0;
 
 	// DrEvil: The following is fucking wrong, don't add it back.

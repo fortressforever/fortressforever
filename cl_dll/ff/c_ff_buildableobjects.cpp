@@ -51,8 +51,10 @@
 //		Added man cannon stuff
 
 #include "cbase.h"
+#include "c_playerresource.h"
 #include "ff_buildableobjects_shared.h"
 #include "c_ff_timers.h"
+#include "ff_gamerules.h"
 
 #include "materialsystem/IMaterialSystem.h"
 #include "materialsystem/IMesh.h"
@@ -116,6 +118,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFBuildableObject, DT_FFBuildableObject, CFFBuildabl
 	RecvPropInt( RECVINFO( m_iHealth ) ),
 	RecvPropInt( RECVINFO( m_iMaxHealth ) ),
 	RecvPropInt( RECVINFO( m_bBuilt ) ),
+	RecvPropFloat( RECVINFO( m_flSabotageTime ) ),
+	RecvPropInt( RECVINFO( m_iSaboteurTeamNumber ) ),
 END_RECV_TABLE( )
 
 //-----------------------------------------------------------------------------
@@ -125,6 +129,8 @@ C_FFBuildableObject::C_FFBuildableObject( void )
 {
 	// Initialize
 	m_bClientSideOnly = false;
+	m_flSabotageTime = 0.0f;
+	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
 }
 
 //-----------------------------------------------------------------------------
@@ -200,11 +206,50 @@ void C_FFBuildableObject::ClientThink( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Two pass so that the player icons can be drawn
+//-----------------------------------------------------------------------------
+RenderGroup_t C_FFBuildableObject::GetRenderGroup()
+{
+	if ( m_flSabotageTime > 0.0f )
+		return RENDER_GROUP_TWOPASS;
+
+	return BaseClass::GetRenderGroup();
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Using this to draw any "can't build" type glyphs
 //-----------------------------------------------------------------------------
 int C_FFBuildableObject::DrawModel( int flags )
 {
-	
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	// render a spy icon during the transparency pass
+	if ( flags & STUDIO_TRANSPARENCY && pPlayer && !pPlayer->IsObserver() && m_flSabotageTime > 0.0f )
+	{
+		if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), m_iSaboteurTeamNumber ) == GR_TEAMMATE )
+		{
+			// Thanks mirv!
+			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_CLIENT_EFFECTS );
+			if( pMaterial )
+			{
+				materials->Bind( pMaterial );
+
+				// The color is based on the saboteur's team
+				Color clr = Color( 255, 255, 255, 255 );
+
+				if( g_PR )
+				{
+					float flSabotageTime = clamp( m_flSabotageTime - gpGlobals->curtime, 0, FF_BUILD_SABOTAGE_TIMEOUT );
+					int iAlpha = 64 + (191 * (flSabotageTime / FF_BUILD_SABOTAGE_TIMEOUT) );
+					clr.SetColor( g_PR->GetTeamColor( m_iSaboteurTeamNumber ).r(), g_PR->GetTeamColor( m_iSaboteurTeamNumber ).g(), g_PR->GetTeamColor( m_iSaboteurTeamNumber ).b(), iAlpha );
+				}
+
+				color32 c = { clr.r(), clr.g(), clr.b(), clr.a() };
+				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z + 64.0f ), 15.0f, 15.0f, c );
+			}
+		}
+	}
+
 	if( m_bClientSideOnly )
 	{
 		// Draw our glyphs
