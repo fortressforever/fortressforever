@@ -2121,9 +2121,9 @@ void CBasePlayer::PlayerDeathThink(void)
 	// the old version just spammed an empty message at the player when it was time to spawn. -> Defrag
 	if( fTimeDelta > 0.0f )
 	{
-		char szSpawnTime[ 256 ];
-		Q_snprintf( szSpawnTime, sizeof( szSpawnTime ), "Can't spawn for %.2f seconds.", m_flDeathTime + m_flNextSpawnDelay - gpGlobals->curtime );
-		ClientPrint( this, HUD_PRINTCENTER, szSpawnTime );
+		char szSpawnTime[ 10 ];
+		Q_snprintf( szSpawnTime, sizeof( szSpawnTime ), "%.2f", m_flDeathTime + m_flNextSpawnDelay - gpGlobals->curtime );
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTSPAWN", szSpawnTime );
 	}
 
 	// display the ready to spawn message for two seconds after the respawn timer has expired

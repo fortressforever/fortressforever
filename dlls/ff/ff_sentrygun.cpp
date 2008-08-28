@@ -347,6 +347,7 @@ void CFFSentryGun::GoLive( void )
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
 	m_bMaliciouslySabotaged = false;
+	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
 
 	// Figure out if we're under water or not
 	if( UTIL_PointContents( GetAbsOrigin() + Vector( 0, 0, 48 ) ) & CONTENTS_WATER )
@@ -1482,8 +1483,12 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 {
 	VPROF_BUDGET( "CFFSentryGun::Sabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	m_flSabotageTime = gpGlobals->curtime + 60.0f;
+	if ( !pSaboteur )
+		return;
+
+	m_flSabotageTime = gpGlobals->curtime + FF_BUILD_SABOTAGE_TIMEOUT;
 	m_hSaboteur = pSaboteur;
+	m_iSaboteurTeamNumber = m_hSaboteur->GetTeamNumber();
 
 	// AfterShock - scoring system: 100 points for sabotage SG
 	pSaboteur->AddFortPoints(100, "#FF_FORTPOINTS_SABOTAGESG");
@@ -1501,6 +1506,9 @@ void CFFSentryGun::MaliciouslySabotage(CFFPlayer *pSaboteur)
 	VPROF_BUDGET( "CFFSentryGun::MaliciousSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	BaseClass::MaliciouslySabotage( pSaboteur );
+
+	if ( !pSaboteur )
+		return;
 
 	EmitSound( "Sentry.SabotageActivate" );
 

@@ -206,6 +206,7 @@ void CFFDispenser::GoLive( void )
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
 	m_bMaliciouslySabotaged = false;
+	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
 
 	// Figure out if we're under water or not
 	if( UTIL_PointContents( GetAbsOrigin() + Vector( 0, 0, 48 ) ) & CONTENTS_WATER )
@@ -548,8 +549,12 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 {
 	VPROF_BUDGET( "CFFDispenser::Sabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	m_flSabotageTime = gpGlobals->curtime + 60.0f;
+	if ( !pSaboteur )
+		return;
+
+	m_flSabotageTime = gpGlobals->curtime + FF_BUILD_SABOTAGE_TIMEOUT;
 	m_hSaboteur = pSaboteur;
+	m_iSaboteurTeamNumber = m_hSaboteur->GetTeamNumber();
 
 	// AfterShock - scoring system: 25 points for sabotage dispenser
 	pSaboteur->AddFortPoints(25, "#FF_FORTPOINTS_SABOTAGEDISPENSER");
@@ -566,10 +571,13 @@ void CFFDispenser::MaliciouslySabotage(CFFPlayer *pSaboteur)
 
 	BaseClass::MaliciouslySabotage( pSaboteur );
 
+	if ( !pSaboteur )
+		return;
+
 	// Explode SG on sabotage finish
 	// TODO: create custom death message for it
-	if ( m_hSaboteur )
-		TakeDamage( CTakeDamageInfo( this, m_hSaboteur, 10000, DMG_GENERIC ) );
+	if ( pSaboteur )
+		TakeDamage( CTakeDamageInfo( this, pSaboteur, 10000, DMG_GENERIC ) );
 	else	// Jiggles: I'm not sure what would happen if the Saboteur leaves the server before this
 	{
 		CFFPlayer *pOwner = ToFFPlayer( m_hOwner.Get() );

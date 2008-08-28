@@ -128,6 +128,8 @@
 #define FF_SOUND_BUILD		0	// Don't change these two values
 #define FF_SOUND_EXPLODE	1
 
+#define FF_BUILD_SABOTAGE_TIMEOUT 90.0f
+
 // Currently only the server uses these...
 #ifdef CLIENT_DLL 
 #else
@@ -274,6 +276,7 @@ protected:
 
 #ifdef CLIENT_DLL
 public:
+	virtual RenderGroup_t GetRenderGroup();
 	virtual int  DrawModel( int flags );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual void ClientThink( void );
@@ -289,7 +292,9 @@ public:
 protected:
 	bool				m_bClientSideOnly;
 	BuildInfoResult_t	m_hBuildError;
-	bool m_bBuilt;
+	bool				m_bBuilt;
+	float				m_flSabotageTime;
+	int					m_iSaboteurTeamNumber;
 
 #else
 public:
@@ -307,8 +312,9 @@ public:
 	static CFFBuildableObject *AttackerInflictorBuildable(CBaseEntity *pAttacker, CBaseEntity *pInflictor);
 
 	CHandle<CFFPlayer>	m_hSaboteur;
-	float				m_flSabotageTime;
+	CNetworkVar(float, m_flSabotageTime);
 	bool				m_bMaliciouslySabotaged;
+	CNetworkVar(int, m_iSaboteurTeamNumber);
 
 	virtual bool CanSabotage() const;
 	virtual bool IsSabotaged() const;
