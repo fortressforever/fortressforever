@@ -19,7 +19,7 @@ using namespace vgui;
 #include <vgui/ILocalize.h>
 
 extern ConVar cl_drawhud;
-static ConVar hud_messages("hud_messages", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Toggle visible FF messages on the HUD.");
+ConVar hud_messages("hud_messages", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Toggle visible FF messages on the HUD.");
 
 class CHudGameMessage : public CHudElement, public vgui::Panel
 {
