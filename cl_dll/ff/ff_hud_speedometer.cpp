@@ -27,7 +27,7 @@
 
 using namespace vgui;
 
-static ConVar hud_speedometer( "hud_speedometer", "0", 0, "Toggle speedometer. Disclaimer: We are not responsible if you get a ticket.");
+static ConVar hud_speedometer( "hud_speedometer", "0", FCVAR_ARCHIVE, "Toggle speedometer. Disclaimer: We are not responsible if you get a ticket.");
 
 class CHudSpeedometer : public CHudElement, public CHudNumericDisplay
 {

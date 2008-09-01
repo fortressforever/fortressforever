@@ -29,7 +29,7 @@
 #define CHAT_WIDTH_PERCENTAGE 0.6f
 
 #ifndef _XBOX
-ConVar hud_saytext_time( "hud_saytext_time", "12", 0 );
+ConVar hud_saytext_time( "hud_saytext_time", "12", FCVAR_ARCHIVE );
 
 //-----------------------------------------------------------------------------
 // Purpose: 

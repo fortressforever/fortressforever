@@ -22,7 +22,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", 0 );
+static ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
 
 // Player entries in a death notice
 struct DeathNoticePlayer

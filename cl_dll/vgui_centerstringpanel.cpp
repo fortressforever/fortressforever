@@ -147,11 +147,21 @@ void CCenterStringLabel::SetTextColor( int r, int g, int b, int a )
 	SetFgColor( Color( r, g, b, a ) );
 }
 
+// --> FF
+extern ConVar cl_drawhud;
+extern ConVar hud_messages;
+// <-- FF
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CCenterStringLabel::Print( char *text )
 {
+	// --> FF
+	if ( !cl_drawhud.GetBool() || !hud_messages.GetBool() )
+		return;
+	// <-- FF
+
 	SetText( text );
 	
 	m_flCentertimeOff = scr_centertime.GetFloat() + gpGlobals->curtime;
@@ -162,6 +172,11 @@ void CCenterStringLabel::Print( char *text )
 //-----------------------------------------------------------------------------
 void CCenterStringLabel::Print( wchar_t *text )
 {
+	// --> FF
+	if ( !cl_drawhud.GetBool() || !hud_messages.GetBool() )
+		return;
+	// <-- FF
+
 	SetText( text );
 	
 	m_flCentertimeOff = scr_centertime.GetFloat() + gpGlobals->curtime;
