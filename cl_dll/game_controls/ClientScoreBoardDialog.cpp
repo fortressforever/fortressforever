@@ -176,6 +176,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 CClientScoreBoardDialog::~CClientScoreBoardDialog()
 {
 	gameeventmanager->RemoveListener(this);
+	g_pScoreboard = NULL;
 }
 
 // --> Mirv: Catches the set channel button

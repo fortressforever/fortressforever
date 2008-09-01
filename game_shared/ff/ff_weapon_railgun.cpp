@@ -253,14 +253,14 @@ bool CFFWeaponRailgun::Deploy( void )
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_ZEROCHARGE;
 
-	StopRevSound();
-
 #else
 
 	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
 	m_flChargeTimeBufferedNextUpdate = 0.0f;
 
 #endif
+
+	StopRevSound();
 
 	return BaseClass::Deploy();
 }
@@ -280,13 +280,14 @@ bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_ZEROCHARGE;
 
-	StopRevSound();
-
 #else
 
 	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
 	m_flChargeTimeBufferedNextUpdate = 0.0f;
+
 #endif
+
+	StopRevSound();
 
 	return BaseClass::Holster( pSwitchingTo );
 }
