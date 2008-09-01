@@ -127,6 +127,7 @@ public:
 	virtual void	Precache( void );
 	virtual void	Fire( void );
 	virtual void	ItemPostFrame( void );
+	virtual void	UpdateOnRemove( void );
 
 	virtual FFWeaponID GetWeaponID( void ) const { return FF_WEAPON_RAILGUN; }
 
@@ -233,6 +234,33 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 	m_colorMuzzleDLight.b = g_uchRailColors[0][2];
 
 #endif
+}
+
+//----------------------------------------------------------------------------
+// Purpose: 
+//----------------------------------------------------------------------------
+void CFFWeaponRailgun::UpdateOnRemove( void )
+{
+#ifdef GAME_DLL
+
+	m_flStartTime = m_flLastUpdate = -1.0f;
+	m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
+	m_iAmmoUsed = 0;
+
+	m_flRevSoundNextUpdate = 0.0f;
+
+	m_flNextPrimaryAttack = gpGlobals->curtime + RAILGUN_COOLDOWNTIME_ZEROCHARGE;
+
+#else
+
+	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
+	m_flChargeTimeBufferedNextUpdate = 0.0f;
+
+#endif
+
+	StopRevSound();
+
+	BaseClass::UpdateOnRemove();
 }
 
 //----------------------------------------------------------------------------
