@@ -14,12 +14,14 @@ VCPM_OBJ_DIR=$(BUILD_OBJ_DIR)/vcpm
 TIER1_OBJ_DIR=$(BUILD_OBJ_DIR)/vcpm/public
 
 #we use custome CFLAGS because the base ones interfere with XERCES
-CFLAGS= -w -fpermissive -D_LINUX -DNDEBUG -D_alloca=alloca -D_snprintf=snprintf -D_vsnprintf=vsnprintf $(ARCH_CFLAGS)
+#CFLAGS= -m32 -w -fpermissive -D_LINUX -DNDEBUG -D_alloca=alloca -D_snprintf=snprintf -D_vsnprintf=vsnprintf $(ARCH_CFLAGS)
+CFLAGS=  -m32 -w -fpermissive -D_LINUX -DNDEBUG $(ARCH_CFLAGS)
 #DEBUG = -g -ggdb
 #CFLAGS+= $(DEBUG)
 
 INCLUDEDIRS=-I$(PUBLIC_SRC_DIR) -I$(XERCES_INC_DIR) -I$(UTIL_COMMON_SRC_DIR) -I$(TIER1_PUBLIC_SRC_DIR)
-LDFLAGS_VC=-lm -ldl -L$(XERCES_LIB_DIR) -lxerces-c $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so
+#LDFLAGS_VC=-m32 -lm -ldl -L$(XERCES_LIB_DIR) -lxerces-c $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so
+LDFLAGS_VC=-m32 -lm -ldl -Wl,-rpath -Wl,$(GAME_DIR)/bin -L$(XERCES_LIB_DIR) -lxerces-c $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so
 
 DO_CC=$(CPLUS) $(INCLUDEDIRS) -w $(CFLAGS) -DARCH=$(ARCH) -o $@ -c $<
 
@@ -53,7 +55,9 @@ $(VCPM_OBJ_DIR)/%.o: $(VCPM_SRC_DIR)/%.cpp
 	$(DO_CC)
 
 $(TIER1_OBJ_DIR)/%.o: $(TIER1_SRC_DIR)/%.cpp
-	$(DO_CC) -Dstricmp=strcasecmp -Dstrcmpi=strcasecmp
+	$(DO_CC) -Dstricmp=strcasecmp -Dstrcmpi=strcasecmp -Dstrnicmp=strncasecmp
+#	$(DO_CC)
+
 
 clean:
 	-rm -rf $(VCPM_OBJ_DIR)
