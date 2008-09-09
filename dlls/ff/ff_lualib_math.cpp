@@ -7,7 +7,7 @@
 // includes
 #include "cbase.h"
 #include "ff_lualib.h"
-
+#include "ff_utils.h"
 
 // Lua includes
 extern "C"
@@ -19,6 +19,8 @@ extern "C"
 
 #include "luabind/luabind.hpp"
 #include "luabind/operator.hpp"
+#include "luabind/object.hpp"
+#include "luabind/iterator_policy.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
