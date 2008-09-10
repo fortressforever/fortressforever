@@ -532,37 +532,6 @@ namespace luabind { namespace detail
 			return ptr;
 		}
 
-		///// [EP] - This function seemed to be missing, so I copied and pasted it from the below, using a diff. return type. ///// This is probably not a good thing considering I'm blindly doing it.
-
-       template<class T>
-
-typename make_pointer<T>::type apply(lua_State* L, by_const_pointer<T>, int index)
-
-       {
-           // preconditions:
-           //  lua_isuserdata(L, index);
-           // getmetatable().__lua_class is true
-           // object_rep->flags() & object_rep::constant == 0
-
-           if (lua_isnil(L, index)) return 0;
-
-
-		object_rep* obj = static_cast<object_rep*>(lua_touserdata (L, index)); assert((obj != 0) && "internal error, please report"); // internal error
-
-	        const class_rep* crep = obj->crep();
-
-
-		T* ptr = reinterpret_cast<T*>(crep->convert_to (LUABIND_TYPEID(T), obj, target));
-	
-		if ((void*)ptr == (char*)target) destructor = detail::destruct_only_s<T>::apply;
-
-	        assert(!destructor || sizeof(T) <= 32);
-
-        	return ptr;
-	       }
-
-
-
 		template<class T>
 		static int match(lua_State* L, by_pointer<T>, int index)
 		{
