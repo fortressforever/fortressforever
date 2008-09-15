@@ -499,10 +499,10 @@ namespace FFLib
 		if( !pEntity )
 			return NULL;
 
-		if( pEntity->IsPlayer() )
-			return dynamic_cast< CFFPlayer * >( pEntity );
-		else
+		if( !IsPlayer( pEntity ) )
 			return NULL;
+
+		return dynamic_cast< CFFPlayer * >( pEntity );
 	}
 
 	CFFGrenadeBase *CastToGrenade( CBaseEntity *pEntity )
