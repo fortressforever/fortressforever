@@ -367,7 +367,7 @@ void CFFDispenser::OnObjectThink( void )
 
 		CFFItemBackpack *pBackpack = dynamic_cast< CFFItemBackpack* > (pEntity);
 
-		if ( pBackpack->GetSpawnFlags() & SF_NORESPAWN )
+		if ( pBackpack && pBackpack->GetSpawnFlags() & SF_NORESPAWN )
 		{
 			iCells += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ) );
 			iNails += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ) );
