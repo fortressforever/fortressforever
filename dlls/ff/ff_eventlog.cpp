@@ -27,6 +27,7 @@ public:
 		gameeventmanager->AddListener( this, "build_detpack", true );
 		gameeventmanager->AddListener( this, "dispenser_killed", true );
 		gameeventmanager->AddListener( this, "sentrygun_killed", true );
+		gameeventmanager->AddListener( this, "disguise_lost", true );
 		gameeventmanager->AddListener( this, "luaevent", true );
 		
 		return BaseClass::Init();
@@ -146,7 +147,38 @@ public:
 		}
 		// END: Watch for buildables getting killed
 
+		// BEG: Spy exposed
+		if( !Q_strncmp( name, "disguise_lost", Q_strlen( "disguise_lost" ) ) )
+		{
+			
+				DevMsg("event received!");
+			const int ownerid = event->GetInt( "spyid" ); // owner is the victim
+			const int attackerid = event->GetInt( "attackerid" ); // attacker is the scout doing the uncloaking
 
+			bool bWorldSpawn = ( attackerid == 0 );
+
+			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
+			CTeam *ateam = NULL; // attackers (spies) team
+			CTeam *oteam = NULL; // owners (person doing the exposing) team
+
+			if( bWorldSpawn )
+			{
+				// is this even possible ?
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "World triggered \"disguise_lost\" against \"%s<%i><%s><%s>\"\n", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "" );
+			}
+			else
+			{
+				CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+				ateam = pAttacker->GetTeam();
+				oteam = pOwner->GetTeam();
+
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"disguise_lost\" against \"%s<%i><%s><%s>\"\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "" );
+				DevMsg( "\"%s<%i><%s><%s>\" triggered \"disguise_lost\" against \"%s<%i><%s><%s>\"\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "" );
+			}
+		}
+		
 		if ( BaseClass::PrintEvent( event ) )
 		{
 			return true;

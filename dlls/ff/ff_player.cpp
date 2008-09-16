@@ -6882,8 +6882,21 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 			ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_REVEALEDSPY");
 			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, -1, PRIORITY_NORMAL, "#FF_HINT_SPY_LOSEDISGUISE" );
 
-			// This the correct func for logs?
-			UTIL_LogPrintf("%s just exposed an enemy spy!\n", STRING(ffplayer->pl.netname));
+			// This the correct func for logs? 
+			// No, it's not :P - AfterShock
+			//UTIL_LogPrintf("%s just exposed an enemy spy!\n", STRING(ffplayer->pl.netname));
+
+			IGameEvent *pEvent = NULL;
+			pEvent = gameeventmanager->CreateEvent( "disguise_lost" );
+			if( pEvent )
+			{
+				pEvent->SetInt( "attackerid", GetUserID() ); // this player just touched and undisguised enemy spy 
+				pEvent->SetInt( "spyid", ffplayer->GetUserID() ); // enemy spy is the victim
+				pEvent->SetInt( "priority", 10 );
+				gameeventmanager->FireEvent( pEvent );
+				DevMsg("event fired!");
+			}
+
 		}
 
 		// Will only let scouts uncloak dudes for the meantime
