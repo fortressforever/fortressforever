@@ -67,10 +67,10 @@ public:
 			const int userid = event->GetInt( "userid" );
 
 			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByUserId( userid ) );
-			CTeam *team = NULL;
+			CTeam *oteam = NULL; // owners (victims) team
 
 			if( pPlayer )
-				team = pPlayer->GetTeam();
+				oteam = pPlayer->GetTeam();
 
 			char szObject[ 64 ];
 			if( Q_strcmp( eventName, "build_dispenser" ) == 0 )
@@ -80,9 +80,9 @@ public:
 			else if( Q_strcmp( eventName, "build_detpack" ) == 0 )
 				Q_strcpy( szObject, "detpack" );
 
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), team ? team->GetName() : "", szObject );
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"build_%s\"\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), oteam ? oteam->GetName() : "", szObject );
 
-			DevMsg( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), team ? team->GetName() : "", szObject );
+			DevMsg( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), oteam ? oteam->GetName() : "", szObject );
 		}
 		// END: Watching when buildables get built
 
@@ -95,16 +95,25 @@ public:
 			bool bWorldSpawn = ( attackerid == 0 );
 
 			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
-			CBasePlayer *pAttacker = NULL;
-			if( !bWorldSpawn )
-				pAttacker = UTIL_PlayerByUserId( attackerid );
+			CTeam *ateam = NULL; // attackers team
+			CTeam *oteam = NULL; // owners (victims) team
 
-			CTeam *team = NULL;
-			if( !bWorldSpawn )
-				team = pAttacker->GetTeam();
+			if( bWorldSpawn )
+			{
+				// is this even possible ?
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "World triggered \"kill_dispenser\" against \"%s<%i><%s><%s>\"\n", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "" );
+			}
+			else
+			{
+				CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+				ateam = pAttacker->GetTeam();
+				oteam = pOwner->GetTeam();
 
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's dispenser with %s\n", bWorldSpawn ? "worldspawn" : pAttacker->GetPlayerName(), attackerid, bWorldSpawn ? "" : pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
-			DevMsg( "\"%s<%i><%s><%s>\" killed %s's dispenser with %s\n", bWorldSpawn ? "worldspawn" : pAttacker->GetPlayerName(), attackerid, bWorldSpawn ? "" : pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"kill_dispenser\" against \"%s<%i><%s><%s>\" (weapon \"%s\")\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "", event->GetString( "weapon" ) );
+				DevMsg( "\"%s<%i><%s><%s>\" triggered \"kill_dispenser\" against \"%s<%i><%s><%s>\" (weapon \"%s\")\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "", event->GetString( "weapon" ) );
+			}
 		}
 		else if( !Q_strncmp( name, "sentrygun_killed", Q_strlen( "sentrygun_killed" ) ) )
 		{
@@ -115,15 +124,25 @@ public:
 
 			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
 			CBasePlayer *pAttacker = NULL;
-			if( !bWorldSpawn )
+			CTeam *ateam = NULL; // attackers team
+			CTeam *oteam = NULL; // owners (victims) team
+
+			if( bWorldSpawn )
+			{
+				// is this even possible ?
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "World triggered \"kill_sentrygun\" against \"%s<%i><%s><%s>\"\n", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "" );
+			}
+			else
+			{
 				pAttacker = UTIL_PlayerByUserId( attackerid );
+				ateam = pAttacker->GetTeam();
+				oteam = pOwner->GetTeam();
 
-			CTeam *team = NULL;
-			if( !bWorldSpawn )
-				team = pAttacker->GetTeam();
-
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's sentrygun with %s\n", bWorldSpawn ? "worldspawn" : pAttacker->GetPlayerName(), attackerid, bWorldSpawn ? "" : pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
-			DevMsg( "\"%s<%i><%s><%s>\" killed %s's sentrygun with %s\n", bWorldSpawn ? "worldspawn" : pAttacker->GetPlayerName(), attackerid, bWorldSpawn ? "" : pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"kill_sentrygun\" against \"%s<%i><%s><%s>\" (weapon \"%s\")\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "", event->GetString( "weapon" ) );
+				DevMsg( "\"%s<%i><%s><%s>\" triggered \"kill_sentrygun\" against \"%s<%i><%s><%s>\" (weapon \"%s\")\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "", event->GetString( "weapon" ) );
+			}		
 		}
 		// END: Watch for buildables getting killed
 
