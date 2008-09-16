@@ -6891,7 +6891,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 			if( pEvent )
 			{
 				pEvent->SetInt( "attackerid", GetUserID() ); // this player just touched and undisguised enemy spy 
-				pEvent->SetInt( "spyid", ffplayer->GetUserID() ); // enemy spy is the victim
+				pEvent->SetInt( "userid", ffplayer->GetUserID() ); // enemy spy is the victim
 				pEvent->SetInt( "priority", 10 );
 				gameeventmanager->FireEvent( pEvent );
 				DevMsg("event fired!");
@@ -6915,7 +6915,19 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 				FF_SendHint( ffplayer, SPY_LOSECLOAK, -1, PRIORITY_NORMAL, "#FF_HINT_SPY_LOSECLOAK" );
 
 				// This the correct func for logs?
-				UTIL_LogPrintf( "%s just uncloaked an enemy spy!\n", STRING( ffplayer->pl.netname ) );
+				// No, it's not :P - AfterShock
+				//UTIL_LogPrintf( "%s just uncloaked an enemy spy!\n", STRING( ffplayer->pl.netname ) );
+
+				IGameEvent *pEvent = NULL;
+				pEvent = gameeventmanager->CreateEvent( "cloak_lost" );
+				if( pEvent )
+				{
+					pEvent->SetInt( "attackerid", GetUserID() ); // this player just touched and undisguised enemy spy 
+					pEvent->SetInt( "userid", ffplayer->GetUserID() ); // enemy spy is the victim
+					pEvent->SetInt( "priority", 10 );
+					gameeventmanager->FireEvent( pEvent );
+					DevMsg("event fired!");
+				}
 			}
 		}
 	}
