@@ -599,42 +599,19 @@ void CFFPlayer::ClassSpecificSkill()
 		}
 		break;
 #endif
+
+#ifdef CLIENT_DLL
+
 		case CLASS_HWGUY:
-#ifdef GAME_DLL
-			if (pWeapon)
+			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
 			{
-				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
-				{
-					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
-					if(pAC)
-					{
-						pAC->ClampOn();
-					}
-				}
-			}		
+				SwapToWeapon(FF_WEAPON_SUPERSHOTGUN);
+			}
+			else 
+			{
+				SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
+			}
 			break;
-#endif
-		/*
-		case CLASS_HWGUY:
-#ifdef CLIENT_DLL
-				if(pWeapon->GetWeaponID() != FF_WEAPON_ASSAULTCANNON)
-					SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
-				break;
-#endif
-#ifdef GAME_DLL
-				if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
-				{
-					CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
-					if(pAC)
-						pAC->ToggleClamp();
-				}
-			break;
-
-#endif
-			*/
-
-#ifdef CLIENT_DLL
-	
 
 		case CLASS_PYRO:
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_IC) )
@@ -697,6 +674,7 @@ void CFFPlayer::ClassSpecificSkill_Post()
 		HudContextShow(false);
 		break;
 #endif
+		/* no more clamp - AfterShock
 #ifdef GAME_DLL
 		case CLASS_HWGUY:
 				if (pWeapon)
@@ -712,6 +690,7 @@ void CFFPlayer::ClassSpecificSkill_Post()
 				}
 			break;
 #endif
+			*/
 	default:
 		break;
 
