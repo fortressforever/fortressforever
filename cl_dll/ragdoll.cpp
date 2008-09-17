@@ -328,7 +328,7 @@ CRagdoll *CreateRagdoll(
 
 	if ( !pRagdoll->IsValid() )
 	{
-		Msg("Bad ragdoll for %s\n", pstudiohdr->pszName() );
+		//Msg("Bad ragdoll for %s\n", pstudiohdr->pszName() );
 		delete pRagdoll;
 		pRagdoll = NULL;
 		return pRagdoll;
