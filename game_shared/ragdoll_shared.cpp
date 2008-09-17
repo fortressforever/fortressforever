@@ -224,7 +224,7 @@ static void RagdollAddSolid( IPhysicsEnvironment *pPhysEnv, ragdoll_t &ragdoll, 
 		}
 		else
 		{
-			Msg( "CRagdollProp::CreateObjects:  Couldn't Lookup Bone %s\n", solid.name );
+			//Msg( "CRagdollProp::CreateObjects:  Couldn't Lookup Bone %s\n", solid.name );
 		}
 	}
 }
