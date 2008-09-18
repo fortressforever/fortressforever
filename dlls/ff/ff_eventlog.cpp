@@ -190,8 +190,8 @@ public:
 		// BEG: LUA events
 		if( !Q_strncmp( name, "luaevent", Q_strlen( "luaevent" ) ) )
 		{
-			const int ownerid = event->GetInt( "userid" ); // owner is typically the victim 
-			const int attackerid = event->GetInt( "userid2" ); // attacker is typically the one triggering the event
+			const int ownerid = event->GetInt( "userid2" ); // owner is typically the victim 
+			const int attackerid = event->GetInt( "userid" ); // attacker is typically the one triggering the event
 			const char *eventName = event->GetString( "eventname" );
 
 			const char *key0 = event->GetString( "key0" );
