@@ -38,30 +38,6 @@ public:
 	{
 		const char *name = event->GetName();
 
-		// BEG: Watching for a Lua event
-		if( !Q_strncmp( name, "luaevent", Q_strlen( "luaevent" ) ) )
-		{
-			// entity index of the Lua object (flag, ball, etc)
-			const int luaObjectEntityIndex = event->GetInt( "luaid" );
-			// entity index of some CBaseEntity* that is doing something to the lua object
-			const int actorEntityIndex = event->GetInt( "objid" );
-			// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
-			const char *eventName = event->GetString( "name" );
-			// "Extra" fields
-			const char *field0 = event->GetString( "field0" );
-			const char *field1 = event->GetString( "field1" );
-			const char *field2 = event->GetString( "field2" );
-			const char *field3 = event->GetString( "field3" );
-			const char *field4 = event->GetString( "field4" );
-			const char *field5 = event->GetString( "field5" );
-			const char *field6 = event->GetString( "field6" );
-
-			// Hot logging action!
-			UTIL_LogPrintf( "%s, %i, %i, %s, %s, %s, %s, %s, %s, %s\n", eventName, luaObjectEntityIndex, actorEntityIndex, field0, field1, field2, field3, field4, field5, field6 );
-			DevMsg( "%s, %i, %i, %s, %s, %s, %s, %s, %s, %s\n", eventName, luaObjectEntityIndex, actorEntityIndex, field0, field1, field2, field3, field4, field5, field6 );
-		}
-		// END: Watching for a Lua event
-
 		// BEG: Watching when buildables get built
 		if( Q_strncmp( name, "build_", strlen( "build_" ) ) == 0 )
 		{
@@ -210,6 +186,116 @@ public:
 			}
 		}
 		// END: spy uncloaked
+
+		// BEG: LUA events
+		if( !Q_strncmp( name, "luaevent", Q_strlen( "luaevent" ) ) )
+		{
+			const int ownerid = event->GetInt( "userid" ); // owner is typically the victim 
+			const int attackerid = event->GetInt( "userid2" ); // attacker is typically the one triggering the event
+			const char *eventName = event->GetString( "eventname" );
+
+			const char *key0 = event->GetString( "key0" );
+			const char *value0 = event->GetString( "value0" );
+			const char *key1 = event->GetString( "key1" );
+			const char *value1 = event->GetString( "value1" );
+			const char *key2 = event->GetString( "key2" );
+			const char *value2 = event->GetString( "value2" );
+				
+			char bracket0[50];
+			char bracket1[50];
+			char bracket2[50];
+
+			if (strlen(key0))
+			{
+				Q_snprintf(bracket0, sizeof(bracket0)," (%s \"%s\")", key0, value0);
+			}
+			if (strlen(key1))
+			{
+				Q_snprintf(bracket1, sizeof(bracket1), " (%s \"%s\")", key1, value1);
+			}
+			if (strlen(key2))
+			{
+				Q_snprintf(bracket2, sizeof(bracket2), " (%s \"%s\")", key2, value2);
+			}
+					
+			bool bNoAttacker = ( attackerid == 0 );
+			bool bNoVictim = ( ownerid == 0 );
+			
+			if( bNoAttacker )
+			{
+				if ( bNoVictim )
+				{
+					
+					// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+					UTIL_LogPrintf( "World triggered \"%s\"%s%s%s\n", 
+						eventName, 
+						strlen(key0) ? bracket0 : "", 
+						strlen(key1) ? bracket1 : "", 
+						strlen(key2) ? bracket2 : "" );
+				}
+				else
+				{
+					
+					CBasePlayer *pOwner = UTIL_PlayerByIndex( ownerid );
+					CTeam *oteam = NULL; // owners (person doing the exposing) team
+					oteam = pOwner->GetTeam();
+
+					// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+					UTIL_LogPrintf( "World triggered \"%s\" against \"%s<%i><%s><%s>\"%s%s%s\n", 
+						eventName, 
+						pOwner->GetPlayerName(), 
+						ownerid, 
+						pOwner->GetNetworkIDString(),	
+						oteam ? oteam->GetName() : "",
+						strlen(key0) ? bracket0 : "", 
+						strlen(key1) ? bracket1 : "", 
+						strlen(key2) ? bracket2 : "" );
+				}
+			}
+			else
+			{
+				
+				CBasePlayer *pAttacker = UTIL_PlayerByIndex( attackerid );
+				CTeam *ateam = NULL; // attackers (spies) team
+				ateam = pAttacker->GetTeam();
+
+				if ( bNoVictim )
+				{
+					// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"%s\"%s%s%s\n", 
+						pAttacker->GetPlayerName(), 
+						attackerid, 
+						pAttacker->GetNetworkIDString(), 
+						ateam ? ateam->GetName() : "",
+						eventName, 
+						strlen(key0) ? bracket0 : "", 
+						strlen(key1) ? bracket1 : "", 
+						strlen(key2) ? bracket2 : "" );
+				}
+				else
+				{
+					CBasePlayer *pOwner = UTIL_PlayerByIndex( ownerid );
+					CTeam *oteam = NULL; // owners (person doing the exposing) team
+					oteam = pOwner->GetTeam();
+
+					// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"%s\" against \"%s<%i><%s><%s>\"%s%s%s\n", 
+						pAttacker->GetPlayerName(), 
+						attackerid, 
+						pAttacker->GetNetworkIDString(), 
+						ateam ? ateam->GetName() : "",
+						eventName, 
+						pOwner->GetPlayerName(), 
+						ownerid, 
+						pOwner->GetNetworkIDString(),	
+						oteam ? oteam->GetName() : "",
+						strlen(key0) ? bracket0 : "", 
+						strlen(key1) ? bracket1 : "", 
+						strlen(key2) ? bracket2 : "" );
+				}
+			}
+		}
+		// END: lua event
 
 		if ( BaseClass::PrintEvent( event ) )
 		{
