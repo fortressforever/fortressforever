@@ -803,37 +803,97 @@ namespace FFLib
 
 	// For generically handling Lua events (like flag caps, drops, or whatever)
 	void LogLuaEvent( 
-		int luaid = -1,							// entity index of the Lua object (flag, ball, etc)
-		int objid = -1,							// entity index of some CBaseEntity* that is doing something to the lua object
-		const char* name = "Generic_Lua_Event",	// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
-		const char* field0 = "",				// "Extra" fields
-		const char* field1 = "",
-		const char* field2 = "",
-		const char* field3 = "",
-		const char* field4 = "",
-		const char* field5 = "",
-		const char* field6 = "" )
-		//const char* field7,
-		//const char* field8,
-		//const char* field9 )
+		int luaid,							// entity index of the Lua object (flag, ball, etc)
+		int objid,							// entity index of some CBaseEntity* that is doing something to the lua object
+		const char* name = "Generic_Lua_Event" )	// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
 	{
 		// Fire an event.
 		IGameEvent *pEvent = gameeventmanager->CreateEvent( "luaevent" );
 		if( pEvent )
 		{
-			pEvent->SetInt( "luaid", luaid );
-			pEvent->SetInt( "objid", objid );
-			pEvent->SetString( "name", name );
-			pEvent->SetString( "field0", field0 );
-			pEvent->SetString( "field1", field1 );
-			pEvent->SetString( "field2", field2 );
-			pEvent->SetString( "field3", field3 );
-			pEvent->SetString( "field4", field4 );
-			pEvent->SetString( "field5", field5 );
-			pEvent->SetString( "field6", field6 );
-			//pEvent->SetString( "field7", field7 );
-			//pEvent->SetString( "field8", field8 );
-			//pEvent->SetString( "field9", field9 );
+			pEvent->SetInt( "userid", luaid );
+			pEvent->SetInt( "userid2", objid );
+			pEvent->SetString( "eventname", name );
+			gameeventmanager->FireEvent( pEvent, true );
+		}
+	}
+
+			// For generically handling Lua events (like flag caps, drops, or whatever)
+	void LogLuaEvent( 
+		int luaid,							// entity index of the Lua object (flag, ball, etc)
+		int objid,							// entity index of some CBaseEntity* that is doing something to the lua object
+		const char* name,	// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
+		const char* field0,				// "Extra" fields
+		const char* field1)				// "Extra" fields
+
+	{
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "luaevent" );
+		if( pEvent )
+		{
+			pEvent->SetInt( "userid", luaid );
+			pEvent->SetInt( "userid2", objid );
+			pEvent->SetString( "eventname", name );
+			pEvent->SetString( "key0", field0 );
+			pEvent->SetString( "value0", field1 );
+
+			gameeventmanager->FireEvent( pEvent, true );
+		}
+	}
+
+		// For generically handling Lua events (like flag caps, drops, or whatever)
+	void LogLuaEvent( 
+		int luaid,							// entity index of the Lua object (flag, ball, etc)
+		int objid,							// entity index of some CBaseEntity* that is doing something to the lua object
+		const char* name = "Generic_Lua_Event",	// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
+		const char* field0 = NULL,				// "Extra" fields
+		const char* field1 = NULL,				// "Extra" fields
+		const char* field2 = NULL,				// "Extra" fields
+		const char* field3 = NULL )				// "Extra" fields
+
+	{
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "luaevent" );
+		if( pEvent )
+		{
+			pEvent->SetInt( "userid", luaid );
+			pEvent->SetInt( "userid2", objid );
+			pEvent->SetString( "eventname", name );
+			pEvent->SetString( "key0", field0 );
+			pEvent->SetString( "value0", field1 );
+			pEvent->SetString( "key1", field2 );
+			pEvent->SetString( "value1", field3 );
+
+			gameeventmanager->FireEvent( pEvent, true );
+		}
+	}
+
+	// For generically handling Lua events (like flag caps, drops, or whatever)
+	void LogLuaEvent( 
+		int luaid,							// entity index of the Lua object (flag, ball, etc)
+		int objid,							// entity index of some CBaseEntity* that is doing something to the lua object
+		const char* name = "Generic_Lua_Event",	// name for the event - like flag_cap, flag_drop, etc - something stats programs could use
+		const char* field0 = NULL,				// "Extra" fields
+		const char* field1 = NULL,				// "Extra" fields
+		const char* field2 = NULL,				// "Extra" fields
+		const char* field3 = NULL,				// "Extra" fields
+		const char* field4 = NULL,				// "Extra" fields
+		const char* field5 = NULL )
+
+	{
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "luaevent" );
+		if( pEvent )
+		{
+			pEvent->SetInt( "userid", luaid );
+			pEvent->SetInt( "userid2", objid );
+			pEvent->SetString( "eventname", name );
+			pEvent->SetString( "key0", field0 );
+			pEvent->SetString( "value0", field1 );
+			pEvent->SetString( "key1", field2 );
+			pEvent->SetString( "value1", field3 );
+			pEvent->SetString( "key2", field4 );
+			pEvent->SetString( "value2", field5 );
 
 			gameeventmanager->FireEvent( pEvent, true );
 		}
@@ -1936,7 +1996,10 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SpeakAll",					&FFLib::SpeakAll),
 		def("SpeakPlayer",				&FFLib::SpeakPlayer),
 		def("SpeakTeam",				&FFLib::SpeakTeam),
-		def("LogLuaEvent",				&FFLib::LogLuaEvent),
+		def("LogLuaEvent",				(void(*)(int, int, const char *))&FFLib::LogLuaEvent),
+		def("LogLuaEvent",				(void(*)(int, int, const char *, const char *, const char *))&FFLib::LogLuaEvent),
+		def("LogLuaEvent",				(void(*)(int, int, const char *, const char *, const char *, const char *, const char *))&FFLib::LogLuaEvent),
+		def("LogLuaEvent",				(void(*)(int, int, const char *, const char *, const char *, const char *, const char *, const char *, const char *))&FFLib::LogLuaEvent),
 		def("UpdateObjectiveIcon",		&FFLib::UpdateObjectiveIcon),
 		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon),
 		def("DisplayMessage",			&FFLib::DisplayMessage)
