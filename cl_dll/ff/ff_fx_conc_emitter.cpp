@@ -33,9 +33,9 @@ ConVar conc_ripples		 ("ffdev_conc_ripples", "1", FCVAR_CHEAT, "How many ripples
 ConVar conc_ripple_period("ffdev_conc_ripple_period", "0.05", FCVAR_CHEAT, "Time between ripples.");
 
 ConVar conc_blur("ffdev_conc_blur", "0.5", FCVAR_CHEAT);
-ConVar conc_refract("ffdev_conc_refract", "0.2", FCVAR_CHEAT);
-ConVar conc_grow("ffdev_conc_grow", "0.2", FCVAR_CHEAT);
-ConVar conc_shrink("ffdev_conc_shrink", "1.2", FCVAR_CHEAT);
+ConVar conc_refract("ffdev_conc_refract", "0.05", FCVAR_CHEAT);
+ConVar conc_grow("ffdev_conc_grow", "0.25", FCVAR_CHEAT);
+ConVar conc_shrink("ffdev_conc_shrink", "0.35", FCVAR_CHEAT);
 
 class CRagdollConcEnumerator : public IPartitionEnumerator
 {
