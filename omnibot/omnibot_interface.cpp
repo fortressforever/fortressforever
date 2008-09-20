@@ -1058,9 +1058,12 @@ namespace Omnibot
 
 		GameEntity GetLocalGameEntity()
 		{
-			CBasePlayer *localPlayer = UTIL_GetListenServerHost();
-			if(localPlayer)
-				return HandleFromEntity(localPlayer);
+			if(!engine->IsDedicatedServer())
+			{
+				CBasePlayer *localPlayer = UTIL_PlayerByIndex( 1 );
+				if(localPlayer)
+					return HandleFromEntity(localPlayer);
+			}
 			return GameEntity();
 		}
 
