@@ -601,7 +601,7 @@ void CFFPlayer::ClassSpecificSkill()
 #endif
 
 #ifdef CLIENT_DLL
-/* UNCOMMENT THIS AFTER 2.1.1 - aftershock
+
 		case CLASS_HWGUY:
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
 			{
@@ -612,7 +612,7 @@ void CFFPlayer::ClassSpecificSkill()
 				SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
 			}
 			break;
-*/
+
 		case CLASS_PYRO:
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_IC) )
 			{
