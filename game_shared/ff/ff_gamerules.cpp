@@ -42,8 +42,8 @@
 // The client + server versions are checked when a server is joined
 // It is the discretion of the web-based version check script whether or not
 // to tell the client to upgrade or that the server they are joining is out of date.
-const char *MOD_CLIENT_VERSION = "2.1";
-const char *MOD_SERVER_VERSION = "2.1";
+const char *MOD_CLIENT_VERSION = "2.2";
+const char *MOD_SERVER_VERSION = "2.2";
 
 // Ignore this for now...!
 void VersionCvarChange(ConVar *var, const char *pOldString) {}
