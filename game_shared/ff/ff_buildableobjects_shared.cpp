@@ -471,13 +471,13 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 				VectorAngles( m_vecPlayerForward, m_angBuildAirAngles );
 			}
 
-			Vector vecRightAdjWidth = m_vecPlayerRight * 18.0f;
-			Vector vecForwardAdjWidth = m_vecPlayerForward * 8.0f;
+			Vector vecRightAdjWidth = m_vecPlayerRight * 4.5f;//18.0f;
+			Vector vecForwardAdjWidth = m_vecPlayerForward * 2.0f;//8.0f;
 
 			// Set up these vectors to reflect the position above the ground at each
 			// of the feet of the sg where we want to start traces from
 			Vector vecFeet[ 3 ];
-			vecFeet[ 0 ] = m_vecBuildAirOrigin + ( m_vecPlayerForward * 20.0f );
+			vecFeet[ 0 ] = m_vecBuildAirOrigin + ( m_vecPlayerForward * 5.0f );//20.0f );
 			vecFeet[ 1 ] = m_vecBuildAirOrigin - ( vecRightAdjWidth ) - ( vecForwardAdjWidth );
 			vecFeet[ 2 ] = m_vecBuildAirOrigin + ( vecRightAdjWidth ) - ( vecForwardAdjWidth );
 
