@@ -749,11 +749,19 @@ int CFFPlayer::GetArmorPercentage( void ) const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Player building?
+// Purpose: Player building? NOTE: This can include building SGs but still able to move around/shoot
 //-----------------------------------------------------------------------------
 bool CFFPlayer::IsBuilding( void ) const
 {
 	return m_bBuilding;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Player static building? E.g. building detpacks / jump pads (cant move, cant shoot!)
+//-----------------------------------------------------------------------------
+bool CFFPlayer::IsStaticBuilding( void ) const
+{
+	return m_bStaticBuilding;
 }
 
 //-----------------------------------------------------------------------------

@@ -145,7 +145,7 @@ void CFFWeaponDeployManCannon::WeaponIdle( void )
 #ifdef CLIENT_DLL 
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
-		if( !pPlayer->IsBuilding() )
+		if( !pPlayer->IsStaticBuilding() )
 		{
 			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_MANCANNON );
 			if( !m_pBuildable )

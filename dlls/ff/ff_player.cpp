@@ -339,7 +339,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hSentryGun ) ),
 	SendPropEHandle( SENDINFO( m_hDetpack ) ),
 	SendPropEHandle( SENDINFO( m_hManCannon ) ),
-	SendPropInt( SENDINFO( m_bBuilding ) ),
+	SendPropBool( SENDINFO( m_bStaticBuilding ) ),
+	SendPropBool( SENDINFO( m_bBuilding ) ),
 	SendPropInt( SENDINFO( m_iCurBuild ) ),
 
 	// health/armor	
@@ -463,6 +464,7 @@ CFFPlayer::CFFPlayer()
 	// Assume true
 	m_bRespawnable = true;
 
+	m_bStaticBuilding = false;
 	m_bBuilding = false;
 	//m_bCancelledBuild = false;
 	m_iWantBuild = FF_BUILD_NONE;
@@ -668,14 +670,13 @@ void CFFPlayer::PreThink(void)
 	if( m_bBuilding )
 	{
 		// Our origin has changed while building! no!!!!!!!!!!!!!!!!!!!!!!
-		if( m_vecBuildOrigin.DistTo( GetAbsOrigin() ) > 128.0f )
+		if( m_bStaticBuilding && ( m_vecBuildOrigin.DistTo( GetAbsOrigin() ) > 128.0f ) )
 		{
 			Warning( "[Buildable] Player origin has changed!\n" );
 			m_iWantBuild = m_iCurBuild;
 			PreBuildGenericThink();
 		}
-
-		// Keeping the m_bBulding line in there in case we cancel the build cause
+		// Keeping the m_bBuilding line in there in case we cancel the build cause
 		// we left the ground in which case m_bBuilding will be false and we'll
 		// just skip this.
 		// If we're building and we've waited the two seconds or whatever...
@@ -1223,12 +1224,13 @@ void CFFPlayer::PreForceSpawn( void )
 		if( pSound )
 			pSound->Reset();
 
-		if( m_bBuilding )
+		if( m_bStaticBuilding )
 		{
 			CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
 			if( pBuildable )
 				pBuildable->Cancel();
 			m_bBuilding = false;
+			m_bStaticBuilding = false;
 		}
 
 		// Detonate player's pipes
@@ -1972,16 +1974,17 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_hGasser = NULL;
 
 	// Beg; Added by Mulchman
-	if( m_bBuilding )
+	if( m_bStaticBuilding )
 	{
 		CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
 		if( pBuildable )
-			pBuildable->Cancel();
+				pBuildable->Cancel();
 
 		// Unlock the player if he/she got locked
 		UnlockPlayer( );
 
 		// Re-initialize
+		m_bStaticBuilding = false;
 		m_bBuilding = false;
 		m_iCurBuild = FF_BUILD_NONE;
 		m_iWantBuild = FF_BUILD_NONE;
@@ -1994,6 +1997,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		WRITE_FLOAT(0);
 		MessageEnd();
 	}
+
 	// If the tag is still active, award a point
 	// to the person who tagged us
 	// (So long as you havent been TKed - AfterShock)
@@ -2814,6 +2818,7 @@ void CFFPlayer::Command_Team( void )
 void CFFPlayer::RemoveBuildables( void )
 {
 	m_bBuilding = false;
+	m_bStaticBuilding = false;
 	m_iCurBuild = FF_BUILD_NONE;
 	m_iWantBuild = FF_BUILD_NONE;
 
@@ -3260,8 +3265,8 @@ void CFFPlayer::Command_BuildManCannon( void )
 	PreBuildGenericThink();
 }
 
-//ConVar sg_buildtime("ffdev_sg_buildtime", "3.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Sentry Gun build time");
-#define SG_BUILDTIME 3.0f // sg_buildtime.GetFloat()
+//ConVar sg_buildtime("ffdev_sg_buildtime", "7.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Sentry Gun build time");
+#define SG_BUILDTIME 3.0f //sg_buildtime.GetFloat()  //
 
 void CFFPlayer::PreBuildGenericThink( void )
 {
@@ -3271,12 +3276,14 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 	if( !m_bBuilding )
 	{
-		m_bBuilding = true;
+		m_bBuilding = true; // Set these immediately in case player tries to do anything elsewhere, presumably?
+		m_bStaticBuilding = true;
 
 		// Store the player's current origin
 		m_vecBuildOrigin = GetAbsOrigin();
 
 		// See if player is in a no build area first
+		// TODO: need to check where the SG is being built, NOT where player is? - AfterShock
 		if( IsInNoBuild() && ( (m_iWantBuild == FF_BUILD_DISPENSER) || (m_iWantBuild == FF_BUILD_SENTRYGUN) || (m_iWantBuild == FF_BUILD_MANCANNON) ) )
 		{
 			Omnibot::Notify_Build_CantBuild(this, m_iWantBuild);
@@ -3285,7 +3292,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
 			m_bBuilding = false;
-
+			m_bStaticBuilding = false;
+			
 			ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_NOBUILD" );
 
 			return;
@@ -3339,6 +3347,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
 			m_bBuilding = false;
+			m_bStaticBuilding = false;
 
 			return;
 		}
@@ -3363,6 +3372,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
 			m_bBuilding = false;
+			m_bStaticBuilding = false;
 
 			return;
 		}
@@ -3378,6 +3388,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
 			m_bBuilding = false;
+			m_bStaticBuilding = false;
 
 			return;
 		}
@@ -3389,12 +3400,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		if( hBuildInfo.BuildResult() == BUILD_ALLOWED )
 		{
 			// BUILD! - Create the actual item finally
-			m_iCurBuild = m_iWantBuild;
-			
-			LockPlayerInPlace();
-			m_hActiveWeapon = GetActiveFFWeapon();
-			if( m_hActiveWeapon )
-				m_hActiveWeapon->Holster( NULL );
+			m_iCurBuild = m_iWantBuild;	
 
 			switch( m_iCurBuild )
 			{
@@ -3426,6 +3432,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 					RemoveAmmo( 100, AMMO_CELLS );
 
 					Omnibot::Notify_DispenserBuilding(this, pDispenser);
+					
+					//m_bStaticBuilding = false; // AfterShock - Uncomment this for testing drop-and-run SGs / Dispensers! (also need SG_BUILDTIME raising)
 				}
 				break;
 
@@ -3474,6 +3482,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 					RemoveAmmo( 130, AMMO_CELLS );
 
 					Omnibot::Notify_SentryBuilding(this, pSentryGun);
+
+					//m_bStaticBuilding = false; // AfterShock - Uncomment this for testing drop-and-run SGs / Dispensers! (also need SG_BUILDTIME raising)
 				}
 				break;
 
@@ -3516,6 +3526,14 @@ void CFFPlayer::PreBuildGenericThink( void )
 				}
 				break;
 			}
+			
+			if ( m_bStaticBuilding == true )
+			{
+				LockPlayerInPlace(); 
+				m_hActiveWeapon = GetActiveFFWeapon();
+				if( m_hActiveWeapon )
+					m_hActiveWeapon->Holster( NULL );
+			}
 
 			// Mirv: Start build timer
 			CSingleUserRecipientFilter user( this );
@@ -3531,6 +3549,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			hBuildInfo.GetBuildError();
 
 			m_bBuilding = false;
+			m_bStaticBuilding = false;
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
 		}
@@ -3565,6 +3584,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				pBuildable->Cancel();
 			}
 
+				
 			// Unlock the player
 			UnlockPlayer();			
 
@@ -3580,9 +3600,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
 			m_bBuilding = false;
+			m_bStaticBuilding = false;
 
+			
 			if( m_hActiveWeapon )
 				m_hActiveWeapon->Deploy();
+				
 		}
 		else
 		{
@@ -3678,19 +3701,26 @@ void CFFPlayer::PostBuildGenericThink( void )
 			break;
 		}
 
-		// Unlock the player
-		UnlockPlayer();
+		if ( m_bStaticBuilding) 
+		{
+			// Unlock the player
+			UnlockPlayer();
+			if( m_hActiveWeapon )
+				m_hActiveWeapon->Deploy();
+		}
+
 
 		// Reset stuff		
 		m_iCurBuild = FF_BUILD_NONE;
 		m_iWantBuild = FF_BUILD_NONE;
 		m_bBuilding = false;
+		m_bStaticBuilding = false;
 		//m_bCancelledBuild = false;
 
-		if( m_hActiveWeapon )
-			m_hActiveWeapon->Deploy();
+
 
 		// Switch to another weapon, only the first time after building something
+		/*
 		if(switchToWeapon != FF_WEAPON_NONE)
 		{
 			CFFWeaponBase *weap;
@@ -3704,6 +3734,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 				}
 			}
 		}
+		*/
 	}
 	else
 	{

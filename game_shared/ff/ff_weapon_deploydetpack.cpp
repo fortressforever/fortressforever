@@ -161,7 +161,7 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 #ifdef CLIENT_DLL 
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
-		if( !pPlayer->IsBuilding() )
+		if( !pPlayer->IsStaticBuilding() )
 		{
 			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DETPACK );
 			if( !m_pBuildable )
