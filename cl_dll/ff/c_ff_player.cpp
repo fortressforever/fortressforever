@@ -287,7 +287,7 @@ void CC_PrimeOne( void )
 	if( pLocalPlayer->GetFlags() & FL_FROZEN )
 		return;
 
-	if( pLocalPlayer->IsBuilding() )
+	if( pLocalPlayer->IsStaticBuilding() )
 		return;
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
@@ -365,7 +365,7 @@ void CC_PrimeTwo( void )
 	if( pLocalPlayer->GetFlags() & FL_FROZEN )
 		return;
 
-	if( pLocalPlayer->IsBuilding() )
+	if( pLocalPlayer->IsStaticBuilding() )
 		return;
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
@@ -584,7 +584,8 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropEHandle( RECVINFO( m_hSentryGun ) ),
 	RecvPropEHandle( RECVINFO( m_hDetpack ) ),
 	RecvPropEHandle( RECVINFO( m_hManCannon ) ),
-	RecvPropInt( RECVINFO( m_bBuilding ) ),
+	RecvPropBool( RECVINFO( m_bStaticBuilding ) ),
+	RecvPropBool( RECVINFO( m_bBuilding ) ),
 	RecvPropInt( RECVINFO( m_iCurBuild ) ),
 	// End: Added by Mulchman for building objects and such
 

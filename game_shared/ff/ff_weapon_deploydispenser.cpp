@@ -131,7 +131,7 @@ void CFFWeaponDeployDispenser::PrimaryAttack( void )
 
 #ifdef GAME_DLL
 		CFFPlayer *pPlayer = GetPlayerOwner();		
-		if( pPlayer->IsBuilding() )
+		if( pPlayer->IsStaticBuilding() )
 		{
 			switch( pPlayer->GetCurBuild() )
 			{
@@ -169,7 +169,7 @@ void CFFWeaponDeployDispenser::WeaponIdle( void )
 		/*if( ( pPlayer->GetDispenser() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 ) )
 			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );*/
 
-		if( !pPlayer->IsBuilding() )
+		if( !pPlayer->IsStaticBuilding() )
 		{
 			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DISPENSER );
 			if( !m_pBuildable )

@@ -369,7 +369,7 @@ bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 		if (pOwner->IsAlive() == false)
 			return false;
 
-		if( GetPlayerOwner()->IsBuilding() )
+		if( GetPlayerOwner()->IsStaticBuilding() )
 			return false;
 
 		pOwner->SetAnimationExtension(szAnimExt);
@@ -401,7 +401,7 @@ bool CFFWeaponBase::CanBeSelected()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if (pPlayer->IsBuilding())
+	if (pPlayer->IsStaticBuilding())
 		return false;
 	//else if( pPlayer->IsCloaked() )
 	//	return false;

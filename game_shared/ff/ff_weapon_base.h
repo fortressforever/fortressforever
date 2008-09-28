@@ -51,7 +51,7 @@ class CFFPlayer;
 #define CANCEL_IF_BUILDING() \
 { \
 	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
-	if( pFFPlayer && pFFPlayer->IsBuilding() ) \
+	if( pFFPlayer && pFFPlayer->IsStaticBuilding() ) \
 	{ \
 		switch( pFFPlayer->GetCurBuild() ) \
 		{ \
@@ -69,10 +69,12 @@ class CFFPlayer;
 #define CANCEL_IF_BUILDING() \
 { \
 	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
-	if( pFFPlayer && pFFPlayer->IsBuilding() ) \
+	if( pFFPlayer && pFFPlayer->IsStaticBuilding() ) \
 		return; \
 }
 #endif
+
+//This isnt used, as far as i can tell - shok
 #define ABORT_FUNC_IF_BUILDING() \
 { \
 	CFFPlayer *pFFPlayer = GetPlayerOwner(); \

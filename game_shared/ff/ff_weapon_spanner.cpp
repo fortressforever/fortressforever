@@ -86,7 +86,7 @@ bool CFFWeaponSpanner::CanBeSelected()
 
 	if( !pPlayer )
 		return false;
-	if( pPlayer->IsBuilding() )
+	if( pPlayer->IsStaticBuilding() )
 		return false;
 	if (!VisibleInWeaponSelection())
 		return false;

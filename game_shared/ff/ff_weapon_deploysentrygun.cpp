@@ -132,7 +132,7 @@ void CFFWeaponDeploySentryGun::PrimaryAttack( void )
 		
 #ifdef GAME_DLL
 		CFFPlayer *pPlayer = GetPlayerOwner();		
-		if( pPlayer->IsBuilding() )
+		if( pPlayer->IsStaticBuilding() )
 		{
 			switch( pPlayer->GetCurBuild() )
 			{
@@ -171,7 +171,7 @@ void CFFWeaponDeploySentryGun::WeaponIdle( void )
 		/*if( ( pPlayer->GetSentryGun() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 ) )
 			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );*/
 
-		if( !pPlayer->IsBuilding() )
+		if( !pPlayer->IsStaticBuilding() )
 		{
 			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_SENTRYGUN );
 			if( !m_pBuildable )

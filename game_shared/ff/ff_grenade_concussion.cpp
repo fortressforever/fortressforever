@@ -259,7 +259,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			}
 
 			// People who are building shouldn't be pushed around by anything
-			if (pPlayer->IsBuilding())
+			if (pPlayer->IsStaticBuilding())
 				continue;
 
 			// TFC considers a displacement < 16units to be a hh

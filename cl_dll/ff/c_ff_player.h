@@ -184,6 +184,7 @@ protected:
 
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
+	CNetworkVar( bool, m_bStaticBuilding );
 	CNetworkVar( bool, m_bBuilding );
 	// Tells us what we are currently trying to build
 	CNetworkVar( int, m_iCurBuild );
@@ -193,6 +194,7 @@ public:
 	bool AnyActiveSentrySabotages() { return (m_iActiveSabotages & 2); }
 
 	bool IsBuilding( void ) const;
+	bool IsStaticBuilding( void ) const;
 	int GetCurBuild( void ) const;
 	C_FFDetpack *GetDetpack( void ) const;
 	C_FFDispenser *GetDispenser( void ) const;
