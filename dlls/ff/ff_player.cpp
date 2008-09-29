@@ -4973,7 +4973,7 @@ void CFFPlayer::Command_PrimeOne(void)
 		return;
 
 	// Can't throw grenade while building
-	if( m_bBuilding )
+	if( m_bStaticBuilding )
 		return;
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
@@ -5018,7 +5018,7 @@ void CFFPlayer::Command_PrimeTwo(void)
 		return;
 
 	// Can't throw grenade while building
-	if( m_bBuilding )
+	if( m_bStaticBuilding )
 		return;
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
@@ -5372,7 +5372,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	func.CallFunction("player_ondamage");
 
 	// Bug #0000781: Placing a detpack can be interrupted
-	if( !m_bBuilding )
+	if( !m_bStaticBuilding )
 	{
 		// We need to apply the force first (since you should move a bit when damage is reduced)
 		ApplyAbsVelocityImpulse( info.GetDamageForce() );
