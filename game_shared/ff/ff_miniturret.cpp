@@ -295,12 +295,12 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurret, DT_FFMiniTurret )
 BEGIN_NETWORK_TABLE( CFFMiniTurret, DT_FFMiniTurret )
 #ifdef CLIENT_DLL 
 	//RecvPropInt( RECVINFO( m_iTeam ) ),
-	RecvPropInt( RECVINFO( m_bActive ) ),
-	RecvPropInt( RECVINFO( m_bEnabled ) ),
+	RecvPropBool( RECVINFO( m_bActive ) ),
+	RecvPropBool( RECVINFO( m_bEnabled ) ),
 #else
 	//SendPropInt( SENDINFO( m_iTeam ) ),
-	SendPropInt( SENDINFO( m_bActive ) ),
-	SendPropInt( SENDINFO( m_bEnabled ) ),
+	SendPropBool( SENDINFO( m_bActive ) ),
+	SendPropBool( SENDINFO( m_bEnabled ) ),
 #endif
 END_NETWORK_TABLE() 
 

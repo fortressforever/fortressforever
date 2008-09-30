@@ -153,7 +153,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFBuildableObject, DT_FFBuildableObject )
 	SendPropEHandle( SENDINFO( m_hOwner ) ),
 	SendPropInt( SENDINFO( m_iHealth ) ),
 	SendPropInt( SENDINFO( m_iMaxHealth ) ),
-	SendPropInt( SENDINFO( m_bBuilt ) ),
+	SendPropBool( SENDINFO( m_bBuilt ) ),
 	SendPropFloat( SENDINFO( m_flSabotageTime ) ),
 	SendPropInt( SENDINFO( m_iSaboteurTeamNumber ) ),
 END_SEND_TABLE( )
@@ -400,6 +400,8 @@ void CFFBuildableObject::GoLive( void )
 	m_hSaboteur = NULL;
 	m_bMaliciouslySabotaged = false;
 	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
+
+	// AfterShock: PUT SG BUILD SOUND SOMEWHERE HERE
 }
 
 /**

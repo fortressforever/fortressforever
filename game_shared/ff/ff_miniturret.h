@@ -91,9 +91,9 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurretLaserDot, DT_FFMiniTurretLaserDot )
 
 BEGIN_NETWORK_TABLE( CFFMiniTurretLaserDot, DT_FFMiniTurretLaserDot ) 
 #ifdef CLIENT_DLL
-	RecvPropInt( RECVINFO( m_bIsOn ) ),
+	RecvPropBool( RECVINFO( m_bIsOn ) ),
 #else
-	SendPropInt( SENDINFO( m_bIsOn ) ),
+	SendPropBool( SENDINFO( m_bIsOn ) ),
 #endif
 END_NETWORK_TABLE() 
 
@@ -158,9 +158,9 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurretLaserBeam, DT_FFMiniTurretLaserBeam 
 
 BEGIN_NETWORK_TABLE( CFFMiniTurretLaserBeam, DT_FFMiniTurretLaserBeam ) 
 #ifdef CLIENT_DLL
-	RecvPropInt( RECVINFO( m_bIsOn ) ),
+	RecvPropBool( RECVINFO( m_bIsOn ) ),
 #else
-	SendPropInt( SENDINFO( m_bIsOn ) ),
+	SendPropBool( SENDINFO( m_bIsOn ) ),
 #endif
 END_NETWORK_TABLE() 
 
