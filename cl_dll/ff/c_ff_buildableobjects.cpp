@@ -117,7 +117,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFBuildableObject, DT_FFBuildableObject, CFFBuildabl
 	RecvPropEHandle( RECVINFO( m_hOwner ) ),
 	RecvPropInt( RECVINFO( m_iHealth ) ),
 	RecvPropInt( RECVINFO( m_iMaxHealth ) ),
-	RecvPropInt( RECVINFO( m_bBuilt ) ),
+	RecvPropBool( RECVINFO( m_bBuilt ) ),
 	RecvPropFloat( RECVINFO( m_flSabotageTime ) ),
 	RecvPropInt( RECVINFO( m_iSaboteurTeamNumber ) ),
 END_RECV_TABLE( )
