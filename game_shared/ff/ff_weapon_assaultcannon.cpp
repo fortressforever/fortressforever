@@ -22,7 +22,7 @@
 #define FF_AC_WINDUPTIME	0.5f	// Assault Cannon Wind Up Time
 #define FF_AC_WINDDOWNTIME	2.5f	// Assault Cannon Wind Down Time
 #define FF_AC_OVERHEATDELAY 1.0f	// Assault Cannon Overheat delay
-#define FF_AC_MOVEMENTDELAY 0.4f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
+#define FF_AC_MOVEMENTDELAY 0.1f	// Time the player has to wait after firing the AC before the speed penalty wears off. 
 									// AfterShock: I'm also using this for the 'charge down' time now also (time before bullets stop firing, after you stop pressing fire)
 #define FF_AC_MINCLAMPTIME 0.53f	// minimum charge on the AC before you can clamp
 
