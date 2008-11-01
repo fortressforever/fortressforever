@@ -104,6 +104,7 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 {
 	m_flChargeTime = 0.0f;
 	m_flLastTick = m_flDeployTick = m_flNextSecondaryAttack = gpGlobals->curtime;
+	m_bAmmoTick = true;
 
 	m_flTriggerReleased = 1.0f;
 	m_flTriggerPressed = 0.0f;
