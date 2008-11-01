@@ -26,10 +26,10 @@
 									// AfterShock: I'm also using this for the 'charge down' time now also (time before bullets stop firing, after you stop pressing fire)
 #define FF_AC_MINCLAMPTIME 0.53f	// minimum charge on the AC before you can clamp
 
-//ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
-#define FF_AC_SPREAD_MIN 0.06f // ffdev_ac_spread_min.GetFloat()
-//ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
-#define FF_AC_SPREAD_MAX 0.06f // ffdev_ac_spread_max.GetFloat()
+ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.10", FCVAR_REPLICATED | FCVAR_CHEAT, "The minimum cone of fire spread for the AC" );
+#define FF_AC_SPREAD_MIN ffdev_ac_spread_min.GetFloat()
+//ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.10", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
+#define FF_AC_SPREAD_MAX ffdev_ac_spread_min.GetFloat() // ffdev_ac_spread_max.GetFloat()
 
 //ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "6.5", FCVAR_REPLICATED | FCVAR_CHEAT, "Damage per bullet" );
 #define FF_AC_BULLET_DAMAGE	6.5f // ffdev_ac_bullet_damage.GetFloat()
@@ -464,34 +464,6 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	if ((flTimeSinceRelease <= FF_AC_MOVEMENTDELAY || pOwner->m_nButtons & IN_ATTACK) && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
 
-		/* NO MORE OVERHEAT - AfterShock
-		// Oh no...
-		if (m_flChargeTime > FF_AC_MAXCHARGETIME)
-		{
-			// Freeze for overheat delay, reduce to max rev sound so it falls away instantly
-			m_flNextSecondaryAttack = gpGlobals->curtime + FF_AC_OVERHEATDELAY;
-			m_flTriggerPressed = gpGlobals->curtime + FF_AC_OVERHEATDELAY;
-			m_flTriggerReleased = 0; //gpGlobals->curtime;
-			
-			// Play the overheat sound
-			WeaponSound(SPECIAL3);
-
-#ifdef CLIENT_DLL
-			StopBarrelRotationSound();
-			StopLoopShotSound();
-
-			FF_SendHint( HWGUY_OVERHEAT, 3, PRIORITY_NORMAL, "#FF_HINT_HWGUY_OVERHEAT" );
-#endif
-
-#ifdef GAME_DLL
-			// Remember to reset the speed soon
-			pOwner->AddSpeedEffect(SE_ASSAULTCANNON, FF_AC_OVERHEATDELAY, FF_AC_SPEEDEFFECT_MIN, SEM_BOOLEAN);
-#endif
-
-			m_bFiring = false;
-		}
-		*/
-
 		// Time for the next real fire think
 		if ((m_flChargeTime > FF_AC_WINDUPTIME || m_bFiring) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
@@ -643,23 +615,34 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
 	// especially if the weapon we're firing has a really fast rate of fire.
 	int iBulletsToFire = 0;
+	int iAmmoToUse = 0;
 
-	float fireRate = GetFireRate();
+	//float fireRate = GetFireRate();
 
 	while ( m_flNextPrimaryAttack <= gpGlobals->curtime )
 	{
-		m_flNextPrimaryAttack = m_flNextPrimaryAttack + fireRate;
+		m_flNextPrimaryAttack = m_flNextPrimaryAttack + FF_AC_ROF_MAX;
 		iBulletsToFire++;
+		if (m_bAmmoTick)
+		{
+			iAmmoToUse++;
+			m_bAmmoTick = false;
+		}
+		else
+		{
+			m_bAmmoTick = true;
+		}
 	}
 
 	if (iBulletsToFire == 0)
 		return;
 
-	// Make sure we can't fire more bullets that we have
-	iBulletsToFire = min(iBulletsToFire, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
-
+	// Make sure we can't fire more bullets than we have
+	iBulletsToFire = min(iBulletsToFire, /*ConvertAmmoToBullets()*/ ( pPlayer->GetAmmoCount(m_iPrimaryAmmoType) * 2 ) );
+	iAmmoToUse = min(iAmmoToUse, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
+	
 #ifdef GAME_DLL
-	pPlayer->RemoveAmmo(iBulletsToFire, m_iPrimaryAmmoType);
+	pPlayer->RemoveAmmo(iAmmoToUse, m_iPrimaryAmmoType);
 #endif
 
 	Vector vecForward;

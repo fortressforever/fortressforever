@@ -67,6 +67,7 @@ private:
 	virtual float GetFireRate();
 	Vector GetFireSpread();
 	bool m_bClamped;
+	bool m_bAmmoTick;
 
 
 #ifdef CLIENT_DLL
