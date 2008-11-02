@@ -253,6 +253,16 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 						// P.S. Make a special upgrade sound 5 lines above this !! :D
 						if ( bFriendly && !bMine )
 							pPlayer->AddFortPoints(100, "#FF_FORTPOINTS_UPGRADETEAMMATESG");
+
+						IGameEvent *pEvent = gameeventmanager->CreateEvent( "sentrygun_upgraded" );
+						if( pEvent )
+						{
+							//CFFPlayer *pOwner = static_cast<CFFPlayer*>( pSentryGun->m_hOwner.Get() );
+							pEvent->SetInt( "userid", pPlayer->GetUserID() );
+							pEvent->SetInt( "sgownerid", ((CFFPlayer*)pSentryGun->m_hOwner.Get())->GetUserID() );
+							pEvent->SetInt( "level", pSentryGun->GetLevel() );
+							gameeventmanager->FireEvent( pEvent, true );
+						}
 #endif
 					}
 #ifdef GAME_DLL
