@@ -1404,6 +1404,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 	SendStatsToBot();
 
+/*
 	if(bUpgraded)
 	{
 		IGameEvent *pEvent = gameeventmanager->CreateEvent( "sentrygun_upgraded" );
@@ -1415,6 +1416,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			gameeventmanager->FireEvent( pEvent, true );
 		}
 	}
+*/
 
 	// Recalculate ammo percentage, 7 bits for shells + 1 bit for no rockets
 	m_iAmmoPercent = 100.0f * (float)m_iShells / (float)m_iMaxShells;

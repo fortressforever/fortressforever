@@ -32,7 +32,10 @@ public:
 		gameeventmanager->AddListener( this, "cloak_lost", true );
 		gameeventmanager->AddListener( this, "luaevent", true );
 		gameeventmanager->AddListener( this, "player_changeclass", true );
+		gameeventmanager->AddListener( this, "sentrygun_upgraded", true );
 		
+		//gameeventmanager->AddListener( this, "player_team", true );
+
 		return BaseClass::Init();
 	}
 
@@ -66,7 +69,47 @@ public:
 		}
 		// END: Watching when buildables get built
 
-		
+		// BEG: Watch for SG upgrades
+		if( !Q_strncmp( name, "sentrygun_upgraded", Q_strlen( "sentrygun_upgraded" ) ) )
+		{
+			const int attackerid = event->GetInt( "userid" );
+			const int sgownerid = event->GetInt( "sgownerid" );
+			const int level = event->GetInt( "level" );
+
+			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+			CBasePlayer *pSGOwner = UTIL_PlayerByUserId( sgownerid );
+
+			char bracket0[50];
+
+			Q_snprintf(bracket0, sizeof(bracket0)," (level \"%i\")", level);
+			if (attackerid == sgownerid) // upgraded your own SG
+			{
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"sentrygun_upgraded\"%s\n", 
+					pAttacker->GetPlayerName(), 
+					attackerid, 
+					pAttacker->GetNetworkIDString(), 
+					pAttacker->TeamID(),
+					bracket0 );
+			}
+			else
+			{
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"sentrygun_upgraded\"against \"%s<%i><%s><%s>\"%s\n", 
+					pAttacker->GetPlayerName(), 
+					attackerid, 
+					pAttacker->GetNetworkIDString(), 
+					pAttacker->TeamID(),
+					pSGOwner->GetPlayerName(),
+					sgownerid,
+					pSGOwner->GetNetworkIDString(),
+					pSGOwner->TeamID(),
+					bracket0 );
+			}
+
+		}
+		// END: Watch for SG upgrades
+
 		// BEG: Watch for players changing class
 		if( !Q_strncmp( name, "player_changeclass", Q_strlen( "player_changeclass" ) ) )
 		{
@@ -95,6 +138,36 @@ public:
 			}
 		}
 		// END: Watch for players changing class
+/*
+		// BEG: Watch for players changing team
+		if( !Q_strncmp( name, "player_team", Q_strlen( "player_team" ) ) )
+		{
+			const int attackerid = event->GetInt( "userid" );
+			const int oldteam = event->GetInt( "oldteam" );
+			const int newteam = event->GetInt( "team" );
+
+			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+			if ( pAttacker )
+			{
+				char bracket0[50];
+				char bracket1[50];
+
+				Q_snprintf(bracket0, sizeof(bracket0)," (oldteam \"%s\")", (GetGlobalTeam(oldteam))->GetName());
+
+				Q_snprintf(bracket1, sizeof(bracket1), " (newteam \"%s\")", (GetGlobalTeam(newteam))->GetName());
+
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"player_team\"%s%s\n", 
+					pAttacker->GetPlayerName(), 
+					attackerid, 
+					pAttacker->GetNetworkIDString(), 
+					pAttacker->TeamID(),
+					bracket0, 
+					bracket1 );
+			}
+		}
+		// END: Watch for players changing team
+*/
 
 		// BEG: Watch for buildables getting killed
 		if( !Q_strncmp( name, "dispenser_killed", Q_strlen( "dispenser_killed" ) ) )
