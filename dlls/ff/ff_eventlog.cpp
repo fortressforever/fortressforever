@@ -10,6 +10,7 @@
 #include "KeyValues.h"
 #include "team.h"
 #include "ff_buildableobjects_shared.h"
+#include "ff_utils.h" // for class_intToString
 
 class CFFEventLog : public CEventLog
 {
@@ -30,6 +31,7 @@ public:
 		gameeventmanager->AddListener( this, "disguise_lost", true );
 		gameeventmanager->AddListener( this, "cloak_lost", true );
 		gameeventmanager->AddListener( this, "luaevent", true );
+		gameeventmanager->AddListener( this, "player_changeclass", true );
 		
 		return BaseClass::Init();
 	}
@@ -63,6 +65,36 @@ public:
 			DevMsg( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), oteam ? oteam->GetName() : "", szObject );
 		}
 		// END: Watching when buildables get built
+
+		
+		// BEG: Watch for players changing class
+		if( !Q_strncmp( name, "player_changeclass", Q_strlen( "player_changeclass" ) ) )
+		{
+			const int attackerid = event->GetInt( "userid" );
+			const int oldclass = event->GetInt( "oldclass" );
+			const int newclass = event->GetInt( "newclass" );
+
+			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+			if ( pAttacker )
+			{
+				char bracket0[50];
+				char bracket1[50];
+
+				Q_snprintf(bracket0, sizeof(bracket0)," (oldclass \"%s\")",  Class_IntToString(oldclass));
+
+				Q_snprintf(bracket1, sizeof(bracket1), " (newclass \"%s\")", Class_IntToString(newclass));
+
+				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"player_changeclass\"%s%s\n", 
+					pAttacker->GetPlayerName(), 
+					attackerid, 
+					pAttacker->GetNetworkIDString(), 
+					pAttacker->TeamID(),
+					bracket0, 
+					bracket1 );
+			}
+		}
+		// END: Watch for players changing class
 
 		// BEG: Watch for buildables getting killed
 		if( !Q_strncmp( name, "dispenser_killed", Q_strlen( "dispenser_killed" ) ) )
@@ -190,6 +222,8 @@ public:
 		// BEG: LUA events
 		if( !Q_strncmp( name, "luaevent", Q_strlen( "luaevent" ) ) )
 		{
+			// WARNING: lua doesnt give you player IDs, it gives you player index. 
+			//          This is why we use PlayerByIndex and GetPlayerUserId unlike other logging calls. - AfterShock
 			const int ownerid = event->GetInt( "userid2" ); // owner is typically the victim 
 			const int attackerid = event->GetInt( "userid" ); // attacker is typically the one triggering the event
 			const char *eventName = event->GetString( "eventname" );
@@ -217,10 +251,10 @@ public:
 			{
 				Q_snprintf(bracket2, sizeof(bracket2), " (%s \"%s\")", key2, value2);
 			}
-					
+			
 			bool bNoAttacker = ( attackerid == 0 );
 			bool bNoVictim = ( ownerid == 0 );
-			
+
 			if( bNoAttacker )
 			{
 				if ( bNoVictim )
@@ -236,21 +270,30 @@ public:
 				else
 				{
 					
-					CBasePlayer *pOwner = UTIL_PlayerByIndex( ownerid );
+					CBasePlayer *pOwner = UTIL_PlayerByIndex( ownerid ); // yes we used PlayerByIndex rather than PlayerByUserId
 					CTeam *oteam = NULL; // owners (person doing the exposing) team
 					oteam = pOwner->GetTeam();
 
+					/*
+				char bracketOriginOwner[50];
+
+				if (strlen(key0))
+				{
+					Q_snprintf(bracket0, sizeof(bracket0)," (%s \"%s\")", key0, value0);
+				}
+				 Vector v_dist = pPlayer->pev->origin;
+*/
 					// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
 					UTIL_LogPrintf( "World triggered \"%s\" against \"%s<%i><%s><%s>\"%s%s%s\n", 
 						eventName, 
 						pOwner->GetPlayerName(), 
-						ownerid, 
+						engine->GetPlayerUserId(pOwner->edict()), 
 						pOwner->GetNetworkIDString(),	
 						oteam ? oteam->GetName() : "",
 						strlen(key0) ? bracket0 : "", 
 						strlen(key1) ? bracket1 : "", 
 						strlen(key2) ? bracket2 : "" );
-				}
+				} 
 			}
 			else
 			{
@@ -264,7 +307,7 @@ public:
 					// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
 					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"%s\"%s%s%s\n", 
 						pAttacker->GetPlayerName(), 
-						attackerid, 
+						engine->GetPlayerUserId(pAttacker->edict()), 
 						pAttacker->GetNetworkIDString(), 
 						ateam ? ateam->GetName() : "",
 						eventName, 
@@ -281,12 +324,12 @@ public:
 					// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
 					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"%s\" against \"%s<%i><%s><%s>\"%s%s%s\n", 
 						pAttacker->GetPlayerName(), 
-						attackerid, 
+						engine->GetPlayerUserId(pAttacker->edict()), 
 						pAttacker->GetNetworkIDString(), 
 						ateam ? ateam->GetName() : "",
 						eventName, 
 						pOwner->GetPlayerName(), 
-						ownerid, 
+						engine->GetPlayerUserId(pOwner->edict()), 
 						pOwner->GetNetworkIDString(),	
 						oteam ? oteam->GetName() : "",
 						strlen(key0) ? bracket0 : "", 

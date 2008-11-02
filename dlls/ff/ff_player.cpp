@@ -2443,8 +2443,23 @@ int CFFPlayer::ActivateClass()
 		return GetClassSlot();
 	}
 
+	// Send a player class change event. - finished below!
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("player_changeclass");
+	if (pEvent)
+	{
+		pEvent->SetInt("userid", GetUserID());
+		pEvent->SetInt("oldclass", GetClassForClient());
+	}
+
 	const CFFPlayerClassInfo &pNewPlayerClassInfo = GetFFClassData();
 	SetClassForClient(pNewPlayerClassInfo.m_iSlot);
+
+	// finish the class change event - AFTER WE'VE SPAWNED!
+	if (pEvent)
+	{
+		pEvent->SetInt("newclass", GetClassForClient());
+		gameeventmanager->FireEvent(pEvent, true);
+	}
 
 	// Display our class information
 	ClientPrint(this, HUD_PRINTNOTIFY, pNewPlayerClassInfo.m_szPrintName);
@@ -2452,16 +2467,6 @@ int CFFPlayer::ActivateClass()
 
 	// Remove all buildable items from the game
 	RemoveItems();
-
-	// Send a player class change event.
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("player_changeclass");
-	if (pEvent)
-	{
-		pEvent->SetInt("userid", GetUserID());
-		pEvent->SetInt("oldclass", GetClassForClient());
-		pEvent->SetInt("newclass", m_iNextClass);
-		gameeventmanager->FireEvent(pEvent, true);
-	}
 
 	// So the client can keep track
 	SetClassForClient(m_iNextClass);
