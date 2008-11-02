@@ -402,6 +402,18 @@ void CFFBuildableObject::GoLive( void )
 	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
 
 	// AfterShock: PUT SG BUILD SOUND SOMEWHERE HERE
+
+	//if( m_bHasSounds )
+
+		// Detpack sound is local only
+		//if( Classify() == CLASS_SENTRYGUN )
+		//{
+		//	CPASAttenuationFilter sndFilter( this );
+			//sndFilter.AddRecipientsByPAS( GetAbsOrigin() );
+		//	EmitSound( sndFilter, entindex(), m_ppszSounds[ 0 ] );
+		//}		
+
+
 }
 
 /**
