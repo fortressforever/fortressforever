@@ -52,6 +52,7 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
 // grenade information
 //ConVar gren_timer("ffdev_gren_timer","3.81",0,"Timer length for all grenades.");
+ConVar cl_ffdev_ragdoll_force("cl_ffdev_ragdoll_force","500.0",0,"Added physics push-force for fatal bullets creating ragdolls.");
 #define GREN_TIMER 3.81f
 //ConVar gren_throw_delay("ffdev_throw_delay","0.5",0,"Delay before primed grenades can be thrown.");
 #define GREN_THROW_DELAY 0.5f
@@ -2168,6 +2169,11 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 
 		if (info && info->GetDamageType() & DMG_BLAST)
 			pRagdoll->m_vecForce = 100.0f * info->GetDamageForce();
+		else // bullet
+		{
+			DevMsg("Vector damage force is %i,%i,%i", info->GetDamageForce().x , info->GetDamageForce().y , info->GetDamageForce().z );
+			pRagdoll->m_vecForce = cl_ffdev_ragdoll_force.GetFloat() * info->GetDamageForce();
+		}
 
 		// remove it after a time
 		pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
