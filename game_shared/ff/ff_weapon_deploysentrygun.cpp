@@ -28,6 +28,8 @@
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
 
+ConVar cl_sentrygun_showaimline( "cl_sentrygun_showaimline", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an explosion (0 disables this type of dlight).");
+
 #ifdef CLIENT_DLL 
 	#define CFFWeaponDeploySentryGun C_FFWeaponDeploySentryGun
 	#define CFFSentryGun C_FFSentryGun
@@ -317,7 +319,11 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 
 		trace_t tr;
 		UTIL_TraceLine(pPlayer->Weapon_ShootPosition(), pPlayer->Weapon_ShootPosition() + vecForward * MAX_TRACE_LENGTH, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
-
+		if (cl_sentrygun_showaimline.GetBool())
+		{
+			NDebugOverlay::Line(pPlayer->Weapon_ShootPosition(), tr.endpos, 255, 255, 255, false, 3);
+			NDebugOverlay::Line(pSentry->EyePosition(), tr.endpos, 255, 128, 128, false, 3);
+		}
 		pSentry->SetFocusPoint(tr.endpos);
 	}
 
