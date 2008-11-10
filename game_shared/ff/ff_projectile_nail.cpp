@@ -127,7 +127,7 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 
 		if (pOther->IsPlayer())
 		{
-			dmgInfo.ScaleDamageForce(0.1f);
+			dmgInfo.ScaleDamageForce(0.01f);
 		}
 		else if( ( pOther->Classify() == CLASS_SENTRYGUN ) && m_bNailGrenadeNail )
 		{
