@@ -57,6 +57,7 @@ ConVar sv_voice_inputfromfile("sv_voice_inputfromfile", "1", FCVAR_REPLICATED | 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Shows client(red) and server(blue) bullet impact point");
 ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allows spectators to talk to players");
 //ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_REPLICATED);
+//ConVar ffdev_mancannon_commandtime( "ffdev_mancannon_commandtime", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_radiotag_time( "ffdev_sniper_radiotag_time", "30.0", FCVAR_REPLICATED | FCVAR_CHEAT );
@@ -647,6 +648,7 @@ void CFFPlayer::ClassSpecificSkill()
 
 		case CLASS_SCOUT:
 			engine->ClientCmd("mancannon");
+			m_flNextClassSpecificSkill = gpGlobals->curtime + 0.25f; //ffdev_mancannon_commandtime.GetFloat();
 			break;
 
 #endif
