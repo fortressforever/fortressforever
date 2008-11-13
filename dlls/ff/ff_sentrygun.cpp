@@ -1556,6 +1556,7 @@ void CFFSentryGun::Detonate()
 		{
 			CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
 			pEvent->SetInt("userid", pOwner->GetUserID());
+			pEvent->SetInt("level", GetLevel());
 			gameeventmanager->FireEvent(pEvent, true);
 		}
 	}

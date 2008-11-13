@@ -31,7 +31,7 @@ public:
 		//gameeventmanager->AddListener( this, "dispenser_detonated", true );
 		gameeventmanager->AddListener( this, "sentrygun_killed", true );
 		gameeventmanager->AddListener( this, "sentry_dismantled", true );
-		//gameeventmanager->AddListener( this, "sentrygun_detonated", true );
+		gameeventmanager->AddListener( this, "sentry_detonated", true );
 		gameeventmanager->AddListener( this, "disguise_lost", true );
 		gameeventmanager->AddListener( this, "cloak_lost", true );
 		gameeventmanager->AddListener( this, "luaevent", true );
@@ -91,9 +91,29 @@ public:
 				pSGOwner->GetNetworkIDString(), 
 				pSGOwner->TeamID(),
 				bracket0 );
-
 		}
 		// END: Watch for SG dismantle
+
+		// BEG: Watch for SG detonate
+		if( !Q_strncmp( name, "sentry_detonated", Q_strlen( "sentry_detonated" ) ) )
+		{
+			const int sgownerid = event->GetInt( "userid" );
+			const int level = event->GetInt( "level" );
+
+			CBasePlayer *pSGOwner = UTIL_PlayerByUserId( sgownerid );
+
+			char bracket0[50];
+
+			Q_snprintf(bracket0, sizeof(bracket0)," (level \"%i\")", level);
+			// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"sentry_detonated\"%s\n", 
+				pSGOwner->GetPlayerName(), 
+				sgownerid, 
+				pSGOwner->GetNetworkIDString(), 
+				pSGOwner->TeamID(),
+				bracket0 );
+		}
+		// END: Watch for SG detonate
 
 
 
