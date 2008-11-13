@@ -370,15 +370,15 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 			CPASAttenuationFilter sndFilter( pSentry );
 			pSentry->EmitSound( sndFilter, pSentry->entindex(), FF_SENTRYGUN_UNBUILD_SOUND );
 
-			pSentry->RemoveQuietly();
-
 			// Fire an event.
 			IGameEvent *pEvent = gameeventmanager->CreateEvent("sentry_dismantled");						
 			if(pEvent)
 			{
 				pEvent->SetInt("userid", pPlayer->GetUserID());
+				pEvent->SetInt("level", pSentry->GetLevel());
 				gameeventmanager->FireEvent(pEvent, true);
 			}
+			pSentry->RemoveQuietly();
 		}
 		else
 			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_TOOFARAWAY");

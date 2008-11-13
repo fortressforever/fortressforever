@@ -27,7 +27,11 @@ public:
 		gameeventmanager->AddListener( this, "build_sentrygun", true );
 		gameeventmanager->AddListener( this, "build_detpack", true );
 		gameeventmanager->AddListener( this, "dispenser_killed", true );
+		//gameeventmanager->AddListener( this, "dispenser_dismantled", true );
+		//gameeventmanager->AddListener( this, "dispenser_detonated", true );
 		gameeventmanager->AddListener( this, "sentrygun_killed", true );
+		gameeventmanager->AddListener( this, "sentry_dismantled", true );
+		//gameeventmanager->AddListener( this, "sentrygun_detonated", true );
 		gameeventmanager->AddListener( this, "disguise_lost", true );
 		gameeventmanager->AddListener( this, "cloak_lost", true );
 		gameeventmanager->AddListener( this, "luaevent", true );
@@ -68,6 +72,30 @@ public:
 			DevMsg( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), oteam ? oteam->GetName() : "", szObject );
 		}
 		// END: Watching when buildables get built
+
+		// BEG: Watch for SG dismantle
+		if( !Q_strncmp( name, "sentry_dismantled", Q_strlen( "sentry_dismantled" ) ) )
+		{
+			const int sgownerid = event->GetInt( "userid" );
+			const int level = event->GetInt( "level" );
+
+			CBasePlayer *pSGOwner = UTIL_PlayerByUserId( sgownerid );
+
+			char bracket0[50];
+
+			Q_snprintf(bracket0, sizeof(bracket0)," (level \"%i\")", level);
+			// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"sentry_dismantled\"%s\n", 
+				pSGOwner->GetPlayerName(), 
+				sgownerid, 
+				pSGOwner->GetNetworkIDString(), 
+				pSGOwner->TeamID(),
+				bracket0 );
+
+		}
+		// END: Watch for SG dismantle
+
+
 
 		// BEG: Watch for SG upgrades
 		if( !Q_strncmp( name, "sentrygun_upgraded", Q_strlen( "sentrygun_upgraded" ) ) )
@@ -202,7 +230,7 @@ public:
 		{
 			const int ownerid = event->GetInt( "userid" );
 			const int attackerid = event->GetInt( "attacker" );
-
+			const char *attackerpos = event->GetString( "attackerpos" );
 			bool bWorldSpawn = ( attackerid == 0 );
 
 			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
@@ -223,8 +251,8 @@ public:
 				oteam = pOwner->GetTeam();
 
 				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
-				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"kill_sentrygun\" against \"%s<%i><%s><%s>\" (weapon \"%s\")\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "", event->GetString( "weapon" ) );
-				DevMsg( "\"%s<%i><%s><%s>\" triggered \"kill_sentrygun\" against \"%s<%i><%s><%s>\" (weapon \"%s\")\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "", event->GetString( "weapon" ) );
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"kill_sentrygun\" against \"%s<%i><%s><%s>\" (weapon \"%s\") (attackerpos \"%s\")\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "", event->GetString( "weapon" ), attackerpos );
+				DevMsg( "\"%s<%i><%s><%s>\" triggered \"kill_sentrygun\" against \"%s<%i><%s><%s>\" (weapon \"%s\") (attackerpos \"%s\")\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(),	oteam ? oteam->GetName() : "", event->GetString( "weapon" ), attackerpos );
 			}		
 		}
 		// END: Watch for buildables getting killed
