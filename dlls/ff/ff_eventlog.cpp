@@ -27,8 +27,8 @@ public:
 		gameeventmanager->AddListener( this, "build_sentrygun", true );
 		gameeventmanager->AddListener( this, "build_detpack", true );
 		gameeventmanager->AddListener( this, "dispenser_killed", true );
-		//gameeventmanager->AddListener( this, "dispenser_dismantled", true );
-		//gameeventmanager->AddListener( this, "dispenser_detonated", true );
+		gameeventmanager->AddListener( this, "dispenser_dismantled", true );
+		gameeventmanager->AddListener( this, "dispenser_detonated", true );
 		gameeventmanager->AddListener( this, "sentrygun_killed", true );
 		gameeventmanager->AddListener( this, "sentry_dismantled", true );
 		gameeventmanager->AddListener( this, "sentry_detonated", true );
@@ -114,6 +114,36 @@ public:
 				bracket0 );
 		}
 		// END: Watch for SG detonate
+
+		// BEG: Watch for dispenser detonate
+		if( !Q_strncmp( name, "dispenser_detonated", Q_strlen( "dispenser_detonated" ) ) )
+		{
+			const int sgownerid = event->GetInt( "userid" );
+
+			CBasePlayer *pSGOwner = UTIL_PlayerByUserId( sgownerid );
+			// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"dispenser_detonated\"\n", 
+				pSGOwner->GetPlayerName(), 
+				sgownerid, 
+				pSGOwner->GetNetworkIDString(), 
+				pSGOwner->TeamID() );
+		}
+		// END: Watch for dispenser detonate
+
+		// BEG: Watch for dispenser dismantle
+		if( !Q_strncmp( name, "dispenser_dismantled", Q_strlen( "dispenser_dismantled" ) ) )
+		{
+			const int sgownerid = event->GetInt( "userid" );
+
+			CBasePlayer *pSGOwner = UTIL_PlayerByUserId( sgownerid );
+			// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"dispenser_dismantled\"\n", 
+				pSGOwner->GetPlayerName(), 
+				sgownerid, 
+				pSGOwner->GetNetworkIDString(), 
+				pSGOwner->TeamID() );
+		}
+		// END: Watch for dispenser dismantle
 
 
 

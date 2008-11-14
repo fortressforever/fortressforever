@@ -267,7 +267,13 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 			// Bug #0000426: Buildables Dismantle Sounds Missing
 			CPASAttenuationFilter sndFilter( pDispenser );
 			pDispenser->EmitSound( sndFilter, pDispenser->entindex(), "Dispenser.unbuild" );
-
+			// Fire an event.
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_dismantled");		
+			if(pEvent)
+			{
+				pEvent->SetInt("userid", pPlayer->GetUserID());
+				gameeventmanager->FireEvent(pEvent, true);
+			}
 			pDispenser->RemoveQuietly();
 		}
 		else
@@ -358,15 +364,16 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 			CPASAttenuationFilter sndFilter( pDispenser );
 			pDispenser->EmitSound( sndFilter, pDispenser->entindex(), "Dispenser.unbuild" );
 
-			pDispenser->RemoveQuietly();
-
+			
 			// Fire an event.
-			IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_dismantled");						
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_dismantled");		
 			if(pEvent)
 			{
 				pEvent->SetInt("userid", pPlayer->GetUserID());
 				gameeventmanager->FireEvent(pEvent, true);
 			}
+			pDispenser->RemoveQuietly();
+
 		}
 		else
 			pDispenser->Detonate();
