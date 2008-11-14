@@ -27,11 +27,11 @@
 
 
 // 1325: Dev variables for tweaking the autorifle
-ConVar ffdev_ar_recoil("ffdev_ar_recoil", "0.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Recoil Amount");
+//ConVar ffdev_ar_recoil("ffdev_ar_recoil", "0.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Recoil Amount");
 //ConVar ffdev_ar_push("ffdev_ar_push", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Push Amount");
-ConVar ffdev_ar_damage("ffdev_ar_damage", "8", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Damage");
-ConVar ffdev_ar_rof("ffdev_ar_rof", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Rate of Fire");
-ConVar ffdev_ar_bulletspread("ffdev_ar_bulletspread", "0.09", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Bullet Spread");
+//ConVar ffdev_ar_damage("ffdev_ar_damage", "7", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Damage");
+//ConVar ffdev_ar_rof("ffdev_ar_rof", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Rate of Fire");
+//ConVar ffdev_ar_bulletspread("ffdev_ar_bulletspread", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Bullet Spread");
 
 
 //=============================================================================
@@ -153,13 +153,15 @@ void CFFWeaponAutoRifle::Fire()
 
 	FireBulletsInfo_t info(pWeaponInfo.m_iBullets, pPlayer->Weapon_ShootPosition(), vecForward, Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
-	//info.m_iDamage = pWeaponInfo.m_iDamage;
+	//info.m_iDamage = ffdev_ar_damage.GetInt();
+	info.m_iDamage = pWeaponInfo.m_iDamage;
 	//info.m_iTracerFreq = 0;
 
 	// 1325: For tweaking autorifle
-	info.m_iDamage = ffdev_ar_damage.GetInt();
-	float flBulletSpread = ffdev_ar_bulletspread.GetFloat();
-	info.m_vecSpread = Vector( flBulletSpread, flBulletSpread, flBulletSpread );
+	//float flBulletSpread = ffdev_ar_bulletspread.GetFloat();
+	//info.m_vecSpread = Vector( flBulletSpread, flBulletSpread, flBulletSpread );
+	
+	info.m_iTracerFreq = 1;
 	//info.m_flDamageForceScale = ffdev_ar_push.GetFloat();
 
 	pPlayer->FireBullets(info);
