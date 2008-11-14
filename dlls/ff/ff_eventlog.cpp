@@ -26,9 +26,12 @@ public:
 		gameeventmanager->AddListener( this, "build_dispenser", true );
 		gameeventmanager->AddListener( this, "build_sentrygun", true );
 		gameeventmanager->AddListener( this, "build_detpack", true );
+		gameeventmanager->AddListener( this, "build_mancannon", true );
 		gameeventmanager->AddListener( this, "dispenser_killed", true );
 		gameeventmanager->AddListener( this, "dispenser_dismantled", true );
 		gameeventmanager->AddListener( this, "dispenser_detonated", true );
+		gameeventmanager->AddListener( this, "mancannon_detonated", true );
+		gameeventmanager->AddListener( this, "detpack_detonated", true );
 		gameeventmanager->AddListener( this, "sentrygun_killed", true );
 		gameeventmanager->AddListener( this, "sentry_dismantled", true );
 		gameeventmanager->AddListener( this, "sentry_detonated", true );
@@ -66,7 +69,9 @@ public:
 				Q_strcpy( szObject, "sentrygun" );
 			else if( Q_strcmp( eventName, "build_detpack" ) == 0 )
 				Q_strcpy( szObject, "detpack" );
-
+			else if( Q_strcmp( eventName, "build_mancannon" ) == 0 )
+				Q_strcpy( szObject, "mancannon" );
+			
 			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"build_%s\"\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), oteam ? oteam->GetName() : "", szObject );
 
 			DevMsg( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), oteam ? oteam->GetName() : "", szObject );
@@ -129,6 +134,34 @@ public:
 				pSGOwner->TeamID() );
 		}
 		// END: Watch for dispenser detonate
+
+		// BEG: Watch for mancannon detonate
+		if( !Q_strncmp( name, "mancannon_detonated", Q_strlen( "mancannon_detonated" ) ) )
+		{
+			const int sgownerid = event->GetInt( "userid" );
+
+			CBasePlayer *pSGOwner = UTIL_PlayerByUserId( sgownerid );
+			// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"mancannon_detonated\"\n", 
+				pSGOwner->GetPlayerName(), 
+				sgownerid, 
+				pSGOwner->GetNetworkIDString(), 
+				pSGOwner->TeamID() );
+		}
+		// END: Watch for mancannon detonate
+
+		if( !Q_strncmp( name, "detpack_detonated", Q_strlen( "detpack_detonated" ) ) )
+		{
+			const int sgownerid = event->GetInt( "userid" );
+
+			CBasePlayer *pSGOwner = UTIL_PlayerByUserId( sgownerid );
+			// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"detpack_detonated\"\n", 
+				pSGOwner->GetPlayerName(), 
+				sgownerid, 
+				pSGOwner->GetNetworkIDString(), 
+				pSGOwner->TeamID() );
+		}
 
 		// BEG: Watch for dispenser dismantle
 		if( !Q_strncmp( name, "dispenser_dismantled", Q_strlen( "dispenser_dismantled" ) ) )
