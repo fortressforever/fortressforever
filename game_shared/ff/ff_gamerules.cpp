@@ -1049,11 +1049,11 @@ ConVar mp_prematch( "mp_prematch",
 		float flDmg = flBaseDmg + speedratio * flBaseDmg;
 
 		// Spies only take half damage too
-		if (bIsSpy)
+		if ((bIsSpy) || (pFFPlayer->GetClassSlot() == 1))
 		{
 			flDmg *= 0.5f;
 		}
-
+		
 		return flDmg;
 	} 
 
