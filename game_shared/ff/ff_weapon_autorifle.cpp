@@ -125,9 +125,9 @@ void CFFWeaponAutoRifle::PrimaryAttack()
 	Fire();
 
 	// To use server .txt files uncomment this line
-	//m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
 	// To use CVARs uncomment this line
-	m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_ar_rof.GetFloat();
+	//m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_ar_rof.GetFloat();
 
 	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
@@ -136,8 +136,8 @@ void CFFWeaponAutoRifle::PrimaryAttack()
 	}
 
 	//Add our view kick in
-	//pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
-	pPlayer->ViewPunch(QAngle(-ffdev_ar_recoil.GetFloat(), 0, 0));
+	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
+	//pPlayer->ViewPunch(QAngle(-ffdev_ar_recoil.GetFloat(), 0, 0));
 }
 
 //----------------------------------------------------------------------------
