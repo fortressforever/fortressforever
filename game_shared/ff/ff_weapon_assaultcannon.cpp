@@ -27,12 +27,12 @@
 #define FF_AC_MINCLAMPTIME 0.53f	// minimum charge on the AC before you can clamp
 
 ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.06", FCVAR_REPLICATED, "The minimum cone of fire spread for the AC" );
-ConVar ffdev_ac_tracerfreq( "ffdev_ac_tracerfreq", "1", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
+ConVar ffdev_ac_tracerfreq( "ffdev_ac_tracerfreq", "2", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
 #define FF_AC_SPREAD_MIN ffdev_ac_spread_min.GetFloat()
 //ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
 #define FF_AC_SPREAD_MAX ffdev_ac_spread_min.GetFloat() // ffdev_ac_spread_max.GetFloat()
 
-ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "8.5", FCVAR_REPLICATED, "Damage per bullet" );
+ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "8.2", FCVAR_REPLICATED, "Damage per bullet" );
 #define FF_AC_BULLET_DAMAGE	ffdev_ac_bullet_damage.GetFloat()
 
 ConVar ffdev_ac_spread_multiplier( "ffdev_ac_spread_multiplier", "2.0", FCVAR_REPLICATED, "Outer cone is X times bigger" );
