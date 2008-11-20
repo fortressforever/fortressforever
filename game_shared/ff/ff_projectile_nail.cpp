@@ -22,7 +22,7 @@
 #define NAIL_MODEL "models/projectiles/nail/w_nail.mdl"
 
 //ConVar ffdev_nail_speed("ffdev_nail_speed", "2000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Nail speed");
-ConVar ffdev_nail_pushmultiplier("ffdev_nail_pushmultiplier", "0.01", FCVAR_REPLICATED | FCVAR_CHEAT, "Nail pushforce multiplier - was 0.1 for 2.1 release");
+ConVar ffdev_nail_pushmultiplier("ffdev_nail_pushmultiplier", "0.05", FCVAR_REPLICATED | FCVAR_CHEAT, "Nail pushforce multiplier - was 0.1 for 2.1 release");
 #define NAIL_SPEED 2000.0f
 //ConVar ffdev_nail_bbox("ffdev_nail_bbox", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Nail bbox");
 #define NAIL_BBOX 2.0f
