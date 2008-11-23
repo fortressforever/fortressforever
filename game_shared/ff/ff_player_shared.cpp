@@ -62,6 +62,7 @@ ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLIC
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_radiotag_time( "ffdev_sniper_radiotag_time", "30.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "10.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 //ConVar ffdev_sniperrifle_legshot_minslowdownspeed( "ffdev_sniperrifle_legshot_minslowdownspeed", "0.7", FCVAR_REPLICATED, "Player speed when hit with a minimum charge sniper rifle shot (0.7 would mean player speed at 70% after being legshot)" );
 //ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
@@ -294,7 +295,7 @@ void CFFPlayer::FireBullet(
 
 	int iDamageType = DMG_BULLET | DMG_NEVERGIB;
 
-	if (bDoEffects)
+	if (bDoEffects) // Only once every 0.3 seconds
 	{
 		// See if the bullet ended up underwater + started out of the water
 		if (enginetrace->GetPointContents(tr.endpos) & (CONTENTS_WATER|CONTENTS_SLIME))
@@ -1069,46 +1070,51 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 				if (bStartedInWater || !bHitWater || (info.m_nFlags & FIRE_BULLETS_ALLOW_WATER_SURFACE_IMPACTS))
 				{
-					if (bDoServerEffects)
+					// Only draw impact effects when you do a tracer, or this weapon doesnt have tracers
+					// this helps cut down the effect message spam for the AC - AfterShock 
+					if ((info.m_iTracerFreq == 0) || (tracerCount % ffdev_ac_impactfreq.GetInt() ) == 0)
 					{
-						// Is the entity valid, and the surface drawable on?
-						if (tr.fraction < 1.0f && tr.m_pEnt && !(tr.surface.flags & (SURF_SKY|SURF_NODRAW)))
+						if (bDoServerEffects)
 						{
-							// Build the impact data
-							CEffectData data;
-							data.m_vOrigin = tr.endpos;
-							data.m_vStart = tr.startpos;
-							data.m_nSurfaceProp = tr.surface.surfaceProps;
-							data.m_nDamageType = nDamageType;
-							data.m_nHitBox = tr.hitbox;
+							// Is the entity valid, and the surface drawable on?
+							if (tr.fraction < 1.0f && tr.m_pEnt && !(tr.surface.flags & (SURF_SKY|SURF_NODRAW)))
+							{
+								// Build the impact data
+								CEffectData data;
+								data.m_vOrigin = tr.endpos;
+								data.m_vStart = tr.startpos;
+								data.m_nSurfaceProp = tr.surface.surfaceProps;
+								data.m_nDamageType = nDamageType;
+								data.m_nHitBox = tr.hitbox;
 
-#ifdef GAME_DLL
-							data.m_nEntIndex = tr.m_pEnt->entindex();
-#else
-							data.m_hEntity = tr.m_pEnt;
-#endif
+	#ifdef GAME_DLL
+								data.m_nEntIndex = tr.m_pEnt->entindex();
+	#else
+								data.m_hEntity = tr.m_pEnt;
+	#endif
 
-							// Always do impact effects for the first few blood spurts.
-							// Otherwise we might not show them and that's bad feedback
-							// Not sure if we should check bDoEffects or not really.
-							if (tr.m_pEnt->IsPlayer() && nBloodSpurts < 3 && bDoEffects)
-								nBloodSpurts++;
-							// Otherwise the impact effects for the 4th shot onwards are optional (depends
-							// on client's cl_effectdetail)
-							else if (iShot > 2 || !bDoEffects)
-								data.m_fFlags |= CEFFECT_EFFECTNOTNEEDED;
+								// Always do impact effects for the first few blood spurts.
+								// Otherwise we might not show them and that's bad feedback
+								// Not sure if we should check bDoEffects or not really.
+								if (tr.m_pEnt->IsPlayer() && nBloodSpurts < 3 && bDoEffects)
+									nBloodSpurts++;
+								// Otherwise the impact effects for the 4th shot onwards are optional (depends
+								// on client's cl_effectdetail)
+								else if (iShot > 2 || !bDoEffects)
+									data.m_fFlags |= CEFFECT_EFFECTNOTNEEDED;
 
-							// No sound for all but the first few
-							if (iShot > 2)
-								data.m_fFlags |= CEFFECT_SOUNDNOTNEEDED;
+								// No sound for all but the first few
+								if (iShot > 2)
+									data.m_fFlags |= CEFFECT_SOUNDNOTNEEDED;
 
-							// Send it off
-							DispatchEffect("Impact", data);
+								// Send it off
+								DispatchEffect("Impact", data);
+							}
 						}
-					}
-					else
-						bDoImpacts = true;
-				}
+						else
+							bDoImpacts = true;
+					}// end if tracers
+				} 
 				else
 				{
 					// We may not impact, but we DO need to affect ragdolls on the client
