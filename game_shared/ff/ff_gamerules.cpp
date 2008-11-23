@@ -1620,17 +1620,17 @@ ConVar mp_prematch( "mp_prematch",
 			pEvent->SetInt( "attacker", iKillerID );
 			pEvent->SetString( "weapon", pszWeapon );
 			pEvent->SetInt( "priority", 10 );
-			gameeventmanager->FireEvent( pEvent );
 			
 			if (pScorer)
 			{
-				char bracket0[50];
+				char bracket0[29];
 				Q_snprintf(bracket0, sizeof(bracket0),"%0.2f, %0.2f, %0.1f", pScorer->GetAbsOrigin().x, pScorer->GetAbsOrigin().y, pScorer->GetAbsOrigin().z);
-
 				pEvent->SetString( "attackerpos", bracket0);
 			}
 			else
 				pEvent->SetString( "attackerpos", "");
+
+			gameeventmanager->FireEvent( pEvent );
 		}
 	}
 
