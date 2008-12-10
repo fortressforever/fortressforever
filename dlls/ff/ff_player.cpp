@@ -3703,7 +3703,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					GetManCannon()->GoLive();
 
 					// TODO: Change to something
-					switchToWeapon = FF_WEAPON_NONE;
+					switchToWeapon = FF_WEAPON_NAILGUN;
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_mancannon" );
 					if( pEvent )
 					{
@@ -3721,6 +3721,29 @@ void CFFPlayer::PostBuildGenericThink( void )
 			UnlockPlayer();
 			if( m_hActiveWeapon )
 				m_hActiveWeapon->Deploy();
+
+			// Switch to a different weapon if you finished building
+			if((switchToWeapon != FF_WEAPON_NONE) && (switchToWeapon < MAX_WEAPONS))
+			{
+				CFFWeaponBase *weap;
+				weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(switchToWeapon));
+				if (weap && weap->GetWeaponID() == switchToWeapon)
+				{
+					Weapon_Switch(weap);
+				}
+			/* AfterShock - this seems more expensive than we need, trying above instead
+				CFFWeaponBase *weap;
+				for (int i = 0; i < MAX_WEAPONS; i++)
+				{
+					weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(i));
+					if (weap && weap->GetWeaponID() == switchToWeapon)
+					{
+						Weapon_Switch(weap);
+						break;
+					}
+				}
+			*/
+			}
 		}
 
 
@@ -3731,24 +3754,6 @@ void CFFPlayer::PostBuildGenericThink( void )
 		m_bStaticBuilding = false;
 		//m_bCancelledBuild = false;
 
-
-
-		// Switch to another weapon, only the first time after building something
-		/*
-		if(switchToWeapon != FF_WEAPON_NONE)
-		{
-			CFFWeaponBase *weap;
-			for (int i = 0; i < MAX_WEAPONS; i++)
-			{
-				weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(i));
-				if (weap && weap->GetWeaponID() == switchToWeapon)
-				{
-					Weapon_Switch(weap);
-					break;
-				}
-			}
-		}
-		*/
 	}
 	else
 	{
@@ -6585,7 +6590,10 @@ int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 
 int CFFPlayer::LuaAddHealth(int iAmount)
 {
-		iAmount = min( iAmount, m_iMaxHealth - m_iHealth ); // dont give more health than their max
+	if (m_iHealth > m_iMaxHealth) // Dont let LUA give over max health
+		return 0
+
+	iAmount = min( iAmount, m_iMaxHealth - m_iHealth ); // dont give more health than their max
 		//if (iAmount == 0)
 		//	return 0;
 	if (iAmount > 0)
