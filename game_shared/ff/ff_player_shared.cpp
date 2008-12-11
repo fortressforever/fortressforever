@@ -62,7 +62,9 @@ ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLIC
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_radiotag_time( "ffdev_sniper_radiotag_time", "30.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "10.0", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+
+//ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define FF_AC_IMPACTFREQ 2 //ffdev_ac_impactfreq.GetInt()
 
 //ConVar ffdev_sniperrifle_legshot_minslowdownspeed( "ffdev_sniperrifle_legshot_minslowdownspeed", "0.7", FCVAR_REPLICATED, "Player speed when hit with a minimum charge sniper rifle shot (0.7 would mean player speed at 70% after being legshot)" );
 //ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
@@ -1072,7 +1074,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 				{
 					// Only draw impact effects when you do a tracer, or this weapon doesnt have tracers
 					// this helps cut down the effect message spam for the AC - AfterShock 
-					if ((info.m_iTracerFreq == 0) || (tracerCount % ffdev_ac_impactfreq.GetInt() ) == 0)
+					if ((info.m_iTracerFreq == 0) || (tracerCount % FF_AC_IMPACTFREQ ) == 0)
 					{
 						if (bDoServerEffects)
 						{
