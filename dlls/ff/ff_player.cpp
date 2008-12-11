@@ -6591,7 +6591,7 @@ int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 int CFFPlayer::LuaAddHealth(int iAmount)
 {
 	if (m_iHealth > m_iMaxHealth) // Dont let LUA give over max health
-		return 0
+		return 0;
 
 	iAmount = min( iAmount, m_iMaxHealth - m_iHealth ); // dont give more health than their max
 		//if (iAmount == 0)
