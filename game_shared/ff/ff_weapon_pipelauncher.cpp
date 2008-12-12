@@ -245,6 +245,7 @@ void CFFWeaponPipeLauncher::Synchronise()
 		return;
 
 	// We could probably just do GetWeapon(2) 
+	/* .. so lets do that. - AfterShock
 	for (int i = 0; i < MAX_WEAPONS; i++) 
 	{
 		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i));
@@ -252,6 +253,12 @@ void CFFWeaponPipeLauncher::Synchronise()
 		if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER) 
 			w->m_iClip1 = m_iClip1;
 	}
+	*/
+	CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(FF_WEAPON_GRENADELAUNCHER));
+
+	if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER) 
+		w->m_iClip1 = m_iClip1;
+
 }
 
 

@@ -3719,6 +3719,13 @@ void CFFPlayer::PostBuildGenericThink( void )
 		{
 			// Unlock the player
 			UnlockPlayer();
+
+			// Reset stuff		
+			m_iCurBuild = FF_BUILD_NONE;
+			m_iWantBuild = FF_BUILD_NONE;
+			m_bBuilding = false;
+			m_bStaticBuilding = false; // this needs to be before deploy weapon, you can't deploy weapons whilst building! - AfterShock
+
 			if( m_hActiveWeapon )
 				m_hActiveWeapon->Deploy();
 
@@ -3731,7 +3738,8 @@ void CFFPlayer::PostBuildGenericThink( void )
 				{
 					Weapon_Switch(weap);
 				}
-			/* AfterShock - this seems more expensive than we need, trying above instead
+
+			/* AfterShock - this seems more expensive than we need, trying above instead 
 				CFFWeaponBase *weap;
 				for (int i = 0; i < MAX_WEAPONS; i++)
 				{
@@ -3742,17 +3750,18 @@ void CFFPlayer::PostBuildGenericThink( void )
 						break;
 					}
 				}
-			*/
+			 */
 			}
 		}
-
-
-		// Reset stuff		
-		m_iCurBuild = FF_BUILD_NONE;
-		m_iWantBuild = FF_BUILD_NONE;
-		m_bBuilding = false;
-		m_bStaticBuilding = false;
-		//m_bCancelledBuild = false;
+		else
+		{
+			// Reset stuff		
+			m_iCurBuild = FF_BUILD_NONE;
+			m_iWantBuild = FF_BUILD_NONE;
+			m_bBuilding = false;
+			m_bStaticBuilding = false;
+			//m_bCancelledBuild = false;
+		}
 
 	}
 	else
