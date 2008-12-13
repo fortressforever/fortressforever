@@ -22,7 +22,8 @@
 #define NAIL_MODEL "models/projectiles/nail/w_nail.mdl"
 
 //ConVar ffdev_nail_speed("ffdev_nail_speed", "2000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Nail speed");
-ConVar ffdev_nail_pushmultiplier("ffdev_nail_pushmultiplier", "0.05", FCVAR_REPLICATED | FCVAR_CHEAT, "Nail pushforce multiplier - was 0.1 for 2.1 release");
+//ConVar ffdev_nail_pushmultiplier("ffdev_nail_pushmultiplier", "0.05", FCVAR_REPLICATED | FCVAR_CHEAT, "Nail pushforce multiplier - was 0.1 for 2.1 release");
+#define FF_NAIL_PUSHMULTIPLIER 0.05f //ffdev_nail_pushmultiplier.GetFloat()
 #define NAIL_SPEED 2000.0f
 //ConVar ffdev_nail_bbox("ffdev_nail_bbox", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Nail bbox");
 #define NAIL_BBOX 2.0f
@@ -128,7 +129,7 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 
 		if (pOther->IsPlayer())
 		{
-			dmgInfo.ScaleDamageForce(ffdev_nail_pushmultiplier.GetFloat());
+			dmgInfo.ScaleDamageForce( FF_NAIL_PUSHMULTIPLIER );
 		}
 		else if( ( pOther->Classify() == CLASS_SENTRYGUN ) && m_bNailGrenadeNail )
 		{
@@ -194,7 +195,8 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, con
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);
 
-	vecForward *= /*iSpeed*/ NAIL_SPEED;
+	//vecForward *= iSpeed /*NAIL_SPEED*/; //AfterShock - lets go back to having different nail speeds script-side
+	vecForward *= NAIL_SPEED; 
 
 	// Set the speed and the initial transmitted velocity
 	pNail->SetAbsVelocity(vecForward);
@@ -204,6 +206,7 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, con
 		CEffectData data;
 		data.m_vOrigin = vecOrigin;
 		data.m_vAngles = angAngles;
+		//data.m_nAttachmentIndex = iSpeed; // AfterShock: HACK: use m_nAttachmentIndex to pass the nail speed int
 
 	#ifdef GAME_DLL
 		data.m_nEntIndex = pentOwner->entindex();
