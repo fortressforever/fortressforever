@@ -29,7 +29,7 @@
 #include "tier0/memdbgon.h"
 
 static ConVar cl_showfps( "cl_showfps", "0", 0, "Draw fps meter at top of screen (1 = fps, 2 = smooth fps)" );
-static ConVar cl_showpos( "cl_showpos", "0", 0, "Draw current position at top of screen" );
+static ConVar cl_showpos( "cl_showpos", "0", FCVAR_CHEAT, "Draw current position at top of screen" );
 
 //-----------------------------------------------------------------------------
 // Purpose: Framerate indicator panel
