@@ -39,11 +39,12 @@ void FF_FX_EjectBrass_40mm_Callback( const CEffectData &data )
 }
 
 //extern ConVar ffdev_nail_speed;
-#define NAIL_SPEED 2000.0f
+#define NAIL_SPEED 1500.0f
 
 void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
 {
-	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, NAIL_SPEED, FF_PROJECTILE_NAIL, 
+	// AfterShock - HACK: AttachmentIndex used to pass the nail speed
+	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, data.m_nAttachmentIndex /*NAIL_SPEED*/, FF_PROJECTILE_NAIL, 
 
 #ifdef GAME_DLL
 		data.m_nEntIndex
