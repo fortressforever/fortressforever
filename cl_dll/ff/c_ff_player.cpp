@@ -86,6 +86,10 @@ static char g_szTimerFile[MAX_PATH];
 void TimerChange_Callback(ConVar *var, char const *pOldString);
 ConVar cl_timerwav("cl_grenadetimer", "default", FCVAR_ARCHIVE, "Timer file to use", TimerChange_Callback);
 
+static char g_szKillBeepFile[MAX_PATH];
+void KillBeepChange_Callback(ConVar *var, char const *pOldString);
+ConVar cl_killbeepwav("cl_killbeepsound", "deathbeep1", FCVAR_ARCHIVE, "Death beep file to use", KillBeepChange_Callback);
+
 // Get around the ambiguous symbol problem
 extern IFileSystem **pFilesystem;
 
@@ -2296,6 +2300,66 @@ void TimerChange_Callback(ConVar *var, char const *pOldString)
 	}
 
 	Q_snprintf(g_szTimerFile, MAX_PATH - 1, "timers/%s", pFilename);
+
+	(*pFilesystem)->FindClose(findHandle);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: When the player selects a timer by changing this cvar, validate
+//			and find the timer and ensure everything is okay.
+//			HANDILY this is also called when the game first loads up
+//-----------------------------------------------------------------------------
+void KillBeepChange_Callback(ConVar *var, char const *pOldString)
+{
+	const char	*pszTimerString = var->GetString();
+	int			nTimerStringChars = strlen(pszTimerString);
+
+	// No need to do any checking if it's default because it should always
+	// be there
+	if (Q_strcmp(pszTimerString, "deathbeep1") == 0)
+	{
+		Q_strcpy(g_szKillBeepFile, "player/deathbeep/deathbeep1.wav");
+		return;
+	}
+
+	if (nTimerStringChars > 28)
+	{
+		Msg("Timer filename too large, must be 14 characters or less!\n");
+		var->SetValue("deathbeep1");
+		return;
+	}
+
+	for (int i = 0; i < nTimerStringChars; i++)	
+	{
+		// Not valid alphanumeric (better way to check anyone?)
+		if (!((pszTimerString[i] >= '0' && pszTimerString[i] <= '9') ||
+			  (pszTimerString[i] >= 'A' && pszTimerString[i] <= 'Z') ||
+			  (pszTimerString[i] >= 'a' && pszTimerString[i] <= 'z')))
+		{
+			Msg("Timer filename must only contain alphanumeric characters (0-9a-Z). Remember that file extension is not needed!\n");
+			var->SetValue("deathbeep1");
+			return;
+		}
+	}
+	
+	// We've got this far so should be safe now
+	char buf[MAX_PATH];
+	Q_snprintf(buf, MAX_PATH - 1, "sound/player/deathbeep/%s.*", var->GetString());
+
+	// Find the file (extension will be found)
+	FileFindHandle_t findHandle;
+	const char *pFilename = (*pFilesystem)->FindFirstEx(buf, "MOD", &findHandle);
+
+	(*pFilesystem)->FindClose(findHandle);
+	
+	// Timer not found so return to default
+	if (!pFilename)
+	{
+		Msg("Timer not found.\n");
+		var->SetValue("deathbeep1");
+	}
+
+	Q_snprintf(g_szKillBeepFile, MAX_PATH - 1, "player/deathbeep/%s", pFilename);
 
 	(*pFilesystem)->FindClose(findHandle);
 }

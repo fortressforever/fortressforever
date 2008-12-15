@@ -31,6 +31,8 @@ using namespace vgui;
 #include "c_ff_buildableobjects.h"
 #include "ff_buildableobjects_shared.h"
 
+extern ConVar cl_killbeepwav; // for the killbeep message
+
 //=============================================================================
 //
 //	class CHudBuildableMessages
@@ -62,6 +64,7 @@ public:
 	void MsgFunc_Dispenser_TouchEnemy( bf_read &msg );
 	void MsgFunc_Dispenser_Destroyed( bf_read &msg );
 	void MsgFunc_SentryGun_Destroyed( bf_read &msg );
+	void MsgFunc_KillBeep( bf_read &msg );
 	void OnTick( void );
 	void Paint( void );
 
@@ -81,6 +84,7 @@ DECLARE_HUD_MESSAGE( CHudBuildableMessages, Dispenser_EnemiesUsing );
 DECLARE_HUD_MESSAGE( CHudBuildableMessages, Dispenser_TouchEnemy );
 DECLARE_HUD_MESSAGE( CHudBuildableMessages, Dispenser_Destroyed );
 DECLARE_HUD_MESSAGE( CHudBuildableMessages, SentryGun_Destroyed );
+DECLARE_HUD_MESSAGE( CHudBuildableMessages, KillBeep );
 
 void CHudBuildableMessages::Init( void )
 {
@@ -90,6 +94,7 @@ void CHudBuildableMessages::Init( void )
 	HOOK_HUD_MESSAGE( CHudBuildableMessages, Dispenser_TouchEnemy );
 	HOOK_HUD_MESSAGE( CHudBuildableMessages, Dispenser_Destroyed );
 	HOOK_HUD_MESSAGE( CHudBuildableMessages, SentryGun_Destroyed );
+	HOOK_HUD_MESSAGE( CHudBuildableMessages, KillBeep );
 
 	// 4 seconds to show the messages enough time?
 	m_flDuration = 4.0f;
@@ -212,6 +217,22 @@ void CHudBuildableMessages::MsgFunc_SentryGun_Destroyed( bf_read &msg )
 		
 		CalculateWidthHeight();
 	}
+}
+
+void CHudBuildableMessages::MsgFunc_KillBeep( bf_read &msg )
+{
+	char buf[MAX_PATH];
+	Q_snprintf(buf, MAX_PATH - 1, "player/deathbeep/%s.wav", cl_killbeepwav.GetString());
+
+	CLocalPlayerFilter filter;
+
+	EmitSound_t params;
+	params.m_pSoundName = buf;
+	params.m_flSoundTime = 0.0f;
+	params.m_pflSoundDuration = NULL;
+	params.m_bWarnOnDirectWaveReference = false;
+
+	C_BaseEntity::EmitSound(filter, -1, params);
 }
 
 void CHudBuildableMessages::OnTick( void )
