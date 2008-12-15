@@ -557,14 +557,17 @@ bool CMultiplayRules::IsMultiplayer( void )
 			}
 			else
 				pScorer->AddFortPoints( 100, "#FF_FORTPOINTS_FRAG" );
+
 			
-			// play local "you killed someone" sound (ala quake 3 hit sound) - AfterShock
-			CSingleUserRecipientFilter filter( pScorer );
-			//EmitSound( filter, entindex(), "Player.Deathbeep" );
-			pScorer->EmitSound( filter, pScorer->entindex(), "Player.Deathbeep" );
-			
+
+			CSingleUserRecipientFilter user( pScorer );
+			UserMessageBegin( user, "KillBeep" );
+				//WRITE_BYTE( 0 );
+			MessageEnd( );
+
 			// Allow the scorer to immediately paint a decal
 			pScorer->AllowImmediateDecalPainting();
+
 
 			// dvsents2: uncomment when removing all FireTargets
 			//variant_t value;

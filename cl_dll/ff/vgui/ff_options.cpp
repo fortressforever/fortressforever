@@ -39,6 +39,7 @@ extern IFileSystem **pFilesystem;
 #define CROSSHAIR_SIZES		5					// This needs to be matched in hud_crosshair.h
 
 extern ConVar cl_timerwav;
+extern ConVar cl_killbeepwav;
 
 // dlight cvarsesesesssssssesssssssssssssssssssssss
 ConVar cl_ffdlight_explosion( "cl_ffdlight_explosion", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an explosion (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
@@ -923,6 +924,9 @@ public:
 		m_pTimers = new ComboBox(this, "TimerList", 0, false);
 		m_pPlayButton = new Button(this, "PlayButton", "", this, "Play");
 
+		m_pBeeps = new ComboBox(this, "BeepList", 0, false);
+		m_pPlayButton2 = new Button(this, "PlayButton2", "", this, "Play2");
+
 		LoadControlSettings("resource/ui/FFOptionsSubTimer.res");
 	}
 
@@ -947,6 +951,24 @@ public:
 		buf[nLen - 4] = 0;
 
 		cl_timerwav.SetValue(buf);
+
+		// same for death beep
+
+		const char *pszBeep = m_pBeeps->GetActiveItemUserData()->GetString("file");
+
+		if (!pszBeep)
+			return;
+
+		int nLen2 = strlen(pszBeep);
+
+		if (nLen2 < 5)
+			return;
+
+		char buf2[128];
+		Q_snprintf(buf2, 127, "%s", pszBeep);
+		buf2[nLen2 - 4] = 0;
+
+		cl_killbeepwav.SetValue(buf2);
 	}
 
 	//-----------------------------------------------------------------------------
@@ -989,6 +1011,35 @@ public:
 		(*pFilesystem)->FindClose(findHandle);
 
 		m_pTimers->ActivateItemByRow(iCurrent);
+
+		// same for death beeps
+		int iCurrent2 = 0;
+		m_pBeeps->DeleteAllItems();
+
+		FileFindHandle_t findHandle2;
+		const char *pFilename2 = (*pFilesystem)->FindFirstEx("sound/player/deathbeep/*.wav", "MOD", &findHandle2);
+		
+		while (pFilename2 != NULL) 
+		{
+			KeyValues *kv = new KeyValues("Beeps");
+			kv->SetString("file", pFilename2);
+			int iNew= m_pBeeps->AddItem(pFilename2, kv);
+			kv->deleteThis();
+
+			int nLength = strlen(cl_killbeepwav.GetString());
+
+			// This is our timer file
+			if (Q_strncmp(pFilename2, cl_killbeepwav.GetString(), nLength) == 0)
+			{
+				iCurrent = iNew;
+			}
+
+			pFilename2 = (*pFilesystem)->FindNext(findHandle2);
+		}
+
+		(*pFilesystem)->FindClose(findHandle2);
+
+		m_pBeeps->ActivateItemByRow(iCurrent2);
 	}
 
 private:
@@ -1010,10 +1061,22 @@ private:
 				engine->ClientCmd(VarArgs("play timers/%s\n", pszTimer));
 			}
 		}
+		else if (Q_strcmp(pszCommand, "Play2") == 0)
+		{
+			const char *pszBeep = m_pBeeps->GetActiveItemUserData()->GetString("file");
+
+			if (pszBeep)
+			{
+				engine->ClientCmd(VarArgs("play player/deathbeep/%s\n", pszBeep));
+			}
+		}
 	}
 
 	ComboBox	*m_pTimers;
 	Button		*m_pPlayButton;
+
+	ComboBox	*m_pBeeps;
+	Button		*m_pPlayButton2;
 };
 
 int GetComboBoxOption(ComboBox *cb, const char *value, const char *keyname = "value")

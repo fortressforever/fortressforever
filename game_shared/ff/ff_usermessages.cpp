@@ -11,13 +11,15 @@
 
 void RegisterUserMessages()
 {
+	//TODO: optimise (reduce) list of these with -1 size
+
 	usermessages->Register( "Geiger", 1 );		// geiger info data
 	usermessages->Register( "Train", 1 );		// train control data
 	usermessages->Register( "HudText", -1 );	
 	usermessages->Register( "SayText", -1 );	
 	usermessages->Register( "TextMsg", -1 );
 	usermessages->Register( "HudMsg", -1 );
-	usermessages->Register( "ResetHUD", 1 );	// called every respawn
+	usermessages->Register( "ResetHUD", 0 );	// called every respawn
 	usermessages->Register( "GameTitle", 0 );	// show game title
 	usermessages->Register( "ItemPickup", -1 );	// for item history on screen
 	usermessages->Register( "ShowMenu", -1 );	// show hud menu
@@ -72,6 +74,8 @@ void RegisterUserMessages()
 	usermessages->Register( "Dispenser_Destroyed", -1 );
 	// When our sentrygun blows up (sent to owner of sg)
 	usermessages->Register( "SentryGun_Destroyed", -1 );
+
+	usermessages->Register( "KillBeep", 0 );
 
 	usermessages->Register("FF_BuildTimer", -1);
   
