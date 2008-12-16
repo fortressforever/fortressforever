@@ -245,20 +245,16 @@ void CFFWeaponPipeLauncher::Synchronise()
 		return;
 
 	// We could probably just do GetWeapon(2) 
-	/* .. so lets do that. - AfterShock
-	for (int i = 0; i < MAX_WEAPONS; i++) 
+	for (int i = 0; i < MAX_WEAPON_SLOTS; i++) 
 	{
-		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i));
+		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i)); // This gets holstered weapon numbers. 0=crowbar, 1=shotgun, (pipelauncher is deployed), 2=grenlauncher 3=detpack
 
-		if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER) 
+		if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER)
+		{
 			w->m_iClip1 = m_iClip1;
+			break;
+		}
 	}
-	*/
-	CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(FF_WEAPON_GRENADELAUNCHER));
-
-	if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER) 
-		w->m_iClip1 = m_iClip1;
-
 }
 
 
