@@ -3733,15 +3733,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 			if((switchToWeapon != FF_WEAPON_NONE) && (switchToWeapon < MAX_WEAPONS))
 			{
 				CFFWeaponBase *weap;
-				weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(switchToWeapon));
-				if (weap && weap->GetWeaponID() == switchToWeapon)
-				{
-					Weapon_Switch(weap);
-				}
-
-			/* AfterShock - this seems more expensive than we need, trying above instead 
-				CFFWeaponBase *weap;
-				for (int i = 0; i < MAX_WEAPONS; i++)
+				for (int i = 0; i < MAX_WEAPON_SLOTS; i++)
 				{
 					weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(i));
 					if (weap && weap->GetWeaponID() == switchToWeapon)
@@ -3750,7 +3742,6 @@ void CFFPlayer::PostBuildGenericThink( void )
 						break;
 					}
 				}
-			 */
 			}
 		}
 		else
