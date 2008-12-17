@@ -44,7 +44,7 @@ void FF_FX_EjectBrass_40mm_Callback( const CEffectData &data )
 void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
 {
 	// AfterShock - HACK: AttachmentIndex used to pass the nail speed
-	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, data.m_nAttachmentIndex /*NAIL_SPEED*/, FF_PROJECTILE_NAIL, 
+	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, data.m_nDamageType /*NAIL_SPEED*/, FF_PROJECTILE_NAIL, 
 
 #ifdef GAME_DLL
 		data.m_nEntIndex

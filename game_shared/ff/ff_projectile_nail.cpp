@@ -206,7 +206,7 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, con
 		CEffectData data;
 		data.m_vOrigin = vecOrigin;
 		data.m_vAngles = angAngles;
-		data.m_nAttachmentIndex = iSpeed; // AfterShock: HACK: use m_nAttachmentIndex to pass the nail speed int
+		data.m_nDamageType = iSpeed; // AfterShock: HACK: use m_nAttachmentIndex to pass the nail speed int
 
 	#ifdef GAME_DLL
 		data.m_nEntIndex = pentOwner->entindex();
