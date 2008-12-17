@@ -1031,7 +1031,7 @@ public:
 			// This is our timer file
 			if (Q_strncmp(pFilename2, cl_killbeepwav.GetString(), nLength) == 0)
 			{
-				iCurrent = iNew;
+				iCurrent2 = iNew;
 			}
 
 			pFilename2 = (*pFilesystem)->FindNext(findHandle2);
