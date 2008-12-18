@@ -28,24 +28,24 @@
 
 //ConVar ffdev_ac_tracerfreq( "ffdev_ac_tracerfreq", "2", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
 #define FF_AC_TRACERFREQ 2 //ffdev_ac_tracerfreq.GetInt()
-ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.06", FCVAR_REPLICATED, "The minimum cone of fire spread for the AC" );
-#define FF_AC_SPREAD_MIN ffdev_ac_spread_min.GetFloat()
+//ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.06", FCVAR_REPLICATED, "The minimum cone of fire spread for the AC" );
+#define FF_AC_SPREAD_MIN 0.06f // ffdev_ac_spread_min.GetFloat()
 //ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
-#define FF_AC_SPREAD_MAX ffdev_ac_spread_min.GetFloat() // ffdev_ac_spread_max.GetFloat()
+#define FF_AC_SPREAD_MAX 0.06f // ffdev_ac_spread_max.GetFloat()
 
-ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "8.2", FCVAR_REPLICATED, "Damage per bullet" );
-#define FF_AC_BULLET_DAMAGE	ffdev_ac_bullet_damage.GetFloat()
+//ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "8.2", FCVAR_REPLICATED, "Damage per bullet" );
+#define FF_AC_BULLET_DAMAGE	8.2f // ffdev_ac_bullet_damage.GetFloat()
 
-ConVar ffdev_ac_spread_multiplier( "ffdev_ac_spread_multiplier", "2.0", FCVAR_REPLICATED, "Outer cone is X times bigger" );
-#define FF_AC_SPREAD_MULTIPLIER	ffdev_ac_spread_multiplier.GetFloat()
+//ConVar ffdev_ac_spread_multiplier( "ffdev_ac_spread_multiplier", "2.0", FCVAR_REPLICATED, "Outer cone is X times bigger" );
+#define FF_AC_SPREAD_MULTIPLIER	2.0f // ffdev_ac_spread_multiplier.GetFloat()
 
 //ConVar ac_rof_max( "ffdev_ac_cycletime_max", "0.08", FCVAR_REPLICATED, "Assault Cannon maximum time between shots (min ROF)" );
 #define FF_AC_ROF_MAX 0.08f // ac_rof_max.GetFloat()	// Assault Cannon maximum rate of fire
 //ConVar ac_rof_min( "ffdev_ac_cycletime_min", "0.08", FCVAR_REPLICATED, "Assault Cannon minimum time between shots (max ROF)" );
 #define FF_AC_ROF_MIN 0.08f // ac_rof_min.GetFloat()		// Assault Cannon minimum rate of fire
 
-ConVar ffdev_ac_bulletpush( "ffdev_ac_bulletpush", "3.0", FCVAR_REPLICATED, "Assault Cannon bullet push force" );
-#define FF_AC_BULLETPUSH ffdev_ac_bulletpush.GetFloat() // Assault Cannon bullet push force
+// ConVar ffdev_ac_bulletpush( "ffdev_ac_bulletpush", "3.0", FCVAR_REPLICATED, "Assault Cannon bullet push force" );
+#define FF_AC_BULLETPUSH 3.0f // ffdev_ac_bulletpush.GetFloat() // Assault Cannon bullet push force
 
 //#define FF_AC_SPEEDEFFECT_MAX 0.6f
 

@@ -27,12 +27,12 @@
 // Debug ConVars
 //=============================================================================
 
-static ConVar ffdev_flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"100", 	0, 	"How fast the flames spread outwards");
-static ConVar ffdev_flame_speed(			"ffdev_flame_speed", 			"1200", 	0, 	"How fast the flames go forwards");
+//static ConVar ffdev_flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"100", 	0, 	"How fast the flames spread outwards");
+//static ConVar ffdev_flame_speed(			"ffdev_flame_speed", 			"1200", 	0, 	"How fast the flames go forwards");
 //static ConVar ffdev_flame_startsize(		"ffdev_flame_startsize", 		"2", 	0, 	"How big the flame starts(0-255) ");
-static ConVar ffdev_flame_endsize(		"ffdev_flame_endsize", 		"192", 	0, 	"How big the flame finishes(0-255) ");
+//static ConVar ffdev_flame_endsize(		"ffdev_flame_endsize", 		"192", 	0, 	"How big the flame finishes(0-255) ");
 //static ConVar ffdev_flame_rate(			"ffdev_flame_rate", 			"128", 	0, 	"Number of flame particles per second");
-static ConVar ffdev_flame_alpha(			"ffdev_flame_alpha", 			"0.3", 	0, 	"Alpha value of the flame(0 - 1.0) ");
+//static ConVar ffdev_flame_alpha(			"ffdev_flame_alpha", 			"0.3", 	0, 	"Alpha value of the flame(0 - 1.0) ");
 
 //static ConVar ffdev_flame_startblue(		"ffdev_flame_startblue", "0.05",		0, "How long the flame stays blue for");
 
@@ -116,11 +116,11 @@ C_FFFlameJet::C_FFFlameJet()
 	m_pParticleMgr	= NULL;
 	m_hMaterialFlame = m_hMaterialSmoke = INVALID_MATERIAL_HANDLE;
 	
-	m_SpreadSpeed	= ffdev_flame_spreadspeed.GetInt();	// 50;
-	m_Speed			= ffdev_flame_speed.GetInt();			// 800;
-	m_StartSize		= 2;//ffdev_flame_startsize.GetInt();		// 3;
-	m_EndSize		= ffdev_flame_endsize.GetInt();		// 128;
-	m_Rate			= 128;//ffdev_flame_rate.GetInt();			// 128; 
+	m_SpreadSpeed	= 100; // ffdev_flame_spreadspeed.GetInt(); // 100;
+	m_Speed			= 1200; // ffdev_flame_speed.GetInt(); // 1200;
+	m_StartSize		= 2; // ffdev_flame_startsize.GetInt(); // 3;
+	m_EndSize		= 192; // ffdev_flame_endsize.GetInt(); // 192;
+	m_Rate			= 128; // ffdev_flame_rate.GetInt(); // 128; 
 
 	m_fEmit			= true;
 
@@ -299,10 +299,11 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	m_ParticleEffect.SetBBox(vMin, vMax);
 
 	// Temp
-	m_SpreadSpeed	= ffdev_flame_spreadspeed.GetInt();	// 50;
-	m_Speed			= ffdev_flame_speed.GetInt();			// 800;
-	m_StartSize		= 2;//ffdev_flame_startsize.GetInt();		// 3;
-	m_EndSize		= ffdev_flame_endsize.GetInt();		// 128;
+
+	m_SpreadSpeed	= 100; // ffdev_flame_spreadspeed.GetInt(); // 100;
+	m_Speed			= 1200; // ffdev_flame_speed.GetInt(); // 1200;
+	m_StartSize		= 2; // ffdev_flame_startsize.GetInt(); // 3;
+	m_EndSize		= 192; // ffdev_flame_endsize.GetInt(); // 192;
 
 	// dlight scale
 	float flDLightScale = cl_ffdlight_flamethrower.GetFloat();
@@ -495,7 +496,7 @@ void C_FFFlameJet::RenderParticles(CParticleRenderIterator *pIterator)
 		float sortKey = tPos.z;
 
 		// Normal alpha
-		float alpha = ffdev_flame_alpha.GetFloat(); //0.95f; // 180.0f
+		float alpha = 0.3f; // ffdev_flame_alpha.GetFloat(); // 0.3f; // 0.95f; // 180.0f;
 
 		// Fade out everything in its last moments
 		if (/*pParticle->m_Type != SMOKE &&*/ pParticle->m_Dietime - pParticle->m_Lifetime < /*ffdev_flame_fadeout_time.GetFloat()*/ 0.2f ) 
