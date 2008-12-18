@@ -83,4 +83,5 @@ void DispatchEffect( const char *pName, const CEffectData &data )
 {
 	CPASFilter filter( data.m_vOrigin );
 	te->DispatchEffect( filter, 0.0, data.m_vOrigin, pName, data );
+	//DevMsg("%s .. ",pName);
 }
