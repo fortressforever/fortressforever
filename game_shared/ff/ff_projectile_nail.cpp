@@ -195,8 +195,8 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, con
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);
 
-	vecForward *= iSpeed /*NAIL_SPEED*/; //AfterShock - lets go back to having different nail speeds script-side
-	//vecForward *= NAIL_SPEED; 
+	//vecForward *= iSpeed /*NAIL_SPEED*/; //AfterShock - lets go back to having different nail speeds script-side (for 2.3!)
+	vecForward *= NAIL_SPEED; 
 
 	// Set the speed and the initial transmitted velocity
 	pNail->SetAbsVelocity(vecForward);
