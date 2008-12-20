@@ -2324,7 +2324,7 @@ void KillBeepChange_Callback(ConVar *var, char const *pOldString)
 
 	if (nTimerStringChars > 28)
 	{
-		Msg("Timer filename too large, must be 14 characters or less!\n");
+		Msg("Death beep filename too large, must be 14 characters or less!\n");
 		var->SetValue("deathbeep1");
 		return;
 	}
@@ -2336,7 +2336,7 @@ void KillBeepChange_Callback(ConVar *var, char const *pOldString)
 			  (pszTimerString[i] >= 'A' && pszTimerString[i] <= 'Z') ||
 			  (pszTimerString[i] >= 'a' && pszTimerString[i] <= 'z')))
 		{
-			Msg("Timer filename must only contain alphanumeric characters (0-9a-Z). Remember that file extension is not needed!\n");
+			Msg("Death beep filename must only contain alphanumeric characters (0-9a-Z). Remember that file extension is not needed!\n");
 			var->SetValue("deathbeep1");
 			return;
 		}
@@ -2355,7 +2355,7 @@ void KillBeepChange_Callback(ConVar *var, char const *pOldString)
 	// Timer not found so return to default
 	if (!pFilename)
 	{
-		Msg("Timer not found.\n");
+		Msg("Death beep not found. Resetting to default. Use filename without extension.\n");
 		var->SetValue("deathbeep1");
 	}
 
