@@ -888,13 +888,13 @@ void CFFMiniTurret::OnActiveThink( void )
 	if( m_flShotTime < gpGlobals->curtime )
 	{
 		// Fire the gun
-		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) > DOT_20DEGREE )
+		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) > DOT_10DEGREE )
 		{
 			//SetActivity( ACT_RESET );
 			//SetActivity( ( Activity )ACT_MINITURRET_FIRE );
 
 			// Fire the weapon
-			Shoot( vecMuzzle, vecMuzzleDir );
+			Shoot( vecMuzzle, vecDirToEnemy );
 		} 
 	}
 
@@ -978,7 +978,7 @@ bool CFFMiniTurret::UpdateFacing( void )
 		Warning( "[MiniTurret] Current pose yaw: %f, vecAngles yaw: %f, goal yaw: %f\n", flYaw, vecAngles.y, m_vecGoalAngles.y );
 
 	// Update yaw
-	flDiff = AngleNormalize( UTIL_ApproachAngle( AngleNormalize( m_vecGoalAngles.y ), AngleNormalize( flYaw ), MaxYawSpeed() ) );
+	flDiff = AngleNormalize( UTIL_ApproachAngle( AngleNormalize( m_vecGoalAngles.y + (flYaw - vecAngles.y) ), AngleNormalize( flYaw ), MaxYawSpeed() ) );
 	SetPoseParameter( m_iYawPoseParameter, flDiff );
 
 	InvalidateBoneCache();
