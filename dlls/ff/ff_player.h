@@ -503,8 +503,6 @@ public:
 		else
 			RemoveFlag( FL_FROZEN );
 	}
-	float  LuaGetSpeedMod( void ){ return m_flLaggedMovementValue;	}
-	void   LuaSpeedMod( float flValue ) { m_flLaggedMovementValue = flValue;	}
 
 	void ReloadClips( void );
  
