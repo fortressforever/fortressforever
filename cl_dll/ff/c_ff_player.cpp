@@ -2576,7 +2576,7 @@ inline float approach(float flInitial, float flDelta, float flTarget)
 	return flInitial;
 }
 
-ConVar cl_dynamicfov("cl_dynamicfov", "1", FCVAR_ARCHIVE);
+ConVar cl_dynamicfov("cl_dynamicfov", "0", FCVAR_ARCHIVE);
 
 ConVar ffdev_dynamicfov_min("ffdev_dynamicfov_min", "1.5", FCVAR_CHEAT);
 ConVar ffdev_dynamicfov_max("ffdev_dynamicfov_max", "2.0", FCVAR_CHEAT);
