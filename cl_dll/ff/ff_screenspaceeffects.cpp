@@ -259,7 +259,7 @@ void CBaseEffect::Render(int x, int y, int w, int h)
 
 static ConVar cl_dynamicblur_ac("cl_dynamicblur_ac", "0", FCVAR_ARCHIVE, "Enable/disable assault cannon blur effect");
 
-static ConVar cl_dynamicblur("cl_dynamicblur", "1", FCVAR_ARCHIVE, "Enable/disable speed-based blur effect");
+static ConVar cl_dynamicblur("cl_dynamicblur", "0", FCVAR_ARCHIVE, "Enable/disable speed-based blur effect");
 static ConVar cl_dynamicblur_min("cl_dynamicblur_min", "400", FCVAR_ARCHIVE, "The minimum player speed required before the blur effect is applied");
 static ConVar cl_dynamicblur_range("cl_dynamicblur_range", "50", FCVAR_ARCHIVE);
 
