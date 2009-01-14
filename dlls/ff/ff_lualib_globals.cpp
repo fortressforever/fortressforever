@@ -304,6 +304,7 @@ namespace FFLib
 		}
 	}
 
+/*
 	void RespawnAllPlayers( void )
 	{		
 		// loop through each player
@@ -334,6 +335,7 @@ namespace FFLib
 			}
 		}
 	}
+*/
 
 	void ConsoleToAll(const char* szMessage)
 	{
@@ -1963,7 +1965,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("IsDetpack",				&FFLib::IsDetpack),
 		def("IsGrenade",				&FFLib::IsGrenade),
 		def("IsTurret",					&FFLib::IsTurret),
-		def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
+		//def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
 		def("NumPlayers",				&FF_NumPlayers),
 		def("OutputEvent",				(void(*)(const char*, const char*))&FFLib::FireOutput),
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*))&FFLib::FireOutput),
@@ -1978,7 +1980,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("RemoveHudItem",			&FFLib::RemoveHudItem),
 		def("RemoveHudItemFromTeam",	&FFLib::RemoveHudItemFromTeam),
 		def("RemoveHudItemFromAll",		&FFLib::RemoveHudItemFromAll),
-		def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
+		//def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
 		def("ResetMap",					&FFLib::ResetMap),
 		def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),
 		def("SetPlayerLimit",			&FFLib::SetPlayerLimit),

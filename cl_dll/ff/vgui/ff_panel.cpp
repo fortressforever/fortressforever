@@ -23,7 +23,7 @@
 #include "ff_panel.h"
 #include "ff_utils.h"
 
-ConVar cl_teamcolourhud("cl_teamcolourhud", "1", FCVAR_ARCHIVE);
+ConVar cl_teamcolourhud("cl_teamcolourhud", "0", FCVAR_ARCHIVE);
 
 namespace vgui
 {
