@@ -153,9 +153,6 @@ BEGIN_DATADESC(CFFSentryGun)
 	DEFINE_THINKFUNC( OnSearchThink ), 
 END_DATADESC() 
 
-// Activities
-int ACT_SENTRYGUN_FIRE;
-
 // Array of char *'s to sentrygun models
 const char *g_pszFFSentryGunModels[] =
 {
@@ -253,7 +250,6 @@ void CFFSentryGun::Precache( void )
 {
 	VPROF_BUDGET( "CFFSentryGun::Precache", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	ADD_CUSTOM_ACTIVITY( CFFSentryGun, ACT_SENTRYGUN_FIRE );
 	BaseClass::Precache();
 }
 
@@ -1134,9 +1130,6 @@ void CFFSentryGun::SpinUp( void )
 	VPROF_BUDGET( "CFFSentryGun::SpinUp", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	EmitSound("Sentry.Spot");
-	// Restarting the manually-stopped firing animation
-	if ( m_iLevel > 1 ) // lvl 1 SG doesn't have a firing animation
-		ResetSequenceInfo();
 }
 
 //-----------------------------------------------------------------------------
@@ -1145,9 +1138,6 @@ void CFFSentryGun::SpinUp( void )
 void CFFSentryGun::SpinDown( void ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::SpinDown", VPROF_BUDGETGROUP_FF_BUILDABLE );
-	// The SG doesn't have an idle animation, so this is sort of a brute-force equivalent
-	if ( m_iLevel > 1 )	// lvl 1 SG doesn't have a firing animation
-		StopAnimation();
 }
 
 //-----------------------------------------------------------------------------
@@ -1326,10 +1316,6 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			SetSolid( SOLID_VPHYSICS );
 			EmitSound( sndFilter, entindex(), "Sentry.Two" );
 
-			// Set the firing animation and "freeze" it (since the SG doesn't have an idle animation)
-			SetActivity( ( Activity )ACT_SENTRYGUN_FIRE );
-			StopAnimation();
-
 			m_iMaxShells = 125;
 			m_iMaxRockets = 0;
 			m_iShellDamage = SG_BULLETDAMAGE;
@@ -1354,12 +1340,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			SetModel( FF_SENTRYGUN_MODEL_LVL3 );
 			SetSolid( SOLID_VPHYSICS );
 			EmitSound( sndFilter, entindex(), "Sentry.Three" );
-			
-			// Gotta reset the activity for the new model
-			m_Activity = ( Activity )0;
-			SetActivity( ( Activity )ACT_SENTRYGUN_FIRE );
-			StopAnimation();
-			
+
 			m_iMaxShells = 150;
 			m_iMaxRockets = 20;
 			m_iShellDamage = SG_BULLETDAMAGE;
@@ -1624,57 +1605,4 @@ void CFFSentryGun::PhysicsSimulate()
 
 		m_iLastState = iState;
 	}
-}
-
-
-// Jiggles: Added for firing animation (spinning barrels) on Lvl 2 and 3 SGs
-//-----------------------------------------------------------------------------
-// Purpose: Sets the activity to the desired activity immediately, skipping any
-//			transition sequences.
-// Input  : NewActivity - 
-//-----------------------------------------------------------------------------
-void CFFSentryGun::SetActivity( Activity NewActivity )
-{
-	if( m_Activity == NewActivity )
-		return;
-
-	// Don't do this if I'm playing a transition, unless it's ACT_RESET.
-	if( ( NewActivity != ACT_RESET ) && ( m_Activity == ACT_TRANSITION ) && ( m_IdealActivity != ACT_DO_NOT_DISTURB ) )
-		return;
-
-	if( !GetModelPtr() )
-		return;
-
-	// In case someone calls this with something other than the ideal activity.
-	m_IdealActivity = NewActivity;
-
-	m_nIdealSequence = SelectWeightedSequence( m_IdealActivity );
-
-	if( m_nIdealSequence == ACT_INVALID )
-		m_nIdealSequence = 0;
-
-	// Set to the desired anim, or default anim if the desired is not present
-	if( m_nIdealSequence > ACTIVITY_NOT_AVAILABLE )
-	{
-		if( ( GetSequence() != m_nIdealSequence ) || !SequenceLoops() )
-			SetCycle( 0 );
-
-		ResetSequence( m_nIdealSequence );
-	}
-	else
-	{
-		// Not available try to get default anim
-		ResetSequence( 0 );
-	}
-
-	// Go ahead and set this so it doesn't keep trying when the anim is not present
-	m_Activity = m_IdealActivity;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns true if our ideal activity has finished playing.
-//-----------------------------------------------------------------------------
-bool CFFSentryGun::IsActivityFinished( void )
-{
-	return ( IsSequenceFinished() && ( GetSequence() == m_nIdealSequence ) );
 }
