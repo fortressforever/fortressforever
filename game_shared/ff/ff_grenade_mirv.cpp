@@ -38,7 +38,7 @@
 	//static ConVar mirv_ang_z_min("ffdev_mirv_ang_z_min","0",FCVAR_CHEAT,"Minimum x spawn angle for mirvlets");
 	//static ConVar mirv_ang_z_max("ffdev_mirv_ang_z_max","0",FCVAR_CHEAT,"Maximum x spawn angle for mirvlets");
 	//static ConVar mirvlet_dmg("ffdev_mirvlet_dmg","180.0",FCVAR_CHEAT,"Damage a single mirvlet does");
-	#define MIRVLET_DMG 145
+	#define MIRVLET_DMG 180.0f
 #endif
 
 class CFFGrenadeMirv : public CFFGrenadeBase
