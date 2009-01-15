@@ -40,7 +40,6 @@
 #endif
 
 #include "ff_buildableobjects_shared.h"
-#include "ai_basenpc.h"  // For firing animations (custom activity)
 
 #define SG_BC_YAW			"aim_yaw"
 #define SG_BC_PITCH			"aim_pitch"

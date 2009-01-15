@@ -735,17 +735,8 @@ public:
 	float			m_flLastClientUpdate;
 	int				m_iLastState;
 
-	// Jiggles: Added for firing animation -- might want to move this into the base class if/when we animate the other buildables
-	Activity		GetActivity( void ) { return m_Activity; }
-	virtual void	SetActivity( Activity NewActivity );
-	virtual bool	IsActivityFinished( void );
 
 private:
-	Activity		m_Activity;
-	Activity		m_IdealActivity;
-	int				m_nIdealSequence;
-	// Jiggles: End add
-
 	bool IsTargetInAimingEllipse( const Vector& vecTarget ) const;
 	bool IsTargetVisible( CBaseEntity *pTarget );
 	bool IsTargetClassTValid( Class_T cT ) const;
