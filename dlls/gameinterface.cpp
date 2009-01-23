@@ -2081,8 +2081,6 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 	{
 		if ( !g_fGameOver )
 		{
-			player->SetMaxSpeed( 0.0f );
-
 			CSound *pSound;
 			pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( pEdict ) );
 			{
@@ -2103,6 +2101,10 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 			{
 				g_pGameRules->ClientDisconnected( pEdict );
 			}
+
+			// --> FF: moved this SetMaxSpeed call below ClientDisconnected
+			player->SetMaxSpeed( 0.0f );
+			// <-- FF: moved this SetMaxSpeed call below ClientDisconnected
 		}
 
 		// Make sure all Untouch()'s are called for this client leaving
