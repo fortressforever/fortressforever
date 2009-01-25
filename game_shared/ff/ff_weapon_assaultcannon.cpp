@@ -26,8 +26,11 @@
 									// AfterShock: I'm also using this for the 'charge down' time now also (time before bullets stop firing, after you stop pressing fire)
 #define FF_AC_MINCLAMPTIME 0.53f	// minimum charge on the AC before you can clamp
 
-//ConVar ffdev_ac_tracerfreq( "ffdev_ac_tracerfreq", "2", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
-#define FF_AC_TRACERFREQ 4 //ffdev_ac_tracerfreq.GetInt()
+//ConVar ffdev_ac_tracerfreq_server( "ffdev_ac_tracerfreq_server", "8", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
+#define FF_AC_TRACERFREQ_SERVER 8 // ffdev_ac_tracerfreq_server.GetInt()
+//ConVar ffdev_ac_tracerfreq_client( "ffdev_ac_tracerfreq_client", "1", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
+#define FF_AC_TRACERFREQ_CLIENT 1 // ffdev_ac_tracerfreq_client.GetInt()
+
 //ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.06", FCVAR_REPLICATED, "The minimum cone of fire spread for the AC" );
 #define FF_AC_SPREAD_MIN 0.06f // ffdev_ac_spread_min.GetFloat()
 //ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
@@ -663,7 +666,12 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 	info.m_pAttacker = pPlayer;
 	info.m_iDamage = (iBulletsToFire * pWeaponInfo.m_iBullets) * /*pWeaponInfo.m_iDamage*/FF_AC_BULLET_DAMAGE;
 	info.m_flDamageForceScale = FF_AC_BULLETPUSH;
-	info.m_iTracerFreq = FF_AC_TRACERFREQ;
+
+#ifdef GAME_DLL
+	info.m_iTracerFreq = FF_AC_TRACERFREQ_SERVER;
+#else
+	info.m_iTracerFreq = FF_AC_TRACERFREQ_CLIENT;
+#endif
 
 	Vector vecTest = info.m_vecSrc;
 
