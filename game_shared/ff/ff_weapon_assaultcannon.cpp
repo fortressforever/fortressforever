@@ -28,8 +28,8 @@
 
 //ConVar ffdev_ac_tracerfreq_server( "ffdev_ac_tracerfreq_server", "8", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
 #define FF_AC_TRACERFREQ_SERVER 8 // ffdev_ac_tracerfreq_server.GetInt()
-//ConVar ffdev_ac_tracerfreq_client( "ffdev_ac_tracerfreq_client", "1", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
-#define FF_AC_TRACERFREQ_CLIENT 1 // ffdev_ac_tracerfreq_client.GetInt()
+//ConVar ffdev_ac_tracerfreq_client( "ffdev_ac_tracerfreq_client", "2", FCVAR_REPLICATED, "Tracers display on 1 in X bullets" );
+#define FF_AC_TRACERFREQ_CLIENT 2 // ffdev_ac_tracerfreq_client.GetInt()
 
 //ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.06", FCVAR_REPLICATED, "The minimum cone of fire spread for the AC" );
 #define FF_AC_SPREAD_MIN 0.06f // ffdev_ac_spread_min.GetFloat()
