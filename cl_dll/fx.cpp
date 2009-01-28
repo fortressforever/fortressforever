@@ -172,6 +172,13 @@ bool FX_GetAttachmentTransform( ClientEntityHandle_t hEntity, int attachmentInde
 	return false;
 }
 
+// --> FF
+extern ConVar muzzleflash_light;
+
+// dlight scale
+extern ConVar cl_ffdlight_muzzle;
+// <-- FF
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -244,6 +251,32 @@ void FX_MuzzleEffect(
 		pParticle->m_flRollDelta	= 0.0f;
 	}
 
+	// --> FF
+	if ( muzzleflash_light.GetBool() )
+	{
+		// dlight scale
+		float flDLightScale = cl_ffdlight_muzzle.GetFloat();
+
+		dlight_t *dl = NULL;
+		if (flDLightScale > 0.0f)
+			// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
+			//dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+			dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
+
+		if (dl) // I'm scared, daddy...of NULL pointers.
+		{
+			dl->origin = origin;
+			dl->radius = random->RandomFloat( 56, 72 ) * flDLightScale; // sorta small radius for muzzle flash
+			dl->die = gpGlobals->curtime + 0.05; // die = current time + life
+			dl->decay = dl->radius / 0.05; // radius / life = good fade
+			dl->color.r = 255;
+			dl->color.g = 192;
+			dl->color.b = 64;
+			dl->color.exponent = 5; // essentially the brightness...also determines the gradient, basically
+		}
+	}
+	// <-- FF
+
 	//
 	// Smoke
 	//
@@ -256,8 +289,8 @@ void FX_MuzzleEffect(
 		if ( pParticle == NULL )
 			return;
 
-		alpha = random->RandomInt( 32, 84 );
-		color = random->RandomInt( 64, 164 );
+		int alpha = random->RandomInt( 32, 84 );
+		int color = random->RandomInt( 64, 164 );
 
 		pParticle->m_flLifetime		= 0.0f;
 		pParticle->m_flDieTime		= random->RandomFloat( 0.5f, 1.0f );
@@ -354,6 +387,31 @@ void FX_MuzzleEffectAttached(
 		pParticle->m_flRollDelta	= 0.0f;
 	}
 
+	// --> FF
+	if ( muzzleflash_light.GetBool() )
+	{
+		// dlight scale
+		float flDLightScale = cl_ffdlight_muzzle.GetFloat();
+
+		dlight_t *dl = NULL;
+		if (flDLightScale > 0.0f)
+			// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
+			//dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+			dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
+
+		if (dl) // I'm scared, daddy...of NULL pointers.
+		{
+			dl->origin = pSimple->GetSortOrigin();
+			dl->radius = random->RandomFloat( 56, 72 ) * flDLightScale; // sorta small radius for muzzle flash
+			dl->die = gpGlobals->curtime + 0.05; // die = current time + life
+			dl->decay = dl->radius / 0.05; // radius / life = good fade
+			dl->color.r = 255;
+			dl->color.g = 192;
+			dl->color.b = 64;
+			dl->color.exponent = 5; // essentially the brightness...also determines the gradient, basically
+		}
+	}
+	// <-- FF
 
 	if ( !ToolsEnabled() )
 		return;

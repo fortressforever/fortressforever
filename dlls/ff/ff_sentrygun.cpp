@@ -1009,9 +1009,11 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
 
 	CEffectData data;
+	data.m_vStart = vecSrc;
+	data.m_vOrigin = data.m_vStart;
 	data.m_nEntIndex = GetBaseAnimating()->entindex();
-	data.m_nAttachmentIndex = iAttachment;
 	data.m_flScale = GetLevel() > 1 ? 8.0f : 1.0f;
+	data.m_nAttachmentIndex = iAttachment;
 	data.m_fFlags = MUZZLEFLASH_TYPE_DEFAULT;
 
 	DispatchEffect("MuzzleFlash", data);
