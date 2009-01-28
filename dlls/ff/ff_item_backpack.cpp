@@ -267,7 +267,7 @@ public:
 		bool bCured = pFFPlayer->Cure(pFFOwner);
 
 		// Remove if we heal any health or if we cure any afflictions
-		if (pFFPlayer->Heal(dynamic_cast<CFFPlayer *> (GetOwnerEntity()), 30.0f) || bCured)
+		if ( ( pFFPlayer->GetHealth() < pFFPlayer->GetMaxHealth() && pFFPlayer->Heal(dynamic_cast<CFFPlayer *> (GetOwnerEntity()), 30.0f) ) || bCured )
 		{
 			EmitSound(HEALTHDROP_SOUND);
 			UTIL_Remove(this);	
