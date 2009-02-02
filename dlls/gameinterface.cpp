@@ -2019,7 +2019,9 @@ void CServerGameEnts::CheckTransmit( CCheckTransmitInfo *pInfo, const unsigned s
 CServerGameClients g_ServerGameClients;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameClients, IServerGameClients, INTERFACEVERSION_SERVERGAMECLIENTS, g_ServerGameClients );
 
-extern const char *MOD_SERVER_VERSION;
+// Jon: reading from a file now
+//extern const char *MOD_SERVER_VERSION;
+char *GetModVersion();
 
 //-----------------------------------------------------------------------------
 // Purpose: called when a player tries to connect to the server
@@ -2033,7 +2035,7 @@ extern const char *MOD_SERVER_VERSION;
 //-----------------------------------------------------------------------------
 bool CServerGameClients::ClientConnect( edict_t *pEdict, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
 {	
-	engine->ClientCommand(pEdict, UTIL_VarArgs("sync_version %s\n", MOD_SERVER_VERSION));
+	engine->ClientCommand(pEdict, UTIL_VarArgs("sync_version %s\n", GetModVersion()));
 	return g_pGameRules->ClientConnected( pEdict, pszName, pszAddress, reject, maxrejectlen );
 }
 
@@ -2043,7 +2045,7 @@ bool CServerGameClients::ClientConnect( edict_t *pEdict, const char *pszName, co
 //-----------------------------------------------------------------------------
 void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 {
-	engine->ClientCommand(pEdict, UTIL_VarArgs("sync_version %s\n", MOD_SERVER_VERSION));
+	engine->ClientCommand(pEdict, UTIL_VarArgs("sync_version %s\n", GetModVersion()));
 
 	MDLCACHE_CRITICAL_SECTION();
 	
