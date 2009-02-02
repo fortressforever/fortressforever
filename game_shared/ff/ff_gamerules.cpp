@@ -64,9 +64,9 @@ ConVar cvar_version("sync_version_cvar", MOD_SERVER_VERSION, FCVAR_REPLICATED, "
 char MOD_VERSION[MAX_MOD_VERSION_LENGTH] = { 0 };
 
 #ifdef CLIENT_DLL
-	#define MOD_VERSION_FILENAME "resource/version_client.txt"
+	#define MOD_VERSION_FILENAME "resource/ff_version_client.txt"
 #else
-	#define MOD_VERSION_FILENAME "resource/version_server.txt"
+	#define MOD_VERSION_FILENAME "resource/ff_version_server.txt"
 #endif
 
 char *GetModVersion()
