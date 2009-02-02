@@ -231,6 +231,7 @@ void CHudBuildableMessages::MsgFunc_KillBeep( bf_read &msg )
 	params.m_flSoundTime = 0.0f;
 	params.m_pflSoundDuration = NULL;
 	params.m_bWarnOnDirectWaveReference = false;
+	params.m_nChannel = CHAN_STATIC;
 
 	C_BaseEntity::EmitSound(filter, -1, params);
 }
