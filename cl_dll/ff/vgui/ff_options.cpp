@@ -1534,7 +1534,9 @@ void CFFOptionsPanel::SetVisible(bool state)
 }
 
 // This is the mod version string (defined in ff_gamerules.cpp)
-extern const char *MOD_CLIENT_VERSION;
+// Jon: reading from a file now
+//extern const char *MOD_CLIENT_VERSION;
+char *GetModVersion();
 
 // This is the URL for checking updates.
 char *szSplashUrl = "http://www.fortress-forever.com/notifier/check.php?c=%s&s=%s";
@@ -1597,7 +1599,7 @@ CFFSplashPanel::CFFSplashPanel(vgui::VPANEL parent)
 
 void CFFSplashPanel::CheckUpdate(const char *pszServerVersion /*= NULL*/)
 {
-	m_pSplashHTML->OpenURL(VarArgs(szSplashUrl, MOD_CLIENT_VERSION, pszServerVersion ? pszServerVersion : ""));
+	m_pSplashHTML->OpenURL(VarArgs(szSplashUrl, GetModVersion(), pszServerVersion ? pszServerVersion : ""));
 	m_pSplashHTML->SetVisible(true);
 }
 

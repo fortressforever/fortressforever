@@ -9,6 +9,7 @@
 #include "ff_gamerules.h"
 #include "ammodef.h"
 #include "KeyValues.h"
+#include "filesystem.h"
 #include "ff_weapon_base.h"
 #include "ff_projectile_base.h"
 
@@ -42,8 +43,10 @@
 // The client + server versions are checked when a server is joined
 // It is the discretion of the web-based version check script whether or not
 // to tell the client to upgrade or that the server they are joining is out of date.
-const char *MOD_CLIENT_VERSION = "2.3";
-const char *MOD_SERVER_VERSION = "2.3";
+/*
+// Jon: starting with 2.3, the versions are set through resource/version_client.txt and resource/version_server.txt
+//const char *MOD_CLIENT_VERSION = "2.3";
+//const char *MOD_SERVER_VERSION = "2.3";
 
 // Ignore this for now...!
 void VersionCvarChange(ConVar *var, const char *pOldString) {}
@@ -53,6 +56,60 @@ ConVar cvar_version("sync_version_cvar", MOD_SERVER_VERSION, FCVAR_REPLICATED, "
 #else
 					);
 #endif
+*/
+
+#define MAX_MOD_VERSION_LENGTH 16
+
+// this can be different between client and server
+char MOD_VERSION[MAX_MOD_VERSION_LENGTH] = { 0 };
+
+#ifdef CLIENT_DLL
+	#define MOD_VERSION_FILENAME "resource/version_client.txt"
+#else
+	#define MOD_VERSION_FILENAME "resource/version_server.txt"
+#endif
+
+char *GetModVersion()
+{
+	if ( MOD_VERSION[0] )
+		return MOD_VERSION;
+
+	FileHandle_t hFile = filesystem->Open( MOD_VERSION_FILENAME, "r", "MOD" );
+
+	if (!hFile)
+	{
+		Warning("[VERSION] %s either does not exist or could not be opened.\n", MOD_VERSION_FILENAME);
+		return "0.0";
+	}
+
+	// allocate buffer for the file's first line
+	char *buffer = (char*)MemAllocScratch(MAX_MOD_VERSION_LENGTH);
+	Assert(buffer);
+
+	// load file's first line into a null-terminated buffer
+	filesystem->ReadLine(buffer, MAX_MOD_VERSION_LENGTH, hFile);
+	buffer[MAX_MOD_VERSION_LENGTH] = 0;
+	filesystem->Close(hFile);
+
+	if ( buffer[0] )
+	{
+		Q_snprintf( MOD_VERSION, sizeof(MOD_VERSION), "%s", buffer );
+		if ( MOD_VERSION[0] )
+		{
+			Msg(
+#ifdef CLIENT_DLL
+				"[VERSION] Client Version:  %s\n"
+#else
+				"[VERSION] Server Version:  %s\n"
+#endif
+				, MOD_VERSION);
+
+			return MOD_VERSION;
+		}
+	}
+
+	return "0.0";
+}
 
 #ifndef CLIENT_DLL
 // Let's not use these or allow them.
