@@ -806,6 +806,7 @@ public:
 	float	m_flLastSight;
 	float	m_flPingTime;
 	float	m_flNextActivateSoundTime;
+	float	m_flAcknowledgeSabotageTime;
 
 	int		m_iEyeAttachment;
 	int		m_iMuzzleAttachment;

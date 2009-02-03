@@ -208,6 +208,7 @@ CFFSentryGun::CFFSentryGun()
 
 	m_flPingTime = 0;
 	m_flNextActivateSoundTime = 0;
+	m_flAcknowledgeSabotageTime = 0.0f;
 	m_flNextShell = 0;
 	m_flShotAccumulator = 0;
 	m_flNextRocket = 0;
@@ -379,6 +380,9 @@ void CFFSentryGun::OnObjectThink( void )
 		EmitSound( "DoSpark" );
 		m_flNextSparkTime = gpGlobals->curtime + random->RandomFloat( 0.5, 2.5 );
 	}
+
+	if ( m_flAcknowledgeSabotageTime != 0.0f && m_flAcknowledgeSabotageTime + 0.5f <= gpGlobals->curtime )
+		m_flAcknowledgeSabotageTime = 0.0f;
 
 	// We've just finished being maliciously sabotaged, so remove enemy here
 	if (m_bMaliciouslySabotaged && m_flSabotageTime <= gpGlobals->curtime)
@@ -686,7 +690,13 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		{
 				bIsSentryVisible = true;
 				if ( pSentryGun->IsMaliciouslySabotaged() && g_pGameRules->PlayerRelationship( pOwner, pSentryGun->m_hSaboteur ) != GR_TEAMMATE )
-					bIsSentryMaliciouslySabotaged = true;
+				{
+					// wait a few seconds before spotting a maliciously sabotaged sentry
+					if ( m_flAcknowledgeSabotageTime == 0.0f )
+						m_flAcknowledgeSabotageTime = gpGlobals->curtime + ( IsSabotaged() ? 6.0f : 3.0f );
+					else if ( m_flAcknowledgeSabotageTime <= gpGlobals->curtime )
+						bIsSentryMaliciouslySabotaged = true;
+				}
 		}
 
 		// Mirv: If we are maliciously sabotaged, then shoot teammates instead.
