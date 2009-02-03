@@ -325,6 +325,9 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	// Stuffs for handling buildable deaths
 	bool bBuildableKilled = false;
 
+	// headshot deaths
+	bool bHeadshot = false;
+
 	// trigger hurt death
 	bool bTriggerHurt = false;
 	char tempTriggerHurtString[128];
@@ -396,32 +399,6 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	if ( !victim_name )
 		victim_name = "";
 
-	// play the killbeep
-	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
-	if ( pLocalPlayer && killer == GetLocalPlayerIndex() )
-	{
-		char buf[MAX_PATH];
-		Q_snprintf( buf, MAX_PATH - 1, "player/deathbeep/%s.wav", cl_killbeepwav.GetString() );
-
-		CPASAttenuationFilter filter(pLocalPlayer, buf);
-
-		EmitSound_t params;
-		params.m_pSoundName = buf;
-		params.m_flSoundTime = 0.0f;
-		params.m_pflSoundDuration = NULL;
-		params.m_bWarnOnDirectWaveReference = false;
-		params.m_nChannel = CHAN_STATIC;
-
-		if ( killer == victim )
-			params.m_nPitch = 90;
-		else if ( bTeamKill )
-			params.m_nPitch = 80;
-		else
-			params.m_nPitch = PITCH_NORM;
-
-		pLocalPlayer->EmitSound(filter, pLocalPlayer->entindex(), params);
-	}
-
 	// going to make these use icons instead of text
 /*
 	// Buildable stuff
@@ -485,6 +462,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	{
 		// need the _weapon_sniperrifle in case people create "death_notice" entries in other weapon scripts...we just want the sniper rifle's
 		deathMsg.iconDeath = gHUD.GetIcon("death_BOOM_HEADSHOT_weapon_sniperrifle");
+		bHeadshot = true;
 	}
 	else if (Q_stricmp(killedwith, "caltrop") == 0)
 	{
@@ -534,6 +512,51 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		{
 			Q_strncat( sDeathMsg, VarArgs( " with %s.\n", fullkilledwith+6 ), sizeof( sDeathMsg ), COPY_ALL_CHARACTERS );
 		}
+	}
+
+	// play the killbeep
+	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
+	if ( pLocalPlayer && killer == GetLocalPlayerIndex() )
+	{
+		char buf[MAX_PATH];
+		Q_snprintf( buf, MAX_PATH - 1, "player/deathbeep/%s.wav", cl_killbeepwav.GetString() );
+
+		CPASAttenuationFilter filter(pLocalPlayer, buf);
+
+		EmitSound_t params;
+		params.m_pSoundName = buf;
+		params.m_flSoundTime = 0.0f;
+		params.m_pflSoundDuration = NULL;
+		params.m_bWarnOnDirectWaveReference = false;
+		params.m_nChannel = CHAN_STATIC;
+
+		if ( bTeamKill )
+		{
+			params.m_nPitch = 88;
+			params.m_flVolume = VOL_NORM;
+		}
+		else if ( deathMsg.iSuicide )
+		{
+			params.m_nPitch = 94;
+			params.m_flVolume = 0.5f;
+		}
+		else if ( bBuildableKilled )
+		{
+			params.m_nPitch = 106;
+			params.m_flVolume = VOL_NORM;
+		}
+		else if ( bHeadshot )
+		{
+			params.m_nPitch = 112;
+			params.m_flVolume = 0.5f;
+		}
+		else
+		{
+			params.m_nPitch = PITCH_NORM;
+			params.m_flVolume = VOL_NORM;
+		}
+
+		pLocalPlayer->EmitSound(filter, pLocalPlayer->entindex(), params);
 	}
 
 	Msg( "%s", sDeathMsg );
