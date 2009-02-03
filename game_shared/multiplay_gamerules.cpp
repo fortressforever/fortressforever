@@ -558,12 +558,6 @@ bool CMultiplayRules::IsMultiplayer( void )
 			else
 				pScorer->AddFortPoints( 100, "#FF_FORTPOINTS_FRAG" );
 
-			
-
-			CSingleUserRecipientFilter user( pScorer );
-			UserMessageBegin( user, "KillBeep" );
-				//WRITE_BYTE( 0 );
-			MessageEnd( );
 
 			// Allow the scorer to immediately paint a decal
 			pScorer->AllowImmediateDecalPainting();
