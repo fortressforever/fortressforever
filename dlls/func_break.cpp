@@ -796,15 +796,11 @@ int CBreakable::OnTakeDamage( const CTakeDamageInfo &info )
 
 	// check LUA to see if (for example) a team is killing it's own power generator, etc
 	CFFLuaSC hContext;
-	hContext.Push( this );
 	hContext.PushRef( subInfo );
-	_scriptman.RunPredicates_LUA( NULL, &hContext, "ondamage" );
-
+	_scriptman.RunPredicates_LUA( this, &hContext, "ondamage" );
 
 	float flPropDamage = GetBreakableDamage( subInfo, assert_cast<IBreakableWithPropData*>(this) );
 	subInfo.SetDamage( flPropDamage );
-	
-
 
 	int iPrevHealth = m_iHealth;
 	BaseClass::OnTakeDamage( subInfo );
