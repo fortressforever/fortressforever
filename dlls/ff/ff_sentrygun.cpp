@@ -693,7 +693,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 				{
 					// wait a few seconds before spotting a maliciously sabotaged sentry
 					if ( m_flAcknowledgeSabotageTime == 0.0f )
-						m_flAcknowledgeSabotageTime = gpGlobals->curtime + ( IsSabotaged() ? 6.0f : 3.0f );
+						m_flAcknowledgeSabotageTime = gpGlobals->curtime + ( IsSabotaged() ? 5.0f : 2.5f );
 					else if ( m_flAcknowledgeSabotageTime <= gpGlobals->curtime )
 						bIsSentryMaliciouslySabotaged = true;
 				}
