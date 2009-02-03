@@ -776,8 +776,6 @@ void CBreakable::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 //-----------------------------------------------------------------------------
 int CBreakable::OnTakeDamage( const CTakeDamageInfo &info )
 {
-	Vector	vecTemp;
-
 	CTakeDamageInfo subInfo = info;
 
 	// If attacker can't do at least the min required damage to us, don't take any damage from them
