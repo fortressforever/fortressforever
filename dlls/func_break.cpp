@@ -23,7 +23,7 @@
 #include "vstdlib/ICommandLine.h"
 #include "ff_luacontext.h"
 #include "ff_scriptman.h"
-#include "ff_entity_system.h"
+//#include "ff_entity_system.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
