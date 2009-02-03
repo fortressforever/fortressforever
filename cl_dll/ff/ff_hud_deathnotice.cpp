@@ -24,6 +24,8 @@
 
 static ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
 
+extern ConVar cl_killbeepwav;
+
 // Player entries in a death notice
 struct DeathNoticePlayer
 {
@@ -393,6 +395,32 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		killer_name = "";
 	if ( !victim_name )
 		victim_name = "";
+
+	// play the killbeep
+	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
+	if ( pLocalPlayer && killer == GetLocalPlayerIndex() )
+	{
+		char buf[MAX_PATH];
+		Q_snprintf( buf, MAX_PATH - 1, "player/deathbeep/%s.wav", cl_killbeepwav.GetString() );
+
+		CPASAttenuationFilter filter(pLocalPlayer, buf);
+
+		EmitSound_t params;
+		params.m_pSoundName = buf;
+		params.m_flSoundTime = 0.0f;
+		params.m_pflSoundDuration = NULL;
+		params.m_bWarnOnDirectWaveReference = false;
+		params.m_nChannel = CHAN_STATIC;
+
+		if ( killer == victim )
+			params.m_nPitch = 90;
+		else if ( bTeamKill )
+			params.m_nPitch = 80;
+		else
+			params.m_nPitch = PITCH_NORM;
+
+		pLocalPlayer->EmitSound(filter, pLocalPlayer->entindex(), params);
+	}
 
 	// going to make these use icons instead of text
 /*

@@ -75,8 +75,6 @@ void RegisterUserMessages()
 	// When our sentrygun blows up (sent to owner of sg)
 	usermessages->Register( "SentryGun_Destroyed", -1 );
 
-	usermessages->Register( "KillBeep", 0 );
-
 	usermessages->Register("FF_BuildTimer", -1);
   
 	// used to send a status icon
