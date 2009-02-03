@@ -21,6 +21,9 @@
 #include "util.h"
 #include "physics_impact_damage.h"
 #include "vstdlib/ICommandLine.h"
+#include "ff_luacontext.h"
+#include "ff_scriptman.h"
+#include "ff_entity_system.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -788,14 +791,21 @@ int CBreakable::OnTakeDamage( const CTakeDamageInfo &info )
 		return 1;
 	}
 
-	vecTemp = subInfo.GetInflictor()->GetAbsOrigin() - WorldSpaceCenter();
-
 	if (!IsBreakable())
 		return 0;
+
+	// check LUA to see if (for example) a team is killing it's own power generator, etc
+	CFFLuaSC hContext;
+	hContext.Push( this );
+	hContext.PushRef( subInfo );
+	_scriptman.RunPredicates_LUA( NULL, &hContext, "ondamage" );
+
 
 	float flPropDamage = GetBreakableDamage( subInfo, assert_cast<IBreakableWithPropData*>(this) );
 	subInfo.SetDamage( flPropDamage );
 	
+
+
 	int iPrevHealth = m_iHealth;
 	BaseClass::OnTakeDamage( subInfo );
 
