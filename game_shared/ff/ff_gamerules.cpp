@@ -98,9 +98,9 @@ char *GetModVersion()
 		{
 			Msg(
 #ifdef CLIENT_DLL
-				"[VERSION] Client Version:  %s\n"
+				"[VERSION] Client:  %s\n"
 #else
-				"[VERSION] Server Version:  %s\n"
+				"[VERSION] Server:  %s\n"
 #endif
 				, MOD_VERSION);
 
