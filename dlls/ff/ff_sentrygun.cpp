@@ -134,6 +134,9 @@
 //ConVar sg_empdmg_rockets_multi("ffdev_sg_empdmg_rockets_multi", "0.9", FCVAR_REPLICATED, "Base emp damage plus the sentry's rocket count times this");
 #define SG_EMPDMG_ROCKETS_MULTI 0.9f // sg_empdmg_rockets_multi.GetFloat()
 
+//ConVar sg_acknowledge_sabotage_delay("ffdev_sg_acknowledge_sabotage_delay", "2.5", FCVAR_REPLICATED, "Sentry won't spot a maliciously sabotaged sentry for this long");
+#define SG_ACKNOWLEDGE_SABOTAGE_DELAY 2.5f // sg_acknowledge_sabotage_delay.GetFloat()
+
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
 	SendPropFloat( SENDINFO( m_flRange ) ), 
@@ -693,7 +696,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 				{
 					// wait a few seconds before spotting a maliciously sabotaged sentry
 					if ( m_flAcknowledgeSabotageTime == 0.0f )
-						m_flAcknowledgeSabotageTime = gpGlobals->curtime + ( IsSabotaged() ? 5.0f : 2.5f );
+						m_flAcknowledgeSabotageTime = gpGlobals->curtime + SG_ACKNOWLEDGE_SABOTAGE_DELAY;
 					else if ( m_flAcknowledgeSabotageTime <= gpGlobals->curtime )
 						bIsSentryMaliciouslySabotaged = true;
 				}
