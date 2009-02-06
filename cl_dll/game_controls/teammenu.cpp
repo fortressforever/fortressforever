@@ -420,19 +420,40 @@ void CTeamMenu::UpdateTeamButtons()
 		// The team is full, so disable 
 		pTeamButton->SetEnabled((nTeamSpaces[iTeamIndex] != 0));
 
-		// Set the team name
-		wchar_t *pszName = localize()->Find(pGR->GetTeamName(iTeamID));
+		// set the team number
+		wchar_t wchTeamNumber = iTeamIndex + '1';
 
-		if (pszName)
+		// Set the team name
+		wchar_t *szTeamName = localize()->Find( pGR->GetTeamName( iTeamID ) );
+		wchar_t	szName[ 256 ];
+
+		if (szTeamName)
 		{
-			pTeamButton->SetText(pszName);
+			swprintf( szName, L"%c. %s", wchTeamNumber, szTeamName );
+			szTeamName = szName;
 		}
 		else
 		{
-			pTeamButton->SetText(pGR->GetTeamName(iTeamID));
+			// No localized text or team name not a resource string
+			char szString[ 256 ];
+			Q_snprintf( szString, 256, "%c. %s", wchTeamNumber, pGR->GetTeamName( iTeamID ) );
+			localize()->ConvertANSIToUnicode( szString, szName, sizeof( szName ) );
+			szTeamName = szName;
 		}
 
-		pTeamButton->SetHotkey((wchar_t) (iTeamIndex + '1'));
+		// one last check
+		if ( szTeamName )
+		{
+			pTeamButton->SetText(szTeamName);
+		}
+		else
+		{
+			// no name, just use the number
+			swprintf( szTeamName, L"%c.", wchTeamNumber );
+			pTeamButton->SetText(szTeamName);
+		}
+
+		pTeamButton->SetHotkey(wchTeamNumber);
 	}
 
 	int iTeamButtonGap = scheme()->GetProportionalScaledValue(TEAM_BUTTON_GAP);

@@ -275,15 +275,19 @@ extern bool Client_IsIntermission();
 
 void ForceScoreboard()
 {
-	if (!g_pScoreboard)
+	// all these NULL checks,
+	// because it's like ~CClientScoreBoardDialog can happen in the middle of this function happening,
+	// or something weird like that...IT'S FUCKING CRAZY, SERIOUSLY, THIS CRASH WON'T GO AWAY
+	// For real though, sometimes g_pScoreboard is NULL, but it still won't return right here...SEE IT'S FUCKING CRAZY, SERIOUSLY
+	if (g_pScoreboard == NULL)
 		return;
 
 	// Force visible
-	if (!g_pScoreboard->IsVisible())
+	if (g_pScoreboard != NULL && !g_pScoreboard->IsVisible())
 		g_pScoreboard->ShowPanel(true);
 
 	// Force mouse control
-	if (!g_pScoreboard->IsMouseInputEnabled())
+	if (g_pScoreboard != NULL && !g_pScoreboard->IsMouseInputEnabled())
 		g_pScoreboard->SetMouseInputEnabled(true);
 }
 
