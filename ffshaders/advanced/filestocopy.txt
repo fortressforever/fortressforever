@@ -1,0 +1,13 @@
+ff_post_colordrain_ps20.fxc
+..\..\materialsystem\stdshaders\common_hlsl_cpp_consts.h
+..\..\materialsystem\stdshaders\common_fxc.h
+..\..\materialsystem\stdshaders\common_ps_fxc.h
+ff_post_colordrain_ps20.fxc
+..\..\materialsystem\stdshaders\common_hlsl_cpp_consts.h
+..\..\materialsystem\stdshaders\common_fxc.h
+..\..\materialsystem\stdshaders\common_ps_fxc.h
+..\..\dx9sdk\utilities\vsa.exe 
+..\..\dx9sdk\utilities\psa.exe 
+..\..\dx9sdk\utilities\fxc.exe 
+..\..\devtools\bin\perl.exe 
+..\..\devtools\bin\perl58.dll 

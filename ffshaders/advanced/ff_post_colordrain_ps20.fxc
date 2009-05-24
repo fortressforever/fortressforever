@@ -1,0 +1,19 @@
+#include "common_ps_fxc.h"
+
+sampler framebuf		: register(s0);
+
+HALF4 main(float2 texcoord : TEXCOORD0) : COLOR
+{
+	float3 search = float3(0.0f, 1.0f, 0.0f);
+	float3 origcol = tex2D(framebuf, texcoord);
+	float lum = (origcol.x + origcol.y + origcol.z) / 3.0f;
+	lum = saturate(lerp(-0.3f, 1.3f, lum));
+	float3 col = float3(1.0f, 1.0f, 1.0f) * lum;
+	float dp = dot(normalize(search), normalize(origcol));
+	/*
+	if(dp > 0.75f)
+		col = origcol;
+	*/
+	col = lerp(col, origcol, dp * dp);
+	return HALF4(col, 1.0f);
+}

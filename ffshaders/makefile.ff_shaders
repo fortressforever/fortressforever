@@ -1,0 +1,55 @@
+default:  fxctmp9\ff_lightmap_ps20.inc shaders\fxc\ff_lightmap_ps20.vcs fxctmp9\ff_lightmap_vs20.inc shaders\fxc\ff_lightmap_vs20.vcs fxctmp9\ff_particle_vs11.inc shaders\fxc\ff_particle_vs11.vcs fxctmp9\ff_particle_ps11.inc shaders\fxc\ff_particle_ps11.vcs fxctmp9\ff_postprocess_ps20.inc shaders\fxc\ff_postprocess_ps20.vcs fxctmp9\ff_postprocess_vs20.inc shaders\fxc\ff_postprocess_vs20.vcs
+
+clean:
+	del /f /q fxctmp9\ff_lightmap_ps20.inc
+	del /f /q "shaders\fxc\ff_lightmap_ps20.vcs"
+	del /f /q fxctmp9\ff_lightmap_vs20.inc
+	del /f /q "shaders\fxc\ff_lightmap_vs20.vcs"
+	del /f /q fxctmp9\ff_particle_vs11.inc
+	del /f /q "shaders\fxc\ff_particle_vs11.vcs"
+	del /f /q fxctmp9\ff_particle_ps11.inc
+	del /f /q "shaders\fxc\ff_particle_ps11.vcs"
+	del /f /q fxctmp9\ff_postprocess_ps20.inc
+	del /f /q "shaders\fxc\ff_postprocess_ps20.vcs"
+	del /f /q fxctmp9\ff_postprocess_vs20.inc
+	del /f /q "shaders\fxc\ff_postprocess_vs20.vcs"
+
+fxctmp9\ff_lightmap_ps20.inc shaders\fxc\ff_lightmap_ps20.vcs: ff_lightmap_ps20.fxc ..\materialsystem\stdshaders\common_ps_fxc.h ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h ..\materialsystem\stdshaders\common_fxc.h
+	..\devtools\bin\perl.exe ..\devtools\bin\fxc_prep.pl  -shaderoutputdir shaders -source ".." ff_lightmap_ps20.fxc
+	echo ff_lightmap_ps20.fxc>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_ps_fxc.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_fxc.h>> filestocopy.txt
+
+fxctmp9\ff_lightmap_vs20.inc shaders\fxc\ff_lightmap_vs20.vcs: ff_lightmap_vs20.fxc ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h ..\materialsystem\stdshaders\common_vs_fxc.h ..\materialsystem\stdshaders\common_fxc.h
+	..\devtools\bin\perl.exe ..\devtools\bin\fxc_prep.pl  -shaderoutputdir shaders -source ".." ff_lightmap_vs20.fxc
+	echo ff_lightmap_vs20.fxc>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_vs_fxc.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_fxc.h>> filestocopy.txt
+
+fxctmp9\ff_particle_vs11.inc shaders\fxc\ff_particle_vs11.vcs: ff_particle_vs11.fxc ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h ..\materialsystem\stdshaders\common_fxc.h ..\materialsystem\stdshaders\common_vs_fxc.h
+	..\devtools\bin\perl.exe ..\devtools\bin\fxc_prep.pl  -shaderoutputdir shaders -source ".." ff_particle_vs11.fxc
+	echo ff_particle_vs11.fxc>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_fxc.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_vs_fxc.h>> filestocopy.txt
+
+fxctmp9\ff_particle_ps11.inc shaders\fxc\ff_particle_ps11.vcs: ff_particle_ps11.fxc 
+	..\devtools\bin\perl.exe ..\devtools\bin\fxc_prep.pl  -shaderoutputdir shaders -source ".." ff_particle_ps11.fxc
+	echo ff_particle_ps11.fxc>> filestocopy.txt
+
+fxctmp9\ff_postprocess_ps20.inc shaders\fxc\ff_postprocess_ps20.vcs: ff_postprocess_ps20.fxc ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h ..\materialsystem\stdshaders\common_ps_fxc.h ..\materialsystem\stdshaders\common_fxc.h
+	..\devtools\bin\perl.exe ..\devtools\bin\fxc_prep.pl  -shaderoutputdir shaders -source ".." ff_postprocess_ps20.fxc
+	echo ff_postprocess_ps20.fxc>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_ps_fxc.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_fxc.h>> filestocopy.txt
+
+fxctmp9\ff_postprocess_vs20.inc shaders\fxc\ff_postprocess_vs20.vcs: ff_postprocess_vs20.fxc ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h ..\materialsystem\stdshaders\common_fxc.h ..\materialsystem\stdshaders\common_vs_fxc.h
+	..\devtools\bin\perl.exe ..\devtools\bin\fxc_prep.pl  -shaderoutputdir shaders -source ".." ff_postprocess_vs20.fxc
+	echo ff_postprocess_vs20.fxc>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_fxc.h>> filestocopy.txt
+	echo ..\materialsystem\stdshaders\common_vs_fxc.h>> filestocopy.txt
+
