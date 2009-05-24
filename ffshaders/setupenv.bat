@@ -1,0 +1,1 @@
+set sourceff=d:\steam\steamapps\billdoor_ff\sourcesdk
