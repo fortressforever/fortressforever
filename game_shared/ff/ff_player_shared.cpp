@@ -63,6 +63,13 @@ ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICAT
 ConVar ffdev_sniper_radiotag_time( "ffdev_sniper_radiotag_time", "30.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "10.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 
+ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "8.4", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "12.6", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "256", FCVAR_REPLICATED | FCVAR_CHEAT );
+
 //ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_AC_IMPACTFREQ 2 //ffdev_ac_impactfreq.GetInt()
 
@@ -79,6 +86,8 @@ ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "
 
 //ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "5.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_SNIPER_MAXPUSH 5.5f // sniperrifle_pushmax.GetFloat()
+
+#define OVERPRESSURE_EFFECT "FF_RingEffect"
 
 //0001279: Need convar for pipe det delay
 extern ConVar pipebomb_time_till_live;
@@ -562,6 +571,8 @@ void CFFPlayer::ClassSpecificSkill()
 
 	CFFWeaponBase *pWeapon = GetActiveFFWeapon();		
 			
+	CEffectData data;
+
 	switch (GetClassSlot())
 	{
 #ifdef GAME_DLL
@@ -605,18 +616,112 @@ void CFFPlayer::ClassSpecificSkill()
 		break;
 #endif
 
-#ifdef CLIENT_DLL
 
 		case CLASS_HWGUY:
-			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
+			/*if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
 			{
 				SwapToWeapon(FF_WEAPON_SUPERSHOTGUN);
 			}
 			else 
 			{
 				SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
+			}*/
+			if (IsAlive())
+			{
+
+				data.m_vOrigin = GetLegacyAbsOrigin();
+				
+				DispatchEffect(OVERPRESSURE_EFFECT, data);
+				// Play a sound
+				EmitSound("overpressure.explode");
+
+#ifdef GAME_DLL
+
+				CBaseEntity *pEntity = NULL;
+
+				float fRadius = ffdev_overpressure_radius.GetFloat();
+
+				for( CEntitySphereQuery sphere( GetLegacyAbsOrigin(), fRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+				{
+					if (!pEntity || !pEntity->IsPlayer())
+						continue;
+
+					CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+
+					if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+						continue;
+
+					// Some useful things to know
+					Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetLegacyAbsOrigin();
+					float flDistance = vecDisplacement.Length();
+					Vector vecDir = vecDisplacement / flDistance;
+
+					// People who are building shouldn't be pushed around by anything
+					if (pPlayer->IsStaticBuilding())
+						continue;
+
+					// TFC considers a displacement < 16units to be a hh
+					Vector vecResult;
+					if ((pEntity == this) || (flDistance < 16.0f))
+					{
+						float fSelfLateral = ffdev_overpressure_selfpush_horizontal.GetFloat();
+						float fSelfVertical = ffdev_overpressure_selfpush_vertical.GetFloat();
+
+						Vector vecVelocity = pPlayer->GetAbsVelocity();
+						Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+						float flHorizontalSpeed = vecLatVelocity.Length();
+
+						// apply push force
+						if (pPlayer->GetFlags() & FL_ONGROUND)
+						{
+							vecResult = Vector(vecVelocity.x * fSelfLateral, vecVelocity.y  * fSelfLateral, (vecVelocity.z + 90)* fSelfVertical);
+							DevMsg("[HW attack2] on ground (%f)\n", flHorizontalSpeed);
+						}
+						else
+						{
+							vecResult = Vector(vecVelocity.x * fSelfLateral, vecVelocity.y * fSelfLateral, vecVelocity.z * fSelfVertical);
+							DevMsg("[HW attack2] in air (%f)\n", flHorizontalSpeed);
+						}
+					}
+					else
+					{
+						float verticalDistance = vecDisplacement.z;
+							
+						vecDisplacement.z = 0;
+						float horizontalDistance = vecDisplacement.Length();
+
+						// Normalise the lateral direction of this
+						vecDisplacement /= horizontalDistance;
+						
+						float fLateral = ffdev_overpressure_push_horizontal.GetFloat();
+						float fVertical = ffdev_overpressure_push_vertical.GetFloat();
+
+						vecDisplacement *= (horizontalDistance / (fLateral - 0.015f * flDistance));
+						vecDisplacement.z = (verticalDistance / (fVertical - 0.0225f * flDistance));
+
+						//pPlayer->SetAbsVelocity(vecDisplacement);
+						vecResult = vecDisplacement;
+					}
+
+					// cap mancannon + overpressure speed
+					if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
+					{
+						if ( vecResult.Length() > 1700.0f )
+						{
+							vecResult.NormalizeInPlace();
+							vecResult *= 1700.0f;
+						}
+					}
+					pPlayer->SetAbsVelocity(vecResult);
+				}
+
+#endif
 			}
+			m_flNextClassSpecificSkill = gpGlobals->curtime + ffdev_overpressure_delay.GetFloat();
 			break;
+
+			
+#ifdef CLIENT_DLL
 
 		case CLASS_PYRO:
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_IC) )
