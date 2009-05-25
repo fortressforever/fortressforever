@@ -133,6 +133,8 @@ extern ConVar sv_maxspeed;
 //ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_REPLICATED, "To tweak z factor of velocity when spy is cloaked" );
 #define FFDEV_SPY_CLOAKZVEL 0.5f
 
+ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "630", FCVAR_REPLICATED | FCVAR_CHEAT );
+
 ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "nailgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
 ConVar ff_defaultweapon_sniper("cl_spawnweapon_sniper", "sniperrifle", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Sniper spawn.");
 ConVar ff_defaultweapon_soldier("cl_spawnweapon_soldier", "rpg", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Soldier spawn.");
@@ -5270,7 +5272,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		{
 			AngleVectors(angAngles, &vecVelocity);
 			VectorNormalize(vecVelocity);
-			vecVelocity *= flSpeed; //gren_speed.GetFloat();	// |-- Mirv: So we can drop grenades
+			vecVelocity *= ffdev_gren_throwspeed.GetFloat(); // flSpeed;	// |-- Mirv: So we can drop grenades
 		}
 		else
 			vecVelocity = Vector(0, 0, 0);
