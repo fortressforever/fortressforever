@@ -65,10 +65,14 @@ ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "10.0", FCVAR_REP
 
 ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "8.4", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "12.6", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "256", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "4", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 //ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_AC_IMPACTFREQ 2 //ffdev_ac_impactfreq.GetInt()
@@ -685,8 +689,44 @@ void CFFPlayer::ClassSpecificSkill()
 					}
 					else
 					{
+						Vector vecVelocity = pPlayer->GetAbsVelocity();
+						Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+						float flHorizontalSpeed = vecLatVelocity.Length();
+
+						float fSpeedPercent = ffdev_overpressure_speed_percent.GetFloat();
+
+						float fLateral = ffdev_overpressure_push_horizontal.GetFloat();
+						float fVertical = ffdev_overpressure_push_vertical.GetFloat();
+
+						if (flHorizontalSpeed > pPlayer->MaxSpeed() * fSpeedPercent)
+						{
+							float fSpeedMultiplier = flHorizontalSpeed / pPlayer->MaxSpeed() - fSpeedPercent + 1;
+
+							float fSpeedMultiplierHorizontal = ffdev_overpressure_speed_multiplier_horizontal.GetFloat() * fSpeedMultiplier;
+							float fSpeedMultiplierVertical = ffdev_overpressure_speed_multiplier_vertical.GetFloat() * fSpeedMultiplier;
+
+							vecResult = Vector(vecDir.x * fLateral * fSpeedMultiplierHorizontal, vecDir.y * fLateral * fSpeedMultiplierHorizontal, vecDir.z * fVertical * fSpeedMultiplierVertical);
+							DevMsg("[HW attack2] enemy going supersonic (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+						}
+						else
+						{
+							// apply push force
+							if (pPlayer->GetFlags() & FL_ONGROUND)
+							{
+								float fGroundPush = ffdev_overpressure_groundpush_multiplier.GetFloat();
+
+								vecResult = Vector(vecDir.x * fLateral * fGroundPush, vecDir.y  * fLateral * fGroundPush, vecDir.z * fVertical);
+								DevMsg("[HW attack2] enemy on ground, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+							}
+							else
+							{
+								vecResult = Vector(vecDir.x * fLateral, vecDir.y * fLateral, vecDir.z * fVertical);
+								DevMsg("[HW attack2] enemy in air, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+							}
+						}
+						/*
 						float verticalDistance = vecDisplacement.z;
-							
+						
 						vecDisplacement.z = 0;
 						float horizontalDistance = vecDisplacement.Length();
 
@@ -696,11 +736,12 @@ void CFFPlayer::ClassSpecificSkill()
 						float fLateral = ffdev_overpressure_push_horizontal.GetFloat();
 						float fVertical = ffdev_overpressure_push_vertical.GetFloat();
 
-						vecDisplacement *= (horizontalDistance / (fLateral - 0.015f * flDistance));
-						vecDisplacement.z = (verticalDistance / (fVertical - 0.0225f * flDistance));
+						vecDisplacement *= (horizontalDistance * (fLateral - 0.015f * flDistance));
+						vecDisplacement.z = (verticalDistance * (fVertical - 0.0225f * flDistance));
 
 						//pPlayer->SetAbsVelocity(vecDisplacement);
 						vecResult = vecDisplacement;
+						*/
 					}
 
 					// cap mancannon + overpressure speed
