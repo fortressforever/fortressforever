@@ -35,6 +35,7 @@ extern "C"
 
 // custom game modes made so damn easy
 ConVar sv_mapluasuffix( "sv_mapluasuffix", "0", FCVAR_ARCHIVE, "Have a custom lua file (game mode) loaded when the map loads. If this suffix string is set, maps\\mapname__suffix__.lua (if it exists) is used instead of maps\\mapname.lua. To reset this cvar, make it 0.");
+ConVar sv_luaglobalscript( "sv_globalluascript", "0", FCVAR_ARCHIVE, "Load a custom lua file globally after map scripts. Will overwrite map script. Will be loaded from maps\\globalscripts. To disable, set to 0.");
 
 /////////////////////////////////////////////////////////////////////////////
 using namespace luabind;
@@ -213,6 +214,22 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 		}
 	}
 
+	// Load global include script, overwriting previously loaded stuff per map
+	if( sv_luaglobalscript.GetString()[0] != '0' )
+	{
+		const char* scriptname = sv_luaglobalscript.GetString();
+		Msg("[SCRIPT] sv_luaglobalscript set to %s | loading global script maps maps\\globalscripts\\%s.lua\n", scriptname, scriptname );
+		if( filesystem->FileExists( UTIL_VarArgs( "maps/globalscripts/%s.lua", scriptname ) ) )
+		{
+			Q_snprintf( globalscript_filename, sizeof(globalscript_filename), "maps/globalscripts/%s.lua", scriptname );
+			Msg("[SCRIPT] maps\\globalscripts\\%s.lua found\n", scriptname );\
+		}
+		else
+		{
+			Msg("[SCRIPT] global script maps\\globalscripts\\%s.lua not found - nothing loaded post map lua.\n", scriptname );
+		}
+	}
+
 	if ( !filename[0] )
 		Q_snprintf( filename, sizeof(filename), "maps/%s.lua", szMapName );
 
@@ -227,6 +244,19 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 
 			if(!engine->IsGenericPrecached(filename))
 				engine->PrecacheGeneric(filename, true);
+		}
+
+		// if we have a globalscript, shoot it down the intertubes too
+		if( sv_luaglobalscript.GetString()[0] != '0' && globalscript_filename[0] )
+		{
+			V_FixSlashes(filename);
+			if(filesystem->FileExists(globalscript_filename))
+			{
+				Util_AddDownload(globalscript_filename);
+
+				if(!engine->IsGenericPrecached(globalscript_filename))
+					engine->PrecacheGeneric(globalscript_filename, true);
+			}
 		}
 
 		//////////////////////////////////////////////////////////////////////////
@@ -245,6 +275,14 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 
 	m_ScriptExists = LoadFile(L, filename);
 	EndScriptLoad();
+
+	// force loading global script in another call :/
+	if( sv_luaglobalscript.GetString()[0] != '0' && globalscript_filename[0] )
+	{
+		BeginScriptLoad();
+		LoadFile(L, globalscript_filename);
+		EndScriptLoad();
+	}
 
 	// spawn the helper entity
 	CFFEntitySystemHelper::Create();
