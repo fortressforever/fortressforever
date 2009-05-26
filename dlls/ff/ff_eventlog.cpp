@@ -40,7 +40,9 @@ public:
 		gameeventmanager->AddListener( this, "luaevent", true );
 		gameeventmanager->AddListener( this, "player_changeclass", true );
 		gameeventmanager->AddListener( this, "sentrygun_upgraded", true );
-		
+		gameeventmanager->AddListener( this, "sentry_sabotaged", true );
+		gameeventmanager->AddListener( this, "dispenser_sabotaged", true );
+
 		//gameeventmanager->AddListener( this, "player_team", true );
 
 		return BaseClass::Init();
@@ -49,6 +51,42 @@ public:
 	bool PrintEvent( IGameEvent * event )	// override virtual function
 	{
 		const char *name = event->GetName();
+
+		// caes: some copy/paste action
+		// BEG: Watch for SG sabotage
+		if( !Q_strncmp( name, "sentry_sabotaged", Q_strlen( "sentry_sabotaged" ) ) )
+		{
+			const int ownerid = event->GetInt( "userid" );
+			const int attackerid = event->GetInt( "saboteur" );
+
+			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
+			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+			CTeam *oteam = pOwner->GetTeam(); // owner's (victim's) team
+			CTeam *ateam = pAttacker->GetTeam(); // attacker's (saboteur's) team
+
+			// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"sentry_sabotaged\" against \"%s<%i><%s><%s>\"\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(), oteam ? oteam->GetName() : "" );
+			DevMsg( "\"%s<%i><%s><%s>\" triggered \"sentry_sabotaged\" against \"%s<%i><%s><%s>\"\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(), oteam ? oteam->GetName() : "" );
+		}
+		// END: Watch for SG sabotage
+
+		// BEG: Watch for dispenser sabotage
+		if( !Q_strncmp( name, "dispenser_sabotaged", Q_strlen( "dispenser_sabotaged" ) ) )
+		{
+			const int ownerid = event->GetInt( "userid" );
+			const int attackerid = event->GetInt( "saboteur" );
+
+			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
+			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+			CTeam *oteam = pOwner->GetTeam(); // owner's (victim's) team
+			CTeam *ateam = pAttacker->GetTeam(); // attacker's (saboteur's) team
+
+			// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"dispenser_sabotaged\" against \"%s<%i><%s><%s>\"\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(), oteam ? oteam->GetName() : "" );
+			DevMsg( "\"%s<%i><%s><%s>\" triggered \"dispenser_sabotaged\" against \"%s<%i><%s><%s>\"\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), ateam ? ateam->GetName() : "", pOwner->GetPlayerName(), ownerid, pOwner->GetNetworkIDString(), oteam ? oteam->GetName() : "" );
+		}
+		// END: Watch for dispenser sabotage
+		// caes
 
 		// BEG: Watching when buildables get built
 		if( Q_strncmp( name, "build_", strlen( "build_" ) ) == 0 )
