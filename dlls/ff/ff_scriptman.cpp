@@ -197,7 +197,7 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	LoadFile(L, "maps/includes/base.lua");
 
 	char filename[256] = {0};
-
+	char globalscript_filename[256] = {0};
 	// Even though LoadFile already checks to see if the file exists, we'll check now so at least the default map lua file is loaded.
 	// That way servers can keep their suffix set without worrying about every map having whatever game mode they always want to use.
 	if ( sv_mapluasuffix.GetString()[0] != '0' )
