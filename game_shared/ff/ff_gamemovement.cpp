@@ -163,10 +163,11 @@ bool CFFGameMovement::CheckJumpButton(void)
 		return false;		// in air, so no effect
 	}
 
-	if ( mv->m_nOldButtons & IN_JUMP )
-	{
-		return false;		// don't pogo stick
-	}
+	// caes: do pogo stick!
+	//if ( mv->m_nOldButtons & IN_JUMP )
+	//{
+	//	return false;		// don't pogo stick
+	//}
 
 	// Don't allow jumping when the player is in a stasis field.
 	if ( player->m_Local.m_bSlowMovement )
