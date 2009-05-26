@@ -257,6 +257,10 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 						pPlayer->Concuss( flDuration, flIconDuration, &angDirection, flDistance);
 				}					
 			}
+			
+			// caes: make hh concs not push other players
+			if ( pEntity != GetThrower() && m_fIsHandheld )
+				continue;
 
 			// People who are building shouldn't be pushed around by anything
 			if (pPlayer->IsStaticBuilding())
