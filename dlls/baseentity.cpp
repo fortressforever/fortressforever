@@ -60,7 +60,8 @@
 #include "ModelSoundsCache.h"
 #include "env_debughistory.h"
 
-#include "ff_luacontext.h"
+#include "ff_luacontext.h" // FF
+#include "ff_scriptman.h" // FF
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -3446,12 +3447,15 @@ ConVar ent_messages_draw( "ent_messages_draw", "0", FCVAR_CHEAT, "Visualizes all
 bool CBaseEntity::AcceptInput( const char *szInputName, CBaseEntity *pActivator, CBaseEntity *pCaller, variant_t Value, int outputID )
 {
 	// pass the event to script
-	CFFLuaSC sc;
+	CFFLuaSC hInput;
 	if(pActivator) // just in case
-		sc.Push(pActivator);
+		hInput.Push(pActivator);
 	if(pCaller) // just in case
-		sc.Push(pCaller);
-	sc.CallFunction(this, szInputName);
+		hInput.Push(pCaller);
+	char buf[ 512 ];
+	Q_strncpy( buf, szInputName, sizeof( buf ) );
+	Q_strlower( buf );
+	_scriptman.RunPredicates_LUA(this, &hInput, buf);
 
 	if ( ent_messages_draw.GetBool() )
 	{
