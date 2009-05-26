@@ -6135,6 +6135,16 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 		// Bug #0000467: Medic can't give over 100% health [just added in the "m_iHealth =" line...]
 		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth * 1.5f ) );
 
+
+	// show addhealth
+	CSingleUserRecipientFilter filter( this );
+	filter.MakeReliable();
+
+	// show added/subtracted health
+	UserMessageBegin( filter, "PlayerAddHealth" );
+		WRITE_SHORT( m_iHealth - iOriginalHP );
+	MessageEnd();
+
 	// AfterShock - scoring system: Heal x amount of health +.5*health_given (only if last damage from enemy) 
 	// Leaving the 'last damage from enemy' part out until discussion has finished about it.
 	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), "#FF_FORTPOINTS_GIVEHEALTH");
@@ -6608,6 +6618,17 @@ int CFFPlayer::LuaAddHealth(int iAmount)
 		info.SetCustomKill(KILLTYPE_INFECTION);
 
 		TakeDamage( info );
+	}
+
+	if (iAmount != 0)
+	{
+		CSingleUserRecipientFilter filter( this );
+		filter.MakeReliable();
+
+		// show added/subtracted health
+		UserMessageBegin( filter, "PlayerAddHealth" );
+			WRITE_SHORT( iAmount );
+		MessageEnd();
 	}
 
 	return iAmount;
@@ -7370,6 +7391,17 @@ int CFFPlayer::AddArmor( int iAmount )
 		return 0;
 
 	m_iArmor += iAmount;
+
+	if (iAmount != 0)
+	{
+		CSingleUserRecipientFilter filter( this );
+		filter.MakeReliable();
+
+		// show added/subtracted health
+		UserMessageBegin( filter, "PlayerAddArmor" );
+			WRITE_SHORT( iAmount );
+		MessageEnd();
+	}
 
 	return iAmount;
 }
