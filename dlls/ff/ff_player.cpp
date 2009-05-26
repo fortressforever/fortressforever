@@ -7292,11 +7292,9 @@ void CFFPlayer::SpySabotageThink()
 					pEvent->SetInt("userid", pOwner->GetUserID());
 					pEvent->SetInt("saboteur", GetUserID());
 
-					// WHY? WHY? WHY?
-					// Why set up the event and never send it? 
-					// DrEvil - I think you for the
-					// "gameeventmanager->FireEvent( pEvent );" 
-					// line. <3
+					// caes: fire the sentry/dispenser sabotaged events
+					gameeventmanager->FireEvent( pEvent );
+					// caes
 				}				
 			}
 
