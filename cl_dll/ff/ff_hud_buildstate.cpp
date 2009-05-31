@@ -57,7 +57,9 @@ private:
 	wchar_t m_szNoRockets[32];
 
 	// Icons
-	CHudTexture *m_pHudSentry;
+	CHudTexture *m_pHudSentryLevel1;
+	CHudTexture *m_pHudSentryLevel2;
+	CHudTexture *m_pHudSentryLevel3;
 	CHudTexture *m_pHudDispenser;
 
 	// Lines of information
@@ -66,6 +68,8 @@ private:
 
 	bool m_bDrawDispenser;
 	bool m_bDrawSentry;
+
+	int m_iSentryLevel;
 
 	void MsgFunc_DispenserMsg(bf_read &msg);
 	void MsgFunc_SentryMsg(bf_read &msg);
@@ -104,9 +108,17 @@ void CHudBuildState::VidInit()
 	SetPaintBackgroundEnabled(false);
 
 	// Precache the icons
-	m_pHudSentry = new CHudTexture();
-	m_pHudSentry->textureId = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_pHudSentry->textureId, "vgui/hud_buildable_sentry", true, false);
+	m_pHudSentryLevel1 = new CHudTexture();
+	m_pHudSentryLevel1->textureId = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile(m_pHudSentryLevel1->textureId, "vgui/hud_buildable_sentry_level1", true, false);
+
+	m_pHudSentryLevel2 = new CHudTexture();
+	m_pHudSentryLevel2->textureId = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile(m_pHudSentryLevel2->textureId, "vgui/hud_buildable_sentry_level2", true, false);
+
+	m_pHudSentryLevel3 = new CHudTexture();
+	m_pHudSentryLevel3->textureId = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile(m_pHudSentryLevel3->textureId, "vgui/hud_buildable_sentry_level3", true, false);
 
 	m_pHudDispenser = new CHudTexture();
 	m_pHudDispenser->textureId = surface()->CreateNewTextureID();
@@ -149,6 +161,7 @@ void CHudBuildState::Init()
 void CHudBuildState::OnTick() 
 {
 	m_bDrawDispenser = m_bDrawSentry = false;
+	m_iSentryLevel = 0;
 
 	if (!engine->IsInGame()) 
 		return;
@@ -164,6 +177,7 @@ void CHudBuildState::OnTick()
 
 	m_bDrawDispenser = pDispenser && pDispenser->IsBuilt();
 	m_bDrawSentry = pSentryGun && pSentryGun->m_iLevel > 0;
+	m_iSentryLevel = pSentryGun->m_iLevel;
 }
 
 void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
@@ -202,7 +216,18 @@ void CHudBuildState::Paint()
 
 	if (m_bDrawSentry) 
 	{
-		surface()->DrawSetTexture(m_pHudSentry->textureId);
+		switch( m_iSentryLevel )
+		{
+			case 1:
+				surface()->DrawSetTexture(m_pHudSentryLevel1->textureId);
+				break;
+			case 2:
+				surface()->DrawSetTexture(m_pHudSentryLevel2->textureId);
+				break;
+			case 3:
+				surface()->DrawSetTexture(m_pHudSentryLevel3->textureId);
+				break;
+		}
 		surface()->DrawTexturedRect(icon1_xpos, icon1_ypos, icon1_xpos + icon1_width, icon1_ypos + icon1_height);
 	}
 
