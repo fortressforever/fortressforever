@@ -177,7 +177,8 @@ void CHudBuildState::OnTick()
 
 	m_bDrawDispenser = pDispenser && pDispenser->IsBuilt();
 	m_bDrawSentry = pSentryGun && pSentryGun->m_iLevel > 0;
-	m_iSentryLevel = pSentryGun->m_iLevel;
+	if (m_bDrawSentry)
+		m_iSentryLevel = pSentryGun->m_iLevel;
 }
 
 void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
