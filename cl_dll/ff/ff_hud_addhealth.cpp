@@ -132,7 +132,7 @@ void CHudPlayerAddHealth::MsgFunc_PlayerAddHealth( bf_read &msg )
 	Q_snprintf( szString2, sizeof(szString2), "%s%i", ptVal>0?"+":"",ptVal );
 
 	// convert int-string to unicode
-	localize()->ConvertANSIToUnicode( szString2, m_pTextHealth, sizeof( m_pTextHealth ) );
+	vgui::localize()->ConvertANSIToUnicode( szString2, m_pTextHealth, sizeof( m_pTextHealth ) );
 
 	// play animation (new points value)
 	if(ptVal > 0)
@@ -149,7 +149,7 @@ void CHudPlayerAddHealth::MsgFunc_PlayerAddHealth( bf_read &msg )
 	{
 		enum { BufferSize = 1024 };
 		char score[BufferSize] = {0};
-		localize()->ConvertUnicodeToANSI(m_pTextHealth, score, BufferSize);
+		vgui::localize()->ConvertUnicodeToANSI(m_pTextHealth, score, BufferSize);
 		//G15::AddFortPoints(description, score);
 	}
 }
