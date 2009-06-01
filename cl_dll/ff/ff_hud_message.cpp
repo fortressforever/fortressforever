@@ -21,6 +21,19 @@ using namespace vgui;
 extern ConVar cl_drawhud;
 ConVar hud_messages("hud_messages", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Toggle visible FF messages on the HUD.");
 
+// Contents of each entry in our list of messages
+struct MessageItem 
+{
+	CHudTexture *pIcon;		// Icon texture reference
+	wchar_t		pText[256];	// Unicode text buffer
+
+	float		flStartTime;	// When the message was recevied
+	float		flDuration;	// Duration of the message
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 class CHudGameMessage : public CHudElement, public vgui::Panel
 {
 private:
@@ -32,8 +45,8 @@ public:
 	{
 		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-		
-		m_pIcon = NULL;
+
+		SetPaintBackgroundEnabled( false );
 
 		// Never hide
 		SetHiddenBits( 0 );
@@ -43,92 +56,129 @@ public:
 	void	VidInit( void );
 	void	Paint( void );
 	
+	void RetireExpiredMessages( void );
+	
 	// Callback function for the "GameMessage" user message
 	void	MsgFunc_GameMessage( bf_read &msg );
 
 private:
-	CHudTexture *m_pIcon;		// Icon texture reference
-	wchar_t		m_pText[256];
-	float		m_flStartTime;	// When the message was recevied
-	float		m_flDuration;	// Duration of the message
+
+	float m_flMaxMessages;
+
+	CUtlVector<MessageItem> m_Messages;
+
 };
 
 DECLARE_HUDELEMENT( CHudGameMessage );
 DECLARE_HUD_MESSAGE( CHudGameMessage, GameMessage );
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CHudGameMessage::VidInit( void )
 {
 	// Store off a reference to our icon
-	m_pIcon = gHUD.GetIcon( "message_icon" );
-
-	m_pText[0] = '\0';
-
-	// To make it go "away" - still visible
-	// just don't see the bg from it
-	SetPaintBackgroundEnabled( false );
+	m_Messages.Purge();
+	m_flMaxMessages = 4.0f;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CHudGameMessage::Init( void )
 {
 	HOOK_HUD_MESSAGE( CHudGameMessage, GameMessage );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CHudGameMessage::MsgFunc_GameMessage( bf_read &msg )
 {
 	// Read in our string
 	char szString[256];
 	msg.ReadString( szString, sizeof(szString) );
+	
+	// Do we have too many death messages in the queue?
+	if ( m_Messages.Count() > 0 &&
+		m_Messages.Count() >= (int)m_flMaxMessages )
+	{
+		// Remove the oldest one in the queue, which will always be the first
+		m_Messages.Remove(0);
+	}
 
-	//DevMsg( "[Game Message] %s\n", szString );
+	MessageItem messageMsg;
 
 	// Convert it to localize friendly unicode
 	wchar_t *pszTemp = vgui::localize()->Find( szString );
 	if( pszTemp )
-		wcscpy( m_pText, pszTemp );
+		wcscpy( messageMsg.pText, pszTemp );
 	else
-		vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof( m_pText ) );
-
-	//vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof(m_pText) );
-
-	// Setup our time trackers
-	m_flStartTime = gpGlobals->curtime;
-	m_flDuration = 5.0f;
+		vgui::localize()->ConvertANSIToUnicode( szString, messageMsg.pText, sizeof( messageMsg.pText ) );
+	
+	messageMsg.flStartTime = gpGlobals->curtime;
+	messageMsg.flDuration = 7.0f;
+	messageMsg.pIcon = gHUD.GetIcon( "message_icon" );
+	
+	m_Messages.AddToTail( messageMsg );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CHudGameMessage::Paint( void )
-{	
-	//if ( !m_pIcon )
-	//	return;
-
-	if ( !cl_drawhud.GetBool() || !hud_messages.GetBool() )
+{
+	if ( !cl_drawhud.GetBool() || !hud_messages.GetBool() || !m_Messages.Count() )
 		return;
 
-	if (m_flStartTime + m_flDuration < gpGlobals->curtime)
-		return;
+	int iCount = m_Messages.Count();
+	for ( int i = 0; i < iCount; i++ )
+	{
+		// Find our fade based on our time shown
+		float dt = ( m_Messages[i].flStartTime - gpGlobals->curtime );
+		float flAlpha = SimpleSplineRemapVal( dt, 0.0f, m_Messages[i].flDuration, 255, 0 );
+		flAlpha = clamp( flAlpha, 0.0f, 255.0f );
 
-	// Find our fade based on our time shown
-	float dt = ( m_flStartTime - gpGlobals->curtime );
-	float flAlpha = SimpleSplineRemapVal( dt, 0.0f, m_flDuration, 255, 0 );
+		// Get our scheme and font information
+		vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
+		vgui::HFont hFont = vgui::scheme()->GetIScheme(scheme)->GetFont( "CloseCaption_Normal" );
 
-	flAlpha = clamp( flAlpha, 0.0f, 255.0f );
+		// Draw our text
+		surface()->DrawSetTextFont( hFont ); // set the font	
+		surface()->DrawSetTextColor( 255, 255, 255, flAlpha ); // white
+		
+		int y = (surface()->GetFontTall( hFont ) + 5) * i;
 
+		// --> Mirv: Fixed hud message alignment
+		//	surface()->DrawSetTextPos( 32, 8 ); // x,y position
 
-	// Draw our icon
-	//m_pIcon->DrawSelf( 0, 0, 32, 32, Color(255,255,255,flAlpha) );
+		// Get the various sizes of things
+		int iStringWidth, iStringHeight, iContainerWidth, iContainerHeight;
 
-	// Get our scheme and font information
-	vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
-	vgui::HFont hFont = vgui::scheme()->GetIScheme(scheme)->GetFont( "CloseCaption_Normal" );
+		surface()->GetTextSize(hFont, m_Messages[i].pText, iStringWidth, iStringHeight);
+		GetSize(iContainerWidth, iContainerHeight);
+		surface()->DrawSetTextPos((iContainerWidth / 2) - (iStringWidth / 2), y); // x,y position
+		// <-- Mirv: Fixed hud message alignment
 
-	// Draw our text
-	surface()->DrawSetTextFont( hFont ); // set the font	
-	surface()->DrawSetTextColor( 255, 255, 255, flAlpha ); // white
+		surface()->DrawPrintText( m_Messages[i].pText, wcslen(m_Messages[i].pText) ); // print text
+	}
+	
+	// Now retire any death notices that have expired
+	RetireExpiredMessages();
+}
 
-	// Get the various sizes of things
-	int iStringWidth, iStringHeight, iContainerWidth, iContainerHeight;
-	surface()->GetTextSize(hFont, m_pText, iStringWidth, iStringHeight);
-	GetSize(iContainerWidth, iContainerHeight);
-
-	surface()->DrawSetTextPos((iContainerWidth / 2) - (iStringWidth / 2), 0); // x,y position
-	surface()->DrawPrintText( m_pText, wcslen(m_pText) ); // print text
+//-----------------------------------------------------------------------------
+// Purpose: This message handler may be better off elsewhere
+//-----------------------------------------------------------------------------
+void CHudGameMessage::RetireExpiredMessages( void )
+{
+	// Loop backwards because we might remove one
+	int iSize = m_Messages.Size();
+	for ( int i = iSize-1; i >= 0; i-- )
+	{
+		if ( (m_Messages[i].flStartTime + m_Messages[i].flDuration) < gpGlobals->curtime )
+		{
+			m_Messages.Remove(i);
+		}
+	}
 }
