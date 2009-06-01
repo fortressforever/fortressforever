@@ -57,12 +57,11 @@ void RegisterUserMessages()
 	usermessages->Register( "SetPlayerLocation", -1 );
 	usermessages->Register( "SetPlayerLatestFortPoints", -1 );
 	usermessages->Register( "SetPlayerTotalFortPoints", -1 );
-
-	usermessages->Register("FF_HudLua", -1);
-
 	// addhealth/armor
 	usermessages->Register( "PlayerAddHealth", -1 );
 	usermessages->Register( "PlayerAddArmor", -1 );
+
+	usermessages->Register("FF_HudLua", -1);
 
 	// so we know when a detpack has been removed
 	// so the owner's client can stop drawing the timer
