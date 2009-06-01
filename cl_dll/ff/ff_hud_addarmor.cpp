@@ -132,7 +132,7 @@ void CHudPlayerAddArmor::MsgFunc_PlayerAddArmor( bf_read &msg )
 	Q_snprintf( szString2, sizeof(szString2), "%s%i", ptVal>0?"+":"",ptVal );
 
 	// convert int-string to unicode
-	localize()->ConvertANSIToUnicode( szString2, m_pTextArmor, sizeof( m_pTextArmor ) );
+	vgui::localize()->ConvertANSIToUnicode( szString2, m_pTextArmor, sizeof( m_pTextArmor ) );
 
 	// play animation (new points value)
 	if(ptVal > 0)
@@ -149,7 +149,7 @@ void CHudPlayerAddArmor::MsgFunc_PlayerAddArmor( bf_read &msg )
 	{
 		enum { BufferSize = 1024 };
 		char score[BufferSize] = {0};
-		localize()->ConvertUnicodeToANSI(m_pTextArmor, score, BufferSize);
+		vgui::localize()->ConvertUnicodeToANSI(m_pTextArmor, score, BufferSize);
 		//G15::AddFortPoints(description, score);
 	}
 }
