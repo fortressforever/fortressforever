@@ -208,6 +208,18 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 			}
 		}
 		// <--
+		
+		// --> squeek
+		p = FindHudTextureInDict( tempList, "deathnotice_backstab" );
+		if (p)
+		{
+			if (strlen(pWeaponInfo->szClassName) > 3)
+			{
+				Q_snprintf(p->szShortName, 63, "death_backstab_%s", pWeaponInfo->szClassName + 3);
+				gHUD.AddSearchableHudIconToList(*p);
+			}
+		}
+		// <-- squeek
 	}
 
 	FreeHudTextureList( tempList );

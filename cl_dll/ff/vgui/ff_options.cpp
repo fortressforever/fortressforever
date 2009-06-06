@@ -303,7 +303,7 @@ public:
 		m_pCrosshairBackground->SetZPos(-1);
 
 		// Weapons list
-		m_pWeapon = new ComboBox(this, "Weapon", (int) FF_WEAPON_TOMMYGUN + 1, false);
+		m_pWeapon = new ComboBox(this, "Weapon", (int) FF_WEAPON_TOMMYGUN + 2, false);
 		m_pWeapon->AddActionSignalTarget(this);
 		m_pWeapon->SetEditable(false);
 
@@ -317,9 +317,15 @@ public:
 		{
 			KeyValues *kv = new KeyValues("W");
 			kv->SetString("wpid", s_WeaponAliasInfo[i]);
-			m_pWeapon->AddItem(VarArgs("#Crosshair_%s", s_WeaponAliasInfo[i]), kv);
+			m_pWeapon->AddItem(VarArgs("#%s", s_WeaponAliasInfo[i]), kv);
 			kv->deleteThis();
-		}		
+		}
+
+		// Add the hit one last
+		KeyValues *kv2 = new KeyValues("W");
+		kv2->SetString("wpid", "hit");
+		m_pWeapon->AddItem("Hit", kv2);
+		kv2->deleteThis();
 
 		LoadControlSettings("resource/ui/FFOptionsSubCrosshairs.res");
 
@@ -417,6 +423,27 @@ public:
 
 			kv->AddSubKey(k);
 		}
+		
+		const WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 1];
+
+		KeyValues *k = new KeyValues("hit");
+		k->SetString("innerChar", VarArgs("%c", cinfo.innerChar));
+		k->SetInt("innerScale", cinfo.innerScale);
+		k->SetInt("innerR", cinfo.innerR);
+		k->SetInt("innerG", cinfo.innerG);
+		k->SetInt("innerB", cinfo.innerB);
+		k->SetInt("innerA", cinfo.innerA);
+		k->SetInt("innerUseGlobal", cinfo.innerUseGlobal);
+
+		k->SetString("outerChar", VarArgs("%c", cinfo.outerChar));
+		k->SetInt("outerScale", cinfo.outerScale);
+		k->SetInt("outerR", cinfo.outerR);
+		k->SetInt("outerG", cinfo.outerG);
+		k->SetInt("outerB", cinfo.outerB);
+		k->SetInt("outerA", cinfo.outerA);
+		k->SetInt("outerUseGlobal", cinfo.outerUseGlobal);
+
+		kv->AddSubKey(k);
 
 		kv->SaveToFile(*pFilesystem, CROSSHAIRS_FILE);
 		kv->deleteThis();
@@ -477,6 +504,50 @@ public:
 			}
 		}
 
+		// hit crosshair
+		WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 1];
+
+		KeyValues *k = kv->FindKey("hit");
+
+		if (k)
+		{
+			cinfo.innerChar = k->GetString("innerChar", "1")[0];
+			cinfo.innerScale = k->GetInt("innerScale", 255);
+			cinfo.innerR = k->GetInt("innerR", 255);
+			cinfo.innerG = k->GetInt("innerG", 255);
+			cinfo.innerB = k->GetInt("innerB", 255);
+			cinfo.innerA = k->GetInt("innerA", 255);
+			cinfo.innerUseGlobal = k->GetInt("innerUseGlobal", 1);
+
+			cinfo.outerChar = k->GetString("outerChar", "1")[0];
+			cinfo.outerScale = k->GetInt("outerScale", 255);
+			cinfo.outerR = k->GetInt("outerR", 255);
+			cinfo.outerG = k->GetInt("outerG", 255);
+			cinfo.outerB = k->GetInt("outerB", 255);
+			cinfo.outerA = k->GetInt("outerA", 255);
+			cinfo.outerUseGlobal = k->GetInt("outerUseGlobal", 1);
+		}
+		else
+		{
+			// Couldn't load at all, give some defaults
+			cinfo.innerChar = '!';
+			cinfo.outerChar = 'G';
+
+			cinfo.innerScale = 3;
+			cinfo.outerScale = 5;
+			cinfo.innerR = 255;
+			cinfo.outerR = 255;
+			cinfo.innerG = 0;
+			cinfo.outerG = 0;
+			cinfo.innerB = 0;
+			cinfo.outerB = 0;
+			cinfo.innerA = 255;
+			cinfo.outerA= 255;
+
+			cinfo.innerUseGlobal = false;
+			cinfo.outerUseGlobal = false;
+		}
+
 		kv->deleteThis();
 
 		// Default to the global weapon
@@ -505,6 +576,33 @@ public:
 		Assert(iWeapon >= 0 && iWeapon <= FF_WEAPON_TOMMYGUN);
 
 		WeaponCrosshair_t &cinfo = m_sCrosshairInfo[iWeapon];
+		WeaponCrosshair_t *pCrosshair = &cinfo;
+
+		if (cinfo.innerUseGlobal || m_bForceGlobalCrosshair)
+		{
+			pCrosshair = &m_sCrosshairInfo[0];
+		}
+
+		innerChar = pCrosshair->innerChar;
+		innerCol = Color(pCrosshair->innerR, pCrosshair->innerG, pCrosshair->innerB, pCrosshair->innerA);
+		innerSize = pCrosshair->innerScale;
+
+		if (!cinfo.outerUseGlobal && !m_bForceGlobalCrosshair)
+		{
+			pCrosshair = &cinfo;
+		}
+
+		outerChar = pCrosshair->outerChar;
+		outerCol = Color(pCrosshair->outerR, pCrosshair->outerG, pCrosshair->outerB, pCrosshair->outerA);
+		outerSize = pCrosshair->outerScale;
+	}
+	
+	//-----------------------------------------------------------------------------
+	// Purpose: Get crosshair for a weapon
+	//-----------------------------------------------------------------------------
+	void GetHitCrosshair(char &innerChar, Color &innerCol, int &innerSize, char &outerChar, Color &outerCol, int &outerSize)
+	{
+		WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 1];
 		WeaponCrosshair_t *pCrosshair = &cinfo;
 
 		if (cinfo.innerUseGlobal || m_bForceGlobalCrosshair)
@@ -585,8 +683,8 @@ private:
 		cinfo.outerA = m_pOuterAlpha->GetValue();
 
 		// Don't allow the individual use globals to be selected if we're editing global
-		cinfo.innerUseGlobal = iCurrentWeapon == 0 ? 0 : m_pInnerUseGlobal->IsSelected();
-		cinfo.outerUseGlobal = iCurrentWeapon == 0 ? 0 : m_pOuterUseGlobal->IsSelected();
+		cinfo.innerUseGlobal = (iCurrentWeapon == 0 || iCurrentWeapon == FF_WEAPON_TOMMYGUN + 1) ? 0 : m_pInnerUseGlobal->IsSelected();
+		cinfo.outerUseGlobal = (iCurrentWeapon == 0 || iCurrentWeapon == FF_WEAPON_TOMMYGUN + 1) ? 0 : m_pOuterUseGlobal->IsSelected();
 
 		m_bForceGlobalCrosshair = m_pForceGlobal->IsSelected();
 
@@ -605,7 +703,7 @@ private:
 
 		// Don't allow them to select "use global" for an inner/outer if they are
 		// editing the global one (logical)
-		if (iCurrentWeapon == 0)
+		if (iCurrentWeapon == 0 || iCurrentWeapon == FF_WEAPON_TOMMYGUN + 1)
 		{
 			m_pInnerUseGlobal->SetEnabled(false);
 			m_pOuterUseGlobal->SetEnabled(false);
@@ -713,7 +811,7 @@ private:
 		bool	innerUseGlobal, outerUseGlobal;
 	} WeaponCrosshair_t;
 
-	WeaponCrosshair_t	m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 1];
+	WeaponCrosshair_t	m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 2];
 
 	bool	m_bForceGlobalCrosshair;
 };
@@ -726,6 +824,16 @@ void GetCrosshair(FFWeaponID iWeapon, char &innerChar, Color &innerCol, int &inn
 	Assert(g_pCrosshairOptions);
 
 	g_pCrosshairOptions->GetCrosshair(iWeapon, innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: A function to allow the current hit crosshair stuff to be retrieved
+//-----------------------------------------------------------------------------
+void GetHitCrosshair(char &innerChar, Color &innerCol, int &innerSize, char &outerChar, Color &outerCol, int &outerSize)
+{
+	Assert(g_pCrosshairOptions);
+
+	g_pCrosshairOptions->GetHitCrosshair(innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 }
 
 //=============================================================================

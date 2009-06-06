@@ -1574,6 +1574,7 @@ void CFFSentryGun::DoExplosionDamage()
 	if (m_hOwner.Get())
 	{
 		CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
+		info.SetCustomKill( KILLTYPE_SENTRYGUN_DET );
 		RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
 
 		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);

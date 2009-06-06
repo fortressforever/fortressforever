@@ -588,6 +588,8 @@ bool CMultiplayRules::IsMultiplayer( void )
 		// Work out what killed the player, and send a message to all clients about it
 		const char *killer_weapon_name = "world";		// by default, the player is killed by the world
 		int killer_ID = 0;
+		int iKilledSGLevel = 0;
+		int iKillerSGLevel = 0;
 
 		// Find the killer & the scorer
 		CBaseEntity *pInflictor = info.GetInflictor();
@@ -606,6 +608,24 @@ bool CMultiplayRules::IsMultiplayer( void )
 		{
 			if ( pSabotagedBuildable->IsMaliciouslySabotaged() )
 				pKiller = pSabotagedBuildable->m_hSaboteur;
+		}
+			
+		// get level of SG if the killer is an SG
+		CFFBuildableObject *pBuildable = CFFBuildableObject::AttackerInflictorBuildable(pKiller, pInflictor);
+		if ( pBuildable )
+		{
+			if ( pBuildable->Classify() == CLASS_SENTRYGUN )
+			{
+				CFFSentryGun *pSentryGun = FF_ToSentrygun( pBuildable );
+				if (pSentryGun->GetLevel() == 1)
+					iKillerSGLevel = 1;
+				else if (pSentryGun->GetLevel() == 2)
+					iKillerSGLevel = 2;
+				else if (pSentryGun->GetLevel() == 3)
+					iKillerSGLevel = 3;
+				else 
+					DevMsg( "Unknown SG level :(" );
+			}
 		}
 
 		/*
@@ -684,20 +704,26 @@ bool CMultiplayRules::IsMultiplayer( void )
 			case KILLTYPE_INFECTION:
 				killer_weapon_name = "ff_weapon_medkit";
 				break;
-			case KILLTYPE_BURN_FLAMETHROWER:
-				killer_weapon_name = "ff_weapon_flamethrower";
+			case KILLTYPE_BURN_LEVEL1:
+				killer_weapon_name = "ff_burndeath_level1";
 				break;
-			case KILLTYPE_BURN_ICCANNON:
-				killer_weapon_name = "ff_weapon_ic";
+			case KILLTYPE_BURN_LEVEL2:
+				killer_weapon_name = "ff_burndeath_level2";
 				break;
-			case KILLTYPE_BURN_NALPALMGRENADE:
-				killer_weapon_name = "ff_grenade_napalm";
+			case KILLTYPE_BURN_LEVEL3:
+				killer_weapon_name = "ff_burndeath_level3";
 				break;
 			case KILLTYPE_GASSED:
 				killer_weapon_name = "ff_grenade_gas";
 				break;
 			case KILLTYPE_HEADSHOT:
 				killer_weapon_name = "BOOM_HEADSHOT"; // BOOM HEADSHOT!  AAAAAAAAHHHH!
+				break;
+			case KILLTYPE_BACKSTAB:
+				killer_weapon_name = "backstab";
+				break;
+			case KILLTYPE_SENTRYGUN_DET:
+				killer_weapon_name = "sg_det";
 				break;
 			}
 			
@@ -739,6 +765,8 @@ bool CMultiplayRules::IsMultiplayer( void )
 			event->SetInt("userid", pVictim->GetUserID() );
 			event->SetInt("attacker", killer_ID );
 			event->SetString("weapon", killer_weapon_name);
+			event->SetInt("killedsglevel", iKilledSGLevel);
+			event->SetInt("killersglevel", iKillerSGLevel);
 			event->SetInt("priority", 10 );
 
 			// #0001568: Falling into pitt damage shows electrocution icon, instead of falling damage icon

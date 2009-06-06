@@ -320,13 +320,19 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	// the event should be "player_death"
 	int killer = engine->GetPlayerForUserID( event->GetInt("attacker") );
 	int victim = engine->GetPlayerForUserID( event->GetInt("userid") );
+	int sglevel_killed = event->GetInt( "killedsglevel" );
+	int sglevel_killer = event->GetInt( "killersglevel" );
 	const char *killedwith = event->GetString( "weapon" );
+
+	DevMsg( "deathnotice sg killed: %d - sg killer: %d - event killed: %d - event killer: %d\n", sglevel_killed, sglevel_killer, event->GetInt( "killedsglevel" ), event->GetInt( "killersglevel" ) );
 
 	// Stuffs for handling buildable deaths
 	bool bBuildableKilled = false;
 
 	// headshot deaths
 	bool bHeadshot = false;
+	// backstab deaths
+	bool bBackstab = false;
 
 	// trigger hurt death
 	bool bTriggerHurt = false;
@@ -428,7 +434,14 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	// buildable kills
 	if( !Q_strcmp( event->GetName(), "sentrygun_killed" ) )
 	{
-		deathMsg.iconBuildable = gHUD.GetIcon("death_weapon_deploysentrygun");
+		if (sglevel_killed == 1)
+			deathMsg.iconBuildable = gHUD.GetIcon("death_sentrygun_level1");
+		else if (sglevel_killed == 2)
+			deathMsg.iconBuildable = gHUD.GetIcon("death_sentrygun_level2");
+		else if (sglevel_killed == 3)
+			deathMsg.iconBuildable = gHUD.GetIcon("death_sentrygun_level3");
+		else
+			deathMsg.iconBuildable = gHUD.GetIcon("death_weapon_deploysentrygun");
 		bBuildableKilled = true;
 	}
 	else if( !Q_strcmp( event->GetName(), "dispenser_killed" ) ) 
@@ -455,7 +468,14 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	// 0001292: If we have a Sentrygun
 	else if (Q_stricmp(killedwith, "Sentrygun") == 0)
 	{
-		deathMsg.iconDeath = gHUD.GetIcon("death_weapon_deploysentrygun");
+		if (sglevel_killer == 1)
+			deathMsg.iconDeath = gHUD.GetIcon("death_sentrygun_level1");
+		else if (sglevel_killer == 2)
+			deathMsg.iconDeath = gHUD.GetIcon("death_sentrygun_level2");
+		else if (sglevel_killer == 3)
+			deathMsg.iconDeath = gHUD.GetIcon("death_sentrygun_level3");
+		else
+			deathMsg.iconDeath = gHUD.GetIcon("death_weapon_deploysentrygun");
 	}
 	// only 1 weapon can kill with a headshot
 	else if (Q_stricmp(killedwith, "BOOM_HEADSHOT") == 0)
@@ -463,6 +483,25 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		// need the _weapon_sniperrifle in case people create "death_notice" entries in other weapon scripts...we just want the sniper rifle's
 		deathMsg.iconDeath = gHUD.GetIcon("death_BOOM_HEADSHOT_weapon_sniperrifle");
 		bHeadshot = true;
+	}
+	// only 1 weapon can kill with a backstab
+	else if (Q_stricmp(killedwith, "backstab") == 0)
+	{
+		// need the _weapon_knife in case people create "death_notice" entries in other weapon scripts...we just want the knife's
+		deathMsg.iconDeath = gHUD.GetIcon("death_backstab_weapon_knife");
+		bBackstab = true;
+	}
+	// sg det
+	else if (Q_stricmp(killedwith, "sg_det") == 0)
+	{
+		if (sglevel_killer == 1)
+			deathMsg.iconDeath = gHUD.GetIcon("death_sentrygun_level1_det");
+		else if (sglevel_killer == 2)
+			deathMsg.iconDeath = gHUD.GetIcon("death_sentrygun_level2_det");
+		else if (sglevel_killer == 3)
+			deathMsg.iconDeath = gHUD.GetIcon("death_sentrygun_level3_det");
+		else
+			deathMsg.iconDeath = gHUD.GetIcon("death_weapon_deploysentrygun");
 	}
 	else if (Q_stricmp(killedwith, "caltrop") == 0)
 	{
@@ -546,6 +585,11 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 			params.m_flVolume = VOL_NORM;
 		}
 		else if ( bHeadshot )
+		{
+			params.m_nPitch = 112;
+			params.m_flVolume = 0.5f;
+		}
+		else if ( bBackstab )
 		{
 			params.m_nPitch = 112;
 			params.m_flVolume = 0.5f;

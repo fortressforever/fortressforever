@@ -3844,6 +3844,10 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_hud_HintCenter.h">
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_hitindicator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_location.cpp">
 			</File>
 			<File

@@ -1495,6 +1495,8 @@ ConVar mp_prematch( "mp_prematch",
 	{
 		const char *pszWeapon = "world";
 		int iKillerID = 0;
+		int iKilledSGLevel = 0;
+		int iKillerSGLevel = 0;
 
 		// Find the killer & the scorer
 		CBaseEntity *pInflictor = info.GetInflictor();
@@ -1508,6 +1510,24 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			if ( pSabotagedBuildable->IsMaliciouslySabotaged() )
 				pKiller = pSabotagedBuildable->m_hSaboteur;
+		}
+
+		// get level of SG if the killer is an SG
+		CFFBuildableObject *pBuildable = CFFBuildableObject::AttackerInflictorBuildable(pKiller, pInflictor);
+		if ( pBuildable )
+		{
+			if ( pBuildable->Classify() == CLASS_SENTRYGUN )
+			{
+				CFFSentryGun *pSentryGun = FF_ToSentrygun( pBuildable );
+				if (pSentryGun->GetLevel() == 1)
+					iKillerSGLevel = 1;
+				else if (pSentryGun->GetLevel() == 2)
+					iKillerSGLevel = 2;
+				else if (pSentryGun->GetLevel() == 3)
+					iKillerSGLevel = 3;
+				else 
+					DevMsg( "Unknown SG level :(" );
+			}
 		}
 
 		CBasePlayer *pScorer = pScorer = GetDeathScorer( pKiller, pInflictor );
@@ -1587,20 +1607,23 @@ ConVar mp_prematch( "mp_prematch",
 			case KILLTYPE_INFECTION:
 				pszWeapon = "ff_weapon_medkit";
 				break;
-			case KILLTYPE_BURN_FLAMETHROWER:
-				pszWeapon = "ff_weapon_flamethrower";
+			case KILLTYPE_BURN_LEVEL1:
+				pszWeapon = "ff_burndeath_level1";
 				break;
-			case KILLTYPE_BURN_ICCANNON:
-				pszWeapon = "ff_weapon_ic";
+			case KILLTYPE_BURN_LEVEL2:
+				pszWeapon = "ff_burndeath_level2";
 				break;
-			case KILLTYPE_BURN_NALPALMGRENADE:
-				pszWeapon = "ff_grenade_napalm";
+			case KILLTYPE_BURN_LEVEL3:
+				pszWeapon = "ff_burndeath_level3";
 				break;
 			case KILLTYPE_GASSED:
 				pszWeapon = "ff_grenade_gas";
 				break;
 			case KILLTYPE_HEADSHOT:
 				pszWeapon = "BOOM_HEADSHOT"; // BOOM HEADSHOT!  AAAAAAAAHHHH!
+				break;
+			case KILLTYPE_SENTRYGUN_DET:
+				pszWeapon  = "sg_det";
 				break;
 			}
 
@@ -1662,6 +1685,14 @@ ConVar mp_prematch( "mp_prematch",
 			}
 		}
 
+		// get level of killed SG
+		if( pObject->Classify() == CLASS_SENTRYGUN )
+		{
+			CFFSentryGun *pSentryGun = FF_ToSentrygun( pObject );
+
+			iKilledSGLevel = pSentryGun->GetLevel();
+		}
+
 		//UTIL_LogPrintf( " userid (buildable's owner): %i\n", pVictim->GetUserID() );
 		//UTIL_LogPrintf( " attacker: %i\n", iKillerID );
 		//UTIL_LogPrintf( " weapon: %s\n", pszWeapon );
@@ -1676,8 +1707,10 @@ ConVar mp_prematch( "mp_prematch",
 			pEvent->SetInt( "userid", pVictim->GetUserID() );
 			pEvent->SetInt( "attacker", iKillerID );
 			pEvent->SetString( "weapon", pszWeapon );
+			pEvent->SetInt( "killedsglevel", iKilledSGLevel );
+			pEvent->SetInt( "killersglevel", iKillerSGLevel );
 			pEvent->SetInt( "priority", 10 );
-			
+
 			if (pScorer)
 			{
 				char bracket0[29];

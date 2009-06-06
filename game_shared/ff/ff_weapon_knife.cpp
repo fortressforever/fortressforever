@@ -130,6 +130,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 
 				CTakeDamageInfo info(this, pPlayer, 108, DMG_DIRECT);
 				info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
+				info.SetCustomKill(KILLTYPE_BACKSTAB);
 
 				pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 				ApplyMultiDamage();

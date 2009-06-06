@@ -4096,13 +4096,21 @@ void CFFPlayer::StatusEffectsThink( void )
 		{
 			CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
 
-			switch(m_BurnType)
+			int iBurnLevel = 0;
+			if (m_bBurnFlagNG == true) 
+				++iBurnLevel;
+			if (m_bBurnFlagFT == true) 
+				++iBurnLevel;
+			if (m_bBurnFlagIC == true) 
+				++iBurnLevel;
+
+			switch(iBurnLevel)
 			{
-			case BURNTYPE_FLAMETHROWER:info.SetCustomKill(KILLTYPE_BURN_FLAMETHROWER);break;
-			case BURNTYPE_ICCANNON:info.SetCustomKill(KILLTYPE_BURN_ICCANNON);break;
-			case BURNTYPE_NALPALMGRENADE:info.SetCustomKill(KILLTYPE_BURN_NALPALMGRENADE);break;
+			case 1:info.SetCustomKill(KILLTYPE_BURN_LEVEL1);break;
+			case 2:info.SetCustomKill(KILLTYPE_BURN_LEVEL2);break;
+			case 3:info.SetCustomKill(KILLTYPE_BURN_LEVEL3);break;
 			}
-			
+
 			TakeDamage( info );
 
 			// remove a tick
@@ -5439,6 +5447,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 			}			
 		}
 	}
+	
 	//// tag the player if hit by radio tag ammo 
 	//if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
 	//{
@@ -5577,6 +5586,16 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if (IsAlive() && !(info.GetDamageType() & DMG_FALL))
 	{
 		EmitSound("Player.Pain");
+	}
+	
+	// Send hit indicator to attacker
+	CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
+	if( pAttacker && pAttacker != this )
+	{
+		CSingleUserRecipientFilter filter(pAttacker);
+		UserMessageBegin(filter, "Hit");
+			WRITE_FLOAT(info.GetDamage());
+		MessageEnd();
 	}
 
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
