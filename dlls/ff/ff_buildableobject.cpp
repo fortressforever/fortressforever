@@ -958,12 +958,23 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 
 	int res = CBaseEntity::OnTakeDamage( adjustedDamage );
 
+	// Send hit indicator to attacker
+	CFFPlayer *pAttacker = ToFFPlayer( adjustedDamage.GetAttacker() );
+	if( pAttacker )
+	{
+		CSingleUserRecipientFilter filter(pAttacker);
+		UserMessageBegin(filter, "Hit");
+			WRITE_FLOAT(info.GetDamage());
+		MessageEnd();
+	}
+
 	// Just extending this to send events to the bots.
 	if(pOwner)
 	{
 		Omnibot::Notify_BuildableDamaged(pOwner, Classify(), this);
 		SendStatsToBot();
 	}
+
 	return res;
 }
 

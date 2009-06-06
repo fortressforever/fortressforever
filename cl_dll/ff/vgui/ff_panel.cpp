@@ -70,10 +70,10 @@ namespace vgui
 		if (cl_teamcolourhud.GetBool())
 		{
 			Color HudBackgroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 175 ) ;
-			Color HudForegroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
+			//Color HudForegroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
 
 			bg = HudBackgroundColour;
-			fg = HudForegroundColour;
+			//fg = HudForegroundColour;
 		}
 
 		if (m_pHudBackground)
