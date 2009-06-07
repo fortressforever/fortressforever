@@ -44,6 +44,7 @@ namespace vgui
 
 		Color			m_HudForegroundColour;
 		Color			m_HudBackgroundColour;
+		Color			m_TeamColorHudBackgroundColour;
 	};
 }
 

@@ -116,8 +116,14 @@ void CHudGameMessage::MsgFunc_GameMessage( bf_read &msg )
 	else
 		vgui::localize()->ConvertANSIToUnicode( szString, messageMsg.pText, sizeof( messageMsg.pText ) );
 	
+	if (m_Messages.Count() > 0)
+	{
+		if (Q_wcscmp( messageMsg.pText, m_Messages[m_Messages.Count() - 1].pText) == 0)
+			return;
+	}
+
 	messageMsg.flStartTime = gpGlobals->curtime;
-	messageMsg.flDuration = 7.0f;
+	messageMsg.flDuration = 5.0f;
 	messageMsg.pIcon = gHUD.GetIcon( "message_icon" );
 	
 	m_Messages.AddToTail( messageMsg );
@@ -135,9 +141,21 @@ void CHudGameMessage::Paint( void )
 	for ( int i = 0; i < iCount; i++ )
 	{
 		// Find our fade based on our time shown
-		float dt = ( m_Messages[i].flStartTime - gpGlobals->curtime );
-		float flAlpha = SimpleSplineRemapVal( dt, 0.0f, m_Messages[i].flDuration, 255, 0 );
-		flAlpha = clamp( flAlpha, 0.0f, 255.0f );
+		float dt = m_Messages[i].flDuration - ( gpGlobals->curtime - m_Messages[i].flStartTime );
+		float flAlpha = 0.0f;
+		float flStartFade = (m_Messages[i].flDuration > 4.0f) ? 2.0f : m_Messages[i].flDuration / 2;
+		DevMsg("dt: %f\n", dt);
+		if (flStartFade > dt)
+		{
+			float normalizedTime = dt / flStartFade;
+			float normalizedSquared = normalizedTime * normalizedTime;
+			flAlpha = normalizedSquared * 255.0f;
+			flAlpha = clamp( flAlpha, 0.0f, 255.0f );
+			DevMsg("normaltime: %f normalsquared: %f alpha: %f\n", normalizedTime, normalizedSquared, flAlpha);
+		}
+		else
+			flAlpha = 255.0f;
+		
 
 		// Get our scheme and font information
 		vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
@@ -176,7 +194,7 @@ void CHudGameMessage::RetireExpiredMessages( void )
 	int iSize = m_Messages.Size();
 	for ( int i = iSize-1; i >= 0; i-- )
 	{
-		if ( (m_Messages[i].flStartTime + m_Messages[i].flDuration) < gpGlobals->curtime )
+		if ( m_Messages[i].flStartTime + m_Messages[i].flDuration < gpGlobals->curtime )
 		{
 			m_Messages.Remove(i);
 		}

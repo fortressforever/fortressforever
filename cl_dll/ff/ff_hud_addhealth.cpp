@@ -70,6 +70,10 @@ protected:
 	int			m_iHealth;
 
 private:
+
+	float		m_flStartTime;		// When the message was recevied
+	float		m_flDuration;		// Duration of the message
+
 	// Stuff we need to know	
 	CPanelAnimationVar( vgui::HFont, m_hHealthFont, "HealthFont", "Default" );
 
@@ -152,6 +156,9 @@ void CHudPlayerAddHealth::MsgFunc_PlayerAddHealth( bf_read &msg )
 		vgui::localize()->ConvertUnicodeToANSI(m_pTextHealth, score, BufferSize);
 		//G15::AddFortPoints(description, score);
 	}
+
+	m_flStartTime = gpGlobals->curtime;
+	m_flDuration = 3.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -164,6 +171,9 @@ void CHudPlayerAddHealth::Paint()
 		return; 
 
 	if(!hud_addhealth.GetBool())
+		return;
+
+	if ( m_flStartTime + m_flDuration < gpGlobals->curtime )
 		return;
 
 	FFPanel::Paint(); // Draws the background glyphs 

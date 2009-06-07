@@ -24,7 +24,7 @@
 
 #define	CROSSHAIR_SIZES	5	// This needs to be matched in ff_options.cpp
 
-ConVar hud_hitindicator_time("hud_hitindicator_time", "1.5", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Length of time the hit indicator shows for (set to 0 to disable).");
+ConVar hud_hitindicator_time("hud_hitindicator_time", "0.75", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Length of time the hit indicator shows for (set to 0 to disable).");
 
 using namespace vgui;
 
