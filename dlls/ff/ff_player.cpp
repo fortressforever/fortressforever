@@ -5280,7 +5280,10 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		{
 			AngleVectors(angAngles, &vecVelocity);
 			VectorNormalize(vecVelocity);
-			vecVelocity *= ffdev_gren_throwspeed.GetFloat(); // flSpeed;	// |-- Mirv: So we can drop grenades
+			if (flSpeed > 0)
+				vecVelocity *= ffdev_gren_throwspeed.GetFloat(); // flSpeed;
+			else
+				vecVelocity *= flSpeed; // |-- Mirv: So we can drop grenades
 		}
 		else
 			vecVelocity = Vector(0, 0, 0);

@@ -531,10 +531,10 @@ public:
 		{
 			// Couldn't load at all, give some defaults
 			cinfo.innerChar = '!';
-			cinfo.outerChar = 'G';
+			cinfo.outerChar = 'U';
 
 			cinfo.innerScale = 3;
-			cinfo.outerScale = 5;
+			cinfo.outerScale = 3;
 			cinfo.innerR = 255;
 			cinfo.outerR = 255;
 			cinfo.innerG = 0;
@@ -544,8 +544,7 @@ public:
 			cinfo.innerA = 255;
 			cinfo.outerA= 255;
 
-			cinfo.innerUseGlobal = false;
-			cinfo.outerUseGlobal = false;
+			cinfo.innerUseGlobal = cinfo.outerUseGlobal = false;
 		}
 
 		kv->deleteThis();

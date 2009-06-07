@@ -48,6 +48,7 @@ namespace vgui
 	{
 		m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
 		m_HudBackgroundColour = GetSchemeColor("HudItem.Background", pScheme);
+		m_TeamColorHudBackgroundColour = GetSchemeColor("TeamColorHud.BackgroundAlpha", pScheme);
 
 		Panel::ApplySchemeSettings(pScheme);
 	}
@@ -60,6 +61,7 @@ namespace vgui
 	{
 		Color bg = m_HudBackgroundColour;
 		Color fg = m_HudForegroundColour;
+		Color teamcolorbg = m_TeamColorHudBackgroundColour;
 
 		C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 
@@ -69,7 +71,7 @@ namespace vgui
 
 		if (cl_teamcolourhud.GetBool())
 		{
-			Color HudBackgroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 175 ) ;
+			Color HudBackgroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), teamcolorbg.a() /*175*/ ) ;
 			//Color HudForegroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
 
 			bg = HudBackgroundColour;

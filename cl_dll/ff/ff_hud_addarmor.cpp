@@ -70,6 +70,10 @@ protected:
 	int			m_iArmor;
 
 private:
+
+	float		m_flStartTime;		// When the message was recevied
+	float		m_flDuration;		// Duration of the message
+
 	// Stuff we need to know	
 	CPanelAnimationVar( vgui::HFont, m_hArmorFont, "ArmorFont", "Default" );
 
@@ -152,6 +156,9 @@ void CHudPlayerAddArmor::MsgFunc_PlayerAddArmor( bf_read &msg )
 		vgui::localize()->ConvertUnicodeToANSI(m_pTextArmor, score, BufferSize);
 		//G15::AddFortPoints(description, score);
 	}
+
+	m_flStartTime = gpGlobals->curtime;
+	m_flDuration = 3.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -164,6 +171,9 @@ void CHudPlayerAddArmor::Paint()
 		return; 
 
 	if(!hud_addarmor.GetBool())
+		return;
+
+	if ( m_flStartTime + m_flDuration < gpGlobals->curtime )
 		return;
 
 	FFPanel::Paint(); // Draws the background glyphs 

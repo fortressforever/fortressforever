@@ -620,26 +620,28 @@ void CFFPlayer::ClassSpecificSkill()
 		break;
 #endif
 
+#ifdef CLIENT_DLL
 
 		case CLASS_HWGUY:
-			/*if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
+			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
 			{
 				SwapToWeapon(FF_WEAPON_SUPERSHOTGUN);
 			}
 			else 
 			{
 				SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
-			}*/
-			if (IsAlive())
+			}
+			
+			/*if (IsAlive())
 			{
 
 				data.m_vOrigin = GetLegacyAbsOrigin();
 				
 				DispatchEffect(OVERPRESSURE_EFFECT, data);
-				// Play a sound
-				EmitSound("overpressure.explode");
 
 #ifdef GAME_DLL
+				// Play a sound
+				EmitSound("overpressure.explode");
 
 				CBaseEntity *pEntity = NULL;
 
@@ -724,24 +726,6 @@ void CFFPlayer::ClassSpecificSkill()
 								DevMsg("[HW attack2] enemy in air, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
 							}
 						}
-						/*
-						float verticalDistance = vecDisplacement.z;
-						
-						vecDisplacement.z = 0;
-						float horizontalDistance = vecDisplacement.Length();
-
-						// Normalise the lateral direction of this
-						vecDisplacement /= horizontalDistance;
-						
-						float fLateral = ffdev_overpressure_push_horizontal.GetFloat();
-						float fVertical = ffdev_overpressure_push_vertical.GetFloat();
-
-						vecDisplacement *= (horizontalDistance * (fLateral - 0.015f * flDistance));
-						vecDisplacement.z = (verticalDistance * (fVertical - 0.0225f * flDistance));
-
-						//pPlayer->SetAbsVelocity(vecDisplacement);
-						vecResult = vecDisplacement;
-						*/
 					}
 
 					// cap mancannon + overpressure speed
@@ -759,9 +743,11 @@ void CFFPlayer::ClassSpecificSkill()
 #endif
 			}
 			m_flNextClassSpecificSkill = gpGlobals->curtime + ffdev_overpressure_delay.GetFloat();
+			*/
 			break;
 
-			
+#endif
+
 #ifdef CLIENT_DLL
 
 		case CLASS_PYRO:
