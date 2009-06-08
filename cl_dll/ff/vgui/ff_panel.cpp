@@ -20,10 +20,14 @@
 #include "convar.h"
 
 #include "c_ff_player.h"
+#include "c_playerresource.h"
+#include "c_ff_team.h"
 #include "ff_panel.h"
 #include "ff_utils.h"
 
-ConVar cl_teamcolourhud("cl_teamcolourhud", "0", FCVAR_ARCHIVE);
+ConVar cl_teamcolourhud("cl_teamcolourhud", "1", FCVAR_ARCHIVE);
+
+extern C_PlayerResource *g_PR;
 
 namespace vgui
 {
@@ -71,7 +75,7 @@ namespace vgui
 
 		if (cl_teamcolourhud.GetBool())
 		{
-			Color HudBackgroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), teamcolorbg.a() /*175*/ ) ;
+			Color HudBackgroundColour = Color( g_PR->GetTeamColor( pPlayer->GetTeamNumber() ).r(), g_PR->GetTeamColor( pPlayer->GetTeamNumber() ).g(), g_PR->GetTeamColor( pPlayer->GetTeamNumber() ).b(), teamcolorbg.a() /*175*/ ) ;
 			//Color HudForegroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
 
 			bg = HudBackgroundColour;
