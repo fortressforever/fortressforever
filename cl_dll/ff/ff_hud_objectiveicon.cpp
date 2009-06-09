@@ -260,7 +260,10 @@ void CHudObjectiveIcon::Paint( void )
 				else
 					surface()->DrawSetColor( Color( 255, 255, 255, 255 ) );
 
-				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
+				// caes: make the bottom of the new downwards pointing objective icon arrow fixed above the objective and move its top instead as it scales
+				//surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
+				surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop - iAdjX - iAdjX, iScreenX + iAdjX, iYTop);
+				// caes
 			}
 		}
 
