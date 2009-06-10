@@ -1163,6 +1163,10 @@ C_FFPlayer::C_FFPlayer() :
 							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
 								m_DisguisedWeapons[iPlayerClass].szAnimExt[2], 
 								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
+							
+							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
+								m_DisguisedWeapons[iPlayerClass].szWeaponClassName[2], 
+								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
 							bDone = true;
 						}
 						break;
@@ -1176,6 +1180,10 @@ C_FFPlayer::C_FFPlayer() :
 							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
 								m_DisguisedWeapons[iPlayerClass].szAnimExt[0], 
 								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
+							
+							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
+								m_DisguisedWeapons[iPlayerClass].szWeaponClassName[0], 
+								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
 							bDone = true;
 						}
 						break;
@@ -1183,6 +1191,10 @@ C_FFPlayer::C_FFPlayer() :
 
 					if(bDone)
 						continue;
+
+					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
+						pWeaponInfo->szClassName, 
+						sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
 
 					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
 						pWeaponInfo->szWorldModel, 

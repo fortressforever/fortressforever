@@ -157,6 +157,12 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 			{
 				pHudHR->SetHistoryGap( pWeaponInfo->iconInactive->Height() );
 			}
+
+			if (strlen(pWeaponInfo->szClassName) > 3)
+			{
+				Q_snprintf(p->szShortName, 63, "weapon_%s", pWeaponInfo->szClassName + 3);
+				gHUD.AddSearchableHudIconToList(*p);
+			}
 		}
 
 		p = FindHudTextureInDict( tempList, "weapon_s" );

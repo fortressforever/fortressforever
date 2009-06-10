@@ -96,6 +96,7 @@ enum LuaEffectType
 
 struct SpyDisguiseWeapon
 {
+	char szWeaponClassName[6][MAX_WEAPON_STRING];
 	char szWeaponModel[6][MAX_WEAPON_STRING];
 	char szAnimExt[6][MAX_WEAPON_PREFIX];
 };

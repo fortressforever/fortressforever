@@ -120,8 +120,6 @@ private:
 	int	m_iDisguising;
 };
 
-DECLARE_HUDELEMENT( CHudSpyDisguise );
-
 //-----------------------------------------------------------------------------
 // Purpose: Done each map load
 //-----------------------------------------------------------------------------
@@ -226,3 +224,154 @@ void CHudSpyDisguise::Paint( void )
 		surface()->DrawUnicodeString( pszText );
 	}
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Displays current disguised weapon
+//-----------------------------------------------------------------------------
+class CHudSpyDisguise2 : public CHudElement, public vgui::FFPanel
+{
+public:
+	DECLARE_CLASS_SIMPLE( CHudSpyDisguise2, vgui::FFPanel );
+
+	CHudSpyDisguise2( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpyDisguise2" ), CHudElement( pElementName )
+	{
+		// Set our parent window
+		SetParent( g_pClientMode->GetViewport() );
+
+		// Hide when player is dead
+		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	}
+
+	virtual void Paint( void );
+	virtual void VidInit( void );
+
+protected:
+	CHudTexture		*m_pWeaponIcon;
+
+private:
+	// Stuff we need to know
+	CPanelAnimationVar( vgui::HFont, m_hDisguisedWeaponFont, "WeaponFont", "WeaponIconsHUD" )
+	CPanelAnimationVar( Color, m_hDisguisedWeaponColor, "WeaponColor", "HUD_Tone_Default" )
+
+	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "2", "proportional_float" );
+	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "4", "proportional_float" );
+
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: Once per map load
+//-----------------------------------------------------------------------------
+void CHudSpyDisguise2::VidInit( void )
+{
+	m_pWeaponIcon = new CHudTexture;
+	m_pWeaponIcon->bRenderUsingFont = true;
+	m_pWeaponIcon->hFont = m_hDisguisedWeaponFont;
+	
+	SetPaintBackgroundEnabled( false );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Paint
+//-----------------------------------------------------------------------------
+void CHudSpyDisguise2::Paint( void )
+{
+	if( !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( !pPlayer )
+		return;
+
+	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
+		return;
+
+	if ( !pPlayer->IsDisguising() && !pPlayer->IsDisguised() )
+		return;
+
+	BaseClass::PaintBackground();
+
+	if ( pPlayer->IsDisguised() )
+	{
+		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+
+		if(!pWeapon)
+			return;
+
+		int iSlot = pWeapon->GetFFWpnData().iSlot;
+		int iClass = pPlayer->GetDisguisedClass();
+		const char *disguisedWeaponName = "ff_weapon_crowbar";
+
+		if(pPlayer->m_DisguisedWeapons[iClass].szWeaponClassName[iSlot][0] != NULL)
+			disguisedWeaponName = pPlayer->m_DisguisedWeapons[iClass].szWeaponClassName[iSlot];
+		else if (pPlayer->GetDisguisedClass() == CLASS_CIVILIAN && pPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szWeaponClassName[0] != NULL)
+			disguisedWeaponName = pPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szWeaponClassName[0]; // always use umbrella
+		
+		if( Q_strnicmp( disguisedWeaponName, "ff_", 3 ) == 0 )
+		{
+			//UTIL_LogPrintf( "  begins with ff_, removing\n" );
+			disguisedWeaponName += 3;
+		}
+
+		char disguised_weapon_name[256];
+		Q_snprintf( disguised_weapon_name, sizeof(disguised_weapon_name), "weapon_%s", disguisedWeaponName );
+
+		Color col = m_hDisguisedWeaponColor;
+
+		// Shallow copy of the weapon scrolling icon
+		m_pWeaponIcon = gHUD.GetIcon(disguised_weapon_name);
+		// Change the font so it uses 28 size instead of 64
+		m_pWeaponIcon->hFont = m_hDisguisedWeaponFont;
+		m_pWeaponIcon->bRenderUsingFont = true;
+		
+		m_pWeaponIcon->DrawSelf( image1_xpos , image1_ypos, col);
+
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Displays current disguised class
+//-----------------------------------------------------------------------------
+class CHudSpyDisguise3 : public CHudElement, public vgui::FFPanel
+{
+public:
+	DECLARE_CLASS_SIMPLE( CHudSpyDisguise3, vgui::FFPanel );
+
+	CHudSpyDisguise3( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpyDisguise3" ), CHudElement( pElementName )
+	{
+		// Set our parent window
+		SetParent( g_pClientMode->GetViewport() );
+
+		// Hide when player is dead
+		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	}
+
+	virtual void VidInit( void )
+	{
+		SetPaintBackgroundEnabled( false );
+	}
+
+	virtual void Paint( void )
+	{
+		if( !engine->IsInGame() )
+			return;
+
+		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+		if( !pPlayer )
+			return;
+
+		if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
+			return;
+
+		if ( !pPlayer->IsDisguising() && !pPlayer->IsDisguised() )
+			return;
+
+		BaseClass::PaintBackground();
+	}
+};
+
+DECLARE_HUDELEMENT(CHudSpyDisguise);
+DECLARE_HUDELEMENT(CHudSpyDisguise2);
+DECLARE_HUDELEMENT(CHudSpyDisguise3);
