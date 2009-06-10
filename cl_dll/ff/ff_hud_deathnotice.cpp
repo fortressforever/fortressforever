@@ -324,8 +324,6 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	int sglevel_killer = event->GetInt( "killersglevel" );
 	const char *killedwith = event->GetString( "weapon" );
 
-	DevMsg( "deathnotice sg killed: %d - sg killer: %d - event killed: %d - event killer: %d\n", sglevel_killed, sglevel_killer, event->GetInt( "killedsglevel" ), event->GetInt( "killersglevel" ) );
-
 	// Stuffs for handling buildable deaths
 	bool bBuildableKilled = false;
 

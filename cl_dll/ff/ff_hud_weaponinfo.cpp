@@ -98,7 +98,10 @@ protected:
 private:
 	// Stuff we need to know
 	CPanelAnimationVar( vgui::HFont, m_hIconFont, "IconFont", "WeaponIconsHUD" );
+	CPanelAnimationVar( vgui::HFont, m_hAmmoIconFont, "AmmoFont", "WeaponIconsHUD" );
 
+	CPanelAnimationVarAliasType( float, ammo_xpos, "ammo_xpos", "10", "proportional_float" );
+	CPanelAnimationVarAliasType( float, ammo_ypos, "ammo_ypos", "32", "proportional_float" );
 };
 
 DECLARE_HUDELEMENT( CHudWeaponInfo );
@@ -171,13 +174,11 @@ void CHudWeaponInfo::Paint()
 
 			// Shallow copy of the ammo icon
 			*m_pAmmoIcon = *pSelectedWeapon->GetSpriteAmmo();
+			m_pAmmoIcon->hFont = m_hAmmoIconFont;
 
 			// Draw itself in the bottom right corner
 			// *** commented until we find a place to fit the ammo icon! - AfterShock
-			m_pAmmoIcon->DrawSelf(cl_box3.GetInt(), cl_box4.GetInt(), col);
-
-						
-					
+			m_pAmmoIcon->DrawSelf(ammo_xpos, ammo_ypos, col);
 
 		// Draw the icon -- yeah, it's not actually a weapon icon – it’s the hint lightbulb 
 		//m_pWeaponIcon->DrawSelf( 0, 0, clr ); // Draws it in the top left corner of the panel 
