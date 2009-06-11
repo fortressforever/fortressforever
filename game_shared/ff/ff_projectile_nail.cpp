@@ -195,8 +195,8 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, con
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);
 
-	//vecForward *= iSpeed /*NAIL_SPEED*/; //AfterShock - lets go back to having different nail speeds script-side (for 2.3!)
-	vecForward *= NAIL_SPEED; 
+	vecForward *= iSpeed /*NAIL_SPEED*/; //AfterShock - lets go back to having different nail speeds script-side (for 2.3!)
+	//vecForward *= NAIL_SPEED; 
 
 	// Set the speed and the initial transmitted velocity
 	pNail->SetAbsVelocity(vecForward);
@@ -206,7 +206,7 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, con
 		CEffectData data;
 		data.m_vOrigin = vecOrigin;
 		data.m_vAngles = angAngles;
-		data.m_nDamageType = iSpeed; // AfterShock: HACK: use m_nAttachmentIndex to pass the nail speed int
+		data.m_nDamageType = iSpeed; // AfterShock: HACK: use m_nDamageType to pass the nail speed int
 
 	#ifdef GAME_DLL
 		data.m_nEntIndex = pentOwner->entindex();
