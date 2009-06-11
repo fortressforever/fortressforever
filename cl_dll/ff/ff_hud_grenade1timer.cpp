@@ -1,13 +1,14 @@
 /********************************************************************
 	created:	2006/02/04
 	created:	4:2:2006   15:15
-	filename: 	f:\cvs\code\cl_dll\ff\ff_hud_buildable.cpp
+	filename: 	f:\cvs\code\cl_dll\ff\ff_hud_grenade1timer.cpp
 	file path:	f:\cvs\code\cl_dll\ff
-	file base:	ff_hud_buildable
+	file base:	ff_hud_grenade1timer
 	file ext:	cpp
 	author:		Gavin "Mirvin_Monkey" Bramhill
 	
-	purpose:	The building progress bar
+	purpose:	For now this is just a straight copy
+				THIS WILL BE SORTED AT A LATER DATE OKAY!!
 *********************************************************************/
 
 #include "cbase.h"
@@ -17,6 +18,7 @@
 #include "hud_macros.h"
 
 #include "ff_hud_grenade1timer.h"
+#include "ff_playerclass_parse.h"
 
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
@@ -24,6 +26,8 @@
 #include <vgui_controls/AnimationController.h>
 
 #include <vgui/ILocalize.h>
+
+extern IFileSystem **pFilesystem;
 
 using namespace vgui;
 
@@ -123,6 +127,63 @@ void CHudGrenade1Timer::Paint()
 
 	// Draw fg & bg box
 	BaseClass::PaintBackground();
+	
+	// First get the class
+	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
+
+	if (pLocalPlayer == NULL)
+		return;
+		
+	C_FFPlayer *ffplayer = ToFFPlayer(pLocalPlayer);
+
+	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN || !ffplayer->GetClassSlot()) 
+		return;
+
+	
+	const char *szClassNames[] = { "scout", "sniper", "soldier", 
+								 "demoman", "medic", "hwguy", 
+								 "pyro", "spy", "engineer", 
+								 "civilian" };
+
+	PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
+	bool bReadInfo = ReadPlayerClassDataFromFileForSlot(*pFilesystem, szClassNames[ffplayer->GetClassSlot() - 1], &hClassInfo, NULL);
+
+	if (!bReadInfo)
+		return;
+
+	const CFFPlayerClassInfo *pClassInfo = GetFilePlayerClassInfoFromHandle(hClassInfo);
+
+	if (!pClassInfo)
+		return;
+
+	if ( strcmp( pClassInfo->m_szPrimaryClassName, "None" ) != 0 )
+	{
+		
+		const char *grenade_name = pClassInfo->m_szPrimaryClassName;
+
+		if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
+		{
+			//UTIL_LogPrintf( "  begins with ff_, removing\n" );
+			grenade_name += 3;
+		}
+
+		char grenade_icon_name[256];
+
+		Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
+
+		CHudTexture *icon = gHUD.GetIcon(grenade_icon_name);
+
+		int iconWide = 0;
+		int iconTall = 0;
+
+		if( icon->bRenderUsingFont )
+		{
+			iconWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
+			iconTall = surface()->GetFontTall( icon->hFont );
+		}
+
+		icon->DrawSelf( 5, iconTall - bar_height / 2, iconWide, iconTall, m_HudForegroundColour );
+	}
 
 	int colour_mod = 0, timer_to_remove = -1;
 
