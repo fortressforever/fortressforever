@@ -39,13 +39,13 @@ using namespace vgui;
 #define OBJECTIVE_ICON_TEXTURE_OBSCURED	"glyphs/objective_icon_obscured"
 #define	OBJECTIVE_ICON_ARROW			"glyphs/ff_damage_pitt"
 
-ConVar cl_objectiveicon_dist( "cl_objectiveicon_dist", "600.0f", FCVAR_ARCHIVE, "Distance beyond which the objective icon won't get any smaller on the screen", true, 100.0f, true, 2000.0f );
+ConVar cl_objectiveicon_dist( "cl_objectiveicon_dist", "450.0f", FCVAR_ARCHIVE, "Distance beyond which the objective icon won't get any smaller on the screen", true, 100.0f, true, 2000.0f );
 #define OBJECTIVE_ICON_MINIMUM_SIZE		/*600.0f*/cl_objectiveicon_dist.GetFloat()
 
 ConVar cl_objectiveicon("cl_objectiveicon", "1", FCVAR_ARCHIVE, "Draws an objective icon and/or arrow | 0 = disables | 1 = icon and arrow | 2 = icon only", true, 0, true, 2);
 ConVar cl_objectiveicon_arrow_size("cl_objectiveicon_arrow_size", "96", FCVAR_ARCHIVE, "Size of the objective arrow", true, 4, true, 256);
 ConVar cl_objectiveicon_arrow_method("cl_objectiveicon_arrow_method", "1", FCVAR_ARCHIVE, "Objective arrow calculation method | 1 = right & up vectors | 2 = forward vector", true, 1, true, 2);
-ConVar cl_objectiveicon_teamcolor("cl_objectiveicon_teamcolor", "1", FCVAR_ARCHIVE, "Team colors the objective icon", true, 0, true, 1);
+ConVar cl_objectiveicon_teamcolor("cl_objectiveicon_teamcolor", "0", FCVAR_ARCHIVE, "Team colors the objective icon", true, 0, true, 1);
 ConVar cl_objectiveicon_arrow_teamcolor("cl_objectiveicon_arrow_teamcolor", "0", FCVAR_ARCHIVE, "Team colors the objective arrow", true, 0, true, 1);
 
 class CHudObjectiveIcon : public CHudElement, public vgui::Panel
