@@ -66,14 +66,14 @@ public:
 	CFFGameMovement() {};
 };
 
-//static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define BHOP_CAP_SOFT 1.4f // bhop_cap_soft.GetFloat()
-//static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define BHOP_CAP_HARD 2.0f // bhop_cap_hard.GetFloat()
-//static ConVar bhop_cap_hard_degen("ffdev_bhop_cap_hard_degen", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define	BHOP_CAP_HARD_DEGEN 0.9 // bhop_cap_hard_degen.GetFloat()
-//static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define BHOP_PCFACTOR 0.65 // bhop_pcfactor.GetFloat()
+//static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT); // bhop_cap_soft.GetFloat()
+#define BHOP_CAP_SOFT 1.4f // also defined in ff_hud_speedometer - change it there too! 
+//static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT); // bhop_cap_hard.GetFloat()
+#define BHOP_CAP_HARD 2.0f // also defined in ff_hud_speedometer - change it there too!
+//static ConVar bhop_cap_hard_degen("ffdev_bhop_cap_hard_degen", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT); // bhop_cap_hard_degen.GetFloat()
+#define	BHOP_CAP_HARD_DEGEN 0.9
+//static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED | FCVAR_CHEAT); // bhop_pcfactor.GetFloat()
+#define BHOP_PCFACTOR 0.65 
 
 //-----------------------------------------------------------------------------
 // Purpose: Provides TFC jump heights, trimping, doublejumps
