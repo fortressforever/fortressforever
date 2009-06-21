@@ -38,7 +38,7 @@ using namespace vgui;
 
 static ConVar hud_speedometer( "hud_speedometer", "0", FCVAR_ARCHIVE, "Toggle speedometer. Disclaimer: We are not responsible if you get a ticket.");
 // ELMO *** 
-static ConVar hud_speedometer_color( "hud_speedometer_color", "2", FCVAR_ARCHIVE, "1 = Stepped Color 2 = Fading Color (RED > hardcap :: ORANGE > softcap :: GREEN > run speed :: WHITE < run speed)", true, 0.0f, true, 2.0f);
+static ConVar hud_speedometer_color( "hud_speedometer_color", "2", FCVAR_ARCHIVE, "0=No color, 1=Stepped Color, 2=Fading Color (RED > hardcap :: ORANGE > softcap :: GREEN > run speed :: WHITE < run speed)", true, 0.0f, true, 2.0f);
 
 class CHudSpeedometer : public CHudElement, public CHudNumericDisplay
 {
