@@ -23,8 +23,8 @@
 #include <vgui/ILocalize.h>
 
 // ELMO *** 
-#define BHOP_CAP_SOFT 1.4f // as defined in ff_gameplay.cpp
-#define BHOP_CAP_HARD 2.0f // as defined in ff_gameplay.cpp
+#define BHOP_CAP_SOFT 1.4f // as defined in ff_gamemovement.cpp
+#define BHOP_CAP_HARD 2.0f // as defined in ff_gamemovement.cpp
 #define SPEEDO_COLOR_RED Color(255,0,0,255)
 #define SPEEDO_COLOR_ORANGE Color(255,128,0,255)
 #define SPEEDO_COLOR_GREEN Color(0,255,0,255)
