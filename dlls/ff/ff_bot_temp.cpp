@@ -783,9 +783,6 @@ void Bot_HandleSendCmd( CFFBot *pBot )
 		if( Q_strcmp( "sentrygun", bot_sendcmd.GetString() ) == 0 )
 			pBot->Command_BuildSentryGun();
 
-		if( Q_strcmp( "sevtest", bot_sendcmd.GetString() ) == 0 )
-			pBot->Command_SevTest();
-
 		if( Q_strcmp( "ammo", bot_sendcmd.GetString() ) == 0 )
 		{
 			pBot->GiveAmmo( 200, AMMO_CELLS );

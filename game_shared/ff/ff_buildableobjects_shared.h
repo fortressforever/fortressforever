@@ -43,7 +43,6 @@
 	#define CFFDispenser C_FFDispenser
 	#define CFFSentryGun C_FFSentryGun
 	#define CFFDetpack C_FFDetpack
-	#define CFFSevTest C_FFSevTest
 	#define CFFManCannon C_FFManCannon
 #else
 	#include "ff_player.h"
@@ -76,8 +75,6 @@
 #define FF_MANCANNON_EXPLODE_SOUND			"Detpack.Explode"
 
 //#define FF_SENTRYGUN_AIMSPHERE_MODEL		"models/buildable/sg/sentrygun_aimsphere.mdl"
-
-#define FF_SEVTEST_MODEL					"models/weapons/w_missile.mdl"
 
 #define FF_BUILDALBE_GENERIC_GIB_MODEL_01	"models/gibs/random/randGib1.mdl"
 #define FF_BUILDALBE_GENERIC_GIB_MODEL_02	"models/gibs/random/randGib2.mdl"
@@ -144,10 +141,6 @@
 	extern const char *g_pszFFSentryGunModels[];
 	extern const char *g_pszFFSentryGunGibModels[];
 	extern const char *g_pszFFSentryGunSounds[];
-
-	extern const char *g_pszFFSevTestModels[];
-	extern const char *g_pszFFSevTestGibModels[];
-	extern const char *g_pszFFSevTestSounds[];
 
 	extern const char *g_pszFFGenGibModels[];
 
@@ -437,44 +430,6 @@ protected:
 
 	char	m_BuildableLocation[1024];
 
-#endif
-
-};
-
-//=============================================================================
-//
-//	class CFFSevTest / C_FFSevTest
-//
-//=============================================================================
-class CFFSevTest : public CFFBuildableObject
-{
-public:
-	DECLARE_CLASS( CFFSevTest, CFFBuildableObject )
-
-#ifdef CLIENT_DLL 
-	DECLARE_CLIENTCLASS()
-#else
-	DECLARE_SERVERCLASS()
-	DECLARE_DATADESC()
-#endif
-
-	// --> shared
-	CFFSevTest( void );
-	virtual ~CFFSevTest( void );
-	virtual bool BlocksLOS( void ) const { return false; }
-	// <-- shared
-
-#ifdef CLIENT_DLL
-	virtual void OnDataChanged( DataUpdateType_t updateType );
-#else
-	void OnObjectThink( void );
-	void Spawn( void );
-	void GoLive( void );	
-
-	static CFFSevTest *Create( const Vector &vecOrigin, const QAngle &vecAngles, edict_t *pentOwner = NULL );
-
-protected:
-	float	m_flSpawnTime;
 #endif
 
 };

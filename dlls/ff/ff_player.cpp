@@ -3778,32 +3778,6 @@ void CFFPlayer::PostBuildGenericThink( void )
 	//if( m_pBuildLastWeapon )
 	//	m_pBuildLastWeapon->Deploy();
 }
-// Sev's test animation thing
-void CFFPlayer::Command_SevTest( void )
-{
-/* STOLEN!
-	Vector vecOrigin = GetAbsOrigin( );
-	vecOrigin.z += 48;
-
-	CFFSevTest *pSevTest = CFFSevTest::Create( vecOrigin, GetAbsAngles( ) );
-	if( pSevTest )
-		pSevTest->GoLive( );
-
-	// BASTARD! :P
-	if (engine->Cmd_Argc() == 4)
-	{
-		Vector vPush(atof(engine->Cmd_Argv(1)),atof(engine->Cmd_Argv(2)),atof(engine->Cmd_Argv(3)));
-		ApplyAbsVelocityImpulse(vPush);
-	}
-
-	STOLEN AGAIN. NINJA!
-
-	if (engine->Cmd_Argc() > 1)
-		entsys.DoString(engine->Cmd_Args());
-
-	STOLEN X3
-*/
-}
 
 /**
 	FlagInfo

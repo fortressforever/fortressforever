@@ -49,7 +49,6 @@
 #include "ff_gamerules.h"
 #include "ff_utils.h"
 #include "ff_item_backpack.h"
-//#include "ff_sevtest.h"
 
 #include "omnibot_interface.h"
 

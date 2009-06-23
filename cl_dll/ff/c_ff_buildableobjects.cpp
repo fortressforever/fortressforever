@@ -320,47 +320,6 @@ int C_FFBuildableObject::DrawModel( int flags )
 
 //=============================================================================
 //
-//	class C_FFSevTest
-//
-//=============================================================================
-
-#if defined( CFFSevTest )
-	#undef CFFSevTest
-#endif
-
-IMPLEMENT_CLIENTCLASS_DT( C_FFSevTest, DT_FFSevTest, CFFSevTest )
-END_RECV_TABLE( )
-
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-C_FFSevTest::C_FFSevTest( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Destructor
-//-----------------------------------------------------------------------------
-C_FFSevTest::~C_FFSevTest( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_FFSevTest::OnDataChanged( DataUpdateType_t updateType )
-{
-	// NOTE: We MUST call the base classes' implementation of this function
-	BaseClass::OnDataChanged( updateType );
-
-	if( updateType == DATA_UPDATE_CREATED )
-	{
-		SetNextClientThink( CLIENT_THINK_ALWAYS );
-	}
-}
-
-//=============================================================================
-//
 //	class C_FFDetpack
 //
 //=============================================================================

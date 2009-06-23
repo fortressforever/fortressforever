@@ -29,7 +29,6 @@ class C_FFBuildableObject;
 class C_FFDetpack;
 class C_FFDispenser;
 class C_FFSentryGun;
-class C_FFSevTest;
 class C_FFManCannon;
 
 #define FF_BUILD_NONE		0
