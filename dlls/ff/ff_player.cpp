@@ -116,7 +116,7 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
 #define FFDEV_OVERHEALTH_FREQ 3.0f
 
-ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","75",FCVAR_REPLICATED | FCVAR_CHEAT,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
+ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED | FCVAR_CHEAT,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW ffdev_dmgforfullslow.GetFloat()
 
 
