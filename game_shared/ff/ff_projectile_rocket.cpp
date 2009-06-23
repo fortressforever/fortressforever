@@ -265,7 +265,7 @@ void CFFProjectileRocket::Spawn()
 	// Setup
 	SetModel(ROCKET_MODEL);
 	SetMoveType(MOVETYPE_FLY);
-	SetSize(Vector(-2, -2, -2), Vector(2, 2, 2)); // smaller, cube bounding box so we rest on the ground
+	SetSize(Vector(-8, -8, -8), Vector(8, 8, 8)); // smaller, cube bounding box so we rest on the ground
 	SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 	SetSolidFlags(FSOLID_NOT_STANDABLE);
 
