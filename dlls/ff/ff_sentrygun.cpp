@@ -95,7 +95,7 @@
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f  // sg_explosiondamage_base.GetFloat()
 //ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "2.0", FCVAR_REPLICATED, "SG bullet push force");
-#define SG_BULLETPUSH 2.0f // ffdev_sg_bulletpush.GetFloat()
+#define SG_BULLETPUSH 0.0f // ffdev_sg_bulletpush.GetFloat()
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
 //ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "4.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL1 4.0f // ffdev_sg_groundpush_multiplier_lvl1.GetFloat()

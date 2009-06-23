@@ -122,25 +122,6 @@ public:
 };
 */
 
-/*
-//=============================================================================
-//
-//	class C_FFSevTest
-//
-//=============================================================================
-class C_FFSevTest : public C_FFBuildableObject
-{
-public:
-	DECLARE_CLASS( C_FFSevTest, C_FFBuildableObject );
-	DECLARE_CLIENTCLASS( );
-
-	C_FFSevTest( void );
-	~C_FFSevTest( void );
-
-	virtual void OnDataChanged( DataUpdateType_t updateType );
-
-};
-*/
 
 /*
 //=============================================================================

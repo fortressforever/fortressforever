@@ -30,7 +30,6 @@ class CFFBuildableObject;
 class CFFDetpack;
 class CFFDispenser;
 class CFFSentryGun;
-class CFFSevTest;
 class CFFManCannon;
 
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
@@ -352,7 +351,6 @@ public:
 	void Command_ThrowGren(void); // throw currently primed grenade
 	void Command_ToggleOne( void );
 	void Command_ToggleTwo( void );	
-	void Command_SevTest( void ); // Sev's test animation thing
 	void Command_FlagInfo( void ); // flaginfo
 	void Command_DropItems( void );
 	void Command_Discard( void );	
