@@ -28,6 +28,9 @@
 	extern ConVar cl_ffdlight_rocket;
 #endif
 
+
+ConVar ffdev_rocketsize("ffdev_rocketsize", "2.0", FCVAR_REPLICATED );
+#define FFDEV_ROCKETSIZE ffdev_rocketsize.GetFloat() //8.0f
 //#define PREDICTED_ROCKETS
 
 //=============================================================================
@@ -265,7 +268,7 @@ void CFFProjectileRocket::Spawn()
 	// Setup
 	SetModel(ROCKET_MODEL);
 	SetMoveType(MOVETYPE_FLY);
-	SetSize(Vector(-8, -8, -8), Vector(8, 8, 8)); // smaller, cube bounding box so we rest on the ground
+	SetSize(Vector(-(FFDEV_ROCKETSIZE), -(FFDEV_ROCKETSIZE), -(FFDEV_ROCKETSIZE)), Vector((FFDEV_ROCKETSIZE), (FFDEV_ROCKETSIZE), (FFDEV_ROCKETSIZE))); // smaller, cube bounding box so we rest on the ground
 	SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 	SetSolidFlags(FSOLID_NOT_STANDABLE);
 
