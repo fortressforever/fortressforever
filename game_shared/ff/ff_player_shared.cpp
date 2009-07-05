@@ -1094,6 +1094,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 		if (IsPlayer() && /*info.m_iShots > 1 &&*/ (iShot % 2) == 0)
 		{
 			// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
+			//NOTE: This also applies to the AC if you're firing more than 1 bullet at a time!
 			AI_TraceHull(info.m_vecSrc, vecEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT, &traceFilter, &tr);
 		}
 		else

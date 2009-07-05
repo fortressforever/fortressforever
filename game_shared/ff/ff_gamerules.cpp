@@ -1145,6 +1145,7 @@ ConVar mp_prematch( "mp_prematch",
 
 		// Always raise by 1.0f
 		// It's so that the grenade isn't in the ground
+		// AfterShock: Isn't this going to raise grenades into the ceiling if they explode there? Shouldnt we be raising off the surface normal instead?
 		vecSrc.z += 1.0f;
 
 		// iterate on all entities in the vicinity.
