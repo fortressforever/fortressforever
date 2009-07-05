@@ -756,7 +756,7 @@ public:
 	virtual int TakeEmp();
 	virtual void Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner );
 
-	void SetFlameSpritesLifetime(float flLifeTime);
+	void SetFlameSpritesLifetime(float flLifeTime, float flFlameSize = 1.0f);
 
 	virtual bool TakeNamedItem(const char* szName);	
 
