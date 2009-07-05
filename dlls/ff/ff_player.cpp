@@ -71,6 +71,13 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
 #define BURN_MULTIPLIER_2BURNS 2.5f
 
+ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_REPLICATED, "flame size multiplier for burn level 1");
+#define FFDEV_FLAMESIZE_BURN1 ffdev_flamesize_burn1.GetFloat()
+ConVar ffdev_flamesize_burn2("ffdev_flamesize_burn2","0.04", FCVAR_REPLICATED, "flame size multiplier for burn level 2");
+#define FFDEV_FLAMESIZE_BURN2 ffdev_flamesize_burn2.GetFloat()
+ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, "flame size multiplier for burn level 3");
+#define FFDEV_FLAMESIZE_BURN3 ffdev_flamesize_burn3.GetFloat()
+
 // For testing purposes
 // [integer] Number of cells it takes to perform the "radar" command
 //static ConVar radar_num_cells( "ffdev_radar_num_cells", "5" );
@@ -4904,6 +4911,8 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 			WRITE_BYTE( FF_STATUSICON_BURNING3 );
 			WRITE_FLOAT( flIconDuration );
 		MessageEnd();
+
+		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN3, false );
 	}
 	// if we're on fire from 2 flame weapons, burn a bit more
 	else if (newburnlevel == 2)
@@ -4920,6 +4929,8 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 			WRITE_BYTE( FF_STATUSICON_BURNING2 );
 			WRITE_FLOAT( flIconDuration );
 		MessageEnd();
+
+		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN2, false );
 	}
 	else // burn level 1
 	{
@@ -4927,6 +4938,8 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 			WRITE_BYTE( FF_STATUSICON_BURNING1 );
 			WRITE_FLOAT( flIconDuration );
 		MessageEnd();
+
+		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN1, false );
 	}
 
 	DevMsg("Burn: %f",m_flBurningDamage);
@@ -4947,8 +4960,6 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	}
 	// <-- Mirv: Pyros safer against fire
 	*/
-
-	Ignite( 10.0, false, 8, false );
 
 	// set up the igniter
 	m_hIgniter = hIgniter;
@@ -5998,7 +6009,7 @@ void CFFPlayer::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool
 	AddFlag( FL_ONFIRE );
 
 
-	SetFlameSpritesLifetime(flFlameLifetime);
+	SetFlameSpritesLifetime(flFlameLifetime, flSize);
 
 	m_OnIgnite.FireOutput( this, this );
 }
@@ -6514,6 +6525,7 @@ void CFFPlayer::FinishDisguise()
 			// Only set new model & skin if we're not cloaked
 			//if( !IsCloaked() )
 			//{
+			// AfterShock: If we want to do friendly spies showing up as friendly spies, we'd have to have different models for friendly and enemies?
 				SetModel(pPlayerClassInfo->m_szModel);
 				m_nSkin = GetNewDisguisedTeam() - TEAM_BLUE; // since m_nSkin = 0 is blue
 			//}
@@ -7754,19 +7766,55 @@ void CFFPlayer::DamageEffect(float flDamage, int fDamageType)
 // Purpose: A function to handle all the flame stuff rather than having it
 //			strewed throughout the code.
 //-----------------------------------------------------------------------------
-void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime)
+void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime, float flFlameSize)
 {
 	CEntityFlame *pFlame = dynamic_cast <CEntityFlame *> (GetEffectEntity());
 
 	// If there is no flame then only create one if necessary
-	if (!pFlame)
+	if (!pFlame )
 	{
 		if (flLifeTime <= 0.0f)
 			return;
 
-		pFlame = CEntityFlame::Create(this);
+		pFlame = CEntityFlame::Create(this, true, flFlameSize);
 		SetEffectEntity(pFlame);
 	}
+	else
+	{
+		if (flLifeTime <= 0.0f) //if this is part of the player extinguish then just return immediately
+		{
+			pFlame->Extinguish();
+			return;
+		}
+
+		// this lame calculation copied from CEntityFlame::Create
+
+		float xSize = CollisionProp()->OBBMaxs().x - CollisionProp()->OBBMins().x;
+		float ySize = CollisionProp()->OBBMaxs().y - CollisionProp()->OBBMins().y;
+		float size = ( xSize + ySize ) * 0.5f;
+		size = size * flFlameSize;
+
+		if ( size != pFlame->m_flSize )
+		{
+			//pFlame->SetSize(size); // i wish this would work and just grow the existing flame
+			pFlame->Extinguish(); // kill the old smaller flame
+			pFlame = CEntityFlame::Create(this, true, flFlameSize); // make a brand new bigger flame
+			SetEffectEntity(pFlame);
+		}
+			
+
+	}
+	/*
+	else if (! (pFlame->m_flSize == flFlameSize))
+	{
+		pFlame->Extinguish(); // kill old smaller flame
+
+		if (flLifeTime <= 0.0f) //if this is part of the player extinguish then just return immediately
+			return;
+
+		pFlame = CEntityFlame::Create(this, true, flFlameSize); // make a new bigger one
+		SetEffectEntity(pFlame);
+	}*/
 
 	Assert(pFlame);
 

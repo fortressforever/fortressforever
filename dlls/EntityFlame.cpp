@@ -113,7 +113,7 @@ void CEntityFlame::InputIgnite( inputdata_t &inputdata )
 // Purpose: Creates a flame and attaches it to a target entity.
 // Input  : pTarget - 
 //-----------------------------------------------------------------------------
-CEntityFlame *CEntityFlame::Create( CBaseEntity *pTarget, bool useHitboxes )
+CEntityFlame *CEntityFlame::Create( CBaseEntity *pTarget, bool useHitboxes, float flameSize )
 {
 	CEntityFlame *pFlame = (CEntityFlame *) CreateEntityByName( "entityflame" );
 
@@ -124,12 +124,15 @@ CEntityFlame *CEntityFlame::Create( CBaseEntity *pTarget, bool useHitboxes )
 	float ySize = pTarget->CollisionProp()->OBBMaxs().y - pTarget->CollisionProp()->OBBMins().y;
 
 	float size = ( xSize + ySize ) * 0.5f;
-	
-	if ( size < 16.0f )
-	{
-		size = 16.0f;
-	}
 
+	size = size * flameSize;
+	/*
+	if ( size < 1.0f )
+	{
+		size = 1.0f;
+	}*/
+
+//DevMsg("Flame created, size: %0.2f... ", size);
 	UTIL_SetOrigin( pFlame, pTarget->GetAbsOrigin() );
 
 	pFlame->m_flSize = size;
