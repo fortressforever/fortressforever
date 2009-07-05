@@ -144,14 +144,14 @@ void CHudGameMessage::Paint( void )
 		float dt = m_Messages[i].flDuration - ( gpGlobals->curtime - m_Messages[i].flStartTime );
 		float flAlpha = 0.0f;
 		float flStartFade = (m_Messages[i].flDuration > 4.0f) ? 2.0f : m_Messages[i].flDuration / 2;
-		DevMsg("dt: %f\n", dt);
+		//DevMsg("dt: %f\n", dt);
 		if (flStartFade > dt)
 		{
 			float normalizedTime = dt / flStartFade;
 			float normalizedSquared = normalizedTime * normalizedTime;
 			flAlpha = normalizedSquared * 255.0f;
 			flAlpha = clamp( flAlpha, 0.0f, 255.0f );
-			DevMsg("normaltime: %f normalsquared: %f alpha: %f\n", normalizedTime, normalizedSquared, flAlpha);
+			//DevMsg("normaltime: %f normalsquared: %f alpha: %f\n", normalizedTime, normalizedSquared, flAlpha);
 		}
 		else
 			flAlpha = 255.0f;
