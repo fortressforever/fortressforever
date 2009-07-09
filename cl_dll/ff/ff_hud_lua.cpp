@@ -429,6 +429,12 @@ void CHudLua::HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, 
 	case 4 : //HUD_ALIGNX_CENTER :
 		iProperXPosition = (ScreenWidth() / 2) - (scaledW / 2) + scaledX;
 		break;
+	case 5 : //HUD_ALIGNX_RIGHT_STRINGSTART :
+		iProperXPosition = ScreenWidth() - scaledX;
+		break;
+	case 6 : //HUD_ALIGNX_LEFT_STRINGEND :
+		iProperXPosition = scaledX - scaledW;
+		break;
 	case 0 : //HUD_ALIGNX_LEFT : 
 	default :
 		iProperXPosition = scaledX;
