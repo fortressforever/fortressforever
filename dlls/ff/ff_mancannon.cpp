@@ -201,8 +201,8 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 			CSingleUserRecipientFilter user( pPlayer );
 			user.MakeReliable();
 			UserMessageBegin( user, "FF_BuildTimer" );
-			WRITE_SHORT( 4 );
-			WRITE_FLOAT( 0.0f );
+				WRITE_SHORT( FF_BUILD_MANCANNON );
+				WRITE_FLOAT( 0.0f );
 			MessageEnd();
 
 			pPlayer->UnlockPlayer();
@@ -218,32 +218,39 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	// not already charging
 	if ( pPlayer->m_flMancannonTimeStartCharge == 0.0f )
 	{
+		// Get lifetime remaining
+		float thinkTime = ( GetNextThink() - gpGlobals->curtime );
+		if ( m_iJumpPadState == JUMPPAD_POWERDOWN ) // add 5 seconds if next state is powerdown (i.e. we're in normal mode)
+		{
+			thinkTime += JUMPPAD_POWERDOWN_TIME;
+		}
 		// start charging
-		if ( m_iJumpPadState < JUMPPAD_POWERDOWN + 1 )
+		if ( thinkTime > JUMPPAD_CHARGE_TIME ) // only allow chargeup if there's enough lifetime left
 		{
 			pPlayer->LockPlayerInPlace();
 
 			CSingleUserRecipientFilter user( pPlayer );
 			user.MakeReliable();
 			UserMessageBegin( user, "FF_BuildTimer" );
-			WRITE_SHORT( 4 );
-			WRITE_FLOAT( JUMPPAD_CHARGE_TIME );
+				WRITE_SHORT( FF_BUILD_MANCANNON );
+				WRITE_FLOAT( JUMPPAD_CHARGE_TIME );
 			MessageEnd();
 
 			pPlayer->m_flMancannonTimeStartCharge = gpGlobals->curtime;
 			EmitSound("JumpPad.WarmUp");
 		}
 		// no time to charge til pad times out
-		else return;
+		else 
+			return;
 	}
 
-	// check if we're fully charged
+	// If not fully charged, exit now
 	if ( gpGlobals->curtime < pPlayer->m_flMancannonTimeStartCharge + JUMPPAD_CHARGE_TIME )
 	{
 		return;
 	}
 	
-	// charge complete
+	// Otherwise, charge complete, launch the guy :)
 	pPlayer->UnlockPlayer();
 	pPlayer->m_flMancannonTimeStartCharge = 0.0f;
 
