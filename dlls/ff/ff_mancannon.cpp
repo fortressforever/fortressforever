@@ -34,6 +34,11 @@ ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICAT
 #define JUMPPAD_LIFESPAN		60.0f // ffdev_mancannon_lifetime.GetFloat()
 #define JUMPPAD_POWERDOWN_TIME	5.0f
 
+// caes: jumppad charge system
+ConVar ffdev_mancannon_charge_time( "ffdev_mancannon_charge_time", "3.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define JUMPPAD_CHARGE_TIME		ffdev_mancannon_charge_time.GetFloat()
+// caes
+
 //=============================================================================
 //
 //	class CFFManCannon
@@ -69,7 +74,7 @@ const char *g_pszFFManCannonSounds[] =
 {
 	FF_MANCANNON_BUILD_SOUND,
 	FF_MANCANNON_EXPLODE_SOUND,
-	//"JumpPad.WarmUp",
+	"JumpPad.WarmUp", // caes: stolen this for jumppad charge system
 	"JumpPad.PowerDown",
 	"JumpPad.Fire",
 	NULL
@@ -133,7 +138,7 @@ void CFFManCannon::OnJumpPadThink( void )
 	case JUMPPAD_ACTIVATE:
 		// Play activate sound
 		//EmitSound("JumpPad.Activate");
-		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN );
+		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN - JUMPPAD_POWERDOWN_TIME );
 		m_iJumpPadState++;
 		break;
 	case JUMPPAD_POWERDOWN:
@@ -184,9 +189,66 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 		return;
 	}
 
-	// Only trigger when the player hits his jump key
+
+	// caes: jumppad charge system changes start here
+
+	// on jumppad but not pressing jump
 	if ( !(pPlayer->m_nButtons & IN_JUMP) )
+	{
+		// stop charging if currently charging
+		if (pPlayer->m_flMancannonTimeStartCharge != 0.0f)
+		{
+			CSingleUserRecipientFilter user( pPlayer );
+			user.MakeReliable();
+			UserMessageBegin( user, "FF_BuildTimer" );
+			WRITE_SHORT( 4 );
+			WRITE_FLOAT( 0.0f );
+			MessageEnd();
+
+			pPlayer->UnlockPlayer();
+			pPlayer->m_flMancannonTimeStartCharge = 0.0f;
+		}
 		return;
+	}
+
+	// can only start charging if going slowly
+	if ( pPlayer->GetAbsVelocity().Length2D() > 200.0f )
+		return;
+
+	// not already charging
+	if ( pPlayer->m_flMancannonTimeStartCharge == 0.0f )
+	{
+		// start charging
+		if ( m_iJumpPadState < JUMPPAD_POWERDOWN + 1 )
+		{
+			pPlayer->LockPlayerInPlace();
+
+			CSingleUserRecipientFilter user( pPlayer );
+			user.MakeReliable();
+			UserMessageBegin( user, "FF_BuildTimer" );
+			WRITE_SHORT( 4 );
+			WRITE_FLOAT( JUMPPAD_CHARGE_TIME );
+			MessageEnd();
+
+			pPlayer->m_flMancannonTimeStartCharge = gpGlobals->curtime;
+			EmitSound("JumpPad.WarmUp");
+		}
+		// no time to charge til pad times out
+		else return;
+	}
+
+	// check if we're fully charged
+	if ( gpGlobals->curtime < pPlayer->m_flMancannonTimeStartCharge + JUMPPAD_CHARGE_TIME )
+	{
+		return;
+	}
+	
+	// charge complete
+	pPlayer->UnlockPlayer();
+	pPlayer->m_flMancannonTimeStartCharge = 0.0f;
+
+	// caes: jumppad charge system changes end here
+
 
 	// Launch the guy
 	QAngle vecAngles = pPlayer->EyeAngles();
