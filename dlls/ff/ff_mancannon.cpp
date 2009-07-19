@@ -37,6 +37,9 @@ ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICAT
 // caes: jumppad charge system
 ConVar ffdev_mancannon_charge_time( "ffdev_mancannon_charge_time", "3.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define JUMPPAD_CHARGE_TIME		ffdev_mancannon_charge_time.GetFloat()
+
+ConVar ffdev_mancannon_charge_speedmul( "ffdev_mancannon_charge_speedmul", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define FFDEV_JUMPPAD_ACTIVATE_SPEEDMUL	ffdev_mancannon_charge_speedmul.GetFloat()
 // caes
 
 //=============================================================================
@@ -213,7 +216,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	}
 
 	// can only start charging if going slowly
-	if ( pPlayer->GetAbsVelocity().Length2D() > 200.0f )
+	if ( pPlayer->GetAbsVelocity().Length2D() > pPlayer->MaxSpeed() * FFDEV_JUMPPAD_ACTIVATE_SPEEDMUL )
 		return;
 
 	// not already charging
