@@ -207,6 +207,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 
 			pPlayer->UnlockPlayer();
 			pPlayer->m_flMancannonTimeStartCharge = 0.0f;
+			pPlayer->m_BuildableBeingUsed = NULL;
 		}
 		return;
 	}
@@ -228,6 +229,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 		if ( thinkTime > JUMPPAD_CHARGE_TIME ) // only allow chargeup if there's enough lifetime left
 		{
 			pPlayer->LockPlayerInPlace();
+			pPlayer->m_BuildableBeingUsed = this;
 
 			CSingleUserRecipientFilter user( pPlayer );
 			user.MakeReliable();
@@ -237,6 +239,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 			MessageEnd();
 
 			pPlayer->m_flMancannonTimeStartCharge = gpGlobals->curtime;
+
 			EmitSound("JumpPad.WarmUp");
 		}
 		// no time to charge til pad times out
@@ -253,6 +256,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	// Otherwise, charge complete, launch the guy :)
 	pPlayer->UnlockPlayer();
 	pPlayer->m_flMancannonTimeStartCharge = 0.0f;
+	pPlayer->m_BuildableBeingUsed = NULL;
 
 	// caes: jumppad charge system changes end here
 
@@ -316,6 +320,28 @@ void CFFManCannon::Detonate( void )
 			pEvent->SetInt( "userid", pOwner->GetUserID() );
 			gameeventmanager->FireEvent( pEvent, true );
 		}		
+	}
+
+	// AfterShock: unlock anyone that was in the middle of charging this jump pad
+	for( int j = 1; j <= gpGlobals->maxClients; j++ )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( j ) );
+		if (pPlayer)
+		{
+			if ( pPlayer->m_BuildableBeingUsed == this )
+			{
+				pPlayer->UnlockPlayer();
+				pPlayer->m_flMancannonTimeStartCharge = 0.0f;
+				pPlayer->m_BuildableBeingUsed = NULL;
+
+				CSingleUserRecipientFilter user( pPlayer );
+				user.MakeReliable();
+				UserMessageBegin( user, "FF_BuildTimer" );
+					WRITE_SHORT( FF_BUILD_MANCANNON );
+					WRITE_FLOAT( 0.0f );
+				MessageEnd();
+			}
+		}
 	}
 
 	CFFBuildableObject::Detonate();

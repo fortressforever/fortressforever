@@ -531,6 +531,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 
 	float flEpsilon = vecNormal.z / VectorLength( vecNormal );
 
+	// AfterShock: comment these 2 lines for near vertical building (but this won't allow you to build on walls unfortunately :)
 	if (flEpsilon < 0.90f) 
 		return BUILD_TOOSTEEP;
 

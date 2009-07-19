@@ -652,6 +652,7 @@ public:
     float m_flMancannonTime;		// Last time the player was affected (pushed) by a jump pad
 	float m_flMancannonTimeStartCharge; // caes: jumppad charge system
 	float m_flMancannonDetTime;		// Used to allow the Scout to det his jump pad
+	CFFBuildableObject *m_BuildableBeingUsed; // AfterShock: Keeping track of players using buildables (e.g. charging up jumppads)
 	// BEG: Spy cloak stuff
 private:
 	void SpyCloakFadeIn( bool bInstant = false );

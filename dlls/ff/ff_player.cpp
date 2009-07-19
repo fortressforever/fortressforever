@@ -1590,6 +1590,7 @@ void CFFPlayer::SetupClassVariables()
 	m_flMancannonTime = 0.0f;
 	m_flMancannonTimeStartCharge = 0.0f; // caes: jumppad charge system
 	m_flMancannonDetTime = 0.0f;
+	m_BuildableBeingUsed = NULL;
 	// Reset Spy stuff
 	m_iCloaked = 0;
 	m_flCloakTime = 0.0f;
