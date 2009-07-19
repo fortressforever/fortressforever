@@ -41,7 +41,8 @@ LINK_ENTITY_TO_CLASS(ff_projectile_pl, CFFProjectilePipebomb);
 PRECACHE_WEAPON_REGISTER(ff_projectile_pl);
 
 //0001279: Need convar for pipe det delay
-ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | FCVAR_CHEAT);
+//ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define PIPE_DET_DELAY 0.55	// this is mirrored in ff_player_shared.cpp(97)
 
 //=============================================================================
 // CFFProjectilePipebomb implementation
@@ -64,7 +65,7 @@ ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | 
 			m_hMainGlow->SetScale( 0.2f );
 			m_hMainGlow->SetGlowProxySize( 4.0f );
 			m_hMainGlow->SetThink(&CBaseEntity::SUB_Remove);
-			m_hMainGlow->SetNextThink(gpGlobals->curtime + pipebomb_time_till_live.GetFloat());
+			m_hMainGlow->SetNextThink(gpGlobals->curtime + PIPE_DET_DELAY);
 		}
 
 		// Start up the eye trail

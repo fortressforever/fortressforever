@@ -1141,7 +1141,7 @@ ConVar mp_prematch( "mp_prematch",
 #endif
 
 		// TFC style falloff please.
-		falloff = 0.5f;
+		falloff = 0.5f; // AfterShock: need to change this if you want to have a radius over 2x the damage
 
 		// Always raise by 1.0f
 		// It's so that the grenade isn't in the ground
@@ -1195,9 +1195,9 @@ ConVar mp_prematch( "mp_prematch",
 					flDistance = 0.0f;
 				}
 				// dH must be positive at this point (dbz safe)
-				else if (dH > dV)
+				else if (dH > dV)// if target is less than 45 degrees i.e more horizontal to the grenade than vertical
 				{
-					flDistance *= dH / (dH + 16.0f);
+					flDistance *= dH / (dH + 16.0f); // this just reduces distance by an amount equivalent to 16 in horizontal (so min 16)
 				}
 				// dV must be positive at this point (as must vecDisplacement.z, thus (dbz safe))
 				else
@@ -1205,7 +1205,16 @@ ConVar mp_prematch( "mp_prematch",
 					// 0001457: Throwing grenades vertically causes more damage
 					// Dividing positive dV (yeah I know this entire thing is a AWFUL HACK) by negative displacement
 					// was resulting in adding damage for falloff instead of subtracting later on.
-					flDistance *= dV / fabs(vecDisplacement.z);
+					flDistance *= dV / fabs(vecDisplacement.z); 
+
+					if ( dH > 0.0f) // AfterShock: make sure distance calculated is always at least distance from explosion to closest corner of bounding box 
+						// (fixes bug at around 50 degrees vertically where explosions were doing too much damage)
+					{
+						float flDistance2 = Vector(dH, 0, dV).Length();
+
+						if (flDistance2 > flDistance)
+							flDistance = flDistance2;
+					}
 				}
 
 				// Another quick fix for the movement code this time
@@ -1221,6 +1230,10 @@ ConVar mp_prematch( "mp_prematch",
 						pEntity->SetAbsVelocity(vecVelocity);
 					}
 				}
+			}
+			else
+			{
+				DevMsg("NOT A PLAYER !! \n");
 			}
 #endif
 
@@ -1260,8 +1273,7 @@ ConVar mp_prematch( "mp_prematch",
 			float flBaseDamage = info.GetDamage();
 
 			// Decrease damage for an ent that's farther from the explosion
-			flAdjustedDamage = flBaseDamage - (flDistance * falloff);
-
+			flAdjustedDamage = flBaseDamage - (flDistance * falloff); // AfterShock: this means if a player is on the radius of 2x the base damage, you'll do 0 damage
 			// We're doing no damage, so don't do anything else here
 			if (flAdjustedDamage <= 0) 
 				continue;
