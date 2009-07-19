@@ -5518,13 +5518,16 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// get the maxdamage cvar 
 	// if their horizontal speed is less than max run speed then skipfunction
 
-	/*
+	
 	if( inputInfo.GetInflictor() )
 	{
-		CFFWeaponBase *pWeapon = dynamic_cast<CFFWeaponBase *>( inputInfo.GetInflictor() );
-		if( !pWeapon || !( pWeapon->GetWeaponID() == FF_WEAPON_DEPLOYSENTRYGUN ) ) // Don't allow buildables to slow the player!
+		CFFBuildableObject *pBuildable = dynamic_cast <CFFBuildableObject *> (info.GetInflictor());
+		if( pBuildable && ( pBuildable->Classify() == CLASS_SENTRYGUN ) ) // Don't allow buildables to slow the player!
 		{
-		*/
+			// do nothing
+		}
+		else
+		{
 			//Vector vecVelocity = pPlayer->GetAbsVelocity();
 			Vector vecVelocity = GetAbsVelocity();
 			Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
@@ -5559,8 +5562,8 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 					SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z));					
 				}
 			}
-		//}
-	//}
+		}
+	}
 
 
 	// add to the damage total for clients, which will be sent as a single
