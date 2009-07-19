@@ -589,8 +589,8 @@ public:
 
 public:
 	// Added by Mulchman - two overrides
-	virtual void LockPlayerInPlace( void );
-	virtual void UnlockPlayer( void );
+	void LockPlayerInPlace( void );
+	void UnlockPlayer( void );
 
 public:
 	// Beg: Added by Mulchman for scout radar
@@ -715,7 +715,7 @@ private:
 	// END: Spy cloak stuff
 
 public:
-	int Heal(CFFPlayer *, float);
+	int Heal(CFFPlayer *pHealer, float flHealth, bool healToFull = true);
 
 	// Keeping these seperate for now
 	CNetworkHandle( CFFMapGuide, m_hNextMapGuide );

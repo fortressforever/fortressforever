@@ -1249,7 +1249,7 @@ void C_EntityFlame::AttachToHitBoxes( void )
 
 		m_pFireSmoke[i]->m_flScaleEnd = 0.00012f * m_flSize * flVolume;
 		m_pFireSmoke[i]->m_flScaleTimeStart = Helper_GetTime();
-		m_pFireSmoke[i]->m_flScaleTimeEnd = Helper_GetTime() + 0.5;
+		m_pFireSmoke[i]->m_flScaleTimeEnd = Helper_GetTime() + 0.1;
 
 		m_pFireSmoke[i]->StartClientOnly();
 	}
