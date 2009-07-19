@@ -4113,30 +4113,33 @@ void CFFPlayer::StatusEffectsThink( void )
 	}
 
 	// check if the player needs a little health/armor (because they are a medic/engy)
-	if( ( ( GetClassSlot() == CLASS_MEDIC ) || ( GetClassSlot() == CLASS_ENGINEER ) ) &&
-		( gpGlobals->curtime > ( m_fLastHealTick + FFDEV_REGEN_FREQ ) ) )
-	{		
-		m_fLastHealTick = gpGlobals->curtime;
+	if ( IsAlive() ) // AfterShock: possible fix for medic crouch bug? Regen health the same tick you die?
+	{
+		if( ( ( GetClassSlot() == CLASS_MEDIC ) || ( GetClassSlot() == CLASS_ENGINEER ) ) &&
+			( gpGlobals->curtime > ( m_fLastHealTick + FFDEV_REGEN_FREQ ) ) )
+		{		
+			m_fLastHealTick = gpGlobals->curtime;
 
-		if( GetClassSlot() == CLASS_MEDIC )
-		{
-			// add the regen health
-			// Don't call CFFPlayer::TakeHealth as it will clear status effects
-			// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
-			if( BaseClass::TakeHealth( FFDEV_REGEN_HEALTH, DMG_GENERIC ) )			
-			//if( TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )
-			{				
-				// make a sound if we did
-				//EmitSound( "medkit.hit" );
+			if( GetClassSlot() == CLASS_MEDIC )
+			{
+				// add the regen health
+				// Don't call CFFPlayer::TakeHealth as it will clear status effects
+				// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
+				if( BaseClass::TakeHealth( FFDEV_REGEN_HEALTH, DMG_GENERIC ) )			
+				//if( TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )
+				{				
+					// make a sound if we did
+					//EmitSound( "medkit.hit" );
+				}
+
+				// Give te medic some cells to generate health packs with...!
+				GiveAmmo(5, AMMO_CELLS, true);
 			}
-
-			// Give te medic some cells to generate health packs with...!
-			GiveAmmo(5, AMMO_CELLS, true);
-		}
-		else if( GetClassSlot() == CLASS_ENGINEER )
-		{
-			// add the regen armor
-			m_iArmor.GetForModify() = clamp( m_iArmor + FFDEV_REGEN_ARMOR, 0, m_iMaxArmor );
+			else if( GetClassSlot() == CLASS_ENGINEER )
+			{
+				// add the regen armor
+				m_iArmor.GetForModify() = clamp( m_iArmor + FFDEV_REGEN_ARMOR, 0, m_iMaxArmor );
+			}
 		}
 	}
 
@@ -5515,43 +5518,49 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// get the maxdamage cvar 
 	// if their horizontal speed is less than max run speed then skipfunction
 
-	//Vector vecVelocity = pPlayer->GetAbsVelocity();
-	Vector vecVelocity = GetAbsVelocity();
-	Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-	float flHorizontalSpeed = vecLatVelocity.Length();
-	//float flMaxSpeed = pPlayer->MaxSpeed();
-	float flMaxSpeed = MaxSpeed();
-	//int DMGFORFULLSLOW = 100;
-
-	// dont slow on team damage or self damage, else we couldnt rocket jump or boost!
-	if ( !g_pGameRules->PlayerRelationship( this, ToFFPlayer( info.GetAttacker() ) ) == GR_TEAMMATE ) 
+	/*
+	if( inputInfo.GetInflictor() )
 	{
-		if (flHorizontalSpeed > flMaxSpeed)
+		CFFWeaponBase *pWeapon = dynamic_cast<CFFWeaponBase *>( inputInfo.GetInflictor() );
+		if( !pWeapon || !( pWeapon->GetWeaponID() == FF_WEAPON_DEPLOYSENTRYGUN ) ) // Don't allow buildables to slow the player!
 		{
-			// excess speed is the speed over the maxrunspeed 
-			// e.g. hit for 50 dmg, maxdmg is 100, speed is 1000, maxrun is 300
-			// so we want 50/100 = 0.5 * 1000-300 = 350, take that away from current speed = 650 speed after shot
-			float fLateral;
-			if (m_lastDamageAmount > FFDEV_DMGFORFULLSLOW) //
-			{
-				// just set their speed to max run speed
-				fLateral = flMaxSpeed / flHorizontalSpeed;
-			}
-			else
-			{
-				// new speed is current speed minus a fraction of the speed above the cap
-				fLateral = flHorizontalSpeed - ((flHorizontalSpeed - flMaxSpeed) * (m_lastDamageAmount / FFDEV_DMGFORFULLSLOW));
-				fLateral = fLateral / flHorizontalSpeed;
-				//flHorizontalSpeed = flHorizontalSpeed - (flHorizontalSpeed - flMaxSpeed) * (fTookDamge / DMGFORFULLSLOW)
-			}
-			// set player velocity
-			//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
-			SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z));
-						
-		}
-	}
-//
+		*/
+			//Vector vecVelocity = pPlayer->GetAbsVelocity();
+			Vector vecVelocity = GetAbsVelocity();
+			Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+			float flHorizontalSpeed = vecLatVelocity.Length();
+			//float flMaxSpeed = pPlayer->MaxSpeed();
+			float flMaxSpeed = MaxSpeed();
+			//int DMGFORFULLSLOW = 100;
 
+			// dont slow on team damage or self damage, else we couldnt rocket jump or boost!
+			if ( !g_pGameRules->PlayerRelationship( this, ToFFPlayer( info.GetAttacker() ) ) == GR_TEAMMATE ) 
+			{
+				if (flHorizontalSpeed > flMaxSpeed)
+				{
+					// excess speed is the speed over the maxrunspeed 
+					// e.g. hit for 50 dmg, maxdmg is 100, speed is 1000, maxrun is 300
+					// so we want 50/100 = 0.5 * 1000-300 = 350, take that away from current speed = 650 speed after shot
+					float fLateral;
+					if (m_lastDamageAmount > FFDEV_DMGFORFULLSLOW) //
+					{
+						// just set their speed to max run speed
+						fLateral = flMaxSpeed / flHorizontalSpeed;
+					}
+					else
+					{
+						// new speed is current speed minus a fraction of the speed above the cap
+						fLateral = flHorizontalSpeed - ((flHorizontalSpeed - flMaxSpeed) * (m_lastDamageAmount / FFDEV_DMGFORFULLSLOW));
+						fLateral = fLateral / flHorizontalSpeed;
+						//flHorizontalSpeed = flHorizontalSpeed - (flHorizontalSpeed - flMaxSpeed) * (fTookDamge / DMGFORFULLSLOW)
+					}
+					// set player velocity
+					//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
+					SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z));					
+				}
+			}
+		//}
+	//}
 
 
 	// add to the damage total for clients, which will be sent as a single
@@ -6131,7 +6140,7 @@ void CFFPlayer::UnGas( void )
 //-----------------------------------------------------------------------------
 // Purpose: Heal player above their maximum
 //-----------------------------------------------------------------------------
-int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
+int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth, bool healToFull)
 {
 	if (!edict() || m_takedamage < DAMAGE_YES)
 		return 0;
@@ -6142,7 +6151,7 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 
 	int iOriginalHP = m_iHealth;
 	// Also medpack boosts health to maximum + then carries on to 150%
-	if( m_iHealth < m_iMaxHealth )
+	if( ( m_iHealth < m_iMaxHealth ) && ( healToFull == true ) )
 		m_iHealth = m_iMaxHealth;
 	else
 		// Bug #0000467: Medic can't give over 100% health [just added in the "m_iHealth =" line...]
@@ -6180,8 +6189,8 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 		user.MakeReliable();
 
 		UserMessageBegin(user, "FFViewEffect");
-		WRITE_BYTE(FF_VIEWEFFECT_INFECTED);
-		WRITE_FLOAT(1.0f);
+			WRITE_BYTE(FF_VIEWEFFECT_INFECTED);
+			WRITE_FLOAT(1.0f);
 		MessageEnd();
 
 		// [TODO] A better sound

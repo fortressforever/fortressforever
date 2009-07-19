@@ -94,7 +94,7 @@ ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "
 #define OVERPRESSURE_EFFECT "FF_RingEffect"
 
 //0001279: Need convar for pipe det delay
-extern ConVar pipebomb_time_till_live;
+#define PIPE_DET_DELAY 0.55 // this is mirrored in ff_projectile_pipebomb.cpp 
 extern ConVar ai_debug_shoot_positions;
 
 void DispatchEffect(const char *pName, const CEffectData &data);
@@ -581,7 +581,7 @@ void CFFPlayer::ClassSpecificSkill()
 	{
 #ifdef GAME_DLL
 	case CLASS_DEMOMAN:
-		if( ( GetPipebombShotTime() + pipebomb_time_till_live.GetFloat() ) < gpGlobals->curtime )
+		if( ( GetPipebombShotTime() + PIPE_DET_DELAY ) < gpGlobals->curtime )
 			CFFProjectilePipebomb::DestroyAllPipes(this);
 		break;
 
