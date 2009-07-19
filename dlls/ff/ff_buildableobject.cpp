@@ -553,6 +553,31 @@ void CFFBuildableObject::RemoveQuietly( void )
 		m_pFlickerer = NULL;
 	}
 
+	// AfterShock: unlock anyone that was in the middle of charging this jump pad
+	if ( ( Classify() == CLASS_MANCANNON ) && ( m_bBuilt == true ) )
+	{
+		for( int j = 1; j <= gpGlobals->maxClients; j++ )
+		{
+			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( j ) );
+			if (pPlayer)
+			{
+				if ( pPlayer->m_BuildableBeingUsed == this )
+				{
+					pPlayer->UnlockPlayer();
+					pPlayer->m_flMancannonTimeStartCharge = 0.0f;
+					pPlayer->m_BuildableBeingUsed = NULL;
+
+					CSingleUserRecipientFilter user( pPlayer );
+					user.MakeReliable();
+					UserMessageBegin( user, "FF_BuildTimer" );
+						WRITE_SHORT( FF_BUILD_MANCANNON );
+						WRITE_FLOAT( 0.0f );
+					MessageEnd();
+				}
+			}
+		}
+	}
+
 	// Notify player to tell them they can build
 	// again and remove current owner
 	m_hOwner = NULL;
