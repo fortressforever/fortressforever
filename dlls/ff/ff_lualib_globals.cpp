@@ -164,7 +164,49 @@ namespace FFLib
 	{
 		CBroadcastRecipientFilter filter;
 		UserMessageBegin(filter, "GameMessage");
+			WRITE_BYTE(HUD_MESSAGE);
 			WRITE_STRING(szMessage);
+		MessageEnd();
+
+		Omnibot::omnibot_interface::Trigger(NULL,NULL,UTIL_VarArgs("broadcast_msg: %s", szMessage),"broadcast_msg");
+	}
+
+	void BroadcastMessage(const char* szMessage, float fDuration)
+	{
+		CBroadcastRecipientFilter filter;
+		UserMessageBegin(filter, "GameMessage");
+			WRITE_BYTE(HUD_MESSAGE_DURATION);
+			WRITE_STRING(szMessage);
+			WRITE_FLOAT(fDuration);
+		MessageEnd();
+
+		Omnibot::omnibot_interface::Trigger(NULL,NULL,UTIL_VarArgs("broadcast_msg: %s", szMessage),"broadcast_msg");
+	}
+
+	void BroadcastMessage(const char* szMessage, float fDuration, int iColorID)
+	{
+		CBroadcastRecipientFilter filter;
+		UserMessageBegin(filter, "GameMessage");
+			WRITE_BYTE(HUD_MESSAGE_COLOR);
+			WRITE_STRING(szMessage);
+			WRITE_FLOAT(fDuration);
+			WRITE_SHORT(iColorID);
+		MessageEnd();
+
+		Omnibot::omnibot_interface::Trigger(NULL,NULL,UTIL_VarArgs("broadcast_msg: %s", szMessage),"broadcast_msg");
+	}
+	
+
+	void BroadcastMessage(const char* szMessage, float fDuration, int iRed, int iGreen, int iBlue )
+	{
+		CBroadcastRecipientFilter filter;
+		UserMessageBegin(filter, "GameMessage");
+			WRITE_BYTE(HUD_MESSAGE_COLOR_CUSTOM);
+			WRITE_STRING(szMessage);
+			WRITE_FLOAT(fDuration);
+			WRITE_SHORT(iRed);
+			WRITE_SHORT(iGreen);
+			WRITE_SHORT(iBlue);
 		MessageEnd();
 
 		Omnibot::omnibot_interface::Trigger(NULL,NULL,UTIL_VarArgs("broadcast_msg: %s", szMessage),"broadcast_msg");
@@ -177,7 +219,51 @@ namespace FFLib
 
 		CSingleUserRecipientFilter filter(pPlayer);
 		UserMessageBegin(filter, "GameMessage");
+			WRITE_BYTE(HUD_MESSAGE);
 			WRITE_STRING(szMessage);
+		MessageEnd();
+	}
+
+	void SendPlayerMessage(CFFPlayer* pPlayer, const char* szMessage, float fDuration)
+	{
+		if(NULL == pPlayer)
+			return;
+
+		CSingleUserRecipientFilter filter(pPlayer);
+		UserMessageBegin(filter, "GameMessage");
+			WRITE_BYTE(HUD_MESSAGE_DURATION);
+			WRITE_STRING(szMessage);
+			WRITE_FLOAT(fDuration);
+		MessageEnd();
+	}
+
+	void SendPlayerMessage(CFFPlayer* pPlayer, const char* szMessage, float fDuration, int iColorID)
+	{
+		if(NULL == pPlayer)
+			return;
+
+		CSingleUserRecipientFilter filter(pPlayer);
+		UserMessageBegin(filter, "GameMessage");
+			WRITE_BYTE(HUD_MESSAGE_COLOR);
+			WRITE_STRING(szMessage);
+			WRITE_FLOAT(fDuration);
+			WRITE_SHORT(iColorID);
+		MessageEnd();
+	}
+
+	void SendPlayerMessage(CFFPlayer* pPlayer, const char* szMessage, float fDuration, int iRed, int iGreen, int iBlue)
+	{
+		if(NULL == pPlayer)
+			return;
+
+		CSingleUserRecipientFilter filter(pPlayer);
+		UserMessageBegin(filter, "GameMessage");
+			WRITE_BYTE(HUD_MESSAGE_COLOR_CUSTOM);
+			WRITE_STRING(szMessage);
+			WRITE_FLOAT(fDuration);
+			WRITE_SHORT(iRed);
+			WRITE_SHORT(iGreen);
+			WRITE_SHORT(iBlue);
 		MessageEnd();
 	}
 
@@ -1923,8 +2009,14 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
 		def("AreTeamsAllied",			(bool(*)(CTeam*, CTeam*))&FFLib::AreTeamsAllied),
 		def("AreTeamsAllied",			(bool(*)(int, int))&FFLib::AreTeamsAllied),
-		def("BroadCastMessage",			&FFLib::BroadcastMessage),
-		def("BroadCastMessageToPlayer",	&FFLib::SendPlayerMessage),
+		def("BroadCastMessage",			(void(*)(const char*))&FFLib::BroadcastMessage),
+		def("BroadCastMessage",			(void(*)(const char*, float))&FFLib::BroadcastMessage),
+		def("BroadCastMessage",			(void(*)(const char*, float, int))&FFLib::BroadcastMessage),
+		def("BroadCastMessage",			(void(*)(const char*, float, int, int, int))&FFLib::BroadcastMessage),
+		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*))&FFLib::SendPlayerMessage),
+		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*, float))&FFLib::SendPlayerMessage),
+		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*, float, int))&FFLib::SendPlayerMessage),
+		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*, float, int, int, int))&FFLib::SendPlayerMessage),
 		def("BroadCastSound",			&FFLib::BroadcastSound),
 		def("BroadCastSoundToPlayer",	&FFLib::SendPlayerSound),
 		def("CastToBeam",				&FFLib::CastToBeam),
