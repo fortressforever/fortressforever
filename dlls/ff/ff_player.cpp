@@ -123,9 +123,11 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 //ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
 #define FFDEV_OVERHEALTH_FREQ 3.0f
 
-ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED | FCVAR_CHEAT,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
+ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED ,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW ffdev_dmgforfullslow.GetFloat()
 
+ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_REPLICATED ,"When getting hit by a SG and player is moving above run speed, he gets slowed down in proportion to this damage");
+#define FFDEV_DMGFORFULLSLOW_SG ffdev_dmgforfullslow_sg.GetFloat()
 
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 #define JERKMULTI 0.0004f
@@ -5518,50 +5520,46 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// get their class max run speed
 	// get the maxdamage cvar 
 	// if their horizontal speed is less than max run speed then skipfunction
-
 	
 	if( inputInfo.GetInflictor() )
 	{
+		float damageForFullSlow;
+
 		CFFBuildableObject *pBuildable = dynamic_cast <CFFBuildableObject *> (info.GetInflictor());
-		if( pBuildable && ( pBuildable->Classify() == CLASS_SENTRYGUN ) ) // Don't allow buildables to slow the player!
+		if( pBuildable && ( pBuildable->Classify() == CLASS_SENTRYGUN ) ) // Buildables e.g. SGs use a different slow value?
 		{
-			// do nothing
+			damageForFullSlow = FFDEV_DMGFORFULLSLOW_SG;
 		}
 		else
 		{
-			//Vector vecVelocity = pPlayer->GetAbsVelocity();
-			Vector vecVelocity = GetAbsVelocity();
-			Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-			float flHorizontalSpeed = vecLatVelocity.Length();
-			//float flMaxSpeed = pPlayer->MaxSpeed();
-			float flMaxSpeed = MaxSpeed();
-			//int DMGFORFULLSLOW = 100;
+			damageForFullSlow = FFDEV_DMGFORFULLSLOW;
+		}
+		Vector vecVelocity = GetAbsVelocity();
+		Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+		float flHorizontalSpeed = vecLatVelocity.Length();
+		float flMaxSpeed = MaxSpeed();
 
-			// dont slow on team damage or self damage, else we couldnt rocket jump or boost!
-			if ( !g_pGameRules->PlayerRelationship( this, ToFFPlayer( info.GetAttacker() ) ) == GR_TEAMMATE ) 
+		// dont slow on team damage or self damage, else we couldnt rocket jump or boost!
+		if ( !g_pGameRules->PlayerRelationship( this, ToFFPlayer( info.GetAttacker() ) ) == GR_TEAMMATE ) 
+		{
+			if (flHorizontalSpeed > flMaxSpeed)
 			{
-				if (flHorizontalSpeed > flMaxSpeed)
+				// excess speed is the speed over the maxrunspeed 
+				// e.g. hit for 50 dmg, maxdmg is 100, speed is 1000, maxrun is 300
+				// so we want 50/100 = 0.5 * 1000-300 = 350, take that away from current speed = 650 speed after shot
+				float fLateral;
+				if (m_lastDamageAmount > damageForFullSlow) //
 				{
-					// excess speed is the speed over the maxrunspeed 
-					// e.g. hit for 50 dmg, maxdmg is 100, speed is 1000, maxrun is 300
-					// so we want 50/100 = 0.5 * 1000-300 = 350, take that away from current speed = 650 speed after shot
-					float fLateral;
-					if (m_lastDamageAmount > FFDEV_DMGFORFULLSLOW) //
-					{
-						// just set their speed to max run speed
-						fLateral = flMaxSpeed / flHorizontalSpeed;
-					}
-					else
-					{
-						// new speed is current speed minus a fraction of the speed above the cap
-						fLateral = flHorizontalSpeed - ((flHorizontalSpeed - flMaxSpeed) * (m_lastDamageAmount / FFDEV_DMGFORFULLSLOW));
-						fLateral = fLateral / flHorizontalSpeed;
-						//flHorizontalSpeed = flHorizontalSpeed - (flHorizontalSpeed - flMaxSpeed) * (fTookDamge / DMGFORFULLSLOW)
-					}
-					// set player velocity
-					//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z * fVertical));
-					SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z));					
+					// just set their speed to max run speed
+					fLateral = flMaxSpeed / flHorizontalSpeed;
 				}
+				else
+				{
+					// new speed is current speed minus a fraction of the speed above the cap
+					fLateral = flHorizontalSpeed - ((flHorizontalSpeed - flMaxSpeed) * (m_lastDamageAmount / damageForFullSlow));
+					fLateral = fLateral / flHorizontalSpeed;
+				}
+				SetAbsVelocity(Vector(vecVelocity.x * fLateral, vecVelocity.y * fLateral, vecVelocity.z));					
 			}
 		}
 	}
