@@ -94,6 +94,26 @@ enum LuaEffectType
 	LUA_EF_MAX_FLAG
 };
 
+/////////////////////////////////////////////////////////////////////////////
+// Purpose: Colors in lua
+/////////////////////////////////////////////////////////////////////////////
+enum LuaColors
+{
+	LUA_COLOR_DEFAULT = 0,
+	LUA_COLOR_BLUE,
+	LUA_COLOR_RED,
+	LUA_COLOR_YELLOW,
+	LUA_COLOR_GREEN,
+	LUA_COLOR_WHITE,
+	LUA_COLOR_BLACK,
+	LUA_COLOR_ORANGE,
+	LUA_COLOR_PINK,
+	LUA_COLOR_PURPLE,
+	LUA_COLOR_GREY,
+
+	LUA_COLOR_INVALID,
+};
+
 struct SpyDisguiseWeapon
 {
 	char szWeaponClassName[6][MAX_WEAPON_STRING];

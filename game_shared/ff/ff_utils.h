@@ -75,6 +75,14 @@ enum HudElementType_t
 	HUD_TIMER_ALIGNXY,
 };
 
+enum HudMessageType_t
+{
+	HUD_MESSAGE = 0,
+	HUD_MESSAGE_DURATION,
+	HUD_MESSAGE_COLOR,
+	HUD_MESSAGE_COLOR_CUSTOM,
+};
+
 int Class_StringToInt( const char *szClassName );
 const char *Class_IntToString( int iClassIndex );
 const char *Class_IntToResourceString( int iClassIndex );

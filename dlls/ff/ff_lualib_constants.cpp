@@ -190,6 +190,23 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kRemove",			LUA_HUD_ITEM_REMOVE)
 			],
 
+		class_<CFFEntity_HudColors>("Color")
+			.enum_("HudColors")
+			[
+				value("kDefault",			LUA_COLOR_DEFAULT),
+				value("kBlue",				LUA_COLOR_BLUE),
+				value("kRed",				LUA_COLOR_RED),
+				value("kYellow",			LUA_COLOR_YELLOW),
+				value("kGreen",				LUA_COLOR_GREEN),
+				value("kWhite",				LUA_COLOR_WHITE),
+				value("kBlack",				LUA_COLOR_BLACK),
+				value("kOrange",			LUA_COLOR_ORANGE),
+				value("kPink",				LUA_COLOR_PINK),
+				value("kPurple",			LUA_COLOR_PURPLE),
+				value("kGrey",				LUA_COLOR_GREY),
+				value("kInvalid",			LUA_COLOR_INVALID)
+			],
+
 		class_<CFFEntity_AllowFlags>("AllowFlags")
 			.enum_("AllowFlags")
 			[
@@ -230,27 +247,27 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kChase",		(int) OBS_MODE_CHASE),
 				value("kRoaming",	(int) OBS_MODE_ROAMING)
 			],
-			class_<CFFRenderFX>("RenderFx")
-				.enum_("RenderFx")
-				[
-					value("kPulseSlow",		(int) kRenderFxPulseSlow),
-					value("kPulseFast",		(int) kRenderFxPulseFast),
-					value("kPulseSlowWide",	(int) kRenderFxPulseSlowWide),				
-					value("kPulseFastWide",	(int) kRenderFxPulseFastWide),
-					value("kFadeSlow",		(int) kRenderFxFadeSlow),
-					value("kFadeFast",		(int) kRenderFxFadeFast),
-					value("kSolidSlow",		(int) kRenderFxSolidSlow),
-					value("kSolidFast",		(int) kRenderFxSolidFast),
-					value("kStrobeSlow",	(int) kRenderFxStrobeSlow),				
-					value("kStrobeFast",	(int) kRenderFxStrobeFast),
-					value("kStrobeFaster",	(int) kRenderFxStrobeFaster),
-					value("kFlickerSlow",	(int) kRenderFxFlickerSlow),
-					value("kFlickerFast",	(int) kRenderFxFlickerFast),
-					value("kNoDissipation",	(int) kRenderFxNoDissipation),
-					value("kDistort",		(int) kRenderFxDistort),				
-					value("kHologram",		(int) kRenderFxHologram),
-					value("kExplode",		(int) kRenderFxExplode),
-					value("kGlowShell",		(int) kRenderFxGlowShell)
-				]
+		class_<CFFRenderFX>("RenderFx")
+			.enum_("RenderFx")
+			[
+				value("kPulseSlow",		(int) kRenderFxPulseSlow),
+				value("kPulseFast",		(int) kRenderFxPulseFast),
+				value("kPulseSlowWide",	(int) kRenderFxPulseSlowWide),				
+				value("kPulseFastWide",	(int) kRenderFxPulseFastWide),
+				value("kFadeSlow",		(int) kRenderFxFadeSlow),
+				value("kFadeFast",		(int) kRenderFxFadeFast),
+				value("kSolidSlow",		(int) kRenderFxSolidSlow),
+				value("kSolidFast",		(int) kRenderFxSolidFast),
+				value("kStrobeSlow",	(int) kRenderFxStrobeSlow),				
+				value("kStrobeFast",	(int) kRenderFxStrobeFast),
+				value("kStrobeFaster",	(int) kRenderFxStrobeFaster),
+				value("kFlickerSlow",	(int) kRenderFxFlickerSlow),
+				value("kFlickerFast",	(int) kRenderFxFlickerFast),
+				value("kNoDissipation",	(int) kRenderFxNoDissipation),
+				value("kDistort",		(int) kRenderFxDistort),				
+				value("kHologram",		(int) kRenderFxHologram),
+				value("kExplode",		(int) kRenderFxExplode),
+				value("kGlowShell",		(int) kRenderFxGlowShell)
+			]
 	];
 };

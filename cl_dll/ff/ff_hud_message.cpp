@@ -9,6 +9,8 @@
 #include "hud_macros.h"
 #include "iclientmode.h"
 #include "view.h"
+#include "ff_shareddefs.h"
+#include "ff_utils.h"
 
 using namespace vgui;
 
@@ -19,16 +21,21 @@ using namespace vgui;
 #include <vgui/ILocalize.h>
 
 extern ConVar cl_drawhud;
-ConVar hud_messages("hud_messages", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Toggle visible FF messages on the HUD.");
+ConVar hud_messages("hud_messages", "2", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Number of FF messages shown on the HUD at a time (set to 0 to disable messages)");
+
+extern enum LuaColors;
+
+#define DEFAULT_MESSAGE_DURATION 5.0f
 
 // Contents of each entry in our list of messages
 struct MessageItem 
 {
-	CHudTexture *pIcon;		// Icon texture reference
-	wchar_t		pText[256];	// Unicode text buffer
+	CHudTexture *pIcon;			// Icon texture reference
+	wchar_t		pText[256];		// Unicode text buffer
+	Color		pColor;			// Color of the message
 
 	float		flStartTime;	// When the message was recevied
-	float		flDuration;	// Duration of the message
+	float		flDuration;		// Duration of the message
 };
 
 //-----------------------------------------------------------------------------
@@ -57,13 +64,12 @@ public:
 	void	Paint( void );
 	
 	void RetireExpiredMessages( void );
+	Color	GetColor( int );
 	
 	// Callback function for the "GameMessage" user message
 	void	MsgFunc_GameMessage( bf_read &msg );
 
 private:
-
-	float m_flMaxMessages;
 
 	CUtlVector<MessageItem> m_Messages;
 
@@ -79,7 +85,6 @@ void CHudGameMessage::VidInit( void )
 {
 	// Store off a reference to our icon
 	m_Messages.Purge();
-	m_flMaxMessages = 4.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -95,20 +100,26 @@ void CHudGameMessage::Init( void )
 //-----------------------------------------------------------------------------
 void CHudGameMessage::MsgFunc_GameMessage( bf_read &msg )
 {
+	
+	byte wType = msg.ReadByte();
+
+	if (wType < 0)
+		return;
+
 	// Read in our string
 	char szString[256];
 	msg.ReadString( szString, sizeof(szString) );
-	
+
 	// Do we have too many death messages in the queue?
 	if ( m_Messages.Count() > 0 &&
-		m_Messages.Count() >= (int)m_flMaxMessages )
+		m_Messages.Count() >= hud_messages.GetInt() )
 	{
 		// Remove the oldest one in the queue, which will always be the first
 		m_Messages.Remove(0);
 	}
 
 	MessageItem messageMsg;
-
+	
 	// Convert it to localize friendly unicode
 	wchar_t *pszTemp = vgui::localize()->Find( szString );
 	if( pszTemp )
@@ -118,12 +129,59 @@ void CHudGameMessage::MsgFunc_GameMessage( bf_read &msg )
 	
 	if (m_Messages.Count() > 0)
 	{
-		if (Q_wcscmp( messageMsg.pText, m_Messages[m_Messages.Count() - 1].pText) == 0)
+		if (Q_wcscmp( messageMsg.pText, m_Messages[m_Messages.Count() - 1].pText ) == 0)
 			return;
 	}
 
+	switch (wType)
+	{
+	case HUD_MESSAGE:
+		{
+			messageMsg.flDuration = DEFAULT_MESSAGE_DURATION;
+			messageMsg.pColor = Color(255, 255, 255, 255);
+
+			break;
+		}
+
+	case HUD_MESSAGE_DURATION:
+		{
+			float t_flDuration = msg.ReadFloat(); // fDuration
+			if (t_flDuration > 0)
+				messageMsg.flDuration = t_flDuration; 
+			else
+				messageMsg.flDuration = DEFAULT_MESSAGE_DURATION;
+			messageMsg.pColor = Color(255, 255, 255, 255);
+
+			break;
+		}
+
+	case HUD_MESSAGE_COLOR:
+		{
+			float t_flDuration = msg.ReadFloat(); // fDuration
+			if (t_flDuration > 0)
+				messageMsg.flDuration = t_flDuration; 
+			else
+				messageMsg.flDuration = DEFAULT_MESSAGE_DURATION;
+			messageMsg.pColor = GetColor( msg.ReadShort() ); // iColorID
+
+			break;
+		}
+
+	case HUD_MESSAGE_COLOR_CUSTOM:
+		{
+			float t_flDuration = msg.ReadFloat(); // fDuration
+			if (t_flDuration > 0)
+				messageMsg.flDuration = t_flDuration; 
+			else
+				messageMsg.flDuration = DEFAULT_MESSAGE_DURATION;
+			messageMsg.pColor = Color( msg.ReadShort(), msg.ReadShort(), msg.ReadShort() ); // iRed, iGreen, iBlue
+
+			break;
+		}
+	}
+
+
 	messageMsg.flStartTime = gpGlobals->curtime;
-	messageMsg.flDuration = 5.0f;
 	messageMsg.pIcon = gHUD.GetIcon( "message_icon" );
 	
 	m_Messages.AddToTail( messageMsg );
@@ -163,7 +221,7 @@ void CHudGameMessage::Paint( void )
 
 		// Draw our text
 		surface()->DrawSetTextFont( hFont ); // set the font	
-		surface()->DrawSetTextColor( 255, 255, 255, flAlpha ); // white
+		surface()->DrawSetTextColor( m_Messages[i].pColor.r(), m_Messages[i].pColor.g(), m_Messages[i].pColor.b(), flAlpha ); // custom color
 		
 		int y = (surface()->GetFontTall( hFont ) + 5) * i;
 
@@ -198,5 +256,45 @@ void CHudGameMessage::RetireExpiredMessages( void )
 		{
 			m_Messages.Remove(i);
 		}
+	}
+}
+
+Color CHudGameMessage::GetColor( int iColorID )
+{
+	switch (iColorID)
+	{
+		case LUA_COLOR_BLUE:
+			return COLOR_BLUE;
+			break;
+		case LUA_COLOR_RED:
+			return COLOR_RED;
+			break;
+		case LUA_COLOR_YELLOW:
+			return COLOR_YELLOW;
+			break;
+		case LUA_COLOR_GREEN:
+			return COLOR_GREEN;
+			break;
+		case LUA_COLOR_BLACK:
+			return Color( 0,0,0 );
+			break;
+		case LUA_COLOR_ORANGE:
+			return Color( 255,161,66 );
+			break;
+		case LUA_COLOR_PINK:
+			return Color( 255,66,161 );
+			break;
+		case LUA_COLOR_PURPLE:
+			return Color( 161,66,255 );
+			break;
+		case LUA_COLOR_GREY:
+			return COLOR_GREY;
+			break;
+		case LUA_COLOR_DEFAULT:
+		case LUA_COLOR_WHITE:
+		case LUA_COLOR_INVALID:
+		default:
+			return Color( 255,255,255 );
+			break;
 	}
 }
