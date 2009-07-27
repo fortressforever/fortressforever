@@ -762,6 +762,8 @@ public:
 	float	m_flPingTime;
 	float	m_flNextActivateSoundTime;
 	float	m_flAcknowledgeSabotageTime;
+	float	m_flStartLockTime;
+	float	m_flEndLockTime;
 
 	int		m_iEyeAttachment;
 	int		m_iMuzzleAttachment;
