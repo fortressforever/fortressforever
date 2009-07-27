@@ -70,10 +70,10 @@
 //#define SG_DEBUG sg_debug.GetBool()
 //ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 #define SG_USEPVS false // sg_usepvs.GetBool()
-//ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "18.0", FCVAR_REPLICATED );
-#define SG_TURNSPEED 18.0f // sg_turnspeed.GetFloat()
-//ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0", FCVAR_REPLICATED );
-#define SG_PITCHSPEED 10.0f // sg_pitchspeed.GetFloat()
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "18.0", FCVAR_REPLICATED );
+#define SG_TURNSPEED  sg_turnspeed.GetFloat()
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "12.0", FCVAR_REPLICATED );
+#define SG_PITCHSPEED sg_pitchspeed.GetFloat()
 //ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 #define SG_RANGE 1050.0f // sg_range.GetFloat()
 //ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_REPLICATED );
@@ -94,24 +94,24 @@
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f  // sg_explosiondamage_base.GetFloat()
-//ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "2.0", FCVAR_REPLICATED, "SG bullet push force");
-#define SG_BULLETPUSH 2.0f // ffdev_sg_bulletpush.GetFloat()
+ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "3.0", FCVAR_REPLICATED, "SG bullet push force");
+#define SG_BULLETPUSH ffdev_sg_bulletpush.GetFloat()
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
 //ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "4.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL1 4.0f // ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
+#define SG_GROUNDPUSH_MULTIPLIER_LVL1 5.0f // ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
 //ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "4.0", FCVAR_REPLICATED, "SG level 2 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL2 4.0f // ffdev_sg_groundpush_multiplier_lvl2.GetFloat()
+#define SG_GROUNDPUSH_MULTIPLIER_LVL2 5.0f // ffdev_sg_groundpush_multiplier_lvl2.GetFloat()
 //ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_REPLICATED, "SG level 3 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL3 4.0f // ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
+#define SG_GROUNDPUSH_MULTIPLIER_LVL3 5.0f // ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
 //ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "12", FCVAR_REPLICATED, "SG bullet damage");
 #define SG_BULLETDAMAGE 12 // ffdev_sg_bulletdamage.GetInt()
 
-//ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.125", FCVAR_REPLICATED, "Level 1 SG time between shots");
-#define SG_SHOTCYCLETIME_LVL1 0.125f // sg_shotcycletime_lvl1.GetFloat()
-//ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.050", FCVAR_REPLICATED, "Level 2 SG time between shots");
-#define SG_SHOTCYCLETIME_LVL2 0.050f // sg_shotcycletime_lvl2.GetFloat()
-//ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.050", FCVAR_REPLICATED, "Level 3 SG time between shots");
-#define SG_SHOTCYCLETIME_LVL3 0.050f // sg_shotcycletime_lvl3.GetFloat()
+ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.125", FCVAR_REPLICATED, "Level 1 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL1 sg_shotcycletime_lvl1.GetFloat()
+ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.050", FCVAR_REPLICATED, "Level 2 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL2 sg_shotcycletime_lvl2.GetFloat()
+ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.050", FCVAR_REPLICATED, "Level 3 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL3 sg_shotcycletime_lvl3.GetFloat()
 
 //ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
 #define SG_HEALTH_LEVEL1 145 // sg_health_lvl1.GetInt()
@@ -120,12 +120,24 @@
 //ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
 #define SG_HEALTH_LEVEL3 200 // sg_health_lvl3.GetInt()
 
-//ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.50", FCVAR_REPLICATED, "Level 1 SG lock on time");
-#define SG_LOCKONTIME_LVL1 0.50f // sg_lockontime_lvl1.GetFloat()
-//ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.50", FCVAR_REPLICATED, "Level 2 SG lock on time");
-#define SG_LOCKONTIME_LVL2 0.50f // sg_lockontime_lvl2.GetFloat()
-//ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.50", FCVAR_REPLICATED, "Level 3 SG lock on time");
-#define SG_LOCKONTIME_LVL3 0.50f // sg_lockontime_lvl3.GetFloat()
+ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.10", FCVAR_REPLICATED, "Level 1 SG lock on time");
+#define SG_LOCKONTIME_LVL1 sg_lockontime_lvl1.GetFloat()
+ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.10", FCVAR_REPLICATED, "Level 2 SG lock on time");
+#define SG_LOCKONTIME_LVL2 sg_lockontime_lvl2.GetFloat()
+ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.10", FCVAR_REPLICATED, "Level 3 SG lock on time");
+#define SG_LOCKONTIME_LVL3 sg_lockontime_lvl3.GetFloat()
+
+ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
+#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
+
+ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.50", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
+#define SG_TIMETOREACHFULLTURNSPEED sg_timetoreachfullturnspeed.GetFloat()
+
+ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
+#define SG_RETURNTOIDLETIME sg_returntoidletime.GetFloat()
+
+ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.0", FCVAR_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
+#define SG_TURNSPEED_AFTERLOCK sg_returntoidlespeed.GetFloat()
 
 //ConVar sg_empdmg_base("ffdev_sg_empdmg_base", "100", FCVAR_REPLICATED, "Base damage a sentry takes from an emp.");
 #define SG_EMPDMG_BASE 100.0f // sg_empdmg_base.GetFloat()
@@ -212,6 +224,8 @@ CFFSentryGun::CFFSentryGun()
 	m_flPingTime = 0;
 	m_flNextActivateSoundTime = 0;
 	m_flAcknowledgeSabotageTime = 0.0f;
+	m_flStartLockTime = 0.0f;
+	m_flEndLockTime = 0.0f;
 	m_flNextShell = 0;
 	m_flShotAccumulator = 0;
 	m_flNextRocket = 0;
@@ -529,6 +543,11 @@ void CFFSentryGun::OnActiveThink( void )
 
 	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMid, false ); // false: not 'noisey', so no random z added on
 
+	QAngle vecAngles = GetEnemy()->EyeAngles();
+	Vector vecForward;
+	AngleVectors( vecAngles, &vecForward );
+
+	vecMidEnemy -= vecForward * SG_LAGBEHINDMUL;
 	// Update our goal directions
 	Vector vecDirToEnemy = vecMidEnemy - vecMid;
 
@@ -823,9 +842,23 @@ float CFFSentryGun::MaxYawSpeed( void ) const
 	VPROF_BUDGET( "CFFSentryGun::MaxYawSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if( GetEnemy() )
-		return SG_TURNSPEED;
-		
-	return 1.0f;
+	{
+		float prop;
+		if ( ( gpGlobals->curtime - m_flStartLockTime ) >= SG_TIMETOREACHFULLTURNSPEED )
+		{
+			prop = 1.0f;
+		}
+		else
+			prop = ( gpGlobals->curtime - m_flStartLockTime ) / SG_TIMETOREACHFULLTURNSPEED;
+
+		return SG_TURNSPEED * prop;
+	}
+	else if ( m_flEndLockTime > ( gpGlobals->curtime - SG_RETURNTOIDLETIME ) ) // just lost my target, so i'm gonna stay focused for a sec in case he reappears
+	{
+		return SG_TURNSPEED_AFTERLOCK; // slower than scan speed
+	}
+	else
+		return 1.0f; // Scan speed
 }
 
 //-----------------------------------------------------------------------------
@@ -836,9 +869,24 @@ float CFFSentryGun::MaxPitchSpeed( void ) const
 	VPROF_BUDGET( "CFFSentryGun::MaxPitchSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if( GetEnemy() )
-		return SG_PITCHSPEED;
+	{
+		float prop;
+		if ( ( gpGlobals->curtime - m_flStartLockTime ) >= SG_TIMETOREACHFULLTURNSPEED )
+		{
+			prop = 1.0f;
+		}
+		else
+			prop = ( gpGlobals->curtime - m_flStartLockTime ) / SG_TIMETOREACHFULLTURNSPEED;
 
-	return 1.0f;
+		return SG_PITCHSPEED * prop;
+	}
+	else if ( m_flEndLockTime > ( gpGlobals->curtime - SG_RETURNTOIDLETIME ) ) // just lost my target, so i'm gonna stay focused for a sec in case he reappears
+	{
+		return SG_TURNSPEED_AFTERLOCK; // slower than scan speed
+	}
+	else
+		return 1.0f; // Scan speed
+
 }
 
 //-----------------------------------------------------------------------------
@@ -1144,6 +1192,8 @@ void CFFSentryGun::SpinUp( void )
 {
 	VPROF_BUDGET( "CFFSentryGun::SpinUp", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
+	m_flStartLockTime = gpGlobals->curtime;
+
 	EmitSound("Sentry.Spot");
 }
 
@@ -1153,6 +1203,8 @@ void CFFSentryGun::SpinUp( void )
 void CFFSentryGun::SpinDown( void ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::SpinDown", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	m_flEndLockTime = gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
