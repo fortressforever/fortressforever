@@ -6843,9 +6843,11 @@ void CFFPlayer::MoveTowardsMapGuide()
 		// We reached the end
 		else
 		{
+			/* // Causing problems with SourceTV
 			// Show menu again if we are spectator
 			if (GetTeamNumber() == TEAM_SPECTATOR)
 				ShowViewPortPanel(PANEL_MAPGUIDE, true);
+			*/
 
 			// Start looping again
 			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("overview"));
