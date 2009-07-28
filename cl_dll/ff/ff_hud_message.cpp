@@ -174,7 +174,10 @@ void CHudGameMessage::MsgFunc_GameMessage( bf_read &msg )
 				messageMsg.flDuration = t_flDuration; 
 			else
 				messageMsg.flDuration = DEFAULT_MESSAGE_DURATION;
-			messageMsg.pColor = Color( msg.ReadShort(), msg.ReadShort(), msg.ReadShort() ); // iRed, iGreen, iBlue
+			int r = msg.ReadShort(); // r
+			int g = msg.ReadShort(); // g
+			int b = msg.ReadShort(); // b
+			messageMsg.pColor = Color( r, g, b );
 
 			break;
 		}

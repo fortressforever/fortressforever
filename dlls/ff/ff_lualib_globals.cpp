@@ -197,16 +197,24 @@ namespace FFLib
 	}
 	
 
-	void BroadcastMessage(const char* szMessage, float fDuration, int iRed, int iGreen, int iBlue )
+	void BroadcastMessage(const char* szMessage, float fDuration, const char* szColor )
 	{
+		int r, g, b;
+		if(sscanf( szColor, "%i %i %i", &r, &g, &b ) != 3)
+			r=g=b=255;
+		
+		r = clamp(r,0,255);
+		g = clamp(g,0,255);
+		b = clamp(b,0,255);
+
 		CBroadcastRecipientFilter filter;
 		UserMessageBegin(filter, "GameMessage");
 			WRITE_BYTE(HUD_MESSAGE_COLOR_CUSTOM);
 			WRITE_STRING(szMessage);
 			WRITE_FLOAT(fDuration);
-			WRITE_SHORT(iRed);
-			WRITE_SHORT(iGreen);
-			WRITE_SHORT(iBlue);
+			WRITE_SHORT(r);
+			WRITE_SHORT(g);
+			WRITE_SHORT(b);
 		MessageEnd();
 
 		Omnibot::omnibot_interface::Trigger(NULL,NULL,UTIL_VarArgs("broadcast_msg: %s", szMessage),"broadcast_msg");
@@ -251,19 +259,27 @@ namespace FFLib
 		MessageEnd();
 	}
 
-	void SendPlayerMessage(CFFPlayer* pPlayer, const char* szMessage, float fDuration, int iRed, int iGreen, int iBlue)
+	void SendPlayerMessage(CFFPlayer* pPlayer, const char* szMessage, float fDuration, const char* szColor)
 	{
 		if(NULL == pPlayer)
 			return;
+		
+		int r, g, b;
+		if(sscanf( szColor, "%i %i %i", &r, &g, &b ) != 3)
+			r=g=b=255;
+		
+		r = clamp(r,0,255);
+		g = clamp(g,0,255);
+		b = clamp(b,0,255);
 
 		CSingleUserRecipientFilter filter(pPlayer);
 		UserMessageBegin(filter, "GameMessage");
 			WRITE_BYTE(HUD_MESSAGE_COLOR_CUSTOM);
 			WRITE_STRING(szMessage);
 			WRITE_FLOAT(fDuration);
-			WRITE_SHORT(iRed);
-			WRITE_SHORT(iGreen);
-			WRITE_SHORT(iBlue);
+			WRITE_SHORT(r);
+			WRITE_SHORT(g);
+			WRITE_SHORT(b);
 		MessageEnd();
 	}
 
@@ -764,6 +780,175 @@ namespace FFLib
 				SendPlayerMessage(pTestPlayer, otherMsg);
 		}
 	}
+	
+	void SmartMessage(CBaseEntity *pEntity, const char* playerMsg, const char* teamMsg, const char* otherMsg, int iPlayerMsgColor, int iTeamMsgColor, int iOtherMsgColor)
+	{
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
+		if(NULL == pPlayer)
+			return;
+
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pTestPlayer )
+				continue;
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerMessage(pTestPlayer, playerMsg, 0.0f, iPlayerMsgColor );
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerMessage(pTestPlayer, teamMsg, 0.0f, iTeamMsgColor );
+
+			else
+				SendPlayerMessage(pTestPlayer, otherMsg, 0.0f, iOtherMsgColor );
+		}
+	}
+	
+	void SmartMessage(CBaseEntity *pEntity, const char* playerMsg, const char* teamMsg, const char* otherMsg, const char* playerMsgColor, const char* teamMsgColor, const char* otherMsgColor)
+	{
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
+		if(NULL == pPlayer)
+			return;
+
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pTestPlayer )
+				continue;
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerMessage(pTestPlayer, playerMsg, 0.0f, playerMsgColor );
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerMessage(pTestPlayer, teamMsg, 0.0f, teamMsgColor );
+
+			else
+				SendPlayerMessage(pTestPlayer, otherMsg, 0.0f, otherMsgColor );
+		}
+	}
+	
+	void SmartMessage(CBaseEntity *pEntity, const char* playerMsg, const char* teamMsg, const char* otherMsg, int playerMsgColor, const char* teamMsgColor, const char* otherMsgColor)
+	{
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
+		if(NULL == pPlayer)
+			return;
+
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pTestPlayer )
+				continue;
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerMessage(pTestPlayer, playerMsg, 0.0f, playerMsgColor );
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerMessage(pTestPlayer, teamMsg, 0.0f, teamMsgColor );
+
+			else
+				SendPlayerMessage(pTestPlayer, otherMsg, 0.0f, otherMsgColor );
+		}
+	}
+	
+	void SmartMessage(CBaseEntity *pEntity, const char* playerMsg, const char* teamMsg, const char* otherMsg, int playerMsgColor, int teamMsgColor, const char* otherMsgColor)
+	{
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
+		if(NULL == pPlayer)
+			return;
+
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pTestPlayer )
+				continue;
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerMessage(pTestPlayer, playerMsg, 0.0f, playerMsgColor );
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerMessage(pTestPlayer, teamMsg, 0.0f, teamMsgColor );
+
+			else
+				SendPlayerMessage(pTestPlayer, otherMsg, 0.0f, otherMsgColor );
+		}
+	}
+	
+	void SmartMessage(CBaseEntity *pEntity, const char* playerMsg, const char* teamMsg, const char* otherMsg, int playerMsgColor, const char* teamMsgColor, int otherMsgColor)
+	{
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
+		if(NULL == pPlayer)
+			return;
+
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pTestPlayer )
+				continue;
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerMessage(pTestPlayer, playerMsg, 0.0f, playerMsgColor );
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerMessage(pTestPlayer, teamMsg, 0.0f, teamMsgColor );
+
+			else
+				SendPlayerMessage(pTestPlayer, otherMsg, 0.0f, otherMsgColor );
+		}
+	}
+	
+	void SmartMessage(CBaseEntity *pEntity, const char* playerMsg, const char* teamMsg, const char* otherMsg, const char* playerMsgColor, int teamMsgColor, const char* otherMsgColor)
+	{
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
+		if(NULL == pPlayer)
+			return;
+
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pTestPlayer )
+				continue;
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerMessage(pTestPlayer, playerMsg, 0.0f, playerMsgColor );
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerMessage(pTestPlayer, teamMsg, 0.0f, teamMsgColor );
+
+			else
+				SendPlayerMessage(pTestPlayer, otherMsg, 0.0f, otherMsgColor );
+		}
+	}
+	
+	
+	void SmartMessage(CBaseEntity *pEntity, const char* playerMsg, const char* teamMsg, const char* otherMsg, const char* playerMsgColor, int teamMsgColor, int otherMsgColor)
+	{
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
+		if(NULL == pPlayer)
+			return;
+
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pTestPlayer )
+				continue;
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerMessage(pTestPlayer, playerMsg, 0.0f, playerMsgColor );
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerMessage(pTestPlayer, teamMsg, 0.0f, teamMsgColor );
+
+			else
+				SendPlayerMessage(pTestPlayer, otherMsg, 0.0f, otherMsgColor );
+		}
+	}
 
 	void SmartSound(CBaseEntity *pEntity, const char* playerSound, const char* teamSound, const char* otherSound)
 	{
@@ -837,6 +1022,98 @@ namespace FFLib
 				SendPlayerMessage(pPlayer, teamMsg);
 			else
 				SendPlayerMessage(pPlayer, otherMsg);
+		}
+	}
+
+	void SmartTeamMessage(CFFTeam *pTeam, const char* teamMsg, const char* otherMsg, int iTeamMsgColor, int iOtherMsgColor)
+	{
+		// get team
+		//CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL == pTeam)
+			return;
+
+		// set the appropriate message to each player
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			if(pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber())
+				SendPlayerMessage(pPlayer, teamMsg, 0.0f, iTeamMsgColor);
+			else
+				SendPlayerMessage(pPlayer, otherMsg, 0.0f, iOtherMsgColor);
+		}
+	}
+
+	void SmartTeamMessage(CFFTeam *pTeam, const char* teamMsg, const char* otherMsg, const char* teamMsgColor, const char* otherMsgColor)
+	{
+		// get team
+		//CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL == pTeam)
+			return;
+
+		// set the appropriate message to each player
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			if(pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber())
+				SendPlayerMessage(pPlayer, teamMsg, 0.0f, teamMsgColor);
+			else
+				SendPlayerMessage(pPlayer, otherMsg, 0.0f, otherMsgColor);
+		}
+	}
+	
+	void SmartTeamMessage(CFFTeam *pTeam, const char* teamMsg, const char* otherMsg, int teamMsgColor, const char* otherMsgColor)
+	{
+		// get team
+		//CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL == pTeam)
+			return;
+
+		// set the appropriate message to each player
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			if(pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber())
+				SendPlayerMessage(pPlayer, teamMsg, 0.0f, teamMsgColor);
+			else
+				SendPlayerMessage(pPlayer, otherMsg, 0.0f, otherMsgColor);
+		}
+	}
+	
+	void SmartTeamMessage(CFFTeam *pTeam, const char* teamMsg, const char* otherMsg, const char* teamMsgColor, int otherMsgColor)
+	{
+		// get team
+		//CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL == pTeam)
+			return;
+
+		// set the appropriate message to each player
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			if(pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber())
+				SendPlayerMessage(pPlayer, teamMsg, 0.0f, teamMsgColor);
+			else
+				SendPlayerMessage(pPlayer, otherMsg, 0.0f, otherMsgColor);
 		}
 	}
 
@@ -2012,11 +2289,11 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("BroadCastMessage",			(void(*)(const char*))&FFLib::BroadcastMessage),
 		def("BroadCastMessage",			(void(*)(const char*, float))&FFLib::BroadcastMessage),
 		def("BroadCastMessage",			(void(*)(const char*, float, int))&FFLib::BroadcastMessage),
-		def("BroadCastMessage",			(void(*)(const char*, float, int, int, int))&FFLib::BroadcastMessage),
+		def("BroadCastMessage",			(void(*)(const char*, float, const char*))&FFLib::BroadcastMessage),
 		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*))&FFLib::SendPlayerMessage),
 		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*, float))&FFLib::SendPlayerMessage),
 		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*, float, int))&FFLib::SendPlayerMessage),
-		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*, float, int, int, int))&FFLib::SendPlayerMessage),
+		def("BroadCastMessageToPlayer",	(void(*)(CFFPlayer*, const char*, float, const char*))&FFLib::SendPlayerMessage),
 		def("BroadCastSound",			&FFLib::BroadcastSound),
 		def("BroadCastSoundToPlayer",	&FFLib::SendPlayerSound),
 		def("CastToBeam",				&FFLib::CastToBeam),
@@ -2081,10 +2358,21 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SetConvar",				&FFLib::SetConvar),
 		def("SetTeamClassLimit",		&FFLib::SetTeamClassLimit),
 		def("SetTeamName",				&FFLib::SetTeamName),
-		def("SmartMessage",				&FFLib::SmartMessage),
+		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*))&FFLib::SmartMessage),
+		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*, int, int, int))&FFLib::SmartMessage),
+		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*, const char*, const char*, const char*))&FFLib::SmartMessage),
+		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*, int, const char*, const char*))&FFLib::SmartMessage),
+		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*, int, int, const char*))&FFLib::SmartMessage),
+		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*, int, const char*, int))&FFLib::SmartMessage),
+		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*, const char*, int, const char*))&FFLib::SmartMessage),
+		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*, const char*, int, int))&FFLib::SmartMessage),
 		def("SmartSound",				&FFLib::SmartSound),
 		def("SmartSpeak",				&FFLib::SmartSpeak),
-		def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
+		def("SmartTeamMessage",			(void(*)(CFFTeam *, const char*, const char*))&FFLib::SmartTeamMessage),
+		def("SmartTeamMessage",			(void(*)(CFFTeam *, const char*, const char*, int, int))&FFLib::SmartTeamMessage),
+		def("SmartTeamMessage",			(void(*)(CFFTeam *, const char*, const char*, const char*, const char*))&FFLib::SmartTeamMessage),
+		def("SmartTeamMessage",			(void(*)(CFFTeam *, const char*, const char*, int, const char*))&FFLib::SmartTeamMessage),
+		def("SmartTeamMessage",			(void(*)(CFFTeam *, const char*, const char*, const char*, int))&FFLib::SmartTeamMessage),
 		def("SmartTeamSound",			&FFLib::SmartTeamSound),
 		def("SmartTeamSpeak",			&FFLib::SmartTeamSpeak),
 		def("SpeakAll",					&FFLib::SpeakAll),
