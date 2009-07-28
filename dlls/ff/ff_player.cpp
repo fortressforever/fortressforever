@@ -6152,12 +6152,17 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth, bool healToFull)
 		return 0;
 
 	int iOriginalHP = m_iHealth;
+
 	// Also medpack boosts health to maximum + then carries on to 150%
 	if( ( m_iHealth < m_iMaxHealth ) && ( healToFull == true ) )
 		m_iHealth = m_iMaxHealth;
-	else
+	else if ( healToFull == true)
+	{
 		// Bug #0000467: Medic can't give over 100% health [just added in the "m_iHealth =" line...]
 		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth * 1.5f ) );
+	}
+	else
+		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth ) );
 
 
 	// show addhealth
