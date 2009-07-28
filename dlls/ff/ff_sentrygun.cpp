@@ -106,11 +106,12 @@ ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "3.0", FCVAR_REPLICATED, "SG b
 //ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "12", FCVAR_REPLICATED, "SG bullet damage");
 #define SG_BULLETDAMAGE 12 // ffdev_sg_bulletdamage.GetInt()
 
-ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.125", FCVAR_REPLICATED, "Level 1 SG time between shots");
+// AfterShock; These values will be rounded by the ActiveThink time (at time of writing 0.01), so 0.125 = 0.13
+ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL1 sg_shotcycletime_lvl1.GetFloat()
-ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.050", FCVAR_REPLICATED, "Level 2 SG time between shots");
+ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.15", FCVAR_REPLICATED, "Level 2 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL2 sg_shotcycletime_lvl2.GetFloat()
-ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.050", FCVAR_REPLICATED, "Level 3 SG time between shots");
+ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3 sg_shotcycletime_lvl3.GetFloat()
 
 //ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
@@ -130,7 +131,7 @@ ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.10", FCVAR_REPLICATED, 
 ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
 #define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
 
-ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.50", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
+ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "1.0", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
 #define SG_TIMETOREACHFULLTURNSPEED sg_timetoreachfullturnspeed.GetFloat()
 
 ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
@@ -486,7 +487,7 @@ void CFFSentryGun::OnActiveThink( void )
 	OnObjectThink();
 
 	// Update our think time
-	SetNextThink( gpGlobals->curtime + 0.1f );
+	SetNextThink( gpGlobals->curtime + 0.01f );
 
 	CBaseEntity *enemy = GetEnemy();
 
