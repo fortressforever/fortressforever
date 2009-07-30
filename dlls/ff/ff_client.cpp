@@ -30,7 +30,7 @@
 #include "tier0/vprof.h"
 #include "ff_bot_temp.h"
 #include "viewport_panel_names.h"
-#include "ff_statslog.h"
+//#include "ff_statslog.h"
 #include "ff_scriptman.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

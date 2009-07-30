@@ -30,7 +30,7 @@
 	extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
 	//extern void DrawHalo(IMaterial* pMaterial, const Vector &source, float scale, float const *color, float flHDRColorScale);
 #else
-	#include "ff_statslog.h"
+//	#include "ff_statslog.h"
 	#include "omnibot_interface.h"
 	#include "ff_player.h"
 	#include "te_effect_dispatch.h"
@@ -419,7 +419,7 @@ void CFFWeaponRailgun::Fire( void )
 	pPlayer->ViewPunch( -QAngle( RAILGUN_RECOIL_MIN + ((RAILGUN_RECOIL_MAX - RAILGUN_RECOIL_MIN) * flPercent), 0, 0 ) );
 
 	// record in stats as a firing
-	g_StatsLog->AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
+	//g_StatsLog->AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
 
 	// cycletime is based on charge level
 	if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE || pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0)

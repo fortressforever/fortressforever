@@ -114,7 +114,7 @@ public:
 };
 
 // Singleton to use
-extern IStatsLog *g_StatsLog;
+//extern IStatsLog *g_StatsLog;
 
 // Function to send stats
 void SendStats();
