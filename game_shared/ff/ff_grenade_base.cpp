@@ -497,7 +497,7 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 	ConVar target_size_multiplier("ffdev_target_size_multiplier", "6.0", FCVAR_CHEAT); // 15
 	ConVar target_time_remaining("ffdev_target_time_remaining", "3.0", FCVAR_CHEAT);
 
-	ConVar target_speed_max("ffdev_target_speed_max", "100", FCVAR_CHEAT);
+	ConVar target_speed_max("ffdev_target_speed_min", "100", FCVAR_CHEAT);
 	ConVar target_speed_min("ffdev_target_speed_min", "20", FCVAR_CHEAT);
 
 	ConVar target_rotation("ffdev_target_rotation", "-118.2", FCVAR_CHEAT); // -100
