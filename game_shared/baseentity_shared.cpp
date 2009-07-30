@@ -540,7 +540,7 @@ void CBaseEntity::SetPredictionRandomSeed( const CUserCmd *cmd )
 //------------------------------------------------------------------------------
 // Purpose : Base implimentation for entity handling decals
 //------------------------------------------------------------------------------
-ConVar	ffdev_disableentitydecals( "ffdev_disableentitydecals", "1", FCVAR_CHEAT );
+ConVar	ffdev_disableentitydecals( "ffdev_disableentitydecals", "1", FCVAR_CHEAT | FCVAR_REPLICATED );
 
 void CBaseEntity::DecalTrace( trace_t *pTrace, char const *decalName )
 {
@@ -2182,10 +2182,8 @@ bool CBaseEntity::IsToolRecording() const
 
 #ifdef CLIENT_DLL
 ConVar dump_deletes_cl( "dump_deletes_cl", "0" );
-#else
-ConVar dump_deletes_s( "dump_deletes_s", "0" );
+ConVar dump_deletes_flush( "dump_deletes_flush", "0" );
 #endif
-ConVar dump_delete_flush( "dump_deletes_flush", "0" );
 
 
 void CBaseEntity::PrintDeleteInfo()
@@ -2194,17 +2192,10 @@ void CBaseEntity::PrintDeleteInfo()
 
 #ifdef CLIENT_DLL
 	if(dump_deletes_cl.GetBool())
-#else
-	if(dump_deletes_s.GetBool())
-#endif
 	{
 		if(!m_hClassNameFile)
 		{
-#ifdef CLIENT_DLL
 			m_hClassNameFile = filesystem->Open("classdump_client.txt", "wt", "MOD");
-#else
-			m_hClassNameFile = filesystem->Open("classdump_server.txt", "wt", "MOD");
-#endif
 		}
 		if(m_hClassNameFile)
 		{
@@ -2213,8 +2204,9 @@ void CBaseEntity::PrintDeleteInfo()
 			V_snprintf(buffer, 1024, "%.2f deleted %s, index %d\n", 
 				gpGlobals->curtime, classname?classname:"unknown",entindex());
 			filesystem->Write(buffer,V_strlen(buffer),m_hClassNameFile);
-			if(dump_delete_flush.GetBool())
+			if( dump_deletes_flush.GetBool() )
 				filesystem->Flush(m_hClassNameFile);
 		}		
 	}
+#endif
 }
