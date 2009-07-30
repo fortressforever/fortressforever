@@ -44,6 +44,10 @@
 //static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
+#ifdef CLIENT_DLL
+	extern ConVar cl_jumpqueue;
+#endif
+
 class CBasePlayer;
 
 //=============================================================================
@@ -168,6 +172,21 @@ bool CFFGameMovement::CheckJumpButton(void)
 	//{
 	//	return false;		// don't pogo stick
 	//}
+
+	/*
+#ifdef CLIENT_DLL
+	if ( mv->m_nOldButtons & IN_JUMP && cl_jumpqueue.GetBool() )
+	{
+		return false;		// don't pogo stick
+	}
+#else
+	if ( mv->m_nOldButtons & IN_JUMP && !(Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_jumpqueue" ) ) ) )
+	{
+		DevMsg("Jumpqueue is %i\n",(Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_jumpqueue" ) ) ) );
+		return false;		// don't pogo stick
+	}
+#endif
+*/
 
 	// Don't allow jumping when the player is in a stasis field.
 	if ( player->m_Local.m_bSlowMovement )

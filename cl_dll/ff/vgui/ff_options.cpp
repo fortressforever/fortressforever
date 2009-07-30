@@ -41,6 +41,8 @@ extern IFileSystem **pFilesystem;
 extern ConVar cl_timerwav;
 extern ConVar cl_killbeepwav;
 
+ConVar cl_jumpqueue( "cl_jumpqueue", "0.0", FCVAR_ARCHIVE, "Disable pogo stick jumping? (so you have to press jump every time)" );
+
 // dlight cvarsesesesssssssesssssssssssssssssssssss
 ConVar cl_ffdlight_explosion( "cl_ffdlight_explosion", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an explosion (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
 ConVar cl_ffdlight_muzzle( "cl_ffdlight_muzzle", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a muzzle flash (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );

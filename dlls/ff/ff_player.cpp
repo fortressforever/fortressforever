@@ -126,7 +126,7 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED ,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW ffdev_dmgforfullslow.GetFloat()
 
-ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_REPLICATED ,"When getting hit by a SG and player is moving above run speed, he gets slowed down in proportion to this damage");
+ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","120",FCVAR_REPLICATED ,"When getting hit by a SG and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW_SG ffdev_dmgforfullslow_sg.GetFloat()
 
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );

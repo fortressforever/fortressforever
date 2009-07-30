@@ -70,9 +70,9 @@
 //#define SG_DEBUG sg_debug.GetBool()
 //ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 #define SG_USEPVS false // sg_usepvs.GetBool()
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "18.0", FCVAR_REPLICATED );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "2.9", FCVAR_REPLICATED );
 #define SG_TURNSPEED  sg_turnspeed.GetFloat()
-ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "12.0", FCVAR_REPLICATED );
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "2.6", FCVAR_REPLICATED );
 #define SG_PITCHSPEED sg_pitchspeed.GetFloat()
 //ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 #define SG_RANGE 1050.0f // sg_range.GetFloat()
@@ -109,7 +109,7 @@ ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "3.0", FCVAR_REPLICATED, "SG b
 // AfterShock; These values will be rounded by the ActiveThink time (at time of writing 0.01), so 0.125 = 0.13
 ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL1 sg_shotcycletime_lvl1.GetFloat()
-ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.15", FCVAR_REPLICATED, "Level 2 SG time between shots");
+ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.14", FCVAR_REPLICATED, "Level 2 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL2 sg_shotcycletime_lvl2.GetFloat()
 ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3 sg_shotcycletime_lvl3.GetFloat()
@@ -121,17 +121,17 @@ ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICA
 //ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
 #define SG_HEALTH_LEVEL3 200 // sg_health_lvl3.GetInt()
 
-ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.10", FCVAR_REPLICATED, "Level 1 SG lock on time");
+ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_REPLICATED, "Level 1 SG lock on time");
 #define SG_LOCKONTIME_LVL1 sg_lockontime_lvl1.GetFloat()
-ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.10", FCVAR_REPLICATED, "Level 2 SG lock on time");
+ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.20", FCVAR_REPLICATED, "Level 2 SG lock on time");
 #define SG_LOCKONTIME_LVL2 sg_lockontime_lvl2.GetFloat()
-ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.10", FCVAR_REPLICATED, "Level 3 SG lock on time");
+ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, "Level 3 SG lock on time");
 #define SG_LOCKONTIME_LVL3 sg_lockontime_lvl3.GetFloat()
 
-ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
-#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
+//ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
+//#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
 
-ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "1.0", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
+ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.85", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
 #define SG_TIMETOREACHFULLTURNSPEED sg_timetoreachfullturnspeed.GetFloat()
 
 ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
@@ -544,11 +544,15 @@ void CFFSentryGun::OnActiveThink( void )
 
 	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMid, false ); // false: not 'noisey', so no random z added on
 
+	/* AfterShock: Don't hit targets moving fast across our vision. 
+	// Commented for now! Intend to replace with 
 	QAngle vecAngles = GetEnemy()->EyeAngles();
 	Vector vecForward;
 	AngleVectors( vecAngles, &vecForward );
 
 	vecMidEnemy -= vecForward * SG_LAGBEHINDMUL;
+	*/
+
 	// Update our goal directions
 	Vector vecDirToEnemy = vecMidEnemy - vecMid;
 
@@ -1260,7 +1264,7 @@ bool CFFSentryGun::UpdateFacing( void )
 
 	// Target pitch = constrained goal pitch - current pitch
 	float new_pitch = UTIL_Approach( clamp( dst_pitch, SG_MIN_PITCH, SG_MAX_PITCH ), cur_pitch, MaxPitchSpeed() );
-	SetPoseParameter( m_iPitchPoseParameter, (new_pitch/2) );
+	SetPoseParameter( m_iPitchPoseParameter, (new_pitch/2.73) ); //AfterShock: (90 + 33) / 45.. bad bad hack, seems to work tho. sgs can only look down about 33 degrees.
 
 	m_angAiming.x = FROM_PITCH( new_pitch + src_pitch );
 
