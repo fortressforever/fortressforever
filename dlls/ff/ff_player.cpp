@@ -34,7 +34,7 @@
 #include "ff_lualib_constants.h"
 
 #include "client.h"
-#include "ff_statslog.h"
+//#include "ff_statslog.h"
 #include "gib.h"
 #include "omnibot_interface.h"
 #include "te_effect_dispatch.h"
@@ -571,18 +571,19 @@ CFFPlayer::CFFPlayer()
 
 	m_SpawnPointOverride = 0;
 
-	m_iStatsID = -1;
+	//m_iStatsID = -1;
 
 #endif // FF_BETA_TEST_COMPILE
 }
 
 CFFPlayer::~CFFPlayer()
 {
+	/* AfterShock: Commenting all oldschool stats stuff
 	if (m_iStatsID != -1)
 	{
 		g_StatsLog->StopTimer(m_iStatsID, m_iPlayTime, true);
 	}
-
+*/
 	m_PlayerAnimState->Release();
 }
 
@@ -1556,11 +1557,12 @@ void CFFPlayer::Spawn( void )
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 
 	// if they change class, we need to stop their timer (it gets started back up after reacquiring our id)
+	/* AfterShock: Commenting all oldschool stats stuff
 	if (m_iStatsID != -1)
 	{
 		g_StatsLog->StopTimer(m_iStatsID, m_iPlayTime, true);
 	}
-	
+
 	// get our stats id, just in case.
 	m_iStatsID = g_StatsLog->GetPlayerID(
 		engine->GetPlayerNetworkIDString(this->edict()),
@@ -1570,7 +1572,7 @@ void CFFPlayer::Spawn( void )
 		GetPlayerName());
 		
 	g_StatsLog->StartTimer(m_iStatsID, m_iPlayTime);
-
+	*/
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1692,6 +1694,7 @@ void CFFPlayer::InitialSpawn( void )
 	// I'm putting this here, I'm not sure if it's the best place though
 	// I wanted to make sure that the statslog was created or I would've put
 	// it in the constructor - FryGuy
+	/* AfterShock: Commenting all oldschool stats stuff
 	m_iStatDeath = g_StatsLog->GetStatID("deaths");
 	m_iStatTeamKill = g_StatsLog->GetStatID("teamkills");
 	m_iStatKill = g_StatsLog->GetStatID("kills");
@@ -1701,7 +1704,7 @@ void CFFPlayer::InitialSpawn( void )
 	m_iStatCritHeals = g_StatsLog->GetStatID("critheals");
 	m_iStatInfectCures = g_StatsLog->GetStatID("infectcures");
 	m_iPlayTime = g_StatsLog->GetStatID("time_played");
-
+*/
 	m_hRadioTagData = ( CFFRadioTagData * )CreateEntityByName( "ff_radiotagdata" );
 	Assert( m_hRadioTagData );
 	m_hRadioTagData->Spawn();
@@ -1886,12 +1889,13 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		SpyCloakFadeIn( true );
 
 	// Log the death to the stats engine
-	g_StatsLog->AddStat(m_iStatsID, m_iStatDeath, 1);
+	//g_StatsLog->AddStat(m_iStatsID, m_iStatDeath, 1);
 
 	// TODO: Take SGs into account here?
 	CFFPlayer *pKiller = dynamic_cast<CFFPlayer *>(dynamic_cast<CMultiplayRules *>(g_pGameRules)->GetDeathScorer( info.GetAttacker(), info.GetInflictor() ));
 	
 	// Log the correct stat for the killer
+	/* AfterShock: Commenting all oldschool stats stuff
 	if (pKiller)
 	{
 		if (g_pGameRules->PlayerRelationship(this, pKiller) == GR_TEAMMATE)
@@ -1902,6 +1906,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		if (info.GetInflictor() && info.GetInflictor()->edict() && dynamic_cast<CFFWeaponBase*>(info.GetInflictor()))
 			g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, "", GetAbsOrigin(), GetLocation());
 	}
+	*/
 
 	if ( info.GetInflictor() )
 	{
@@ -3124,6 +3129,7 @@ void CFFPlayer::Command_DispenserText( void )
 
 void CFFPlayer::Command_Radar( void )
 {
+	/*
 	// Player issued the command "radar"
 	// Can only do it every CVAR seconds (atm)
 	// Cost is CVAR cells (atm)
@@ -3227,6 +3233,7 @@ void CFFPlayer::Command_Radar( void )
 	{
 		ClientPrint(this, HUD_PRINTCONSOLE, "#FF_RADARTOOSOON");
 	}
+	*/
 }
 
 void CFFPlayer::Command_BuildDispenser( void )
@@ -4757,7 +4764,7 @@ bool CFFPlayer::Infect( CFFPlayer *pInfector )
 
 		EmitSound( "Player.cough" );	// |-- Mirv: [TODO] Change to something more suitable
 
-		g_StatsLog->AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
+		//g_StatsLog->AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
 
 		// And now.. an effect
 		CSingleUserRecipientFilter user(this);
@@ -4806,8 +4813,8 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 			pCurer->AddFortPoints( 100, "#FF_FORTPOINTS_CUREINFECTION" );
 
 		// Log this in the stats
-		if (pCurer)
-			g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatInfectCures, 1);
+		//if (pCurer)
+			//g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatInfectCures, 1);
 
 		Omnibot::Notify_Cured(this, pCurer);
 
@@ -6179,12 +6186,12 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth, bool healToFull)
 	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), "#FF_FORTPOINTS_GIVEHEALTH");
 	
 	// Log the added health
-	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
-	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHealHP, m_iHealth - iOriginalHP);
+	//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
+	//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHealHP, m_iHealth - iOriginalHP);
 	
 	// Critical heal is when they are <= 15hp
-	if (iOriginalHP <= 15)
-		g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatCritHeals, 1);
+	//if (iOriginalHP <= 15)
+	//	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatCritHeals, 1);
 
 	if (IsInfected())
 	{
@@ -7863,6 +7870,7 @@ void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime, float flFlameSize)
 //-----------------------------------------------------------------------------
 // Purpose: A function to allow lua to add stats for a player (ctf_flag_caps, for instance)
 //-----------------------------------------------------------------------------
+/* AfterShock: removing all oldschool stats stuff
 void CFFPlayer::AddStat(const char *stat, double value)
 {
 	int statId = g_StatsLog->GetStatID(stat);
@@ -7878,7 +7886,7 @@ void CFFPlayer::AddAction(CFFPlayer *target, const char *action, const char *par
 	int actionId = g_StatsLog->GetActionID(action);
 	g_StatsLog->AddAction(m_iStatsID, target!=NULL ? target->m_iStatsID : -1, actionId, param, origin, location);
 }
-
+*/
 //-----------------------------------------------------------------------------
 // Purpose: Updates camera position & mapguide stuff (called from CFFPlayer::Spawn()
 // Fixes bug #0001767

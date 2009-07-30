@@ -904,6 +904,7 @@ public:
 	float		m_flSpeedModifierChangeTime;
 
 	// stats stuff
+	/*
 	int			m_iStatsID;
 	int			m_iStatDeath;
 	int			m_iStatTeamKill;
@@ -915,6 +916,7 @@ public:
 	int			m_iStatCritHeals;
 	int			m_iStatInfectCures;
 	int			m_iPlayTime;
+*/
 
 	CBaseEntity	*m_SpawnPointOverride;
 public:
