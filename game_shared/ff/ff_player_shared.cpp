@@ -59,9 +59,12 @@ ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Al
 //ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_REPLICATED);
 //ConVar ffdev_mancannon_commandtime( "ffdev_mancannon_commandtime", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define HEADSHOT_MOD 2.0f //ffdev_sniper_headshotmod.GetFloat()
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_sniper_radiotag_time( "ffdev_sniper_radiotag_time", "30.0", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "10.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define LEGSHOT_MOD 1.0f //ffdev_sniper_legshotmod.GetFloat()
+ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define LEGSHOT_TIME 5.0f //ffdev_sniper_legshot_time.GetFloat()
+//AfterShock: radiotag time is in ff_player.cpp under RADIOTAG_DURATION
 
 ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
@@ -258,8 +261,8 @@ void CFFPlayer::FireBullet(
 
 		if (tr.hitgroup == HITGROUP_HEAD)
 		{
-			DevMsg("Headshot, damage multiplied by %f\n", ffdev_sniper_headshotmod.GetFloat());
-			flCurrentDamage *= ffdev_sniper_headshotmod.GetFloat();
+			DevMsg("Headshot, damage multiplied by %f\n", HEADSHOT_MOD );
+			flCurrentDamage *= HEADSHOT_MOD;
 
 			bHeadshot = true;
 
@@ -270,7 +273,7 @@ void CFFPlayer::FireBullet(
 		else if (tr.hitgroup == HITGROUP_LEFTLEG || tr.hitgroup == HITGROUP_RIGHTLEG)
 		{
 			DevMsg("Legshot\n");
-			flCurrentDamage *= ffdev_sniper_legshotmod.GetFloat();
+			flCurrentDamage *= LEGSHOT_MOD;
 #ifdef CLIENT_DLL
 			FF_SendHint( SNIPER_LEGSHOT, 3, PRIORITY_NORMAL, "#FF_HINT_SNIPER_LEGSHOT" );
 #endif
@@ -288,7 +291,7 @@ void CFFPlayer::FireBullet(
 
 			// Bug #0000557: Teamplay 0 + sniper legshot slows allies
 			// If they're not a teammate/ally then do the leg shot speed effect
-			float flDuration =  ffdev_sniper_legshot_time.GetFloat();
+			float flDuration =  LEGSHOT_TIME;
 			float flIconDuration = flDuration;
 			// AfterShock: this should be like 0.7f - 7 / (7 * 2)
 			// so like if divider is high, less slowdown,  divider low = more slowdown
