@@ -515,6 +515,12 @@ void CFFSentryGun::OnActiveThink( void )
 		return;
 	}
 
+	if ( !enemy->IsAlive() )
+	{
+		m_flEndLockTime = gpGlobals->curtime - 5.0f; // AfterShock: if we killed someone, dont wait the extra lock time
+
+	}
+
 	// If we're targeting a buildable, and a player is a better target, change.
 	if(enemy && FF_IsBuildableObject(enemy))
 	{
