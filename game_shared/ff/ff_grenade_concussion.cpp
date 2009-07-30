@@ -58,7 +58,7 @@
 #endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
-ConVar conc_ragdoll_push("conc_ragdoll_push","600", FCVAR_CHEAT,"How much to push ragdolls");
+ConVar conc_ragdoll_push("conc_ragdoll_push","600", FCVAR_CHEAT | FCVAR_REPLICATED,"How much to push ragdolls");
 
 #define CONCUSSIONGRENADE_MODEL			"models/grenades/conc/conc.mdl"
 #define CONCUSSIONGRENADE_GLOW_SPRITE	"sprites/glow04_noz.vmt"
