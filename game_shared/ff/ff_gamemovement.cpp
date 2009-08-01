@@ -45,7 +45,7 @@
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
 #ifdef CLIENT_DLL
-	extern ConVar cl_jumpqueue;
+	extern ConVar cl_bunnyhop_disablepogojump;
 #endif
 
 class CBasePlayer;
@@ -173,20 +173,20 @@ bool CFFGameMovement::CheckJumpButton(void)
 	//	return false;		// don't pogo stick
 	//}
 
-	/*
+	
 #ifdef CLIENT_DLL
-	if ( mv->m_nOldButtons & IN_JUMP && cl_jumpqueue.GetBool() )
+	if ( mv->m_nOldButtons & IN_JUMP && cl_bunnyhop_disablepogojump.GetBool() )
 	{
 		return false;		// don't pogo stick
 	}
 #else
-	if ( mv->m_nOldButtons & IN_JUMP && !(Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_jumpqueue" ) ) ) )
+	if ( mv->m_nOldButtons & IN_JUMP && (Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_bunnyhop_disablepogojump" ) ) ) )
 	{
-		DevMsg("Jumpqueue is %i\n",(Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_jumpqueue" ) ) ) );
+		DevMsg("Jumpqueue is %i\n",(Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_bunnyhop_disablepogojump" ) ) ) );
 		return false;		// don't pogo stick
 	}
 #endif
-*/
+
 
 	// Don't allow jumping when the player is in a stasis field.
 	if ( player->m_Local.m_bSlowMovement )
