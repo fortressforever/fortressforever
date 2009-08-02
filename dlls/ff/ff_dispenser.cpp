@@ -101,6 +101,7 @@ const char *g_pszFFDispenserSounds[ ] =
 	FF_DISPENSER_BUILD_SOUND,
 	FF_DISPENSER_EXPLODE_SOUND,
 	FF_DISPENSER_UNBUILD_SOUND,
+	FF_DISPENSER_OMNOMNOM_SOUND,
 	NULL
 };
 
@@ -381,7 +382,7 @@ void CFFDispenser::OnObjectThink( void )
 	}
 
 	if ( bAteBag )
-		EmitSound( "Dispenser.omnomnomnom" );
+		EmitSound( "Dispenser.omnomnom" );
 
 	// Generate stock
 	m_iCells = clamp( m_iCells + iCells, 0, m_iMaxCells );
