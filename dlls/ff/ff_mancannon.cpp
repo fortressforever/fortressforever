@@ -34,14 +34,6 @@ ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICAT
 #define JUMPPAD_LIFESPAN		60.0f // ffdev_mancannon_lifetime.GetFloat()
 #define JUMPPAD_POWERDOWN_TIME	5.0f
 
-// caes: jumppad charge system
-ConVar ffdev_mancannon_charge_time( "ffdev_mancannon_charge_time", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT );
-#define JUMPPAD_CHARGE_TIME		ffdev_mancannon_charge_time.GetFloat()
-
-//ConVar ffdev_mancannon_charge_speedmul( "ffdev_mancannon_charge_speedmul", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT );
-//#define FFDEV_JUMPPAD_ACTIVATE_SPEEDMUL	ffdev_mancannon_charge_speedmul.GetFloat()
-// caes
-
 //=============================================================================
 //
 //	class CFFManCannon
@@ -77,7 +69,7 @@ const char *g_pszFFManCannonSounds[] =
 {
 	FF_MANCANNON_BUILD_SOUND,
 	FF_MANCANNON_EXPLODE_SOUND,
-	"JumpPad.WarmUp", // caes: stolen this for jumppad charge system
+	//"JumpPad.WarmUp",
 	"JumpPad.PowerDown",
 	"JumpPad.Fire",
 	NULL
@@ -141,7 +133,7 @@ void CFFManCannon::OnJumpPadThink( void )
 	case JUMPPAD_ACTIVATE:
 		// Play activate sound
 		//EmitSound("JumpPad.Activate");
-		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN - JUMPPAD_POWERDOWN_TIME );
+		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN );
 		m_iJumpPadState++;
 		break;
 	case JUMPPAD_POWERDOWN:
@@ -192,77 +184,9 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 		return;
 	}
 
-
-	// caes: jumppad charge system changes start here
-
-	// on jumppad but not pressing jump
+	// Only trigger when the player hits his jump key
 	if ( !(pPlayer->m_nButtons & IN_JUMP) )
-	{
-		// stop charging if currently charging
-		if (pPlayer->m_flMancannonTimeStartCharge != 0.0f)
-		{
-			CSingleUserRecipientFilter user( pPlayer );
-			user.MakeReliable();
-			UserMessageBegin( user, "FF_BuildTimer" );
-				WRITE_SHORT( FF_BUILD_MANCANNON );
-				WRITE_FLOAT( 0.0f );
-			MessageEnd();
-
-			pPlayer->UnlockPlayer();
-			pPlayer->m_flMancannonTimeStartCharge = 0.0f;
-			pPlayer->m_BuildableBeingUsed = NULL;
-		}
 		return;
-	}
-
-	// can only start charging if going slowly
-	//if ( pPlayer->GetAbsVelocity().Length2D() > pPlayer->MaxSpeed() * FFDEV_JUMPPAD_ACTIVATE_SPEEDMUL )
-	//	return;
-
-	// not already charging
-	if ( pPlayer->m_flMancannonTimeStartCharge == 0.0f )
-	{
-		// Get lifetime remaining
-		float thinkTime = ( GetNextThink() - gpGlobals->curtime );
-		if ( m_iJumpPadState == JUMPPAD_POWERDOWN ) // add 5 seconds if next state is powerdown (i.e. we're in normal mode)
-		{
-			thinkTime += JUMPPAD_POWERDOWN_TIME;
-		}
-		// start charging
-		if ( thinkTime > JUMPPAD_CHARGE_TIME ) // only allow chargeup if there's enough lifetime left
-		{
-			pPlayer->LockPlayerInPlace();
-			pPlayer->m_BuildableBeingUsed = this;
-
-			CSingleUserRecipientFilter user( pPlayer );
-			user.MakeReliable();
-			UserMessageBegin( user, "FF_BuildTimer" );
-				WRITE_SHORT( FF_BUILD_MANCANNON );
-				WRITE_FLOAT( JUMPPAD_CHARGE_TIME );
-			MessageEnd();
-
-			pPlayer->m_flMancannonTimeStartCharge = gpGlobals->curtime;
-
-			EmitSound("JumpPad.WarmUp");
-		}
-		// no time to charge til pad times out
-		else 
-			return;
-	}
-
-	// If not fully charged, exit now
-	if ( gpGlobals->curtime < pPlayer->m_flMancannonTimeStartCharge + JUMPPAD_CHARGE_TIME )
-	{
-		return;
-	}
-	
-	// Otherwise, charge complete, launch the guy :)
-	pPlayer->UnlockPlayer();
-	pPlayer->m_flMancannonTimeStartCharge = 0.0f;
-	pPlayer->m_BuildableBeingUsed = NULL;
-
-	// caes: jumppad charge system changes end here
-
 
 	// Launch the guy
 	QAngle vecAngles = pPlayer->EyeAngles();
@@ -323,28 +247,6 @@ void CFFManCannon::Detonate( void )
 			pEvent->SetInt( "userid", pOwner->GetUserID() );
 			gameeventmanager->FireEvent( pEvent, true );
 		}		
-	}
-
-	// AfterShock: unlock anyone that was in the middle of charging this jump pad
-	for( int j = 1; j <= gpGlobals->maxClients; j++ )
-	{
-		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( j ) );
-		if (pPlayer)
-		{
-			if ( pPlayer->m_BuildableBeingUsed == this )
-			{
-				pPlayer->UnlockPlayer();
-				pPlayer->m_flMancannonTimeStartCharge = 0.0f;
-				pPlayer->m_BuildableBeingUsed = NULL;
-
-				CSingleUserRecipientFilter user( pPlayer );
-				user.MakeReliable();
-				UserMessageBegin( user, "FF_BuildTimer" );
-					WRITE_SHORT( FF_BUILD_MANCANNON );
-					WRITE_FLOAT( 0.0f );
-				MessageEnd();
-			}
-		}
 	}
 
 	CFFBuildableObject::Detonate();
