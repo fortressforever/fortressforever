@@ -58,6 +58,7 @@
 #define FF_DISPENSER_BUILD_SOUND			"Dispenser.Build"
 #define FF_DISPENSER_UNBUILD_SOUND			"Dispenser.unbuild"
 #define FF_DISPENSER_EXPLODE_SOUND			"Dispenser.Explode"
+#define FF_DISPENSER_OMNOMNOM_SOUND			"Dispenser.omnomnom"
 
 #define FF_DETPACK_MODEL					"models/buildable/detpack/detpack.mdl"
 #define FF_DETPACK_BUILD_SOUND				"Detpack.Build"
