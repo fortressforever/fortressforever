@@ -1270,7 +1270,7 @@ bool CFFSentryGun::UpdateFacing( void )
 
 	// Target pitch = constrained goal pitch - current pitch
 	float new_pitch = UTIL_Approach( clamp( dst_pitch, SG_MIN_PITCH, SG_MAX_PITCH ), cur_pitch, MaxPitchSpeed() );
-	SetPoseParameter( m_iPitchPoseParameter, (new_pitch/2.73) ); //AfterShock: (90 + 33) / 45.. bad bad hack, seems to work tho. sgs can only look down about 33 degrees.
+	SetPoseParameter( m_iPitchPoseParameter, ( clamp( new_pitch, SG_MIN_ANIMATED_PITCH, SG_MAX_PITCH ) / 2.0f ) ); //AfterShock: (90 + 33) / 45.. bad bad hack, seems to work tho. sgs can only look down about 33 degrees.
 
 	m_angAiming.x = FROM_PITCH( new_pitch + src_pitch );
 
