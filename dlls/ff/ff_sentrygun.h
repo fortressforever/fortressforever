@@ -49,7 +49,8 @@
 #define	SG_PING_TIME		10.0f	// LPB!!
 
 #define SG_MAX_PITCH		90.0f
-#define SG_MIN_PITCH		-33.0f
+#define SG_MIN_PITCH		-90.0f
+#define SG_MIN_ANIMATED_PITCH		-33.0f
 #define SG_SCAN_HALFWIDTH	40.0f
 
 //extern ConVar sg_health_lvl1;
