@@ -787,6 +787,11 @@ public:
 	QAngle	m_angGoal;
 	QAngle	m_angAimBase;
 	QAngle	m_angAiming;
+
+	// caes: store angular speeds of SG
+	float m_angSpeed_yaw;
+	float m_angSpeed_pitch;
+	// caes
 #endif
 };
 

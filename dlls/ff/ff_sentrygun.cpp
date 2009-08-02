@@ -150,6 +150,13 @@ ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.0", FCVAR_REPLICATE
 //ConVar sg_acknowledge_sabotage_delay("ffdev_sg_acknowledge_sabotage_delay", "2.5", FCVAR_REPLICATED, "Sentry won't spot a maliciously sabotaged sentry for this long");
 #define SG_ACKNOWLEDGE_SABOTAGE_DELAY 2.5f // sg_acknowledge_sabotage_delay.GetFloat()
 
+// caes: limit angular acceleration of SG
+ConVar sg_angular_accel_yaw("ffdev_sg_angular_accel_yaw", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
+#define SG_ANGULAR_ACCEL_YAW sg_angular_accel_yaw.GetFloat()
+ConVar sg_angular_accel_pitch("ffdev_sg_angular_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
+#define SG_ANGULAR_ACCEL_PITCH sg_angular_accel_pitch.GetFloat()
+// caes
+
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
 	SendPropFloat( SENDINFO( m_flRange ) ), 
@@ -313,6 +320,11 @@ void CFFSentryGun::Spawn( void )
 	VectorAngles( vecBaseForward, m_angAiming );
 	m_angAimBase = m_angAiming;
 	m_angGoal.y = m_angAimBase.y - SG_SCAN_HALFWIDTH;
+
+	// caes: set angular speeds to 0
+	m_angSpeed_yaw = 0.0;
+	m_angSpeed_pitch = 0.0;
+	// caes
 }
 
 //-----------------------------------------------------------------------------
@@ -1235,6 +1247,43 @@ bool CFFSentryGun::UpdateFacing( void )
 	float cur_yaw = m_angAiming.y - src_yaw;
 	float new_yaw = UTIL_ApproachAngle( dst_yaw, cur_yaw, MaxYawSpeed() );
 
+
+// caes: limit angular acceleration of SG in yaw
+	// find how much the SG wants to turn by
+	float delta_yaw = new_yaw - cur_yaw;
+	// allow for wrapping around
+	if( delta_yaw > 180.0 )
+	{
+		delta_yaw -= 360.0;
+	}
+	else if( delta_yaw < -180.0 )
+	{
+		delta_yaw += 360.0;
+	}
+	// limit the amount it can turn according to its current angular speed and the max angular accel allowed
+	if( delta_yaw > m_angSpeed_yaw + SG_ANGULAR_ACCEL_YAW )
+	{
+		delta_yaw = m_angSpeed_yaw + SG_ANGULAR_ACCEL_YAW;
+	}
+	else if( delta_yaw < m_angSpeed_yaw - SG_ANGULAR_ACCEL_YAW )
+	{
+		delta_yaw = m_angSpeed_yaw - SG_ANGULAR_ACCEL_YAW;
+	}
+	// update the angular speed for next time
+	m_angSpeed_yaw = delta_yaw;
+	// calc new aim angle and make sure it's in the range -180 < x <= 180
+	new_yaw = cur_yaw + delta_yaw;
+	if( new_yaw > 180.0 )
+	{
+		new_yaw -= 360.0;
+	}
+	else if( new_yaw <= -180.0 )
+	{
+		new_yaw += 360.0;
+	}
+// caes
+
+
 	m_angAiming.y = new_yaw + src_yaw;
 
 	SetPoseParameter( m_iYawPoseParameter, TO_YAW( new_yaw ) );
@@ -1270,6 +1319,38 @@ bool CFFSentryGun::UpdateFacing( void )
 
 	// Target pitch = constrained goal pitch - current pitch
 	float new_pitch = UTIL_Approach( clamp( dst_pitch, SG_MIN_PITCH, SG_MAX_PITCH ), cur_pitch, MaxPitchSpeed() );
+
+
+// caes: limit angular acceleration of SG in pitch
+	// find how much the SG wants to turn by
+	float delta_pitch = new_pitch - cur_pitch;
+	// limit the amount it can turn according to its current angular speed and the max angular accel allowed
+	if( delta_pitch > m_angSpeed_pitch + SG_ANGULAR_ACCEL_PITCH )
+	{
+		delta_pitch = m_angSpeed_pitch + SG_ANGULAR_ACCEL_PITCH;
+	}
+	else if( delta_pitch < m_angSpeed_pitch - SG_ANGULAR_ACCEL_PITCH )
+	{
+		delta_pitch = m_angSpeed_pitch - SG_ANGULAR_ACCEL_PITCH;
+	}
+	// update the angular speed for next time
+	m_angSpeed_pitch = delta_pitch;
+	// calc new aim angle
+	new_pitch = cur_pitch + delta_pitch;
+	// check if we've hit the end stops
+	if( new_pitch <= SG_MIN_PITCH )
+	{
+		new_pitch = SG_MIN_PITCH;
+		m_angSpeed_pitch = 0.0;
+	}
+	else if( new_pitch >= SG_MAX_PITCH )
+	{
+		new_pitch = SG_MAX_PITCH;
+		m_angSpeed_pitch = 0.0;
+	}
+// caes
+
+
 	SetPoseParameter( m_iPitchPoseParameter, ( clamp( new_pitch, SG_MIN_ANIMATED_PITCH, SG_MAX_PITCH ) / 2.0f ) ); //AfterShock: (90 + 33) / 45.. bad bad hack, seems to work tho. sgs can only look down about 33 degrees.
 
 	m_angAiming.x = FROM_PITCH( new_pitch + src_pitch );

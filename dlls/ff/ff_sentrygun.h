@@ -49,8 +49,12 @@
 #define	SG_PING_TIME		10.0f	// LPB!!
 
 #define SG_MAX_PITCH		90.0f
-#define SG_MIN_PITCH		-90.0f
-#define SG_MIN_ANIMATED_PITCH		-33.0f
+// caes: SG min pitch cvar for testing
+//#define SG_MIN_PITCH		-90.0f
+ConVar sg_min_pitch("ffdev_sg_min_pitch", "-90.0", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
+#define SG_MIN_PITCH sg_min_pitch.GetFloat()
+// caes
+#define SG_MIN_ANIMATED_PITCH		-30.0f//-33.0f (caes: changed to -30 so animation doesn't go up again at end)
 #define SG_SCAN_HALFWIDTH	40.0f
 
 //extern ConVar sg_health_lvl1;
