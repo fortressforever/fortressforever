@@ -1593,7 +1593,6 @@ void CFFPlayer::SetupClassVariables()
 	m_flScreamTime = 0.0f;
 	m_flMancannonTime = 0.0f;
 	m_flMancannonDetTime = 0.0f;
-	m_BuildableBeingUsed = NULL;
 	// Reset Spy stuff
 	m_iCloaked = 0;
 	m_flCloakTime = 0.0f;
