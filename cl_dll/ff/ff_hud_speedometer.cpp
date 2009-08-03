@@ -140,7 +140,7 @@ void CHudSpeedometer::Paint()
 
 	if( avgVelocity > BHOP_CAP_HARD * maxVelocity && hud_speedometer_color.GetInt() > 0) // above hard cap
 		speedColor = SPEEDO_COLOR_RED;
-	else if(avgVelocity  > BHOP_CAP_SOFT * maxVelocity && hud_speedometer_color.GetInt() > 0) // above soft cap
+	else if(avgVelocity-1  > BHOP_CAP_SOFT * maxVelocity && hud_speedometer_color.GetInt() > 0) // above soft cap
 		if(hud_speedometer_color.GetInt() == 2)
 			speedColor = ColorFade( avgVelocity, BHOP_CAP_HARD*maxVelocity, SPEEDO_COLOR_RED, BHOP_CAP_SOFT*maxVelocity, SPEEDO_COLOR_ORANGE );
 		else
