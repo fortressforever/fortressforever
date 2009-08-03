@@ -151,12 +151,14 @@ ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.0", FCVAR_REPLICATE
 #define SG_ACKNOWLEDGE_SABOTAGE_DELAY 2.5f // sg_acknowledge_sabotage_delay.GetFloat()
 
 // caes: limit angular acceleration of SG
-ConVar sg_angular_accel_yaw("ffdev_sg_angular_accel_yaw", "0.3", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
-#define SG_ANGULAR_ACCEL_YAW sg_angular_accel_yaw.GetFloat()
-ConVar sg_angular_accel_pitch("ffdev_sg_angular_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
-#define SG_ANGULAR_ACCEL_PITCH sg_angular_accel_pitch.GetFloat()
-ConVar sg_angular_accel_distmult("ffdev_sg_angular_accel_distmult", "0.002", FCVAR_REPLICATED, "multiplier of distance taken into account on turn accel");
-#define SG_ACCELDISTANCEMULT sg_angular_accel_distmult.GetFloat()
+ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.1", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
+#define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat()
+ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.2", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
+#define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat()
+ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.0007", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better)");
+#define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat()
+ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
+#define SG_ACCELFRICTIONMULT sg_accel_fricmult.GetFloat()
 // caes
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
@@ -1262,14 +1264,19 @@ bool CFFSentryGun::UpdateFacing( void )
 	{
 		delta_yaw += 360.0;
 	}
-	// limit the amount it can turn according to its current angular speed and the max angular accel allowed
 
+	// linearly decrease max accel as distance to enemy increases
 	float accelYaw;
 	if ( GetEnemy() )
 		accelYaw = SG_ANGULAR_ACCEL_YAW / ( WorldSpaceCenter().DistTo( GetEnemy()->GetAbsOrigin() ) * SG_ACCELDISTANCEMULT );
 	else
 		accelYaw = SG_ANGULAR_ACCEL_YAW;
 
+	// allow more accel if slowing down (friction)
+	if( ( m_angSpeed_yaw < 0.0 && delta_yaw > m_angSpeed_yaw ) || ( m_angSpeed_yaw > 0.0 && delta_yaw < m_angSpeed_yaw ) )
+		accelYaw *= SG_ACCELFRICTIONMULT;
+
+	// limit the amount it can turn according to its current angular speed and the max angular accel allowed
 	if( delta_yaw > m_angSpeed_yaw + accelYaw )
 	{
 		delta_yaw = m_angSpeed_yaw + accelYaw;
@@ -1333,14 +1340,19 @@ bool CFFSentryGun::UpdateFacing( void )
 // caes: limit angular acceleration of SG in pitch
 	// find how much the SG wants to turn by
 	float delta_pitch = new_pitch - cur_pitch;
-	// limit the amount it can turn according to its current angular speed and the max angular accel allowed
 
+	// linearly decrease max accel as distance to enemy increases
 	float accelPitch;
 	if ( GetEnemy() )
 		accelPitch = SG_ANGULAR_ACCEL_PITCH / ( WorldSpaceCenter().DistTo( GetEnemy()->GetAbsOrigin() ) * SG_ACCELDISTANCEMULT );
 	else
 		accelPitch = SG_ANGULAR_ACCEL_PITCH;
 
+	// allow more accel if slowing down (friction)
+	if( ( m_angSpeed_pitch < 0.0 && delta_pitch > m_angSpeed_pitch ) || ( m_angSpeed_pitch > 0.0 && delta_pitch < m_angSpeed_pitch ) )
+		accelPitch *= SG_ACCELFRICTIONMULT;
+
+	// limit the amount it can turn according to its current angular speed and the max angular accel allowed
 	if( delta_pitch > m_angSpeed_pitch + accelPitch )
 	{
 		delta_pitch = m_angSpeed_pitch + accelPitch;
