@@ -157,6 +157,7 @@ FF_AUTO_COMMAND( mancannon, &CFFPlayer::Command_BuildManCannon, "Build a man can
 FF_AUTO_COMMAND( discard, &CFFPlayer::Command_Discard, "Discards unneeded ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_CLOAKED );
 FF_AUTO_COMMAND( saveme, &CFFPlayer::Command_SaveMe, "Call for medical attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( engyme, &CFFPlayer::Command_EngyMe, "Call for engineer attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( ammome, &CFFPlayer::Command_AmmoMe, "Call for ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class>", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_CLOAKED )
 
 // entity system interfacing stuffs
