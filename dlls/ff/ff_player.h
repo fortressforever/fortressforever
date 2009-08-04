@@ -356,6 +356,7 @@ public:
 	void Command_Discard( void );	
 	void Command_SaveMe( void );
 	void Command_EngyMe( void );
+	void Command_AmmoMe( void );
 	void Command_Disguise();
 
 	void Command_SabotageSentry();

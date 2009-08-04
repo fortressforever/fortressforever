@@ -835,6 +835,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("medical.saveme");
 	PrecacheScriptSound("maintenance.saveme");
 	PrecacheScriptSound("infected.saveme");
+	PrecacheScriptSound("ammo.saveme");
 	
 	// Precache gib sound -> Defrag
 	PrecacheScriptSound("Player.Gib");
@@ -2069,6 +2070,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	StopSound( "infected.saveme" );
 	StopSound( "medical.saveme" );
 	StopSound( "maintenance.saveme" );
+	StopSound( "ammo.saveme" );
 
 	// --> Mirv: Create backpack moved here to stop crash
 	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
@@ -4027,6 +4029,19 @@ void CFFPlayer::Command_EngyMe( void )
 		}
 		// End Hint Code
 
+	}
+}
+
+void CFFPlayer::Command_AmmoMe( void )
+{
+	if( m_flSaveMeTime < gpGlobals->curtime )
+	{
+		// Set the time we can do another saveme/engyme/ammome at
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
+
+		// Call for ammo
+		CPASAttenuationFilter sndFilter( this );
+		EmitSound("ammo.saveme");
 	}
 }
 
