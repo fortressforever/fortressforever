@@ -51,7 +51,7 @@
 #define SG_MAX_PITCH		90.0f
 #define SG_MIN_PITCH		-85.0f//-90.0f
 #define SG_MIN_ANIMATED_PITCH		-30.0f//-33.0f (caes: changed to -30 so animation doesn't go up again at end)
-#define SG_SCAN_HALFWIDTH	40.0f
+#define SG_SCAN_HALFWIDTH	30.0f//40.0f
 
 //extern ConVar sg_health_lvl1;
 //#define SG_HEALTH_LEVEL1	sg_health_lvl1.GetInt()
