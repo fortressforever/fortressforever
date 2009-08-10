@@ -70,9 +70,9 @@
 //#define SG_DEBUG sg_debug.GetBool()
 //ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 #define SG_USEPVS false // sg_usepvs.GetBool()
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "3.5", FCVAR_REPLICATED );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "2.9", FCVAR_REPLICATED );
 #define SG_TURNSPEED  sg_turnspeed.GetFloat()
-ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "2.8", FCVAR_REPLICATED );
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "2.5", FCVAR_REPLICATED );
 #define SG_PITCHSPEED sg_pitchspeed.GetFloat()
 //ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 #define SG_RANGE 1050.0f // sg_range.GetFloat()
@@ -525,16 +525,26 @@ void CFFSentryGun::OnActiveThink( void )
 			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
 			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAKMULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{
+
+		if ( enemy && enemy->IsAlive() )
+		{
+
+
+			Vector vecAiming, vecGoal;
+			AngleVectors( m_angAiming, &vecAiming );
+			AngleVectors( m_angGoal, &vecGoal );
+
+			// Are we rotated enough to where we can fire?
+			bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_7DEGREE;
+			if ( bCanFire )			
+				m_flEndLockTime = gpGlobals->curtime; // AfterShock: if we lost track of our target, and they are still alive, 
+						// and we're looking the right way, then pause to see if our target comes back
+		}
+
 		SetEnemy( NULL );
 		SetThink( &CFFSentryGun::OnSearchThink );
 		SpinDown();
 		return;
-	}
-
-	if ( enemy && !enemy->IsAlive() )
-	{
-		m_flEndLockTime = gpGlobals->curtime - 5.0f; // AfterShock: if we killed someone, dont wait the extra lock time
-
 	}
 
 	// If we're targeting a buildable, and a player is a better target, change.
@@ -1230,8 +1240,6 @@ void CFFSentryGun::SpinUp( void )
 void CFFSentryGun::SpinDown( void ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::SpinDown", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	m_flEndLockTime = gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
