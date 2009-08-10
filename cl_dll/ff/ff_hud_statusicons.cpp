@@ -47,6 +47,7 @@ const char *szIcons[FF_STATUSICON_MAX] = {	"concussion",		// FF_STATUSICON_CONCU
 											"burning1",			// FF_STATUSICON_BURNING1
 											"burning2",			// FF_STATUSICON_BURNING2
 											"burning3",			// FF_STATUSICON_BURNING3
+											"lockedon",			// FF_STATUSICON_LOCKEDON
 										};
 
 struct statusicon_t
@@ -243,7 +244,7 @@ void CStatusIcons::Paint( void )
 
 		// This icon is not active. If the duration is negative then we allow it to
 		// stay on as long as it likes.
-		if (flTimeLeft < 0 && sIcon.m_flDuration > -0.1f)
+		if (flTimeLeft <= 0 && sIcon.m_flDuration > -0.1f)
 			continue;
 
 		// This icon has no texture, that's pretty bad news
