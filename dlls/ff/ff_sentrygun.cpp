@@ -72,7 +72,7 @@
 #define SG_USEPVS false // sg_usepvs.GetBool()
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "2.9", FCVAR_REPLICATED );
 #define SG_TURNSPEED  sg_turnspeed.GetFloat()
-ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "2.5", FCVAR_REPLICATED );
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "2.6", FCVAR_REPLICATED );
 #define SG_PITCHSPEED sg_pitchspeed.GetFloat()
 //ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 #define SG_RANGE 1050.0f // sg_range.GetFloat()
@@ -114,6 +114,11 @@ ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.14", FCVAR_REPLIC
 ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3 sg_shotcycletime_lvl3.GetFloat()
 
+ConVar sg_warningshots_delay("ffdev_sg_warningshots_delay", "0.3", FCVAR_REPLICATED, "Time between warning shots");
+#define SG_WARNINGSHOTS_DELAY sg_warningshots_delay.GetFloat()
+ConVar sg_warningshots_angle("ffdev_sg_warningshots_angle", "0.985", FCVAR_REPLICATED, "Dotproduct angle where SG will start firing warning shots. 5=0.996, 10=0.985");
+#define SG_WARNINGSHOTS_ANGLE sg_warningshots_angle.GetFloat()
+
 //ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
 #define SG_HEALTH_LEVEL1 145 // sg_health_lvl1.GetInt()
 //ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG health");
@@ -137,7 +142,7 @@ ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.85", 
 ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
 #define SG_RETURNTOIDLETIME sg_returntoidletime.GetFloat()
 
-ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.0", FCVAR_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
+ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.1", FCVAR_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
 #define SG_TURNSPEED_AFTERLOCK sg_returntoidlespeed.GetFloat()
 
 //ConVar sg_empdmg_base("ffdev_sg_empdmg_base", "100", FCVAR_REPLICATED, "Base damage a sentry takes from an emp.");
@@ -151,11 +156,11 @@ ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.0", FCVAR_REPLICATE
 #define SG_ACKNOWLEDGE_SABOTAGE_DELAY 2.5f // sg_acknowledge_sabotage_delay.GetFloat()
 
 // caes: limit angular acceleration of SG
-ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.1", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
+ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.25", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
 #define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat()
-ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.2", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
+ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
 #define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat()
-ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.001", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
+ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.0004", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
 #define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat()
 ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
 #define SG_ACCELFRICTIONMULT sg_accel_fricmult.GetFloat()
@@ -445,7 +450,7 @@ void CFFSentryGun::OnObjectThink( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::OnSearchThink( void ) 
 {
-	VPROF_BUDGET( "CFFSentryGun::OnOSearchThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+	VPROF_BUDGET( "CFFSentryGun::OnSearchThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	OnObjectThink();
 
@@ -525,26 +530,34 @@ void CFFSentryGun::OnActiveThink( void )
 			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
 			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAKMULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{
-
 		if ( enemy && enemy->IsAlive() )
 		{
-
-
+			// AfterShock: if we lost track of our target, and they are still alive, 
+			// and we're looking the right way, then pause to see if our target comes back
 			Vector vecAiming, vecGoal;
 			AngleVectors( m_angAiming, &vecAiming );
 			AngleVectors( m_angGoal, &vecGoal );
-
-			// Are we rotated enough to where we can fire?
 			bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_7DEGREE;
 			if ( bCanFire )			
-				m_flEndLockTime = gpGlobals->curtime; // AfterShock: if we lost track of our target, and they are still alive, 
-						// and we're looking the right way, then pause to see if our target comes back
+				m_flEndLockTime = gpGlobals->curtime; 
+
+			// Tell player they aren't locked on any more, and remove the status icon
+			if ( enemy->IsPlayer() )
+			{
+				CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+				user.MakeReliable();
+
+				UserMessageBegin(user, "StatusIconUpdate");
+					WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+					WRITE_FLOAT(0.0);
+				MessageEnd();
+			}
 		}
 
 		SetEnemy( NULL );
 		SetThink( &CFFSentryGun::OnSearchThink );
 		SpinDown();
-		return;
+		return; // No target, do nothing!
 	}
 
 	// If we're targeting a buildable, and a player is a better target, change.
@@ -552,7 +565,18 @@ void CFFSentryGun::OnActiveThink( void )
 	{
 		CBaseEntity *pNewTarget = HackFindEnemy();
 		if(pNewTarget && pNewTarget->IsPlayer())
+		{
+			// Tell player they're locked on, and give the status icon
+			CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+			user.MakeReliable();
+
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+				WRITE_FLOAT(30.0);
+			MessageEnd();
+
 			SetEnemy(pNewTarget);
+		}
 	}
 
 	// Get the approximate distance that we're firing
@@ -618,6 +642,7 @@ void CFFSentryGun::OnActiveThink( void )
 
 	// Are we rotated enough to where we can fire?
 	bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_5DEGREE;
+	bool bCanAlmostFire = vecAiming.Dot( vecGoal ) > SG_WARNINGSHOTS_ANGLE;
 
 	// Did we fire
 	bool bFired = false;
@@ -650,6 +675,22 @@ void CFFSentryGun::OnActiveThink( void )
 			bFired = true;
 		}		
 	}	
+	else if ( bCanAlmostFire )
+	{
+		// Fire warning shots
+		if( ( gpGlobals->curtime > m_flNextShell + SG_WARNINGSHOTS_DELAY ) && ( m_iShells > 0 ) ) 
+		{
+			Vector vecOrigin;
+			QAngle vecAngles;
+			GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
+			//AngleVectors(vecAngles, &vecAiming);
+
+			Shoot( MuzzlePosition(), vecAiming, true );
+
+			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
+			bFired = true;
+		}	
+	}
 
 	if( bFired ) 
 	{
@@ -895,7 +936,7 @@ float CFFSentryGun::MaxYawSpeed( void ) const
 		return SG_TURNSPEED_AFTERLOCK; // slower than scan speed
 	}
 	else
-		return 1.0f; // Scan speed
+		return 2.0f; // Scan speed
 }
 
 //-----------------------------------------------------------------------------
@@ -1232,6 +1273,17 @@ void CFFSentryGun::SpinUp( void )
 	m_flStartLockTime = gpGlobals->curtime;
 
 	EmitSound("Sentry.Spot");
+
+	if ( GetEnemy() && GetEnemy()->Classify() == CLASS_PLAYER )
+	{
+		CSingleUserRecipientFilter user( ToBasePlayer( GetEnemy() ) );
+		user.MakeReliable();
+
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+			WRITE_FLOAT(30.0);
+		MessageEnd();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1710,6 +1762,17 @@ void CFFSentryGun::MaliciouslySabotage(CFFPlayer *pSaboteur)
 	EmitSound( "Sentry.SabotageActivate" );
 
 	// Cancel target so it searchs for a new (friendly one)
+	if ( GetEnemy() && GetEnemy()->IsPlayer() )
+	{
+		// Tell player they aren't locked on any more, and remove the status icon
+		CSingleUserRecipientFilter user( ToBasePlayer( GetEnemy() ) );
+		user.MakeReliable();
+
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+			WRITE_FLOAT(0.0);
+		MessageEnd();
+	}
 	SetEnemy(NULL);
 
 	m_nSkin = clamp( pSaboteur->GetTeamNumber() - TEAM_BLUE, 0, 3 );
