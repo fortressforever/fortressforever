@@ -87,6 +87,7 @@ public:
 	Color	m_clrBurning1;
 	Color	m_clrBurning2;
 	Color	m_clrBurning3;
+	Color	m_clrLockedon;
 
 };
 
@@ -260,6 +261,8 @@ void CStatusIcons::Paint( void )
 			sIcon.pTexture->DrawSelf(0, iOffset, m_clrBurning2 );
 		else if (i == FF_STATUSICON_BURNING3)
 			sIcon.pTexture->DrawSelf(0, iOffset, m_clrBurning3 );
+		else if (i == FF_STATUSICON_LOCKEDON)
+			sIcon.pTexture->DrawSelf(0, iOffset, m_clrLockedon );
 		else
 			sIcon.pTexture->DrawSelf(0, iOffset, m_clrDefault );
 		// TODO: make the status icons pulsate (and possibly pulsate faster as the end of duration nears)
@@ -295,6 +298,7 @@ void CStatusIcons::ApplySchemeSettings( vgui::IScheme *pScheme )
 	m_clrDefault = pScheme->GetColor("HUD_Status_Default", Color(109, 124, 142, 160));
 	m_clrDim = pScheme->GetColor("HUD_Status_Dim", Color(109, 124, 142, 96));
 	m_clrBurning1 = pScheme->GetColor("HUD_Status_Burning1", Color(255, 255, 0, 96));
-	m_clrBurning2 = pScheme->GetColor("HUD_Status_Burning3", Color(255, 96, 0, 96));
+	m_clrBurning2 = pScheme->GetColor("HUD_Status_Burning2", Color(255, 96, 0, 96));
 	m_clrBurning3 = pScheme->GetColor("HUD_Status_Burning3", Color(255, 0, 0, 96));
+	m_clrLockedon = pScheme->GetColor("HUD_Status_Lockedon", Color(255, 0, 0, 255));
 }
