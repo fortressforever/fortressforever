@@ -70,7 +70,7 @@
 //#define SG_DEBUG sg_debug.GetBool()
 //ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 #define SG_USEPVS false // sg_usepvs.GetBool()
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "2.9", FCVAR_REPLICATED );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "3.1", FCVAR_REPLICATED );
 #define SG_TURNSPEED  sg_turnspeed.GetFloat()
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "2.6", FCVAR_REPLICATED );
 #define SG_PITCHSPEED sg_pitchspeed.GetFloat()
@@ -160,7 +160,7 @@ ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.25", FCVAR_REPLICATED, "Maximum ang
 #define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat()
 ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
 #define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat()
-ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.0004", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
+ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.0025", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
 #define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat()
 ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
 #define SG_ACCELFRICTIONMULT sg_accel_fricmult.GetFloat()
@@ -572,7 +572,7 @@ void CFFSentryGun::OnActiveThink( void )
 
 			UserMessageBegin(user, "StatusIconUpdate");
 				WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-				WRITE_FLOAT(30.0);
+				WRITE_FLOAT(-1.0); //forever
 			MessageEnd();
 
 			SetEnemy(pNewTarget);
@@ -1281,7 +1281,7 @@ void CFFSentryGun::SpinUp( void )
 
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-			WRITE_FLOAT(30.0);
+			WRITE_FLOAT(-1.0); //forever
 		MessageEnd();
 	}
 }
