@@ -549,7 +549,7 @@ bool CServerGameDLL::DLLInit(CreateInterfaceFn engineFactory,
 	ConVar *sv_maxupdaterate = cvar->FindVar("sv_maxupdaterate");
 	ConVar *sv_maxcmdrate = cvar->FindVar("sv_maxcmdrate");
 
-	int nTickRate = 33;
+	int nTickRate = 66;
 	if (CommandLine()->CheckParm("-tickrate"))
 	{
 		nTickRate = CommandLine()->ParmValue("-tickrate", 0);
