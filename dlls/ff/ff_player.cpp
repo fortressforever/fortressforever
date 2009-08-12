@@ -1350,8 +1350,8 @@ void CFFPlayer::Spawn( void )
 
 	// This will finish all status icons
 	UserMessageBegin(user, "StatusIconUpdate");
-	WRITE_BYTE(FF_STATUSICON_MAX);
-	WRITE_FLOAT(0.0);
+		WRITE_BYTE(FF_STATUSICON_MAX);
+		WRITE_FLOAT(0.0);
 	MessageEnd();
 
 	// Get rid of any fire
