@@ -97,7 +97,7 @@ ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "
 #define OVERPRESSURE_EFFECT "FF_RingEffect"
 
 //0001279: Need convar for pipe det delay
-#define PIPE_DET_DELAY 0.55 // this is mirrored in ff_projectile_pipebomb.cpp 
+#define PIPE_DET_DELAY 0.55 // this is mirrored in ff_projectile_pipebomb.cpp and ff_player.cpp
 extern ConVar ai_debug_shoot_positions;
 
 void DispatchEffect(const char *pName, const CEffectData &data);
@@ -576,8 +576,10 @@ void CFFPlayer::ClassSpecificSkill()
 	if (m_flNextClassSpecificSkill > gpGlobals->curtime)
 		return;
 
+#ifdef CLIENT_DLL
 	CFFWeaponBase *pWeapon = GetActiveFFWeapon();		
-			
+#endif
+
 	CEffectData data;
 
 	switch (GetClassSlot())
@@ -800,43 +802,18 @@ void CFFPlayer::ClassSpecificSkill()
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post()
 {
-#ifdef GAME_DLL
-	CFFWeaponBase *pWeapon = GetActiveFFWeapon();
-#endif
+#ifdef CLIENT_DLL
 	switch (GetClassSlot())
 	{
-#ifdef CLIENT_DLL
-	case CLASS_SOLDIER:
-		engine->ClientCmd("-reload");
-		break;
-
-	case CLASS_ENGINEER:
-	case CLASS_SPY:
-		HudContextShow(false);
-		break;
-#endif
-		/* no more clamp - AfterShock
-#ifdef GAME_DLL
-		case CLASS_HWGUY:
-				if (pWeapon)
-				{
-					if(pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON)
-					{
-						CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *)pWeapon;
-						if(pAC)
-						{
-							pAC->ClampOff();
-						}
-					}
-				}
+		case CLASS_ENGINEER:
+		case CLASS_SPY:
+			HudContextShow(false);
 			break;
-#endif
-			*/
-	default:
-		break;
 
+		default:
+			break;
 	}
-
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1414,6 +1391,74 @@ void CFFPlayer::Command_SpyCloak( void )
 #ifdef GAME_DLL
 	SpyCloakFadeIn();
 #endif	
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared silent cloak code
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_SpySmartCloak( void )
+{
+	// Jon: always allow uncloaking if already cloaked
+	if( IsCloaked() )
+	{
+		// Can only cloak every ffdev_spy_nextcloak seconds
+		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+		Cloak();
+#ifdef GAME_DLL
+		SpyCloakFadeOut();
+#endif
+		return;
+	}
+
+	if( !IsCloakable() )
+	{
+#ifdef GAME_DLL
+		Omnibot::Notify_CantCloak(this);
+#endif
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
+		return;
+	}
+
+	// 0001379: can cloak only if on the ground
+	// added: or also not swimming
+	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
+		return;
+	}
+
+	// Check if we can cloak yet
+	if( m_flNextCloak > gpGlobals->curtime )
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_TIMELIMIT" );
+		return;
+	}
+
+	// Can only cloak every ffdev_spy_nextcloak seconds
+	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+
+	// Silent cloak must be done while not moving! But if we're
+	// already cloaked we'll allow it so the player can uncloak
+	// Jon: adding in minimum allowed speed cvar
+	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
+	{
+#ifdef GAME_DLL	
+		// normal cloak
+		m_bCloakFadeType = false;
+#endif
+	}
+	else
+	{
+#ifdef GAME_DLL	
+		// Silent cloak
+		m_bCloakFadeType = true;
+#endif
+	}
+	Cloak();
+
+#ifdef GAME_DLL
+	SpyCloakFadeIn();
+#endif
 }
 
 //-----------------------------------------------------------------------------

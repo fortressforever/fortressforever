@@ -163,6 +163,7 @@ FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class
 // entity system interfacing stuffs
 FF_AUTO_COMMAND( flaginfo, &CFFPlayer::Command_FlagInfo, "Displays information about the flag", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH | FF_CMD_CLOAKED );
 FF_AUTO_COMMAND( dropitems, &CFFPlayer::Command_DropItems, "Drops items (flags)", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( detpipes, &CFFPlayer::Command_DetPipes, "Detontates a demoman's pipes", FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_SKILL_COMMAND );
 
 // spy sabotage stuff
 FF_AUTO_COMMAND( dispensersabotage, &CFFPlayer::Command_SabotageDispenser, "Detonate enemy dispenser that you have sabtoaged", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH | FF_CMD_CLOAKED );
@@ -171,6 +172,7 @@ FF_AUTO_COMMAND( sentrysabotage, &CFFPlayer::Command_SabotageSentry, "Turn enemy
 // Mulch: Making spy commands shared
 FF_SHARED_COMMAND( cloak, &CFFPlayer::Command_SpyCloak, CC_SpyCloak, "Cloak", FF_CMD_ALIVE | FF_CMD_CLOAKED | FF_CMD_PREMATCH | FF_CMD_SKILL_COMMAND );
 FF_SHARED_COMMAND( scloak, &CFFPlayer::Command_SpySilentCloak, CC_SpySilentCloak, "Silent Cloak", FF_CMD_ALIVE | FF_CMD_CLOAKED | FF_CMD_PREMATCH | FF_CMD_SKILL_COMMAND );
+FF_SHARED_COMMAND( smartcloak, &CFFPlayer::Command_SpySmartCloak, CC_SpySmartCloak, "Smart Cloak", FF_CMD_ALIVE | FF_CMD_CLOAKED | FF_CMD_PREMATCH | FF_CMD_SKILL_COMMAND );
 
 // --> Mirv: Toggle grenades (requested by defrag)
 FF_SHARED_COMMAND( toggleone, &CFFPlayer::Command_ToggleOne, CC_ToggleOne, "Primes and throws primary grenade on subsequent touches", FF_CMD_ALIVE | FF_CMD_CLOAKED | FF_CMD_PREMATCH );

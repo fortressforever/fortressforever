@@ -353,6 +353,7 @@ public:
 	void Command_ToggleTwo( void );	
 	void Command_FlagInfo( void ); // flaginfo
 	void Command_DropItems( void );
+	void Command_DetPipes( void );
 	void Command_Discard( void );	
 	void Command_SaveMe( void );
 	void Command_EngyMe( void );
@@ -677,6 +678,7 @@ private:
 public:
 	void Command_SpyCloak( void );
 	void Command_SpySilentCloak( void );
+	void Command_SpySmartCloak( void );
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
 private:
 	void Cloak( void );	
