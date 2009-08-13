@@ -50,6 +50,8 @@ extern int gEvilImpulse101;
 // Oh no a gobal.
 int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
+#define PIPE_DET_DELAY 0.55 // this is mirrored in ff_projectile_pipebomb.cpp and ff_player_shared.cpp
+
 // grenade information
 //ConVar gren_timer("ffdev_gren_timer","3.81",0,"Timer length for all grenades.");
 #define GREN_TIMER 3.81f
@@ -3827,6 +3829,12 @@ void CFFPlayer::Command_DropItems( void )
 		// Next!
 		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( pEnt, CLASS_INFOSCRIPT );
 	}
+}
+
+void CFFPlayer::Command_DetPipes( void )
+{	
+	if( ( GetPipebombShotTime() + PIPE_DET_DELAY ) < gpGlobals->curtime )
+		CFFProjectilePipebomb::DestroyAllPipes(this);
 }
 
 /**

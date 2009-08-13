@@ -525,6 +525,26 @@ void CC_SpySilentCloak( void )
 	pLocalPlayer->Command_SpySilentCloak();
 }
 
+void CC_SpySmartCloak( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+
+	if( pLocalPlayer->GetClassSlot() != CLASS_SPY )
+		return;
+
+	pLocalPlayer->Command_SpySmartCloak();
+}
+
+
+
 #define FF_PLAYER_MODEL "models/player/terror.mdl"
 
 // -------------------------------------------------------------------------------- //
