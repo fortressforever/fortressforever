@@ -21,7 +21,7 @@
 	#include "ilagcompensationmanager.h"
 #endif
 
-#define MELEE_HULL_DIM		16
+#define MELEE_HULL_DIM		16 //If this is changed, need to change the hardcoded cube root of 2 around line 305
 
 static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
