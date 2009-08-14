@@ -1334,7 +1334,7 @@ bool CFFSentryGun::UpdateFacing( void )
 
 	// allow more accel if slowing down (friction)
 	if( ( m_angSpeed_yaw < 0.0 && delta_yaw > m_angSpeed_yaw ) || ( m_angSpeed_yaw > 0.0 && delta_yaw < m_angSpeed_yaw ) )
-		accelYaw *= SG_ACCELFRICTIONMULT;
+		accelYaw = SG_ANGULAR_ACCEL_YAW * SG_ACCELFRICTIONMULT;
 
 	// limit the amount it can turn according to its current angular speed and the max angular accel allowed
 	if( delta_yaw > m_angSpeed_yaw + accelYaw )
@@ -1410,7 +1410,7 @@ bool CFFSentryGun::UpdateFacing( void )
 
 	// allow more accel if slowing down (friction)
 	if( ( m_angSpeed_pitch < 0.0 && delta_pitch > m_angSpeed_pitch ) || ( m_angSpeed_pitch > 0.0 && delta_pitch < m_angSpeed_pitch ) )
-		accelPitch *= SG_ACCELFRICTIONMULT;
+		accelPitch = SG_ANGULAR_ACCEL_PITCH * SG_ACCELFRICTIONMULT;
 
 	// limit the amount it can turn according to its current angular speed and the max angular accel allowed
 	if( delta_pitch > m_angSpeed_pitch + accelPitch )
