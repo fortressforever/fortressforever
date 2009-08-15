@@ -136,11 +136,11 @@ ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, 
 //ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
 //#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
 
-ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.7", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
+ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.0", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
 #define SG_TIMETOREACHFULLTURNSPEED sg_timetoreachfullturnspeed.GetFloat()
 ConVar sg_timetoreachfullfirespeed("ffdev_sg_timetoreachfullfirespeed", "0.8", FCVAR_REPLICATED, "How many seconds should the SG take to reach full fire rate when changing from idle to locked");
 #define SG_TIMETOREACHFULLFIRESPEED sg_timetoreachfullfirespeed.GetFloat()
-ConVar sg_lowfirespeed("ffdev_sg_lowfirespeed", "0.12", FCVAR_REPLICATED, "This time is added to normal cycletime at beginning of a lock when it ramps up");
+ConVar sg_lowfirespeed("ffdev_sg_lowfirespeed", "0.1", FCVAR_REPLICATED, "This time is added to normal cycletime at beginning of a lock when it ramps up");
 #define SG_LOWFIRESPEED sg_lowfirespeed.GetFloat()
 
 ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
@@ -163,7 +163,7 @@ ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.25", FCVAR_REPLICATED, "Maximum ang
 #define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat()
 ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
 #define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat()
-ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.006", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
+ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.008", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
 #define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat()
 ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
 #define SG_ACCELFRICTIONMULT sg_accel_fricmult.GetFloat()
