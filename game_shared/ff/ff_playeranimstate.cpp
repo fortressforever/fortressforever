@@ -166,13 +166,15 @@ void CFFPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event )
 		m_iFireSequence = CalcFireLayerSequence( event );
 		m_bFiring = m_iFireSequence != -1;
 	}
-	else if ( event == PLAYERANIMEVENT_JUMP )
+	// caes: disable jump anim for now
+	/*else if ( event == PLAYERANIMEVENT_JUMP )
 	{
 		// Play the jump animation.
 		m_bJumping = true;
 		m_bFirstJumpFrame = true;
 		m_flJumpStartTime = gpGlobals->curtime;
-	}
+	}*/
+	// caes
 	else if ( event == PLAYERANIMEVENT_RELOAD )
 	{
 		m_iReloadSequence = CalcReloadLayerSequence();
