@@ -114,7 +114,7 @@ ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.14", FCVAR_REPLIC
 ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3 sg_shotcycletime_lvl3.GetFloat()
 
-ConVar sg_warningshots_delay("ffdev_sg_warningshots_delay", "0.3", FCVAR_REPLICATED, "Time between warning shots");
+ConVar sg_warningshots_delay("ffdev_sg_warningshots_delay", "0.2", FCVAR_REPLICATED, "Time between warning shots");
 #define SG_WARNINGSHOTS_DELAY sg_warningshots_delay.GetFloat()
 ConVar sg_warningshots_angle("ffdev_sg_warningshots_angle", "0.985", FCVAR_REPLICATED, "Dotproduct angle where SG will start firing warning shots. 5=0.996, 10=0.985");
 #define SG_WARNINGSHOTS_ANGLE sg_warningshots_angle.GetFloat()
@@ -136,12 +136,15 @@ ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, 
 //ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
 //#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
 
-ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.85", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
+ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.7", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
 #define SG_TIMETOREACHFULLTURNSPEED sg_timetoreachfullturnspeed.GetFloat()
+ConVar sg_timetoreachfullfirespeed("ffdev_sg_timetoreachfullfirespeed", "0.8", FCVAR_REPLICATED, "How many seconds should the SG take to reach full fire rate when changing from idle to locked");
+#define SG_TIMETOREACHFULLFIRESPEED sg_timetoreachfullfirespeed.GetFloat()
+ConVar sg_lowfirespeed("ffdev_sg_lowfirespeed", "0.12", FCVAR_REPLICATED, "This time is added to normal cycletime at beginning of a lock when it ramps up");
+#define SG_LOWFIRESPEED sg_lowfirespeed.GetFloat()
 
 ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
 #define SG_RETURNTOIDLETIME sg_returntoidletime.GetFloat()
-
 ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.1", FCVAR_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
 #define SG_TURNSPEED_AFTERLOCK sg_returntoidlespeed.GetFloat()
 
@@ -160,7 +163,7 @@ ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.25", FCVAR_REPLICATED, "Maximum ang
 #define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat()
 ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
 #define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat()
-ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.0025", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
+ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.006", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
 #define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat()
 ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
 #define SG_ACCELFRICTIONMULT sg_accel_fricmult.GetFloat()
@@ -671,7 +674,20 @@ void CFFSentryGun::OnActiveThink( void )
 
 			Shoot( MuzzlePosition(), vecAiming, true );
 
-			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
+			//m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
+
+			// AfterShock: ramp up fire rate starting from SG_LOWFIRESPEED and reaching normal fire rate at time SG_TIMETOREACHFULLFIRESPEED
+			float prop;
+			if ( ( gpGlobals->curtime - m_flStartLockTime ) >= SG_TIMETOREACHFULLFIRESPEED )
+			{
+				prop = 1.0f;
+			}
+			else
+				prop = ( gpGlobals->curtime - m_flStartLockTime ) / SG_TIMETOREACHFULLFIRESPEED;
+
+			prop = 1.0f - prop;
+			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime + SG_LOWFIRESPEED * prop;
+
 			bFired = true;
 		}		
 	}	
