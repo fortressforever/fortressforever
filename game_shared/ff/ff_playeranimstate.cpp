@@ -25,7 +25,7 @@
 #endif
 
 #define ANIM_TOPSPEED_WALK			100
-#define ANIM_TOPSPEED_RUN			250
+#define ANIM_TOPSPEED_RUN			200
 #define ANIM_TOPSPEED_RUN_CROUCH	85
 
 #define ANGLE_BEFORE_TURN_LEGS		60 // changed from 30 -> 60 for rebo
