@@ -25,7 +25,11 @@
 #endif
 
 #define ANIM_TOPSPEED_WALK			100
-#define ANIM_TOPSPEED_RUN			200
+// caes: cvar for testing
+ConVar ff_anim_topspeed_run( "ffdev_anim_topspeed_run", "225", FCVAR_REPLICATED, "player speed at which animations play full speed" );
+#define ANIM_TOPSPEED_RUN ff_anim_topspeed_run.GetFloat()
+//#define ANIM_TOPSPEED_RUN			200
+// caes
 #define ANIM_TOPSPEED_RUN_CROUCH	85
 
 #define ANGLE_BEFORE_TURN_LEGS		60 // changed from 30 -> 60 for rebo
@@ -166,15 +170,13 @@ void CFFPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event )
 		m_iFireSequence = CalcFireLayerSequence( event );
 		m_bFiring = m_iFireSequence != -1;
 	}
-	// caes: disable jump anim for now
-	/*else if ( event == PLAYERANIMEVENT_JUMP )
+	else if ( event == PLAYERANIMEVENT_JUMP )
 	{
 		// Play the jump animation.
 		m_bJumping = true;
 		m_bFirstJumpFrame = true;
 		m_flJumpStartTime = gpGlobals->curtime;
-	}*/
-	// caes
+	}
 	else if ( event == PLAYERANIMEVENT_RELOAD )
 	{
 		m_iReloadSequence = CalcReloadLayerSequence();
