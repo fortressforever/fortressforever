@@ -22,10 +22,11 @@ using namespace vgui;
 
 extern ConVar cl_drawhud;
 ConVar hud_messages("hud_messages", "2", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Number of FF messages shown on the HUD at a time (set to 0 to disable messages)");
+ConVar hud_messages_duration("hud_messages_duration", "4", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Default duration of FF messages on the HUD");
 
 extern enum LuaColors;
 
-#define DEFAULT_MESSAGE_DURATION 5.0f
+#define DEFAULT_MESSAGE_DURATION hud_messages_duration.GetFloat()
 
 // Contents of each entry in our list of messages
 struct MessageItem 
