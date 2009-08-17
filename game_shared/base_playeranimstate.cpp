@@ -446,11 +446,7 @@ void CBasePlayerAnimState::ComputeAimSequence()
 		// weighting it based on how fast he's moving. That way, when he's moving slowly, his upper 
 		// body doesn't jiggle all around.
 		bool bIsMoving;
-
-		//AfterShock: this needs scaling by class max speed. Currently it assumes that if you're playing the run anim 
-		//at 70% speed, you're going 70% max speed. This isn't true for e.g. HW who goes at ~55% scout speed and this 
-		//code will falsely blend 45% into an idle when the HW runs!
-		float flPlaybackRate = CalcMovementPlaybackRate( &bIsMoving ); 
+		float flPlaybackRate = CalcMovementPlaybackRate( &bIsMoving );
 		if ( bIsMoving )
 			UpdateAimSequenceLayers( flCycle, AIMSEQUENCE_LAYER+2, false, &m_SequenceTransitioner, flPlaybackRate );
 	}
@@ -543,8 +539,7 @@ bool CBasePlayerAnimState::CanThePlayerMove()
 void CBasePlayerAnimState::ComputePlaybackRate()
 {
 	VPROF( "CBasePlayerAnimState::ComputePlaybackRate" );
-	if ( /*m_AnimConfig.m_LegAnimType != LEGANIM_9WAY &&*/ m_AnimConfig.m_LegAnimType != LEGANIM_8WAY )
-	//if ( m_AnimConfig.m_LegAnimType != LEGANIM_9WAY && m_AnimConfig.m_LegAnimType != LEGANIM_8WAY )
+	if ( m_AnimConfig.m_LegAnimType != LEGANIM_9WAY && m_AnimConfig.m_LegAnimType != LEGANIM_8WAY )
 	{
 		// When using a 9-way blend, playback rate is always 1 and we just scale the pose params
 		// to speed up or slow down the animation.

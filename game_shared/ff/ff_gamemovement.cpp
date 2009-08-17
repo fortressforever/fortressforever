@@ -215,6 +215,10 @@ bool CFFGameMovement::CheckJumpButton(void)
 	//player->PlayStepSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, 1.0, true );
 	ffplayer->PlayJumpSound(mv->m_vecAbsOrigin, player->m_pSurfaceData, 1.0);
 
+	// Mirv: This fixes the jump animation
+	//MoveHelper()->PlayerSetAnimation( PLAYER_JUMP );
+	ffplayer->DoAnimationEvent(PLAYERANIMEVENT_JUMP);
+
 	float fGroundFactor = 1.0f;
 	if (player->m_pSurfaceData)
 	{
@@ -228,13 +232,6 @@ bool CFFGameMovement::CheckJumpButton(void)
 	const float cap_hard = BHOP_CAP_HARD * mv->m_flMaxSpeed;
 	const float pcfactor = BHOP_PCFACTOR;
 	float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
-
-	// caes: play jump animation if going at or under run speed
-	if ( speed <= mv->m_flMaxSpeed )
-	{
-		ffplayer->DoAnimationEvent(PLAYERANIMEVENT_JUMP);
-	}
-	// caes
 
 #ifdef GAME_DLL
 	if ( ffplayer->m_flMancannonTime + 0.5f <= gpGlobals->curtime )
