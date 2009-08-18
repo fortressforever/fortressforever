@@ -70,7 +70,7 @@
 //#define SG_DEBUG sg_debug.GetBool()
 //ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 #define SG_USEPVS false // sg_usepvs.GetBool()
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "3.1", FCVAR_REPLICATED );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "3.2", FCVAR_REPLICATED );
 #define SG_TURNSPEED  sg_turnspeed.GetFloat()
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "2.6", FCVAR_REPLICATED );
 #define SG_PITCHSPEED sg_pitchspeed.GetFloat()
@@ -114,10 +114,15 @@ ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.14", FCVAR_REPLIC
 ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3 sg_shotcycletime_lvl3.GetFloat()
 
-ConVar sg_warningshots_delay("ffdev_sg_warningshots_delay", "0.2", FCVAR_REPLICATED, "Time between warning shots");
-#define SG_WARNINGSHOTS_DELAY sg_warningshots_delay.GetFloat()
-ConVar sg_warningshots_angle("ffdev_sg_warningshots_angle", "0.985", FCVAR_REPLICATED, "Dotproduct angle where SG will start firing warning shots. 5=0.996, 10=0.985");
-#define SG_WARNINGSHOTS_ANGLE sg_warningshots_angle.GetFloat()
+//ConVar sg_warningshots_delay("ffdev_sg_warningshots_delay", "0.2", FCVAR_REPLICATED, "Time between warning shots");
+//#define SG_WARNINGSHOTS_DELAY sg_warningshots_delay.GetFloat()
+//ConVar sg_warningshots_angle("ffdev_sg_warningshots_angle", "0.985", FCVAR_REPLICATED, "Dotproduct angle where SG will start firing warning shots. 5deg=0.996, 10deg=0.985");
+//#define SG_WARNINGSHOTS_ANGLE sg_warningshots_angle.GetFloat()
+//ConVar sg_shoot_angle("ffdev_sg_shoot_angle", "30.0", FCVAR_REPLICATED, "Angle where SG will start firing.");
+//#define SG_SHOOT_ANGLE sg_shoot_angle.GetFloat()
+//ConVar sg_shoot_angle_distmult("ffdev_sg_shoot_angle_distmult", "0.008", FCVAR_REPLICATED, "The angle required to shoot the target is multiplied by (distance to target * this)");
+//#define SG_SHOOT_ANGLE_DISTMULT sg_shoot_angle_distmult.GetFloat()
+
 
 //ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
 #define SG_HEALTH_LEVEL1 160 // sg_health_lvl1.GetInt()
@@ -126,27 +131,27 @@ ConVar sg_warningshots_angle("ffdev_sg_warningshots_angle", "0.985", FCVAR_REPLI
 //ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
 #define SG_HEALTH_LEVEL3 200 // sg_health_lvl3.GetInt()
 
-ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_REPLICATED, "Level 1 SG lock on time");
-#define SG_LOCKONTIME_LVL1 sg_lockontime_lvl1.GetFloat()
-ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.20", FCVAR_REPLICATED, "Level 2 SG lock on time");
-#define SG_LOCKONTIME_LVL2 sg_lockontime_lvl2.GetFloat()
-ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, "Level 3 SG lock on time");
-#define SG_LOCKONTIME_LVL3 sg_lockontime_lvl3.GetFloat()
+//ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_REPLICATED, "Level 1 SG lock on time");
+#define SG_LOCKONTIME_LVL1 0.2f //sg_lockontime_lvl1.GetFloat()
+//ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.20", FCVAR_REPLICATED, "Level 2 SG lock on time");
+#define SG_LOCKONTIME_LVL2 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl2.GetFloat()
+//ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, "Level 3 SG lock on time");
+#define SG_LOCKONTIME_LVL3 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl3.GetFloat()
 
 //ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
 //#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
 
-ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.0", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
-#define SG_TIMETOREACHFULLTURNSPEED sg_timetoreachfullturnspeed.GetFloat()
-ConVar sg_timetoreachfullfirespeed("ffdev_sg_timetoreachfullfirespeed", "0.0", FCVAR_REPLICATED, "How many seconds should the SG take to reach full fire rate when changing from idle to locked");
-#define SG_TIMETOREACHFULLFIRESPEED sg_timetoreachfullfirespeed.GetFloat()
-ConVar sg_lowfirespeed("ffdev_sg_lowfirespeed", "0.1", FCVAR_REPLICATED, "This time is added to normal cycletime at beginning of a lock when it ramps up");
-#define SG_LOWFIRESPEED sg_lowfirespeed.GetFloat()
+//ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.0", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
+//#define SG_TIMETOREACHFULLTURNSPEED sg_timetoreachfullturnspeed.GetFloat()
+//ConVar sg_timetoreachfullfirespeed("ffdev_sg_timetoreachfullfirespeed", "0.0", FCVAR_REPLICATED, "How many seconds should the SG take to reach full fire rate when changing from idle to locked");
+//#define SG_TIMETOREACHFULLFIRESPEED sg_timetoreachfullfirespeed.GetFloat()
+//ConVar sg_lowfirespeed("ffdev_sg_lowfirespeed", "0.1", FCVAR_REPLICATED, "This time is added to normal cycletime at beginning of a lock when it ramps up");
+//#define SG_LOWFIRESPEED sg_lowfirespeed.GetFloat()
 
-ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
-#define SG_RETURNTOIDLETIME sg_returntoidletime.GetFloat()
-ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.1", FCVAR_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
-#define SG_TURNSPEED_AFTERLOCK sg_returntoidlespeed.GetFloat()
+//ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
+#define SG_RETURNTOIDLETIME 1.0f //sg_returntoidletime.GetFloat()
+//ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.1", FCVAR_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
+#define SG_TURNSPEED_AFTERLOCK 0.1f //sg_returntoidlespeed.GetFloat()
 
 //ConVar sg_empdmg_base("ffdev_sg_empdmg_base", "100", FCVAR_REPLICATED, "Base damage a sentry takes from an emp.");
 #define SG_EMPDMG_BASE 100.0f // sg_empdmg_base.GetFloat()
@@ -159,14 +164,14 @@ ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.1", FCVAR_REPLICATE
 #define SG_ACKNOWLEDGE_SABOTAGE_DELAY 2.5f // sg_acknowledge_sabotage_delay.GetFloat()
 
 // caes: limit angular acceleration of SG
-ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.25", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
-#define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat()
-ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
-#define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat()
+//ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.25", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
+#define SG_ANGULAR_ACCEL_YAW 0.25 //sg_accel_yaw.GetFloat()
+//ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
+#define SG_ANGULAR_ACCEL_PITCH 0.5 //sg_accel_pitch.GetFloat()
 ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.008", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
 #define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat()
-ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
-#define SG_ACCELFRICTIONMULT sg_accel_fricmult.GetFloat()
+//ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
+#define SG_ACCELFRICTIONMULT 2.0f //sg_accel_fricmult.GetFloat()
 // caes
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
@@ -644,8 +649,12 @@ void CFFSentryGun::OnActiveThink( void )
 	AngleVectors( m_angGoal, &vecGoal );
 
 	// Are we rotated enough to where we can fire?
-	bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_5DEGREE;
-	bool bCanAlmostFire = vecAiming.Dot( vecGoal ) > SG_WARNINGSHOTS_ANGLE;
+	bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_5DEGREE; 
+
+	//bool bCanAlmostFire = vecAiming.Dot( vecGoal ) > SG_WARNINGSHOTS_ANGLE;
+
+	//bool bCanFire = vecAiming.Dot( vecGoal ) > cosf( (SG_SHOOT_ANGLE / ( flDistance * SG_SHOOT_ANGLE_DISTMULT )) / 58.0f ); // scale the angle required by target distance
+	//bool bCanAlmostFire = vecAiming.Dot( vecGoal ) > cosf( (SG_WARNINGSHOTS_ANGLE / ( flDistance * SG_SHOOT_ANGLE_DISTMULT )) / 59.0f );
 
 	// Did we fire
 	bool bFired = false;
@@ -677,6 +686,7 @@ void CFFSentryGun::OnActiveThink( void )
 			//m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
 
 			// AfterShock: ramp up fire rate starting from SG_LOWFIRESPEED and reaching normal fire rate at time SG_TIMETOREACHFULLFIRESPEED
+			/* Actually, this is too complex, removing
 			float prop;
 			if ( ( gpGlobals->curtime - m_flStartLockTime ) >= SG_TIMETOREACHFULLFIRESPEED )
 			{
@@ -688,9 +698,13 @@ void CFFSentryGun::OnActiveThink( void )
 			prop = 1.0f - prop;
 			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime + SG_LOWFIRESPEED * prop;
 
+			*/
+			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
+
 			bFired = true;
 		}		
 	}	
+	/*
 	else if ( bCanAlmostFire )
 	{
 		// Fire warning shots
@@ -706,7 +720,7 @@ void CFFSentryGun::OnActiveThink( void )
 			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
 			bFired = true;
 		}	
-	}
+	} */
 
 	if( bFired ) 
 	{
@@ -937,6 +951,7 @@ float CFFSentryGun::MaxYawSpeed( void ) const
 
 	if( GetEnemy() )
 	{
+		/* AfterShock: no more initial accel on turnspeed
 		float prop;
 		if ( ( gpGlobals->curtime - m_flStartLockTime ) >= SG_TIMETOREACHFULLTURNSPEED )
 		{
@@ -946,6 +961,8 @@ float CFFSentryGun::MaxYawSpeed( void ) const
 			prop = ( gpGlobals->curtime - m_flStartLockTime ) / SG_TIMETOREACHFULLTURNSPEED;
 
 		return SG_TURNSPEED * prop;
+		*/
+		return SG_TURNSPEED;
 	}
 	else if ( m_flEndLockTime > ( gpGlobals->curtime - SG_RETURNTOIDLETIME ) ) // just lost my target, so i'm gonna stay focused for a sec in case he reappears
 	{
@@ -964,6 +981,7 @@ float CFFSentryGun::MaxPitchSpeed( void ) const
 
 	if( GetEnemy() )
 	{
+		/*
 		float prop;
 		if ( ( gpGlobals->curtime - m_flStartLockTime ) >= SG_TIMETOREACHFULLTURNSPEED )
 		{
@@ -973,13 +991,15 @@ float CFFSentryGun::MaxPitchSpeed( void ) const
 			prop = ( gpGlobals->curtime - m_flStartLockTime ) / SG_TIMETOREACHFULLTURNSPEED;
 
 		return SG_PITCHSPEED * prop;
+		*/
+		return SG_PITCHSPEED;
 	}
 	else if ( m_flEndLockTime > ( gpGlobals->curtime - SG_RETURNTOIDLETIME ) ) // just lost my target, so i'm gonna stay focused for a sec in case he reappears
 	{
 		return SG_TURNSPEED_AFTERLOCK; // slower than scan speed
 	}
 	else
-		return 1.0f; // Scan speed
+		return 2.0f; // Scan speed
 
 }
 
@@ -1144,8 +1164,8 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 
 	// Introduce quite a big spread now if sabotaged
 	// but not if we're in malicious mode
-	if (IsSabotaged()&& !IsMaliciouslySabotaged())
-		info.m_vecSpread = VECTOR_CONE_10DEGREES;
+	//if (IsSabotaged()&& !IsMaliciouslySabotaged())
+	//	info.m_vecSpread = VECTOR_CONE_10DEGREES;
 
 	/*if ( SG_DEBUG )
 	{
