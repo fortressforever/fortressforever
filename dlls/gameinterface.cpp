@@ -81,7 +81,6 @@
 #include "ff_scriptman.h"
 #include "ff_luacontext.h"
 #include "ff_scheduleman.h"
-//#include "ff_statslog.h"
 #include "util.h"
 
 #if !defined( _RETAIL )
@@ -1189,9 +1188,6 @@ void CServerGameDLL::Think( bool finalTick )
 // Called when a level is shutdown (including changing levels)
 void CServerGameDLL::LevelShutdown( void )
 {
-	// AfterShock: removing oldschool stats stuff
-	//SendStats();
-
 	// Omni-bot: Shut down the bot interface
 	Omnibot::omnibot_interface::ShutdownBotInterface();	
 

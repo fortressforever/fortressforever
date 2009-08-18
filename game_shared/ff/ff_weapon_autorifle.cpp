@@ -22,7 +22,6 @@
 #else
 	#include "omnibot_interface.h"
 	#include "ff_player.h"
-//	#include "ff_statslog.h"
 #endif
 
 
@@ -116,9 +115,6 @@ void CFFWeaponAutoRifle::PrimaryAttack()
 #ifdef GAME_DLL
 	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
 	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
-
-	// record in stats as a firing
-	//g_StatsLog->AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
 #endif
 
 	// Fire now
