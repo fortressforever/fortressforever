@@ -34,7 +34,6 @@
 #include "ff_lualib_constants.h"
 
 #include "client.h"
-//#include "ff_statslog.h"
 #include "gib.h"
 #include "omnibot_interface.h"
 #include "te_effect_dispatch.h"
@@ -580,12 +579,6 @@ CFFPlayer::CFFPlayer()
 
 CFFPlayer::~CFFPlayer()
 {
-	/* AfterShock: Commenting all oldschool stats stuff
-	if (m_iStatsID != -1)
-	{
-		g_StatsLog->StopTimer(m_iStatsID, m_iPlayTime, true);
-	}
-*/
 	m_PlayerAnimState->Release();
 }
 
@@ -1555,27 +1548,11 @@ void CFFPlayer::Spawn( void )
 	else
 		RemoveFlag(FL_FROZEN);
 	*/
+	// TODO: CHECK OUT WHY THE ABOVE ACTUALLY FIXED IT, WHY DID IT THINK WE'RE IN AN INTERMISSION?!
 
 	// Increment the spawn counter
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 
-	// if they change class, we need to stop their timer (it gets started back up after reacquiring our id)
-	/* AfterShock: Commenting all oldschool stats stuff
-	if (m_iStatsID != -1)
-	{
-		g_StatsLog->StopTimer(m_iStatsID, m_iPlayTime, true);
-	}
-
-	// get our stats id, just in case.
-	m_iStatsID = g_StatsLog->GetPlayerID(
-		engine->GetPlayerNetworkIDString(this->edict()),
-		GetClassSlot(),
-		GetTeamNumber(),
-		engine->GetPlayerUserId(this->edict()),
-		GetPlayerName());
-		
-	g_StatsLog->StartTimer(m_iStatsID, m_iPlayTime);
-	*/
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1692,20 +1669,6 @@ void CFFPlayer::InitialSpawn( void )
 	// Set up their global voice channel
 	m_iChannel = 0;
 
-	// I'm putting this here, I'm not sure if it's the best place though
-	// I wanted to make sure that the statslog was created or I would've put
-	// it in the constructor - FryGuy
-	/* AfterShock: Commenting all oldschool stats stuff
-	m_iStatDeath = g_StatsLog->GetStatID("deaths");
-	m_iStatTeamKill = g_StatsLog->GetStatID("teamkills");
-	m_iStatKill = g_StatsLog->GetStatID("kills");
-	m_iStatInfections = g_StatsLog->GetStatID("infections");
-	m_iStatHeals = g_StatsLog->GetStatID("heals");
-	m_iStatHealHP = g_StatsLog->GetStatID("healhp");
-	m_iStatCritHeals = g_StatsLog->GetStatID("critheals");
-	m_iStatInfectCures = g_StatsLog->GetStatID("infectcures");
-	m_iPlayTime = g_StatsLog->GetStatID("time_played");
-*/
 	m_hRadioTagData = ( CFFRadioTagData * )CreateEntityByName( "ff_radiotagdata" );
 	Assert( m_hRadioTagData );
 	m_hRadioTagData->Spawn();
@@ -1889,25 +1852,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if( GetClassSlot() == CLASS_SPY )
 		SpyCloakFadeIn( true );
 
-	// Log the death to the stats engine
-	//g_StatsLog->AddStat(m_iStatsID, m_iStatDeath, 1);
-
 	// TODO: Take SGs into account here?
 	CFFPlayer *pKiller = dynamic_cast<CFFPlayer *>(dynamic_cast<CMultiplayRules *>(g_pGameRules)->GetDeathScorer( info.GetAttacker(), info.GetInflictor() ));
-	
-	// Log the correct stat for the killer
-	/* AfterShock: Commenting all oldschool stats stuff
-	if (pKiller)
-	{
-		if (g_pGameRules->PlayerRelationship(this, pKiller) == GR_TEAMMATE)
-			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatTeamKill, 1);
-		else
-			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
-
-		if (info.GetInflictor() && info.GetInflictor()->edict() && dynamic_cast<CFFWeaponBase*>(info.GetInflictor()))
-			g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, "", GetAbsOrigin(), GetLocation());
-	}
-	*/
 
 	if ( info.GetInflictor() )
 	{
@@ -4785,8 +4731,6 @@ bool CFFPlayer::Infect( CFFPlayer *pInfector )
 
 		EmitSound( "Player.cough" );	// |-- Mirv: [TODO] Change to something more suitable
 
-		//g_StatsLog->AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
-
 		// And now.. an effect
 		CSingleUserRecipientFilter user(this);
 		user.MakeReliable();
@@ -4832,10 +4776,6 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 		// credit the curer with a score
 		if( pCurer )
 			pCurer->AddFortPoints( 100, "#FF_FORTPOINTS_CUREINFECTION" );
-
-		// Log this in the stats
-		//if (pCurer)
-			//g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatInfectCures, 1);
 
 		Omnibot::Notify_Cured(this, pCurer);
 
@@ -6206,14 +6146,6 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth, bool healToFull)
 	// Leaving the 'last damage from enemy' part out until discussion has finished about it.
 	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), "#FF_FORTPOINTS_GIVEHEALTH");
 	
-	// Log the added health
-	//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
-	//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHealHP, m_iHealth - iOriginalHP);
-	
-	// Critical heal is when they are <= 15hp
-	//if (iOriginalHP <= 15)
-	//	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatCritHeals, 1);
-
 	if (IsInfected())
 	{
 		//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatInfectCures, 1);
@@ -7498,7 +7430,7 @@ void CFFPlayer::Command_SabotageSentry()
 
 	ClientPrint(this, HUD_PRINTCONSOLE, "> Send spike... ... ... ... ... ...Spike sent.\n");
 
-	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassT(pSentry, CLASS_SENTRYGUN)) != NULL) //FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
+	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassT(pSentry, CLASS_SENTRYGUN)) != NULL) 
 	{
 		if (pSentry->IsSabotaged() && pSentry->m_hSaboteur == this) 
 			pSentry->MaliciouslySabotage(this);
@@ -7514,7 +7446,7 @@ void CFFPlayer::Command_SabotageDispenser()
 {
 	CFFDispenser *pDispenser = NULL; 
 
-	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassT(pDispenser, CLASS_DISPENSER)) != NULL) //FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
+	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassT(pDispenser, CLASS_DISPENSER)) != NULL)  
 	{
 		if (pDispenser->IsSabotaged() && pDispenser->m_hSaboteur == this) 
 			pDispenser->MaliciouslySabotage(this);
@@ -7527,16 +7459,6 @@ void CFFPlayer::Command_SabotageDispenser()
 //-----------------------------------------------------------------------------
 void CFFPlayer::SpySabotageRelease()
 {
-	//CFFDispenser *pDispenser = NULL; 
-
-	//// Release any sentryguns
-	//while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
-	//{
-	//	if (pDispenser->m_hSaboteur == this) 
-	//	{
-	//		pDispenser->RemoveSaboteur(true);
-	//	}
-	//}
 
 	// Jiggles: Let's try it without Strings
 	CFFDispenser *pDispenser = (CFFDispenser*)gEntList.FindEntityByClassT( NULL, CLASS_DISPENSER );
@@ -7550,20 +7472,6 @@ void CFFPlayer::SpySabotageRelease()
 		// Next!
 		pDispenser = (CFFDispenser*)gEntList.FindEntityByClassT( pDispenser, CLASS_DISPENSER );
 	}
-
-
-	//CFFSentryGun *pSentry = NULL; 
-
-	//// Release any dispensers
-	//while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
-	//{
-	//	// Jiggles: Don't remove the Saboteur if he's already triggered Malicious Sabotage mode!
-	//	//          The SG will die after the "shooting teammates" period ends anyway.
-	//	if ( (pSentry->m_hSaboteur == this) && !pSentry->m_bShootingTeammates ) 
-	//	{
-	//		pSentry->RemoveSaboteur(true);
-	//	}
-	//}
 
 	// Jiggles: Again, let's try it without Strings
 	CFFSentryGun *pSentry = (CFFSentryGun*)gEntList.FindEntityByClassT( NULL, CLASS_SENTRYGUN );
@@ -7851,17 +7759,6 @@ void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime, float flFlameSize)
 			
 
 	}
-	/*
-	else if (! (pFlame->m_flSize == flFlameSize))
-	{
-		pFlame->Extinguish(); // kill old smaller flame
-
-		if (flLifeTime <= 0.0f) //if this is part of the player extinguish then just return immediately
-			return;
-
-		pFlame = CEntityFlame::Create(this, true, flFlameSize); // make a new bigger one
-		SetEffectEntity(pFlame);
-	}*/
 
 	Assert(pFlame);
 
@@ -7887,27 +7784,6 @@ void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime, float flFlameSize)
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: A function to allow lua to add stats for a player (ctf_flag_caps, for instance)
-//-----------------------------------------------------------------------------
-/* AfterShock: removing all oldschool stats stuff
-void CFFPlayer::AddStat(const char *stat, double value)
-{
-	int statId = g_StatsLog->GetStatID(stat);
-	g_StatsLog->AddStat(m_iStatsID, statId, value);
-}
-void CFFPlayer::AddAction(CFFPlayer *target, const char *action, const char *param)
-{
-	int actionId = g_StatsLog->GetActionID(action);
-	g_StatsLog->AddAction(m_iStatsID, target!=NULL ? target->m_iStatsID : -1, actionId, param, GetAbsOrigin(), GetLocation());
-}
-void CFFPlayer::AddAction(CFFPlayer *target, const char *action, const char *param, Vector &origin, const char *location)
-{
-	int actionId = g_StatsLog->GetActionID(action);
-	g_StatsLog->AddAction(m_iStatsID, target!=NULL ? target->m_iStatsID : -1, actionId, param, origin, location);
-}
-*/
 //-----------------------------------------------------------------------------
 // Purpose: Updates camera position & mapguide stuff (called from CFFPlayer::Spawn()
 // Fixes bug #0001767

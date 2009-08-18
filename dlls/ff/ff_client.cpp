@@ -30,7 +30,6 @@
 #include "tier0/vprof.h"
 #include "ff_bot_temp.h"
 #include "viewport_panel_names.h"
-//#include "ff_statslog.h"
 #include "ff_scriptman.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -61,9 +60,6 @@ void FinishClientPutInServer( CFFPlayer *pPlayer )
 
 	// --> Mirv: Various connectiong things
 	
-	// Register this with the stats engine
-	//g_StatsLog->RegisterPlayerID(pPlayer->entindex(), engine->GetPlayerUserId(pPlayer->edict()), engine->GetPlayerNetworkIDString(pPlayer->edict()));
-
 	// Bring up the MOTD in front of the team menu
 /*	const ConVar *hostname = cvar->FindVar( "hostname" );
 	const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";

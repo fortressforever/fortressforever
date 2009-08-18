@@ -22,7 +22,6 @@
 #ifdef CLIENT_DLL 
 	#include "c_ff_player.h"
 #else
-//	#include "ff_statslog.h"
 	#include "ff_player.h"
 	#include "eventqueue.h"
 #endif
@@ -148,19 +147,6 @@ CFFWeaponBase::CFFWeaponBase()
 void CFFWeaponBase::Spawn()
 {
 	CBaseCombatWeapon::Spawn();
-
-#ifdef GAME_DLL
-	// get the stat ids
-	/* AfterShock: commenting all oldschool stats stuff
-	char buf[256];
-	Q_snprintf(buf, 256, "fired_%s", GetDeathNoticeName());
-	m_iStatFired = g_StatsLog->GetStatID(buf);
-	Q_snprintf(buf, 256, "hit_%s", GetDeathNoticeName());
-	m_iStatHit = g_StatsLog->GetStatID(buf);
-	Q_snprintf(buf, 256, "%s", GetDeathNoticeName());
-	m_iActionKill = g_StatsLog->GetActionID(buf);
-	*/
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -570,8 +556,6 @@ void CFFWeaponBase::PrimaryAttack()
 	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
 	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
 
-	// record in stats as a firing
-	//g_StatsLog->AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
 #endif
 
 	// Fire now

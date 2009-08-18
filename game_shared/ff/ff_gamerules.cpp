@@ -23,7 +23,6 @@
 	#include "ff_player.h"
 	#include "ff_playercommand.h"
 	#include "ff_sentrygun.h"
-//	#include "ff_statslog.h"
 	#include "ff_item_flag.h"
 	#include "ff_entity_system.h"
 	#include "ff_scriptman.h"
@@ -360,9 +359,6 @@ ConVar mp_prematch( "mp_prematch",
 		// Prematch system, game has not started
 		m_flGameStarted = -1.0f;
 		
-		// Start stats engine
-		//g_StatsLog->ResetStats();
-
 		// Reset the effects timeouts
 		ClearAllowedEffects();
 	}
@@ -532,9 +528,6 @@ ConVar mp_prematch( "mp_prematch",
 			// TODO: Do stuff!
 
 			m_flIntermissionEndTime = 0.f;
-
-			// Restart stats!
-			//g_StatsLog->ResetStats();
 
 			// Kill entity system helper
 			UTIL_Remove( CFFEntitySystemHelper::GetInstance() );
@@ -1448,7 +1441,6 @@ ConVar mp_prematch( "mp_prematch",
 			// We should have started now, lets go!
 			if( gpGlobals->curtime > flPrematch )
 			{
-				//g_StatsLog->ResetStats();	// we should restart at the end of prematch
 				StartGame();
 			}
 			else
