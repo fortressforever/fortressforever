@@ -308,8 +308,9 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 						ClientPrint( pPlayer, HUD_PRINTCENTER, m_szCustomText );
 
 					// Mirv: Don't do this while sabotaged
-					if (!IsSabotaged())
-					{
+					
+					//if (!IsSabotaged())
+					//{
 						// Message owner (wiki says spies don't trigger the "enemies are using..." message)
 						if( !pPlayer->IsDisguised() )
 						{
@@ -325,7 +326,7 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 							pEvent->SetInt("enemyid", pPlayer->GetUserID());
 							gameeventmanager->FireEvent(pEvent, true);
 						}
-					}
+					//}
 				}
 				else
 				{
@@ -466,8 +467,8 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 
 	// Mirv: sabotage
 	// We can call this over and over, it will only ever reduce one level
-	if (IsSabotaged())
-		pPlayer->ReduceArmorClass();
+	//if (IsSabotaged())
+	//	pPlayer->ReduceArmorClass();
 
 	Omnibot::Notify_GotDispenserAmmo(pPlayer);
 }
