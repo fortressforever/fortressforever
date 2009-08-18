@@ -300,5 +300,5 @@ void CStatusIcons::ApplySchemeSettings( vgui::IScheme *pScheme )
 	m_clrBurning1 = pScheme->GetColor("HUD_Status_Burning1", Color(255, 255, 0, 96));
 	m_clrBurning2 = pScheme->GetColor("HUD_Status_Burning2", Color(255, 96, 0, 96));
 	m_clrBurning3 = pScheme->GetColor("HUD_Status_Burning3", Color(255, 0, 0, 96));
-	m_clrLockedon = pScheme->GetColor("HUD_Status_Lockedon", Color(255, 0, 0, 255));
+	m_clrLockedon = pScheme->GetColor("HUD_Status_Lockedon", Color(100, 32, 255, 255));
 }
