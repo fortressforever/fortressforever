@@ -108,6 +108,15 @@ void CFFManCannon::GoLive( void )
 	if( pOwner )
 		pOwner->RemoveAmmo( 1, AMMO_MANCANNON );
 
+	// tell the client when it expires
+	CSingleUserRecipientFilter user(pOwner);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "ManCannonMsg");
+		WRITE_FLOAT(gpGlobals->curtime + JUMPPAD_LIFESPAN + JUMPPAD_POWERDOWN_TIME);
+	MessageEnd();
+	
+
 	// start thinking
 	SetThink( &CFFManCannon::OnJumpPadThink );
 	// Stagger our starting times
