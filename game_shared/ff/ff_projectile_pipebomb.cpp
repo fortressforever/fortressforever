@@ -203,6 +203,15 @@ void CFFProjectilePipebomb::Explode( trace_t *pTrace, int bitsDamageType )
 	AddEffects( EF_NODRAW );
 	SetAbsVelocity( vec3_origin );
 	SetNextThink( gpGlobals->curtime );
+
+	// tell the client to decrement the count for the hud
+	CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
+	CSingleUserRecipientFilter user(pPipeOwner);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "PipeMsg");
+		WRITE_BYTE(0);
+	MessageEnd();
 #endif
 }
 
@@ -301,6 +310,15 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity 
 	// Too many pipes
 	if (i > 8) 
 		pOldestPipe->DetonatePipe();
+
+	// tell the client to decrement the count for the hud
+	CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (pPipebomb->GetOwnerEntity());
+	CSingleUserRecipientFilter user(pPipeOwner);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "PipeMsg");
+		WRITE_BYTE(1);
+	MessageEnd();
 #endif
 
 	return pPipebomb; 

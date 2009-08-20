@@ -177,6 +177,14 @@ void CFFDetpack::GoLive( void )
 	CFFPlayer *pOwner = GetOwnerPlayer();
 	if( pOwner )
 		pOwner->RemoveAmmo( 1, AMMO_DETPACK );
+	
+	// tell the client when we're supposed to blow up
+	CSingleUserRecipientFilter user(pOwner);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "DetpackMsg");
+		WRITE_FLOAT(m_flDetonateTime);
+	MessageEnd();
 
 	//DevMsg( "[Detpack] Next think in: %f seconds\n", flCurTime + m_flThinkTime );
 }
@@ -226,6 +234,10 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 	
 	// AfterShock - Scoring System: 100 points for defusing detpack
 	pPlayer->AddFortPoints(100,"#FF_FORTPOINTS_DEFUSEDETPACK");
+
+	// Send a message to the owner telling them what happened
+	ClientPrint( ( CFFPlayer * )m_hOwner.Get(), HUD_PRINTCENTER, "#FF_DETPACK_DEFUSED" );
+
 	// Finally remove
 	RemoveQuietly();	
 }
