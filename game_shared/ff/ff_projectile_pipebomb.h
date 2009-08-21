@@ -47,6 +47,7 @@ public:
 	DECLARE_CLASS(CFFProjectilePipebomb, CFFProjectileGrenade);
 	DECLARE_NETWORKCLASS(); 
 
+	void PipebombThink();
 	// Override precache because we want a different model
 	virtual void Spawn();
 	// Needs its own explode func for custom scorch mark
@@ -60,6 +61,8 @@ public:
 	void Precache( void );
 
 	virtual bool ExplodeOnHitPlayer() { return false; }
+
+	void DecrementHUDCount();
 
 #ifdef CLIENT_DLL
 	virtual int DrawModel(int flags);

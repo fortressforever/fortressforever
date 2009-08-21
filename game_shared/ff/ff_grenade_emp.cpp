@@ -103,8 +103,10 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_emp );
 				switch( pEntity->Classify() )
 				{
 				case CLASS_PIPEBOMB:
+
 					// This will handle the pipes blowing up and setting
 					// the correct owner
+					((CFFProjectilePipebomb *)pEntity)->DecrementHUDCount();
 					((CFFProjectilePipebomb *)pEntity)->DetonatePipe(true, GetOwnerEntity());
 					break;
 

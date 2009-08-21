@@ -28,6 +28,12 @@
 
 using namespace vgui;
 
+enum {
+	RESET_PIPES=0,
+	INCREMENT_PIPES,
+	DECREMENT_PIPES
+};
+
 class CHudBuildState : public CHudElement, public vgui::Panel
 {
 private:
@@ -216,7 +222,7 @@ void CHudBuildState::OnTick()
 		m_iSentryLevel = pSentryGun->m_iLevel;
 	m_bDrawManCannon = pManCannon && pManCannon->IsBuilt();
 	m_bDrawDetpack = pDetpack && pDetpack->IsBuilt();
-	m_bDrawPipes = pPlayer && pPlayer->GetClassSlot() == CLASS_DEMOMAN;
+	m_bDrawPipes = pPlayer && pPlayer->GetClassSlot() == CLASS_DEMOMAN && m_iNumPipes > 0;
 }
 
 void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
@@ -257,11 +263,23 @@ void CHudBuildState::MsgFunc_DetpackMsg(bf_read &msg)
 
 void CHudBuildState::MsgFunc_PipeMsg(bf_read &msg)
 {
-    bool iIncrementPipes = (bool) msg.ReadByte();
-	if (iIncrementPipes)
+    int iIncrementPipes = (int) msg.ReadByte();
+	switch (iIncrementPipes)
+	{
+	case INCREMENT_PIPES:
 		m_iNumPipes++;
-	else
+		DevMsg("Incrementing pipe count (to %i)\n", m_iNumPipes);
+		break;
+	case DECREMENT_PIPES:
 		m_iNumPipes--;
+		DevMsg("Decrementing pipe count (to %i)\n", m_iNumPipes);
+		break;
+	case RESET_PIPES:
+	default:
+		m_iNumPipes = 0;
+		DevMsg("Resetting pipe count (to %i)\n", m_iNumPipes);
+		break;
+	}
 }
 
 void CHudBuildState::Paint() 
@@ -357,7 +375,7 @@ void CHudBuildState::Paint()
 	{
 		surface()->DrawSetTextPos(text2_xpos, text2_ypos);
 
-		_snwprintf(m_szPipes, 127, L"%i / %i", clamp(m_iNumPipes, 0, 8), 8 );
+		_snwprintf(m_szPipes, 127, L"%i / %i", m_iNumPipes/*clamp(m_iNumPipes, 0, 8)*/, 8 );
 
 		for (wchar_t *wch = m_szPipes; *wch != 0; wch++) 
 			surface()->DrawUnicodeChar(*wch);

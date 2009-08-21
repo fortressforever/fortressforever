@@ -28,7 +28,8 @@ extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for 
 //=============================================================================
 
 #ifdef GAME_DLL
-BEGIN_DATADESC(CFFProjectilePipebomb) 
+BEGIN_DATADESC(CFFProjectilePipebomb)
+	DEFINE_THINKFUNC(PipebombThink), 
 END_DATADESC() 
 #endif
 
@@ -131,6 +132,10 @@ void CFFProjectilePipebomb::Spawn()
 		engine->GetPlayerInfo(C_BasePlayer::GetLocalPlayer()->entindex(), &pinfo);
 		fAltSkin = ! (pinfo.friendsID & 1);
 	}
+#else
+	// Set the think
+	SetThink(&CFFProjectilePipebomb::PipebombThink);		// |-- Mirv: Account for GCC strictness
+	SetNextThink(gpGlobals->curtime);
 #endif
 }
 
@@ -203,15 +208,6 @@ void CFFProjectilePipebomb::Explode( trace_t *pTrace, int bitsDamageType )
 	AddEffects( EF_NODRAW );
 	SetAbsVelocity( vec3_origin );
 	SetNextThink( gpGlobals->curtime );
-
-	// tell the client to decrement the count for the hud
-	CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
-	CSingleUserRecipientFilter user(pPipeOwner);
-	user.MakeReliable();
-
-	UserMessageBegin(user, "PipeMsg");
-		WRITE_BYTE(0);
-	MessageEnd();
 #endif
 }
 
@@ -234,6 +230,15 @@ int CFFProjectilePipebomb::DrawModel(int flags)
 void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force) 
 {
 #ifdef GAME_DLL
+	// tell the client to reset the count for the hud
+	CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (pOwner);
+	CSingleUserRecipientFilter user(pPipeOwner);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "PipeMsg");
+		WRITE_BYTE(0);
+	MessageEnd();
+
 	// Detonate all the pipes belonging to us
 	CFFProjectilePipebomb *pPipe = NULL; 
 
@@ -308,18 +313,50 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity 
 	}
 
 	// Too many pipes
-	if (i > 8) 
+	if (i > 8)
 		pOldestPipe->DetonatePipe();
+	else {
+		// tell the client to increment the count for the hud
+		CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (pPipebomb->GetOwnerEntity());
+		CSingleUserRecipientFilter user(pPipeOwner);
+		user.MakeReliable();
 
-	// tell the client to decrement the count for the hud
-	CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (pPipebomb->GetOwnerEntity());
+		UserMessageBegin(user, "PipeMsg");
+			WRITE_BYTE(1);
+		MessageEnd();
+	}
+#endif
+
+	return pPipebomb; 
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Grenade think function
+//----------------------------------------------------------------------------
+void CFFProjectilePipebomb::DecrementHUDCount() 
+{
+#ifdef GAME_DLL
+	// tell the client (demoman) to decrement the hud pipe count
+	CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
 	CSingleUserRecipientFilter user(pPipeOwner);
 	user.MakeReliable();
 
 	UserMessageBegin(user, "PipeMsg");
-		WRITE_BYTE(1);
+		WRITE_BYTE(2);
 	MessageEnd();
 #endif
+}
 
-	return pPipebomb; 
+//----------------------------------------------------------------------------
+// Purpose: Pipe think function
+//----------------------------------------------------------------------------
+void CFFProjectilePipebomb::PipebombThink() 
+{
+	// Remove if we're nolonger in the world
+	if (!IsInWorld() || gpGlobals->curtime > m_flDetonateTime) 
+	{
+		DecrementHUDCount();
+	}
+
+	BaseClass::GrenadeThink();
 }
