@@ -41,7 +41,6 @@ ConVar cl_box2(
 	"0", 
 	FCVAR_REPLICATED, 
 	"sds" );
-*/
 ConVar cl_box3( 
 	"cl_box3", 
 	"100", 
@@ -52,6 +51,7 @@ ConVar cl_box4(
 	"100", 
 	FCVAR_REPLICATED, 
 	"sds" );
+*/
 
 
 using namespace vgui;
