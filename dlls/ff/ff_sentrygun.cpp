@@ -70,9 +70,9 @@
 //#define SG_DEBUG sg_debug.GetBool()
 //ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 #define SG_USEPVS false // sg_usepvs.GetBool()
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "3.2", FCVAR_REPLICATED );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "5.5", FCVAR_REPLICATED );
 #define SG_TURNSPEED  sg_turnspeed.GetFloat()
-ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "2.6", FCVAR_REPLICATED );
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "4.0", FCVAR_REPLICATED );
 #define SG_PITCHSPEED sg_pitchspeed.GetFloat()
 //ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 #define SG_RANGE 1050.0f // sg_range.GetFloat()
@@ -109,7 +109,7 @@ ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "14", FCVAR_REPLICATED, "S
 // AfterShock; These values will be rounded by the ActiveThink time (at time of writing 0.01), so 0.125 = 0.13
 ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL1 sg_shotcycletime_lvl1.GetFloat()
-ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.14", FCVAR_REPLICATED, "Level 2 SG time between shots");
+ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.129", FCVAR_REPLICATED, "Level 2 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL2 sg_shotcycletime_lvl2.GetFloat()
 ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3 sg_shotcycletime_lvl3.GetFloat()
@@ -164,10 +164,10 @@ ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICA
 #define SG_ACKNOWLEDGE_SABOTAGE_DELAY 2.5f // sg_acknowledge_sabotage_delay.GetFloat()
 
 // caes: limit angular acceleration of SG
-//ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.25", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
-#define SG_ANGULAR_ACCEL_YAW 0.25 //sg_accel_yaw.GetFloat()
-//ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "0.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
-#define SG_ANGULAR_ACCEL_PITCH 0.5 //sg_accel_pitch.GetFloat()
+ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.75", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
+#define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat()
+ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "1.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
+#define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat()
 ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.008", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
 #define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat()
 //ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
@@ -462,7 +462,7 @@ void CFFSentryGun::OnSearchThink( void )
 
 	OnObjectThink();
 
-	SetNextThink( gpGlobals->curtime + 0.05f );
+	SetNextThink( gpGlobals->curtime + 0.029f ); // Just less than 1 tick (33 tickrate) or just less than 2 ticks (66 tick) or just less than 3 (100 tick)
 
 	if( GetEnemy() && !GetEnemy()->IsAlive() ) 
 		SetEnemy( NULL );
@@ -516,7 +516,7 @@ void CFFSentryGun::OnActiveThink( void )
 	OnObjectThink();
 
 	// Update our think time
-	SetNextThink( gpGlobals->curtime + 0.01f );
+	SetNextThink( gpGlobals->curtime + 0.029f ); // slightly less than 1 tick (33 tick), 
 
 	CBaseEntity *enemy = GetEnemy();
 
@@ -1848,6 +1848,19 @@ void CFFSentryGun::Detonate()
 			pEvent->SetInt("level", GetLevel());
 			gameeventmanager->FireEvent(pEvent, true);
 		}
+	}
+
+	CBaseEntity *enemy = GetEnemy();
+
+	if ( enemy && enemy->IsPlayer() )
+	{
+		CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+		user.MakeReliable();
+
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+			WRITE_FLOAT(0.0);
+		MessageEnd();
 	}
 
 	CFFBuildableObject::Detonate();
