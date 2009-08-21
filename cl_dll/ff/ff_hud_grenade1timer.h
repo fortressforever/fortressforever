@@ -52,8 +52,10 @@ private:
 	CPanelAnimationVarAliasType(float, bar_width, "bar_width", "1", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_height, "bar_height", "1", "proportional_float");
 	CPanelAnimationVarAliasType(Color, bar_color, "bar_color", "255 255 255", "color");
+	CPanelAnimationVarAliasType(float, icon_xpos, "icon_xpos", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, icon_ypos, "icon_ypos", "0", "proportional_float");
 
-	CHudTexture	*m_pIcon;
+	//CHudTexture	*m_pHudElementTexture;
 
 public:
 	CHudGrenade1Timer(const char *pElementName) : CHudElement(pElementName), vgui::FFPanel(NULL, "HudGrenade1Timer") 
