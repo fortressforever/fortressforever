@@ -456,6 +456,14 @@ public:
 protected:
 	unsigned int m_iEngyMe;
 	// ----------------------------------
+	
+	// ----------------------------------
+	// AmmoMe stuffs
+public:
+	bool IsInAmmoMe( void ) const { return m_iAmmoMe != 0; }
+protected:
+	unsigned int m_iAmmoMe;
+	// ----------------------------------
 
 	// ----------------------------------
 	// Cloak stuff

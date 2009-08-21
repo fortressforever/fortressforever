@@ -427,6 +427,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 
 	SendPropInt( SENDINFO( m_iSaveMe ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iEngyMe ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iAmmoMe ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
@@ -655,6 +656,10 @@ void CFFPlayer::PreThink(void)
 	// See if it's time to reset our engyme status
 	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iEngyMe != 0 ) )
 		m_iEngyMe = 0;
+	
+	// See if it's time to reset our engyme status
+	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iAmmoMe != 0 ) )
+		m_iAmmoMe = 0;
 
 	// Update our list of tagged players that the client
 	FindRadioTaggedPlayers();
@@ -1846,6 +1851,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if( m_iEngyMe )
 		m_iEngyMe = 0;
+	
+	if( m_iAmmoMe )
+		m_iAmmoMe = 0;
 
 	m_flSaveMeTime = 0.0f;
 
@@ -3990,6 +3998,7 @@ void CFFPlayer::Command_AmmoMe( void )
 {
 	if( m_flSaveMeTime < gpGlobals->curtime )
 	{
+		m_iAmmoMe = 1;
 		// Set the time we can do another saveme/engyme/ammome at
 		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
 
@@ -5393,9 +5402,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		return 0;
 	}
 
-	// AfterShock - Reset sabotage timer on getting shot
-	SpyStopSabotaging();
-
 	// Check for radio tag shots
 	if( inputInfo.GetInflictor() )
 	{
@@ -5476,9 +5482,8 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !fTookDamage )
 		return 0;
 
-
-
-
+	// AfterShock - Reset sabotage timer on getting shot
+	SpyStopSabotaging();
 
 // COMMENTED - NOT READY YET (not fully tested)
 	// AfterShock: slow the player depending on how much damage they took, down to a minimum of standard run speed - mostly useful for slowing bhoppers and concers

@@ -826,6 +826,15 @@ protected:
 	CNetworkVar( unsigned int, m_iEngyMe );
 	// 0001339: Share m_flSaveMeTime with the medic call.
 	// **********************************
+	
+	// **********************************
+	// AmmoMe stuffs
+public:
+	bool IsInAmmoMe( void ) const { return m_iAmmoMe != 0; }
+protected:
+	CNetworkVar( unsigned int, m_iAmmoMe );
+	// 0001339: Share m_flSaveMeTime with the medic call.
+	// **********************************
 
 public:
 	// Some luabind functions
