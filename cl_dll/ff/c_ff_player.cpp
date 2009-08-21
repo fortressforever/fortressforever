@@ -114,6 +114,10 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheEngyMeSprite )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_engyme" )
 CLIENTEFFECT_REGISTER_END()
 
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheAmmoMeSprite )
+CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_ammome" )
+CLIENTEFFECT_REGISTER_END()
+
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheTeamMate )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_teammate" )
 CLIENTEFFECT_REGISTER_END()
@@ -680,6 +684,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	
 	RecvPropInt( RECVINFO( m_iSaveMe ) ),
 	RecvPropInt( RECVINFO( m_iEngyMe ) ),
+	RecvPropInt( RECVINFO( m_iAmmoMe ) ),
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
@@ -1635,7 +1640,7 @@ void C_FFPlayer::DrawPlayerIcons()
 		{
 			materials->Bind( pMaterial );
 			color32 c = { 255, 0, 0, 255 };
-			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
+			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
 
 			// Increment offset
 			flOffset += 16.0f;
@@ -1654,6 +1659,31 @@ void C_FFPlayer::DrawPlayerIcons()
 
 			// The color is based on the players real team
 			int iTeam = GetTeamNumber();						
+			Color clr = Color( 255, 255, 255, 255 );
+
+			if( g_PR )
+				clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
+
+			color32 c = { clr.r(), clr.g(), clr.b(), 255 };
+			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
+
+			// Increment offset
+			flOffset += 16.0f;
+		}
+	}
+	
+	// --------------------------------
+	// Check for "ammome"
+	// --------------------------------
+	if( IsInAmmoMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_ammome", TEXTURE_GROUP_CLIENT_EFFECTS );
+		if( pMaterial )
+		{
+			materials->Bind( pMaterial );
+
+			// The color is based on the players real team
+			int iTeam = GetTeamNumber();
 			Color clr = Color( 255, 255, 255, 255 );
 
 			if( g_PR )
