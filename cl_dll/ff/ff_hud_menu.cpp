@@ -382,8 +382,8 @@ int CanCloak()
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( cloak, "#FF_CM_CLOAK", 'A', "cloak" ) { return CanCloak(); }
-ADD_MENU_OPTION( scloak, "#FF_CM_SCLOAK", 'B', "scloak" ) { return CanCloak(); }
+ADD_MENU_OPTION( smartcloak, "#FF_CM_SMARTCLOAK", 'A', "smartcloak" ) { return CanCloak(); }
+//ADD_MENU_OPTION( scloak, "#FF_CM_SCLOAK", 'B', "scloak" ) { return CanCloak(); }
 
 
 //-----------------------------------------------------------------------------
@@ -425,7 +425,7 @@ ADD_MENU_OPTION( need_ammo, "#FF_CM_CALLAMMO", '^', "ammome" ) { return MENU_SHO
 //-----------------------------------------------------------------------------
 MenuOption EngineerOptionList[] = { aimsentry, builddispenser, detdispenser, dismantledispenser, dismantlesentry, detsentry, buildsentry };
 MenuOption DemomanOptionList[] = { det5, det10, det20, det50 };
-MenuOption SpyOptionList[] = { lastdisguise, disguiseenemy, scloak, sentrysabotage, dispensersabotage, cloak, disguiseteam };
+MenuOption SpyOptionList[] = { lastdisguise, disguiseenemy, smartcloak, sentrysabotage, dispensersabotage, disguiseteam };
 MenuOption ClassDOptionList[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
 MenuOption FriendlyDOptionList[] = { disguise_blue_friendly, disguise_red_friendly, disguise_yellow_friendly, disguise_green_friendly };
 MenuOption EnemyDOptionList[] = { disguise_blue_enemy, disguise_red_enemy, disguise_yellow_enemy, disguise_green_enemy };
@@ -436,7 +436,7 @@ MenuOption CallOptionList[] = { need_armor, need_medic, need_ammo };
 //-----------------------------------------------------------------------------
 menu_t EngineerMenu = { ARRAYSIZE(EngineerOptionList), EngineerOptionList, "aimsentry" };
 menu_t DemomanMenu = { ARRAYSIZE(DemomanOptionList), DemomanOptionList, "detpack 5" };
-menu_t SpyMenu = { ARRAYSIZE(SpyOptionList), SpyOptionList, "scloak" };
+menu_t SpyMenu = { ARRAYSIZE(SpyOptionList), SpyOptionList, "smartcloak" };
 menu_t ClassDMenu = { ARRAYSIZE(ClassDOptionList), ClassDOptionList, NULL };
 menu_t FriendlyDMenu = { ARRAYSIZE(FriendlyDOptionList), FriendlyDOptionList, NULL };
 menu_t EnemyDMenu = { ARRAYSIZE(EnemyDOptionList), EnemyDOptionList, NULL };
