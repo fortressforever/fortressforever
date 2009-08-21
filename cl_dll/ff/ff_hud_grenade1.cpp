@@ -17,7 +17,6 @@
 #include "hud_numericdisplay.h"
 #include "iclientmode.h"
 #include "iclientvehicle.h"
-#include "ff_playerclass_parse.h"
 
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
@@ -32,8 +31,6 @@
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
-
-extern IFileSystem **pFilesystem;
 
 // Yeah macros suck, but this is the quickest way to do it
 #define ADD_GRENADE_ICON(id, filename) \
@@ -69,12 +66,7 @@ private:
 	// Last recorded player class
 	int		m_iClass;
 
-	CPanelAnimationVarAliasType(float, icon_xpos, "icon_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_ypos, "icon_ypos", "0", "proportional_float");
-	CPanelAnimationVar(vgui::HFont, icon_font, "icon_font", "StatusGlyphsSmaller");
-	CPanelAnimationVar( Color, icon_color, "icon_color", "HUD_Tone_Default" );
-
-	CHudTexture	*m_pIcon;
+	//CHudTexture	*m_pHudElementTexture;
 	//CHudTexture *m_pPrimaryGrenade[2];
 };
 
@@ -121,7 +113,6 @@ void CHudGrenade1::VidInit()
 	// Add the grenades icons(only these 2 are needed) 
 	//ADD_GRENADE_ICON(0, "vgui/hud_grenade_frag");
 	//ADD_GRENADE_ICON(1, "vgui/hud_grenade_caltop");
-	m_pIcon = new CHudTexture;
 }
 
 //-----------------------------------------------------------------------------
@@ -191,43 +182,6 @@ void CHudGrenade1::UpdatePlayerGrenade(C_BasePlayer *player)
 
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasGrenades");
 		m_iClass = ffplayer->GetClassSlot();
-
-		const char *szClassNames[] = { "scout", "sniper", "soldier", 
-									 "demoman", "medic", "hwguy", 
-									 "pyro", "spy", "engineer", 
-									 "civilian" };
-
-		PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
-		bool bReadInfo = ReadPlayerClassDataFromFileForSlot(*pFilesystem, szClassNames[m_iClass - 1], &hClassInfo, NULL);
-
-		if (!bReadInfo)
-			return;
-
-		const CFFPlayerClassInfo *pClassInfo = GetFilePlayerClassInfoFromHandle(hClassInfo);
-
-		if (!pClassInfo)
-			return;
-
-		if ( strcmp( pClassInfo->m_szPrimaryClassName, "None" ) != 0 )
-		{
-			
-			const char *grenade_name = pClassInfo->m_szPrimaryClassName;
-
-			if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
-			{
-				//UTIL_LogPrintf( "  begins with ff_, removing\n" );
-				grenade_name += 3;
-			}
-
-			char grenade_icon_name[256];
-
-			Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
-
-			m_pIcon = gHUD.GetIcon(grenade_icon_name);
-		}
-		else {
-			m_pIcon = new CHudTexture;
-		}
 	}
 }
 
@@ -307,21 +261,6 @@ void CHudGrenade1::Paint()
 	//surface()->DrawSetTexture(m_pPrimaryGrenade[gren_num]->textureId);
 	//surface()->DrawSetColor(255, 255, 255, 255);
 	//surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
-	
-	if (m_pIcon)
-	{
-		int iconWide = 0;
-		int iconTall = 0;
-
-		if( m_pIcon->bRenderUsingFont )
-		{
-			m_pIcon->hFont = icon_font;
-			iconWide = surface()->GetCharacterWidth( m_pIcon->hFont, m_pIcon->cCharacterInFont );
-			iconTall = surface()->GetFontTall( m_pIcon->hFont );
-		}
-
-		m_pIcon->DrawSelf( icon_xpos, icon_ypos - iconTall / 2, iconWide, iconTall, icon_color );
-	}
 
 	BaseClass::Paint();
 }
