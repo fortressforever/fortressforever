@@ -123,7 +123,10 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 
 		// I dunno... just try again i suppose
 		if (!pMirvlet)
+		{
+			Warning("Unable to create mirvlet\n");
 			continue;
+		}
 
 		QAngle angRotate;
 		angRotate.x = RandomFloat(-360.0f, 360.0f);
