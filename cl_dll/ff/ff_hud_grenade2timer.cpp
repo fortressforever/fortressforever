@@ -45,6 +45,7 @@ void CHudGrenade2Timer::VidInit()
 
 	m_fVisible = false;
 	m_flLastTime = -10.0f;
+	m_pIcon = new CHudTexture;
 	
 	m_Timers.RemoveAll();
 
@@ -69,6 +70,52 @@ void CHudGrenade2Timer::SetTimer(float duration)
 	{
 		m_fVisible = true;
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("FadeInGrenade2Timer");
+	}
+	
+	// First get the class
+	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
+
+	if (pLocalPlayer == NULL)
+		return;
+		
+	C_FFPlayer *ffplayer = ToFFPlayer(pLocalPlayer);
+
+	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN || !ffplayer->GetClassSlot()) 
+		return;
+
+	
+	const char *szClassNames[] = { "scout", "sniper", "soldier", 
+								 "demoman", "medic", "hwguy", 
+								 "pyro", "spy", "engineer", 
+								 "civilian" };
+
+	PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
+	bool bReadInfo = ReadPlayerClassDataFromFileForSlot(*pFilesystem, szClassNames[ffplayer->GetClassSlot() - 1], &hClassInfo, NULL);
+
+	if (!bReadInfo)
+		return;
+
+	const CFFPlayerClassInfo *pClassInfo = GetFilePlayerClassInfoFromHandle(hClassInfo);
+
+	if (!pClassInfo)
+		return;
+
+	if ( strcmp( pClassInfo->m_szSecondaryClassName, "None" ) != 0 )
+	{
+		
+		const char *grenade_name = pClassInfo->m_szSecondaryClassName;
+
+		if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
+		{
+			//UTIL_LogPrintf( "  begins with ff_, removing\n" );
+			grenade_name += 3;
+		}
+
+		char grenade_icon_name[256];
+
+		Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
+
+		m_pIcon = gHUD.GetIcon(grenade_icon_name);
 	}
 
 	// We're assuming that all grens have the same timer
@@ -128,67 +175,24 @@ void CHudGrenade2Timer::Paint()
 	// Draw fg & bg box
 	BaseClass::PaintBackground();
 	
-	// First get the class
-	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
-
-	if (pLocalPlayer == NULL)
-		return;
-		
-	C_FFPlayer *ffplayer = ToFFPlayer(pLocalPlayer);
-
-	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN || !ffplayer->GetClassSlot()) 
-		return;
-
-	
-	const char *szClassNames[] = { "scout", "sniper", "soldier", 
-								 "demoman", "medic", "hwguy", 
-								 "pyro", "spy", "engineer", 
-								 "civilian" };
-
-	PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
-	bool bReadInfo = ReadPlayerClassDataFromFileForSlot(*pFilesystem, szClassNames[ffplayer->GetClassSlot() - 1], &hClassInfo, NULL);
-
-	if (!bReadInfo)
-		return;
-
-	const CFFPlayerClassInfo *pClassInfo = GetFilePlayerClassInfoFromHandle(hClassInfo);
-
-	if (!pClassInfo)
-		return;
-
-	if ( strcmp( pClassInfo->m_szSecondaryClassName, "None" ) != 0 )
-	{
-		
-		const char *grenade_name = pClassInfo->m_szSecondaryClassName;
-
-		if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
-		{
-			//UTIL_LogPrintf( "  begins with ff_, removing\n" );
-			grenade_name += 3;
-		}
-
-		char grenade_icon_name[256];
-
-		Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
-
-		CHudTexture *icon = gHUD.GetIcon(grenade_icon_name);
-
-		int iconWide = 0;
-		int iconTall = 0;
-
-		if( icon->bRenderUsingFont )
-		{
-			iconWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
-			iconTall = surface()->GetFontTall( icon->hFont );
-		}
-
-		icon->DrawSelf( 5, iconTall - bar_height / 2, iconWide, iconTall, m_HudForegroundColour );
-	}
-	
 	int colour_mod = 0, timer_to_remove = -1;
 
 	float timer_height = bar_height / num_timers;
 	float bar_newypos = bar_ypos;
+	
+	if (m_pIcon)
+	{
+		int iconWide = 0;
+		int iconTall = 0;
+
+		if( m_pIcon->bRenderUsingFont )
+		{
+			iconWide = surface()->GetCharacterWidth( m_pIcon->hFont, m_pIcon->cCharacterInFont );
+			iconTall = surface()->GetFontTall( m_pIcon->hFont );
+		}
+
+		m_pIcon->DrawSelf( 5, iconTall - bar_height / 2, iconWide, iconTall, m_HudForegroundColour );
+	}
 
 	CFFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 
