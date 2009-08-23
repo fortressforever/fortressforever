@@ -337,6 +337,29 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 				}
 			}
 		}
+		else if( pOther->Classify() == CLASS_BACKPACK )
+		{
+			CFFItemBackpack *pBackpack = dynamic_cast< CFFItemBackpack* > (pOther);
+
+			if ( pBackpack && pBackpack->GetSpawnFlags() & SF_NORESPAWN )
+			{
+
+				m_iCells = clamp( m_iCells + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ) ) ) , 0, m_iMaxCells );
+				m_iNails = clamp( m_iNails + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ) ) ), 0, m_iMaxNails );
+				m_iShells = clamp( m_iShells + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ) ) ), 0, m_iMaxShells );
+				m_iRockets = clamp( m_iRockets + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ) ) ), 0, m_iMaxRockets );
+
+				UTIL_Remove( pBackpack );
+
+				// Update ammo percentage
+				UpdateAmmoPercentage();	
+
+				SendStatsToBot();
+
+				EmitSound( "Dispenser.omnomnom" );
+
+			}
+		}
 	}
 }
 
@@ -357,33 +380,6 @@ void CFFDispenser::OnObjectThink( void )
 	int iShells = 40;
 	int iRockets = 30;
 	bool bAteBag = false;
-
-	// eat backpacks
-	CBaseEntity *pEntity = NULL;
-	for ( CEntitySphereQuery sphere( GetAbsOrigin(), 64 ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-	{
-		// Don't care about ourselves or non-backpacks
-		if( pEntity == this || pEntity->Classify() != CLASS_BACKPACK)
-			continue;
-
-		CFFItemBackpack *pBackpack = dynamic_cast< CFFItemBackpack* > (pEntity);
-
-		if ( pBackpack && pBackpack->GetSpawnFlags() & SF_NORESPAWN )
-		{
-			iCells += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ) );
-			iNails += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ) );
-			iShells += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ) );
-			iRockets += pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ) );
-
-			if ( !bAteBag )
-				bAteBag = true;
-
-			UTIL_Remove( pBackpack );
-		}
-	}
-
-	if ( bAteBag )
-		EmitSound( "Dispenser.omnomnom" );
 
 	// Generate stock
 	m_iCells = clamp( m_iCells + iCells, 0, m_iMaxCells );
@@ -560,7 +556,7 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 	// AfterShock - scoring system: 25 points for sabotage dispenser
 	pSaboteur->AddFortPoints(25, "#FF_FORTPOINTS_SABOTAGEDISPENSER");
 
-	Warning("Dispenser sabotaged\n");
+	//Warning("Dispenser sabotaged\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -586,7 +582,7 @@ void CFFDispenser::MaliciouslySabotage(CFFPlayer *pSaboteur)
 			TakeDamage( CTakeDamageInfo( this, pOwner, 10000, DMG_GENERIC ) );
 	}
 
-	Warning("Dispenser maliciously sabotaged\n");
+	//Warning("Dispenser maliciously sabotaged\n");
 }
 
 //-----------------------------------------------------------------------------
