@@ -534,7 +534,9 @@ void CFFSentryGun::OnActiveThink( void )
 		enemy = NULL;
 
 	// Enemy is no longer targettable
-	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive()
+	if( !enemy 
+			|| ( !FVisible( enemy ) && !FVisible( pFFPlayer->GetLegacyAbsOrigin() ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
+			|| !enemy->IsAlive()
 			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
 			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAKMULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{
@@ -969,7 +971,7 @@ float CFFSentryGun::MaxYawSpeed( void ) const
 		return SG_TURNSPEED_AFTERLOCK; // slower than scan speed
 	}
 	else
-		return 2.0f; // Scan speed
+		return 1.0f; // Scan speed
 }
 
 //-----------------------------------------------------------------------------
