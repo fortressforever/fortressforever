@@ -222,6 +222,8 @@ void CHudBuildState::OnTick()
 		m_iSentryLevel = pSentryGun->m_iLevel;
 	m_bDrawManCannon = pManCannon && pManCannon->IsBuilt();
 	m_bDrawDetpack = pDetpack && pDetpack->IsBuilt();
+	if (pPlayer && pPlayer->GetClassSlot() != CLASS_DEMOMAN)
+		m_iNumPipes = 0;
 	m_bDrawPipes = pPlayer && pPlayer->GetClassSlot() == CLASS_DEMOMAN && m_iNumPipes > 0;
 }
 

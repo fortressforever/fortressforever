@@ -28,6 +28,8 @@
 	#define CFFProjectilePipebomb C_FFProjectilePipebomb
 #endif
 
+extern ConVar ffdev_pipe_friction;
+
 //0001279: Commented out because of the ConVar created for the pipe det delay.
 //#define PIPEBOMB_TIME_TILL_LIVE		0.75f
 
@@ -53,6 +55,8 @@ public:
 	// Needs its own explode func for custom scorch mark
 	// drawing
 	virtual void Explode( trace_t *pTrace, int bitsDamageType );
+	
+	static inline const float GetGrenadeFriction() { return /*0.2f */ ffdev_pipe_friction.GetFloat(); }
 
 	//-- Added by L0ki ------------------------------
 	virtual Class_T Classify( void ) { return CLASS_PIPEBOMB; }
