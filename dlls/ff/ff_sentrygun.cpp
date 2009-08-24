@@ -577,7 +577,7 @@ void CFFSentryGun::OnActiveThink( void )
 		if(pNewTarget && pNewTarget->IsPlayer())
 		{
 			// Tell player they're locked on, and give the status icon
-			CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+			CSingleUserRecipientFilter user( ToBasePlayer( pNewTarget ) );
 			user.MakeReliable();
 
 			UserMessageBegin(user, "StatusIconUpdate");
