@@ -379,7 +379,6 @@ void CFFDispenser::OnObjectThink( void )
 	int iNails = 60;
 	int iShells = 40;
 	int iRockets = 30;
-	bool bAteBag = false;
 
 	// Generate stock
 	m_iCells = clamp( m_iCells + iCells, 0, m_iMaxCells );
