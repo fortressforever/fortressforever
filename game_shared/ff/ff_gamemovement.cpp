@@ -180,9 +180,9 @@ bool CFFGameMovement::CheckJumpButton(void)
 		return false;		// don't pogo stick
 	}
 #else
-	if ( mv->m_nOldButtons & IN_JUMP && (Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_bunnyhop_disablepogojump" ) ) ) )
+	if ( mv->m_nOldButtons & IN_JUMP && (Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_jumpqueue" ) ) ) )
 	{
-		//DevMsg("Jumpqueue is %i\n",(Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_bunnyhop_disablepogojump" ) ) ) );
+		//DevMsg("Jumpqueue is %i\n",(Q_atoi( engine->GetClientConVarValue( player->entindex(), "cl_jumpqueue" ) ) ) );
 		return false;		// don't pogo stick
 	}
 #endif
