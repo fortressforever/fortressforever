@@ -11,10 +11,6 @@
 //	Unknown, Mulchman: 
 //		First created
 //
-//	Unknown, Mulchman: 
-//		Added a bunch of utility type stuff mainly to be used with the
-//		Scout Radar
-//
 //	05/10/2005, Mulchman:
 //		Moved some generic buildable stuff over here so it can be used
 //		easily on both the client and server - mainly to comply
