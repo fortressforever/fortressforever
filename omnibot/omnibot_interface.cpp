@@ -881,8 +881,6 @@ namespace Omnibot
 					serverpluginhelpers->ClientCommand(pEdict, "cloak");
 				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_SILENT_CLOAK))
 					serverpluginhelpers->ClientCommand(pEdict, "scloak");
-				if(_input.m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_RADAR))
-					serverpluginhelpers->ClientCommand(pEdict, "radar");
 
 				// Convert the facing vector to angles.
 				const QAngle currentAngles = pPlayer->EyeAngles();
@@ -3372,18 +3370,6 @@ namespace Omnibot
 
 		int iGameId = _player->entindex();
 		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_CLOAKED));
-	}
-
-	void Notify_RadarDetectedEnemy(CBasePlayer *_player, CBaseEntity *_ent)
-	{
-		if(!IsOmnibotLoaded())
-			return;
-		if(!_player->IsBot())
-			return;
-
-		int iGameId = _player->entindex();
-		Event_RadarUpdate_TF d = { HandleFromEntity(_ent) };
-		g_BotFunctions.pfnBotSendEvent(iGameId, MessageHelper(TF_MSG_RADAR_DETECT_ENEMY, &d, sizeof(d)));
 	}
 
 	void Notify_RadioTagUpdate(CBasePlayer *_player, CBaseEntity *_ent)
