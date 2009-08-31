@@ -288,6 +288,9 @@ void CTeamMenu::OnCommand(const char *command)
 	if (Q_strcmp(command, "team spec") == 0) 
 		return;
 
+	if (Q_strcmp(command, "mapguide") == 0) 
+		return;
+
 	// Display the class panel now
 	gViewPortInterface->ShowPanel(PANEL_CLASS, true);
 
