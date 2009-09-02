@@ -342,10 +342,10 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hManCannon ) ),
 	SendPropBool( SENDINFO( m_bStaticBuilding ) ),
 	SendPropBool( SENDINFO( m_bBuilding ) ),
-	SendPropInt( SENDINFO( m_iCurBuild ) ),
+	SendPropInt( SENDINFO( m_iCurBuild ), 3, SPROP_UNSIGNED ),
 
 	// health/armor	
-	SendPropFloat(SENDINFO(m_flArmorType)),
+	SendPropInt(SENDINFO( m_iArmorType ), 4, SPROP_UNSIGNED ),
 
 	// random player class 
 	SendPropBool( SENDINFO ( m_fRandomPC ) ),
@@ -1593,8 +1593,8 @@ void CFFPlayer::SetupClassVariables()
 	m_iMaxHealth	= pPlayerClassInfo.m_iHealth;
 	m_iArmor		= pPlayerClassInfo.m_iInitialArmour;
 	m_iMaxArmor		= pPlayerClassInfo.m_iMaxArmour;
-	m_flArmorType	= pPlayerClassInfo.m_flArmourType;
-	m_flBaseArmorType = m_flArmorType;
+	m_iArmorType	= pPlayerClassInfo.m_iArmourType;
+	m_iBaseArmorType = m_iArmorType;
 
 	m_flMaxspeed	= pPlayerClassInfo.m_iSpeed;
 	m_iPrimary		= pPlayerClassInfo.m_iPrimaryInitial;
@@ -5311,7 +5311,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		//float flNew = info.GetDamage() * flRatio;
 		float fFullDamage = info.GetDamage();
 
-		float fArmorDamage = fFullDamage * m_flArmorType;
+		float fArmorDamage = fFullDamage * (((float)m_iArmorType) / 10.0f); //AfterShock: changing int to float e.g. armor type 8 means 0.8 i.e. 80% damage absorbed by armor
 		float fHealthDamage = fFullDamage - fArmorDamage;
 		float fArmorLeft = (float) m_iArmor;
 
@@ -7238,7 +7238,8 @@ CBaseCombatWeapon *CFFPlayer::GetWeaponForSlot(int iSlot)
 int CFFPlayer::AddArmor( int iAmount )
 {
 	// Boost up their armour type again
-	m_flArmorType = m_flBaseArmorType;
+	// AfterShock: not needed now disp quiet sabotage is canned
+	//m_iArmorType = m_iBaseArmorType;
 
 	iAmount = min( iAmount, m_iMaxArmor - m_iArmor );
 	if (iAmount <= 0)
@@ -7276,6 +7277,7 @@ int CFFPlayer::RemoveArmor( int iAmount )
 // Purpose: Reduce armour class to level below normal, this is only really
 //			used by the sabotaged dispenser
 //-----------------------------------------------------------------------------
+/* AfterShock: removing quiet disp sabotage
 void CFFPlayer::ReduceArmorClass()
 {
 	if (m_flBaseArmorType == 0.8f)
@@ -7283,7 +7285,7 @@ void CFFPlayer::ReduceArmorClass()
 	else if (m_flBaseArmorType == 0.5f)
 		m_flArmorType = 0.3f;
 }
-
+*/
 //-----------------------------------------------------------------------------
 // Purpose: Find all sentry guns that have been sabotaged by this player and 
 //			turn them on the enemy.
