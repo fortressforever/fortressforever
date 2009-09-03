@@ -405,8 +405,8 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11 ),
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 
-	SendPropInt( SENDINFO( m_iClassStatus ) ),
-	SendPropInt( SENDINFO( m_iSpyDisguise ) ), 
+	SendPropInt( SENDINFO( m_iClassStatus ), 4, SPROP_UNSIGNED ),   // AfterShock: this only uses the last hex digit i.e. 0x0000000F
+	SendPropInt( SENDINFO( m_iSpyDisguise ), 8, SPROP_UNSIGNED ),   // AfterShock: this only uses the last 2 hex digits, bits 1-4 for team, 5-8 for class
 
 	SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
 
@@ -416,7 +416,6 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
-	//SendPropFloat( SENDINFO( m_flCloakSpeed ) ),	// Hate to do this, but for spy cloak mat proxy we need to know everyone's speed :X
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
@@ -431,7 +430,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CFFRagdoll, DT_FFRagdoll )
 	SendPropVector( SENDINFO( m_vecRagdollVelocity ) ),
 
 	// State of player's limbs
-	SendPropInt(SENDINFO(m_fBodygroupState)),
+	SendPropInt(SENDINFO(m_fBodygroupState), 5, SPROP_UNSIGNED), //AfterShock: this uses 5 flags for limbs decapped, up to DECAP_RIGHT_LEG which is 1 << 4
 	SendPropInt(SENDINFO(m_nSkinIndex), 3, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
@@ -6306,7 +6305,7 @@ int CFFPlayer::GetNewDisguisedTeam( void ) const
 int CFFPlayer::GetNewDisguisedClass( void ) const
 {
 	// Assumes we're a spy and currently disguising
-	return ( ( m_iNewSpyDisguise & 0xFFFFFFF0 ) >> 4 );
+	return ( ( m_iNewSpyDisguise & 0x000000F0 ) >> 4 );
 }
 
 //-----------------------------------------------------------------------------
