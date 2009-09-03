@@ -37,7 +37,7 @@
 //ConVar ffdev_ac_spread_min( "ffdev_ac_spread_min", "0.06", FCVAR_REPLICATED, "The minimum cone of fire spread for the AC" );
 #define FF_AC_SPREAD_MIN 0.06f // ffdev_ac_spread_min.GetFloat()
 //ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
-#define FF_AC_SPREAD_MAX FF_AC_SPREAD_MIN // ffdev_ac_spread_max.GetFloat()
+#define FF_AC_SPREAD_MAX 0.06f // ffdev_ac_spread_max.GetFloat()
 
 //ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "8.2", FCVAR_REPLICATED, "Damage per bullet" );
 #define FF_AC_BULLET_DAMAGE	8.2f // ffdev_ac_bullet_damage.GetFloat()
@@ -48,7 +48,7 @@
 //ConVar ac_rof_max( "ffdev_ac_cycletime_max", "0.08", FCVAR_REPLICATED, "Assault Cannon maximum time between shots (min ROF)" );
 #define FF_AC_ROF_MAX 0.08f // ac_rof_max.GetFloat()	// Assault Cannon maximum rate of fire
 //ConVar ac_rof_min( "ffdev_ac_cycletime_min", "0.08", FCVAR_REPLICATED, "Assault Cannon minimum time between shots (max ROF)" );
-#define FF_AC_ROF_MIN FF_AC_ROF_MAX // ac_rof_min.GetFloat()		// Assault Cannon minimum rate of fire
+#define FF_AC_ROF_MIN 0.08f // ac_rof_min.GetFloat()		// Assault Cannon minimum rate of fire
 
 // ConVar ffdev_ac_bulletpush( "ffdev_ac_bulletpush", "3.0", FCVAR_REPLICATED, "Assault Cannon bullet push force" );
 #define FF_AC_BULLETPUSH 0.0f // ffdev_ac_bulletpush.GetFloat() // Assault Cannon bullet push force
@@ -505,6 +505,14 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 				// If the firing button was just pressed, reset the firing time
 				m_flNextPrimaryAttack = m_flLastTick;
 
+//#ifdef GAME_DLL
+//				// base the speed effect on how charged the ac is
+//				float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
+//				CFFPlayer *pPlayer = GetPlayerOwner();
+//				if (pPlayer)
+//					pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, flSpeed, SEM_BOOLEAN);
+//#endif
+
 				m_flPlaybackRate = 1.0f + m_flChargeTime;
 				PrimaryAttack();
 
@@ -551,13 +559,23 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	// This makes it so that if there's a charge on the bar but the player is not attacking, the player can move around 
 	// after a certain period of time has passed (whereas it may take another few seconds for the bar to fully drain)
 	if( m_flChargeTime > 0.0f && (( pOwner->m_nButtons & IN_ATTACK ) || (m_bClamped == true)))
+	//if( m_flChargeTime > FF_AC_MINCLAMPTIME)
 	{
+		// base the speed effect on how charged the ac is
+		//float flSpeed = FF_AC_SPEEDEFFECT_MAX - ( (FF_AC_SPEEDEFFECT_MAX - FF_AC_SPEEDEFFECT_MIN) * (m_flChargeTime / FF_AC_MAXCHARGETIME) );
+		
 		// HW is too mobile. Instantly slow him down on revving the AC -> Defrag
 		float flSpeed = FF_AC_SPEEDEFFECT_MAX;
 		
+		/*
+		CFFPlayer *pPlayer = GetPlayerOwner();
+
+		if (pPlayer)
+		*/
 		pOwner->AddSpeedEffect(SE_ASSAULTCANNON, FF_AC_MOVEMENTDELAY, flSpeed, SEM_BOOLEAN);
 	}
-
+	//else
+	//	pOwner->RemoveSpeedEffect(SE_ASSAULTCANNON);
 #endif
 
 	m_flLastTick = gpGlobals->curtime;
@@ -573,6 +591,7 @@ void CFFWeaponAssaultCannon::Precache()
 	PrecacheScriptSound("Assaultcannon.Windup");
 	PrecacheScriptSound("Assaultcannon.Winddown");
 	PrecacheScriptSound("assaultcannon.rotate");
+	PrecacheScriptSound("assaultcannon.overheat");
 	BaseClass::Precache();
 }
 
@@ -681,30 +700,184 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 
 float CFFWeaponAssaultCannon::GetFireRate()
 {
-	/*
 	float t = m_flChargeTime / FF_AC_MAXCHARGETIME;
 	t = clamp(t, 0.0f, 1.0f);
 	t = SimpleSpline(t);
 
 	return FF_AC_ROF_MAX * (1.0f - t) + FF_AC_ROF_MIN * t;
-	*/
-	return FF_AC_ROF_MAX;
 }
 
 Vector CFFWeaponAssaultCannon::GetFireSpread()
 {
-	/*
 	float t = clamp(m_flChargeTime, 0.0f, FF_AC_MAXCHARGETIME) / FF_AC_MAXCHARGETIME;
 	t = SimpleSpline(t);
 
 	float flSpread = FF_AC_SPREAD_MIN * (1.0f - t) + FF_AC_SPREAD_MAX * t;
 	
 	return Vector(flSpread, flSpread, flSpread);
-	*/
-	return Vector(FF_AC_SPREAD_MAX,FF_AC_SPREAD_MAX,FF_AC_SPREAD_MAX);
 }
 
+// loop shot sound is client side now
+/*
+//-----------------------------------------------------------------------------
+// Purpose: plays the looping sound that's played while firing really fast
+//-----------------------------------------------------------------------------
+void CFFWeaponAssaultCannon::PlayLoopShotSound()
+{
+	// this function is currently called every frame and this bool is set during certain fire situations
+	if (!m_bPlayLoopShotSound)
+	{
+		StopLoopShotSound();
+		return;
+	}
+
+	if (!m_LoopShotSoundParams.m_pSoundName || !m_LoopShotSoundParams.m_pSoundName[0])
+	{
+		const char *shootsound = GetShootSound( m_nLoopShotSound );
+		if (!shootsound || !shootsound[0])
+			return;
+
+		// setup parameters (Only one time!)
+		m_LoopShotSoundParams.m_pSoundName = shootsound;
+		m_LoopShotSoundParams.m_flSoundTime = 0.0f;
+		m_LoopShotSoundParams.m_pOrigin = NULL;
+		m_LoopShotSoundParams.m_pflSoundDuration = NULL;
+		m_LoopShotSoundParams.m_bWarnOnDirectWaveReference = true;
+		m_LoopShotSoundParams.m_SoundLevel = SNDLVL_NORM;
+		m_LoopShotSoundParams.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL;
+	}
+
+	// wait a little while so we're not constantly calling EmitSound
+	if (gpGlobals->curtime < m_flLoopShotSoundNextUpdate)
+		return;
+	m_flLoopShotSoundNextUpdate = gpGlobals->curtime + FF_AC_LOOPSHOTSOUND_UPDATEINTERVAL;
+
+	float flPercentForVolume = 0.0f;
+	float flPercentForPitch = 0.0f;
+
+	float flFireRate = GetFireRate();
+	float flMax = FF_AC_ROF_LOOPSHOTSOUND_MAX;
+	float flMin = FF_AC_ROF_LOOPSHOTSOUND_MIN;
+	if (flMax - flMin != 0)
+		flPercentForVolume = clamp((flMax - clamp(flFireRate, flMin, flMax)) / (flMax - flMin), 0.0f, 1.0f);
+	SimpleSpline(flPercentForVolume);
+
+	flMax = FF_AC_ROF_MAX;
+	flMin = FF_AC_ROF_MIN;
+	if (flMax - flMin != 0)
+		flPercentForPitch = clamp((flMax - clamp(flFireRate, flMin, flMax)) / (flMax - flMin), 0.0f, 1.0f);
+	SimpleSpline(flPercentForPitch);
+
+	// setup pitch and volume parameters
+	m_LoopShotSoundParams.m_flVolume = FF_AC_LOOPSHOTSOUND_VOLUME_LOW + ((FF_AC_LOOPSHOTSOUND_VOLUME_HIGH - FF_AC_LOOPSHOTSOUND_VOLUME_LOW) * flPercentForVolume);
+	m_LoopShotSoundParams.m_nPitch = FF_AC_LOOPSHOTSOUND_PITCH_LOW + ((FF_AC_LOOPSHOTSOUND_PITCH_HIGH - FF_AC_LOOPSHOTSOUND_PITCH_LOW) * flPercentForPitch);
+
+	// have no idea, but this is done elsewhere in Source when emitting a sound
+	CPASAttenuationFilter filter( GetOwner(), m_LoopShotSoundParams.m_SoundLevel );
+	if ( IsPredicted() )
+	{
+		filter.UsePredictionRules();
+	}
+
+	// play the sound
+	EmitSound( filter, entindex(), m_LoopShotSoundParams, m_LoopShotSoundParams.m_hSoundScriptHandle );
+
+	// we're playing now...in case nobody knows for some reason
+	m_bPlayLoopShotSound = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: stops the looping sound that's played while firing really fast
+//-----------------------------------------------------------------------------
+void CFFWeaponAssaultCannon::StopLoopShotSound()
+{
+	if (!m_LoopShotSoundParams.m_pSoundName || !m_LoopShotSoundParams.m_pSoundName[0])
+		return;
+
+	StopSound( entindex(), m_LoopShotSoundParams.m_pSoundName );
+	m_bPlayLoopShotSound = false;
+	m_flLoopShotSoundNextUpdate = 0.0f;
+}
+*/
+
 #ifdef CLIENT_DLL
+
+// old revsound junk is gone - barrel rotation stuff now handles the spinning sound
+/*
+//-----------------------------------------------------------------------------
+// Purpose: plays the rev sound (barrel spin)
+//-----------------------------------------------------------------------------
+void CFFWeaponAssaultCannon::PlayRevSound()
+{
+	if (!m_RevSoundParams.m_pSoundName || !m_RevSoundParams.m_pSoundName[0])
+	{
+		const char *shootsound = GetShootSound( m_nRevSound );
+		if (!shootsound || !shootsound[0])
+			return;
+
+		// setup parameters (Only one time!)
+		m_RevSoundParams.m_pSoundName = shootsound;
+		m_RevSoundParams.m_flSoundTime = 0.0f;
+		m_RevSoundParams.m_pOrigin = NULL;
+		m_RevSoundParams.m_pflSoundDuration = NULL;
+		m_RevSoundParams.m_bWarnOnDirectWaveReference = true;
+		m_RevSoundParams.m_SoundLevel = SNDLVL_NORM;
+		m_RevSoundParams.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL;
+	}
+
+	float flPercent = 0.0f;
+
+	float flFireRate = GetFireRate();
+	float flMax = FF_AC_ROF_MAX;
+	float flMin = FF_AC_ROF_MIN;
+	if (flMax - flMin != 0)
+		flPercent = clamp((flMax - clamp(flFireRate, flMin, flMax)) / (flMax - flMin), 0.0f, 1.0f);
+	SimpleSpline(flPercent);
+
+	// setup pitch and volume parameters
+	// volume and pitch go up and down based on certain variables and whatnot
+	// ac is charging/firing
+	if (m_flRevSoundStopTick == 0.0f)
+	{
+		m_RevSoundParams.m_flVolume = FF_AC_REVSOUND_VOLUME_LOW + ((FF_AC_REVSOUND_VOLUME_HIGH - FF_AC_REVSOUND_VOLUME_LOW) * flPercent);
+		m_RevSoundParams.m_nPitch = FF_AC_REVSOUND_PITCH_LOW + ((FF_AC_REVSOUND_PITCH_HIGH - FF_AC_REVSOUND_PITCH_LOW) * flPercent);
+	}
+	// ac is done charging/firing
+	else
+	{
+		m_RevSoundParams.m_flVolume = FF_AC_REVSOUND_VOLUME_LOW * ( (m_flRevSoundStopTick + 1.0f) - gpGlobals->curtime);
+		m_RevSoundParams.m_nPitch = (FF_AC_REVSOUND_PITCH_LOW * 0.75) + ( ( FF_AC_REVSOUND_PITCH_LOW - (FF_AC_REVSOUND_PITCH_LOW * 0.75) ) * ( (m_flRevSoundStopTick + 1.0f) - gpGlobals->curtime) ); // min + ( (max - min) * percent )
+	}
+
+	// have no idea, but this is done elsewhere in Source when emitting a sound
+	if ( IsPredicted() )
+	{
+		filter.UsePredictionRules();
+	}
+
+	// play the sound
+	EmitSound( filter, entindex(), m_RevSoundParams, m_RevSoundParams.m_hSoundScriptHandle );
+
+	// just cause
+	m_bPlayRevSound = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: stops the rev sound (barrel spin)
+//-----------------------------------------------------------------------------
+void CFFWeaponAssaultCannon::StopRevSound()
+{
+	if (!m_RevSoundParams.m_pSoundName || !m_RevSoundParams.m_pSoundName[0])
+		return;
+
+	StopSound( entindex(), m_RevSoundParams.m_pSoundName );
+
+	// reset some variables
+	m_bPlayRevSound = false;
+	m_flRevSoundNextUpdate = 0.0f;
+	m_flRevSoundStopTick = 0.0f;
+}
+*/
 
 // stop the spinning sound
 void CFFWeaponAssaultCannon::StopBarrelRotationSound()

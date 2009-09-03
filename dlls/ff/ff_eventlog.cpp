@@ -244,7 +244,7 @@ public:
 			else
 			{
 				// technically we should be printing ownerid / attackerid instead of "" when teams arent set up
-				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"sentrygun_upgraded\" against \"%s<%i><%s><%s>\"%s\n", 
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"sentrygun_upgraded\"against \"%s<%i><%s><%s>\"%s\n", 
 					pAttacker->GetPlayerName(), 
 					attackerid, 
 					pAttacker->GetNetworkIDString(), 

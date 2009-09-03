@@ -548,11 +548,7 @@ int CFFBuildableObject::GetHealthPercent( void ) const
 {
 	float flPercent = ( ( float )GetHealth() / ( float )GetMaxHealth() ) * 100.0f;
 
-	// Don't display 0% it looks stupid
-	if (flPercent < 1.0f)
-		return 1;
-	else
-		return ( int )flPercent;
+	return ( int )flPercent;
 }
 
 //-----------------------------------------------------------------------------

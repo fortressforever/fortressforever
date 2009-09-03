@@ -138,14 +138,22 @@ FF_AUTO_COMMAND( testcmd, &CFFPlayer::Command_TestCommand, "test command descrip
 FF_AUTO_COMMAND( mapguide, &CFFPlayer::Command_MapGuide, "Start/stop a map guide.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH ); // |-- Mirv: Channel setting command
 FF_AUTO_COMMAND( setchannel, &CFFPlayer::Command_SetChannel, "Choose your voice comm channel.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH ); // |-- Mirv: Channel setting command
 
+// Mulch: Making these shared
+// --> Mirv: Spy feigning
+//FF_AUTO_COMMAND( feign, &CFFPlayer::SpyFeign, "Feign!", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
+//FF_AUTO_COMMAND( sfeign, &CFFPlayer::SpySilentFeign, "Feign!", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
+// <-- Mirv: Spy feigning
+
 FF_AUTO_COMMAND( class, &CFFPlayer::Command_Class, "Choose your player class.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH | FF_CMD_CLOAKED );
 FF_AUTO_COMMAND( team, &CFFPlayer::Command_Team, "Choose your team.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH | FF_CMD_CLOAKED );
 FF_AUTO_COMMAND( whatteam, &CFFPlayer::Command_WhatTeam, "Tells what team you're on for debugging.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH | FF_CMD_CLOAKED );
 FF_AUTO_COMMAND( dispenser, &CFFPlayer::Command_BuildDispenser, "Build or detonate a dispenser.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( sentrygun, &CFFPlayer::Command_BuildSentryGun, "Build or detonate a sentry gun.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( dispensertext, &CFFPlayer::Command_DispenserText, "Set custom text for your dispenser.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( hinttest, &CFFPlayer::Command_HintTest, "Tests the hint system.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( detpack, &CFFPlayer::Command_BuildDetpack, "Drop a detpack.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( mancannon, &CFFPlayer::Command_BuildManCannon, "Build a man cannon.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
+//FF_AUTO_COMMAND( radar, &CFFPlayer::Command_Radar, "Start the scout radar.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( discard, &CFFPlayer::Command_Discard, "Discards unneeded ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_CLOAKED );
 FF_AUTO_COMMAND( saveme, &CFFPlayer::Command_SaveMe, "Call for medical attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( engyme, &CFFPlayer::Command_EngyMe, "Call for engineer attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
