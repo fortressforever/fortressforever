@@ -43,13 +43,11 @@ void RegisterUserMessages()
 	usermessages->Register( "PlayerAnimEvent", -1 );	// jumping, firing, reload, etc.
 
 	usermessages->Register( "AmmoDenied", 2 );
-	//usermessages->Register( "UpdateRadar", -1 );
 
 	// Used to send a sample HUD message
 	usermessages->Register( "GameMessage", -1 );
 
-	// ESP/radar stuff, & hints
-	usermessages->Register( "RadarUpdate", -1 );
+	// hints
 	usermessages->Register( "FF_HudHint", -1 );
 	// Jiggles: Added for testing Hint Center
 	usermessages->Register( "FF_SendHint", -1 );

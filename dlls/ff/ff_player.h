@@ -67,21 +67,6 @@ enum SpeedEffectType
 	SE_LUA10,	// a speed effect that lua can set
 };
 
-// Scout radar struct
-struct ScoutRadar_s
-{
-	int		m_iInfo;
-	byte	m_bDucking;
-	Vector	m_vecOrigin;
-
-	ScoutRadar_s( int iInfo, byte bDucking, const Vector& vecOrigin )
-	{
-		m_iInfo = iInfo;
-		m_bDucking = bDucking;
-		m_vecOrigin = vecOrigin;
-	}
-};
-
 // BEG: Speed Effect class for handling speed impairing effects (caltrop, legshot, etc)
 #define NUM_SPEED_EFFECTS 48
 struct SpeedEffect
@@ -343,8 +328,6 @@ public:
 	void Command_BuildSentryGun( void );
 	void Command_BuildDetpack( void );
 	void Command_BuildManCannon( void );
-	void Command_Radar( void );	
-	void Command_HintTest( void );
 	void Command_DispenserText( void );	// to set custom dispenser text messages on the server
 	void Command_PrimeOne(void); // prime primary grenade
 	void Command_PrimeTwo(void); // prime secondary grenade
@@ -595,11 +578,8 @@ public:
 	void UnlockPlayer( void );
 
 public:
-	// Beg: Added by Mulchman for scout radar
-	float m_flLastScoutRadarUpdate;
-	// End: Added by Mulchman for scout radar
 
-	// BEG: Added by Mulchman for radar tagging
+	// BEG: Added by Mulchman for radio tagging
 	bool IsRadioTagged( void ) const { return m_bRadioTagged; }
 	void SetRadioTagged( CFFPlayer *pWhoTaggedMe, float flStartTime, float flDuration );
 	void SetUnRadioTagged( void );
@@ -623,7 +603,7 @@ protected:
 
 protected:
 	void FindRadioTaggedPlayers( void );
-	// END: Added by Mulchman for radar tagging
+	// END: Added by Mulchman for radio tagging
 
 	// TODO: REMOVE ME REMOVE ME
 	// this is here so i can easily make the bot

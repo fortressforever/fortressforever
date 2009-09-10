@@ -15,13 +15,11 @@
 #include "Omni-Bot_Events.h"
 
 // constants: Game constants
-//		RADAR_CELL_REQUIREMENT - Number of cells required to use the radar.
 //		BUILD_SENTRY_REQUIREMENT - Number of cells required to build a sentry gun.
 //		BUILD_DISPENSER_REQUIREMENT - Number of cells required to build a dispenser.
 //		MAX_DEMO_PIPETRAPS - Max number of traps to lay at once.
 //		MAX_DEMO_PIPES - Max number of pipes a single demo-man can lay.
 //		MAX_DEMO_TEAM_PIPES - Max number of pipes available for an entire team.
-#define RADAR_CELL_REQUIREMENT 5
 #define BUILD_SENTRY_REQUIREMENT 130
 #define BUILD_SENTRY_UPGRADE_RADIUS 64.0
 #define BUILD_DISPENSER_REQUIREMENT 100
@@ -71,7 +69,6 @@ typedef enum eTF_ButtonFlags
 	TF_BOT_BUTTON_SABOTAGE_DISPENSER,
 	TF_BOT_BUTTON_CLOAK,
 	TF_BOT_BUTTON_SILENT_CLOAK,
-	TF_BOT_BUTTON_RADAR,
 	TF_BOT_BUTTON_CANCELBUILD,
 
 	// THIS MUST BE LAST
@@ -406,7 +403,6 @@ typedef enum eTF_Events
 	// Scout
 	TF_MSG_SCOUT_START,
 	// Game Events
-	TF_MSG_RADAR_DETECT_ENEMY,
 	// Internal Events.
 	TF_MSG_SCOUT_END,
 

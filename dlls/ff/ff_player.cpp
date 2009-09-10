@@ -79,21 +79,6 @@ ConVar ffdev_flamesize_burn2("ffdev_flamesize_burn2","0.04", FCVAR_REPLICATED, "
 ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, "flame size multiplier for burn level 3");
 #define FFDEV_FLAMESIZE_BURN3 ffdev_flamesize_burn3.GetFloat()
 
-// For testing purposes
-// [integer] Number of cells it takes to perform the "radar" command
-//static ConVar radar_num_cells( "ffdev_radar_num_cells", "5" );
-#define RADAR_NUM_CELLS 5
-
-// [integer] Distance of the "radar" pulse - ie. max distance someone
-// can be from us when doing a "radar" command so that the player
-// will show up on our screen
-//static ConVar radar_radius_distance( "ffdev_radar_radius_distance", "1024" );
-#define RADAR_RADIUS_DISTANCE 1024
-
-// [integer] Time [in seconds] you have to wait before doing another "radar" command
-//static ConVar radar_wait_time( "ffdev_radar_wait_time", "5" );
-#define RADAR_WAIT_TIME 3
-
 // [integer] Max distance a player can be from us to be shown
 //static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
 #define RADIOTAG_DISTANCE 1024
@@ -492,8 +477,6 @@ CFFPlayer::CFFPlayer()
 	m_hManCannon = NULL;
 	m_flBuildTime = 0.0f;
 
-	m_flLastScoutRadarUpdate = 0.0f;
-
 	m_bRadioTagged = false;
 	m_flRadioTaggedStartTime = 0.0f;
 	m_flRadioTaggedDuration = RADIOTAG_DRAW_DURATION;
@@ -826,7 +809,6 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Player.Deathbeep");
 	PrecacheScriptSound("Player.Ammotoss");
 	PrecacheScriptSound("speech.saveme");
-	PrecacheScriptSound("radar.single_shot");
 	PrecacheScriptSound("Player.bodysplat");
 	PrecacheScriptSound("Item.Toss");
 	PrecacheScriptSound("Player.Pain");
@@ -3025,11 +3007,6 @@ void CFFPlayer::Command_WhatTeam( void )
 {
 }
 
-void CFFPlayer::Command_HintTest( void )
-{	
-	FF_HudHint( this, 0, 1, "#FF_HELLO" );
-}
-
 void CFFPlayer::Command_DispenserText( void )
 {
 	if( engine->Cmd_Argc( ) < 1 )
@@ -3081,115 +3058,6 @@ void CFFPlayer::Command_DispenserText( void )
 	// Change text on the fly
 	if( GetDispenser() )
 		GetDispenser()->SetText( m_szCustomDispenserText );
-}
-
-void CFFPlayer::Command_Radar( void )
-{
-	/*
-	// Player issued the command "radar"
-	// Can only do it every CVAR seconds (atm)
-	// Cost is CVAR cells (atm)
-	if( gpGlobals->curtime > ( m_flLastScoutRadarUpdate + ( float )RADAR_WAIT_TIME ) )
-	{
-		// See if the player has enough ammo
-		if( GetAmmoCount( AMMO_CELLS ) >= RADAR_NUM_CELLS )
-		{				
-					FF_SendHint( this, SCOUT_RADAR, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_RADAR" );
-
-			// Bug #0000531: Everyone hears radar
-			//CPASAttenuationFilter sndFilter;
-			//sndFilter.RemoveAllRecipients();
-			//sndFilter.AddRecipient( ( CBasePlayer * )this );
-			CSingleUserRecipientFilter sndFilter( ( CBasePlayer * )this );
-			EmitSound( sndFilter, entindex(), "radar.single_shot");
-
-			// Remove ammo
-			RemoveAmmo( RADAR_NUM_CELLS, AMMO_CELLS );
-
-			CUtlVector< ScoutRadar_s > hRadarInfo;
-
-			Vector vecOrigin = GetFeetOrigin();
-
-			for( int i = 1; i <= gpGlobals->maxClients; i++ )
-			{
-				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
-				if( pPlayer && ( pPlayer != this ) )
-				{
-					// Bug #0000497: The scout radar picks up on people who are observing/spectating.
-					// If the player isn't alive
-					if( !pPlayer->IsAlive() )
-						continue;
-
-					// Bug #0000497: The scout radar picks up on people who are observing/spectating.
-					// If the player is a spectator
-					if( pPlayer->IsObserver() )
-						continue;
-
-					// Bug #0000497: The scout radar picks up on people who are observing/spectating.
-					// If the player is a spectator
-					if( FF_IsPlayerSpec( pPlayer ) )
-						return;
-
-					Vector vecPlayerOrigin = pPlayer->GetFeetOrigin();
-					float flDist = vecOrigin.DistTo( vecPlayerOrigin );
-
-					if( flDist <= ( float )RADAR_RADIUS_DISTANCE )
-					{
-						int iInfo = pPlayer->GetTeamNumber();
-						iInfo += pPlayer->GetClassSlot() << 4;
-
-						if( ( g_pGameRules->PlayerRelationship( this, pPlayer ) == GR_NOTTEAMMATE ) &&
-							( pPlayer->IsDisguised() ) )
-						{
-							iInfo = pPlayer->GetDisguisedTeam();
-							iInfo += pPlayer->GetDisguisedClass() << 4;
-						}
-
-						ScoutRadar_s hInfo( iInfo, ( pPlayer->GetFlags() & FL_DUCKING ) ? ( byte )1 : ( byte )0, vecPlayerOrigin );
-						hRadarInfo.AddToTail( hInfo );
-
-						Omnibot::Notify_RadarDetectedEnemy(this, pPlayer);
-					}
-				}
-			}
-
-			int iCount = hRadarInfo.Count();
-			if( iCount >= 0 )
-			{
-				// Only send this message to the local player	
-				CSingleUserRecipientFilter user( ( CBasePlayer * )this );
-				user.MakeReliable();
-
-				// Start the message block
-				UserMessageBegin( user, "RadarUpdate" );
-
-				// Tell client how much to expect
-				WRITE_SHORT( iCount );
-
-				for( int i = 0; i < iCount; i++ )
-				{
-					WRITE_WORD( hRadarInfo[ i ].m_iInfo );
-					WRITE_BYTE( hRadarInfo[ i ].m_bDucking );
-					WRITE_VEC3COORD( hRadarInfo[ i ].m_vecOrigin );
-				}
-
-				// End the message block
-				MessageEnd();
-			}
-
-			// Update our timer
-			m_flLastScoutRadarUpdate = gpGlobals->curtime;
-		}
-		else
-		{
-			ClientPrint(this, HUD_PRINTCONSOLE, "#FF_RADARCELLS");
-		}
-	}
-	else
-	{
-		ClientPrint(this, HUD_PRINTCONSOLE, "#FF_RADARTOOSOON");
-	}
-	*/
 }
 
 void CFFPlayer::Command_BuildDispenser( void )
@@ -3825,14 +3693,6 @@ void CFFPlayer::Command_Discard( void )
 			}
 		}
 
-		// Bug #0001682: Scout discard drops cells
-		// Scout has no weapon that uses cells, but the radar needs them.  Add explicit check -> Defrag
-		//if( GetClassSlot() == CLASS_SCOUT )
-		//{
-		//	// Keep our cells if we're scout, bitches.  4 = AMMO_CELLS (pain in balls)
-		//	bKeepAmmo[ 4 ] = true;
-		//}
-
 		// Add ammo if they have any
 		for( int iAmmoNum = 0; iAmmoNum < MAX_AMMO_TYPES; iAmmoNum++ )
 		{
@@ -3842,7 +3702,6 @@ void CFFPlayer::Command_Discard( void )
 				if ( ! pBackpack )
 					pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", GetAbsOrigin(), GetAbsAngles() );
 
-				// Check again in case we failed to make one
 				if( pBackpack )
 				{
 					pBackpack->SetAmmoCount( iAmmoNum, GetAmmoCount( iAmmoNum ));
