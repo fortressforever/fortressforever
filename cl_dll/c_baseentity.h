@@ -85,6 +85,8 @@ enum Class_T
 	CLASS_GREN_GAS,		// Gas grenade
 	CLASS_GREN_CONC,	// Conc grenade
 	CLASS_GREN_CALTROP,	// Caltrop grenade
+	CLASS_GREN_SLOWFIELD,
+	CLASS_GREN_VERT,
 	// END: Added by Mulchman
 
 	//-- Added by L0ki --
