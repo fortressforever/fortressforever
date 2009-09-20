@@ -42,7 +42,7 @@ LINK_ENTITY_TO_CLASS(ff_projectile_pl, CFFProjectilePipebomb);
 PRECACHE_WEAPON_REGISTER(ff_projectile_pl);
 
 
-ConVar ffdev_pipe_friction("ffdev_pipe_friction", "0.375", FCVAR_REPLICATED | FCVAR_CHEAT, "");
+ConVar ffdev_pipe_friction("ffdev_pipe_friction", "256", FCVAR_REPLICATED | FCVAR_CHEAT, "");
 //0001279: Need convar for pipe det delay
 //ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define PIPE_DET_DELAY 0.55	// this is mirrored in ff_player_shared.cpp(97) and ff_player.cpp
