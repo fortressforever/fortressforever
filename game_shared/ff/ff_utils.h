@@ -11,6 +11,10 @@
 //	Unknown, Mulchman: 
 //		First created
 //
+//	Unknown, Mulchman: 
+//		Added a bunch of utility type stuff mainly to be used with the
+//		Scout Radar
+//
 //	05/10/2005, Mulchman:
 //		Moved some generic buildable stuff over here so it can be used
 //		easily on both the client and server - mainly to comply
@@ -162,6 +166,7 @@ enum HintType
 
 	// SCOUT
 	SCOUT_SPAWN,		// Event: First spawn +5 seconds
+	SCOUT_RADAR,		// Event: First radar use
 	SCOUT_CONC1,		// Event: First thrown conc
 	SCOUT_CONC2,		// Event: Conc hint #2
 	SCOUT_TOUCHFLAG,	// Event: First initial touch on a flag
@@ -193,6 +198,7 @@ enum HintType
 	MEDIC_NOINFECT,		// Event: Medic tries to infect an enemy player who is Immune.
 	// HW
 	HWGUY_SPAWN,		// Event: First spawn +5 seconds
+	HWGUY_OVERHEAT,		// Event: AC overheats
 	// PYRO
 	PYRO_SPAWN,			// Event: First spawn +5 seconds
 	PYRO_FLAMER,		// Event: Select flamethrower
