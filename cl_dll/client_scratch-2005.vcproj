@@ -202,7 +202,7 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				LinkLibraryDependencies="true"
-				AdditionalDependencies="winmm.lib shell32.lib gdi32.lib kernel32.lib user32.lib comdlg32.lib ole32.lib oleaut32.lib advapi32.lib"
+				AdditionalDependencies="winmm.lib"
 				OutputFile="$(IntDir)/client.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
