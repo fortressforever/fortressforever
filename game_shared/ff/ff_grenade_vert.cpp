@@ -33,11 +33,11 @@
 #define VERT_SOUND "Vert.Explode"
 #define VERT_EFFECT "FF_Vert"
 
-ConVar ffdev_vert_radius("ffdev_vert_radius", "170", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of vert grenade");
+ConVar ffdev_vert_radius("ffdev_vert_radius", "270", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of vert grenade");
 #define VERT_RADIUS ffdev_vert_radius.GetFloat()
 
-ConVar ffdev_vert_vertical_velocity_min("ffdev_vert_vertical_velocity_min", "300", FCVAR_REPLICATED | FCVAR_CHEAT);
-ConVar ffdev_vert_vertical_velocity_max("ffdev_vert_vertical_velocity_max", "600", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_vert_vertical_velocity_min("ffdev_vert_vertical_velocity_min", "400", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_vert_vertical_velocity_max("ffdev_vert_vertical_velocity_max", "800", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define VERT_MIN_VERTICAL_VELOCITY ffdev_vert_vertical_velocity_min.GetFloat()
 #define VERT_MAX_VERTICAL_VELOCITY ffdev_vert_vertical_velocity_max.GetFloat()
 
