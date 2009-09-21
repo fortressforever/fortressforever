@@ -29,12 +29,12 @@ public:
 	DECLARE_DATADESC();
 
 	virtual void	Spawn();
-	bool			FlameEmit(bool bEmit);
+	bool			FlameEmit(bool fEmit);
 	virtual void	UpdateOnRemove( void );
 
 	// Stuff from the datatable.
 public:
-	CNetworkVar(unsigned int, m_bEmit);
+	CNetworkVar(unsigned int, m_fEmit);
 };
 
 #endif // FF_ENV_FLAME_H

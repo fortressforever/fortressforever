@@ -67,7 +67,7 @@ public:
 	
 	int						m_iMaxArmour;
 	int						m_iInitialArmour;
-	int						m_iArmourType;
+	float					m_flArmourType;
 
 	int						m_iHealth;
 	

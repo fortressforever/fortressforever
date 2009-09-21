@@ -176,7 +176,7 @@ ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.008", FCVAR_REPLICATED, "
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
-	//SendPropFloat( SENDINFO( m_flRange ) ), //AfterShock: surely the client knows it's range?
+	SendPropFloat( SENDINFO( m_flRange ) ), 
 	SendPropInt( SENDINFO( m_iLevel ) ), 
 	SendPropInt( SENDINFO( m_iShells ) ),
 	SendPropInt( SENDINFO( m_iRockets ) ),
@@ -240,7 +240,7 @@ CFFSentryGun::CFFSentryGun()
 	m_ppszSounds = g_pszFFSentryGunSounds;
 
 	// Set lvl1 range
-	//m_flRange = 1024.0f;
+	m_flRange = 1024.0f;
 
 	// Set level - keep it < 0 until we GoLive the first time
 	m_iLevel = 0;

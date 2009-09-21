@@ -27,10 +27,10 @@ END_RECV_TABLE()
 #else
 IMPLEMENT_SERVERCLASS_ST_NOBASE( CFFRadioTagData, DT_FFRadioTagData )
 	SendPropArray3( SENDINFO_ARRAY3( m_bVisible ), SendPropInt( SENDINFO_ARRAY( m_bVisible ), 1, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iClass ), SendPropInt( SENDINFO_ARRAY( m_iClass ), 5 ) ), // 10 classes fits into 4 bits, plus i think we use -1, need to check though
-	SendPropArray3( SENDINFO_ARRAY3( m_iTeam ), SendPropInt( SENDINFO_ARRAY( m_iTeam ), 4 ) ), // teams go from 0-5: none,spec,blue,red,green,yellow, plus i think we use -1, need to check though
+	SendPropArray3( SENDINFO_ARRAY3( m_iClass ), SendPropInt( SENDINFO_ARRAY( m_iClass ), 5 ) ),
+	SendPropArray3( SENDINFO_ARRAY3( m_iTeam ), SendPropInt( SENDINFO_ARRAY( m_iTeam ), 4 ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_bDucking ), SendPropInt( SENDINFO_ARRAY( m_bDucking ), 1, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_vecOrigin ), SendPropVector( SENDINFO_ARRAY( m_vecOrigin ), 32, SPROP_CHANGES_OFTEN | SPROP_COORD ) ),
+	SendPropArray3( SENDINFO_ARRAY3( m_vecOrigin ), SendPropVector( SENDINFO_ARRAY( m_vecOrigin ), 32, SPROP_CHANGES_OFTEN ) ),
 END_SEND_TABLE()
 #endif
 

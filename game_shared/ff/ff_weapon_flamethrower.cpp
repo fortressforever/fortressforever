@@ -63,7 +63,7 @@ public:
 	virtual void UpdateOnRemove( void );
 	//virtual void WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
 
-	void EmitFlames(bool bEmit);
+	void EmitFlames(bool fEmit);
 	void Cleanup( void );
 
 	virtual ~CFFWeaponFlamethrower();
@@ -337,20 +337,20 @@ void CFFWeaponFlamethrower::Precache()
 //----------------------------------------------------------------------------
 // Purpose: Turn flame jet on or off
 //----------------------------------------------------------------------------
-void CFFWeaponFlamethrower::EmitFlames(bool bEmit)
+void CFFWeaponFlamethrower::EmitFlames(bool fEmit)
 {
 	// We're using m_flNextSecondaryAttack to make sure we don't draw the flames
 	// before we're allowed to fire (set by DefaultDeploy)
-	if (bEmit && m_flNextSecondaryAttack > gpGlobals->curtime)
+	if (fEmit && m_flNextSecondaryAttack > gpGlobals->curtime)
 	{
 		WeaponSound(STOP);
 		return;
 	}
 	// Spawn the FlameJet if necessary
 	if(m_hFlameJet)
-		m_hFlameJet->FlameEmit(bEmit);
+		m_hFlameJet->FlameEmit(fEmit);
 	// If we are going to Emit play the sound, otherwise don't play anything.
-	if (bEmit)
+	if (fEmit)
 		WeaponSound(BURST);
 	else
 		WeaponSound(STOP);

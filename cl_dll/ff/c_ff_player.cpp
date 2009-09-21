@@ -618,7 +618,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	// End: Added by Mulchman for building objects and such
 
 	// ---> added by billdoor
-	RecvPropInt(RECVINFO(m_iArmorType)),
+	RecvPropFloat(RECVINFO(m_flArmorType)),
 
 	// ---> added by defrag
 	RecvPropBool( RECVINFO( m_fRandomPC ) ),

@@ -77,8 +77,6 @@ ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.
 ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED | FCVAR_CHEAT );
 
-#define OVERPRESSURE_JERKMULTI 0.0004f
-
 //ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_AC_IMPACTFREQ 2 //ffdev_ac_impactfreq.GetInt()
 
@@ -96,7 +94,7 @@ ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "
 //ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "5.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_SNIPER_MAXPUSH 5.5f // sniperrifle_pushmax.GetFloat()
 
-#define OVERPRESSURE_EFFECT "FF_FlashEffect"
+#define OVERPRESSURE_EFFECT "FF_RingEffect"
 
 //0001279: Need convar for pipe det delay
 #define PIPE_DET_DELAY 0.55 // this is mirrored in ff_projectile_pipebomb.cpp and ff_player.cpp
@@ -627,17 +625,19 @@ void CFFPlayer::ClassSpecificSkill()
 		break;
 #endif
 
+#ifdef CLIENT_DLL
+
 		case CLASS_HWGUY:
-			/*if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
+			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
 			{
 				SwapToWeapon(FF_WEAPON_SUPERSHOTGUN);
 			}
 			else 
 			{
 				SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
-			}*/
+			}
 			
-			if (IsAlive())
+			/*if (IsAlive())
 			{
 
 				data.m_vOrigin = GetLegacyAbsOrigin();
@@ -646,7 +646,6 @@ void CFFPlayer::ClassSpecificSkill()
 
 #ifdef GAME_DLL
 				// Play a sound
-				CPASAttenuationFilter sndFilter( this );
 				EmitSound("overpressure.explode");
 
 				CBaseEntity *pEntity = NULL;
@@ -697,11 +696,6 @@ void CFFPlayer::ClassSpecificSkill()
 					}
 					else
 					{
-						QAngle angDirection;
-						VectorAngles(vecDir, angDirection);
-
-						pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
-
 						Vector vecVelocity = pPlayer->GetAbsVelocity();
 						Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 						float flHorizontalSpeed = vecLatVelocity.Length();
@@ -754,8 +748,10 @@ void CFFPlayer::ClassSpecificSkill()
 #endif
 			}
 			m_flNextClassSpecificSkill = gpGlobals->curtime + ffdev_overpressure_delay.GetFloat();
-
+			*/
 			break;
+
+#endif
 
 #ifdef CLIENT_DLL
 
@@ -970,7 +966,7 @@ int CFFPlayer::GetDisguisedTeam( void ) const
 int CFFPlayer::GetDisguisedClass( void ) const
 {
 	if( IsDisguised() )
-		return ( ( m_iSpyDisguise & 0x000000F0 ) >> 4 );
+		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
 
 	return CLASS_NONE;
 }

@@ -77,7 +77,7 @@ public:
 	virtual void		SimulateParticles(CParticleSimulateIterator *pIterator);
 
 	// C_FFFlameJet-specific
-	bool				FlameEmit(bool bEmit);
+	bool				FlameEmit(bool fEmit);
 	void				Cleanup( void );
 	virtual void		SetDormant( bool bDormant );
 
@@ -85,7 +85,7 @@ public:
 
 public:
 
-	bool			m_bEmit;
+	int				m_fEmit;
 
 	float			m_SpreadSpeed;
 	float			m_Speed;

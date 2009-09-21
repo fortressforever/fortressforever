@@ -642,7 +642,7 @@ public:
 
 public:
 	// Network variables
-	//CNetworkVar( float, m_flRange );
+	CNetworkVar( float, m_flRange );
 	CNetworkVar( int, m_iLevel );
 	CNetworkVar( int, m_iShells );
 	CNetworkVar( int, m_iRockets );

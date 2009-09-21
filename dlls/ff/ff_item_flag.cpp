@@ -81,7 +81,7 @@ void CFFInfoScriptAnimator::OnThink( void )
 // --> Mirv: Added for client class
 IMPLEMENT_SERVERCLASS_ST( CFFInfoScript, DT_FFInfoScript )
 	SendPropFloat( SENDINFO( m_flThrowTime ) ),
-	SendPropVector( SENDINFO( m_vecOffset ), SPROP_NOSCALE ), // AfterShock: possibly SPROP_COORD this and remove SPROP_NOSCALE for optimisation?
+	SendPropVector( SENDINFO( m_vecOffset ), SPROP_NOSCALE ),
 	SendPropInt( SENDINFO( m_iGoalState ), 4 ),
 	SendPropInt( SENDINFO( m_iPosState ), 4 ),
 	SendPropInt( SENDINFO( m_iShadow ), 1, SPROP_UNSIGNED ),

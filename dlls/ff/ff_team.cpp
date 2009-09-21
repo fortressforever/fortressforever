@@ -15,7 +15,7 @@
 // Datatable
 IMPLEMENT_SERVERCLASS_ST(CFFTeam, DT_FFTeam)
 	// --> Mirv: Some limits that the client needs to know about for the menu
-	SendPropInt( SENDINFO( m_iAllies ) ), //AfterShock: this has a flag for each team
+	SendPropInt( SENDINFO( m_iAllies ) ),
 	SendPropInt( SENDINFO( m_iMaxPlayers ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iClasses), SendPropInt( SENDINFO_ARRAY(m_iClasses), 4 ) ),
 	

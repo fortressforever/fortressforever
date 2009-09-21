@@ -271,7 +271,7 @@ CFFPlayerClassInfo::CFFPlayerClassInfo()
 	
 	m_iMaxArmour = 0;
 	m_iInitialArmour = 0;
-	m_iArmourType = 0;
+	m_flArmourType = 0;
 
 	m_iHealth = 0;
 	
@@ -312,7 +312,7 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 	// Health and armour values
 	m_iMaxArmour		= pKeyValuesData->GetInt("max_armour", 0);
 	m_iInitialArmour	= pKeyValuesData->GetInt("initial_armour", 0);
-	m_iArmourType		= pKeyValuesData->GetInt("armour_type", 0);
+	m_flArmourType		= pKeyValuesData->GetFloat("armour_type", 0);
 	m_iHealth			= pKeyValuesData->GetInt("health", 0);
 
 	// Speed
