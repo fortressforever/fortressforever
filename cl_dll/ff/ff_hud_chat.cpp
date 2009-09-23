@@ -545,9 +545,7 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		while( pBeg[ 0 ] )
 		{
 			iAdjust = 1;
-			
-			/* Don't need to localize resource strings in chat
-			
+
 			// Found a resource string to localize
 			if( ( pBeg[ 0 ] == '#' ) && pBeg[ 1 ] )
 			{
@@ -577,8 +575,7 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 
 				iAdjust = i;
 			}
-			*/
-			if(pBeg[0] == '^')
+			else if(pBeg[0] == '^')
 			{
 				if(pBeg[1] >= '0' && pBeg[1] <= '9')
 				{
