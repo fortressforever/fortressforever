@@ -480,7 +480,7 @@ C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFSentryGun, DT_FFSentryGun, CFFSentryGun )
 	RecvPropInt( RECVINFO( m_iAmmoPercent ) ),
-	RecvPropFloat( RECVINFO( m_flRange ) ),
+	//RecvPropFloat( RECVINFO( m_flRange ) ),
 	RecvPropInt( RECVINFO( m_iLevel ) ),
 	RecvPropInt( RECVINFO( m_iShells ) ),
 	RecvPropInt( RECVINFO( m_iRockets ) ),
