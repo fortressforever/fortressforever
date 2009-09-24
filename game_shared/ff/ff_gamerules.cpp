@@ -144,8 +144,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 #ifdef GAME_DLL
 	//ConVar push_multiplier("ffdev_pushmultiplier", "8.0", FCVAR_REPLICATED | FCVAR_CHEAT);
 	#define PUSH_MULTIPLIER 8.0f
-	//ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED | FCVAR_CHEAT);
-	#define FATTYPUSH_MULTIPLIER 0.15f
+	ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FATTYPUSH_MULTIPLIER fattypush_multiplier.GetFloat()
 	//ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_REPLICATED | FCVAR_CHEAT);
 	#define NODAMAGEPUSH_MULTIPLIER 0.80f
 	//ConVar push_clamp("ffdev_pushclamp", "450", FCVAR_REPLICATED | FCVAR_CHEAT);
