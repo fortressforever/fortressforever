@@ -312,9 +312,8 @@ void CHudChat::MsgFunc_SayText( bf_read &msg )
 	{
 		// try to lookup translated string
 		 Printf( "%s", hudtextmessage->LookupString( szString ) );
+		 Msg( "%s", szString );
 	}
-
-	Msg( "%s", szString );
 }
 
 wchar_t* ReadLocalizedRadioCommandString( bf_read &msg, wchar_t *pOut, int outSize, bool bStripNewline )
@@ -667,6 +666,10 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 
 			// Show the message to the client
 			line->SetVisible( true );
+
+			// Show message in console
+			line->GetText( 0, szTemp, sizeof( szTemp ) );
+			Msg( "%s\n", szTemp );
 		}
 	}
 }
