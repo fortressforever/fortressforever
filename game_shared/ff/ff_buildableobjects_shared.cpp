@@ -650,7 +650,7 @@ CFFDispenser::CFFDispenser( void )
 	m_iGiveArmor	= 40;
 
 	// Health
-	m_iMaxHealth = m_iHealth = 150;
+	m_iMaxHealth = m_iHealth = 100;
 }
 
 //-----------------------------------------------------------------------------

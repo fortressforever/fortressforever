@@ -125,11 +125,11 @@ ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICA
 
 
 //ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
-#define SG_HEALTH_LEVEL1 160 // sg_health_lvl1.GetInt()
+#define SG_HEALTH_LEVEL1 132 // sg_health_lvl1.GetInt()
 //ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG health");
-#define SG_HEALTH_LEVEL2 180 // sg_health_lvl2.GetInt()
+#define SG_HEALTH_LEVEL2 164 // sg_health_lvl2.GetInt()
 //ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
-#define SG_HEALTH_LEVEL3 200 // sg_health_lvl3.GetInt()
+#define SG_HEALTH_LEVEL3 182 // sg_health_lvl3.GetInt()
 
 //ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_REPLICATED, "Level 1 SG lock on time");
 #define SG_LOCKONTIME_LVL1 0.2f //sg_lockontime_lvl1.GetFloat()
@@ -1873,9 +1873,11 @@ void CFFSentryGun::Detonate()
 //-----------------------------------------------------------------------------
 void CFFSentryGun::DoExplosionDamage()
 {
+	/* No more SG explosion damage! Engineers rejoice!
 	VPROF_BUDGET( "CFFSentryGun::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
+	//float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
+	float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel;
 	// COmmented out for testing explosion damage - AfterShock
 	//flDamage = min(280, flDamage);
 	
@@ -1887,6 +1889,7 @@ void CFFSentryGun::DoExplosionDamage()
 
 		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
 	}
+	*/
 }
 
 //-----------------------------------------------------------------------------

@@ -917,7 +917,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// Sentry gun seems to take about 110% of damage, going to assume its the same
 	// for all others for now -mirv
 	CTakeDamageInfo adjustedDamage = info;
-	adjustedDamage.SetDamage( adjustedDamage.GetDamage() * 1.1f );
+	//adjustedDamage.SetDamage( adjustedDamage.GetDamage() * 1.1f ); //AfterShock: this is dumb. just reduce health by 10/110
 
 	// Sorry trepids, not putting this one check in LUA
 	// Bug #0000333: Buildable Behavior (non build slot) while building
