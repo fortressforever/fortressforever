@@ -67,10 +67,9 @@ class CHudChatLine;
 // Dump text
 void DumpBufToChatline( CHudChatLine *pChatLine, char *szText, int &iPos )
 {
-	wchar_t wszTemp[ 4096 ];
+	wchar_t wszTemp[ 128 ];
 	vgui::localize()->ConvertANSIToUnicode( szText, wszTemp, sizeof( wszTemp ) );
 	pChatLine->InsertString( wszTemp );
-	Q_strcpy( szText, "\0" );
 	iPos = 0;
 }
 
@@ -429,37 +428,36 @@ void CHudChat::MsgFunc_TextMsg( bf_read &msg )
 	}
 }
 
-
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Formats the chat line for the client
 // Input  : *fmt - 
 //			... - 
 //-----------------------------------------------------------------------------
 void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 {
-	va_list marker;
-	char msg[4096];
+	// hlstriker: Rewrote a lot here
 
-	va_start(marker, fmt);
-	Q_vsnprintf(msg, sizeof( msg), fmt, marker);
-	va_end(marker);
+	// Copy the message into szMsg
+	va_list marker;
+	char szMsg[ 128 ];
+
+	va_start( marker, fmt );
+	Q_vsnprintf( szMsg, sizeof( szMsg ), fmt, marker );
+	va_end( marker );
 
 	// Strip any trailing '\n'
-	if ( strlen( msg ) > 0 && msg[ strlen( msg )-1 ] == '\n' )
-	{
-		msg[ strlen( msg ) - 1 ] = 0;
-	}
+	if ( strlen( szMsg ) > 0 && szMsg[ strlen( szMsg )-1 ] == '\n' )
+		szMsg[ strlen( szMsg )-1 ] = 0;
 
 	// Strip leading \n characters ( or notify/color signifiers )
-	char *pmsg = msg;
-	while ( *pmsg && ( *pmsg == '\n' || *pmsg == 1 || *pmsg == 2 ) )
-	{
-		pmsg++;
-	}
+	char *pMsg = szMsg;
+	while ( *pMsg && ( *pMsg == '\n' || *pMsg == 1 || *pMsg == 2 ) )
+		pMsg++;
 	
-	if ( !*pmsg )
+	if ( !*pMsg )
 		return;
 
+	// Make sure there is an opened chat line
 	CHudChatLine *line = (CHudChatLine *)FindUnusedChatLine();
 	if ( !line )
 	{
@@ -468,205 +466,209 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 	}
 
 	if ( !line )
-	{
 		return;
-	}
 
-	line->SetText( "" );
-	
-	int iNameLength = 0;
-	
-	player_info_t sPlayerInfo;
-	if ( iPlayerIndex == 0 )
-	{
-		Q_memset( &sPlayerInfo, 0, sizeof(player_info_t) );
-		Q_strncpy( sPlayerInfo.name, "Console", sizeof(sPlayerInfo.name)  );	
-	}
-	else
-	{
-		engine->GetPlayerInfo( iPlayerIndex, &sPlayerInfo );
-	}	
-
-	const char *pName = sPlayerInfo.name;
-
-	if ( pName )
-	{
-		const char *nameInString = strstr( pmsg, pName );
-
-		if ( nameInString )
-		{
-			iNameLength = strlen( pName ) + (nameInString - pmsg);
-
-			// Jiggles: For the two different "chat beeps" that Mr.Beefy was dying to have
-			CLocalPlayerFilter filter;
-			// These strings will be the same length if the "(TEAM)" prefix is missing
-			if ( strlen( pmsg ) == strlen( nameInString ) )
-				C_BaseEntity::EmitSound( filter, -1, "HudChat.Message" );
-			else // They're not the same length, so this must be team chat
-				C_BaseEntity::EmitSound( filter, -1, "HudChat.TeamMessage" );
-			// End Beefy's demand
-		}
-	}
-	else
-		line->InsertColorChange( GetDefaultChatColor() );
-
-	const int iBufferSize = strlen( pmsg ) + 1;
+	// Start printing the message
+	const int iBufferSize = strlen( pMsg ) + 1;
 	char *buf = static_cast<char *>( _alloca( iBufferSize ) );
-	wchar_t *wbuf = static_cast<wchar_t *>( _alloca( iBufferSize * sizeof(wchar_t) ) );
+
 	if ( buf )
 	{
-		Color col = GetClientColor( iPlayerIndex );
-
+		// Clear the chat line and set expire time
+		line->SetText( "" );
 		line->SetExpireTime();
-	
-		// draw the first x characters in the player color
-		Q_strncpy( buf, pmsg, min( iNameLength + 1, MAX_PLAYER_NAME_LENGTH+32) );
-		buf[ min( iNameLength, MAX_PLAYER_NAME_LENGTH+31) ] = 0;
-		line->InsertColorChange( col );
-		line->InsertString( buf );
-		Q_strncpy( buf, pmsg + iNameLength, strlen( pmsg ));
-		buf[ strlen( pmsg + iNameLength ) ] = '\0';
-		line->InsertColorChange( GetDefaultChatColor() );
-
-		enum { ColorStackSize = 64 };
-		Color m_ColorStack[ColorStackSize];
-		int m_StackIndex = 0;
-		m_ColorStack[m_StackIndex] = GetDefaultChatColor();
-
-		// Want to look in buf for any localized strings
-		// and convert them to resource strings if possible
-		char *pBeg = buf;
-		int iAdjust = 1;
-		char szTemp[ 4096 ];
-
-		Q_strcpy( szTemp, "\0" );
-		int iPos = 0;
-
-		while( pBeg[ 0 ] )
+		
+		// Get the players name
+		player_info_t sPlayerInfo;
+		if ( iPlayerIndex == 0 )
 		{
-			iAdjust = 1;
+			Q_memset( &sPlayerInfo, 0, sizeof( player_info_t ) );
+			Q_strncpy( sPlayerInfo.name, "Console", sizeof( sPlayerInfo.name ) );	
+		}
+		else
+			engine->GetPlayerInfo( iPlayerIndex, &sPlayerInfo );
 
-			// Found a resource string to localize
-			if( ( pBeg[ 0 ] == '#' ) && pBeg[ 1 ] )
+		const char *pName = sPlayerInfo.name;
+
+		if ( pName )
+		{
+			// If the players name is in the string draw it
+			int iPos = 0;
+			int iNameLength = 0;
+			const char *nameInString = strstr( pMsg, pName );
+			if ( nameInString )
 			{
-				// If there's stuff in our buffer, dump it first
-				if( iPos )
-					DumpBufToChatline( line, szTemp, iPos );
+				iNameLength = strlen( pName ) + ( nameInString - pMsg );
 
-				// Now get on with tokenizing
-				int i = 1;
-
-				while( ( ( pBeg[ i ] >= 'A' ) && ( pBeg[ i ] <= 'Z' ) ) || 
-					( ( pBeg[ i ] >= 'a' ) && ( pBeg[ i ] <= 'z' ) ) ||
-					( pBeg[ i ] == '_' ) )
-					i++;
-
-				char szToken[ 1024 ];
-				Q_strncpy( szToken, pBeg, i + 1 );
-
-				wchar_t *pszTemp = vgui::localize()->Find( szToken );
-				if( pszTemp )
-					line->InsertString( pszTemp );
+				// Go ahead and play the correct "chat beep" sound.
+				// These strings will be the same length if the "(TEAM)" prefix is missing
+				CLocalPlayerFilter filter;
+				if ( strlen( pMsg ) == strlen( nameInString ) )
+					C_BaseEntity::EmitSound( filter, -1, "HudChat.Message" );
 				else
-				{
-					vgui::localize()->ConvertANSIToUnicode( szToken, wbuf, iBufferSize * sizeof(wchar_t) );
-					line->InsertString( wbuf );
-				}
+					C_BaseEntity::EmitSound( filter, -1, "HudChat.TeamMessage" );
 
-				iAdjust = i;
+				// Draw the players name and set names color
+				line->InsertColorChange( GetClientColor( iPlayerIndex ) );
+
+				Q_strncpy( buf, pMsg, min( iNameLength + 1, MAX_PLAYER_NAME_LENGTH + 32 ) );
+				buf[ min( iNameLength, MAX_PLAYER_NAME_LENGTH + 31) ] = 0;
+				DumpBufToChatline( line, buf, iPos );
+				Q_strncpy( buf, pMsg + iNameLength, strlen( pMsg ));
+				buf[ strlen( pMsg + iNameLength ) ] = '\0';
+
+				line->SetNameLength( iNameLength );
+				line->SetNameColor( GetClientColor( iPlayerIndex ) ); // Only for fade out
 			}
-			else if(pBeg[0] == '^')
-			{
-				if(pBeg[1] >= '0' && pBeg[1] <= '9')
-				{
-					// If there's stuff in our buffer, dump it first
-					if( iPos )
-						DumpBufToChatline( line, szTemp, iPos );
-
-					enum MarkupColors
-					{
-						COL_ORANGE,
-						COL_BLUE,
-						COL_RED,
-						COL_YELLOW,
-						COL_GREEN,
-						COL_WHITE,
-						COL_BLACK,
-						COL_GREY,
-						COL_MAGENTA,
-						COL_CYAN,
-						NUM_COLORS,
-					};
-
-					Color colorMarkup[NUM_COLORS];
-					colorMarkup[COL_WHITE] = Color(255,255,255, 255);
-					colorMarkup[COL_BLACK] = Color(0,0,0, 255);
-					colorMarkup[COL_GREY] = Color(204, 204, 204, 255);
-					colorMarkup[COL_BLUE] = Color(0,0,255, 255);
-					colorMarkup[COL_RED] = Color(255,0,0, 255);
-					colorMarkup[COL_YELLOW] = Color(255,255,0, 255);
-					colorMarkup[COL_GREEN] = Color(0,255,0, 255);
-					colorMarkup[COL_MAGENTA] = Color(255, 0, 255, 255);
-					colorMarkup[COL_CYAN] = Color(0, 255, 255, 255);
-					colorMarkup[COL_ORANGE] = Color(255, 170, 0, 255);
-
-					char col[2];
-					col[0] = pBeg[1];
-					col[1] = NULL;
-					int c = atoi(col);
-					Color colo = colorMarkup[COL_WHITE];
-					if(c>=0 && c<NUM_COLORS)
-						colo = colorMarkup[c];
-
-					if(!cl_chat_colorize.GetBool())
-						colo = GetDefaultChatColor();
-
-					line->InsertColorChange(colo);
-
-					if(m_StackIndex < ColorStackSize-1)
-						m_ColorStack[++m_StackIndex] = colo;
-
-					iAdjust = 2;
-				}
-				else
-				{
-					// If there's stuff in our buffer, dump it first
-					if( iPos )
-						DumpBufToChatline( line, szTemp, iPos );
-
-					//just a ^ with no number after terminates the color
-					if(m_StackIndex>0)
-						--m_StackIndex;
-
-					line->InsertColorChange(m_ColorStack[m_StackIndex]);
-				}
-			}
-			// Regular characters
 			else
 			{
-				// Add a character to our buffer
-				char ch = pBeg[ 0 ];
-				szTemp[ iPos++ ] = ch;
-				if( iPos == 4096 )
-					szTemp[ --iPos ] = '\0';
-				else
-					szTemp[ iPos ] = '\0';
+				// Name not found, still need to play "chat beep"
+				CLocalPlayerFilter filter;
+				C_BaseEntity::EmitSound( filter, -1, "HudChat.Message" );
 			}
 
-			pBeg += iAdjust;
+			// Draw the rest of the message
+			line->InsertColorChange( GetDefaultChatColor() );
+
+			char *pBeg = buf;
+			int iAdjust = 1;
+			char szTemp[ 256 ];
+			int iTotalLen = iNameLength;
+
+			while( pBeg[ 0 ] )
+			{
+				// Change localized strings to resource strings
+				if( ( pBeg[ 0 ] == '#' ) && pBeg[ 1 ] )
+				{
+					// Dump what's already on the buffer
+					if( iPos )
+						DumpBufToChatline( line, szTemp, iPos );
+
+					// Create the localized string
+					int i = 1;
+					while( ( ( pBeg[ i ] >= 'A' ) && ( pBeg[ i ] <= 'Z' ) ) || 
+						( ( pBeg[ i ] >= 'a' ) && ( pBeg[ i ] <= 'z' ) ) ||
+						( pBeg[ i ] == '_' ) )
+						i++;
+
+					if( ( iTotalLen + i ) > 127 )
+						Q_strncpy( szTemp, pBeg, i - ( ( iTotalLen + i ) - 127 ) + 1 );
+					else
+						Q_strncpy( szTemp, pBeg, i + 1 );
+
+					// Create and dump the resource string
+					wchar_t *pszTemp = vgui::localize()->Find( szTemp );
+					if( pszTemp )
+					{
+						// Found resource string, check if it's length goes past cap
+						wchar_t wszTemp[ 130 ];
+						Q_wcsncpy( wszTemp, pszTemp, sizeof( wszTemp ) );
+
+						int j = Q_wcslen( wszTemp );
+						if( ( iTotalLen + j ) > 127 )
+						{
+							//int iOverBy = j - ( ( iTotalLen + j ) - 127 );
+							wszTemp[ ( j - ( ( iTotalLen + j ) - 127 ) ) ] = '\0';
+						}
+
+						line->InsertString( wszTemp );
+						iTotalLen = iTotalLen + ( j - i );
+					}
+					else
+						DumpBufToChatline( line, szTemp, iPos );
+
+					iAdjust = i;
+				}
+				// Change color codes into color
+				else if( pBeg[ 0 ] == '^' )
+				{
+					if( pBeg[ 1 ] >= '0' && pBeg[ 1 ] <= '9' )
+					{
+						// If there's stuff in our buffer, dump it first
+						if( iPos )
+							DumpBufToChatline( line, szTemp, iPos );
+
+						enum MarkupColors
+						{
+							COL_ORANGE,
+							COL_BLUE,
+							COL_RED,
+							COL_YELLOW,
+							COL_GREEN,
+							COL_WHITE,
+							COL_BLACK,
+							COL_GREY,
+							COL_MAGENTA,
+							COL_CYAN,
+							NUM_COLORS,
+						};
+
+						// hlstriker: Adjusted colors for better visibility
+						Color colorMarkup[ NUM_COLORS ];
+						colorMarkup[ COL_WHITE ] = Color( 255, 255, 255, 255 );
+						colorMarkup[ COL_BLACK ] = Color( 20, 20, 20, 255 );
+						colorMarkup[ COL_GREY ] = Color( 188, 188, 188, 255 );
+						colorMarkup[ COL_BLUE ] = Color( 60, 60, 255, 255 );
+						colorMarkup[ COL_RED ] = Color( 255, 60, 60, 255 );
+						colorMarkup[ COL_YELLOW ] = Color( 248, 248, 0, 255 );
+						colorMarkup[ COL_GREEN ] = Color( 40, 245, 40, 255 );
+						colorMarkup[ COL_MAGENTA ] = Color( 139, 45, 139, 255 );
+						colorMarkup[ COL_CYAN ] = Color( 0, 255, 255, 255 );
+						colorMarkup[ COL_ORANGE ] = Color( 226, 118, 10, 255 );
+
+						char col[ 2 ];
+						col[ 0 ] = pBeg[ 1 ];
+						col[ 1 ] = NULL;
+						int c = atoi( col );
+						Color colo = colorMarkup[ COL_WHITE ];
+						if( c >= 0 && c < NUM_COLORS )
+							colo = colorMarkup[ c ];
+
+						if( !cl_chat_colorize.GetBool() )
+							colo = GetDefaultChatColor();
+
+						line->InsertColorChange( colo );
+
+						iAdjust = 2;
+					}
+					else
+					{
+						// If there's stuff in our buffer, dump it first
+						if( iPos )
+							DumpBufToChatline( line, szTemp, iPos );
+
+						// Just a ^ with no number after terminates the color
+						line->InsertColorChange( GetDefaultChatColor() );
+					}
+				}
+				// Handle regular characters
+				else
+				{
+					// Add a character to our buffer
+					szTemp[ iPos++ ] = pBeg[ 0 ];
+					if( iPos == 128 )
+						szTemp[ --iPos ] = '\0';
+					else
+						szTemp[ iPos ] = '\0';
+					iAdjust = 1;
+				}
+
+				pBeg += iAdjust;
+
+				// Break if passed cap length
+				iTotalLen += iAdjust;
+				if( iTotalLen > ( 127 - 1 ) )
+					break;
+			}
+
+			// Dump any text that's left on buffer
+			if( iPos )
+				DumpBufToChatline( line, szTemp, iPos );
+
+			// Show the message to the client
+			line->SetVisible( true );
 		}
-
-		// If there's stuff still in our buffer, dump it
-		if( iPos )
-			DumpBufToChatline( line, szTemp, iPos );
-
-		line->SetVisible( true );
-		line->SetNameLength( iNameLength );
-		line->SetNameColor( col );
 	}
-
-	//CLocalPlayerFilter filter;
-	//C_BaseEntity::EmitSound( filter, -1 /*SOUND_FROM_LOCAL_PLAYER*/, "HudChat.Message" );
 }
 
 int CHudChat::GetChatInputOffset( void )
