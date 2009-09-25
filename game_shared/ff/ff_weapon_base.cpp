@@ -608,7 +608,8 @@ void CFFWeaponBase::ItemPostFrame()
 		else if (pOwner->GetWaterLevel() == 3 && m_bAltFiresUnderwater == false)
 		{
 			// This weapon doesn't fire underwater
-			WeaponSound(EMPTY);
+			// Causing menu click underwater
+			// WeaponSound(EMPTY);
 			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
 			return;
 		}
