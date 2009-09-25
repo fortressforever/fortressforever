@@ -6060,10 +6060,14 @@ int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 }
 
 // ConVar emp_celldamage("ffdev_emp_celldamagecap", "150", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define MAX_CELLDAMAGE 150 // emp_celldamage.GetInt()
+//#define MAX_CELLDAMAGE 150 // emp_celldamage.GetInt()
 
 //ConVar emp_hwguy_shells_multi("ffdev_emp_hwguy_shells_multi", "0.666", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define EMP_HWGUY_SHELLS_MULTI 0.666f // emp_hwguy_shells_multi.GetFloat()
+//#define EMP_HWGUY_SHELLS_MULTI 0.666f // emp_hwguy_shells_multi.GetFloat()
+
+#define EMP_DAMAGE_PER_SHELL 0.25f
+#define EMP_DAMAGE_PER_ROCKET 0.65f
+#define EMP_DAMAGE_PER_CELL 0.65f
 
 int CFFPlayer::TakeEmp()
 {
@@ -6078,15 +6082,13 @@ int CFFPlayer::TakeEmp()
 	int iRockets = GetAmmoDef()->Index(AMMO_ROCKETS);
 	int iCells = GetAmmoDef()->Index(AMMO_CELLS);
 
-	float flShellsMultiplier = 1.0f;
+	//if (GetClassSlot() == CLASS_HWGUY) // Don't need this any more, since we reduced HW shells from 300 to 200 - AfterShock
+	//	flShellsMultiplier = EMP_HWGUY_SHELLS_MULTI;
 
-	if (GetClassSlot() == CLASS_HWGUY)
-		flShellsMultiplier = EMP_HWGUY_SHELLS_MULTI;
-
-	ammodmg += GetAmmoCount(iShells) * 0.5f * flShellsMultiplier;
+	ammodmg += GetAmmoCount(iShells) * EMP_DAMAGE_PER_SHELL;
 	SetAmmoCount(GetAmmoCount(iShells) * 0.75f, iShells);
 
-	ammodmg += GetAmmoCount(iRockets) * 1.3f;
+	ammodmg += GetAmmoCount(iRockets) * EMP_DAMAGE_PER_ROCKET;
 	SetAmmoCount(GetAmmoCount(iRockets) * 0.75f, iRockets);
 
 	// phish and I just found out that only the engineer has his cells ignored
@@ -6094,7 +6096,8 @@ int CFFPlayer::TakeEmp()
 	if (GetClassSlot() != CLASS_ENGINEER)
 	{
 		// Jiggles: Actually, we don't really want to insta-gib Pyros...
-		ammodmg += clamp( GetAmmoCount(iCells) * 1.3f, 0, MAX_CELLDAMAGE );
+		//ammodmg += clamp( GetAmmoCount(iCells) * EMP_DAMAGE_PER_CELL, 0, MAX_CELLDAMAGE );
+		ammodmg += GetAmmoCount(iCells) * EMP_DAMAGE_PER_CELL;
 		SetAmmoCount(GetAmmoCount(iCells) * 0.75f, iCells);
 	}
 
