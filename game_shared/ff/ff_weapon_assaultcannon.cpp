@@ -39,8 +39,8 @@
 //ConVar ffdev_ac_spread_max( "ffdev_ac_spread_max", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "The maximum cone of fire spread for the AC" );
 #define FF_AC_SPREAD_MAX FF_AC_SPREAD_MIN // ffdev_ac_spread_max.GetFloat()
 
-//ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "8.2", FCVAR_REPLICATED, "Damage per bullet" );
-#define FF_AC_BULLET_DAMAGE	8.2f // ffdev_ac_bullet_damage.GetFloat()
+ConVar ffdev_ac_bullet_damage( "ffdev_ac_bullet_damage", "7.5", FCVAR_REPLICATED, "Damage per bullet" );
+#define FF_AC_BULLET_DAMAGE	ffdev_ac_bullet_damage.GetFloat()
 
 //ConVar ffdev_ac_spread_multiplier( "ffdev_ac_spread_multiplier", "2.0", FCVAR_REPLICATED, "Outer cone is X times bigger" );
 #define FF_AC_SPREAD_MULTIPLIER	2.0f // ffdev_ac_spread_multiplier.GetFloat()
