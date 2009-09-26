@@ -29,14 +29,18 @@ void CHud::MsgFunc_ResetHUD( bf_read &msg )
 void CHud::ResetHUD()
 {
 	// clear all hud data
-	g_pClientMode->GetViewportAnimationController()->CancelAllAnimations();
+
+	// hlstriker: Caused HUD items to get stuck on screen
+	//g_pClientMode->GetViewportAnimationController()->CancelAllAnimations();
 
 	for ( int i = 0; i < m_HudList.Size(); i++ )
 	{
 		m_HudList[i]->Reset();
 	}
 
-	g_pClientMode->GetViewportAnimationController()->RunAllAnimationsToCompletion();
+	// hlstriker: Caused HUD items to get stuck on screen
+	//g_pClientMode->GetViewportAnimationController()->RunAllAnimationsToCompletion();
+
 #ifndef _XBOX
 	// reset sensitivity
 	m_flMouseSensitivity = 0;
