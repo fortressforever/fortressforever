@@ -34,24 +34,24 @@
 	#include "te_effect_dispatch.h"
 #endif
 
-ConVar ffdev_jumpdown_chargeuptime("ffdev_jumpdown_chargeuptime", "6", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jumpdown_chargeuptime("ffdev_jumpdown_chargeuptime", "6", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_CHARGEUPTIME ffdev_jumpdown_chargeuptime.GetFloat()
 
 #ifdef GAME_DLL
 
-ConVar ffdev_jumpdown_allowunchargedshot("ffdev_jumpdown_allowunchargedshot", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jumpdown_allowunchargedshot("ffdev_jumpdown_allowunchargedshot", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_ALLOWUNCHARGEDSHOT ffdev_jumpdown_allowunchargedshot.GetBool()
 
-ConVar ffdev_jumpdown_verticalpush("ffdev_jumpdown_verticalpush", "500", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jumpdown_verticalpush("ffdev_jumpdown_verticalpush", "500", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_VERTICALPUSH ffdev_jumpdown_verticalpush.GetFloat()
 
-ConVar ffdev_jumpdown_horizontalpush("ffdev_jumpdown_horizontalpush", "450", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jumpdown_horizontalpush("ffdev_jumpdown_horizontalpush", "450", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_HORIZONTALPUSH ffdev_jumpdown_horizontalpush.GetFloat()
 
-ConVar ffdev_jumpdown_horizontalsetvelocity("ffdev_jumpdown_horizontalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jumpdown_horizontalsetvelocity("ffdev_jumpdown_horizontalsetvelocity", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_HORIZONTALSETVELOCITY ffdev_jumpdown_horizontalsetvelocity.GetBool()
 
-ConVar ffdev_jumpdown_verticalsetvelocity("ffdev_jumpdown_verticalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jumpdown_verticalsetvelocity("ffdev_jumpdown_verticalsetvelocity", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_VERTICALSETVELOCITY ffdev_jumpdown_verticalsetvelocity.GetBool()
 
 #else

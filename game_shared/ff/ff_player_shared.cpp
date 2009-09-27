@@ -66,16 +66,16 @@ ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_REPL
 #define LEGSHOT_TIME 5.0f //ffdev_sniper_legshot_time.GetFloat()
 //AfterShock: radiotag time is in ff_player.cpp under RADIOTAG_DURATION
 
-ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "4", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "4", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 
 #define OVERPRESSURE_JERKMULTI 0.0004f
 

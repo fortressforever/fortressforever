@@ -57,13 +57,13 @@ ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "1.0", FCVAR_CHEAT, "Slo
 
 #endif
 
-ConVar ffdev_slowfield_radius("ffdev_slowfield_radius", "256", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of slowfield grenade");
+ConVar ffdev_slowfield_radius("ffdev_slowfield_radius", "256", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Radius of slowfield grenade");
 #define SLOWFIELD_RADIUS ffdev_slowfield_radius.GetFloat()
 
-ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "6", FCVAR_REPLICATED | FCVAR_CHEAT, "Duration of slowfield grenade");
+ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "6", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Duration of slowfield grenade");
 #define SLOWFIELD_DURATION ffdev_slowfield_duration.GetFloat()
 
-ConVar ffdev_slowfield_min_slow("ffdev_slowfield_min_slow", ".20", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum slow motion percentage of slowfield grenade");
+ConVar ffdev_slowfield_min_slow("ffdev_slowfield_min_slow", ".20", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Minimum slow motion percentage of slowfield grenade");
 #define SLOWFIELD_MIN_SLOW ffdev_slowfield_min_slow.GetFloat()
 
 #ifdef CLIENT_DLL
