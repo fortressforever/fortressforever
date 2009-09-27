@@ -138,6 +138,10 @@ typedef enum
 	// Engineer specific
 	FF_WEAPON_RAILGUN, 
 
+	// Scout specific
+	FF_WEAPON_JUMPDOWN,
+	FF_WEAPON_JUMPUP,
+
 	// Spy specific
 	FF_WEAPON_TRANQUILISER, 
 
