@@ -310,9 +310,6 @@ void CFFWeaponJumpdown::Fire( void )
 		}
 	}
 
-	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(SINGLE);
-
 	if (m_bMuzzleFlash)
 		pPlayer->DoMuzzleFlash();
 
@@ -321,11 +318,8 @@ void CFFWeaponJumpdown::Fire( void )
 	// Player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	
-#ifdef GAME_DLL
 	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
 	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
-
-#endif
 
 	//pPlayer->ViewPunch( -QAngle( RAILGUN_RECOIL_MIN + ((RAILGUN_RECOIL_MAX - RAILGUN_RECOIL_MIN) * flPercent), 0, 0 ) );
 
@@ -336,6 +330,8 @@ void CFFWeaponJumpdown::Fire( void )
 	m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
 
 #endif
+	// MUST call sound before removing a round from the clip of a CMachineGun
+	WeaponSound(SINGLE);
 }
 
 //----------------------------------------------------------------------------
@@ -370,7 +366,7 @@ void CFFWeaponJumpdown::ItemPostFrame( void )
 
 	}
 
-    if ((pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+    if ((pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0))
 	{
 		CANCEL_IF_BUILDING();
 		CANCEL_IF_CLOAKED();
