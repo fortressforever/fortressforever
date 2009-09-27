@@ -77,6 +77,13 @@ ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.
 ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 
+
+ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_REPLICATED );
+#define FF_AC_BULLETSIZE ffdev_ac_bulletsize.GetInt()
+
+ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_REPLICATED );
+#define FF_AC_NEWSYSTEM ffdev_ac_newsystem.GetBool()
+
 #define OVERPRESSURE_JERKMULTI 0.0004f
 
 //ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
@@ -1075,7 +1082,11 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 		vecEnd = info.m_vecSrc + vecDir * info.m_flDistance;
 
-		if (IsPlayer() && /*info.m_iShots > 1 &&*/ (iShot % 2) == 0)
+		if ( ( ToFFPlayer(pAttacker)->GetActiveFFWeapon()->GetWeaponID() == FF_WEAPON_ASSAULTCANNON ) && FF_AC_NEWSYSTEM )
+		{
+			AI_TraceHull(info.m_vecSrc, vecEnd, Vector(-FF_AC_BULLETSIZE, -FF_AC_BULLETSIZE, -FF_AC_BULLETSIZE), Vector(FF_AC_BULLETSIZE, FF_AC_BULLETSIZE, FF_AC_BULLETSIZE), MASK_SHOT, &traceFilter, &tr);
+		}
+		else if (IsPlayer() && /*info.m_iShots > 1 &&*/ (iShot % 2) == 0)
 		{
 			// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
 			//NOTE: This also applies to the AC if you're firing more than 1 bullet at a time!
