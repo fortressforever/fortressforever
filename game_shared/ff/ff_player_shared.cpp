@@ -79,7 +79,7 @@ ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_m
 
 
 ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_REPLICATED );
-#define FF_AC_BULLETSIZE ffdev_ac_bulletsize.GetInt()
+#define FF_AC_BULLETSIZE ffdev_ac_bulletsize.GetFloat()
 
 ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_REPLICATED );
 #define FF_AC_NEWSYSTEM ffdev_ac_newsystem.GetBool()
