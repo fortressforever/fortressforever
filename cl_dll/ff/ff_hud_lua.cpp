@@ -36,6 +36,9 @@
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 
+#include "IGameUIFuncs.h" // for key bindings
+extern IGameUIFuncs *gameuifuncs; // for key binding details
+
 using namespace vgui;
 
 DECLARE_HUDELEMENT(CHudLua);
@@ -403,8 +406,14 @@ void CHudLua::HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, 
 	if (!pLabel)
 		return;
 
+	wchar_t szTranslatedText[1024];
+	
 	// Now set this label up
-	pLabel->SetText(pszText);
+	if ( TranslateKeyCommand( pszText, szTranslatedText, sizeof(szTranslatedText) ) )
+		pLabel->SetText(szTranslatedText);
+	else
+		pLabel->SetText(pszText);
+
 	pLabel->SizeToContents();
 
 	int iProperXPosition = 0;
@@ -463,6 +472,71 @@ void CHudLua::HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, 
 	pLabel->SetPos( iProperXPosition, iProperYPosition );
 
 	pLabel->SetVisible(true);
+}
+
+//-------------------------------------------------------------------------------
+// Purpose: Translate key commands into user's current key bind, and add the 
+//			hint text to the text box. 
+//			-For example, if the hint string says {+duck} and the user has the
+//			 duck command bound to the SHIFT key, this function translates the 
+//			 hint string into SHIFT.
+//-------------------------------------------------------------------------------
+bool CHudLua::TranslateKeyCommand( const char *szMessage, wchar_t *szTranslated, int iBufferSizeInBytes )
+{
+	if ( !szMessage )
+	{
+		Warning( "Error: Received a HudText message that was formatted incorrectly!\n" );
+		return false;
+	}
+
+	int i = 0;
+	int iTrans = 0;
+	for (;;)
+	{
+		if ( szMessage[i] == '{' )
+		{
+			char sKeyCommand[30];
+			int iKeyIndex = 0;
+			for (;;)
+			{
+				i++;
+
+				// This shouldn't happen unless someone used the {} incorrectly
+				if ( szMessage[i] == '\0' || iKeyIndex > 30 )
+				{
+					Warning( "Error: Received a HudText message that was formatted incorrectly!\n" );
+					return false;
+				}
+				// We've got the whole command -- now find out what key it's bound to
+				if ( szMessage[i] == '}' )
+				{
+					sKeyCommand[iKeyIndex] = '\0';
+					//Msg( "\nCommand: %s\n", sKeyCommand );
+					const char *sConvertedCommand = gameuifuncs->Key_NameForKey( gameuifuncs->GetEngineKeyCodeForBind( sKeyCommand ) );
+					//Msg( "\nConverted Command: %s\n", sConvertedCommand );
+					for( const char *wch = sConvertedCommand; *wch != 0; wch++ )
+					{
+						szTranslated[iTrans] = *wch;
+						iTrans++;
+					}
+					i++;
+					break;
+				}
+				//Msg( "\nChar: %c\n", szMessage[i] );
+				sKeyCommand[iKeyIndex] = szMessage[i];
+				iKeyIndex++;
+
+			}
+		}
+
+		szTranslated[iTrans] = szMessage[i];
+
+		// We're done!
+		if ( szMessage[i] == '\0' )
+			return true;
+		i++;
+		iTrans++;
+	}
 }
 
 //-----------------------------------------------------------------------------
