@@ -16,6 +16,7 @@
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
 #include "in_buttons.h"
+#include "beam_flags.h"
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponJumpdown C_FFWeaponJumpdown
@@ -25,12 +26,14 @@
 	//#include "c_te_effect_dispatch.h"
 	
 	#include "beamdraw.h"
+	#include "c_te_effect_dispatch.h"
 
 	extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
 	//extern void DrawHalo(IMaterial* pMaterial, const Vector &source, float scale, float const *color, float flHDRColorScale);
 #else
 	#include "omnibot_interface.h"
 	#include "ff_player.h"
+	#include "ff_entity_system.h"
 	#include "te_effect_dispatch.h"
 #endif
 
@@ -53,6 +56,47 @@ ConVar ffdev_jumpdown_horizontalsetvelocity("ffdev_jumpdown_horizontalsetvelocit
 
 ConVar ffdev_jumpdown_verticalsetvelocity("ffdev_jumpdown_verticalsetvelocity", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_VERTICALSETVELOCITY ffdev_jumpdown_verticalsetvelocity.GetBool()
+
+//effect vars
+
+ConVar ffdev_jumpdown_fx_radius("ffdev_jumpdown_fx_radius", "128", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_RADIUS ffdev_jumpdown_fx_radius.GetFloat()
+
+ConVar ffdev_jumpdown_fx_lifetime("ffdev_jumpdown_fx_lifetime", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_LIFETIME ffdev_jumpdown_fx_lifetime.GetFloat()
+
+ConVar ffdev_jumpdown_fx_width("ffdev_jumpdown_fx_width", "16", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_WIDTH ffdev_jumpdown_fx_width.GetFloat()
+
+ConVar ffdev_jumpdown_fx_spread("ffdev_jumpdown_fx_spread", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_SPREAD ffdev_jumpdown_fx_spread.GetFloat()
+
+ConVar ffdev_jumpdown_fx_amplitude("ffdev_jumpdown_fx_amplitude", "10", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_AMPLITUDE ffdev_jumpdown_fx_amplitude.GetFloat()
+
+ConVar ffdev_jumpdown_fx_r("ffdev_jumpdown_fx_r", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_R ffdev_jumpdown_fx_r.GetInt()
+
+ConVar ffdev_jumpdown_fx_g("ffdev_jumpdown_fx_g", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_G ffdev_jumpdown_fx_g.GetInt()
+
+ConVar ffdev_jumpdown_fx_b("ffdev_jumpdown_fx_b", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_B ffdev_jumpdown_fx_b.GetInt()
+
+ConVar ffdev_jumpdown_fx_alpha("ffdev_jumpdown_fx_alpha", "100", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_ALPHA ffdev_jumpdown_fx_alpha.GetInt()
+
+ConVar ffdev_jumpdown_fx_speed("ffdev_jumpdown_fx_speed", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_SPEED ffdev_jumpdown_fx_speed.GetFloat()
+
+ConVar ffdev_jumpdown_fx_offset_x("ffdev_jumpdown_fx_offset_x", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_X_OFFSET ffdev_jumpdown_fx_offset_x.GetFloat()
+
+ConVar ffdev_jumpdown_fx_offset_y("ffdev_jumpdown_fx_offset_y", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_Y_OFFSET ffdev_jumpdown_fx_offset_y.GetFloat()
+
+ConVar ffdev_jumpdown_fx_offset_z("ffdev_jumpdown_fx_offset_z", "-32", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPDOWN_EFFECT_Z_OFFSET ffdev_jumpdown_fx_offset_z.GetFloat()
 
 #else
 
@@ -87,6 +131,7 @@ public:
 	float	GetClampedCharge( void );
 
 	int m_nRevSound;
+	int m_iShockwaveTexture;
 
 #ifdef GAME_DLL
 
@@ -252,6 +297,7 @@ void CFFWeaponJumpdown::Precache( void )
 	PrecacheScriptSound( "railgun.halfcharge" );		// SPECIAL2 - half charge notification
 	PrecacheScriptSound( "railgun.fullcharge" );		// SPECIAL3 - full charge notification
 	PrecacheScriptSound( "railgun.overcharge" );		// BURST - overcharge
+	m_iShockwaveTexture = PrecacheModel( "sprites/lgtning.vmt" );	
 
 	BaseClass::Precache();
 }
@@ -315,6 +361,9 @@ void CFFWeaponJumpdown::Fire( void )
 
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 
+	// MUST call sound before removing a round from the clip of a CMachineGun
+	WeaponSound(SINGLE);
+
 	// Player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	
@@ -329,9 +378,31 @@ void CFFWeaponJumpdown::Fire( void )
 	m_flStartTime = m_flLastUpdate = -1.0f;
 	m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
 
+	// effect
+	CBroadcastRecipientFilter filter;
+	te->BeamRingPoint( 
+		filter, 
+		0,										//delay
+		pPlayer->GetLegacyAbsOrigin() + Vector(JUMPDOWN_EFFECT_X_OFFSET, JUMPDOWN_EFFECT_Y_OFFSET, JUMPDOWN_EFFECT_Z_OFFSET + ((pPlayer->GetFlags() & FL_DUCKING) ? 16.0f : 0.0f)),					//origin
+		1.0f,									//start radius
+		flPercent * JUMPDOWN_EFFECT_RADIUS,		//end radius
+		m_iShockwaveTexture,					//texture
+		0,										//halo index
+		0,										//start frame
+		2,										//framerate
+		JUMPDOWN_EFFECT_LIFETIME,				//life
+		JUMPDOWN_EFFECT_WIDTH,					//width
+		JUMPDOWN_EFFECT_SPREAD,					//spread
+		JUMPDOWN_EFFECT_AMPLITUDE,				//amplitude
+		JUMPDOWN_EFFECT_R,						//r
+		JUMPDOWN_EFFECT_G,						//g
+		JUMPDOWN_EFFECT_B,						//b
+		JUMPDOWN_EFFECT_ALPHA,					//a
+		JUMPDOWN_EFFECT_SPEED,					//speed
+		FBEAM_FADEOUT
+		);
+
 #endif
-	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(SINGLE);
 }
 
 //----------------------------------------------------------------------------
