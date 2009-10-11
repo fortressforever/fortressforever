@@ -406,7 +406,7 @@ void CHudLua::HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, 
 	if (!pLabel)
 		return;
 
-	wchar_t szTranslatedText[1024];
+	char szTranslatedText[1024];
 	
 	// Now set this label up
 	if ( TranslateKeyCommand( pszText, szTranslatedText, sizeof(szTranslatedText) ) )
@@ -481,7 +481,7 @@ void CHudLua::HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, 
 //			 duck command bound to the SHIFT key, this function translates the 
 //			 hint string into SHIFT.
 //-------------------------------------------------------------------------------
-bool CHudLua::TranslateKeyCommand( const char *szMessage, wchar_t *szTranslated, int iBufferSizeInBytes )
+bool CHudLua::TranslateKeyCommand( const char *szMessage, char *szTranslated, int iBufferSizeInBytes )
 {
 	if ( !szMessage )
 	{
