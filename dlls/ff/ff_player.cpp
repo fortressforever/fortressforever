@@ -3674,7 +3674,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					GetManCannon()->GoLive();
 
 					// TODO: Change to something
-					switchToWeapon = FF_WEAPON_NAILGUN;
+					switchToWeapon = FF_WEAPON_JUMPDOWN;
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_mancannon" );
 					if( pEvent )
 					{
