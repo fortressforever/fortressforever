@@ -134,7 +134,7 @@ extern ConVar sv_maxspeed;
 
 ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
 
-ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "nailgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
+ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "jumpdown", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
 ConVar ff_defaultweapon_sniper("cl_spawnweapon_sniper", "sniperrifle", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Sniper spawn.");
 ConVar ff_defaultweapon_soldier("cl_spawnweapon_soldier", "rpg", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Soldier spawn.");
 ConVar ff_defaultweapon_demoman("cl_spawnweapon_demoman", "grenadelauncher", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Demo-man spawn.");
@@ -3551,7 +3551,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					GetManCannon()->GoLive();
 
 					// TODO: Change to something
-					switchToWeapon = FF_WEAPON_NAILGUN;
+					switchToWeapon = FF_WEAPON_JUMPDOWN;
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_mancannon" );
 					if( pEvent )
 					{
