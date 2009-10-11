@@ -263,7 +263,14 @@ void CHudCrosshair::Paint( void )
 		int iRight = iLeft + (charOffsetX * 2);
 		int iBottom = iTop + 10;
 
-		surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
+		if ( flCharge == 1.0f )
+		{
+			surface()->DrawSetColor( 128, 255, 64, 150 );
+		}
+		else
+		{
+			surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
+		}
 		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge)), iBottom );
 
 		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
