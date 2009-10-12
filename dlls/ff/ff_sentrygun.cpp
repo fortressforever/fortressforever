@@ -470,6 +470,11 @@ void CFFSentryGun::OnSearchThink( void )
 	if( !GetEnemy() ) 
 		SetEnemy(HackFindEnemy());
 
+	// hlstriker: Added to make sure sentry doesn't fire at ghost buildables
+	CFFBuildableObject *pBuildable = dynamic_cast <CFFBuildableObject *> (GetEnemy());
+	if( pBuildable && FF_IsBuildableObject(pBuildable) && !pBuildable->IsBuilt() )
+		SetEnemy( NULL );
+
 	if( GetEnemy() )
 	{
 		// Pause for the lock-on time
@@ -533,7 +538,7 @@ void CFFSentryGun::OnActiveThink( void )
 	if (m_bMaliciouslySabotaged && m_flSabotageTime <= gpGlobals->curtime)
 		enemy = NULL;
 
-	// Enemy is no longer targettable
+	// Enemy is no longer targettable // hlstriker: Crashing bug when sg loses sight of enemy buildable is somewhere in this if statement/nest
 	if( !enemy 
 			|| ( !FVisible( enemy ) && !FVisible( pFFPlayer->GetLegacyAbsOrigin() ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
 			|| !enemy->IsAlive()
