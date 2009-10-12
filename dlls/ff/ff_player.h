@@ -662,7 +662,8 @@ public:
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
 private:
 	void Cloak( void );	
-	CNetworkVar( unsigned int, m_iCloaked );
+	//unsigned int m_iCloaked;
+	CNetworkVar( unsigned int, m_iCloaked ); //gotta network this since lots of serverside-only code calls it, e.g. when touching a scout
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)
