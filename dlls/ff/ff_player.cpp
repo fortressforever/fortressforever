@@ -692,6 +692,9 @@ void CFFPlayer::PreThink(void)
 		//float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
 		//float flSpeed = m_flCloakSpeed;
 
+		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > 3.5f ) )
+			Uncloak( true );
+		/* AfterShock: Don't uncloak when moving fast now
 		// Jiggles: Nope, let's try it this way instead
 		Vector vecCloakVelocity = GetLocalVelocity();
 		float flSpeed = FastSqrt( ( vecCloakVelocity.x * vecCloakVelocity.x ) + 
@@ -699,7 +702,7 @@ void CFFPlayer::PreThink(void)
 		  ( ( vecCloakVelocity.z * FFDEV_SPY_CLOAKZVEL ) * ( vecCloakVelocity.z * FFDEV_SPY_CLOAKZVEL ) ) );
 
 		// If going faster than spies walk speed, reset
-		if( IsCloaked() && ( flSpeed > 220 /* ffdev_spy_maxcloakspeed */ ) )
+		if( IsCloaked() && ( flSpeed > ffdev_spy_maxcloakspeed  ) )
 		{
 			// If it was a regular cloak, verify we haven't JUST cloaked
 			// and are still within the ffdev_spy_speedenforcewait period
@@ -722,6 +725,7 @@ void CFFPlayer::PreThink(void)
 			if( bUncloak )
 				Uncloak( true );
 		}
+		*/
 
 		// Disguising
 		if (m_iNewSpyDisguise && gpGlobals->curtime > m_flFinishDisguise)
@@ -1684,133 +1688,6 @@ bool CFFPlayer::ClientCommand(const char *cmd)
 
 	return BaseClass::ClientCommand(cmd);
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: This is the normal, noisey cloak. It used to have a check for
-//			velocity but not anymore.
-//-----------------------------------------------------------------------------
-/*
-void CFFPlayer::Command_SpyCloak( void )
-{
-	Warning( "[Cloak] [S] Time: %f\n", gpGlobals->curtime );
-
-	// Just be on ground
-	if (GetGroundEntity() == NULL)
-		return;
-
-	// A yell of pain
-	if (!IsCloaked())
-	{
-		EmitSound( "Player.Death" );
-	}
-
-	Command_SpySilentCloak();
-}
-*/
-
-//-----------------------------------------------------------------------------
-// Purpose: This doesn't have a maximum speed either.
-//			That wasn't really a description or a purpose, I know.
-//-----------------------------------------------------------------------------
-/*
-void CFFPlayer::Command_SpySilentCloak( void )
-{
-	Warning( "[Silent Cloak] [S] Time: %f\n", gpGlobals->curtime );
-
-	// Must be on ground
-	if (GetGroundEntity() == NULL)
-		return;
-
-	// Already Cloaked so remove all effects
-	if (IsCloaked())
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_UNCLOAK" );
-
-		// Yeah we're not Cloaked anymore bud
-		m_iCloaked = 0;
-
-		// If we're currently disguising, remove some time (50%)
-		if( m_flFinishDisguise > gpGlobals->curtime )
-			m_flFinishDisguise -= ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
-
-		CFFRagdoll *pRagdoll = dynamic_cast<CFFRagdoll *> (m_hRagdoll.Get());
-
-		// Remove the ragdoll instantly
-		pRagdoll->SetThink(&CBaseEntity::SUB_Remove);
-		pRagdoll->SetNextThink(gpGlobals->curtime);
-
-		// Visible and able to move again
-		RemoveEffects(EF_NODRAW);
-		//RemoveFlag(FL_FROZEN);
-
-		// Redeploy our weapon
-		if (GetActiveWeapon() && GetActiveWeapon()->IsWeaponVisible() == false)
-		{
-			GetActiveWeapon()->Deploy();
-			ShowCrosshair(true);
-		}
-
-		// Fire an event.
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("uncloaked");						
-		if(pEvent)
-		{
-			pEvent->SetInt("userid", this->GetUserID());
-			gameeventmanager->FireEvent(pEvent, true);
-		}
-	}
-	// Not already cloakned, so collapse with ragdoll
-	else
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );
-
-		m_iCloaked = 1;
-
-		// If we're currently disguising, add on some time (50%)
-		if( m_flFinishDisguise > gpGlobals->curtime )
-			m_flFinishDisguise += ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
-
-		// Create our ragdoll using this function (we could just c&p it and modify it i guess)
-		CreateRagdollEntity();
-
-		CFFRagdoll *pRagdoll = dynamic_cast<CFFRagdoll *> (m_hRagdoll.Get());
-
-		// Make a few things to the ragdoll, such as stopping it from travelling any
-		// further and don't allow it to fade out. Actually this velocity change
-		// won't work because the client will use the velocity of its local 
-		// representation of this player. Dang.
-		pRagdoll->m_vecRagdollVelocity = Vector(0, 0, 0);
-		pRagdoll->SetThink(NULL);
-
-		// Invisible and unable to move
-		AddEffects(EF_NODRAW);
-		//AddFlag(FL_FROZEN);
-
-		// Holster our current weapon
-		if (GetActiveWeapon())
-			GetActiveWeapon()->Holster(NULL);
-
-		CFFLuaSC hOwnerCloak( 1, this );
-		// Find any items that we are in control of and let them know we Cloaked
-		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
-		while( pEnt != NULL )
-		{
-			// Tell the ent that it Cloaked
-			_scriptman.RunPredicates_LUA( pEnt, &hOwnerCloak, "onownercloak" );
-
-			// Next!
-			pEnt = (CFFInfoScript*)gEntList.FindEntityByOwnerAndClassT( pEnt, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
-		}
-
-		// Fire an event.
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("cloaked");						
-		if(pEvent)
-		{
-			pEvent->SetInt("userid", this->GetUserID());
-			gameeventmanager->FireEvent(pEvent, true);
-		}
-	}
-}
-*/
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
@@ -3763,110 +3640,6 @@ void CFFPlayer::Command_Discard( void )
 	}
 }
 
-void CFFPlayer::Command_SaveMe( void )
-{
-	if( m_flSaveMeTime < gpGlobals->curtime )
-	{
-		m_iSaveMe = 1;
-
-		// Set the time we can do another saveme at
-		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
-
-		// Do the actual sound always... cause spamming the sound is fun
-		CPASAttenuationFilter sndFilter( this );
-
-		// Remove people not allied to us (or not on our team)
-		// 0001311: don't do this any more
-/*		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
-		{
-			if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
-				sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
-		}
-
-		// 0001311: if infected do a special saveme
-
-		if (IsInfected())
-			EmitSound( sndFilter, entindex(), "infected.saveme" );
-		else
-			EmitSound( sndFilter, entindex(), "medical.saveme" );
-			*/
-		if (IsInfected())
-			EmitSound( "infected.saveme" );
-		else
-			EmitSound( "medical.saveme" );
-
-		// Hint Code -- Event: Allied player within 1000 units calls for medic
-		CBaseEntity *ent = NULL;
-		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-		{
-			if( ent->IsPlayer() )
-			{
-				CFFPlayer *player = ToFFPlayer( ent );
-				// Only alive friendly medics within 1000 units are sent this hint
-				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_MEDIC ) )
-					FF_SendHint( player, MEDIC_GOHEAL, 5, PRIORITY_NORMAL, "#FF_HINT_MEDIC_GOHEAL" );  // Go heal that dude!
-			}
-		}
-		// End Hint Code
-	}	
-}
-
-void CFFPlayer::Command_EngyMe( void )
-{
-	if( m_flSaveMeTime < gpGlobals->curtime )
-	{
-		m_iEngyMe = 1;
-
-		// Set the time we can do another engyme at
-		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
-
-		// Do the actual sound always... cause spamming the sound is fun
-		CPASAttenuationFilter sndFilter( this );
-
-		// Remove people not allied to us (or not on our team)
-		// 0001311: don't do this any more. 
-/*
-		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
-		{
-			if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
-				sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
-		}
-
-		// 0001318: generic engyme instead of class based
-		EmitSound( sndFilter, entindex(), "maintenance.saveme" ); */
-		EmitSound("maintenance.saveme");
-
-		// Hint Code -- Event: Allied player within 1000 units calls for engy
-		CBaseEntity *ent = NULL;
-		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-		{
-			if( ent->IsPlayer() )
-			{
-				CFFPlayer *player = ToFFPlayer( ent );
-				// Only alive friendly engies within 1000 units are sent this hint
-				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_ENGINEER ) )
-					FF_SendHint( player, ENGY_GOSMACK, 5, PRIORITY_NORMAL, "#FF_HINT_ENGY_GOSMACK" );  // Go wrench that dude!
-			}
-		}
-		// End Hint Code
-
-	}
-}
-
-void CFFPlayer::Command_AmmoMe( void )
-{
-	if( m_flSaveMeTime < gpGlobals->curtime )
-	{
-		m_iAmmoMe = 1;
-		// Set the time we can do another saveme/engyme/ammome at
-		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
-
-		// Call for ammo
-		CPASAttenuationFilter sndFilter( this );
-		EmitSound("ammo.saveme");
-	}
-}
-
 void CFFPlayer::StatusEffectsThink( void )
 {
 	if( m_bGassed )
@@ -4839,8 +4612,8 @@ void CFFPlayer::Command_PrimeOne(void)
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when Cloaked
-	if (IsCloaked())
-		return;
+	//if (IsCloaked())
+	//	return;
 
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
@@ -4884,8 +4657,8 @@ void CFFPlayer::Command_PrimeTwo(void)
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when Cloaked
-	if (IsCloaked())
-		return;
+	//if (IsCloaked())
+	//	return;
 
     const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
@@ -5588,11 +5361,13 @@ int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 	}
 
 	//	Event: Spy, while cloaked, takes damage from SG
+	/* AfterShock: Cloak loses SG lock now
 	if ( m_bSGDamageHint && IsCloaked() && ( attacker->Classify() == CLASS_SENTRYGUN )  )
 	{
 		FF_SendHint( this, SPY_SGCLOAK, 1, PRIORITY_NORMAL, "#FF_HINT_SPY_SGCLOAK" );
 		m_bSGDamageHint = false; // Only do this hint once -- we don't want this hint sent every time this function is triggered!
 	}
+	*/
 	// End hint code
 
 	// Apply the force needed

@@ -537,6 +537,7 @@ void CFFSentryGun::OnActiveThink( void )
 	if( !enemy 
 			|| ( !FVisible( enemy ) && !FVisible( pFFPlayer->GetLegacyAbsOrigin() ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
 			|| !enemy->IsAlive()
+			|| ( pFFPlayer && pFFPlayer->IsCloaked() )
 			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
 			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAKMULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{

@@ -147,10 +147,10 @@ FF_AUTO_COMMAND( dispensertext, &CFFPlayer::Command_DispenserText, "Set custom t
 FF_AUTO_COMMAND( detpack, &CFFPlayer::Command_BuildDetpack, "Drop a detpack.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( mancannon, &CFFPlayer::Command_BuildManCannon, "Build a man cannon.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( discard, &CFFPlayer::Command_Discard, "Discards unneeded ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_CLOAKED );
-FF_AUTO_COMMAND( saveme, &CFFPlayer::Command_SaveMe, "Call for medical attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
-FF_AUTO_COMMAND( engyme, &CFFPlayer::Command_EngyMe, "Call for engineer attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
-FF_AUTO_COMMAND( ammome, &CFFPlayer::Command_AmmoMe, "Call for ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH );
-FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class>", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_CLOAKED )
+FF_SHARED_COMMAND( saveme, &CFFPlayer::Command_SaveMe, CC_SaveMe, "Call for medical attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_SHARED_COMMAND( engyme, &CFFPlayer::Command_EngyMe, CC_EngyMe, "Call for engineer attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_SHARED_COMMAND( ammome, &CFFPlayer::Command_AmmoMe, CC_AmmoMe, "Call for ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+//FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class>", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_CLOAKED )
 
 // entity system interfacing stuffs
 FF_AUTO_COMMAND( flaginfo, &CFFPlayer::Command_FlagInfo, "Displays information about the flag", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH | FF_CMD_CLOAKED );

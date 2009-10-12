@@ -322,9 +322,10 @@ void CC_PrimeOne( void )
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
+	/* AfterShock: Player can do what he wants when cloaked now
 	if( pLocalPlayer->IsCloaked() )
 		return;
-
+	*/
 	// Make sure we can't insta-prime on the client either
 	// This can be anything really so long as it's less than the real delay
 	// This should be okay up to about ~400ms for the moment
@@ -400,9 +401,10 @@ void CC_PrimeTwo( void )
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
+	/* AfterShock: Player can do what he wants when cloaked now
 	if( pLocalPlayer->IsCloaked() )
 		return;
-
+	*/
 	// Make sure we can't insta-prime on the client either
 	// This can be anything really so long as it's less than the real delay
 	// This should be okay up to about ~400ms for the moment
@@ -547,6 +549,50 @@ void CC_SpySmartCloak( void )
 	pLocalPlayer->Command_SpySmartCloak();
 }
 
+void CC_EngyMe( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+
+	pLocalPlayer->Command_EngyMe();
+}
+
+void CC_SaveMe( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+
+	pLocalPlayer->Command_SaveMe();
+}
+
+void CC_AmmoMe( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+
+	pLocalPlayer->Command_AmmoMe();
+}
 
 
 #define FF_PLAYER_MODEL "models/player/terror.mdl"
@@ -695,6 +741,7 @@ END_RECV_TABLE( )
 BEGIN_PREDICTION_DATA( C_FFPlayer )
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_iCloaked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
 END_PREDICTION_DATA()
 
 class C_FFRagdoll : public C_BaseAnimatingOverlay
@@ -1262,6 +1309,13 @@ void C_FFPlayer::PreThink( void )
 	//	We really don't need per-frame accuracy here
 	g_FFHintTimers.SimulateTimers();
 
+	// Do some spy stuff
+	if (GetClassSlot() == CLASS_SPY)
+	{
+		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > 3.5f ) )
+			Cloak();
+	}
+
 	// Do we need to do a class specific skill?
 	if (m_afButtonPressed & IN_ATTACK2)
 		ClassSpecificSkill();
@@ -1321,7 +1375,9 @@ void C_FFPlayer::Spawn( void )
 		return;
 
 	m_flNextCloak = 0.0f;
-
+	m_flCloakTime = 0.0f;
+	m_bCloakFadeType = false; // assume regular cloaking and not silent coaking
+	
 	// Bug #0001448: Spy menu stuck on screen.  |----> Defrag
 	HudContextForceClose();
 
@@ -1756,9 +1812,10 @@ int C_FFPlayer::DrawModel( int flags )
 	else
 	{
 		// don't draw if cloaked and basically not moving
+		/* AfterShock: No longer completely invisible ever
 		if ( GetLocalVelocity().Length() < 1.0f )
 			return 1;
-
+		*/
 		FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
 	}
 

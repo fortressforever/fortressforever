@@ -32,7 +32,7 @@
 
 using namespace vgui;
 
-#define SPY_DISGUISE_TIME 3.5f
+#define SPY_CLOAK_TIME 3.5f
 
 inline void MapClassToGlyph( int iClass, char& cGlyph )
 {
@@ -150,37 +150,28 @@ void CHudSpyDisguise::Paint( void )
 		return;
 
 	// Let's calculate and draw the disguising progress bar
-	if ( pPlayer->IsDisguising() )
+	if ( pPlayer->IsCloaked() )
 	{	
-		if ( m_iDisguising != pPlayer->IsDisguising() )
-		{
-			m_iDisguising = pPlayer->IsDisguising();
-			m_flDisguiseStartTime = gpGlobals->curtime;
-		}
-
-		float flRemainingTime = gpGlobals->curtime - m_flDisguiseStartTime;
-		float iProgressPercent = ( ( 1 - ( SPY_DISGUISE_TIME - flRemainingTime ) / SPY_DISGUISE_TIME ) );
+		float iProgressPercent = ( ( 1 - ( gpGlobals->curtime - pPlayer->GetCloakStartTime() ) / SPY_CLOAK_TIME ) );
 	
 		// Paint foreground/background stuff
 		BaseClass::PaintBackground();
-
-		//char szProgress[3];
-		//wchar_t wsProgress[3];
-		//Q_snprintf( szProgress, sizeof( szProgress ), "%i", iProgressPercent );
-		//vgui::localize()->ConvertANSIToUnicode( szProgress, wsProgress, sizeof(wsProgress) );
-
-		//// Draw text
-		//surface()->DrawSetTextFont( m_hTextFont );
-		//surface()->DrawSetTextColor( pPlayer->GetTeamColor() );
-		//surface()->DrawSetTextPos( text1_xpos, text1_ypos );
-		//surface()->DrawUnicodeString( wsProgress );
 
 		// Draw progress bar
 		surface()->DrawSetColor( m_BarColor );
 		surface()->DrawFilledRect( image1_xpos, image1_ypos, image1_xpos + bar_width * iProgressPercent, image1_ypos + bar_height );
 	}
-	else
-		m_iDisguising = 0;
+	else if ( pPlayer->GetCloakNextTime() > gpGlobals->curtime )
+	{
+		float iProgressPercent = ( ( 1 - ( pPlayer->GetCloakNextTime() - gpGlobals->curtime ) / 5.0f ) );
+	
+		// Paint foreground/background stuff
+		BaseClass::PaintBackground();
+
+		// Draw progress bar
+		surface()->DrawSetColor( m_BarColor );
+		surface()->DrawFilledRect( image1_xpos, image1_ypos, image1_xpos + bar_width * iProgressPercent, image1_ypos + bar_height );
+	}
 
 	if( !pPlayer->IsDisguised() )
 		return;	

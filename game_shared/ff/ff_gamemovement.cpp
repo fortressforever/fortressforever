@@ -560,7 +560,7 @@ void CFFGameMovement::CheckVelocity( void )
 	CFFPlayer *pPlayer = ToFFPlayer( player );
 	if( !pPlayer )
 		return;
-	
+	/* AfterShock: Cloaking no longer slows you down
 	if( !pPlayer->IsCloaked() )
 		return;
 
@@ -572,6 +572,7 @@ void CFFGameMovement::CheckVelocity( void )
 		mv->m_vecVelocity.x *= 0.5f;
 		mv->m_vecVelocity.y *= 0.5f;
 	}
+	*/
 }
 
 // Expose our interface.

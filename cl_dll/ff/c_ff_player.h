@@ -71,6 +71,10 @@ void CC_SpyCloak( void );
 void CC_SpySilentCloak( void );
 void CC_SpySmartCloak( void );
 
+void CC_EngyMe( void );
+void CC_SaveMe( void );
+void CC_AmmoMe( void );
+
 // Moved here from ff_shareddefs.h
 typedef struct SpyInfo_s
 {
@@ -447,6 +451,7 @@ public:
 	bool IsInSaveMe( void ) const { return m_iSaveMe != 0; }
 protected:
 	unsigned int m_iSaveMe;
+	float m_flSaveMeTime;
 	// ----------------------------------
 
 	// ----------------------------------
@@ -471,11 +476,22 @@ public:
 	void Command_SpyCloak( void );
 	void Command_SpySilentCloak( void );
 	void Command_SpySmartCloak( void );
+	void Command_AmmoMe( void );
+	void Command_SaveMe( void );
+	void Command_EngyMe( void );
+
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
+	float GetCloakStartTime( void ) const { return m_flCloakTime; }
+	float GetCloakNextTime( void ) const { return m_flNextCloak; }
 private:
 	void Cloak( void );
 	unsigned int m_iCloaked;
+	// Time the spy started cloaking
+	float m_flCloakTime;
+	// Time until player can cloak again
 	float m_flNextCloak;
+	bool m_bCloakFadeType; // Silent or nonsilent
+	
 
 public:
 	// Returns true if the player can cloak

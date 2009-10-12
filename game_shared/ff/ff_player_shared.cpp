@@ -10,6 +10,7 @@
 #include "ammodef.h"
 #include "ai_debug_shared.h"
 #include "shot_manipulator.h"
+#include "ff_utils.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_weapon_sniperrifle.h"
 #include "ff_weapon_assaultcannon.h"
@@ -17,7 +18,6 @@
 #ifdef CLIENT_DLL
 	
 	#include "c_ff_player.h"
-	#include "ff_utils.h"
 	#define CRecipientFilter C_RecipientFilter	// |-- For PlayJumpSound
 
 	extern void HudContextShow(bool visible);
@@ -93,7 +93,7 @@ ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_REPLICATED );
 //ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
 			
 // Time in seconds you have to wait until you can cloak again
-ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "5", FCVAR_REPLICATED | FCVAR_CHEAT, "Time in seconds you have to wait until you can cloak again" );
+ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "8.5", FCVAR_REPLICATED | FCVAR_CHEAT, "Time in seconds you have to wait until you can cloak again" );
 
 ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED | FCVAR_CHEAT, "Spy must be moving at least this slow to scloak." );
 
@@ -468,7 +468,7 @@ void CFFPlayer::PlayJumpSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 	CRecipientFilter filter;
 	filter.AddRecipientsByPAS(vecOrigin);
 
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 	// Don't send to self
 	if (gpGlobals->maxClients > 1)
 	{
@@ -789,13 +789,25 @@ void CFFPlayer::ClassSpecificSkill()
 			break;
 
 		case CLASS_ENGINEER:
+			if( IsAlive()  )
+			{
+				HudContextShow(true);
+			}	
+			break;
+#endif
+
 		case CLASS_SPY:
+			Command_SpySmartCloak();
+			//engine->ClientCmd("smartcloak");
+			/* AfterShock: Since spy can no longer disguise or activate sabotages, no need for a menu
 			// Bug #0001683: Can use engineer radial menu when dead.  This seems to put an end to it -> Defrag
 			if( IsAlive()  )
 			{
 				HudContextShow(true);
-			}			
+			}		
+			*/
 			break;
+#ifdef CLIENT_DLL
 
 		case CLASS_SCOUT:
 			engine->ClientCmd("mancannon");
@@ -1380,11 +1392,13 @@ void CFFPlayer::Command_SpyCloak( void )
 
 	// 0001379: can cloak only if on the ground
 	// added: or also not swimming
+	/* AfterShock: Can cloak even in the air now
 	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
 		return;
 	}
+	*/
 
 	// Check if we can cloak yet
 	if( m_flNextCloak > gpGlobals->curtime )
@@ -1396,10 +1410,8 @@ void CFFPlayer::Command_SpyCloak( void )
 	// Can only cloak every ffdev_spy_nextcloak seconds
 	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 
-#ifdef GAME_DLL
 	// Regular cloak
 	m_bCloakFadeType = false;
-#endif
 
 	Cloak();
 
@@ -1436,12 +1448,13 @@ void CFFPlayer::Command_SpySmartCloak( void )
 
 	// 0001379: can cloak only if on the ground
 	// added: or also not swimming
+	/* AfterShock: Can cloak even in the air now
 	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
 		return;
 	}
-
+	*/
 	// Check if we can cloak yet
 	if( m_flNextCloak > gpGlobals->curtime )
 	{
@@ -1457,18 +1470,15 @@ void CFFPlayer::Command_SpySmartCloak( void )
 	// Jon: adding in minimum allowed speed cvar
 	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
 	{
-#ifdef GAME_DLL	
 		// normal cloak
 		m_bCloakFadeType = false;
-#endif
 	}
 	else
 	{
-#ifdef GAME_DLL	
 		// Silent cloak
 		m_bCloakFadeType = true;
-#endif
 	}
+
 	Cloak();
 
 #ifdef GAME_DLL
@@ -1504,12 +1514,13 @@ void CFFPlayer::Command_SpySilentCloak( void )
 
 	// 0001379: can cloak only if on the ground
 	// added: or also not swimming
+	/* AfterShock: Can cloak even in the air now
 	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
 		return;
 	}
-
+	*/
 	// Check if we can cloak yet
 	if( m_flNextCloak > gpGlobals->curtime )
 	{
@@ -1532,10 +1543,8 @@ void CFFPlayer::Command_SpySilentCloak( void )
 		return;
 	}
 
-#ifdef GAME_DLL	
 	// Silent cloak
 	m_bCloakFadeType = true;
-#endif
 
 	Cloak();
 
@@ -1549,8 +1558,6 @@ void CFFPlayer::Command_SpySilentCloak( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::Cloak( void )
 {
-#ifdef CLIENT_DLL 
-#else
 	// Already Cloaked so remove all effects
 	if( IsCloaked() )
 	{
@@ -1559,18 +1566,7 @@ void CFFPlayer::Cloak( void )
 		// Yeah we're not Cloaked anymore bud
 		m_iCloaked = 0;
 
-		// If we're currently disguising, remove some time (50%)
-		//if( m_flFinishDisguise > gpGlobals->curtime )
-		//	m_flFinishDisguise -= ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
-
-		//// Redeploy our weapon
-		//if( GetActiveWeapon() && ( GetActiveWeapon()->IsWeaponVisible() == false ) )
-		//{
-		//	GetActiveWeapon()->Deploy();
-		//	ShowCrosshair( true );
-		//}
-
-		// If regular cloak cleanup ragdoll
+#ifdef GAME_DLL 		
 		if( !m_bCloakFadeType )
 		{
 			// Cleanup ragdoll
@@ -1595,10 +1591,11 @@ void CFFPlayer::Cloak( void )
 			pEvent->SetInt( "userid", this->GetUserID() );
 			gameeventmanager->FireEvent( pEvent, true );
 		}
-
+#endif		
 		// We are uncloaking so reset this
 		m_bCloakFadeType = false;
 	}
+
 	// Not already cloaked
 	else
 	{
@@ -1608,7 +1605,6 @@ void CFFPlayer::Cloak( void )
 		// If regular cloak, scream
 		if( !m_bCloakFadeType )
 			EmitSound( "Player.Death" );
-
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );		
 
 		m_flCloakTime = gpGlobals->curtime;
@@ -1623,7 +1619,7 @@ void CFFPlayer::Cloak( void )
 
 		// Remove any decals on us
 		RemoveAllDecals();		
-
+#ifdef GAME_DLL
 		// If regular cloak, create ragdoll
 		if( !m_bCloakFadeType )
 		{
@@ -1636,7 +1632,7 @@ void CFFPlayer::Cloak( void )
 				pRagdoll->m_vecRagdollVelocity = 100.0f * GetLocalVelocity();
 				pRagdoll->SetThink( NULL );
 			}
-		}		
+		}	
 
 		CFFLuaSC hOwnerCloak( 1, this );
 		// Find any items that we are in control of and let them know we Cloaked
@@ -1657,8 +1653,8 @@ void CFFPlayer::Cloak( void )
 			pEvent->SetInt( "userid", this->GetUserID() );
 			gameeventmanager->FireEvent( pEvent, true );
 		}
-	}
 #endif
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1670,4 +1666,92 @@ char const *CFFPlayer::DamageDecal( int bitsDamageType, int gameMaterial )
 		return "";
 
 	return BaseClass::DamageDecal( bitsDamageType, gameMaterial );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared ammome
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_AmmoMe( void )
+{
+	if( m_flSaveMeTime < gpGlobals->curtime )
+	{
+#ifdef GAME_DLL
+		m_iAmmoMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+#endif
+		// Set the time we can do another saveme/engyme/ammome at
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
+
+		// Call for ammo
+		EmitSound("ammo.saveme");
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared saveme
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_SaveMe( void )
+{
+	if( m_flSaveMeTime < gpGlobals->curtime )
+	{
+#ifdef GAME_DLL
+		m_iSaveMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+#endif
+		// Set the time we can do another saveme at
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
+
+		if (IsInfected())
+			EmitSound( "infected.saveme" );
+		else
+			EmitSound( "medical.saveme" );
+
+#ifdef GAME_DLL
+		// Hint Code -- Event: Allied player within 1000 units calls for medic
+		CBaseEntity *ent = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( ent->IsPlayer() )
+			{
+				CFFPlayer *player = ToFFPlayer( ent );
+				// Only alive friendly medics within 1000 units are sent this hint
+				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_MEDIC ) )
+					FF_SendHint( player, MEDIC_GOHEAL, 5, PRIORITY_NORMAL, "#FF_HINT_MEDIC_GOHEAL" );  // Go heal that dude!
+			}
+		}
+		// End Hint Code
+#endif
+	}	
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared ammome
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_EngyMe( void )
+{
+	if( m_flSaveMeTime < gpGlobals->curtime )
+	{
+#ifdef GAME_DLL
+		m_iEngyMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+#endif
+		// Set the time we can do another engyme at
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
+
+		EmitSound("maintenance.saveme");
+
+		// Hint Code -- Event: Allied player within 1000 units calls for engy
+#ifdef GAME_DLL
+		CBaseEntity *ent = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( ent->IsPlayer() )
+			{
+				CFFPlayer *player = ToFFPlayer( ent );
+				// Only alive friendly engies within 1000 units are sent this hint
+				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_ENGINEER ) )
+					FF_SendHint( player, ENGY_GOSMACK, 5, PRIORITY_NORMAL, "#FF_HINT_ENGY_GOSMACK" );  // Go wrench that dude!
+			}
+		}
+		// End Hint Code
+#endif
+	}
 }
