@@ -250,7 +250,7 @@ void CFFGrenadeSlowfield::Precache()
 					continue;
 
 				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-				CFFPlayer *pSlower = ToFFPlayer( GetOwnerEntity() );
+				//CFFPlayer *pSlower = ToFFPlayer( GetOwnerEntity() );
 
 				if( !pPlayer || pPlayer->IsObserver() )
 					continue;
