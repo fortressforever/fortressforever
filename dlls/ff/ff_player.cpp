@@ -6,6 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+#include "ieffects.h"
 #include "ff_player.h"
 #include "ff_entity_system.h"	// Entity system
 #include "ff_scriptman.h"
@@ -822,6 +823,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("infected.saveme");
 	PrecacheScriptSound("ammo.saveme");
 	PrecacheScriptSound("overpressure.explode");
+	PrecacheScriptSound("Sentry.CloakSonar");
 	
 	// Precache gib sound -> Defrag
 	PrecacheScriptSound("Player.Gib");
@@ -1582,6 +1584,9 @@ void CFFPlayer::SetupClassVariables()
 	m_flNextSpySabotageThink = 0.0f;
 	m_flSpySabotageFinish = 0.0f;
 	m_hSabotaging = NULL;
+
+	m_flLastCloakSonarSound = 0.0f;
+	m_flCloakDistance = 65536.0f;
 
 	m_Locations.Purge();
 	m_iClientLocation = 0;
@@ -3910,6 +3915,53 @@ void CFFPlayer::StatusEffectsThink( void )
 			m_bImmune = 0;
 	}
 
+	// AfterShock: Sonar is a status effect... sort of? Otherwise this could go elsewhere?
+	m_flCloakDistance = 65536.0f;
+	CBaseEntity *ent = NULL;
+	for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
+		if( ent->IsPlayer() )
+		{
+			CFFPlayer *player = ToFFPlayer( ent );
+			// Only alive friendly players within 1000 units are sent these hints
+			if( player && ( player != this ) && player->IsCloaked()&& player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) != GR_TEAMMATE ) )
+			{
+				float distance = GetAbsOrigin().DistTo( player->GetAbsOrigin() );
+				if ( distance < m_flCloakDistance )
+					m_flCloakDistance = distance;
+			}
+		}
+	}
+
+	if ( m_flCloakDistance < 65536.0f )
+	{
+		float flPercent = clamp( m_flCloakDistance / ( 1155.0f /*SG_RANGE_UNTARGET*/ * 0.666f /*SG_RANGE_CLOAKMULTI*/ ), 0.0f, 1.0f );
+		float flInterval = 2.02f /*SG_CLOAKSONAR_INTERVAL_NEAR*/ + ( ( 3.03f /*SG_CLOAKSONAR_INTERVAL_FAR*/ - 2.02f /*SG_CLOAKSONAR_INTERVAL_NEAR*/ ) * flPercent );
+
+		if ( m_flLastCloakSonarSound + flInterval <= gpGlobals->curtime )
+		{
+			CSoundParameters params;
+			if ( GetParametersForSound( "Sentry.CloakSonar", params, NULL ) )
+			{
+				CPASAttenuationFilter filter( this, params.soundlevel );
+
+				EmitSound_t ep;
+				ep.m_nChannel = params.channel;
+				ep.m_pSoundName = params.soundname;
+				ep.m_SoundLevel = params.soundlevel;
+				ep.m_pOrigin = &GetAbsOrigin();
+
+				ep.m_flVolume = params.volume;
+				ep.m_nPitch = 108 /*SG_CLOAKSONAR_PITCH_FAR*/ + ( ( 92 /*SG_CLOAKSONAR_PITCH_NEAR*/ - 108 /*SG_CLOAKSONAR_PITCH_FAR*/ ) * flPercent ); // far and near are swapped right here
+
+				EmitSound( filter, entindex(), ep );
+
+				g_pEffects->EnergySplash(GetFeetOrigin(), Vector(0.0f, 0.0f, 1.0f) , false);
+
+				m_flLastCloakSonarSound = gpGlobals->curtime;
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------

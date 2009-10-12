@@ -779,6 +779,8 @@ public:
 	bool GetDisguisable( void ) const	{ return m_bDisguisable != 0; }
 private:
 	CNetworkVar( unsigned int, m_bDisguisable );
+	float	m_flLastCloakSonarSound;
+	float	m_flCloakDistance;
 
 public:	
 	int GetDisguisedClass( void ) const;
