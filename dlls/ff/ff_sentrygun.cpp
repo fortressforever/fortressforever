@@ -70,10 +70,10 @@
 //#define SG_DEBUG sg_debug.GetBool()
 //ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
 #define SG_USEPVS false // sg_usepvs.GetBool()
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "5.5", FCVAR_REPLICATED );
-#define SG_TURNSPEED  sg_turnspeed.GetFloat()
-ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "4.0", FCVAR_REPLICATED );
-#define SG_PITCHSPEED sg_pitchspeed.GetFloat()
+//ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "5.5", FCVAR_REPLICATED );
+#define SG_TURNSPEED 5.5f //sg_turnspeed.GetFloat()
+//ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "4.0", FCVAR_REPLICATED );
+#define SG_PITCHSPEED 4.0f //sg_pitchspeed.GetFloat()
 //ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
 #define SG_RANGE 1050.0f // sg_range.GetFloat()
 //ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_REPLICATED );
@@ -94,25 +94,25 @@ ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "4.0", FCVAR_REPLICATED );
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f  // sg_explosiondamage_base.GetFloat()
-ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "4.0", FCVAR_REPLICATED, "SG bullet push force");
-#define SG_BULLETPUSH ffdev_sg_bulletpush.GetFloat()
+//ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "4.0", FCVAR_REPLICATED, "SG bullet push force");
+#define SG_BULLETPUSH 4.0f //ffdev_sg_bulletpush.GetFloat()
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
-ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "7.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL1 ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
+//ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "7.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL1 7.0f //ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
 //ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "4.0", FCVAR_REPLICATED, "SG level 2 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL2 SG_GROUNDPUSH_MULTIPLIER_LVL1 //5.0f // ffdev_sg_groundpush_multiplier_lvl2.GetFloat()
 //ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_REPLICATED, "SG level 3 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL3 SG_GROUNDPUSH_MULTIPLIER_LVL1 //5.0f // ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
-ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "14", FCVAR_REPLICATED, "SG bullet damage");
-#define SG_BULLETDAMAGE ffdev_sg_bulletdamage.GetInt()
+//ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "14", FCVAR_REPLICATED, "SG bullet damage");
+#define SG_BULLETDAMAGE 14.0f //ffdev_sg_bulletdamage.GetInt()
 
 // AfterShock; These values will be rounded by the ActiveThink time (at time of writing 0.01), so 0.125 = 0.13
-ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG time between shots");
-#define SG_SHOTCYCLETIME_LVL1 sg_shotcycletime_lvl1.GetFloat()
-ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.129", FCVAR_REPLICATED, "Level 2 SG time between shots");
-#define SG_SHOTCYCLETIME_LVL2 sg_shotcycletime_lvl2.GetFloat()
-ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
-#define SG_SHOTCYCLETIME_LVL3 sg_shotcycletime_lvl3.GetFloat()
+//ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL1 0.2f //sg_shotcycletime_lvl1.GetFloat()
+//ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.129", FCVAR_REPLICATED, "Level 2 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL2 0.129f //sg_shotcycletime_lvl2.GetFloat()
+//ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
+#define SG_SHOTCYCLETIME_LVL3 0.1f //sg_shotcycletime_lvl3.GetFloat()
 
 //ConVar sg_warningshots_delay("ffdev_sg_warningshots_delay", "0.2", FCVAR_REPLICATED, "Time between warning shots");
 //#define SG_WARNINGSHOTS_DELAY sg_warningshots_delay.GetFloat()
@@ -164,12 +164,12 @@ ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICA
 #define SG_ACKNOWLEDGE_SABOTAGE_DELAY 2.5f // sg_acknowledge_sabotage_delay.GetFloat()
 
 // caes: limit angular acceleration of SG
-ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.75", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
-#define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat()
-ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "1.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
-#define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat()
-ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.008", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
-#define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat()
+//ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.75", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
+#define SG_ANGULAR_ACCEL_YAW 0.75f //sg_accel_yaw.GetFloat()
+//ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "1.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
+#define SG_ANGULAR_ACCEL_PITCH 1.5f //sg_accel_pitch.GetFloat()
+//ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.008", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
+#define SG_ACCELDISTANCEMULT 0.008f //sg_accel_distmult.GetFloat()
 //ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
 #define SG_ACCELFRICTIONMULT 2.0f //sg_accel_fricmult.GetFloat()
 // caes
@@ -540,7 +540,7 @@ void CFFSentryGun::OnActiveThink( void )
 
 	// Enemy is no longer targettable // hlstriker: Crashing bug when sg loses sight of enemy buildable is somewhere in this if statement/nest
 	if( !enemy 
-			|| ( !FVisible( enemy ) && !FVisible( pFFPlayer->GetLegacyAbsOrigin() ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
+			|| ( !FVisible( enemy ) && ( pFFPlayer && !FVisible( pFFPlayer->GetLegacyAbsOrigin() ) ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
 			|| !enemy->IsAlive()
 			|| ( pFFPlayer && pFFPlayer->IsCloaked() )
 			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
@@ -824,7 +824,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		bool bIsSentryVisible = false;
 		bool bIsSentryMaliciouslySabotaged = false;
 		CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
-		if( IsTargetVisible( pSentryGun ) )
+		if( IsTargetVisible( pSentryGun ) ) //Yes this does null pointer check
 		{
 				bIsSentryVisible = true;
 				if ( pSentryGun->IsMaliciouslySabotaged() && g_pGameRules->PlayerRelationship( pOwner, pSentryGun->m_hSaboteur ) != GR_TEAMMATE )
