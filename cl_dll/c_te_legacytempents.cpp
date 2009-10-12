@@ -165,7 +165,7 @@ int C_LocalTempEntity::DrawStudioModel( int flags )
 
 		if (flLength > 2025.0f)
 		{
-			color32 col = { 255, 255, 255, 255 };
+			//color32 col = { 255, 255, 255, 255 };
 			IMaterial *pMaterial = materials->FindMaterial(/*"sprites/glow2.vmt"*/ "sprites/ff_trail.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
 			materials->Bind(pMaterial);
 
