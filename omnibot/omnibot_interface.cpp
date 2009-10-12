@@ -245,6 +245,7 @@ namespace Omnibot
 		"ff_weapon_supernailgun", // TF_WP_SUPERNAILGUN		
 		"ff_weapon_grenadelauncher", // TF_WP_GRENADE_LAUNCHER
 		"ff_weapon_rpg", // TF_WP_ROCKET_LAUNCHER
+		"ff_weapon_hookgun", // TF_WP_HOOKGUN
 		"ff_weapon_sniperrifle", // TF_WP_SNIPER_RIFLE		
 		"ff_weapon_railgun", // TF_WP_RAILGUN
 		"ff_weapon_flamethrower", // TF_WP_FLAMETHROWER
@@ -415,6 +416,8 @@ namespace Omnibot
 			return TF_WP_MINIGUN;
 		case FF_WEAPON_RPG: 
 			return TF_WP_ROCKET_LAUNCHER;
+		case FF_WEAPON_HOOKGUN: 
+			return TF_WP_HOOKGUN;
 		case FF_WEAPON_DEPLOYDISPENSER: 
 			return TF_WP_DEPLOY_DISP;
 		case FF_WEAPON_DEPLOYSENTRYGUN: 
@@ -470,6 +473,8 @@ namespace Omnibot
 			return FF_WEAPON_ASSAULTCANNON;
 		case TF_WP_ROCKET_LAUNCHER: 
 			return FF_WEAPON_RPG;
+		case TF_WP_HOOKGUN: 
+			return FF_WEAPON_HOOKGUN;
 		case TF_WP_DEPLOY_DISP: 
 			return FF_WEAPON_DEPLOYDISPENSER;
 		case TF_WP_DEPLOY_SG: 

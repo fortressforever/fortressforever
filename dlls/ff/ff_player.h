@@ -25,12 +25,14 @@
 #include "ff_modelglyph.h"
 #include "in_buttons.h"
 #include "ff_radiotagdata.h"
+#include "ff_projectile_hook.h"
 
 class CFFBuildableObject;
 class CFFDetpack;
 class CFFDispenser;
 class CFFSentryGun;
 class CFFManCannon;
+class CFFProjectileHook;
 
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
@@ -352,6 +354,7 @@ protected:
 	CNetworkHandle( CFFDispenser, m_hDispenser );
 	CNetworkHandle( CFFSentryGun, m_hSentryGun );
 	CNetworkHandle( CFFDetpack, m_hDetpack );
+	CNetworkHandle( CFFProjectileHook, m_hHook );
 	CNetworkHandle( CFFManCannon, m_hManCannon );
 	
 	// Used for seeing if a player is currently
@@ -384,6 +387,7 @@ public:
 	CFFDispenser *GetDispenser( void ) const;
 	CFFSentryGun *GetSentryGun( void ) const;
 	CFFManCannon *GetManCannon( void ) const;
+	CFFProjectileHook *GetHook( void ) const;
 	CFFBuildableObject *GetBuildable( int iBuildable ) const;
 
 	void PreBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***

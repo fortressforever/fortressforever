@@ -143,7 +143,7 @@ ConVar ff_defaultweapon_medic("cl_spawnweapon_medic", "supernailgun", FCVAR_USER
 ConVar ff_defaultweapon_hwguy("cl_spawnweapon_hwguy", "assaultcannon", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on HwGuy.");
 ConVar ff_defaultweapon_pyro("cl_spawnweapon_pyro", "flamethrower", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Pyro.");
 ConVar ff_defaultweapon_engineer("cl_spawnweapon_engineer", "railgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Engineer.");
-ConVar ff_defaultweapon_spy("cl_spawnweapon_spy", "tranq", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Spy.");
+ConVar ff_defaultweapon_spy("cl_spawnweapon_spy", "hookgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Spy.");
 ConVar ff_defaultweapon_civy("cl_spawnweapon_civilian", "tommygun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Civilian.");
 
 #ifdef _DEBUG
@@ -340,6 +340,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hDispenser ) ),
 	SendPropEHandle( SENDINFO( m_hSentryGun ) ),
 	SendPropEHandle( SENDINFO( m_hDetpack ) ),
+	SendPropEHandle( SENDINFO( m_hHook ) ),
 	SendPropEHandle( SENDINFO( m_hManCannon ) ),
 	SendPropBool( SENDINFO( m_bStaticBuilding ) ),
 	SendPropBool( SENDINFO( m_bBuilding ) ),
@@ -474,6 +475,7 @@ CFFPlayer::CFFPlayer()
 	m_hDispenser = NULL;
 	m_hSentryGun = NULL;
 	m_hDetpack = NULL;
+	m_hHook = NULL;
 	m_hManCannon = NULL;
 	m_flBuildTime = 0.0f;
 

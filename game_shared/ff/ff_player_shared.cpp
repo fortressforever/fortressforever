@@ -14,6 +14,7 @@
 #include "ff_buildableobjects_shared.h"
 #include "ff_weapon_sniperrifle.h"
 #include "ff_weapon_assaultcannon.h"
+#include "ff_projectile_hook.h"
 
 #ifdef CLIENT_DLL
 	
@@ -806,6 +807,24 @@ void CFFPlayer::ClassSpecificSkill()
 				HudContextShow(true);
 			}		
 			*/
+					/*
+	case CLASS_SPY:
+		if ( IsAlive() )
+		{
+			Vector	vForward, vRight, vUp;
+			EyeVectors(&vForward, &vRight, &vUp);
+
+			//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
+			Vector vecSrc = GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
+
+			//CFFProjectileHook *pHook = (CFFProjectileHook *) CREATE_PREDICTED_ENTITY("ff_projectile_hook");
+			//pHook->SetPlayerSimulated(ToBasePlayer(pentOwner));
+
+			CFFProjectileHook *pHook = CFFProjectileHook::CreateHook( vecSrc, EyeAngles(), (CBaseEntity*) this );
+			m_hHook = pHook;
+			pHook;			
+		}*/
+
 			break;
 #ifdef CLIENT_DLL
 
@@ -943,6 +962,14 @@ CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 CFFManCannon *CFFPlayer::GetManCannon( void ) const
 {
 	return dynamic_cast<CFFManCannon *>( m_hManCannon.Get() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get grappling hook
+//-----------------------------------------------------------------------------
+CFFProjectileHook *CFFPlayer::GetHook( void ) const
+{
+	return dynamic_cast<CFFProjectileHook *>( m_hHook.Get() );
 }
 
 //-----------------------------------------------------------------------------

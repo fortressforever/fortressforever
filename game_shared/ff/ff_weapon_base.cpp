@@ -60,6 +60,7 @@ const char *s_WeaponAliasInfo[] =
 	"assaultcannon", 	// FF_WEAPON_ASSAULTCANNON
 
 	"rpg", 				// FF_WEAPON_RPG
+	"hookgun", 			// FF_WEAPON_HOOKGUN
 
 	"tommygun",			// FF_WEAPON_TOMMYGUN
 
