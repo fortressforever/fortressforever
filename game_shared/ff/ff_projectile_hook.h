@@ -19,6 +19,14 @@
 
 #include "cbase.h"
 #include "ff_projectile_base.h"
+
+#ifdef GAME_DLL
+	#include "rope.h"
+#endif
+
+#include "rope_shared.h"
+
+
 //#include "ff_gamerules.h"
 
 #ifdef CLIENT_DLL
@@ -48,13 +56,19 @@ public:
 	virtual Class_T Classify() { return CLASS_HOOK; }
 #endif
 	static CFFProjectileHook *CreateHook(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner);
+	void RemoveHook( void );
 	virtual void Spawn();
 	bool bHooked;
-	//void CreateSmokeTrail();
 
-#ifdef CLIENT_DLL
+#ifdef GAME_DLL
+	CHandle<CRopeKeyframe>		m_hRope;
+#endif
+
+	//void CreateSmokeTrail();
 	CFFProjectileHook();
 	CFFProjectileHook(const CFFProjectileHook&) { CFFProjectileHook(); }
+
+#ifdef CLIENT_DLL
 
 	virtual void OnDataChanged(DataUpdateType_t type);
 	virtual void ClientThink( void );

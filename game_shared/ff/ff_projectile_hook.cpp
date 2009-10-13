@@ -13,8 +13,9 @@
 
 #include "cbase.h"
 #include "ff_projectile_hook.h"
+#include "IEffects.h"
 #ifdef GAME_DLL
-#include "ff_player.h"
+	#include "ff_player.h"
 #endif
 
 #define ROCKET_MODEL "models/projectiles/rocket/w_rocket.mdl"
@@ -31,6 +32,7 @@ ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1000.0", FCVAR_REPLICATED 
 ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
 #define HOOK_PULLSPEED ffdev_hook_pullspeed.GetFloat()
 
+#define ROPE_MATERIAL "Sprites/glow04_ring.vmt"
 
 #ifdef GAME_DLL
 	//#include "smoke_trail.h"
@@ -77,16 +79,19 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_hook);
 	END_DATADESC()
 #endif
 
-#ifdef CLIENT_DLL
+
 
 	//----------------------------------------------------------------------------
 	// Purpose: Client constructor
 	//----------------------------------------------------------------------------
 	CFFProjectileHook::CFFProjectileHook()
 	{
-
+#ifdef GAME_DLL
+		m_hRope				= NULL;
+#endif
 	}
 
+#ifdef CLIENT_DLL
 	//-----------------------------------------------------------------------------
 	// Purpose: Remove the rocket trail
 	//-----------------------------------------------------------------------------
@@ -201,6 +206,9 @@ void CFFProjectileHook::Spawn()
 void CFFProjectileHook::Precache() 
 {
 	PrecacheModel(ROCKET_MODEL);
+	PrecacheModel("cable/cable.vmt"); //rope material	
+	PrecacheModel(ROPE_MATERIAL); //rope material	
+	
 	PrecacheScriptSound("rocket.fly");
 
 	BaseClass::Precache();
@@ -260,6 +268,10 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 
 	// Now just remove the nail
 	//Remove();
+	if ( UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER)
+	{
+		g_pEffects->Sparks( GetAbsOrigin() );
+	}
 
 	SetAbsVelocity(Vector(0,0,0));
 	bHooked = true;
@@ -280,7 +292,7 @@ void CFFProjectileHook::HookThink()
 	// Remove if we're nolonger in the world
 	if (!IsInWorld())
 	{
-		Remove();
+		RemoveHook();
 		return;
 	}
 
@@ -291,7 +303,7 @@ void CFFProjectileHook::HookThink()
 	if ( !FVisible( pOwner->GetAbsOrigin() ) )
 	{
 		//CancelHook();
-		Remove();
+		RemoveHook();
 		return;
 	}
 
@@ -300,7 +312,7 @@ void CFFProjectileHook::HookThink()
 	if ( flDistance > HOOK_RANGE || ( bHooked && flDistance < HOOK_CLOSERANGE ) )
 	{
 		//CancelHook();
-		Remove();
+		RemoveHook();
 		return;
 	}
 
@@ -321,16 +333,18 @@ void CFFProjectileHook::HookThink()
 		pOwner->SetAbsVelocity( vecPushDir );
 	}
 
-	CPVSFilter filter( GetAbsOrigin() );
-	//te->ShowLine( filter, 0.0, &GetAbsOrigin(), &( pOwner->GetAbsOrigin() ) );
+#ifdef GAME_DLL
+	if ( m_hRope )
+		m_hRope->RecalculateLength();
+#endif
 
-	// AfterShock: TODO: This doesnt work. I want to draw a line between hook + owner!
-	te->BeamEntPoint ( filter, 0.0, this->entindex(), &GetAbsOrigin(), pOwner->entindex(), &( pOwner->GetAbsOrigin() ),
-		0, 0, 0, 1, 
-		5.0f, 2.0f,  2.0f, 10, 1.0f,
-		255, 200, 150, 150, 100 );
+	/*
+	void BeamDraw(IMaterial *pMaterial, const Vector &vecstart, const Vector &vecend, float widthstart, float widthend, float alphastart, float alphaend, const Vector &colorstart, const Vector &colorend);
 
-
+			::BeamDraw(pMaterial, GetAbsOrigin() - (vecForward * 2), GetAbsOrigin() - (vecForward * 40),
+						8.0f, 1.0f,
+						1.0f, 0.1f,
+						Vector(1.0f, 1.0f, 1.0f), Vector(0.6f, 0.6f, 0.6f));*/
 /*
 	BeamEntPoint( IRecipientFilter& filer, float delay,
 		int	nStartEntity, const Vector *start, int nEndEntity, const Vector* end, 
@@ -348,6 +362,24 @@ void CFFProjectileHook::HookThink()
 	// Next think straight away
 	SetNextThink(gpGlobals->curtime + 0.01f); // think every tick (since it shouldnt multiply the effect, just will stop gravity doing odd things inbetween ticks
 
+}
+
+
+
+//----------------------------------------------------------------------------
+// Purpose: Remove the hook from world
+//----------------------------------------------------------------------------
+void CFFProjectileHook::RemoveHook() 
+{
+#ifdef GAME_DLL
+	if ( m_hRope )
+	{
+		UTIL_Remove( m_hRope );
+		m_hRope = NULL;
+	}
+#endif
+
+	Remove();
 }
 //----------------------------------------------------------------------------
 // Purpose: Create a new rocket
@@ -402,6 +434,51 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 	pHook->bHooked = false;
 	//pRocket->EmitSound("rocket.fly");
 	// this is being swapped over to the client -mirv
+
+	CPASFilter filter( vecOrigin );
+	//te->ShowLine( filter, 0.0, &GetAbsOrigin(), &( pOwner->GetAbsOrigin() ) );
+
+	// AfterShock: TODO: This doesnt work. I want to draw a line between hook + owner!
+	/*
+	te->BeamEntPoint ( filter, 0.0, 
+		pHook->entindex(), &vecOrigin, pentOwner->entindex(), &( pentOwner->GetAbsOrigin() ),
+		0, 0, 1, 1, 
+		5.0f, 10.0f,  10.0f, 10, 10.0f,
+		255, 200, 150, 150, 10 );
+*/
+#ifdef GAME_DLL
+	pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, 0, 2, ROPE_MATERIAL );
+ 
+	if ( pHook->m_hRope )
+	{
+		pHook->m_hRope->m_Width = 2;
+		pHook->m_hRope->m_nSegments = ROPE_MAX_SEGMENTS / 2;
+		pHook->m_hRope->EnableWind( false );
+	//	m_hRope->EnableCollision(); // Collision looks worse than no collision
+		pHook->m_hRope->SetupHangDistance( 0 );
+	}
+#endif
+
+
+	/*
+	void BeamDraw(IMaterial *pMaterial, const Vector &vecstart, const Vector &vecend, float widthstart, float widthend, float alphastart, float alphaend, const Vector &colorstart, const Vector &colorend);
+
+			::BeamDraw(pMaterial, GetAbsOrigin() - (vecForward * 2), GetAbsOrigin() - (vecForward * 40),
+						8.0f, 1.0f,
+						1.0f, 0.1f,
+						Vector(1.0f, 1.0f, 1.0f), Vector(0.6f, 0.6f, 0.6f));*/
+/*
+	BeamEntPoint( IRecipientFilter& filer, float delay,
+		int	nStartEntity, const Vector *start, int nEndEntity, const Vector* end, 
+		int modelindex, int haloindex, int startframe, int framerate,
+		float life, float width, float endWidth, int fadeLength, float amplitude, 
+		int r, int g, int b, int a, int speed ) = 0;
+
+	BeamEnts( IRecipientFilter& filer, float delay,
+		int	start, int end, int modelindex, int haloindex, int startframe, int framerate,
+		float life, float width, float endWidth, int fadeLength, float amplitude, 
+		int r, int g, int b, int a, int speed ) = 0;
+*/
 
 	return pHook; 
 }
