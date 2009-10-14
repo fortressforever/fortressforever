@@ -1995,6 +1995,8 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = Vector(0, 0, 0);
 
+		// hlstriker: Commenting this because it isn't working and not sure if it's worth fixing
+		/*
 		// Create flames on ragdoll if player has flames
 		CEntityFlame *pPlayerFlame = dynamic_cast< CEntityFlame * >( GetEffectEntity() );
 		if( pPlayerFlame )
@@ -2010,6 +2012,7 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 				pRagdoll->AddFlag( FL_ONFIRE );
 			}
 		}
+		*/
 
 		if ( info ) // crash fix: cloaking spy has no "info"
 		{
