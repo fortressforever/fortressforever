@@ -32,7 +32,7 @@ ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1000.0", FCVAR_REPLICATED 
 ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
 #define HOOK_PULLSPEED ffdev_hook_pullspeed.GetFloat()
 
-#define ROPE_MATERIAL "Sprites/glow04_ring.vmt"
+#define ROPE_MATERIAL "cable/rope.vmt"
 
 #ifdef GAME_DLL
 	//#include "smoke_trail.h"
@@ -273,6 +273,11 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 		g_pEffects->Sparks( GetAbsOrigin() );
 	}
 
+#ifdef GAME_DLL
+	if ( m_hRope )
+		m_hRope->SetupHangDistance( 0 );
+#endif
+
 	SetAbsVelocity(Vector(0,0,0));
 	bHooked = true;
 	//SetThink( &CFFProjectileHook::HookThink ); // start thinking! (pulling the owner towards you)
@@ -298,8 +303,19 @@ void CFFProjectileHook::HookThink()
 
 	CBaseEntity *pOwner = GetOwnerEntity();
 
+	/*
+	CFFPlayer *pOwner = dynamic_cast< CFFPlayer* > ( GetOwnerEntity() );
+
+	// remove if we let go of attack
+	if ( !( pOwner->m_nButtons & IN_ATTACK ) )
+	{
+		//CancelHook();
+		RemoveHook();
+		return;
+	}
+	*/
+
 	// remove if we can't see our owner any more
-	
 	if ( !FVisible( pOwner->GetAbsOrigin() ) )
 	{
 		//CancelHook();
@@ -455,7 +471,7 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 		pHook->m_hRope->m_nSegments = ROPE_MAX_SEGMENTS / 2;
 		pHook->m_hRope->EnableWind( false );
 	//	m_hRope->EnableCollision(); // Collision looks worse than no collision
-		pHook->m_hRope->SetupHangDistance( 0 );
+		pHook->m_hRope->SetupHangDistance( 2.2f );
 	}
 #endif
 
