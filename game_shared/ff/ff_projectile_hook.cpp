@@ -18,7 +18,7 @@
 	#include "ff_player.h"
 #endif
 
-#define ROCKET_MODEL "models/grenades/caltrop/caltrop.mdl"
+#define HOOK_MODEL "models/grenades/caltrop/caltrop.mdl"
 
 ConVar ffdev_hook_range( "ffdev_hook_range", "1000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook range" );
 #define HOOK_RANGE ffdev_hook_range.GetFloat()
@@ -34,33 +34,23 @@ ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED |
 
 #define ROPE_MATERIAL "cable/rope.vmt"
 
-#ifdef GAME_DLL
-	//#include "smoke_trail.h"
-#else
-	//#define RocketTrail C_RocketTrail
-	//#include "c_smoke_trail.h"
+#ifdef CLIENT_DLL
 	#include "tempentity.h"
 	#include "iefx.h"
-
 #endif
 
 
 //ConVar ffdev_rocketsize("ffdev_rocketsize", "2.0", FCVAR_REPLICATED );
-#define FFDEV_ROCKETSIZE 2.0f //ffdev_rocketsize.GetFloat() //2.0f
+#define FFDEV_HOOKSIZE 1.0f //ffdev_rocketsize.GetFloat() //2.0f
 //#define PREDICTED_ROCKETS
 
 //=============================================================================
-// CFFProjectileRocket tables
+// CFFProjectileHook tables
 //=============================================================================
 
 IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileHook, DT_FFProjectileHook)
 
 BEGIN_NETWORK_TABLE(CFFProjectileHook, DT_FFProjectileHook)
-#ifdef GAME_DLL
-//SendPropEHandle(SENDINFO(m_hRocketTrail)),
-#else
-//RecvPropEHandle(RECVINFO(m_hRocketTrail)),
-#endif
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(ff_projectile_hook, CFFProjectileHook);
@@ -97,9 +87,6 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_hook);
 	//-----------------------------------------------------------------------------
 	void CFFProjectileHook::CleanUp()
 	{
-		//if (m_hRocketTrail)
-		//	m_hRocketTrail->m_bEmit = false;
-
 		BaseClass::CleanUp();
 	}
 
@@ -145,33 +132,6 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_hook);
 #endif
 
 //----------------------------------------------------------------------------
-// Purpose: Creata a trail of smoke for the rocket
-//----------------------------------------------------------------------------
-	/*
-void CFFProjectileHook::CreateSmokeTrail() 
-{
-#ifdef GAME_DLL
-	// Smoke trail.
-	if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL) 
-	{
-		m_hRocketTrail->m_Opacity = 0.2f;
-		m_hRocketTrail->m_SpawnRate = 100;
-		m_hRocketTrail->m_ParticleLifetime = 0.5f;
-		m_hRocketTrail->m_StartColor.Init(0.65f, 0.65f , 0.65f);
-		m_hRocketTrail->m_EndColor.Init(0.45f, 0.45f, 0.45f);
-		m_hRocketTrail->m_StartSize = 6;
-		m_hRocketTrail->m_EndSize = 10; // 24; // 32; Reduced a bit now
-		m_hRocketTrail->m_SpawnRadius = 4;
-		m_hRocketTrail->m_MinSpeed = 2;
-		m_hRocketTrail->m_MaxSpeed = 16;
-		
-		m_hRocketTrail->SetLifetime(999);
-		m_hRocketTrail->FollowEntity(this, "0");
-	}
-#endif
-}
-*/
-//----------------------------------------------------------------------------
 // Purpose: Spawn a rocket, set up model, size, etc
 //----------------------------------------------------------------------------
 void CFFProjectileHook::Spawn() 
@@ -183,9 +143,9 @@ void CFFProjectileHook::Spawn()
 #endif
 
 	// Setup
-	SetModel(ROCKET_MODEL);
+	SetModel(HOOK_MODEL);
 	SetMoveType(MOVETYPE_FLY);
-	SetSize(Vector(-(FFDEV_ROCKETSIZE), -(FFDEV_ROCKETSIZE), -(FFDEV_ROCKETSIZE)), Vector((FFDEV_ROCKETSIZE), (FFDEV_ROCKETSIZE), (FFDEV_ROCKETSIZE))); // smaller, cube bounding box so we rest on the ground
+	SetSize(Vector(-(FFDEV_HOOKSIZE), -(FFDEV_HOOKSIZE), -(FFDEV_HOOKSIZE)), Vector((FFDEV_HOOKSIZE), (FFDEV_HOOKSIZE), (FFDEV_HOOKSIZE))); // smaller, cube bounding box so we rest on the ground
 	SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 	SetSolidFlags(FSOLID_NOT_STANDABLE);
 	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
@@ -196,9 +156,6 @@ void CFFProjectileHook::Spawn()
 
 	// Next think
 	SetNextThink(gpGlobals->curtime);
-
-	// Creates the smoke trail
-	//CreateSmokeTrail();
 }
 
 //----------------------------------------------------------------------------
@@ -206,8 +163,7 @@ void CFFProjectileHook::Spawn()
 //----------------------------------------------------------------------------
 void CFFProjectileHook::Precache() 
 {
-	PrecacheModel(ROCKET_MODEL);
-	PrecacheModel("cable/cable.vmt"); //rope material	
+	PrecacheModel(HOOK_MODEL);
 	PrecacheModel(ROPE_MATERIAL); //rope material	
 	
 	PrecacheScriptSound("rocket.fly");
@@ -274,8 +230,6 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 	// Play body "thwack" sound
 	EmitSound("Nail.HitBody");
 
-	// Now just remove the nail
-	//Remove();
 	if ( UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER)
 	{
 		g_pEffects->Sparks( GetAbsOrigin() );
@@ -288,8 +242,6 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 
 	SetAbsVelocity(Vector(0,0,0));
 	bHooked = true;
-	//SetThink( &CFFProjectileHook::HookThink ); // start thinking! (pulling the owner towards you)
-	//SetNextThink( gpGlobals->curtime );
 }
 
 //----------------------------------------------------------------------------
@@ -309,7 +261,7 @@ void CFFProjectileHook::HookThink()
 		return;
 	}
 
-	CBaseEntity *pOwner = GetOwnerEntity();
+	CBaseEntity *pOwner = GetOwnerEntity(); // Get player
 
 	/*
 	CFFPlayer *pOwner = dynamic_cast< CFFPlayer* > ( GetOwnerEntity() );
@@ -326,7 +278,6 @@ void CFFProjectileHook::HookThink()
 	// remove if we can't see our owner any more
 	if ( !FVisible( pOwner->GetAbsOrigin() ) )
 	{
-		//CancelHook();
 		RemoveHook();
 		return;
 	}
@@ -335,7 +286,6 @@ void CFFProjectileHook::HookThink()
 	float flDistance = WorldSpaceCenter().DistTo( pOwner->GetAbsOrigin() );
 	if ( flDistance > HOOK_RANGE || ( bHooked && flDistance < HOOK_CLOSERANGE ) )
 	{
-		//CancelHook();
 		RemoveHook();
 		return;
 	}
@@ -350,11 +300,10 @@ void CFFProjectileHook::HookThink()
 	// This is the actual code for how the hook moves the player
 	if ( bHooked )
 	{
-		Vector vecPushDir = GetAbsOrigin() - pOwner->GetAbsOrigin();
-		VectorNormalize( vecPushDir );
-		vecPushDir*= HOOK_PULLSPEED;
-		//pOwner->VelocityPunch( vecPushDir );
-		pOwner->SetAbsVelocity( vecPushDir );
+		Vector vecPullDir = GetAbsOrigin() - pOwner->GetAbsOrigin();
+		VectorNormalize( vecPullDir );
+		vecPullDir*= HOOK_PULLSPEED;
+		pOwner->SetAbsVelocity( vecPullDir );
 	}
 
 #ifdef GAME_DLL
@@ -362,30 +311,9 @@ void CFFProjectileHook::HookThink()
 		m_hRope->RecalculateLength();
 #endif
 
-	/*
-	void BeamDraw(IMaterial *pMaterial, const Vector &vecstart, const Vector &vecend, float widthstart, float widthend, float alphastart, float alphaend, const Vector &colorstart, const Vector &colorend);
-
-			::BeamDraw(pMaterial, GetAbsOrigin() - (vecForward * 2), GetAbsOrigin() - (vecForward * 40),
-						8.0f, 1.0f,
-						1.0f, 0.1f,
-						Vector(1.0f, 1.0f, 1.0f), Vector(0.6f, 0.6f, 0.6f));*/
-/*
-	BeamEntPoint( IRecipientFilter& filer, float delay,
-		int	nStartEntity, const Vector *start, int nEndEntity, const Vector* end, 
-		int modelindex, int haloindex, int startframe, int framerate,
-		float life, float width, float endWidth, int fadeLength, float amplitude, 
-		int r, int g, int b, int a, int speed ) = 0;
-
-	BeamEnts( IRecipientFilter& filer, float delay,
-		int	start, int end, int modelindex, int haloindex, int startframe, int framerate,
-		float life, float width, float endWidth, int fadeLength, float amplitude, 
-		int r, int g, int b, int a, int speed ) = 0;
-*/
-
 #endif
 	// Next think straight away
 	SetNextThink(gpGlobals->curtime + 0.01f); // think every tick (since it shouldnt multiply the effect, just will stop gravity doing odd things inbetween ticks
-
 }
 
 
@@ -406,7 +334,7 @@ void CFFProjectileHook::RemoveHook()
 	Remove();
 }
 //----------------------------------------------------------------------------
-// Purpose: Create a new rocket
+// Purpose: Create a new hook (hacked from ff_projectile_rocket.cpp)
 //----------------------------------------------------------------------------
 CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner) 
 {
@@ -443,33 +371,13 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 	//pHook->m_flDamage = iDamage;
 	//pHook->m_DmgRadius = iDamageRadius;
 
-	// Remove the old hook
-	CFFPlayer *pPlayer = ToFFPlayer( pentOwner );
-	if ( pPlayer )
-	{
-		if ( pPlayer->GetHook() )
-		{
-
-			pPlayer->GetHook()->Remove();
-		}
-	}
-
 #endif
 	pHook->bHooked = false;
 	//pRocket->EmitSound("rocket.fly");
 	// this is being swapped over to the client -mirv
 
 	CPASFilter filter( vecOrigin );
-	//te->ShowLine( filter, 0.0, &GetAbsOrigin(), &( pOwner->GetAbsOrigin() ) );
 
-	// AfterShock: TODO: This doesnt work. I want to draw a line between hook + owner!
-	/*
-	te->BeamEntPoint ( filter, 0.0, 
-		pHook->entindex(), &vecOrigin, pentOwner->entindex(), &( pentOwner->GetAbsOrigin() ),
-		0, 0, 1, 1, 
-		5.0f, 10.0f,  10.0f, 10, 10.0f,
-		255, 200, 150, 150, 10 );
-*/
 #ifdef GAME_DLL
 	pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, 0, 2, ROPE_MATERIAL );
  
@@ -482,27 +390,6 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 		pHook->m_hRope->SetupHangDistance( 2.2f );
 	}
 #endif
-
-
-	/*
-	void BeamDraw(IMaterial *pMaterial, const Vector &vecstart, const Vector &vecend, float widthstart, float widthend, float alphastart, float alphaend, const Vector &colorstart, const Vector &colorend);
-
-			::BeamDraw(pMaterial, GetAbsOrigin() - (vecForward * 2), GetAbsOrigin() - (vecForward * 40),
-						8.0f, 1.0f,
-						1.0f, 0.1f,
-						Vector(1.0f, 1.0f, 1.0f), Vector(0.6f, 0.6f, 0.6f));*/
-/*
-	BeamEntPoint( IRecipientFilter& filer, float delay,
-		int	nStartEntity, const Vector *start, int nEndEntity, const Vector* end, 
-		int modelindex, int haloindex, int startframe, int framerate,
-		float life, float width, float endWidth, int fadeLength, float amplitude, 
-		int r, int g, int b, int a, int speed ) = 0;
-
-	BeamEnts( IRecipientFilter& filer, float delay,
-		int	start, int end, int modelindex, int haloindex, int startframe, int framerate,
-		float life, float width, float endWidth, int fadeLength, float amplitude, 
-		int r, int g, int b, int a, int speed ) = 0;
-*/
 
 	return pHook; 
 }

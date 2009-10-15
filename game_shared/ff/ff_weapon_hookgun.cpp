@@ -83,6 +83,8 @@ CFFWeaponHookGun::CFFWeaponHookGun()
 void CFFWeaponHookGun::Fire() 
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
+	if ( !pPlayer )
+		return;
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
 	Vector	vForward, vRight, vUp;
@@ -92,7 +94,9 @@ void CFFWeaponHookGun::Fire()
 	Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
 
 	CFFProjectileHook *pHook = CFFProjectileHook::CreateHook(vecSrc, pPlayer->EyeAngles(), pPlayer);
-	pHook;
+
+	// TODO: if we want, we should delete any old hook so player can only have 1 active.
+	// to do this we'd just have a pointer to the current hook, then RemoveHook that one and set it to pHook here
 
 #ifdef GAME_DLL
 	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_HOOKGUN, pHook);

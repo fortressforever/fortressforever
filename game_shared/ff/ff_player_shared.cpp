@@ -965,14 +965,6 @@ CFFManCannon *CFFPlayer::GetManCannon( void ) const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Get grappling hook
-//-----------------------------------------------------------------------------
-CFFProjectileHook *CFFPlayer::GetHook( void ) const
-{
-	return dynamic_cast<CFFProjectileHook *>( m_hHook.Get() );
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 CFFBuildableObject *CFFPlayer::GetBuildable( int iBuildable ) const
