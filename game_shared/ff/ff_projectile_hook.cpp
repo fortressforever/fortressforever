@@ -18,7 +18,7 @@
 	#include "ff_player.h"
 #endif
 
-#define ROCKET_MODEL "models/projectiles/rocket/w_rocket.mdl"
+#define ROCKET_MODEL "models/grenades/caltrop/caltrop.mdl"
 
 ConVar ffdev_hook_range( "ffdev_hook_range", "1000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook range" );
 #define HOOK_RANGE ffdev_hook_range.GetFloat()
@@ -188,6 +188,7 @@ void CFFProjectileHook::Spawn()
 	SetSize(Vector(-(FFDEV_ROCKETSIZE), -(FFDEV_ROCKETSIZE), -(FFDEV_ROCKETSIZE)), Vector((FFDEV_ROCKETSIZE), (FFDEV_ROCKETSIZE), (FFDEV_ROCKETSIZE))); // smaller, cube bounding box so we rest on the ground
 	SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 	SetSolidFlags(FSOLID_NOT_STANDABLE);
+	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 
 	// Set the correct think & touch for the nail
 	SetTouch(&CFFProjectileHook::HookTouch); // No we're going to explode when we touch something
@@ -230,6 +231,13 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 	trace_t	tr;
 	tr = BaseClass::GetTouchTrace();
 
+	// Remove the hook if it hits the sky
+	if(tr.surface.flags & SURF_SKY)
+	{
+		RemoveHook();
+		return;
+	}
+
 	// This entity can take damage, so deal it out
 	if (pOther->m_takedamage != DAMAGE_NO) 
 	{
@@ -261,10 +269,10 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 		// Keep going through the glass.
 		if (pOther->GetCollisionGroup() == COLLISION_GROUP_BREAKABLE_GLASS) 
 			 return;
-
-		// Play body "thwack" sound
-		EmitSound("Nail.HitBody");
 	}
+
+	// Play body "thwack" sound
+	EmitSound("Nail.HitBody");
 
 	// Now just remove the nail
 	//Remove();
