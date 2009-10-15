@@ -244,7 +244,8 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 		m_hRope->SetupHangDistance( 0 );
 #endif
 
-	SetAbsVelocity(Vector(0,0,0));
+	SetLocalAngularVelocity(QAngle(0, 0, 0));	// stop spinning
+	SetAbsVelocity(Vector(0,0,0));				// stop moving
 	bHooked = true;
 }
 
@@ -319,8 +320,6 @@ void CFFProjectileHook::HookThink()
 	// Next think straight away
 	SetNextThink(gpGlobals->curtime + 0.01f); // think every tick (since it shouldnt multiply the effect, just will stop gravity doing odd things inbetween ticks
 }
-
-
 
 //----------------------------------------------------------------------------
 // Purpose: Remove the hook from world
