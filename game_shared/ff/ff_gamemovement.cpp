@@ -42,7 +42,7 @@
 //static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
 #define SV_TRIMPMAX 5000.0f
 //static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define SV_TRIMPTRIGGERSPEED 550.0f
+#define SV_TRIMPTRIGGERSPEED 750.0f
 //static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
@@ -290,7 +290,6 @@ bool CFFGameMovement::CheckJumpButton(void)
 		//float flRampSlideDotProduct = DotProduct(mv->m_vecVelocity, pm.plane.normal);
 
 		// They have to be at least moving a bit
-		/*
 		if (flHorizontalSpeed > SV_TRIMPTRIGGERSPEED)
 		{
 			// Don't do anything for flat ground or downwardly sloping (relative to motion)
@@ -316,7 +315,6 @@ bool CFFGameMovement::CheckJumpButton(void)
 				//fMul += reflect.z * flSpeedAmount;
 			}
 		}
-		*/
 		// trigger downwards trimp at any speed
 		if (flHorizontalSpeed > SV_TRIMPTRIGGERSPEEDDOWN)
 		{
