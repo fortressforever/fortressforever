@@ -287,7 +287,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 			vecVelocity /= flHorizontalSpeed;
 
         float flDotProduct = DotProduct(vecVelocity, pm.plane.normal);
-		//float flRampSlideDotProduct = DotProduct(mv->m_vecVelocity, pm.plane.normal);
+		float flRampSlideDotProduct = DotProduct(mv->m_vecVelocity, pm.plane.normal);
 
 		// They have to be at least moving a bit
 		if (flHorizontalSpeed > SV_TRIMPTRIGGERSPEED)
