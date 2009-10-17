@@ -22,13 +22,10 @@
 
 ConVar ffdev_hook_range( "ffdev_hook_range", "1000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook range" );
 #define HOOK_RANGE ffdev_hook_range.GetFloat()
-
 ConVar ffdev_hook_closerange( "ffdev_hook_closerange", "80.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook close range" );
 #define HOOK_CLOSERANGE ffdev_hook_closerange.GetFloat()
-
 ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook fire speed" );
 #define HOOK_FIRESPEED ffdev_hook_firespeed.GetFloat()
-
 ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
 #define HOOK_PULLSPEED ffdev_hook_pullspeed.GetFloat()
 
@@ -391,6 +388,7 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 		pHook->m_hRope->EnableWind( false );
 	//	m_hRope->EnableCollision(); // Collision looks worse than no collision
 		pHook->m_hRope->SetupHangDistance( FFDEV_HOOK_ROPE_HANGDISTANCE ); 
+		pHook->m_hRope->SetParent( pHook, 1 );
 	}
 #endif
 
