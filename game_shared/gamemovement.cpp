@@ -904,7 +904,7 @@ void CGameMovement::CheckWaterJump( void )
 																		   //			from triggering when the player was merely walking out 
 																		   //			of the water on a slope (see Mantis issue 1164)
 			{
-				mv->m_vecVelocity[2] = /*256.0f*/ 320.0f;			// Push up
+				mv->m_vecVelocity[2] = /*256.0f*/ /*320.0f*/ 380.0f;			// Push up
 				mv->m_nOldButtons |= IN_JUMP;		// Don't jump again until released
 				player->AddFlag( FL_WATERJUMP );
 				player->m_flWaterJumpTime = 2000.0f;	// Do this for 2 seconds
