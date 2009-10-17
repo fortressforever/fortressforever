@@ -33,9 +33,9 @@
 #include "tier0/memdbgon.h"
 
 //ConVar ffdev_spy_mincloakness( "ffdev_spy_mincloakness", "0.05" );
-#define SPY_MINCLOAKNESS 0.05f
+#define SPY_MINCLOAKNESS 1.0 //ffdev_spy_mincloakness.GetFloat()
 //ConVar ffdev_spy_maxrefractval( "ffdev_spy_maxrefractval", "0.5" );
-#define SPY_MAXREFRACTVAL 0.5f
+#define SPY_MAXREFRACTVAL 1.0 //ffdev_spy_maxrefractval.GetFloat()
 
 //=============================================================================
 //
