@@ -5083,6 +5083,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_hookgun.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_ic.cpp"
 				>
 			</File>
