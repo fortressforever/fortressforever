@@ -13,6 +13,7 @@
 
 #include "cbase.h"
 #include "ff_projectile_hook.h"
+#include "ff_weapon_hookgun.h"
 #include "IEffects.h"
 #ifdef GAME_DLL
 	#include "ff_player.h"
@@ -174,13 +175,12 @@ void CFFProjectileHook::Spawn()
 void CFFProjectileHook::Precache() 
 {
 	PrecacheModel(HOOK_MODEL);
-	PrecacheModel(ROPE_MATERIAL); //rope material	
-	PrecacheModel(ROPE_MATERIAL_BLUE); //rope material	
-	PrecacheModel(ROPE_MATERIAL_RED); //rope material	
-	PrecacheModel(ROPE_MATERIAL_YELLOW); //rope material	
-	PrecacheModel(ROPE_MATERIAL_GREEN); //rope material	
+	PrecacheModel(ROPE_MATERIAL);
+	PrecacheModel(ROPE_MATERIAL_BLUE);
+	PrecacheModel(ROPE_MATERIAL_RED);
+	PrecacheModel(ROPE_MATERIAL_YELLOW);
+	PrecacheModel(ROPE_MATERIAL_GREEN);	
 
-	
 	PrecacheScriptSound("rocket.fly");
 
 	BaseClass::Precache();
@@ -266,7 +266,8 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 void CFFProjectileHook::HookThink() 
 {
 #ifdef GAME_DLL
-	DevMsg("Hook think!!  ");
+	//DevMsg("Hook think!!  ");
+
 
 	SetNextThink(gpGlobals->curtime + 1.0f);
 
@@ -279,6 +280,16 @@ void CFFProjectileHook::HookThink()
 
 	CBaseEntity *pOwner = GetOwnerEntity(); // Get player
 
+	if ( !pOwner )
+	{
+		RemoveHook();
+		return;
+	}
+	if ( !pOwner->IsAlive() )
+	{
+		RemoveHook();
+		return;
+	}
 	/*
 	CFFPlayer *pOwner = dynamic_cast< CFFPlayer* > ( GetOwnerEntity() );
 
@@ -345,20 +356,25 @@ void CFFProjectileHook::RemoveHook()
 	}
 #endif
 
+	
+	CFFWeaponHookGun *pOwnerGun = dynamic_cast< CFFWeaponHookGun * >( m_pOwnerGun );
+	if ( pOwnerGun )
+		pOwnerGun->m_pHook = NULL;
+		
 	Remove();
 }
 //----------------------------------------------------------------------------
 // Purpose: Create a new hook (hacked from ff_projectile_rocket.cpp)
 //----------------------------------------------------------------------------
-CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner) 
+CFFProjectileHook * CFFProjectileHook::CreateHook(CBaseEntity *pOwnerGun, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwnerPlayer) 
 {
 	CFFProjectileHook *pHook;
 	
 #ifdef PREDICTED_ROCKETS
-	if (pentOwner->IsPlayer()) 
+	if (pentOwnerPlayer->IsPlayer()) 
 	{
 		pHook = (CFFProjectileHook *) CREATE_PREDICTED_ENTITY("ff_projectile_hook");
-		pHook->SetPlayerSimulated(ToBasePlayer(pentOwner));
+		pHook->SetPlayerSimulated(ToBasePlayer(pentOwnerPlayer));
 	}
 	else
 #endif
@@ -369,8 +385,9 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 	UTIL_SetOrigin(pHook, vecOrigin);
 	pHook->SetAbsAngles(angAngles);
 	pHook->Spawn();
-	pHook->SetOwnerEntity(pentOwner);
-	pHook->m_iSourceClassname = (pentOwner ? pentOwner->m_iClassname : NULL_STRING);
+	pHook->SetOwnerEntity(pentOwnerPlayer);
+	pHook->m_iSourceClassname = (pentOwnerPlayer ? pentOwnerPlayer->m_iClassname : NULL_STRING);
+	pHook->m_pOwnerGun = pOwnerGun;
 
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);
@@ -381,11 +398,10 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 #ifdef GAME_DLL
 	pHook->SetupInitialTransmittedVelocity(vecForward * HOOK_FIRESPEED);
 
-
 	//pHook->m_flDamage = iDamage;
 	//pHook->m_DmgRadius = iDamageRadius;
-
 #endif
+
 	pHook->bHooked = false;
 	//pRocket->EmitSound("rocket.fly");
 	// this is being swapped over to the client -mirv
@@ -394,12 +410,12 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 	
 #ifdef GAME_DLL
 
-	switch( pentOwner->GetTeamNumber() )
+	switch( pentOwnerPlayer->GetTeamNumber() )
 	{
-		case TEAM_BLUE: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_BLUE ); break;
-		case TEAM_RED: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_RED ); break;
-		case TEAM_YELLOW: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_YELLOW ); break;
-		case TEAM_GREEN: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_GREEN ); break;
+		case TEAM_BLUE: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwnerPlayer, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_BLUE ); break;
+		case TEAM_RED: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwnerPlayer, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_RED ); break;
+		case TEAM_YELLOW: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwnerPlayer, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_YELLOW ); break;
+		case TEAM_GREEN: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwnerPlayer, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_GREEN ); break;
 	}
  
 	if ( pHook->m_hRope )

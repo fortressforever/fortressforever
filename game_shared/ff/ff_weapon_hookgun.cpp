@@ -13,42 +13,11 @@
 
 
 #include "cbase.h"
-#include "ff_weapon_baseclip.h"
-#include "ff_projectile_hook.h"
 
-#ifdef CLIENT_DLL 
-	#define CFFWeaponHookGun C_FFWeaponHookGun
-	#include "c_ff_player.h"
-#else
-	#include "omnibot_interface.h"
-	#include "ff_player.h"
-#endif
+#include "ff_weapon_hookgun.h"
+#include "in_buttons.h"
 
-// ConVar rpg_damage_radius( "ffdev_rpg_damage_radius", "115", FCVAR_REPLICATED | FCVAR_CHEAT, "RPG explosion radius" );
-//#define RPG_DAMAGERADIUS 115.0f // rpg_damage_radius.GetFloat()
-
-//=============================================================================
-// CFFWeaponHook
-//=============================================================================
-
-class CFFWeaponHookGun : public CFFWeaponBaseClip
-{
-public:
-	DECLARE_CLASS(CFFWeaponHookGun, CFFWeaponBaseClip);
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-	
-	CFFWeaponHookGun();
-
-	virtual void		Fire();
-	virtual bool		SendWeaponAnim(int iActivity);
-	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_HOOKGUN; }
-
-	bool	m_fStartedReloading;
-
-private:
-	CFFWeaponHookGun(const CFFWeaponHookGun &);
-};
+extern ConVar auto_reload;
 
 //=============================================================================
 // CFFWeaponHook tables
@@ -75,6 +44,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_hookgun);
 CFFWeaponHookGun::CFFWeaponHookGun() 
 {
 	m_fStartedReloading = false;
+	m_pHook = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -93,17 +63,146 @@ void CFFWeaponHookGun::Fire()
 	//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
 	Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
 
-	CFFProjectileHook *pHook = CFFProjectileHook::CreateHook(vecSrc, pPlayer->EyeAngles(), pPlayer);
+	CFFProjectileHook *pHook = CFFProjectileHook::CreateHook(this, vecSrc, pPlayer->EyeAngles(), pPlayer);
 	pHook->SetLocalAngularVelocity(QAngle(0, 0, -500)); // spin!
 	// TODO: if we want, we should delete any old hook so player can only have 1 active.
 	// to do this we'd just have a pointer to the current hook, then RemoveHook that one and set it to pHook here
+
+	m_pHook = pHook;
 
 #ifdef GAME_DLL
 	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_HOOKGUN, pHook);
 #endif
 }
 
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// Purpose: This is copied + tweaked from baseclip
+//-----------------------------------------------------------------------------
+void CFFWeaponHookGun::ItemPostFrame()
+{
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+	{
+		return;
+	}
+
+	if (m_bInReload)
+	{
+		// Add the ammo now
+		if (m_flReloadTime > 0 && m_flReloadTime <= gpGlobals->curtime)
+		{
+			FillClip();
+			m_flReloadTime = -1.0f;
+		}
+
+		// If time for the next reload tick, then do it
+		if (m_flTimeWeaponIdle <= gpGlobals->curtime)
+		{
+			// If out of ammo, end reload
+			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) < GetFFWpnData().m_iCycleDecrement)
+			{
+				FinishReload();
+				return;
+			}
+			// If clip not full reload again
+			if (m_iClip1 < GetMaxClip1())
+			{
+				Reload();
+				return;
+			}
+			// Clip full, stop reloading
+			else
+			{
+				FinishReload();
+				return;
+			}
+		}
+	}
+
+	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
+	{
+		if ( m_pHook ) // if hook exists just delete it and dont allow firing until they release the attack key
+		{
+			m_pHook->RemoveHook();
+			m_pHook = NULL;
+			m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f;
+		}
+		else if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+		{
+			if (!pOwner->GetAmmoCount(m_iPrimaryAmmoType))
+			{
+				DryFire();
+			}
+			else if (!m_bInReload)
+			{
+				StartReload();
+			}
+		}
+		else
+		{
+			 // create a hook and dont allow firing until they release the attack key
+			PrimaryAttack();
+			m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f;
+		}
+	}
+	else if ( !(pOwner->m_nButtons & IN_ATTACK) )
+	{
+		m_flNextPrimaryAttack = 0.0f; // enable firing again if they release the attack key
+	}
+
+	if (pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload)
+	{
+		// reload when reload is pressed, or if no buttons are down and weapon is empty.
+		StartReload();
+	}
+	else 
+	{
+		// no fire buttons down
+		m_bFireOnEmpty = false;
+
+		if (!HasAnyAmmo() && m_flNextPrimaryAttack < gpGlobals->curtime)
+		{
+			// weapon isn't useable, switch.
+			if (! (GetWeaponFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) && pOwner->SwitchToNextBestWeapon(this))
+			{
+				m_flNextPrimaryAttack = gpGlobals->curtime + 0.3;
+				return;
+			}
+		}
+		else
+		{
+			// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
+			if (m_iClip1 <= 0 && m_flTimeWeaponIdle < gpGlobals->curtime && m_flNextPrimaryAttack < gpGlobals->curtime)
+			{
+				if (StartReload())
+				{
+					// if we've successfully started to reload, we're done
+					return;
+				}
+			}
+
+			// Autoreload
+			// This would be better done reading a client off the client
+			// Added: Don't do it if they are holding down fire while there is still ammo in clip
+#ifdef CLIENT_DLL
+			if (!m_bInReload && !(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
+				&& m_flNextAutoReload <= gpGlobals->curtime 
+				&& m_iClip1 < GetMaxClip1() 
+				&& auto_reload.GetBool())
+			{
+				if(pOwner->IsAlive())
+				{
+					engine->ClientCmd("+reload");
+					m_flNextAutoReload = gpGlobals->curtime + 0.2f;
+				}
+			}
+#endif
+		}
+
+		WeaponIdle();
+		return;
+	}
+}//----------------------------------------------------------------------------
 // Purpose: Override animations
 //----------------------------------------------------------------------------
 bool CFFWeaponHookGun::SendWeaponAnim(int iActivity) 

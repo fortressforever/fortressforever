@@ -26,7 +26,6 @@
 
 #include "rope_shared.h"
 
-
 //#include "ff_gamerules.h"
 
 #ifdef CLIENT_DLL
@@ -55,10 +54,12 @@ public:
 #ifdef CLIENT_DLL
 	virtual Class_T Classify() { return CLASS_HOOK; }
 #endif
-	static CFFProjectileHook *CreateHook(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner);
+	static CFFProjectileHook *CreateHook(CBaseEntity *pOwnerGun, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner);
 	void RemoveHook( void );
 	virtual void Spawn();
+
 	bool bHooked;
+	CBaseEntity * m_pOwnerGun;
 
 #ifdef GAME_DLL
 	CHandle<CRopeKeyframe>		m_hRope;
