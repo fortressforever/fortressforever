@@ -20,9 +20,12 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE );
-ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE );
-ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE);
+ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+ConVar cl_concaim_movexhair("cl_concaim_movexhair", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL, "0 = always show xhair in centre. 1 = show xhair trueaim. 2 = hide xhair when conced");
+
+#define FFDEV_CONCAIM_MOVEXHAIR cl_concaim_movexhair.GetInt()
 	
 using namespace vgui;
 
@@ -122,6 +125,9 @@ void CHudCrosshair::Paint( void )
 	if ( !IsCurrentViewAccessAllowed() )
 		return;
 
+
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
 	m_curViewAngles = CurrentViewAngles();
 	m_curViewOrigin = CurrentViewOrigin();
 
@@ -149,13 +155,36 @@ void CHudCrosshair::Paint( void )
 		y += 0.5f * screen[1] * ScreenHeight() + 0.5f;
 	}
 
+	// AfterShock: Conc aim -> plot crosshair properly
+	if ( ( FFDEV_CONCAIM_MOVEXHAIR == 1) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		QAngle angles;
+		Vector forward;
+		Vector point, screen;
+
+		// this code is wrong
+		// AfterShock: No, the code is now right!
+		angles = pPlayer->EyeAngles();
+		AngleVectors( angles, &forward );
+		forward *= 10000.0f;
+		VectorAdd( m_curViewOrigin, forward, point );
+		ScreenTransform( point, screen );
+
+		x = (screen[0]*0.5 + 0.5f) * ScreenWidth();
+		y = (1 - ( screen[1]*0.5 + 0.5f ) ) * ScreenHeight();
+	}
+	else if ( ( FFDEV_CONCAIM_MOVEXHAIR == 2) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		x = -1;
+		y = -1;
+	}
+
+
 	// --> Mirv: Crosshair stuff
 	//m_pCrosshair->DrawSelf( 
 	//		x - 0.5f * m_pCrosshair->Width(), 
 	//		y - 0.5f * m_pCrosshair->Height(),
 	//		m_clrCrosshair );
-
-	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 	
 	if (!pPlayer)
 		return;
