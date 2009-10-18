@@ -43,6 +43,11 @@ ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED |
 #define FFDEV_HOOK_ATTACHMENT 23 //ffdev_hook_attachment.GetInt() //2.0f  // 0=feet, 1=eyes, 2=shoulder, 3=knee... 23=left hand with floppy rope. Dont ask me.
 //ConVar ffdev_hook_rope_hangdistance("ffdev_hook_rope_hangdistance", "2.2", FCVAR_REPLICATED );
 #define FFDEV_HOOK_ROPE_HANGDISTANCE 2.2f //ffdev_hook_rope_hangdistance.GetFloat() //2.0f
+ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATED );
+#define FFDEV_HOOK_ROPE_SEGMENTS ffdev_hook_rope_segments.GetInt() //2.0f
+
+
+
 //#define PREDICTED_ROCKETS
 
 //=============================================================================
@@ -384,7 +389,7 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 	if ( pHook->m_hRope )
 	{
 		pHook->m_hRope->m_Width = 2;
-		pHook->m_hRope->m_nSegments = ROPE_MAX_SEGMENTS / 2; // This is like 10+9*8 segments = 41, which is a lot, could probably cut this down.
+		pHook->m_hRope->m_nSegments = FFDEV_HOOK_ROPE_SEGMENTS; // This is like 10+9*8 segments = 41, which is a lot, could probably cut this down.
 		pHook->m_hRope->EnableWind( false );
 	//	m_hRope->EnableCollision(); // Collision looks worse than no collision
 		pHook->m_hRope->SetupHangDistance( FFDEV_HOOK_ROPE_HANGDISTANCE ); 
