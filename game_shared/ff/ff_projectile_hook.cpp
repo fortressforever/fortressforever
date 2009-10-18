@@ -29,7 +29,11 @@ ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1000.0", FCVAR_REPLICATED 
 ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
 #define HOOK_PULLSPEED ffdev_hook_pullspeed.GetFloat()
 
-#define ROPE_MATERIAL "cable/rope.vmt"
+#define ROPE_MATERIAL			"cable/rope_b.vmt"
+#define ROPE_MATERIAL_BLUE		"cable/rope_b.vmt"
+#define ROPE_MATERIAL_RED		"cable/rope_r.vmt"
+#define ROPE_MATERIAL_YELLOW	"cable/rope_y.vmt"
+#define ROPE_MATERIAL_GREEN		"cable/rope_g.vmt"
 
 #ifdef CLIENT_DLL
 	#include "tempentity.h"
@@ -44,7 +48,7 @@ ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED |
 //ConVar ffdev_hook_rope_hangdistance("ffdev_hook_rope_hangdistance", "2.2", FCVAR_REPLICATED );
 #define FFDEV_HOOK_ROPE_HANGDISTANCE 2.2f //ffdev_hook_rope_hangdistance.GetFloat() //2.0f
 ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATED );
-#define FFDEV_HOOK_ROPE_SEGMENTS ffdev_hook_rope_segments.GetInt() //2.0f
+#define FFDEV_HOOK_ROPE_SEGMENTS ffdev_hook_rope_segments.GetInt()
 
 
 
@@ -171,6 +175,11 @@ void CFFProjectileHook::Precache()
 {
 	PrecacheModel(HOOK_MODEL);
 	PrecacheModel(ROPE_MATERIAL); //rope material	
+	PrecacheModel(ROPE_MATERIAL_BLUE); //rope material	
+	PrecacheModel(ROPE_MATERIAL_RED); //rope material	
+	PrecacheModel(ROPE_MATERIAL_YELLOW); //rope material	
+	PrecacheModel(ROPE_MATERIAL_GREEN); //rope material	
+
 	
 	PrecacheScriptSound("rocket.fly");
 
@@ -382,16 +391,23 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(const Vector &vecOrigin, const
 	// this is being swapped over to the client -mirv
 
 	CPASFilter filter( vecOrigin );
-
+	
 #ifdef GAME_DLL
-	pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL );
+
+	switch( pentOwner->GetTeamNumber() )
+	{
+		case TEAM_BLUE: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_BLUE ); break;
+		case TEAM_RED: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_RED ); break;
+		case TEAM_YELLOW: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_YELLOW ); break;
+		case TEAM_GREEN: pHook->m_hRope = CRopeKeyframe::Create( pHook, pentOwner, 1, FFDEV_HOOK_ATTACHMENT, 2, ROPE_MATERIAL_GREEN ); break;
+	}
  
 	if ( pHook->m_hRope )
 	{
 		pHook->m_hRope->m_Width = 2;
 		pHook->m_hRope->m_nSegments = FFDEV_HOOK_ROPE_SEGMENTS; // This is like 10+9*8 segments = 41, which is a lot, could probably cut this down.
 		pHook->m_hRope->EnableWind( false );
-	//	m_hRope->EnableCollision(); // Collision looks worse than no collision
+	//	pHook->m_hRope->EnableCollision(); // Collision looks worse than no collision
 		pHook->m_hRope->SetupHangDistance( FFDEV_HOOK_ROPE_HANGDISTANCE ); 
 		pHook->m_hRope->SetParent( pHook, 1 );
 	}
