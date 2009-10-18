@@ -4671,6 +4671,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_timerman.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_timerman.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_vehicle_jeep.cpp"
 				>
 			</File>
