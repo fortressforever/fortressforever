@@ -185,18 +185,21 @@ void CFFWeaponHookGun::ItemPostFrame()
 			// This would be better done reading a client off the client
 			// Added: Don't do it if they are holding down fire while there is still ammo in clip
 #ifdef CLIENT_DLL
-			if (!m_bInReload && !(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
-				&& m_flNextAutoReload <= gpGlobals->curtime 
-				&& m_iClip1 < GetMaxClip1() 
-				&& auto_reload.GetBool())
+			if( auto_reload.GetBool() )
+#else
+			if( (Q_atoi(engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ) ) ) )
+#endif
 			{
-				if(pOwner->IsAlive())
+				if (!m_bInReload && !(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
+					&& m_flNextAutoReload <= gpGlobals->curtime 
+					&& m_iClip1 < GetMaxClip1())
 				{
-					engine->ClientCmd("+reload");
-					m_flNextAutoReload = gpGlobals->curtime + 0.2f;
+					if(pOwner->IsAlive())
+					{
+						StartReload();
+					}
 				}
 			}
-#endif
 		}
 
 		WeaponIdle();

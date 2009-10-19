@@ -25,10 +25,7 @@ public:
 	DECLARE_PREDICTABLE();
 
 protected:
-
-#ifdef CLIENT_DLL
 	float		m_flNextAutoReload;
-#endif
 
 public:
 	virtual	bool StartReload();
