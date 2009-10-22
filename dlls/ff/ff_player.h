@@ -230,14 +230,14 @@ private:
 	IFFPlayerAnimState *m_PlayerAnimState;
 
 	// ---> FF class stuff (billdoor)
-	CNetworkVar(float, m_flArmorType);
-	float m_flBaseArmorType;
+	CNetworkVar(int, m_iArmorType);
+	int m_iBaseArmorType;
 
 	// BEG: Added by Mulchman for armor stuff
 public:
 	int		AddArmor( int iAmount );
 	int		RemoveArmor( int iAmount );
-	void	ReduceArmorClass();	// Bit of a one hit wonder, this
+	//void	ReduceArmorClass();	// Bit of a one hit wonder, this
 
 	int GetMaxShells( void ) const { return GetFFClassData().m_iMaxShells; }
 	int GetMaxCells( void ) const { return GetFFClassData().m_iMaxCells; }

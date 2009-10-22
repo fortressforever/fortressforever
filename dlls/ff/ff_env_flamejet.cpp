@@ -23,13 +23,13 @@
 //=============================================================================
 
 IMPLEMENT_SERVERCLASS_ST(CFFFlameJet, DT_FFFlameJet) 
-	SendPropInt(SENDINFO(m_fEmit), 1, SPROP_UNSIGNED), 	// Declare our boolean state variable
+	SendPropInt(SENDINFO(m_bEmit), 1, SPROP_UNSIGNED), 	// Declare our boolean state variable
 END_SEND_TABLE() 
 
 LINK_ENTITY_TO_CLASS(env_flamejet, CFFFlameJet);
 
 BEGIN_DATADESC(CFFFlameJet) 
-	DEFINE_FIELD(m_fEmit, FIELD_BOOLEAN), 
+	DEFINE_FIELD(m_bEmit, FIELD_BOOLEAN), 
 END_DATADESC() 
 
 //=============================================================================
@@ -41,7 +41,7 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CFFFlameJet::Spawn() 
 {
-	m_fEmit = false;
+	m_bEmit = false;
 }
 
 //----------------------------------------------------------------------------
@@ -49,7 +49,7 @@ void CFFFlameJet::Spawn()
 //----------------------------------------------------------------------------
 void CFFFlameJet::UpdateOnRemove( void )
 {
-	m_fEmit = false;
+	m_bEmit = false;
 
 	BaseClass::UpdateOnRemove();
 }
@@ -58,11 +58,11 @@ void CFFFlameJet::UpdateOnRemove( void )
 // Purpose: Turn the flame jet on or off
 //			Returns true if value has changed
 //-----------------------------------------------------------------------------
-bool CFFFlameJet::FlameEmit(bool fEmit)
+bool CFFFlameJet::FlameEmit(bool bEmit)
 {
-	if ((m_fEmit != 0) != fEmit)
+	if ((m_bEmit != 0) != bEmit)
 	{
-		m_fEmit = fEmit;
+		m_bEmit = bEmit;
 		return true;
 	}
 	return false;

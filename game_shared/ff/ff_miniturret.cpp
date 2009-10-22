@@ -294,11 +294,9 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurret, DT_FFMiniTurret )
 
 BEGIN_NETWORK_TABLE( CFFMiniTurret, DT_FFMiniTurret )
 #ifdef CLIENT_DLL 
-	//RecvPropInt( RECVINFO( m_iTeam ) ),
 	RecvPropBool( RECVINFO( m_bActive ) ),
 	RecvPropBool( RECVINFO( m_bEnabled ) ),
 #else
-	//SendPropInt( SENDINFO( m_iTeam ) ),
 	SendPropBool( SENDINFO( m_bActive ) ),
 	SendPropBool( SENDINFO( m_bEnabled ) ),
 #endif
@@ -541,23 +539,8 @@ void CFFMiniTurret::Spawn( void )
 	//m_Activity = m_IdealActivity;
 	//m_nIdealSequence = GetSequence();
 
-	//ChangeTeam( m_iTeam );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Change a turrets team
-//-----------------------------------------------------------------------------
-/*
-void CFFMiniTurret::ChangeTeam( int iTeamNum )
-{
-	AssertMsg( ( iTeamNum >= TEAM_UNASSIGNED ) && ( iTeamNum <= TEAM_GREEN ), "Invalid ChangeTeam for MiniTurret\n" );
-
-	Warning( "[MiniTurret] Changing team to: %i\n", iTeamNum );
-
-	m_iTeam = iTeamNum;
-	SetEnemy( NULL );
-}
-*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Decided whether this new target is better than the current one

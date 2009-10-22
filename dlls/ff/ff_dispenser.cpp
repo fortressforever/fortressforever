@@ -65,11 +65,11 @@ PRECACHE_REGISTER( FF_Dispenser );
 
 IMPLEMENT_SERVERCLASS_ST( CFFDispenser, DT_FFDispenser )
 	SendPropInt( SENDINFO( m_iAmmoPercent ), 8, SPROP_UNSIGNED ), 
-	SendPropInt( SENDINFO( m_iCells ) ),
-	SendPropInt( SENDINFO( m_iShells ) ),
-	SendPropInt( SENDINFO( m_iNails ) ),
-	SendPropInt( SENDINFO( m_iRockets ) ),
-	SendPropInt( SENDINFO( m_iArmor ) ),
+	SendPropInt( SENDINFO( m_iCells ), 9, SPROP_UNSIGNED ), // max is 400 cells
+	SendPropInt( SENDINFO( m_iShells ), 9, SPROP_UNSIGNED ), // max is 400 shells
+	SendPropInt( SENDINFO( m_iNails ), 9, SPROP_UNSIGNED ), // max is 500 nails
+	SendPropInt( SENDINFO( m_iRockets ), 8, SPROP_UNSIGNED ), // max is 250 rockets
+	SendPropInt( SENDINFO( m_iArmor ), 9, SPROP_UNSIGNED ), // max is 500 armor
 END_SEND_TABLE()
 
 // Start of our data description for the class
