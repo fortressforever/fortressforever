@@ -236,7 +236,7 @@ void CHudCrosshairInfo::OnTick( void )
 				}
 
 				// Are we a medic?
-				bool bWeMedic = ( pPlayer->GetClassSlot() == CLASS_MEDIC );
+				//bool bWeMedic = ( pPlayer->GetClassSlot() == CLASS_MEDIC );
 				// Are we an engineer?
 				//bool bWeEngy = ( pPlayer->GetClassSlot() == 9 );
 				// Are we looking at a spy?
@@ -373,12 +373,12 @@ void CHudCrosshairInfo::OnTick( void )
 					{
 						// We're looking at a player
 
-						if( bWeMedic )
-						{
+						//if( bWeMedic ) //AfterShock: Testing every class having this ability
+						//{
 							// Grab the real health/armor of this player
 							iHealth = pHitPlayer->GetHealthPercentage();
 							iArmor = pHitPlayer->GetArmorPercentage();
-						}
+						//}
 							
 						if( bTheySpy )
 						{

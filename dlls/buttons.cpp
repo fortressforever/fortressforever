@@ -566,7 +566,7 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 		{
 			if( !hAllowed.GetBool() )
 			{
-				_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailused" );
+				_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailuse" );
 				return;
 			}
 		}

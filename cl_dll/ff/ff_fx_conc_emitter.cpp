@@ -18,11 +18,13 @@
 #include "ff_fx_conc_emitter.h"
 #include "materialsystem/imaterialvar.h"
 #include "c_te_effect_dispatch.h"
+#include "beam_flags.h"
 #include "fx_explosion.h"
 #include "tempent.h"
 #include "materialsystem/imaterialsystemhardwareconfig.h"
 
 #define CONC_EFFECT_MATERIAL "sprites/concrefract"
+extern int g_iConcRingTexture;
 
 ConVar conc_on			 ("ffdev_conc_on", "1", FCVAR_CHEAT, "Turn the conc effect on or off - 1 or 0." );
 ConVar conc_scale		 ("ffdev_conc_scale", "512.0", FCVAR_CHEAT, "How big the conc effect gets.");
@@ -37,6 +39,42 @@ ConVar conc_refract("ffdev_conc_refract", "0.5", FCVAR_CHEAT);
 ConVar conc_grow("ffdev_conc_grow", "0.25", FCVAR_CHEAT);
 ConVar conc_shrink("ffdev_conc_shrink", "0.35", FCVAR_CHEAT);
 
+//==============================
+// conc ring effect vars
+//==============================
+//ConVar ffdev_conc_effect_num_rings("ffdev_conc_effect_num_rings", "1");
+ConVar ffdev_conc_effect_framerate("ffdev_conc_effect_framerate", "1");
+ConVar ffdev_conc_effect_width("ffdev_conc_effect_width", "50");
+ConVar ffdev_conc_effect_width2("ffdev_conc_effect_width2", "0");
+ConVar ffdev_conc_effect_width3("ffdev_conc_effect_width3", "10");
+ConVar ffdev_conc_effect_spread("ffdev_conc_effect_spread", "0");
+ConVar ffdev_conc_effect_amplitude("ffdev_conc_effect_amplitude", "0");
+ConVar ffdev_conc_effect_lifetime("ffdev_conc_effect_lifetime", ".3");
+ConVar ffdev_conc_effect_r("ffdev_conc_effect_r", "255");
+ConVar ffdev_conc_effect_g("ffdev_conc_effect_g", "255");
+ConVar ffdev_conc_effect_b("ffdev_conc_effect_b", "225");
+ConVar ffdev_conc_effect_a("ffdev_conc_effect_a", "178");
+ConVar ffdev_conc_effect_radius("ffdev_conc_effect_radius", "600");
+ConVar ffdev_conc_effect_radius2("ffdev_conc_effect_radius2", "520");
+
+#define CONC_FRAMERATE		ffdev_conc_effect_framerate.GetFloat()
+#define CONC_WIDTH			ffdev_conc_effect_width.GetFloat()
+#define CONC_WIDTH2			ffdev_conc_effect_width2.GetFloat()
+#define CONC_WIDTH3			ffdev_conc_effect_width3.GetFloat()
+#define CONC_SPREAD			ffdev_conc_effect_spread.GetFloat()
+#define CONC_AMPLITUDE		ffdev_conc_effect_amplitude.GetFloat()
+#define CONC_LIFETIME		ffdev_conc_effect_lifetime.GetFloat()
+#define CONC_R				ffdev_conc_effect_r.GetFloat()
+#define CONC_G				ffdev_conc_effect_g.GetFloat()
+#define CONC_B				ffdev_conc_effect_b.GetFloat()
+#define CONC_A				ffdev_conc_effect_a.GetFloat()
+#define CONC_RADIUS			ffdev_conc_effect_radius.GetFloat()
+#define CONC_RADIUS2			ffdev_conc_effect_radius2.GetFloat()
+
+
+//========================================================================
+// Ragdoll stuff
+//========================================================================
 class CRagdollConcEnumerator : public IPartitionEnumerator
 {
 	DECLARE_CLASS_GAMEROOT( CRagdollConcEnumerator, IPartitionEnumerator );
@@ -354,6 +392,90 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 		//return;
 	}
 
+	CBroadcastRecipientFilter filter;
+		te->BeamRingPoint(filter,
+			0,						// delay
+			data.m_vOrigin,			// origin
+			1.0f,					// start radius
+			CONC_RADIUS,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+		te->BeamRingPoint(filter,
+			0,						// delay
+			( data.m_vOrigin + Vector( 0.0f, 0.0f, 32.0f ) ),			// origin
+			1.0f,					// start radius
+			CONC_RADIUS2,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH2,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+		te->BeamRingPoint(filter,
+			0,						// delay
+			( data.m_vOrigin + Vector( 0.0f, 0.0f, -32.0f ) ),			// origin
+			1.0f,					// start radius
+			CONC_RADIUS2,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH2,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+
+		// Outer bounding rings
+		te->BeamRingPoint(filter,
+			0,						// delay
+			data.m_vOrigin,			// origin
+			CONC_RADIUS - 1,					// start radius
+			CONC_RADIUS,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH3,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+/*
 	// Okay so apparently dx7 is not so good for the 3d conc effect
 	// So instead we use the flat one for those systems
 	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() > 70)
@@ -381,6 +503,8 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 			}
 		}
 	}
+*/
+
 }
 
 DECLARE_CLIENT_EFFECT("FF_ConcussionEffect", FF_FX_ConcussionEffect_Callback);

@@ -69,6 +69,10 @@ ConVar conc_ragdoll_push("conc_ragdoll_push","600", FCVAR_CHEAT | FCVAR_REPLICAT
 #define RING_EFFECT						"FF_RingEffect"
 
 #ifdef CLIENT_DLL
+	int g_iConcRingTexture = -1;
+#endif
+
+#ifdef CLIENT_DLL
 	#define CFFGrenadeConcussion C_FFGrenadeConcussion
 	#define CFFGrenadeConcussionGlow C_FFGrenadeConcussionGlow
 #endif
@@ -331,6 +335,11 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				}
 			}
 			pPlayer->SetAbsVelocity(vecResult);
+
+			//AfterShock: If we ever want to play effects on whoever got hit, we can do it like this
+			//g_pEffects->EnergySplash( pPlayer->GetLegacyAbsOrigin() , Vector(0, 0, 1.0f), true);
+			//g_pEffects->Sparks(pPlayer->GetLegacyAbsOrigin());
+
 		}
 
 		// Now get rid of this
@@ -358,6 +367,11 @@ void CFFGrenadeConcussion::Precache()
 	PrecacheModel(CONCUSSIONGRENADE_MODEL);
 	PrecacheModel(CONCUSSIONGRENADE_GLOW_SPRITE);
 	PrecacheModel("models/grenades/conc/conceffect.mdl");
+	
+#ifdef CLIENT_DLL
+	g_iConcRingTexture = PrecacheModel("sprites/lgtning.vmt");
+#endif
+
 	PrecacheScriptSound(CONCUSSION_SOUND);
 	BaseClass::Precache();
 }

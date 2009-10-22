@@ -81,6 +81,7 @@
 #include "ff_scriptman.h"
 #include "ff_luacontext.h"
 #include "ff_scheduleman.h"
+#include "ff_timerman.h"
 #include "util.h"
 
 #if !defined( _RETAIL )
@@ -827,6 +828,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	// Added: Initialize Lua stuff
 	_scheduleman.Init();
+	_timerman.Init();
 	_scriptman.LevelInit(pMapName);
 
 	Omnibot::omnibot_interface::LevelInit();
@@ -1201,6 +1203,7 @@ void CServerGameDLL::LevelShutdown( void )
 
 	_scriptman.LevelShutdown();
 	_scheduleman.Shutdown();
+	_timerman.Shutdown();
 
 	IGameSystem::LevelShutdownPostEntityAllSystems();
 
