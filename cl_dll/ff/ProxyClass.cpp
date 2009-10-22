@@ -42,4 +42,4 @@ void CProxyClass::OnBind(void *pC_BaseEntity)
 		SetFloatResult(0);
 }
 
-EXPOSE_INTERFACE(CProxyClass, IMaterialProxy, "CurrentTeam" IMATERIAL_PROXY_INTERFACE_VERSION);
+EXPOSE_INTERFACE(CProxyClass, IMaterialProxy, "CurrentClass" IMATERIAL_PROXY_INTERFACE_VERSION);
