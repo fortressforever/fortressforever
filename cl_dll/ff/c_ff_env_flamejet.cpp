@@ -95,7 +95,7 @@ float tex_coords[5][4] = {	{ 0, 		0.25f, 		0, 			0.5f }, 	   // normal flame
 EXPOSE_PROTOTYPE_EFFECT(FlameJet, C_FFFlameJet);
 
 IMPLEMENT_CLIENTCLASS_DT(C_FFFlameJet, DT_FFFlameJet, CFFFlameJet) 
-	RecvPropInt(RECVINFO(m_fEmit), 0), 
+	RecvPropInt(RECVINFO(m_bEmit), 0), 
 END_RECV_TABLE() 
 
 LINK_ENTITY_TO_CLASS(env_flamejet, C_FFFlameJet);
@@ -122,7 +122,7 @@ C_FFFlameJet::C_FFFlameJet()
 	m_EndSize		= 192; // ffdev_flame_endsize.GetInt(); // 192;
 	m_Rate			= 128; // ffdev_flame_rate.GetInt(); // 128; 
 
-	m_fEmit			= true;
+	m_bEmit			= true;
 
 	m_fLastParticleDLightTime = 0;
 
@@ -232,7 +232,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	if (!pOwner || !pOwner->GetActiveFFWeapon() || pOwner->GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_FLAMETHROWER)
 	{
 		// Don't disable it for now
-		//m_fEmit = false;
+		//m_bEmit = false;
 		return;
 	}
 
@@ -308,7 +308,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	// dlight scale
 	float flDLightScale = cl_ffdlight_flamethrower.GetFloat();
 
-	if (m_fEmit && m_ParticleEffect.WasDrawnPrevFrame()) 
+	if (m_bEmit && m_ParticleEffect.WasDrawnPrevFrame()) 
 	{
 		// update the existing muzzle light
 		if (m_pDLight)
@@ -637,11 +637,11 @@ void C_FFFlameJet::SimulateParticles(CParticleSimulateIterator *pIterator)
 //-----------------------------------------------------------------------------
 // Purpose: Turn the flame jet on or off
 //-----------------------------------------------------------------------------
-bool C_FFFlameJet::FlameEmit(bool fEmit)
+bool C_FFFlameJet::FlameEmit(bool bEmit)
 {
-	if ((m_fEmit != 0) != fEmit)
+	if ((m_bEmit != 0) != bEmit)
 	{
-		m_fEmit = fEmit;
+		m_bEmit = bEmit;
 		return true;
 	}
 	return false;

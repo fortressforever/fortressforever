@@ -966,7 +966,7 @@ int CFFPlayer::GetDisguisedTeam( void ) const
 int CFFPlayer::GetDisguisedClass( void ) const
 {
 	if( IsDisguised() )
-		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
+		return ( ( m_iSpyDisguise & 0x000000F0 ) >> 4 );
 
 	return CLASS_NONE;
 }

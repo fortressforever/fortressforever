@@ -152,8 +152,8 @@ PRECACHE_REGISTER( FF_BuildableObject_entity );
 IMPLEMENT_SERVERCLASS_ST( CFFBuildableObject, DT_FFBuildableObject )
 	SendPropEHandle( SENDINFO( m_hOwner ) ),
 	SendPropInt( SENDINFO( m_iHealth ) ),
-	SendPropInt( SENDINFO( m_iMaxHealth ) ),
-	SendPropBool( SENDINFO( m_bBuilt ) ),
+	SendPropInt( SENDINFO( m_iMaxHealth ) ), //surely the client knows a buildables max health?
+	SendPropBool( SENDINFO( m_bBuilt ) ), // can we encode this in the health? perhaps when health is 0?
 	SendPropFloat( SENDINFO( m_flSabotageTime ) ),
 	SendPropInt( SENDINFO( m_iSaboteurTeamNumber ) ),
 END_SEND_TABLE( )
