@@ -24,11 +24,8 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
-private:
-
-#ifdef CLIENT_DLL
+protected:
 	float		m_flNextAutoReload;
-#endif
 
 public:
 	virtual	bool StartReload();
