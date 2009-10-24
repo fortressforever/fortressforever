@@ -43,6 +43,8 @@ extern ConVar cl_killbeepwav;
 
 ConVar cl_bunnyhop_disablepogojump( "cl_jumpqueue", "0.0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Enables jump queue (have to let go and press jump in between concurrent jumps) if set to 1" );
 
+ConVar hud_takesshots( "hud_takesshots", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Takes a screenshot at the end of each map if set to 1 (0 to disable)" );
+
 // dlight cvarsesesesssssssesssssssssssssssssssssss
 ConVar cl_ffdlight_explosion( "cl_ffdlight_explosion", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from an explosion (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );
 ConVar cl_ffdlight_muzzle( "cl_ffdlight_muzzle", "1.0", FCVAR_ARCHIVE, "Radius scale of the dynamic light from a muzzle flash (0 disables this type of dlight).", TRUE, 0.0f, TRUE, 2.0f );

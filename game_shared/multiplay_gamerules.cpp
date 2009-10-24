@@ -1057,6 +1057,9 @@ bool CMultiplayRules::IsMultiplayer( void )
 			pFFPlayer->LockPlayerInPlace();
 			pFFPlayer->AddFlag(FL_FROZEN);
 
+			if ( Q_atoi( engine->GetClientConVarValue( pFFPlayer->entindex(), "hud_takesshots" ) ) )
+				engine->ClientCommand( pFFPlayer->edict(), "jpeg" );
+
 			if (CFFWeaponBase *pWeapon = pFFPlayer->GetActiveFFWeapon())
 				pWeapon->Holster();
 			// <-- Mirv
