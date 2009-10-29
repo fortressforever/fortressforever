@@ -753,6 +753,11 @@ public:
 	bool LuaOwnsWeaponType(const char *_name);
 	bool LuaGiveWeapon(const char *_name, bool _autoselect);
 	void LuaRemoveAllWeapons();
+	int LuaGetAmmoCount( int iAmmoType );
+	int GetAmmoInClip();
+	int GetAmmoInClip( const char *_name );
+	bool SetAmmoInClip( int iAmount );
+	bool SetAmmoInClip( const char *_name, int iAmount );
 
 	virtual int GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
 	int	GiveAmmo(int iCount, const char *szName, bool bSuppressSound = false);
