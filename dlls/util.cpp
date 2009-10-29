@@ -36,6 +36,8 @@
 #include "datacache/imdlcache.h"
 #include "networkstringtable_gamedll.h"
 #include "util.h"
+#include "ff_scriptman.h"
+#include "ff_luacontext.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1065,18 +1067,25 @@ void ClientPrint( CBasePlayer *player, int msg_dest, const char *msg_name, const
 
 void UTIL_SayTextFilter( IRecipientFilter& filter, const char *pText, CBasePlayer *pPlayer, bool bChat )
 {
-	UserMessageBegin( filter, "SayText" );
-		if ( pPlayer ) 
-		{
-			WRITE_BYTE( pPlayer->entindex() );
-		}
-		else
-		{
-			WRITE_BYTE( 0 ); // world, dedicated server says
-		}
-		WRITE_STRING( pText );
-		WRITE_BYTE( bChat );
-	MessageEnd();
+	CFFLuaSC hContext( 0 );
+	hContext.Push( pPlayer );
+	hContext.Push( pText );
+	
+	if( _scriptman.RunPredicates_LUA( NULL, &hContext, "player_onchat" ) )
+	{
+		UserMessageBegin( filter, "SayText" );
+			if ( pPlayer ) 
+			{
+				WRITE_BYTE( pPlayer->entindex() );
+			}
+			else
+			{
+				WRITE_BYTE( 0 ); // world, dedicated server says
+			}
+			WRITE_STRING( pText );
+			WRITE_BYTE( bChat );
+		MessageEnd();
+	}
 }
 
 void UTIL_SayText2Filter( IRecipientFilter& filter, CBasePlayer *pEntity, bool bChat, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 )
