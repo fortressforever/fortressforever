@@ -38,6 +38,7 @@
 #define MAX_TEAMS			32
 
 #define TEAMPLAY_TEAMLISTLENGTH		MAX_TEAMS*MAX_TEAMNAME_LENGTH
+#define TEAMPLAY_GAMEDESCLENGTH		32
 
 
 class CTeamplayRules : public CMultiplayRules
@@ -65,7 +66,8 @@ public:
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled );
 	virtual void InitHUD( CBasePlayer *pl );
 	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );
-	virtual const char *GetGameDescription( void ) { return "Fortress Forever"; }  // this is the game name that gets seen in the server browser
+	virtual const char *GetGameDescription( void ) { return m_szGameDescription; }  // this is the game name that gets seen in the server browser
+	virtual void SetGameDescription( const char *szGameDescription ) { Q_strcpy( m_szGameDescription, szGameDescription ); }  // this is the game name that gets seen in the server browser
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	virtual void Think ( void );
 	virtual int GetTeamIndex( const char *pTeamName );
@@ -85,6 +87,7 @@ private:
 	bool m_DisableDeathPenalty;
 	bool m_teamLimit;				// This means the server set only some teams as valid
 	char m_szTeamList[TEAMPLAY_TEAMLISTLENGTH];
+	char m_szGameDescription[TEAMPLAY_GAMEDESCLENGTH];
 
 #endif
 };

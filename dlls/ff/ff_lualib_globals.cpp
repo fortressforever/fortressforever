@@ -2357,6 +2357,12 @@ namespace FFLib
 
 		UTIL_DropToFloor( pEntity, MASK_SOLID );
 	}
+	
+	void SetGameDescription( const char *szGameDescription )
+	{
+		if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
+			g_pGameRules->SetGameDescription( szGameDescription );
+	}
 
 } // namespace FFLib
 
@@ -2550,6 +2556,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("LogLuaEvent",				(void(*)(int, int, const char *, const char *, const char *, const char *, const char *, const char *, const char *))&FFLib::LogLuaEvent),
 		def("UpdateObjectiveIcon",		&FFLib::UpdateObjectiveIcon),
 		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon),
-		def("DisplayMessage",			&FFLib::DisplayMessage)
+		def("DisplayMessage",			&FFLib::DisplayMessage),
+		def("SetGameDescription",		&FFLib::SetGameDescription)
 	];
 }
