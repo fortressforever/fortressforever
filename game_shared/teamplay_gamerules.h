@@ -66,7 +66,7 @@ public:
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled );
 	virtual void InitHUD( CBasePlayer *pl );
 	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );
-	virtual const char *GetGameDescription( void ) { return m_szGameDescription; }  // this is the game name that gets seen in the server browser
+	virtual const char *GetGameDescription( void ) { if (*m_szGameDescription) { return m_szGameDescription; } else { return "Fortress Forever"; } }  // this is the game name that gets seen in the server browser
 	virtual void SetGameDescription( const char *szGameDescription ) { Q_strcpy( m_szGameDescription, szGameDescription ); }  // this is the game name that gets seen in the server browser
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	virtual void Think ( void );
