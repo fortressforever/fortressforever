@@ -64,6 +64,9 @@ bool g_bMovementOptimizations = true;	// |-- Mirv: Changed to false, but not sur
 
 #define	NUM_CROUCH_HINTS	3
 
+static ConVar sv_sharkingfriction("sv_sharkingfriction", "0", FCVAR_REPLICATED);
+#define SV_SHARKINGFRICTION sv_sharkingfriction.GetFloat()
+
 #ifndef _XBOX
 void COM_Log( char *pszFile, char *fmt, ...)
 {
@@ -963,12 +966,15 @@ void CGameMovement::WaterMove( void )
 		wishvel[i] = forward[i]*mv->m_flForwardMove + right[i]*mv->m_flSideMove + up[i]*mv->m_flUpMove;
 	}
 
+
+	bool bIsSharking = false;
 	// --> Mirv: Sharking fix
 	// if we have the jump key down, move us up as well
 	if (mv->m_nButtons & IN_JUMP)
 	{
 		//wishvel[2] += mv->m_flClientMaxSpeed;
 		mv->m_vecVelocity[2] = 100.0f;
+		bIsSharking = true;
 	}
 	// <-- Mirv: Trimping fix
 
@@ -1013,7 +1019,10 @@ void CGameMovement::WaterMove( void )
 	speed = VectorNormalize(temp);
 	if (speed)
 	{
-		newspeed = speed - gpGlobals->frametime * speed * /*sv_friction.GetFloat()*/ 4.0f * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
+		if (!bIsSharking)
+			newspeed = speed - gpGlobals->frametime * speed * /*sv_friction.GetFloat()*/ 4.0f * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
+		else
+			newspeed = speed - gpGlobals->frametime * speed * SV_SHARKINGFRICTION * /*player->m_surfaceFriction*/ 1.0f;
 		if (newspeed < 0.1f)
 		{
 			newspeed = 0;
