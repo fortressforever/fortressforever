@@ -151,8 +151,8 @@ PRECACHE_REGISTER( FF_BuildableObject_entity );
 
 IMPLEMENT_SERVERCLASS_ST( CFFBuildableObject, DT_FFBuildableObject )
 	SendPropEHandle( SENDINFO( m_hOwner ) ),
-	SendPropInt( SENDINFO( m_iHealth ), 9 ),	// AfterShock: this can probably be limited to ~9 bits? max 180ish health on a SG? Do we ever use hp <0 for checking death?
-	SendPropInt( SENDINFO( m_iMaxHealth ) ), // The client should work this out using Classify() and getLevel() 
+	SendPropInt( SENDINFO( m_iHealth ), 10 ),	// AfterShock: this can probably be limited to ~9 bits? max 180ish health on a SG? Do we ever use hp <0 for checking death?
+	SendPropInt( SENDINFO( m_iMaxHealth ), 10 ), // The client should work this out using Classify() and getLevel() 
 	SendPropBool( SENDINFO( m_bBuilt ) ), // can we encode this in the health? perhaps when health is 0?
 	SendPropFloat( SENDINFO( m_flSabotageTime ) ), // Do we need to send these for jumppads + detpacks? maybe make new datatables?
 	SendPropInt( SENDINFO( m_iSaboteurTeamNumber ) ),
