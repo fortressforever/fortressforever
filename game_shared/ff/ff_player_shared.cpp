@@ -549,6 +549,7 @@ void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 	{
 		// Don't play footsteps for spy
 		// Jiggles: 0001374: But do play footsteps while disguised as a non-spy class, unless cloaked
+		/* AfterShock: play footsteps again
 		case CLASS_SPY:
 		{
 			if( IsCloaked() || !IsDisguised() )
@@ -559,7 +560,7 @@ void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 
 		}
 		break;
-
+		*/
 		// Bug #0001520: Sniper has footsteps while charging sniper rifle
 		case CLASS_SNIPER:
 		{
