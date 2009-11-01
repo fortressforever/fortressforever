@@ -262,7 +262,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		{
 			// Changed 130 to 65 because:
 			// Bug #0000333: Buildable Behavior (non build slot) while building
-			pPlayer->GiveAmmo(65.0f, AMMO_CELLS, true);
+			pPlayer->GiveAmmo(50.0f, AMMO_CELLS, true);
 
 			// Bug #0000426: Buildables Dismantle Sounds Missing
 			CPASAttenuationFilter sndFilter( pDispenser );

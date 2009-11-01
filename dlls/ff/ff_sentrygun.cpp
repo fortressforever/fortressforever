@@ -44,6 +44,7 @@
 #include "ff_sentrygun.h"
 #include "te_effect_dispatch.h" 
 #include "ff_projectile_rocket.h"
+#include "ff_item_backpack.h"
 #include "ff_utils.h"
 #include "ff_gamerules.h"
 #include "IEffects.h"
@@ -137,6 +138,10 @@
 #define SG_LOCKONTIME_LVL2 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl2.GetFloat()
 //ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, "Level 3 SG lock on time");
 #define SG_LOCKONTIME_LVL3 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl3.GetFloat()
+
+#define SG_DETONATECELLS_BASE_LEVEL1 33
+#define SG_DETONATECELLS_BASE_LEVEL2 65
+#define SG_DETONATECELLS_BASE_LEVEL3 98
 
 //ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
 //#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
@@ -1515,6 +1520,26 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 		MessageEnd();
 	}
 
+	// AfterShock: Create bag when detonate
+	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
+
+	if( pBackpack )
+	{
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
+
+		int cells = 0;
+		if ( m_iLevel == 1)
+			cells = SG_DETONATECELLS_BASE_LEVEL1; // Health is always <0 so no need to calculate complex cell count
+		else if ( m_iLevel == 2)
+			cells = SG_DETONATECELLS_BASE_LEVEL2;
+		else if ( m_iLevel == 3)
+			cells = SG_DETONATECELLS_BASE_LEVEL3;
+
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
+		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
+	}
+
 	BaseClass::Event_Killed( info );
 }
 
@@ -1731,7 +1756,9 @@ CFFSentryGun *CFFSentryGun::Create( const Vector &vecOrigin, const QAngle &vecAn
 	return pObject;
 }
 
-// Player-set aim focus point!
+//-----------------------------------------------------------------------------
+// Purpose: Player-set aim focus point!
+//----------------------------------------------------------------------------
 void CFFSentryGun::SetFocusPoint( Vector &origin ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::SetFocusPoint", VPROF_BUDGETGROUP_FF_BUILDABLE );
@@ -1766,7 +1793,9 @@ void CFFSentryGun::SetFocusPoint( Vector &origin )
 	}
 }
 
-// How much damage should be taken from an emp explosion
+//-----------------------------------------------------------------------------
+// Purpose: How much damage should be taken from an emp explosion
+//-----------------------------------------------------------------------------
 int CFFSentryGun::TakeEmp( void ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::TakeEmp", VPROF_BUDGETGROUP_FF_BUILDABLE );
@@ -1869,6 +1898,34 @@ void CFFSentryGun::Detonate()
 			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
 			WRITE_FLOAT(0.0);
 		MessageEnd();
+	}
+
+	// AfterShock: Create bag when detonate
+	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
+
+	if( pBackpack )
+	{
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
+
+		int cells = 0;
+		if ( m_iLevel == 1)
+		{
+			cells = SG_DETONATECELLS_BASE_LEVEL1 + ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL1 ;
+			if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
+				--cells;
+		}
+		else if ( m_iLevel == 2)
+			cells = SG_DETONATECELLS_BASE_LEVEL2 + ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL2 ;
+		else if ( m_iLevel == 3)
+		{
+			cells = SG_DETONATECELLS_BASE_LEVEL3 + ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL3 ;
+			if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
+				--cells;
+		}
+
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
+		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
 	}
 
 	CFFBuildableObject::Detonate();

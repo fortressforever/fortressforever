@@ -60,6 +60,10 @@
 //	class CFFDispenser
 //
 //=============================================================================
+
+#define DISP_DETONATECELLS_BASE 50
+#define DISP_DETONATECELLS_HELDMULT 0.5
+
 LINK_ENTITY_TO_CLASS( FF_Dispenser, CFFDispenser );
 PRECACHE_REGISTER( FF_Dispenser );
 
@@ -121,6 +125,8 @@ inline void DispenseHelper( CFFPlayer *pPlayer, int& iAmmo, int iGiveAmmo, const
 		iAmmo -= iGave;
 	}
 }
+
+
 
 /**
 @fn void Spawn( )
@@ -406,6 +412,23 @@ void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
 	if( m_hOwner.Get() )
 		ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_DISPENSER_DESTROYED" );
 
+	// AfterShock: Create bag when detonate
+	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
+
+	if( pBackpack )
+	{
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ), m_iNails/2 );
+
+		int cells = DISP_DETONATECELLS_BASE + m_iCells * DISP_DETONATECELLS_HELDMULT ;
+		if ( cells > 200 )
+			cells = 200;
+
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
+		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
+	}
+
 	BaseClass::Event_Killed( info );
 }
 
@@ -601,6 +624,23 @@ void CFFDispenser::Detonate()
 			pEvent->SetInt("userid", pOwner->GetUserID());
 			gameeventmanager->FireEvent(pEvent, true);
 		}		
+	}
+
+	// AfterShock: Create bag when detonate
+	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
+
+	if( pBackpack )
+	{
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ), m_iNails/2 );
+
+		int cells = DISP_DETONATECELLS_BASE + m_iCells * DISP_DETONATECELLS_HELDMULT ;
+		if ( cells > 200 )
+			cells = 200;
+
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
+		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
 	}
 
 	CFFBuildableObject::Detonate();
