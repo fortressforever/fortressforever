@@ -64,7 +64,7 @@ bool g_bMovementOptimizations = true;	// |-- Mirv: Changed to false, but not sur
 
 #define	NUM_CROUCH_HINTS	3
 
-static ConVar sv_sharkingfriction("sv_sharkingfriction", "0", FCVAR_REPLICATED);
+static ConVar sv_sharkingfriction("sv_sharkingfriction", "1", FCVAR_REPLICATED);
 #define SV_SHARKINGFRICTION sv_sharkingfriction.GetFloat()
 
 #ifndef _XBOX
