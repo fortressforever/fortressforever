@@ -187,7 +187,7 @@ ADD_MENU_OPTION(detdispenser, "#FF_CM_DETDISPENSER", 'P', "detdispenser")
 
 	return MENU_SHOW;
 }
-
+/*
 ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'Q', "dismantledispenser")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
@@ -205,7 +205,7 @@ ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'Q', "dismantle
 
 	return MENU_SHOW;
 }
-
+*/
 ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'S', "qsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
@@ -241,7 +241,7 @@ ADD_MENU_OPTION(detsentry, "#FF_CM_DETSENTRY", 'R', "detsentry")
 
 	return MENU_SHOW;
 }
-
+/*
 ADD_MENU_OPTION(dismantlesentry, "#FF_CM_DISMANTLESENTRY", 'S', "dismantlesentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
@@ -259,7 +259,7 @@ ADD_MENU_OPTION(dismantlesentry, "#FF_CM_DISMANTLESENTRY", 'S', "dismantlesentry
 
 	return MENU_SHOW;
 }
-
+*/
 ADD_MENU_OPTION(aimsentry, "#FF_CM_AIMSENTRY", 'O', "aimsentry")
 {
 	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
@@ -423,7 +423,7 @@ ADD_MENU_OPTION( need_ammo, "#FF_CM_CALLAMMO", '^', "ammome" ) { return MENU_SHO
 //-----------------------------------------------------------------------------
 // Menu option lists
 //-----------------------------------------------------------------------------
-MenuOption EngineerOptionList[] = { aimsentry, builddispenser, detdispenser, dismantledispenser, dismantlesentry, detsentry, buildsentry };
+MenuOption EngineerOptionList[] = { aimsentry, builddispenser, detdispenser, detsentry, buildsentry };
 MenuOption DemomanOptionList[] = { det5, det10, det20, det50 };
 MenuOption SpyOptionList[] = { lastdisguise, disguiseenemy, smartcloak, sentrysabotage, dispensersabotage, disguiseteam };
 MenuOption ClassDOptionList[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
