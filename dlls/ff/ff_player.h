@@ -745,7 +745,13 @@ public:
 
 	virtual bool TakeNamedItem(const char* szName);	
 
+private:
+	char m_pCurrentLuaMenu[128];
+
 public:
+	const char *GetCurrentLuaMenu() const { return m_pCurrentLuaMenu; }
+	void SetCurrentLuaMenu( const char *szMenuName ) { Q_strcpy(m_pCurrentLuaMenu, szMenuName); }
+
 	int LuaAddHealth(int iAmount);
 	int LuaAddAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAmmo( int iAmmoType, int iAmount );

@@ -31,6 +31,7 @@
 	#include "ff_timerman.h"
 	#include "ff_utils.h"
 	#include "ff_buildableobjects_shared.h"
+	#include "ff_menuman.h"
 #endif
 
 
@@ -456,6 +457,10 @@ ConVar mp_prematch( "mp_prematch",
 			pPlayer->RemoveProjectiles();
 			pPlayer->RemoveBackpacks();
 			pPlayer->RemoveBuildables();
+
+			const char *szCurrentLuaMenu = pPlayer->GetCurrentLuaMenu();
+			if (szCurrentLuaMenu[0])
+				_menuman.PlayerMenuExpired( szCurrentLuaMenu );
 
 			pPlayer->SetObjectiveEntity(NULL);
 			int iObjectivePlayerRefs = pPlayer->m_ObjectivePlayerRefs.Count();
@@ -1050,6 +1055,42 @@ ConVar mp_prematch( "mp_prematch",
 		if (pPlayer && pPlayer->ClientCommand(pcmd))
 			return true;
 		// <-- Mirv: More commands
+		
+		if ( FStrEq( pcmd, "menuselect" ) )
+		{
+			if ( engine->Cmd_Argc() < 2 )
+				return true;
+
+			int slot = atoi( engine->Cmd_Argv(1) );
+			const char *szMenuName = pPlayer->GetCurrentLuaMenu();
+
+			// menu expired
+			if (slot == 0)
+			{
+				// tell the menu manager what happened
+				_menuman.PlayerMenuExpired( szMenuName );
+			}
+			else
+			{
+				if (slot == 10)
+					slot = 0;
+
+				// select the item from the current menu
+				CFFLuaSC hContext( 0 );
+				hContext.Push( pPlayer );
+				hContext.Push( szMenuName );
+				hContext.Push( slot );
+				
+				_scriptman.RunPredicates_LUA( NULL, &hContext, "player_onmenuselect" );
+				
+				// tell the menu manager what happened
+				_menuman.PlayerOptionSelected( szMenuName, slot );
+			}
+
+			pPlayer->SetCurrentLuaMenu( "" );
+
+			return true;
+		}
 
 		return BaseClass::ClientCommand( pcmd, pEdict );
 	}
