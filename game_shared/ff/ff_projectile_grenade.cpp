@@ -13,6 +13,7 @@
 
 #include "cbase.h"
 #include "ff_projectile_grenade.h"
+#include "ff_buildableobjects_shared.h"
 
 #define GRENADE_MODEL "models/projectiles/pipe/w_pipe.mdl"
 
@@ -45,10 +46,10 @@ ConVar projectile_gren_elasticity("ffdev_projectile_gren_elasticity", "0.5", FCV
 ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT, "");
 //ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.3", FCVAR_REPLICATED | FCVAR_CHEAT, "");
 #define FF_PROJECTILE_GREN_FUSETIME 1.3f //projectile_gren_fusetime.GetFloat();
-//ConVar projectile_gren_bonusdirectdmg("ffdev_projectile_gren_bonusdirectdmg", "28.0", FCVAR_REPLICATED, "");
-//#define FF_PROJECTILE_GREN_BONUSDIRECTDMG projectile_gren_bonusdirectdmg.GetFloat()
-//ConVar projectile_gren_normaldmg("ffdev_projectile_gren_normaldmg", "80.0", FCVAR_REPLICATED, "");
-//#define FF_PROJECTILE_GREN_NORMALDMG projectile_gren_normaldmg.GetFloat()
+ConVar projectile_gren_bonusdirectdmg("ffdev_projectile_gren_bonusdirectdmg", "28.0", FCVAR_REPLICATED, "");
+#define FF_PROJECTILE_GREN_BONUSDIRECTDMG projectile_gren_bonusdirectdmg.GetFloat()
+ConVar projectile_gren_normaldmg("ffdev_projectile_gren_normaldmg", "80.0", FCVAR_REPLICATED, "");
+#define FF_PROJECTILE_GREN_NORMALDMG projectile_gren_normaldmg.GetFloat()
 #ifdef GAME_DLL
 
 	//----------------------------------------------------------------------------
@@ -123,8 +124,8 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REP
 			// Explode on contact with people	
 			if (ExplodeOnHitPlayer()) 
 			{
-				//CBasePlayer *pVictim = dynamic_cast< CBasePlayer* > ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to player here
-				//pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , DMG_BLAST ) );
+				CBasePlayer *pVictim = dynamic_cast< CBasePlayer* > ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to player here
+				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , DMG_BLAST ) );
 							//CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
 				Detonate(); 
 			}
@@ -137,7 +138,12 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REP
 		if( trace.m_pEnt && ( ( trace.m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( trace.m_pEnt->Classify() == CLASS_DISPENSER ) ) )
 		{
 			if( m_bIsLive )
+			{
+				CFFBuildableObject *pVictim = dynamic_cast< CFFBuildableObject* > ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to buildable here
+				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , DMG_BLAST ) );
+							//CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
 				Detonate();// TODO: (AFTERSHOCK): Extra damage applied to buildable here
+			}
 		}
 
 		float flTotalElasticity = GetElasticity() * flSurfaceElasticity;
@@ -275,8 +281,8 @@ CFFProjectileGrenade * CFFProjectileGrenade::CreateGrenade(const CBaseEntity *pS
 	pGrenade->SetElasticity(GetGrenadeElasticity());
 #endif
 
-	pGrenade->SetDamage(iDamage); 
-	//pGrenade->SetDamage(FF_PROJECTILE_GREN_NORMALDMG);//AfterShock: cvar for damage while we test direct damage bonus
+	//pGrenade->SetDamage(iDamage); 
+	pGrenade->SetDamage(FF_PROJECTILE_GREN_NORMALDMG);//AfterShock: cvar for damage while we test direct damage bonus
 	pGrenade->SetDamageRadius(iDamageRadius);
 
 	pGrenade->m_bIsLive = true;
