@@ -179,6 +179,7 @@ void CFFDispenser::GoLive( void )
 	// Set up a think function
 	SetThink( &CFFDispenser::OnObjectThink );	// |-- Mirv: Account for GCC strictness
 	SetNextThink( gpGlobals->curtime + m_flThinkTime );
+	m_flSavedThink = 0.0f;
 
 	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
 
@@ -232,6 +233,9 @@ void CFFDispenser::GoLive( void )
 void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 {
 	VPROF_BUDGET( "CFFDispenser::OnObjectTouch", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if ( IsDisabled() )
+		return;
 
 	CheckForOwner();
 
@@ -381,25 +385,43 @@ void CFFDispenser::OnObjectThink( void )
 	// Do any thinking that needs to be done for _this_ class
 	CheckForOwner();
 
-	int iCells = 40;
-	int iNails = 60;
-	int iShells = 40;
-	int iRockets = 30;
+	if (!IsDisabled())
+	{
+		if (!m_flSavedThink)
+		{
+			int iCells = 40;
+			int iNails = 60;
+			int iShells = 40;
+			int iRockets = 30;
 
-	// Generate stock
-	m_iCells = clamp( m_iCells + iCells, 0, m_iMaxCells );
-	m_iNails = clamp( m_iNails + iNails, 0, m_iMaxNails );
-	m_iShells = clamp( m_iShells + iShells, 0, m_iMaxShells );
-	m_iRockets = clamp( m_iRockets + iRockets, 0, m_iMaxRockets );
-	m_iArmor = clamp( m_iArmor + 50, 0, m_iMaxArmor );
+			// Generate stock
+			m_iCells = clamp( m_iCells + iCells, 0, m_iMaxCells );
+			m_iNails = clamp( m_iNails + iNails, 0, m_iMaxNails );
+			m_iShells = clamp( m_iShells + iShells, 0, m_iMaxShells );
+			m_iRockets = clamp( m_iRockets + iRockets, 0, m_iMaxRockets );
+			m_iArmor = clamp( m_iArmor + 50, 0, m_iMaxArmor );
 
-	// Update ammo percentage
-	UpdateAmmoPercentage();	
+			// Update ammo percentage
+			UpdateAmmoPercentage();	
 
-	SendStatsToBot();
+			SendStatsToBot();
 
-	// Set the next time to call this function
-	SetNextThink( gpGlobals->curtime + m_flThinkTime );
+			// Set the next time to call this function
+			SetNextThink( gpGlobals->curtime + m_flThinkTime );
+		}
+		else {
+			// Set the next time to call this function
+			SetNextThink( max( m_flSavedThink, gpGlobals->curtime + 0.1f ) );
+			m_flSavedThink = 0.0f;
+		}
+	}
+	else
+	{
+		if (!m_flSavedThink)
+			m_flSavedThink = GetNextThink();
+
+		SetNextThink( gpGlobals->curtime + 0.029f );
+	}
 
 	// Call base class think func
 	CFFBuildableObject::OnObjectThink();
@@ -644,6 +666,19 @@ void CFFDispenser::Detonate()
 	}
 
 	CFFBuildableObject::Detonate();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Can it be disabled?
+//-----------------------------------------------------------------------------
+bool CFFDispenser::CanDisable() const
+{
+	VPROF_BUDGET( "CFFDispenser::CanDisable", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if (!m_bBuilt)
+		return false;
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------

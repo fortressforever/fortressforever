@@ -333,6 +333,14 @@ public:
 
 		return true;
 	}
+	
+	float				m_flDisableTime;
+	float				m_flNextDisableEffectTime;
+	float				m_flSavedThink;
+
+	virtual bool CanDisable() const { return false; }
+	virtual bool IsDisabled() const;
+	virtual void Disable();
 
 	virtual bool HasMalfunctioned( void ) const;
 
@@ -569,6 +577,8 @@ public:
 	virtual void MaliciouslySabotage(CFFPlayer *pSaboteur);
 	virtual void Detonate();
 
+	virtual bool CanDisable() const;
+
 	CNetworkVar( unsigned int, m_iAmmoPercent );
 
 	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets );
@@ -672,6 +682,8 @@ public:
 	void GoLive( void );
 
 	int TakeEmp( void );
+
+	virtual bool CanDisable() const;
 
 	void SetFocusPoint(Vector &origin);
 

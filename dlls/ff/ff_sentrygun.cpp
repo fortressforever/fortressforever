@@ -469,6 +469,9 @@ void CFFSentryGun::OnSearchThink( void )
 
 	SetNextThink( gpGlobals->curtime + 0.029f ); // Just less than 1 tick (33 tickrate) or just less than 2 ticks (66 tick) or just less than 3 (100 tick)
 
+	if ( IsDisabled() )
+		return;
+
 	if( GetEnemy() && !GetEnemy()->IsAlive() ) 
 		SetEnemy( NULL );
 
@@ -529,6 +532,26 @@ void CFFSentryGun::OnActiveThink( void )
 	SetNextThink( gpGlobals->curtime + 0.029f ); // slightly less than 1 tick (33 tick), 
 
 	CBaseEntity *enemy = GetEnemy();
+	
+	if ( IsDisabled() )
+	{
+		SetEnemy( NULL );
+		SetThink( &CFFSentryGun::OnSearchThink );
+		SpinDown();
+		
+		// Tell player they aren't locked on any more, and remove the status icon
+		if ( enemy->IsPlayer() )
+		{
+			CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+			user.MakeReliable();
+
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+				WRITE_FLOAT(0.0);
+			MessageEnd();
+		}
+		return;
+	}
 
 	// Jiggles: Hint that tells Soldiers to use nail grens on SGs
 	CFFPlayer *pFFPlayer = ToFFPlayer( enemy );
@@ -1929,6 +1952,19 @@ void CFFSentryGun::Detonate()
 	}
 
 	CFFBuildableObject::Detonate();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Can it be disabled?
+//-----------------------------------------------------------------------------
+bool CFFSentryGun::CanDisable() const
+{
+	VPROF_BUDGET( "CFFSentryGun::CanDisable", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if (!m_bBuilt)
+		return false;
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------

@@ -626,6 +626,8 @@ CFFDispenser::CFFDispenser( void )
 
 	m_flLastClientUpdate = 0;
 	m_iLastState = 0;
+
+	m_flSavedThink = 0.0f;
 #endif
 
 	// Initial values

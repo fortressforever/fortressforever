@@ -44,6 +44,8 @@
 #include "ff_luacontext.h"
 #include "ff_scriptman.h"
 #include "ff_entity_system.h"
+#include "te_effect_dispatch.h" 
+#include "IEffects.h"
 
 #ifdef _DEBUG
 #include "Color.h"
@@ -57,6 +59,9 @@
 #include "tier0/memdbgon.h"
 
 extern short	g_sModelIndexFireball;
+
+extern ConVar ffdev_disable_duration;
+#define DISABLE_GREN_DURATION ffdev_disable_duration.GetFloat()
 
 //=============================================================================
 //
@@ -243,6 +248,8 @@ CFFBuildableObject::CFFBuildableObject( void )
 	m_hSaboteur = NULL;
 	m_bMaliciouslySabotaged = false;
 	m_iSaboteurTeamNumber = TEAM_UNASSIGNED;
+	
+	m_flDisableTime = 0;
 }
 
 /**
@@ -661,6 +668,16 @@ void CFFBuildableObject::OnObjectThink( void )
 			break;
 		}
 	}
+	
+	// Spark if at 50% or less health
+	if ( IsDisabled() && gpGlobals->curtime >= m_flNextDisableEffectTime )
+	{
+		// Emit some sparks from a random location hopefully inside the SG's bounds :)
+		Vector vecUp(0, 0, 1.0f);
+		g_pEffects->Sparks( GetAbsOrigin() + Vector(random->RandomFloat( -16, 16 ), random->RandomFloat( -16, 16 ), random->RandomFloat( 5, 32 )), 2, 5, &vecUp );
+		EmitSound( "DoSpark" );
+		m_flNextDisableEffectTime = gpGlobals->curtime + random->RandomFloat( 0.1, 0.5 );
+	}
 
 	// Check for "malfunctions"
 	if( HasMalfunctioned() )
@@ -682,6 +699,31 @@ void CFFBuildableObject::OnObjectThink( void )
 
 		Detonate();
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this buildable in level 1 sabotage (not maliciously)
+//-----------------------------------------------------------------------------
+bool CFFBuildableObject::IsDisabled() const
+{
+	VPROF_BUDGET( "CFFBuildableObject::IsDisabled", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	return (m_flDisableTime > gpGlobals->curtime);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Spy gren disable
+//-----------------------------------------------------------------------------
+void CFFBuildableObject::Disable()
+{
+	VPROF_BUDGET( "CFFBuildableObject::Disable", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if ( !CanDisable() )
+		return;
+
+	m_flDisableTime = gpGlobals->curtime + DISABLE_GREN_DURATION;
+	m_flSavedThink = GetNextThink();
+	SetNextThink( gpGlobals->curtime + 0.029f );
 }
 
 //-----------------------------------------------------------------------------
