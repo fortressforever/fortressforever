@@ -653,10 +653,11 @@ void CFFPlayer::ClassSpecificSkill()
 				
 				DispatchEffect(OVERPRESSURE_EFFECT, data);
 
-#ifdef GAME_DLL
 				// Play a sound
 				CPASAttenuationFilter sndFilter( this );
 				EmitSound("overpressure.explode");
+
+#ifdef GAME_DLL
 
 				CBaseEntity *pEntity = NULL;
 
