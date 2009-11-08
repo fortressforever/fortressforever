@@ -57,7 +57,7 @@ ConVar ffdev_armorstrip_damagetype_percent_currarmor("ffdev_armorstrip_damagetyp
 ConVar ffdev_armorstrip_damagetype_percent_maxarmor("ffdev_armorstrip_damagetype_percent_maxarmor", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_armorstrip_damagetype_flat("ffdev_armorstrip_damagetype_flat", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_armorstrip_damage_falloff("ffdev_armorstrip_damage_falloff", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_armorstrip_damage_armortype("ffdev_armorstrip_damage_armortype", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_armorstrip_damage_armortype("ffdev_armorstrip_damage_armortype", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define ARMORSTRIP_DAMAGETYPE_PERCENT_CURRARMOR ffdev_armorstrip_damagetype_percent_currarmor.GetBool()
 #define ARMORSTRIP_DAMAGETYPE_PERCENT_MAXARMOR ffdev_armorstrip_damagetype_percent_maxarmor.GetBool()
 #define ARMORSTRIP_DAMAGETYPE_FLAT ffdev_armorstrip_damagetype_flat.GetBool()
@@ -69,8 +69,9 @@ ConVar ffdev_armorstrip_damage("ffdev_armorstrip_damage", "75", FCVAR_REPLICATED
 ConVar ffdev_armorstrip_damage_falloff_min("ffdev_armorstrip_damage_falloff_min", "25", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_armorstrip_damage_percent("ffdev_armorstrip_damage_percent", ".75", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_armorstrip_damage_falloff_min_percent("ffdev_armorstrip_damage_falloff_min_percent", ".25", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_armorstrip_armortocells_percent("ffdev_armorstrip_armortocells_percent", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_armorstrip_armortocells_percent("ffdev_armorstrip_armortocells_percent", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_armorstrip_radius("ffdev_armorstrip_radius", "240", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_armorstrip_radius_maxdamage("ffdev_armorstrip_radius_maxdamage", "120", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_armorstrip_damage_armortype_percent("ffdev_armorstrip_damage_armortype_percent", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_armorstrip_takebag_cellpercent("ffdev_armorstrip_takebag_cellpercent", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define ARMORSTRIP_DAMAGE ffdev_armorstrip_damage.GetFloat()
@@ -79,6 +80,7 @@ ConVar ffdev_armorstrip_takebag_cellpercent("ffdev_armorstrip_takebag_cellpercen
 #define ARMORSTRIP_DAMAGE_FALLOFF_MIN_PERCENT ffdev_armorstrip_damage_falloff_min_percent.GetFloat()
 #define ARMORSTRIP_ARMORTOCELLS_PERCENT ffdev_armorstrip_armortocells_percent.GetFloat()
 #define ARMORSTRIP_RADIUS ffdev_armorstrip_radius.GetFloat()
+#define ARMORSTRIP_RADIUS_MAXDAMAGE ffdev_armorstrip_radius_maxdamage.GetFloat()
 #define ARMORSTRIP_DAMAGE_ARMORTYPE_PERCENT ffdev_armorstrip_damage_armortype_percent.GetFloat()
 #define ARMORSTRIP_TAKEBAG_CELLPERCENT ffdev_armorstrip_takebag_cellpercent.GetFloat()
 
@@ -205,7 +207,8 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_armorstrip );
 						float flDistance = vecDisplacement.Length();
 						Vector vecDir = vecDisplacement / flDistance;
 
-						armordamage *= 1.0f - (flDistance > 16.0f ? flDistance : 0.0f) / radius;
+						if (ARMORSTRIP_RADIUS_MAXDAMAGE != radius)
+							armordamage *= 1.0f - ((flDistance > (16.0f + ARMORSTRIP_RADIUS_MAXDAMAGE)) ? flDistance - ARMORSTRIP_RADIUS_MAXDAMAGE : 0.0f) / (radius - ARMORSTRIP_RADIUS_MAXDAMAGE);
 						if (ARMORSTRIP_DAMAGETYPE_PERCENT_MAXARMOR || ARMORSTRIP_DAMAGETYPE_PERCENT_CURRARMOR)
 							armordamage = max( armordamage, ARMORSTRIP_DAMAGE_FALLOFF_MIN_PERCENT );
 						else if (ARMORSTRIP_DAMAGETYPE_FLAT)
