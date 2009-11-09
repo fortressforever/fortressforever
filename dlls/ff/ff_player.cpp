@@ -1919,9 +1919,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		//for (int i = 1; i < MAX_AMMO_SLOTS; i++)
 		//	pBackpack->SetAmmoCount(i, GetAmmoCount(i));
 
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), 10 );
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), 30 );
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ), 75 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), 20 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), 100 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ), 100 );
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), 30 );
 
 	}
