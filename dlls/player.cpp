@@ -7228,10 +7228,10 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropEHandle(SENDINFO(m_hVehicle)),
 		SendPropEHandle(SENDINFO(m_hUseEntity)),
 		// Added by Mulch for testing
-		SendPropInt		(SENDINFO(m_iHealth), 10 ),
-		SendPropInt		(SENDINFO(m_iMaxHealth), 10 ),
+		SendPropInt		(SENDINFO(m_iHealth), 10 ), 
+		SendPropInt		(SENDINFO(m_iMaxHealth), 10 ), //AfterShock: we should work this out from class
 		SendPropInt		(SENDINFO(m_iArmor), 10 ),
-		SendPropInt		(SENDINFO(m_iMaxArmor), 10 ),
+		SendPropInt		(SENDINFO(m_iMaxArmor), 10 ), //AfterShock: we should work this out from class
 		// Added by Mulch for testing
 		SendPropInt		(SENDINFO(m_lifeState), 3, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flMaxspeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),  // CL
