@@ -16,6 +16,7 @@
 #include "weapon_parse.h"
 #include "baseviewmodel_shared.h"
 #include "weapon_proficiency.h"
+#include "mathlib.h"
 
 #if defined( CLIENT_DLL )
 #define CBaseCombatWeapon C_BaseCombatWeapon
@@ -299,6 +300,8 @@ public:
 	virtual int				GetSecondaryAmmoType( void )  const { return m_iSecondaryAmmoType; }
 	int						Clip1() const { return m_iClip1; }
 	int						Clip2() const { return m_iClip2; }
+	void					Clip1( int count ) { m_iClip1 = clamp( count, 0, GetMaxClip1() ); }
+	void					Clip2( int count ) { m_iClip2 = clamp( count, 0, GetMaxClip1() ); }
 
 	// Ammo quantity queries for weapons that do not use clips. These are only
 	// used to determine how much ammo is in a weapon that does not have an owner.

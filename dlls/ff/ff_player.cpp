@@ -6545,6 +6545,11 @@ void CFFPlayer::LuaRemoveAllAmmo(bool bClipToo)
 	}
 }
 
+int CFFPlayer::LuaGetAmmoCount( int iAmmoType )
+{
+	return GetAmmoCount( GetAmmoDef()->Index(LookupLuaAmmo( iAmmoType )) );
+}
+
 bool CFFPlayer::LuaOwnsWeaponType(const char *_name)
 {
 	return Weapon_OwnsThisType(_name, 0) != NULL;
@@ -6567,6 +6572,58 @@ bool CFFPlayer::LuaGiveWeapon(const char *_name, bool _autoselect)
 void CFFPlayer::LuaRemoveAllWeapons()
 {
 	RemoveAllItems(false);
+}
+
+int CFFPlayer::GetAmmoInClip()
+{
+	if (GetActiveFFWeapon())
+	{
+		return GetActiveFFWeapon()->Clip1();
+	}
+	return -1;
+}
+
+int CFFPlayer::GetAmmoInClip( const char *_name )
+{
+	if (Weapon_OwnsThisType(_name, 0))
+	{
+		for (int i=0;i<MAX_WEAPONS;i++) 
+		{
+			if ( m_hMyWeapons[i].Get() && FClassnameIs(m_hMyWeapons[i], _name) )
+			{
+				CBaseCombatWeapon *pWeapon = m_hMyWeapons[i].Get();
+				return pWeapon->Clip1();
+			}
+		}
+	}
+	return -1;
+}
+
+bool CFFPlayer::SetAmmoInClip( int iAmount )
+{
+	if (GetActiveFFWeapon())
+	{
+		GetActiveFFWeapon()->Clip1( iAmount );
+		return true;
+	}
+	return false;
+}
+
+bool CFFPlayer::SetAmmoInClip( const char *_name, int iAmount )
+{
+	if (Weapon_OwnsThisType(_name, 0))
+	{
+		for (int i=0;i<MAX_WEAPONS;i++) 
+		{
+			if ( m_hMyWeapons[i].Get() && FClassnameIs(m_hMyWeapons[i], _name) )
+			{
+				CBaseCombatWeapon *pWeapon = m_hMyWeapons[i].Get();
+				pWeapon->Clip1( iAmount );
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 //-----------------------------------------------------------------------------
