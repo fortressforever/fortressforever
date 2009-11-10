@@ -24,6 +24,7 @@
 #include "ff_luacontext.h"
 #include "ff_scheduleman.h"
 #include "ff_timerman.h"
+#include "ff_menuman.h"
 #include "ff_scriptman.h"
 #include "ff_utils.h"
 
@@ -80,6 +81,7 @@ void CFFEntitySystemHelper::OnThink()
 
 	_scheduleman.Update();
 	_timerman.Update();
+	//_menuman.Update();
 	SetNextThink(gpGlobals->curtime + TICK_INTERVAL);
 }
 

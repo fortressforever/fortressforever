@@ -35,11 +35,14 @@ extern "C"
 #undef min
 #undef max
 
+#define MAX_MENU_LEN 240
+
 #include "luabind/luabind.hpp"
 #include "luabind/iterator_policy.hpp"
 
 #include "ff_scheduleman.h"
 #include "ff_timerman.h"
+#include "ff_menuman.h"
 
 #include "omnibot_interface.h"
 
@@ -2364,6 +2367,108 @@ namespace FFLib
 			g_pGameRules->SetGameDescription( szGameDescription );
 	}
 
+	void ShowMenuToPlayer( CFFPlayer *pPlayer, const char *szMenuName )
+	{
+		if (!pPlayer)
+			return;
+
+		CSingleUserRecipientFilter filter( pPlayer );
+		_menuman.DisplayLuaMenu( filter, szMenuName );
+	}
+
+	void ShowMenuToTeam( int iTeam, const char *szMenuName )
+	{
+		// send the sentence on each client
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+			
+			if(pPlayer->GetTeamNumber() == iTeam)
+				ShowMenuToPlayer( pPlayer, szMenuName );
+		}
+	}
+
+	void ShowMenu( const char *szMenuName )
+	{
+		// send the sentence on each client
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			ShowMenuToPlayer( pPlayer, szMenuName );
+		}
+	}
+	
+	void CreateMenu( const char *szMenuName )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenu( szMenuName );
+	}
+	
+	void CreateMenu( const char *szMenuName, float flDisplayTime )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenu( szMenuName, flDisplayTime );
+	}
+	
+	void CreateMenu( const char *szMenuName, const char *szMenuTitle )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenu( szMenuName, szMenuTitle );
+	}
+	
+	void CreateMenu( const char *szMenuName, const char *szMenuTitle, float flDisplayTime )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenu( szMenuName, szMenuTitle, flDisplayTime );
+	}
+	
+	void DestroyMenu( const char *szMenuName )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.RemoveLuaMenu( szMenuName );
+	}
+	
+	void SetMenuTitle( const char *szMenuName, const char *szMenuTitle )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.SetLuaMenuTitle( szMenuName, szMenuTitle );
+	}
+	
+	void AddMenuOption( const char *szMenuName, int iSlot, const char *szOptionText )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenuOption( szMenuName, iSlot, szOptionText );
+	}
+
+	void RemoveMenuOption( const char *szMenuName, int iSlot )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.RemoveLuaMenuOption( szMenuName, iSlot );
+	}
+
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -2557,6 +2662,17 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("UpdateObjectiveIcon",		&FFLib::UpdateObjectiveIcon),
 		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon),
 		def("DisplayMessage",			&FFLib::DisplayMessage),
-		def("SetGameDescription",		&FFLib::SetGameDescription)
+		def("SetGameDescription",		&FFLib::SetGameDescription),
+		def("ShowMenuToPlayer",			&FFLib::ShowMenuToPlayer),
+		def("ShowMenuToTeam",			&FFLib::ShowMenuToTeam),
+		def("ShowMenu",					&FFLib::ShowMenu),
+		def("CreateMenu",				(void(*)(const char *))&FFLib::CreateMenu),
+		def("CreateMenu",				(void(*)(const char *, float))&FFLib::CreateMenu),
+		def("CreateMenu",				(void(*)(const char *, const char *))&FFLib::CreateMenu),
+		def("CreateMenu",				(void(*)(const char *, const char *, float))&FFLib::CreateMenu),
+		def("DestroyMenu",				&FFLib::DestroyMenu),
+		def("SetMenuTitle",				&FFLib::SetMenuTitle),
+		def("AddMenuOption",			&FFLib::AddMenuOption),
+		def("RemoveMenuOption",			&FFLib::RemoveMenuOption)
 	];
 }
