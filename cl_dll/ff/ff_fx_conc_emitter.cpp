@@ -26,6 +26,7 @@
 #define CONC_EFFECT_MATERIAL "sprites/concrefract"
 extern int g_iConcRingTexture;
 
+
 ConVar conc_on			 ("ffdev_conc_on", "1", FCVAR_CHEAT, "Turn the conc effect on or off - 1 or 0." );
 ConVar conc_scale		 ("ffdev_conc_scale", "512.0", FCVAR_CHEAT, "How big the conc effect gets.");
 //ConVar conc_refract		 ("ffdev_conc_refract", "0.2", FCVAR_CHEAT, "Refraction amount for conc effect.");
@@ -39,23 +40,25 @@ ConVar conc_refract("ffdev_conc_refract", "0.5", FCVAR_CHEAT);
 ConVar conc_grow("ffdev_conc_grow", "0.25", FCVAR_CHEAT);
 ConVar conc_shrink("ffdev_conc_shrink", "0.35", FCVAR_CHEAT);
 
+ConVar cl_conc_refract("cl_conc_refract", "0", FCVAR_ARCHIVE, "Toggles between conc effects; set to 1 for the refractive sphere or 0 for the flat rings");
+
 //==============================
 // conc ring effect vars
 //==============================
 //ConVar ffdev_conc_effect_num_rings("ffdev_conc_effect_num_rings", "1");
-ConVar ffdev_conc_effect_framerate("ffdev_conc_effect_framerate", "1");
-ConVar ffdev_conc_effect_width("ffdev_conc_effect_width", "50");
-ConVar ffdev_conc_effect_width2("ffdev_conc_effect_width2", "0");
-ConVar ffdev_conc_effect_width3("ffdev_conc_effect_width3", "10");
-ConVar ffdev_conc_effect_spread("ffdev_conc_effect_spread", "0");
-ConVar ffdev_conc_effect_amplitude("ffdev_conc_effect_amplitude", "0");
-ConVar ffdev_conc_effect_lifetime("ffdev_conc_effect_lifetime", ".3");
-ConVar ffdev_conc_effect_r("ffdev_conc_effect_r", "255");
-ConVar ffdev_conc_effect_g("ffdev_conc_effect_g", "255");
-ConVar ffdev_conc_effect_b("ffdev_conc_effect_b", "225");
-ConVar ffdev_conc_effect_a("ffdev_conc_effect_a", "178");
-ConVar ffdev_conc_effect_radius("ffdev_conc_effect_radius", "600");
-ConVar ffdev_conc_effect_radius2("ffdev_conc_effect_radius2", "520");
+ConVar ffdev_conc_effect_framerate("ffdev_conc_effect_framerate", "1", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_width("ffdev_conc_effect_width", "50", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_width2("ffdev_conc_effect_width2", "0", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_width3("ffdev_conc_effect_width3", "10", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_spread("ffdev_conc_effect_spread", "0", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_amplitude("ffdev_conc_effect_amplitude", "0", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_lifetime("ffdev_conc_effect_lifetime", ".3", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_r("ffdev_conc_effect_r", "255", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_g("ffdev_conc_effect_g", "255", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_b("ffdev_conc_effect_b", "225", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_a("ffdev_conc_effect_a", "178", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_radius("ffdev_conc_effect_radius", "600", FCVAR_CHEAT);
+ConVar ffdev_conc_effect_radius2("ffdev_conc_effect_radius2", "520", FCVAR_CHEAT);
 
 #define CONC_FRAMERATE		ffdev_conc_effect_framerate.GetFloat()
 #define CONC_WIDTH			ffdev_conc_effect_width.GetFloat()
@@ -392,7 +395,10 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 		//return;
 	}
 
-	CBroadcastRecipientFilter filter;
+	if (!cl_conc_refract.GetBool())
+	{
+		CBroadcastRecipientFilter filter;
+
 		te->BeamRingPoint(filter,
 			0,						// delay
 			data.m_vOrigin,			// origin
@@ -475,35 +481,37 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
 
-/*
-	// Okay so apparently dx7 is not so good for the 3d conc effect
-	// So instead we use the flat one for those systems
-	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() > 70)
-	{
-		C_ConcEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin );
 	}
 	else
 	{
-		CSmartPtr<CConcEmitter> concEffect = CConcEmitter::Create("ConcussionEffect");
-
-		float offset = 0;
-
-		for (int i = 0; i < conc_ripples.GetInt(); i++)
+		// Okay so apparently dx7 is not so good for the 3d conc effect
+		// So instead we use the flat one for those systems
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() > 70)
 		{
-			ConcParticle *c = concEffect->AddConcParticle();
+			C_ConcEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin );
+		}
+		else
+		{
+			CSmartPtr<CConcEmitter> concEffect = CConcEmitter::Create("ConcussionEffect");
 
-			if (c)
+			float offset = 0;
+
+			for (int i = 0; i < conc_ripples.GetInt(); i++)
 			{
-				c->m_flDieTime = conc_speed.GetFloat();
-				c->m_Pos = data.m_vOrigin;
-				c->m_flRefract = conc_refract.GetFloat();
-				c->m_flOffset = offset;
+				ConcParticle *c = concEffect->AddConcParticle();
 
-				offset += conc_ripple_period.GetFloat();
+				if (c)
+				{
+					c->m_flDieTime = conc_speed.GetFloat();
+					c->m_Pos = data.m_vOrigin;
+					c->m_flRefract = conc_refract.GetFloat();
+					c->m_flOffset = offset;
+
+					offset += conc_ripple_period.GetFloat();
+				}
 			}
 		}
 	}
-*/
 
 }
 
