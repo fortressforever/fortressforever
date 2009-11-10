@@ -60,6 +60,7 @@ private:
 	bool			m_bMenuDisplayed;
 	int				m_bitsValidSlots;
 	float			m_flShutoffTime;
+	float			m_flExpireTime;
 	int				m_fWaitingForMore;
 	int				m_nSelectedItem;
 	bool			m_bMenuTakesInput;
