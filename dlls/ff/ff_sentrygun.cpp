@@ -177,11 +177,11 @@
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
 	//SendPropFloat( SENDINFO( m_flRange ) ), //AfterShock: surely the client knows it's range?
-	SendPropInt( SENDINFO( m_iLevel ) ), 
-	SendPropInt( SENDINFO( m_iShells ) ),
-	SendPropInt( SENDINFO( m_iRockets ) ),
-	SendPropInt( SENDINFO( m_iMaxShells ) ),
-	SendPropInt( SENDINFO( m_iMaxRockets ) ),
+	SendPropInt( SENDINFO( m_iLevel ), 2, SPROP_UNSIGNED ), //AfterShock: max level 3
+	SendPropInt( SENDINFO( m_iShells ), 8, SPROP_UNSIGNED ), //AfterShock: max 150 shells for level 3
+	SendPropInt( SENDINFO( m_iRockets ), 5, SPROP_UNSIGNED ), //AfterShock: max 20 rockets for level 3
+	SendPropInt( SENDINFO( m_iMaxShells ) ), //AfterShock: this should be inferred from level
+	SendPropInt( SENDINFO( m_iMaxRockets ) ), //AfterShock: this should be inferred from level
 END_SEND_TABLE() 
 
 LINK_ENTITY_TO_CLASS( FF_SentryGun, CFFSentryGun );
