@@ -1071,21 +1071,20 @@ void UTIL_SayTextFilter( IRecipientFilter& filter, const char *pText, CBasePlaye
 	hContext.Push( pPlayer );
 	hContext.Push( pText );
 	
-	if( _scriptman.RunPredicates_LUA( NULL, &hContext, "player_onchat" ) )
-	{
-		UserMessageBegin( filter, "SayText" );
-			if ( pPlayer ) 
-			{
-				WRITE_BYTE( pPlayer->entindex() );
-			}
-			else
-			{
-				WRITE_BYTE( 0 ); // world, dedicated server says
-			}
-			WRITE_STRING( pText );
-			WRITE_BYTE( bChat );
-		MessageEnd();
-	}
+	_scriptman.RunPredicates_LUA( NULL, &hContext, "player_onchat" );
+
+	UserMessageBegin( filter, "SayText" );
+		if ( pPlayer ) 
+		{
+			WRITE_BYTE( pPlayer->entindex() );
+		}
+		else
+		{
+			WRITE_BYTE( 0 ); // world, dedicated server says
+		}
+		WRITE_STRING( pText );
+		WRITE_BYTE( bChat );
+	MessageEnd();
 }
 
 void UTIL_SayText2Filter( IRecipientFilter& filter, CBasePlayer *pEntity, bool bChat, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 )
