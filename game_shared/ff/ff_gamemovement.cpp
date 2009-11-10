@@ -32,8 +32,6 @@
 #define FF_JUMP_HEIGHT 27.5f // Modified by Mulch 10/20/2005 so we could jump on 63 but not 64 unit high stuff
 #define FF_MUL_CONSTANT 209.76177f //sqrt(2.0f * 800.0f * FF_JUMP_HEIGHT);
 //static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5", FCVAR_CHEAT );
-//static ConVar ffdev_doublejump_height( "ffdev_doublejump_height", "190.0f", FCVAR_CHEAT );
-#define FF_DOUBLEJUMP_HEIGHT 250.0f //ffdev_doublejump_height.GetFloat() //sqrt(2.0f * 800.0f * FF_JUMP_HEIGHT);
 
 //static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPMULTIPLIER 1.4f
@@ -42,7 +40,7 @@
 //static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
 #define SV_TRIMPMAX 5000.0f
 //static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define SV_TRIMPTRIGGERSPEED 750.0f
+#define SV_TRIMPTRIGGERSPEED 550.0f
 //static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
@@ -396,7 +394,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 		if (flElapsed > 0 && flElapsed < 0.4f)
 		{
 			// AfterShock: Add a set amount for a double jump (dont multiply)
-			fMul += FF_DOUBLEJUMP_HEIGHT;
+			fMul += 190.0f;
 
 #ifdef GAME_DLL
 			DevMsg("[S] Double jump %f!\n", fMul);
