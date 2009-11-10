@@ -37,6 +37,7 @@ CTeamplayRules::CTeamplayRules()
 
 	// Copy over the team from the server config
 	m_szTeamList[0] = 0;
+	m_szGameDescription[0] = '\0';
 
 	RecountTeams();
 }
