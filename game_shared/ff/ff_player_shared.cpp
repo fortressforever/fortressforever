@@ -469,7 +469,11 @@ void CFFPlayer::PlayJumpSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 
 	EmitSound_t ep;
 	ep.m_nChannel = CHAN_BODY;
+#ifdef CLIENT_DLL
+	ep.m_pSoundName = "Player.ClientJump"; //params.soundname;
+#else
 	ep.m_pSoundName = "Player.Jump"; //params.soundname;
+#endif
 	ep.m_flVolume = fvol;
 	ep.m_SoundLevel = SNDLVL_70dB; // params.soundlevel;
 	ep.m_nFlags = 0;
