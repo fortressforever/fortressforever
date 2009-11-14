@@ -392,7 +392,8 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 	if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
 	{
 		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, TE_EXPLFLAG_NODLIGHTS|TE_EXPLFLAG_NOSOUND);
-		//return;
+		if (cl_conc_refract.GetBool())
+			return;
 	}
 
 	if (!cl_conc_refract.GetBool())
