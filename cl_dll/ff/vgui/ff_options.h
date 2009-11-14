@@ -59,6 +59,7 @@ private:
 	CFFOptionsPage			*m_pMiscOptions1;
 	CFFOptionsPage			*m_pMiscOptions2;
 	CFFOptionsPage			*m_pMiscOptions3;
+	CFFOptionsPage			*m_pMiscOptions4;
 	CFFOptionsPage			*m_pDLightOptions;
 
 
