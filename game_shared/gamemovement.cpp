@@ -67,6 +67,10 @@ bool g_bMovementOptimizations = true;	// |-- Mirv: Changed to false, but not sur
 static ConVar sv_sharkingfriction("sv_sharkingfriction", "1", FCVAR_REPLICATED);
 #define SV_SHARKINGFRICTION sv_sharkingfriction.GetFloat()
 
+static ConVar ffdev_rampslide_minspeed("ffdev_rampslide_minspeed", "800", FCVAR_REPLICATED);
+static ConVar ffdev_rampslide_zchange_threshold("ffdev_rampslide_zchange_threshold", "1.5", FCVAR_REPLICATED);
+static ConVar ffdev_rampslide_speedmaintained("ffdev_rampslide_speedmaintained", "1.0", FCVAR_REPLICATED);
+
 #ifndef _XBOX
 void COM_Log( char *pszFile, char *fmt, ...)
 {
@@ -2418,7 +2422,6 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 	return blocked;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Determine whether or not the player is on a ladder (physprop or world).
 //-----------------------------------------------------------------------------
@@ -2707,8 +2710,10 @@ int CGameMovement::ClipVelocity( Vector& in, Vector& normal, Vector& out, float 
 {
 	float	backoff;
 	float	change;
-	float angle;
+	float	angle;
 	int		i, blocked;
+	Vector  speedvector;
+	float	speed;
 	
 	angle = normal[ 2 ];
 
@@ -2722,10 +2727,39 @@ int CGameMovement::ClipVelocity( Vector& in, Vector& normal, Vector& out, float 
 	// Determine how far along plane to slide based on incoming direction.
 	backoff = DotProduct (in, normal) * overbounce;
 
+	VectorCopy (in, speedvector);
+	speedvector[2] = 0.0f;
+	speed = speedvector.Length();
+
+	float zchange = normal[2]*backoff / in[2];
+
 	for (i=0 ; i<3 ; i++)
 	{
 		change = normal[i]*backoff;
-		out[i] = in[i] - change; 
+
+		if (speed >= ffdev_rampslide_minspeed.GetFloat())
+		{
+			if (i==2)
+			{
+				out[i] = in[i] - change;
+			}
+			else
+			{
+				if (zchange < 0 || zchange > ffdev_rampslide_zchange_threshold.GetFloat())
+				{
+					out[i] = in[i] * ffdev_rampslide_speedmaintained.GetFloat();
+				}
+				else
+				{
+					out[i] = in[i] - change;
+					Msg("zchange: %f\n", zchange);
+				}
+			}
+		}
+		else
+		{
+			out[i] = in[i] - change;
+		}
 	}
 	
 	// iterate once to make sure we aren't still moving through the plane
