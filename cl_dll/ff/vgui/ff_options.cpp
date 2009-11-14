@@ -1562,6 +1562,7 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pMiscOptions1 = new CFFMiscOptions(this, "MiscOptions", "resource/Options1.vdf");
 	m_pMiscOptions2 = new CFFMiscOptions(this, "MiscOptions", "resource/Options2.vdf");
 	m_pMiscOptions3 = new CFFMiscOptions(this, "MiscOptions", "resource/Options3.vdf");
+	m_pMiscOptions4 = new CFFMiscOptions(this, "MiscOptions", "resource/Options4.vdf");
 	m_pDLightOptions = new CFFDLightOptions(this, "DLightOptions");
 
 	m_pPropertyPages = new PropertySheet(this, "OptionsPages", true);
@@ -1570,6 +1571,7 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pPropertyPages->AddPage(m_pMiscOptions1, "#GameUI_Misc1");
 	m_pPropertyPages->AddPage(m_pMiscOptions2, "#GameUI_Misc2");
 	m_pPropertyPages->AddPage(m_pMiscOptions3, "#GameUI_Misc3");
+	m_pPropertyPages->AddPage(m_pMiscOptions4, "#GameUI_Misc4");
 	m_pPropertyPages->AddPage(m_pDLightOptions, "#GameUI_DLights");
 	m_pPropertyPages->SetActivePage(m_pCrosshairOptions);
 	m_pPropertyPages->SetDragEnabled(false);
