@@ -2752,7 +2752,7 @@ int CGameMovement::ClipVelocity( Vector& in, Vector& normal, Vector& out, float 
 				else
 				{
 					out[i] = in[i] - change;
-					Msg("zchange: %f\n", zchange);
+					//Msg("zchange: %f\n", zchange);
 				}
 			}
 		}
