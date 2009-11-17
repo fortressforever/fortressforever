@@ -322,6 +322,11 @@ void CFFWeaponJumpdown::Fire( void )
 	Vector vecForward, vecRight, vecUp;
 	pPlayer->EyeVectors( &vecForward, &vecRight, &vecUp);
 	VectorNormalizeFast( vecForward );
+	VectorNormalizeFast( vecRight );
+	
+	// get only the direction the player is looking (ignore any z)
+	Vector horizPush = CrossProduct(Vector( 0.0f, 0.0f, 1.0f ), vecRight);
+	horizPush *= JUMPDOWN_HORIZONTALPUSH;
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
 	//Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vecForward * 8.0f + vecRight * 5.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 22.0f);
@@ -330,9 +335,9 @@ void CFFWeaponJumpdown::Fire( void )
 
 	// Push them
 	if (!JUMPDOWN_VERTICALSETVELOCITY && !JUMPDOWN_HORIZONTALSETVELOCITY)
-		pPlayer->ApplyAbsVelocityImpulse(Vector(vecForward.x * JUMPDOWN_HORIZONTALPUSH, vecForward.y * JUMPDOWN_HORIZONTALPUSH, JUMPDOWN_VERTICALPUSH) * flPercent);
+		pPlayer->ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JUMPDOWN_VERTICALPUSH) * flPercent);
 	else if (JUMPDOWN_VERTICALSETVELOCITY && JUMPDOWN_HORIZONTALSETVELOCITY)
-	    pPlayer->SetAbsVelocity(Vector(vecForward.x * JUMPDOWN_HORIZONTALPUSH, vecForward.y * JUMPDOWN_HORIZONTALPUSH, JUMPDOWN_VERTICALPUSH) * flPercent);
+	    pPlayer->SetAbsVelocity(Vector(horizPush.x, horizPush.y, JUMPDOWN_VERTICALPUSH) * flPercent);
 	else
 	{
 		if (JUMPDOWN_VERTICALSETVELOCITY)
@@ -348,11 +353,11 @@ void CFFWeaponJumpdown::Fire( void )
 		if (JUMPDOWN_HORIZONTALSETVELOCITY)
 		{
 			Vector vecVelocity = pPlayer->GetAbsVelocity();
-			pPlayer->SetAbsVelocity(Vector(vecForward.x * JUMPDOWN_HORIZONTALPUSH * flPercent, vecForward.y * JUMPDOWN_HORIZONTALPUSH * flPercent, vecVelocity.z));
+			pPlayer->SetAbsVelocity(Vector(horizPush.x * flPercent, horizPush.y * flPercent, vecVelocity.z));
 		}
 		else
 		{
-			pPlayer->ApplyAbsVelocityImpulse(Vector(vecForward.x * JUMPDOWN_HORIZONTALPUSH, vecForward.y * JUMPDOWN_HORIZONTALPUSH, 0) * flPercent);
+			pPlayer->ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, 0) * flPercent);
 		}
 	}
 
