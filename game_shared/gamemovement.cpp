@@ -3494,16 +3494,6 @@ void CGameMovement::CheckFalling( void )
 				//
 				bAlive = MoveHelper( )->PlayerFallingDamage();
 				fvol = 1.0;
-
-#ifdef GAME_DLL
-				if (player->GetGroundEntity()->IsPlayer())
-				{
-					CFFPlayer *pCrushedPlayer = ToFFPlayer(player->GetGroundEntity());
-
-					CTakeDamageInfo info( player, player, ffdev_headcrush_damage.GetFloat(), DMG_DIRECT, KILLTYPE_MARIO );
-					pCrushedPlayer->TakeDamage(info);
-				}
-#endif
 			}
 			else if ( player->m_Local.m_flFallVelocity > PLAYER_MAX_SAFE_FALL_SPEED / 2 )
 			{
@@ -3545,6 +3535,22 @@ void CGameMovement::CheckFalling( void )
 			if ( player->m_Local.m_vecPunchAngle[PITCH] > 8 )
 			{
 				player->m_Local.m_vecPunchAngle.Set( PITCH, 8 );
+			}
+			
+			if (fvol == 1.0f)
+			{
+#ifdef GAME_DLL
+				if (player->GetGroundEntity() && player->GetGroundEntity()->IsPlayer())
+				{
+					CFFPlayer *pCrushedPlayer = ToFFPlayer(player->GetGroundEntity());
+
+					if (pCrushedPlayer && pCrushedPlayer != player)
+					{
+						CTakeDamageInfo info( player, player, ffdev_headcrush_damage.GetFloat(), DMG_DIRECT, KILLTYPE_MARIO );
+						pCrushedPlayer->TakeDamage(info);
+					}
+				}
+#endif
 			}
 		}
 
