@@ -509,6 +509,10 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	{
 		deathMsg.iconDeath = gHUD.GetIcon("death_grenade_napalm");
 	}
+	else if (Q_stricmp(killedwith, "mario") == 0)
+	{
+		deathMsg.iconDeath = gHUD.GetIcon("death_door");
+	}
 	else
 	{
 		// Try and find the death identifier in the icon list

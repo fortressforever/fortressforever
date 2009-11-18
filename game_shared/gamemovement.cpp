@@ -71,6 +71,8 @@ static ConVar ffdev_rampslide_minspeed("ffdev_rampslide_minspeed", "800", FCVAR_
 static ConVar ffdev_rampslide_zchange_threshold("ffdev_rampslide_zchange_threshold", "1.5", FCVAR_REPLICATED);
 static ConVar ffdev_rampslide_speedmaintained("ffdev_rampslide_speedmaintained", "1.0", FCVAR_REPLICATED);
 
+static ConVar ffdev_headcrush_damage("ffdev_headcrush_damage", "108", FCVAR_REPLICATED);
+
 #ifndef _XBOX
 void COM_Log( char *pszFile, char *fmt, ...)
 {
@@ -3492,6 +3494,16 @@ void CGameMovement::CheckFalling( void )
 				//
 				bAlive = MoveHelper( )->PlayerFallingDamage();
 				fvol = 1.0;
+
+#ifdef GAME_DLL
+				if (player->GetGroundEntity()->IsPlayer())
+				{
+					CFFPlayer *pCrushedPlayer = ToFFPlayer(player->GetGroundEntity());
+
+					CTakeDamageInfo info( player, player, ffdev_headcrush_damage.GetFloat(), DMG_DIRECT, KILLTYPE_MARIO );
+					pCrushedPlayer->TakeDamage(info);
+				}
+#endif
 			}
 			else if ( player->m_Local.m_flFallVelocity > PLAYER_MAX_SAFE_FALL_SPEED / 2 )
 			{
