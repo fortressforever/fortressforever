@@ -40,8 +40,6 @@
 ConVar ffdev_jumpdown_chargeuptime("ffdev_jumpdown_chargeuptime", "6", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_CHARGEUPTIME ffdev_jumpdown_chargeuptime.GetFloat()
 
-#ifdef GAME_DLL
-
 ConVar ffdev_jumpdown_allowunchargedshot("ffdev_jumpdown_allowunchargedshot", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_ALLOWUNCHARGEDSHOT ffdev_jumpdown_allowunchargedshot.GetBool()
 
@@ -98,7 +96,7 @@ ConVar ffdev_jumpdown_fx_offset_y("ffdev_jumpdown_fx_offset_y", "0", FCVAR_REPLI
 ConVar ffdev_jumpdown_fx_offset_z("ffdev_jumpdown_fx_offset_z", "-32", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define JUMPDOWN_EFFECT_Z_OFFSET ffdev_jumpdown_fx_offset_z.GetFloat()
 
-#else
+#ifdef CLIENT_DLL
 
 #define JUMPDOWN_CHARGETIMEBUFFERED_UPDATEINTERVAL 0.02f
 
@@ -307,17 +305,12 @@ void CFFWeaponJumpdown::Precache( void )
 //----------------------------------------------------------------------------
 void CFFWeaponJumpdown::Fire( void )
 {
-#ifdef GAME_DLL
-
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	//const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();  
 	// Jiggles: Above line removed until we decide on a good base damage value
 
 	if (!pPlayer)
 		return;
-	
-	// in case a spy gives himself a jumpdown?
-	pPlayer->ResetDisguise();
 
 	Vector vecForward, vecRight, vecUp;
 	pPlayer->EyeVectors( &vecForward, &vecRight, &vecUp);
@@ -380,7 +373,9 @@ void CFFWeaponJumpdown::Fire( void )
 	m_flNextPrimaryAttack = (JUMPDOWN_ALLOWUNCHARGEDSHOT) ? (gpGlobals->curtime + 0.2f) : (gpGlobals->curtime + JUMPDOWN_CHARGEUPTIME);
 
 	// reset these variables
+#ifdef GAME_DLL
 	m_flStartTime = m_flLastUpdate = -1.0f;
+#endif
 	m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
 
 	// effect
@@ -407,6 +402,7 @@ void CFFWeaponJumpdown::Fire( void )
 		FBEAM_FADEOUT
 		);
 
+#ifdef GAME_DLL
 #endif
 }
 
@@ -415,13 +411,13 @@ void CFFWeaponJumpdown::Fire( void )
 //----------------------------------------------------------------------------
 void CFFWeaponJumpdown::ItemPostFrame( void )
 {
-#ifdef GAME_DLL
 
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if (!pPlayer)
 		return;
 
+#ifdef GAME_DLL
 	// Not currently charging, but wanting to start it up
 	if (m_flStartTime == -1.0f && pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0)
 	{
@@ -441,6 +437,7 @@ void CFFWeaponJumpdown::ItemPostFrame( void )
 		m_flClampedChargeTime = clamp(gpGlobals->curtime - m_flStartTime, 0, JUMPDOWN_CHARGEUPTIME);
 
 	}
+#endif
 
     if ((pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0))
 	{
@@ -459,6 +456,7 @@ void CFFWeaponJumpdown::ItemPostFrame( void )
 		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
 	}
 
+#ifdef GAME_DLL
 #else // ^^ GAME_DLL ^^
 
 	// create a little buffer so some client stuff can be more smooth
