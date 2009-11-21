@@ -296,12 +296,12 @@ void CHudCrosshairInfo::OnTick( void )
 					{
 						CROSSHAIRTYPE = CROSSHAIRTYPE_SENTRYGUN;
 						iLevel = ( ( C_FFSentryGun * )pBuildable )->GetLevel();
-						iRockets = ( ( C_FFSentryGun * )pBuildable )->GetRocketsPercent();
-						iShells = ( ( C_FFSentryGun * )pBuildable )->GetShellsPercent();
-						iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
+						//iRockets = ( ( C_FFSentryGun * )pBuildable )->GetRocketsPercent();
+						//iShells = ( ( C_FFSentryGun * )pBuildable )->GetShellsPercent();
+						//iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
 
-						if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
-							iArmor -= 128;
+						//if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
+						//	iArmor -= 128;
 					}
 					else if( pBuildable->Classify() == CLASS_DETPACK )
 					{
@@ -341,10 +341,10 @@ void CHudCrosshairInfo::OnTick( void )
 							}
 							else if( pBuildable->Classify() == CLASS_SENTRYGUN )
 							{
-								iArmor = ((C_FFSentryGun *)pBuildable)->GetAmmoPercent();
+								//iArmor = ((C_FFSentryGun *)pBuildable)->GetAmmoPercent();
 
-								if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
-									iArmor -= 128;
+								//if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
+								//	iArmor -= 128;
 							}
 							else if( pBuildable->Classify() == CLASS_MANCANNON )
 							{
@@ -539,23 +539,23 @@ void CHudCrosshairInfo::OnTick( void )
 				}
 				else if (CROSSHAIRTYPE == CROSSHAIRTYPE_SENTRYGUN)
 				{
-					char szHealth[ 5 ], szRockets[ 5 ], szShells[ 5 ], szLevel[ 5 ], szArmor[ 5 ];
+					char szHealth[ 5 ], /*szRockets[ 5 ], szShells[ 5 ],*/ szLevel[ 5 ]/*, szArmor[ 5 ]*/;
 					Q_snprintf( szHealth, 5, "%i%%", iHealth );
 					Q_snprintf( szLevel, 5, "%i", iLevel );
-					Q_snprintf( szRockets, 5, "%i%%", iRockets );
-					Q_snprintf( szShells, 5, "%i%%", iShells );
-					Q_snprintf( szArmor, 5, "%i%%", iArmor );
+					//Q_snprintf( szRockets, 5, "%i%%", iRockets );
+					//Q_snprintf( szShells, 5, "%i%%", iShells );
+					//Q_snprintf( szArmor, 5, "%i%%", iArmor );
 
 					
-					wchar_t wszHealth[ 10 ], wszRockets[ 10 ], wszShells[ 10 ], wszLevel[ 10 ], wszArmor[ 10 ];
+					wchar_t wszHealth[ 10 ], /*wszRockets[ 10 ], wszShells[ 10 ],*/ wszLevel[ 10 ]/*, wszArmor[ 10 ]*/;
 
                     vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
-					vgui::localize()->ConvertANSIToUnicode( szRockets, wszRockets, sizeof( wszRockets ) );
+					//vgui::localize()->ConvertANSIToUnicode( szRockets, wszRockets, sizeof( wszRockets ) );
 					vgui::localize()->ConvertANSIToUnicode( szLevel, wszLevel, sizeof( wszLevel ) );
-					vgui::localize()->ConvertANSIToUnicode( szShells, wszShells, sizeof( wszShells ) );
-					vgui::localize()->ConvertANSIToUnicode( szArmor, wszArmor, sizeof( wszArmor ) );
+					//vgui::localize()->ConvertANSIToUnicode( szShells, wszShells, sizeof( wszShells ) );
+					//vgui::localize()->ConvertANSIToUnicode( szArmor, wszArmor, sizeof( wszArmor ) );
 					
-					_snwprintf( m_pText, 255, L"Your Sentry Gun: Level %s - Health: %s Ammo: %s", wszLevel, wszHealth , wszArmor );
+					_snwprintf( m_pText, 255, L"Your Sentry Gun: Level %s - Health: %s", wszLevel, wszHealth );
 				
 				}
 				else if (CROSSHAIRTYPE == CROSSHAIRTYPE_DETPACK)

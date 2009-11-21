@@ -479,13 +479,13 @@ C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin
 #endif
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFSentryGun, DT_FFSentryGun, CFFSentryGun )
-	RecvPropInt( RECVINFO( m_iAmmoPercent ) ),
+	//RecvPropInt( RECVINFO( m_iAmmoPercent ) ),
 	//RecvPropFloat( RECVINFO( m_flRange ) ),
 	RecvPropInt( RECVINFO( m_iLevel ) ),
-	RecvPropInt( RECVINFO( m_iShells ) ),
-	RecvPropInt( RECVINFO( m_iRockets ) ),
-	RecvPropInt( RECVINFO( m_iMaxShells ) ),
-	RecvPropInt( RECVINFO( m_iMaxRockets ) ),
+	//RecvPropInt( RECVINFO( m_iShells ) ),
+	//RecvPropInt( RECVINFO( m_iRockets ) ),
+	//RecvPropInt( RECVINFO( m_iMaxShells ) ),
+	//RecvPropInt( RECVINFO( m_iMaxRockets ) ),
 END_RECV_TABLE( )
 
 //-----------------------------------------------------------------------------

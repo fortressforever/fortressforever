@@ -211,8 +211,8 @@ struct Event_SentryStatus_TF
 	int				m_Level;
 	int				m_Health;
 	int				m_MaxHealth;
-	int				m_Shells[2];
-	int				m_Rockets[2];
+	//int				m_Shells[2];
+	//int				m_Rockets[2];
 };
 
 struct Event_DispenserStatus_TF

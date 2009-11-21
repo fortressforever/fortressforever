@@ -4093,10 +4093,10 @@ void CFFSentryGun::SendStatsToBot( void )
 		d.m_Entity = Omnibot::HandleFromEntity(this);
 		d.m_Health = m_iHealth;
 		d.m_MaxHealth = m_iMaxHealth;
-		d.m_Shells[0] = m_iShells;
-		d.m_Shells[1] = m_iMaxShells;
-		d.m_Rockets[0] = m_iRockets;
-		d.m_Rockets[1] = m_iMaxRockets;
+		//d.m_Shells[0] = m_iShells;
+		//d.m_Shells[1] = m_iMaxShells;
+		//d.m_Rockets[0] = m_iRockets;
+		//d.m_Rockets[1] = m_iMaxRockets;
 		d.m_Level = m_iLevel;
 		d.m_Position[0] = vPos.x;
 		d.m_Position[1] = vPos.y;

@@ -90,16 +90,8 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 	case 'a':
 	case 'A':
 		{
-			if ( pPlayer->IsGassed() )  // Jiggles: Don't want players finding out their true armor when gassed
-			{
-				V_strncpy( pszText, "LOL", sizeof(pszText) );
-				return 1;
-			}
-			else
-			{
-				Q_snprintf( pszText, iDestLen, "%i", pPlayer->GetArmor() );
-				return 1;
-			}
+			Q_snprintf( pszText, iDestLen, "%i", pPlayer->GetArmor() );
+			return 1;
 		}
 		break;
 
@@ -244,9 +236,9 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 					CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 					if(pSentry)
 					{
-						if(pSentry->IsBuilt())
-							Q_snprintf( pszText, iDestLen, "%d", (int)pSentry->m_iAmmoPercent);
-						else
+						//if(pSentry->IsBuilt())
+						//	Q_snprintf( pszText, iDestLen, "%d", (int)pSentry->m_iAmmoPercent);
+						//else
 							Q_snprintf( pszText, iDestLen, "0");
 					}
 					return 2;

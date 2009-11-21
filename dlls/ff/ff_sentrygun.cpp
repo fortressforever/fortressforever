@@ -180,13 +180,13 @@
 // caes
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
-	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
+	//SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
 	//SendPropFloat( SENDINFO( m_flRange ) ), //AfterShock: surely the client knows it's range?
 	SendPropInt( SENDINFO( m_iLevel ), 2, SPROP_UNSIGNED ), //AfterShock: max level 3
-	SendPropInt( SENDINFO( m_iShells ), 8, SPROP_UNSIGNED ), //AfterShock: max 150 shells for level 3
-	SendPropInt( SENDINFO( m_iRockets ), 5, SPROP_UNSIGNED ), //AfterShock: max 20 rockets for level 3
-	SendPropInt( SENDINFO( m_iMaxShells ) ), //AfterShock: this should be inferred from level
-	SendPropInt( SENDINFO( m_iMaxRockets ) ), //AfterShock: this should be inferred from level
+	//SendPropInt( SENDINFO( m_iShells ), 8, SPROP_UNSIGNED ), //AfterShock: max 150 shells for level 3
+	//SendPropInt( SENDINFO( m_iRockets ), 5, SPROP_UNSIGNED ), //AfterShock: max 20 rockets for level 3
+	//SendPropInt( SENDINFO( m_iMaxShells ) ), //AfterShock: this should be inferred from level
+	//SendPropInt( SENDINFO( m_iMaxRockets ) ), //AfterShock: this should be inferred from level
 END_SEND_TABLE() 
 
 LINK_ENTITY_TO_CLASS( FF_SentryGun, CFFSentryGun );
@@ -260,9 +260,9 @@ CFFSentryGun::CFFSentryGun()
 	m_flShotAccumulator = 0;
 	m_flNextRocket = 0;
 	m_flLastSight = 0;
-	m_iMaxShells = 200; // TODO: Get Number
-	m_iMaxRockets = 0;
-	m_iRockets = 0;
+	//m_iMaxShells = 200; // TODO: Get Number
+	//m_iMaxRockets = 0;
+	//m_iRockets = 0;
 	m_iShellDamage = 15;
 	m_bLeftBarrel = true;
 	m_bRocketLeftBarrel = true;
@@ -700,7 +700,7 @@ void CFFSentryGun::OnActiveThink( void )
 		// Fire rockets
 		if( GetLevel() >= 3 )
 		{
-			if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) && ( gpGlobals->curtime > m_flNextShell ) )
+			if( ( gpGlobals->curtime > m_flNextRocket ) && ( gpGlobals->curtime > m_flNextShell ) )
 			{
 				ShootRockets( RocketPosition(), vecAiming, true );
 
@@ -710,7 +710,7 @@ void CFFSentryGun::OnActiveThink( void )
 		}
 
 		// Fire shells
-		if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) ) 
+		if( gpGlobals->curtime > m_flNextShell ) 
 		{
 			Vector vecOrigin;
 			QAngle vecAngles;
@@ -744,7 +744,7 @@ void CFFSentryGun::OnActiveThink( void )
 	else if ( bCanAlmostFire )
 	{
 		// Fire warning shots
-		if( ( gpGlobals->curtime > m_flNextShell + SG_WARNINGSHOTS_DELAY ) && ( m_iShells > 0 ) ) 
+		if( gpGlobals->curtime > m_flNextShell + SG_WARNINGSHOTS_DELAY ) 
 		{
 			Vector vecOrigin;
 			QAngle vecAngles;
@@ -761,11 +761,11 @@ void CFFSentryGun::OnActiveThink( void )
 	if( bFired ) 
 	{
 		// Recalculate ammo percentage, 7 bits for shells + 1 bit for no rockets
-		m_iAmmoPercent = 100.0f * (float) m_iShells / m_iMaxShells;
-		if( m_iMaxRockets && !m_iRockets ) 
-			m_iAmmoPercent += 128;
+		//m_iAmmoPercent = 100.0f * (float) m_iShells / m_iMaxShells;
+		//if( m_iMaxRockets && !m_iRockets ) 
+		//	m_iAmmoPercent += 128;
 
-		SendStatsToBot();
+		//SendStatsToBot();
 	}
 }
 
@@ -1144,8 +1144,8 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	FireBulletsInfo_t info;
 	Vector vecDir;
 
-	if( m_iShells <= 0 ) 
-		return;
+	//if( m_iShells <= 0 ) 
+	//	return;
 
 	// Shoot in direction we're facing or shoot directly at enemy?
 	if( !bStrict && GetEnemy() ) 
@@ -1240,7 +1240,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	// Change barrel
 	m_bLeftBarrel = !m_bLeftBarrel;	
 
-	m_iShells--;
+	//m_iShells--;
 }
 
 //-----------------------------------------------------------------------------
@@ -1250,8 +1250,8 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 {
 	VPROF_BUDGET( "CFFSentryGun::ShootRockets", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	if( m_iRockets <= 0 )
-		return;
+	//if( m_iRockets <= 0 )
+	//	return;
 
 	Vector vecDir = vecDirToEnemy;
 
@@ -1278,7 +1278,7 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 	//DoRocketMuzzleFlash( ( m_bRocketLeftBarrel ? m_iRocketLAttachment : m_iRocketRAttachment ), vecSrc, vecAngles );
 
 	// Rockets weren't being decremented
-	m_iRockets--;
+	//m_iRockets--;
 
 	// Flip which barrel to come out of next
 	m_bRocketLeftBarrel = !m_bRocketLeftBarrel;
@@ -1548,8 +1548,8 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 
 	if( pBackpack )
 	{
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
+		//pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
+		//pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
 
 		int cells = 0;
 		if ( m_iLevel == 1)
@@ -1646,10 +1646,10 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			SetModel( FF_SENTRYGUN_MODEL );
 			SetSolid( SOLID_VPHYSICS );
 			
-			m_iShells = 20;
+			//m_iShells = 20;
 
-			m_iMaxShells = 100;
-			m_iMaxRockets = 0;
+			//m_iMaxShells = 100;
+			//m_iMaxRockets = 0;
 			m_iShellDamage = SG_BULLETDAMAGE;
 
 			//m_flShellCycleTime = 0.2f;
@@ -1669,8 +1669,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			SetSolid( SOLID_VPHYSICS );
 			EmitSound( sndFilter, entindex(), "Sentry.Two" );
 
-			m_iMaxShells = 125;
-			m_iMaxRockets = 0;
+			//m_iMaxShells = 125;
+			//m_iMaxRockets = 0;
 			m_iShellDamage = SG_BULLETDAMAGE;
 
 			//m_flShellCycleTime = 0.1f;
@@ -1694,8 +1694,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			SetSolid( SOLID_VPHYSICS );
 			EmitSound( sndFilter, entindex(), "Sentry.Three" );
 
-			m_iMaxShells = 150;
-			m_iMaxRockets = 20;
+			//m_iMaxShells = 150;
+			//m_iMaxRockets = 20;
 			m_iShellDamage = SG_BULLETDAMAGE;
 
 			//m_flShellCycleTime = 0.1f;
@@ -1728,8 +1728,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 	else
 	{
 		m_iHealth = clamp( m_iHealth + iCells * 3.5f, 0, m_iMaxHealth );
-		m_iShells = clamp( m_iShells + iShells, 0, m_iMaxShells );
-		m_iRockets = clamp( m_iRockets + iRockets, 0, m_iMaxRockets );
+		//m_iShells = clamp( m_iShells + iShells, 0, m_iMaxShells );
+		//m_iRockets = clamp( m_iRockets + iRockets, 0, m_iMaxRockets );
 
 		// Bug #0000238: Repairing sg doesn't remove damage decals
 		if( iCells > 0 )
@@ -1753,9 +1753,9 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 */
 
 	// Recalculate ammo percentage, 7 bits for shells + 1 bit for no rockets
-	m_iAmmoPercent = 100.0f * (float)m_iShells / (float)m_iMaxShells;
-	if( m_iMaxRockets && !m_iRockets ) 
-		m_iAmmoPercent += 128;
+	//m_iAmmoPercent = 100.0f * (float)m_iShells / (float)m_iMaxShells;
+	//if( m_iMaxRockets && !m_iRockets ) 
+	//	m_iAmmoPercent += 128;
 
 	return bRetval;
 }
@@ -1827,8 +1827,8 @@ int CFFSentryGun::TakeEmp( void )
 	int ammodmg = SG_EMPDMG_BASE;
 
 	// These values are from tfc.
-	ammodmg += m_iShells * SG_EMPDMG_SHELLS_MULTI;
-	ammodmg += m_iRockets * SG_EMPDMG_ROCKETS_MULTI;
+	//ammodmg += m_iShells * SG_EMPDMG_SHELLS_MULTI;
+	//ammodmg += m_iRockets * SG_EMPDMG_ROCKETS_MULTI;
 
 	return ammodmg;
 }
@@ -1928,8 +1928,8 @@ void CFFSentryGun::Detonate()
 
 	if( pBackpack )
 	{
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
+		//pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
+		//pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
 
 		int cells = 0;
 		if ( m_iLevel == 1)
@@ -2009,14 +2009,14 @@ void CFFSentryGun::PhysicsSimulate()
 			return;
 
 		int iHealth = (int) (100.0f * GetHealth() / GetMaxHealth());
-		int iAmmo = (int) (100.0f * (float) m_iShells / m_iMaxShells);
+		//int iAmmo = (int) (100.0f * (float) m_iShells / m_iMaxShells);
 
 		// Last bit of ammo signifies whether the SG needs rockets
-		if (m_iMaxRockets && !m_iRockets) 
-			m_iAmmoPercent += 128;
+		//if (m_iMaxRockets && !m_iRockets) 
+		//	m_iAmmoPercent += 128;
 
 		// If things haven't changed then do nothing more
-		int iState = iHealth + (iAmmo << 8);
+		int iState = iHealth; // + (iAmmo << 8);
 		if (m_iLastState == iState)
 			return;
 
@@ -2025,7 +2025,7 @@ void CFFSentryGun::PhysicsSimulate()
 
 		UserMessageBegin(user, "SentryMsg");
 		WRITE_BYTE(iHealth);
-		WRITE_BYTE(iAmmo);
+		//WRITE_BYTE(iAmmo);
 		WRITE_BYTE(GetLevel());
 		MessageEnd();
 

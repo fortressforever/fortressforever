@@ -279,15 +279,17 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 
 					// Calculate if it needs anything...
 					int cells = min(ceil(pSentryGun->NeedsHealth() / 3.5f), pPlayer->GetAmmoCount(AMMO_CELLS));
+/* AfterShock - SGs have infinite ammo now
 					int shells = min(pSentryGun->NeedsShells(), pPlayer->GetAmmoCount(AMMO_SHELLS));
 					int rockets = 0; 
 
 					if( pSentryGun->GetLevel() > 2 )
 						rockets = min(pSentryGun->NeedsRockets(), pPlayer->GetAmmoCount(AMMO_ROCKETS));
-
+*/
 					// If it needs anything, play a special sound. Pun intended.
-					if( ( cells > 0 ) || ( shells > 0 ) || ( rockets > 0 ) )
+					if( cells > 0 )
 						WeaponSoundLocal( SPECIAL3 );
+
 #ifdef GAME_DLL
 					// AfterShock - scoring system: Save teammate sg +.5*amount repaired (only if last damage from enemy)
 					// last enemy damage bit ignored for now.
@@ -295,10 +297,10 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 						pPlayer->AddFortPoints(cells*0.3, "#FF_FORTPOINTS_REPAIRTEAMMATESG");
 
 
-					pSentryGun->Upgrade(false, cells, shells, rockets);
+					pSentryGun->Upgrade(false, cells, 0, 0);
 					pPlayer->RemoveAmmo(cells, AMMO_CELLS);
-					pPlayer->RemoveAmmo(shells, AMMO_SHELLS);
-					pPlayer->RemoveAmmo(rockets, AMMO_ROCKETS);
+					//pPlayer->RemoveAmmo(shells, AMMO_SHELLS);
+					//pPlayer->RemoveAmmo(rockets, AMMO_ROCKETS);
 #endif
 				}
 

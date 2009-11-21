@@ -262,10 +262,10 @@ public:
 	int GetOwnerTeamId( void );
 
 	int GetHealthPercent( void ) const;
-	unsigned int GetAmmoPercent( void ) const { return m_iAmmoPercent; }
+	//unsigned int GetAmmoPercent( void ) const { return m_iAmmoPercent; }
 
 protected:
-	CNetworkVarForDerived( unsigned int, m_iAmmoPercent );
+	//CNetworkVarForDerived( unsigned int, m_iAmmoPercent );
 	// <-- shared
 
 #ifdef CLIENT_DLL
@@ -527,6 +527,7 @@ public:
 	CNetworkVar( int, m_iNails );
 	CNetworkVar( int, m_iRockets );
 	CNetworkVar( int, m_iArmor );
+	CNetworkVar( unsigned int, m_iAmmoPercent );
 
 	int GetCells( void ) const { return m_iCells; }
 	int GetShells( void ) const { return m_iShells; }
@@ -540,6 +541,8 @@ public:
 	int NeedsShells( void ) const { return m_iMaxShells - m_iShells; }
 	int NeedsNails( void ) const { return m_iMaxNails - m_iNails; }
 	int NeedsRockets( void ) const { return m_iMaxRockets - m_iRockets; }
+
+	unsigned int GetAmmoPercent( void ) const { return m_iAmmoPercent; }
 
 protected:
 	int		m_iMaxCells;
@@ -578,8 +581,6 @@ public:
 	virtual void Detonate();
 
 	virtual bool CanDisable() const;
-
-	CNetworkVar( unsigned int, m_iAmmoPercent );
 
 	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets );
 
@@ -635,14 +636,14 @@ public:
 	// --> shared
 	CFFSentryGun( void );
 	virtual ~CFFSentryGun( void );
-	int GetRockets( void ) const  { return m_iRockets; };
-	int GetShells( void ) const  { return m_iShells; };
-	int GetRocketsPercent( void ) const  { return (int) ((float) m_iRockets / (float) m_iMaxRockets) * 100.0f; };
-	int GetShellsPercent( void ) const  { return (int) ((float) m_iShells / (float) m_iMaxShells) * 100.0f; };
+	//int GetRockets( void ) const  { return m_iRockets; };
+	//int GetShells( void ) const  { return m_iShells; };
+	//int GetRocketsPercent( void ) const  { return (int) ((float) m_iRockets / (float) m_iMaxRockets) * 100.0f; };
+	//int GetShellsPercent( void ) const  { return (int) ((float) m_iShells / (float) m_iMaxShells) * 100.0f; };
 	
 	int NeedsHealth( void ) const { return m_iMaxHealth - m_iHealth; }
-	int NeedsShells( void ) const { return m_iMaxShells - m_iShells; }
-	int NeedsRockets( void ) const { return m_iMaxRockets - m_iRockets; }
+	//int NeedsShells( void ) const { return m_iMaxShells - m_iShells; }
+	//int NeedsRockets( void ) const { return m_iMaxRockets - m_iRockets; }
 	
 	int GetLevel( void ) const { return m_iLevel; }
 	bool Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
@@ -654,11 +655,11 @@ public:
 	// Network variables
 	//CNetworkVar( float, m_flRange );
 	CNetworkVar( int, m_iLevel );
-	CNetworkVar( int, m_iShells );
-	CNetworkVar( int, m_iRockets );
+	//CNetworkVar( int, m_iShells );
+	//CNetworkVar( int, m_iRockets );
 
-	CNetworkVar( int, m_iMaxShells );
-	CNetworkVar( int, m_iMaxRockets );
+	//CNetworkVar( int, m_iMaxShells );
+	//CNetworkVar( int, m_iMaxRockets );
 	// <-- shared
 
 #ifdef CLIENT_DLL 
@@ -752,7 +753,7 @@ public:
 	void DoRocketMuzzleFlash( int iAttachment, const Vector& vecOrigin, const QAngle& vecAngles );
 
 public:
-	CNetworkVar(unsigned int, m_iAmmoPercent);
+	//CNetworkVar(unsigned int, m_iAmmoPercent);
 
 
 	int		m_iShellDamage;

@@ -60,7 +60,7 @@ private:
 	// Results of localising strings
 	wchar_t m_szHealth[32];
 	wchar_t m_szAmmo[32];
-	wchar_t m_szNoRockets[32];
+	//wchar_t m_szNoRockets[32];
 
 	// Icons
 	CHudTexture *m_pHudSentryLevel1;
@@ -176,7 +176,7 @@ void CHudBuildState::VidInit()
 
 	wcsncpy(m_szAmmo, tempString, sizeof(m_szAmmo) / sizeof(wchar_t));
 	m_szAmmo[ (sizeof(m_szAmmo) / sizeof(wchar_t)) - 1] = 0;
-
+/* AfterShock: SGs have infinite ammo now
 	tempString = vgui::localize()->Find("#FF_HUD_NOROCKETS");
 
 	if (!tempString) 
@@ -184,6 +184,7 @@ void CHudBuildState::VidInit()
 
 	wcsncpy(m_szNoRockets, tempString, sizeof(m_szNoRockets) / sizeof(wchar_t));
 	m_szNoRockets[ (sizeof(m_szNoRockets) / sizeof(wchar_t)) - 1] = 0;
+*/
 }
 
 void CHudBuildState::Init() 
@@ -238,9 +239,10 @@ void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
 void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 {
     int iHealth = (int) msg.ReadByte();
-    int iAmmo = (int) msg.ReadByte();
+    //int iAmmo = (int) msg.ReadByte();
 	int iLevel = (int) msg.ReadByte();
 
+/* Infinite ammo
 	bool fNoRockets = false;
 	
 	// Last bit of ammo is the rocket warning
@@ -249,8 +251,8 @@ void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 		fNoRockets = true;
 		iAmmo -= 128;
 	}
-
-	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% %s: %i%% %s", iLevel , m_szHealth, iHealth, m_szAmmo, iAmmo, fNoRockets ? m_szNoRockets : L"");
+*/
+	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%%", iLevel , m_szHealth, iHealth);
 }
 
 void CHudBuildState::MsgFunc_ManCannonMsg(bf_read &msg)
