@@ -313,7 +313,7 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f) 
 		{
-			pPlayer->GiveAmmo(pSentry->GetLevel() * (FF_BUILDCOST_SENTRYGUN / 2), AMMO_CELLS, true);
+			pPlayer->GiveAmmo(pSentry->GetLevel() * (65 / 2), AMMO_CELLS, true);
 
 			// Bug #0000426: Buildables Dismantle Sounds Missing
 			CPASAttenuationFilter sndFilter( pSentry );
