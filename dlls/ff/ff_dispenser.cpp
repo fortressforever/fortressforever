@@ -360,10 +360,10 @@ void CFFDispenser::OnObjectThink( void )
 	// Do any thinking that needs to be done for _this_ class
 	CheckForOwner();
 
-	int iCells = 40;
-	int iNails = 60;
-	int iShells = 40;
-	int iRockets = 30;
+			int iCells = 20;
+			int iNails = 20;
+			int iShells = 20;
+			int iRockets = 10;
 
 	// Generate stock
 	m_iCells = clamp( m_iCells + iCells, 0, m_iMaxCells );
