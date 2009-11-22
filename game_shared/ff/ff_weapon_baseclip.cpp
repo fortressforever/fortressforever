@@ -13,7 +13,7 @@
 #ifdef CLIENT_DLL
 	#include "c_ff_player.h"
 
-	ConVar auto_reload("cl_autoreload", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Automatic weapon reload");
+	ConVar auto_reload("cl_autoreload", "1", FCVAR_ARCHIVE, "Automatic weapon reload");
 #else
 	#include "ff_player.h"
 #endif
@@ -37,6 +37,10 @@ bool CFFWeaponBaseClip::StartReload()
 {
 	CBaseCombatCharacter *pOwner  = GetOwner();
 
+#ifdef CLIENT_DLL	
+	engine->ClientCmd("-reload");
+#endif
+
 	if (pOwner == NULL)
 		return false;
 
@@ -54,8 +58,6 @@ bool CFFWeaponBaseClip::StartReload()
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
 	m_flTimeWeaponIdle = gpGlobals->curtime + GetFFWpnData().m_flPreReloadTime;
-
-	m_flNextAutoReload = gpGlobals->curtime + 0.2f;
 
 	m_bInReload = true;
 	return true;
@@ -200,7 +202,10 @@ void CFFWeaponBaseClip::PrimaryAttack()
 	// No longer reloading (cancel any deferred ammo too)
 	m_bInReload = false;
 	m_flReloadTime = -1.0f;
+
+#ifdef CLIENT_DLL
 	m_flNextAutoReload = gpGlobals->curtime;
+#endif
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
@@ -348,21 +353,18 @@ void CFFWeaponBaseClip::ItemPostFrame()
 			// This would be better done reading a client off the client
 			// Added: Don't do it if they are holding down fire while there is still ammo in clip
 #ifdef CLIENT_DLL
-			if( auto_reload.GetBool() )
-#else
-			if( (Q_atoi(engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ) ) ) )
-#endif
+			if (!m_bInReload && !(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
+				&& m_flNextAutoReload <= gpGlobals->curtime 
+				&& m_iClip1 < GetMaxClip1() 
+				&& auto_reload.GetBool())
 			{
-				if (!m_bInReload && !(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
-					&& m_flNextAutoReload <= gpGlobals->curtime 
-					&& m_iClip1 < GetMaxClip1())
+				if(pOwner->IsAlive())
 				{
-					if(pOwner->IsAlive())
-					{
-						StartReload();
-					}
+					engine->ClientCmd("+reload");
+					m_flNextAutoReload = gpGlobals->curtime + 0.2f;
 				}
 			}
+#endif
 		}
 
 		WeaponIdle();
@@ -376,5 +378,8 @@ void CFFWeaponBaseClip::ItemPostFrame()
 CFFWeaponBaseClip::CFFWeaponBaseClip()
 {
 	m_bReloadsSingly = true;
+
+#ifdef CLIENT_DLL
 	m_flNextAutoReload = 0;
+#endif
 }
