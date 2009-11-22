@@ -2010,7 +2010,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	StopSound( "ammo.saveme" );
 
 	// --> Mirv: Create backpack moved here to stop crash
-	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
+	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
 
 	if (pBackpack)
 	{
@@ -2031,8 +2031,16 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		pBackpack->SetAbsVelocity(vel);
 		pBackpack->SetAbsOrigin(GetAbsOrigin());
 
-		for (int i = 1; i < MAX_AMMO_SLOTS; i++)
-			pBackpack->SetAmmoCount(i, GetAmmoCount(i));
+		// AfterShock: Players always drop the same ammo now
+
+		//for (int i = 1; i < MAX_AMMO_SLOTS; i++)
+		//	pBackpack->SetAmmoCount(i, GetAmmoCount(i));
+
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), 20 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), 100 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ), 100 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), 30 );
+
 	}
 	// <-- Mirv: Create backpack moved here to stop crash
 
