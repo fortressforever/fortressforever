@@ -136,14 +136,14 @@
 #define SG_ARMOR_MULTIPLIER 0.97f //sg_armor_mult.GetFloat() //0.95f
 
 //ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
-#define SG_HEALTH_LEVEL1 66 //132 // sg_health_lvl1.GetInt()
+#define SG_HEALTH_LEVEL1 50 //132 // sg_health_lvl1.GetInt()
 //ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG health");
 #define SG_HEALTH_LEVEL2 82 //164 // sg_health_lvl2.GetInt()
 //ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
 #define SG_HEALTH_LEVEL3 92 //182 // sg_health_lvl3.GetInt()
 
 //ConVar sg_armor_lvl1("ffdev_sg_armor_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG armor");
-#define SG_ARMOR_LEVEL1 100 // sg_armor_lvl1.GetInt()
+#define SG_ARMOR_LEVEL1 80 // sg_armor_lvl1.GetInt()
 //ConVar sg_armor_lvl2("ffdev_sg_armor_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG armor");
 #define SG_ARMOR_LEVEL2 123 // sg_armor_lvl2.GetInt()
 //ConVar sg_armor_lvl3("ffdev_sg_armor_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG armor");

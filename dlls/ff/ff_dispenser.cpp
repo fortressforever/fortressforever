@@ -61,7 +61,7 @@
 //
 //=============================================================================
 
-#define DISP_DETONATECELLS_BASE 50
+#define DISP_DETONATECELLS_BASE 15
 #define DISP_DETONATECELLS_HELDMULT 0.5
 
 LINK_ENTITY_TO_CLASS( FF_Dispenser, CFFDispenser );
@@ -435,6 +435,7 @@ void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
 		ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_DISPENSER_DESTROYED" );
 
 	// AfterShock: Create bag when detonate
+	/* EDIT: Don't do this on death now
 	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
 
 	if( pBackpack )
@@ -450,7 +451,7 @@ void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
 		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
 	}
-
+*/
 	BaseClass::Event_Killed( info );
 }
 

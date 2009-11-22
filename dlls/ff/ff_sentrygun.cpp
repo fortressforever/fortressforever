@@ -131,9 +131,9 @@
 //ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, "Level 3 SG lock on time");
 #define SG_LOCKONTIME_LVL3 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl3.GetFloat()
 
-#define SG_DETONATECELLS_BASE_LEVEL1 33
-#define SG_DETONATECELLS_BASE_LEVEL2 65
-#define SG_DETONATECELLS_BASE_LEVEL3 98
+#define SG_DETONATECELLS_BASE_LEVEL1 65
+#define SG_DETONATECELLS_BASE_LEVEL2 100
+#define SG_DETONATECELLS_BASE_LEVEL3 130
 
 //ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
 //#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
@@ -1528,6 +1528,7 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	// AfterShock: Create bag when detonate
+	/* EDIT: Don't do this on death
 	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
 
 	if( pBackpack )
@@ -1546,7 +1547,7 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
 		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
 	}
-
+*/
 	BaseClass::Event_Killed( info );
 }
 
@@ -1924,17 +1925,17 @@ void CFFSentryGun::Detonate()
 		int cells = 0;
 		if ( m_iLevel == 1)
 		{
-			cells = SG_DETONATECELLS_BASE_LEVEL1 + ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL1 ;
-			if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
-				--cells;
+			cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL1 ;
+			//if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
+			//	--cells;
 		}
 		else if ( m_iLevel == 2)
-			cells = SG_DETONATECELLS_BASE_LEVEL2 + ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL2 ;
+			cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL2 ;
 		else if ( m_iLevel == 3)
 		{
-			cells = SG_DETONATECELLS_BASE_LEVEL3 + ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL3 ;
-			if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
-				--cells;
+			cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL3 ;
+			//if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
+			//	--cells;
 		}
 
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
