@@ -1922,7 +1922,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), 20 );
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), 100 );
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ), 100 );
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), 30 );
+		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), 25 );
 
 	}
 	// <-- Mirv: Create backpack moved here to stop crash
