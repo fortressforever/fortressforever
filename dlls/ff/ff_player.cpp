@@ -3108,8 +3108,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 		}
 
 		// See if the user has appropriate ammo
-		if( ( (m_iWantBuild == FF_BUILD_DISPENSER) && (GetAmmoCount( AMMO_CELLS ) < 100) ) ||
-			( (m_iWantBuild == FF_BUILD_SENTRYGUN) && (GetAmmoCount( AMMO_CELLS ) < 130) ) ||
+		if( ( (m_iWantBuild == FF_BUILD_DISPENSER) && (GetAmmoCount( AMMO_CELLS ) < FF_BUILDCOST_DISPENSER) ) ||
+			( (m_iWantBuild == FF_BUILD_SENTRYGUN) && (GetAmmoCount( AMMO_CELLS ) < FF_BUILDCOST_SENTRYGUN) ) ||
 			( (m_iWantBuild == FF_BUILD_DETPACK) && (GetAmmoCount( AMMO_DETPACK ) < 1 )) ||
 			( (m_iWantBuild == FF_BUILD_MANCANNON) && (GetAmmoCount( AMMO_MANCANNON ) < 1 )) )
 		{
@@ -3184,7 +3184,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Bug #0001558: exploit to get instant lvl2 SG
 					// Moved code to remove cells from CFFDispenser::GoLive() to here.  
 					// Leaving the remove armour code in that function as you can't fiddle with armour vals via this exploit -> Defrag
-					RemoveAmmo( 100, AMMO_CELLS );
+					RemoveAmmo( FF_BUILDCOST_DISPENSER, AMMO_CELLS );
 
 					Omnibot::Notify_DispenserBuilding(this, pDispenser);
 					
@@ -3234,7 +3234,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					// Bug #0001558: exploit to get instant lvl2 SG
 					// Moved code to remove cells from CFFSentryGun::GoLive() to here -> Defrag
-					RemoveAmmo( 130, AMMO_CELLS );
+					RemoveAmmo( FF_BUILDCOST_SENTRYGUN, AMMO_CELLS );
 
 					Omnibot::Notify_SentryBuilding(this, pSentryGun);
 
@@ -3327,10 +3327,10 @@ void CFFPlayer::PreBuildGenericThink( void )
 				switch( m_iCurBuild )
 				{
 				case FF_BUILD_DISPENSER:
-					GiveAmmo( 100, AMMO_CELLS, true );
+					GiveAmmo( FF_BUILDCOST_DISPENSER, AMMO_CELLS, true );
 					break;
 				case FF_BUILD_SENTRYGUN:
-					GiveAmmo( 130, AMMO_CELLS, true );
+					GiveAmmo( FF_BUILDCOST_SENTRYGUN, AMMO_CELLS, true );
 					break;
 				default:
 					break;
