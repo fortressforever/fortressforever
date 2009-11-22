@@ -124,14 +124,6 @@
 //ConVar sg_shoot_angle_distmult("ffdev_sg_shoot_angle_distmult", "0.008", FCVAR_REPLICATED, "The angle required to shoot the target is multiplied by (distance to target * this)");
 //#define SG_SHOOT_ANGLE_DISTMULT sg_shoot_angle_distmult.GetFloat()
 
-
-//ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
-#define SG_HEALTH_LEVEL1 132 // sg_health_lvl1.GetInt()
-//ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG health");
-#define SG_HEALTH_LEVEL2 164 // sg_health_lvl2.GetInt()
-//ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
-#define SG_HEALTH_LEVEL3 182 // sg_health_lvl3.GetInt()
-
 //ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_REPLICATED, "Level 1 SG lock on time");
 #define SG_LOCKONTIME_LVL1 0.2f //sg_lockontime_lvl1.GetFloat()
 //ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.20", FCVAR_REPLICATED, "Level 2 SG lock on time");
@@ -183,6 +175,7 @@ IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun)
 	//SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
 	//SendPropFloat( SENDINFO( m_flRange ) ), //AfterShock: surely the client knows it's range?
 	SendPropInt( SENDINFO( m_iLevel ), 2, SPROP_UNSIGNED ), //AfterShock: max level 3
+	SendPropInt( SENDINFO( m_iSGArmor ), 8, SPROP_UNSIGNED ), //AfterShock: max armor 200ish
 	//SendPropInt( SENDINFO( m_iShells ), 8, SPROP_UNSIGNED ), //AfterShock: max 150 shells for level 3
 	//SendPropInt( SENDINFO( m_iRockets ), 5, SPROP_UNSIGNED ), //AfterShock: max 20 rockets for level 3
 	//SendPropInt( SENDINFO( m_iMaxShells ) ), //AfterShock: this should be inferred from level
@@ -249,6 +242,7 @@ CFFSentryGun::CFFSentryGun()
 
 	// Set level - keep it < 0 until we GoLive the first time
 	m_iLevel = 0;
+	m_iSGArmor = 0;
 	m_flThinkTime = 0.1f;
 
 	m_flPingTime = 0;
@@ -373,16 +367,6 @@ void CFFSentryGun::GoLive( void )
 
 	// Stagger our starting times
 	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
-
-	// CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
-	
-	// Bug #0000244: Building L1 sg doesn't take away cells
-	
-	// Bug #0001558: exploit to get instant lvl2 SG.
-	// Cells are now taken when build starts and returned if build is cancelled -> Defrag
-	
-	//if( pOwner ) 
-	//	pOwner->RemoveAmmo( 130, AMMO_CELLS );
 
 	// Create our flickerer
 	m_pFlickerer = ( CFFBuildableFlickerer * )CreateEntityByName( "ff_buildable_flickerer" );
@@ -1240,7 +1224,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	// Change barrel
 	m_bLeftBarrel = !m_bLeftBarrel;	
 
-	//m_iShells--;
+	//m_iShells--; // AfterShock: Infinite ammo ftw
 }
 
 //-----------------------------------------------------------------------------
@@ -1278,7 +1262,7 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 	//DoRocketMuzzleFlash( ( m_bRocketLeftBarrel ? m_iRocketLAttachment : m_iRocketRAttachment ), vecSrc, vecAngles );
 
 	// Rockets weren't being decremented
-	//m_iRockets--;
+	//m_iRockets--; // AfterShock: Infinite ammo ftw
 
 	// Flip which barrel to come out of next
 	m_bRocketLeftBarrel = !m_bRocketLeftBarrel;
@@ -1657,6 +1641,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxHealth = SG_HEALTH_LEVEL1;
 			m_iHealth = SG_HEALTH_LEVEL1;
+			m_iMaxSGArmor = SG_ARMOR_LEVEL1;
+			m_iSGArmor = SG_ARMOR_LEVEL1;
 
 			m_flLockTime = SG_LOCKONTIME_LVL1;
 			//m_flTurnSpeed = 4.0f;
@@ -1678,6 +1664,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxHealth = SG_HEALTH_LEVEL2;
 			m_iHealth = SG_HEALTH_LEVEL2;
+			m_iMaxSGArmor = SG_ARMOR_LEVEL2;
+			m_iSGArmor = SG_ARMOR_LEVEL2;
 
 			m_flLockTime = SG_LOCKONTIME_LVL2;
 			//m_flTurnSpeed = 7.0f;
@@ -1704,6 +1692,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_iMaxHealth = SG_HEALTH_LEVEL3;
 			m_iHealth = SG_HEALTH_LEVEL3;
+			m_iMaxSGArmor = SG_ARMOR_LEVEL3;
+			m_iSGArmor = SG_ARMOR_LEVEL3;
 
 			m_flLockTime = SG_LOCKONTIME_LVL3;
 			//m_flTurnSpeed = 7.0f;
@@ -1727,7 +1717,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 	}
 	else
 	{
-		m_iHealth = clamp( m_iHealth + iCells * 3.5f, 0, m_iMaxHealth );
+		m_iSGArmor = clamp( m_iSGArmor + iCells * 5.0f, 0, m_iMaxSGArmor );
 		//m_iShells = clamp( m_iShells + iShells, 0, m_iMaxShells );
 		//m_iRockets = clamp( m_iRockets + iRockets, 0, m_iMaxRockets );
 
@@ -2009,6 +1999,7 @@ void CFFSentryGun::PhysicsSimulate()
 			return;
 
 		int iHealth = (int) (100.0f * GetHealth() / GetMaxHealth());
+		int iArmor = (int) ( 100.0f * m_iSGArmor / m_iMaxSGArmor);
 		//int iAmmo = (int) (100.0f * (float) m_iShells / m_iMaxShells);
 
 		// Last bit of ammo signifies whether the SG needs rockets
@@ -2016,7 +2007,7 @@ void CFFSentryGun::PhysicsSimulate()
 		//	m_iAmmoPercent += 128;
 
 		// If things haven't changed then do nothing more
-		int iState = iHealth; // + (iAmmo << 8);
+		int iState = iHealth + (iArmor << 8);
 		if (m_iLastState == iState)
 			return;
 
@@ -2024,9 +2015,10 @@ void CFFSentryGun::PhysicsSimulate()
 		user.MakeReliable();
 
 		UserMessageBegin(user, "SentryMsg");
-		WRITE_BYTE(iHealth);
-		//WRITE_BYTE(iAmmo);
-		WRITE_BYTE(GetLevel());
+			WRITE_BYTE(iHealth);
+			WRITE_BYTE(iArmor);
+			//WRITE_BYTE(iAmmo);
+			WRITE_BYTE(GetLevel());
 		MessageEnd();
 
 		m_iLastState = iState;

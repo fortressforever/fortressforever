@@ -482,6 +482,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFSentryGun, DT_FFSentryGun, CFFSentryGun )
 	//RecvPropInt( RECVINFO( m_iAmmoPercent ) ),
 	//RecvPropFloat( RECVINFO( m_flRange ) ),
 	RecvPropInt( RECVINFO( m_iLevel ) ),
+	RecvPropInt( RECVINFO( m_iSGArmor ) ),
 	//RecvPropInt( RECVINFO( m_iShells ) ),
 	//RecvPropInt( RECVINFO( m_iRockets ) ),
 	//RecvPropInt( RECVINFO( m_iMaxShells ) ),

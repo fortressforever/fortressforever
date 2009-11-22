@@ -1019,6 +1019,41 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// This will force an update of this variable for the client	
 	NetworkStateChanged( ( int * )&m_iHealth );
 
+
+
+	// AfterShock: TODO: reduce armor here then let cbaseentity do the health, so subtract 95% or whatever off
+
+	if ( Classify() == CLASS_SENTRYGUN )
+	{
+		CFFSentryGun *pSentrygun = FF_ToSentrygun( this );
+		if ( pSentrygun )
+		{
+			int damage = adjustedDamage.GetDamage();
+			float armorToRemove = (float) damage * SG_ARMOR_MULTIPLIER;
+			int armorToRemoveTruncated;
+			if ( armorToRemove > pSentrygun->m_iSGArmor )
+			{
+				damage -= pSentrygun->m_iSGArmor;
+				armorToRemoveTruncated = pSentrygun->m_iSGArmor;
+			}
+			else
+			{
+				armorToRemoveTruncated = (int) armorToRemove;
+				armorToRemove -= armorToRemoveTruncated;
+				if ( RandomFloat( 0.0, 1.0 ) < armorToRemove )
+					armorToRemoveTruncated++;
+
+				damage -= armorToRemoveTruncated;
+			}
+
+			pSentrygun->m_iSGArmor -= armorToRemoveTruncated;
+			adjustedDamage.SetDamage( damage );
+
+			//NetworkStateChanged( ( int * )&(pSentrygun->m_iSGArmor) );
+		}
+	}
+
+
 	int res = CBaseEntity::OnTakeDamage( adjustedDamage );
 
 	// Send hit indicator to attacker

@@ -59,6 +59,7 @@ private:
 
 	// Results of localising strings
 	wchar_t m_szHealth[32];
+	wchar_t m_szArmor[32];
 	wchar_t m_szAmmo[32];
 	//wchar_t m_szNoRockets[32];
 
@@ -169,6 +170,14 @@ void CHudBuildState::VidInit()
 	wcsncpy(m_szHealth, tempString, sizeof(m_szHealth) / sizeof(wchar_t));
 	m_szHealth[ (sizeof(m_szHealth) / sizeof(wchar_t)) - 1] = 0;
 
+	tempString = vgui::localize()->Find("#FF_HUD_ARMOR");
+
+	if (!tempString) 
+		tempString = L"ARMOR";
+
+	wcsncpy(m_szArmor, tempString, sizeof(m_szArmor) / sizeof(wchar_t));
+	m_szArmor[ (sizeof(m_szArmor) / sizeof(wchar_t)) - 1] = 0;
+
 	tempString = vgui::localize()->Find("#FF_HUD_AMMO");
 
 	if (!tempString) 
@@ -239,6 +248,7 @@ void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
 void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 {
     int iHealth = (int) msg.ReadByte();
+    int iArmor = (int) msg.ReadByte();
     //int iAmmo = (int) msg.ReadByte();
 	int iLevel = (int) msg.ReadByte();
 
@@ -252,7 +262,7 @@ void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 		iAmmo -= 128;
 	}
 */
-	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%%", iLevel , m_szHealth, iHealth);
+	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% %s: %i%%", iLevel , m_szHealth, iHealth, m_szArmor,  iArmor);
 }
 
 void CHudBuildState::MsgFunc_ManCannonMsg(bf_read &msg)

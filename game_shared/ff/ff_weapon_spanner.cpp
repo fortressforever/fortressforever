@@ -242,7 +242,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					return;
 
 				// Try to upgrade first
-				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= FF_BUILDCOST_UPGRADE_SENTRYGUN)) 
+				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= FF_BUILDCOST_UPGRADE_SENTRYGUN )) 
 				{
 					// If we upgrade, play a special sound. Pun intended.
 					if( pSentryGun->Upgrade(true) )
@@ -278,7 +278,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 #endif
 
 					// Calculate if it needs anything...
-					int cells = min(ceil(pSentryGun->NeedsHealth() / 3.5f), pPlayer->GetAmmoCount(AMMO_CELLS));
+					int cells = min(ceil(pSentryGun->NeedsSGArmor() / 5.0f), pPlayer->GetAmmoCount(AMMO_CELLS));
 /* AfterShock - SGs have infinite ammo now
 					int shells = min(pSentryGun->NeedsShells(), pPlayer->GetAmmoCount(AMMO_SHELLS));
 					int rockets = 0; 

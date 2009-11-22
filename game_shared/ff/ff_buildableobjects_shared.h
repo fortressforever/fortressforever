@@ -129,8 +129,25 @@
 #define FF_BUILD_SABOTAGE_TIMEOUT 90.0f
 
 #define FF_BUILDCOST_SENTRYGUN 130
-#define FF_BUILDCOST_DISPENSER 100
+#define FF_BUILDCOST_DISPENSER 30
 #define FF_BUILDCOST_UPGRADE_SENTRYGUN 130
+
+//ConVar sg_armor_mult("ffdev_sg_armor_mult", "0.95", FCVAR_REPLICATED, "Proportion of damage absorbed by SG armor");
+#define SG_ARMOR_MULTIPLIER 0.97f //sg_armor_mult.GetFloat() //0.95f
+
+//ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
+#define SG_HEALTH_LEVEL1 66 //132 // sg_health_lvl1.GetInt()
+//ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG health");
+#define SG_HEALTH_LEVEL2 82 //164 // sg_health_lvl2.GetInt()
+//ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
+#define SG_HEALTH_LEVEL3 92 //182 // sg_health_lvl3.GetInt()
+
+//ConVar sg_armor_lvl1("ffdev_sg_armor_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG armor");
+#define SG_ARMOR_LEVEL1 100 // sg_armor_lvl1.GetInt()
+//ConVar sg_armor_lvl2("ffdev_sg_armor_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG armor");
+#define SG_ARMOR_LEVEL2 123 // sg_armor_lvl2.GetInt()
+//ConVar sg_armor_lvl3("ffdev_sg_armor_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG armor");
+#define SG_ARMOR_LEVEL3 136 // sg_armor_lvl3.GetInt()
 
 // Currently only the server uses these...
 #ifdef CLIENT_DLL 
@@ -644,8 +661,17 @@ public:
 	//int GetShells( void ) const  { return m_iShells; };
 	//int GetRocketsPercent( void ) const  { return (int) ((float) m_iRockets / (float) m_iMaxRockets) * 100.0f; };
 	//int GetShellsPercent( void ) const  { return (int) ((float) m_iShells / (float) m_iMaxShells) * 100.0f; };
-	
+
+	int	GetSGArmor( void ) const { return m_iSGArmor; }
+#ifdef GAME_DLL 
+	int GetSGArmorPercent( void ) const  { return (int) ( 100.0f * m_iSGArmor / m_iMaxSGArmor); };
+#else
+	int GetMaxSGArmor( void ) const  { if ( m_iLevel == 1 ) return SG_ARMOR_LEVEL1; else if ( m_iLevel == 2) return SG_ARMOR_LEVEL2; else return SG_ARMOR_LEVEL3; };
+	int GetSGArmorPercent( void ) const  { return (int) ( 100.0f * m_iSGArmor / GetMaxSGArmor() ); };
+#endif
+
 	int NeedsHealth( void ) const { return m_iMaxHealth - m_iHealth; }
+	int NeedsSGArmor( void ) const { return m_iMaxSGArmor - m_iSGArmor; }
 	//int NeedsShells( void ) const { return m_iMaxShells - m_iShells; }
 	//int NeedsRockets( void ) const { return m_iMaxRockets - m_iRockets; }
 	
@@ -659,12 +685,15 @@ public:
 	// Network variables
 	//CNetworkVar( float, m_flRange );
 	CNetworkVar( int, m_iLevel );
+	CNetworkVar( int, m_iSGArmor ); // health is stored in buildableobject - AfterShock
 	//CNetworkVar( int, m_iShells );
 	//CNetworkVar( int, m_iRockets );
 
 	//CNetworkVar( int, m_iMaxShells );
 	//CNetworkVar( int, m_iMaxRockets );
 	// <-- shared
+
+	int m_iMaxSGArmor; // Don't need to network this, work it out from level
 
 #ifdef CLIENT_DLL 
 	virtual void OnDataChanged( DataUpdateType_t updateType );
