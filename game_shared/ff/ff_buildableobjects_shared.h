@@ -144,6 +144,10 @@
 
 #define FF_BUILD_SABOTAGE_TIMEOUT 90.0f
 
+#define FF_BUILDCOST_SENTRYGUN 130
+#define FF_BUILDCOST_DISPENSER 100
+#define FF_BUILDCOST_UPGRADE_SENTRYGUN 130
+
 //Enum for the jumppad states - GreenMushy
 enum JumpPadState_t
 { 

@@ -242,7 +242,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					return;
 
 				// Try to upgrade first
-				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= 130)) 
+				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= FF_BUILDCOST_UPGRADE_SENTRYGUN)) 
 				{
 					// If we upgrade, play a special sound. Pun intended.
 					if( pSentryGun->Upgrade() )
@@ -266,14 +266,14 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 #endif
 					}
 #ifdef GAME_DLL
-					pPlayer->RemoveAmmo(130, AMMO_CELLS);
+					pPlayer->RemoveAmmo(FF_BUILDCOST_UPGRADE_SENTRYGUN, AMMO_CELLS);
 #endif
 				}
 				else
 				{
 
 #ifdef CLIENT_DLL
-					if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) < 130))
+					if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) < FF_BUILDCOST_UPGRADE_SENTRYGUN))
 						FF_SendHint( ENGY_NOUPGRADE, 1, PRIORITY_NORMAL, "#FF_HINT_ENGY_NOUPGRADE" );
 #endif
 
