@@ -3773,6 +3773,8 @@ void CFFPlayer::StatusEffectsThink( void )
 			{
 				// add the regen armor
 				m_iArmor.GetForModify() = clamp( m_iArmor + FFDEV_REGEN_ARMOR, 0, m_iMaxArmor );
+				if ( !IsStaticBuilding() )
+					GiveAmmo(5, AMMO_CELLS, true); //AfterShock: Engineers regen cells now, only when not building tho
 			}
 		}
 	}
