@@ -37,7 +37,7 @@ extern "C"
 
 #include "tier0/memdbgon.h"
 
-#define ITEM_PICKUP_BOX_BLOAT		8
+#define ITEM_PICKUP_BOX_BLOAT		14
 ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_CHEAT );
 
 int ACT_INFO_RETURNED;
