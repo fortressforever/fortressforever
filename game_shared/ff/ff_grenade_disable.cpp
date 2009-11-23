@@ -52,7 +52,7 @@ int g_iDisableRingTexture = -1;
 */
 
 // values
-ConVar ffdev_disable_duration("ffdev_disable_duration", "6", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_disable_duration("ffdev_disable_duration", "4", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define DISABLE_DURATION ffdev_disable_duration.GetFloat()
 
 ConVar ffdev_disable_radius("ffdev_disable_radius", "240", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
