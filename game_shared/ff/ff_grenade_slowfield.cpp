@@ -297,7 +297,12 @@ void CFFGrenadeSlowfield::Precache()
 			float flDistance = vecDisplacement.Length();
 
 			if (flDistance < GetGrenadeRadius())
-				pPlayer->SetLaggedMovementValue(SimpleSplineRemapVal(flDistance, 0.0f, SLOWFIELD_RADIUS, SLOWFIELD_MIN_SLOW, 1.0f));
+			{
+				// only change players motion if they will be going slower
+				float flLaggedMovement = SimpleSplineRemapVal(flDistance, 0.0f, SLOWFIELD_RADIUS, SLOWFIELD_MIN_SLOW, 1.0f)
+				if (pPlayer->GetLaggedMovementValue() > flLaggedMovement)
+					pPlayer->SetLaggedMovementValue(flLaggedMovement);
+			}
 			else
 				pPlayer->SetLaggedMovementValue( 1.0f );
 		}
