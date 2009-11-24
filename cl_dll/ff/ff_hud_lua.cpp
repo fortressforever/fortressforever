@@ -493,7 +493,7 @@ bool CHudLua::TranslateKeyCommand( const char *szMessage, char *szTranslated, in
 	int iTrans = 0;
 	for (;;)
 	{
-		if ( szMessage[i] == '{' )
+		if ( szMessage[i] == '%' )
 		{
 			char sKeyCommand[30];
 			int iKeyIndex = 0;
@@ -508,7 +508,7 @@ bool CHudLua::TranslateKeyCommand( const char *szMessage, char *szTranslated, in
 					return false;
 				}
 				// We've got the whole command -- now find out what key it's bound to
-				if ( szMessage[i] == '}' )
+				if ( szMessage[i] == '%' )
 				{
 					sKeyCommand[iKeyIndex] = '\0';
 					//Msg( "\nCommand: %s\n", sKeyCommand );
