@@ -68,6 +68,8 @@ public:
 	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY);
 	void	HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY);
 
+	bool	TranslateKeyCommand( const char *szMessage, char *szTranslated, int iBufferSizeInBytes );
+
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed);
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlign);
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY);
