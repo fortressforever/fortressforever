@@ -240,6 +240,11 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
 				continue;
 
+			// caes: make hh concs not push other players
+			// Shok: OR concuss at all!
+			if ( pEntity != GetThrower() && m_fIsHandheld )
+				continue;
+
 			// Some useful things to know
 			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
 			float flDistance = vecDisplacement.Length();
@@ -251,7 +256,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				QAngle angDirection;
 				VectorAngles(vecDir, angDirection);
 
-				float flDuration = (pPlayer->GetClassSlot() == CLASS_MEDIC || pPlayer->GetClassSlot() == CLASS_SCOUT ) ? 7.5f : 15.0f;
+				float flDuration = (pPlayer->GetClassSlot() == CLASS_MEDIC || pPlayer->GetClassSlot() == CLASS_SCOUT ) ? 5.0f : 10.0f;
 				float flIconDuration = flDuration;
 				if( pPlayer->LuaRunEffect( LUA_EF_CONC, GetOwnerEntity(), &flDuration, &flIconDuration ) )
 				{
@@ -261,10 +266,6 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 						pPlayer->Concuss( flDuration, flIconDuration, &angDirection, flDistance);
 				}					
 			}
-			
-			// caes: make hh concs not push other players
-			if ( pEntity != GetThrower() && m_fIsHandheld )
-				continue;
 
 			// People who are building shouldn't be pushed around by anything
 			if (pPlayer->IsStaticBuilding())
