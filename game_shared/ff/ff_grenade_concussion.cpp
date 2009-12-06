@@ -43,18 +43,19 @@
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag
 #ifdef GAME_DLL
 
-#define FFDEV_CONC_LATERAL_POWER 2.74f
-#define FFDEV_CONC_VERTICAL_POWER 4.10f
-#define FFDEV_CONC_NEWBCONC_UPPUSH 90
+
 
 //ConVar ffdev_mancannon_conc_speed( "ffdev_mancannon_conc_speed", "1700.0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_CHEAT, "Max conc speed a player can attain after just using a jump pad." );
 #define MAX_JUMPPAD_TO_CONC_SPEED 1700.0f // ffdev_mancannon_conc_speed.GetFloat()
 
-/* AfterShock: cvars to #defines for the win!
-	static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_CHEAT, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
-	static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_CHEAT, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
-	static ConVar ffdev_conc_newbconc_uppush( "ffdev_conc_newbconc_uppush", "90", FCVAR_CHEAT, "Vertical movement boost value for newb-didnt-jump hh concs" );
-*/
+
+//static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_CHEAT, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
+#define FFDEV_CONC_LATERAL_POWER 2.74f //ffdev_conc_lateral_power.GetFloat() //2.74f
+//static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_CHEAT, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
+#define FFDEV_CONC_VERTICAL_POWER 4.10f // ffdev_conc_vertical_power.GetFloat() //4.10f
+//static ConVar ffdev_conc_newbconc_uppush( "ffdev_conc_newbconc_uppush", "90", FCVAR_CHEAT, "Vertical movement boost value for newb-didnt-jump hh concs" );
+#define FFDEV_CONC_NEWBCONC_UPPUSH 90
+//
 #endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
@@ -64,6 +65,7 @@ ConVar conc_ragdoll_push("conc_ragdoll_push","600", FCVAR_CHEAT | FCVAR_REPLICAT
 #define CONCUSSIONGRENADE_GLOW_SPRITE	"sprites/glow04_noz.vmt"
 #define CONCUSSION_SOUND				"ConcussionGrenade.Explode"
 #define CONCUSSION_EFFECT				"FF_ConcussionEffect" // "ConcussionExplosion"
+#define CONCUSSION_EFFECT_HANDHELD		"FF_ConcussionEffectHandheld" // "ConcussionExplosion"
 #define CONCBITS_EFFECT					"FF_ConcBitsEffect"
 #define FLASH_EFFECT					"FF_FlashEffect"
 #define RING_EFFECT						"FF_RingEffect"
@@ -189,8 +191,15 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 		data.m_vOrigin = GetAbsOrigin();
 		data.m_flScale = 1.0f;
 		data.m_flRadius = GetGrenadeRadius();
-		
-		DispatchEffect(CONCUSSION_EFFECT, data);
+		if ( m_fIsHandheld )
+		{
+			DispatchEffect(CONCUSSION_EFFECT_HANDHELD, data);
+		}
+		else
+		{
+			DispatchEffect(CONCUSSION_EFFECT, data);
+		}
+
 		g_pEffects->EnergySplash(GetAbsOrigin(), Vector(0, 0, 1.0f), true);
 
 		//Need this so they make ragdolls go flying.

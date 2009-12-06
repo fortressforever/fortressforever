@@ -75,6 +75,35 @@ ConVar ffdev_conc_effect_radius2("ffdev_conc_effect_radius2", "520", FCVAR_CHEAT
 #define CONC_RADIUS2			ffdev_conc_effect_radius2.GetFloat()
 
 
+ConVar ffdev_conc2_effect_framerate("ffdev_conc2_effect_framerate", "1", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_width("ffdev_conc2_effect_width", "20", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_width2("ffdev_conc2_effect_width2", "0", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_width3("ffdev_conc2_effect_width3", "10", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_spread("ffdev_conc2_effect_spread", "0", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_amplitude("ffdev_conc2_effect_amplitude", "0", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_lifetime("ffdev_conc2_effect_lifetime", ".3", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_r("ffdev_conc2_effect_r", "255", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_g("ffdev_conc2_effect_g", "255", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_b("ffdev_conc2_effect_b", "225", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_a("ffdev_conc2_effect_a", "178", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_radius("ffdev_conc2_effect_radius", "120", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_radius2("ffdev_conc2_effect_radius2", "520", FCVAR_CHEAT);
+
+#define CONC2_FRAMERATE		ffdev_conc2_effect_framerate.GetFloat()
+#define CONC2_WIDTH			ffdev_conc2_effect_width.GetFloat()
+#define CONC2_WIDTH2			ffdev_conc2_effect_width2.GetFloat()
+#define CONC2_WIDTH3			ffdev_conc2_effect_width3.GetFloat()
+#define CONC2_SPREAD			ffdev_conc2_effect_spread.GetFloat()
+#define CONC2_AMPLITUDE		ffdev_conc2_effect_amplitude.GetFloat()
+#define CONC2_LIFETIME		ffdev_conc2_effect_lifetime.GetFloat()
+#define CONC2_R				ffdev_conc2_effect_r.GetFloat()
+#define CONC2_G				ffdev_conc2_effect_g.GetFloat()
+#define CONC2_B				ffdev_conc2_effect_b.GetFloat()
+#define CONC2_A				ffdev_conc2_effect_a.GetFloat()
+#define CONC2_RADIUS			ffdev_conc2_effect_radius.GetFloat()
+#define CONC2_RADIUS2			ffdev_conc2_effect_radius2.GetFloat()
+
+
 //========================================================================
 // Ragdoll stuff
 //========================================================================
@@ -378,13 +407,7 @@ void C_ConcEffect::ClientThink( void )
 //-----------------------------------------------------------------------------
 void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 {
-	/*
-	voogru: not enough time for this shit, spent 3-4 hours fucking with this and ragdolls are being a fucking pain in the ass, 
-	I'm able to affect them, but not the way I want them to behave.
 
-	CRagdollConcEnumerator ragdollEnum(data.m_vOrigin);
-	partition->EnumerateElementsInSphere( PARTITION_CLIENT_RESPONSIVE_EDICTS, data.m_vOrigin, data.m_flRadius, false, &ragdollEnum );
-	*/
 #define TE_EXPLFLAG_NODLIGHTS	0x2	// do not render dynamic lights
 #define TE_EXPLFLAG_NOSOUND		0x4	// do not play client explosion sound
 
@@ -516,4 +539,142 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Callback function for the concussion effect (HANDHELD)
+//-----------------------------------------------------------------------------
+void FF_FX_ConcussionEffectHandheld_Callback(const CEffectData &data)
+{
+
+#define TE_EXPLFLAG_NODLIGHTS	0x2	// do not render dynamic lights
+#define TE_EXPLFLAG_NOSOUND		0x4	// do not play client explosion sound
+
+	// If underwater, just do a bunch of gas
+	if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
+	{
+		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, TE_EXPLFLAG_NODLIGHTS|TE_EXPLFLAG_NOSOUND);
+		if (cl_conc_refract.GetBool())
+			return;
+	}
+
+	if (!cl_conc_refract.GetBool())
+	{
+		CBroadcastRecipientFilter filter;
+
+		te->BeamRingPoint(filter,
+			0,						// delay
+			data.m_vOrigin,			// origin
+			1.0f,					// start radius
+			CONC2_RADIUS,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC2_FRAMERATE,			// frame rate
+			CONC2_LIFETIME,			// life
+			CONC2_WIDTH,				// width
+			CONC2_SPREAD,			// spread (10x end width)
+			CONC2_AMPLITUDE,			// amplitude
+			CONC2_R,					// r
+			CONC2_G,					// g
+			CONC2_B,					// b
+			CONC2_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+		te->BeamRingPoint(filter,
+			0,						// delay
+			( data.m_vOrigin + Vector( 0.0f, 0.0f, 32.0f ) ),			// origin
+			1.0f,					// start radius
+			CONC2_RADIUS2,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC2_FRAMERATE,			// frame rate
+			CONC2_LIFETIME,			// life
+			CONC2_WIDTH2,				// width
+			CONC2_SPREAD,			// spread (10x end width)
+			CONC2_AMPLITUDE,			// amplitude
+			CONC2_R,					// r
+			CONC2_G,					// g
+			CONC2_B,					// b
+			CONC2_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+		te->BeamRingPoint(filter,
+			0,						// delay
+			( data.m_vOrigin + Vector( 0.0f, 0.0f, -32.0f ) ),			// origin
+			1.0f,					// start radius
+			CONC2_RADIUS2,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC2_FRAMERATE,			// frame rate
+			CONC2_LIFETIME,			// life
+			(CONC2_WIDTH2 / 2),				// width
+			CONC2_SPREAD,			// spread (10x end width)
+			CONC2_AMPLITUDE,			// amplitude
+			CONC2_R,					// r
+			CONC2_G,					// g
+			CONC2_B,					// b
+			CONC2_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+
+		// Outer bounding rings
+		te->BeamRingPoint(filter,
+			0,						// delay
+			data.m_vOrigin,			// origin
+			CONC2_RADIUS - 1,					// start radius
+			CONC2_RADIUS,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC2_FRAMERATE,			// frame rate
+			CONC2_LIFETIME,			// life
+			(CONC2_WIDTH3/ 2),				// width
+			CONC2_SPREAD,			// spread (10x end width)
+			CONC2_AMPLITUDE,			// amplitude
+			CONC2_R,					// r
+			CONC2_G,					// g
+			CONC2_B,					// b
+			CONC2_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+	}
+	else
+	{
+		// Okay so apparently dx7 is not so good for the 3d conc effect
+		// So instead we use the flat one for those systems
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() > 70)
+		{
+			C_ConcEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin );
+		}
+		else
+		{
+			CSmartPtr<CConcEmitter> concEffect = CConcEmitter::Create("ConcussionEffect");
+
+			float offset = 0;
+
+			for (int i = 0; i < conc_ripples.GetInt(); i++)
+			{
+				ConcParticle *c = concEffect->AddConcParticle();
+
+				if (c)
+				{
+					c->m_flDieTime = conc_speed.GetFloat();
+					c->m_Pos = data.m_vOrigin;
+					c->m_flRefract = conc_refract.GetFloat();
+					c->m_flOffset = offset;
+
+					offset += conc_ripple_period.GetFloat();
+				}
+			}
+		}
+	}
+
+}
+
 DECLARE_CLIENT_EFFECT("FF_ConcussionEffect", FF_FX_ConcussionEffect_Callback);
+DECLARE_CLIENT_EFFECT("FF_ConcussionEffectHandheld", FF_FX_ConcussionEffectHandheld_Callback);
