@@ -1877,12 +1877,10 @@ void CFFSentryGun::Detonate()
 // Purpose: Carry out the radius damage for this buildable
 //-----------------------------------------------------------------------------
 void CFFSentryGun::DoExplosionDamage()
-{	
-	/* No more SG explosion damage! Engineers rejoice!
+{
 	VPROF_BUDGET( "CFFSentryGun::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	//float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
-	float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel;
+	float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
 	// COmmented out for testing explosion damage - AfterShock
 	//flDamage = min(280, flDamage);
 	
@@ -1894,7 +1892,6 @@ void CFFSentryGun::DoExplosionDamage()
 
 		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
 	}
-	*/
 }
 
 //-----------------------------------------------------------------------------
