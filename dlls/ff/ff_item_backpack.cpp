@@ -87,7 +87,7 @@ int CFFItemBackpack::TakeEmp()
 
 	UTIL_Remove(this);
 
-	return ammo;
+	return int ( ammo / 2) ;
 }
 
 void CFFItemBackpack::RestockTouch( CBaseEntity *pPlayer )
