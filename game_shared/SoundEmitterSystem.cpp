@@ -1172,7 +1172,7 @@ static ConCommand Command_Playgamesound( "playgamesound", Playgamesound_f, "Play
 // Purpose:  Non-static override for doing the general case of CPASAttenuationFilter( this ), and EmitSound( filter, entindex(), etc. );
 // Input  : *soundname - 
 //-----------------------------------------------------------------------------
-void CBaseEntity::EmitSound( const char *soundname, float soundtime /*= 0.0f*/, float *duration /*=NULL*/ )
+void CBaseEntity::EmitSoundShared( const char *soundname, float soundtime /*= 0.0f*/, float *duration /*=NULL*/ )
 {
 	//VPROF( "CBaseEntity::EmitSound" );
 	VPROF_BUDGET( "CBaseEntity::EmitSound", _T( "CBaseEntity::EmitSound" ) );
@@ -1188,6 +1188,27 @@ void CBaseEntity::EmitSound( const char *soundname, float soundtime /*= 0.0f*/, 
 			filter.RemoveRecipient(pPlayer);
 	}
 #endif
+
+	EmitSound_t params;
+	params.m_pSoundName = soundname;
+	params.m_flSoundTime = soundtime;
+	params.m_pflSoundDuration = duration;
+	params.m_bWarnOnDirectWaveReference = true;
+
+	EmitSound( filter, entindex(), params );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:  Non-static override for doing the general case of CPASAttenuationFilter( this ), and EmitSound( filter, entindex(), etc. );
+// Input  : *soundname - 
+//-----------------------------------------------------------------------------
+
+void CBaseEntity::EmitSound( const char *soundname, float soundtime /*= 0.0f*/, float *duration /*=NULL*/ )
+{
+	//VPROF( "CBaseEntity::EmitSound" );
+	VPROF_BUDGET( "CBaseEntity::EmitSound", _T( "CBaseEntity::EmitSound" ) );
+
+	CPASAttenuationFilter filter( this, soundname );
 
 	EmitSound_t params;
 	params.m_pSoundName = soundname;

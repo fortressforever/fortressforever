@@ -346,6 +346,8 @@ void CC_PrimeOne( void )
 
 	//pLocalPlayer->EmitSound( "Grenade.Timer" );
 
+	pLocalPlayer->EmitSound("Grenade.Prime");
+
 	CPASAttenuationFilter filter(pLocalPlayer, g_szTimerFile);
 
 	EmitSound_t params;
@@ -424,6 +426,8 @@ void CC_PrimeTwo( void )
 	}*/
 	
 	//pLocalPlayer->EmitSound( "Grenade.Timer" );
+
+	pLocalPlayer->EmitSound("Grenade.Prime");
 
 	CPASAttenuationFilter filter(pLocalPlayer, g_szTimerFile);
 

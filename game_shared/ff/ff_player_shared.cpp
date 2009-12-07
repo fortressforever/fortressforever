@@ -519,29 +519,7 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 		FF_SendHint( SPY_SPLAT, 3, PRIORITY_NORMAL, "#FF_HINT_SPY_SPLAT" );
 #endif
 
-	CRecipientFilter filter;
-	filter.AddRecipientsByPAS(vecOrigin);
-
-#ifndef CLIENT_DLL
-	// Should we be excluding by PVS or just the local player??
-	// Doing the latter for now
-	if (gpGlobals->maxClients > 1)
-	{
-		//filter.RemoveRecipientsByPVS(vecOrigin);
-		filter.RemoveRecipient(this);
-	}
-#endif
-
-	EmitSound_t ep;
-	ep.m_nChannel = CHAN_BODY;
-	ep.m_pSoundName = "Player.FallDamage"; //params.soundname;
-	ep.m_flVolume = fvol;
-	ep.m_SoundLevel = SNDLVL_70dB; // params.soundlevel;
-	ep.m_nFlags = 0;
-	ep.m_nPitch = PITCH_NORM; // params.pitch;
-	ep.m_pOrigin = &vecOrigin;
-
-	EmitSound(filter, entindex(), ep);
+	EmitSoundShared("Player.FallDamage");
 }
 
 void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force)
@@ -658,8 +636,7 @@ void CFFPlayer::ClassSpecificSkill()
 				DispatchEffect(OVERPRESSURE_EFFECT, data);
 
 				// Play a sound
-				CPASAttenuationFilter sndFilter( this );
-				EmitSound("overpressure.explode");
+				EmitSoundShared("overpressure.explode");
 
 #ifdef GAME_DLL
 
@@ -1629,7 +1606,7 @@ void CFFPlayer::Cloak( void )
 
 		// If regular cloak, scream
 		if( !m_bCloakFadeType )
-			EmitSound( "Player.Death" );
+			EmitSoundShared( "Player.Death" );
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );		
 
 		m_flCloakTime = gpGlobals->curtime;
@@ -1707,7 +1684,7 @@ void CFFPlayer::Command_AmmoMe( void )
 		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
 
 		// Call for ammo
-		EmitSound("ammo.saveme");
+		EmitSoundShared("ammo.saveme");
 	}
 }
 
@@ -1726,9 +1703,9 @@ void CFFPlayer::Command_SaveMe( void )
 		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
 
 		if (IsInfected())
-			EmitSound( "infected.saveme" );
+			EmitSoundShared( "infected.saveme" );
 		else
-			EmitSound( "medical.saveme" );
+			EmitSoundShared( "medical.saveme" );
 
 #ifdef GAME_DLL
 		// Hint Code -- Event: Allied player within 1000 units calls for medic
@@ -1761,7 +1738,7 @@ void CFFPlayer::Command_EngyMe( void )
 		// Set the time we can do another engyme at
 		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
 
-		EmitSound("maintenance.saveme");
+		EmitSoundShared("maintenance.saveme");
 
 		// Hint Code -- Event: Allied player within 1000 units calls for engy
 #ifdef GAME_DLL
