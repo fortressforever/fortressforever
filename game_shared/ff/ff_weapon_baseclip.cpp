@@ -30,8 +30,6 @@ LINK_ENTITY_TO_CLASS(weapon_ff_baseclip, CFFWeaponBaseClip);
 
 //-----------------------------------------------------------------------------
 // Purpose: Override so only reload one shell at a time
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
 bool CFFWeaponBaseClip::StartReload()
 {
@@ -63,8 +61,6 @@ bool CFFWeaponBaseClip::StartReload()
 
 //-----------------------------------------------------------------------------
 // Purpose: Override so only reload one shell at a time
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
 bool CFFWeaponBaseClip::Reload()
 {
@@ -107,8 +103,6 @@ bool CFFWeaponBaseClip::Reload()
 
 //-----------------------------------------------------------------------------
 // Purpose: Play finish reload anim and fill clip
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
 void CFFWeaponBaseClip::FinishReload()
 {
@@ -128,8 +122,6 @@ void CFFWeaponBaseClip::FinishReload()
 
 //-----------------------------------------------------------------------------
 // Purpose: Play finish reload anim and fill clip
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
 void CFFWeaponBaseClip::FillClip()
 {
@@ -155,8 +147,6 @@ void CFFWeaponBaseClip::FillClip()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-//
-//
 //-----------------------------------------------------------------------------
 void CFFWeaponBaseClip::DryFire()
 {
@@ -168,8 +158,6 @@ void CFFWeaponBaseClip::DryFire()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// To do stuff
-//
 //-----------------------------------------------------------------------------
 bool CFFWeaponBaseClip::Holster(CBaseCombatWeapon *pSwitchingTo) 
 {
@@ -179,8 +167,6 @@ bool CFFWeaponBaseClip::Holster(CBaseCombatWeapon *pSwitchingTo)
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-//
-//
 //-----------------------------------------------------------------------------
 void CFFWeaponBaseClip::PrimaryAttack()
 {
