@@ -9,6 +9,7 @@
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/PropertySheet.h>
 #include <vgui_controls/PropertyPage.h>
+#include <vgui_controls/TextEntry.h>
 #include "ff_gameui.h"
 
 using namespace vgui;
@@ -45,8 +46,12 @@ private:
 	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	
 	vgui::PropertySheet		*m_pIRCTabs;
-	CFFIRCLobbyTab			*m_pLobbyTab;
-	CFFIRCGameTab			*m_pGame1Tab;
+	//CFFIRCLobbyTab			*m_pLobbyTab;
+	//CFFIRCGameTab			*m_pGame1Tab;
+	vgui::PropertyPage			*m_pLobbyTab;
+	vgui::PropertyPage			*m_pGame1Tab;
+
+	vgui::TextEntry*		m_pTextEntryChat1;
 
 	//vgui::Button			*m_pOKButton;
 	//vgui::Button			*m_pCancelButton;

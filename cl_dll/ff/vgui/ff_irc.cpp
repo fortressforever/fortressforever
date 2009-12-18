@@ -21,21 +21,31 @@ CFFIRCPanel::CFFIRCPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFIRCPanel" 
 
 	// Centre this panel on the screen for consistency.
 	// This should be in the .res surely? - AfterShock
-	int nWide = GetWide();
-	int nTall = GetTall();
+	//int nWide = GetWide();
+	//int nTall = GetTall();
 
-	SetPos((ScreenWidth() - nWide) / 2, (ScreenHeight() - nTall) / 2);
+	//SetPos((ScreenWidth() - nWide) / 2, (ScreenHeight() - nTall) / 2);
 
-	m_pLobbyTab = new CFFIRCLobbyTab(this, "IRCLobbyTab");
-	m_pGame1Tab = new CFFIRCGameTab(this, "IRCGameTab");
+	//m_pLobbyTab = new CFFIRCLobbyTab(this, "IRCLobbyTab");
+	//m_pGame1Tab = new CFFIRCGameTab(this, "IRCGameTab");
+	//m_pLobbyTab = new PropertyPage(this, "IRCLobbyTab");
+	//m_pGame1Tab = new PropertyPage(this, "IRCGameTab");
 
-	m_pIRCTabs = new PropertySheet(this, "IRCTabs", true);
+	//m_pIRCTabs = new PropertySheet(this, "IRCTabs", true);
 	//m_pIRCTabs->AddPage(m_pLobbyTab, "#GameUI_IRCLobbyTab");
-	m_pIRCTabs->AddPage(m_pLobbyTab, "Lobby");
+	//m_pIRCTabs->AddPage(m_pLobbyTab, "Lobby");
 	//m_pIRCTabs->AddPage(m_pGame1Tab, "#GameUI_IRCGameTab");
-	m_pIRCTabs->AddPage(m_pGame1Tab, "Game1");
-	m_pIRCTabs->SetActivePage(m_pGame1Tab);
-	m_pIRCTabs->SetDragEnabled(false);
+	//m_pIRCTabs->AddPage(m_pGame1Tab, "Game1");
+	//m_pIRCTabs->SetActivePage(m_pLobbyTab);
+	//m_pIRCTabs->SetDragEnabled(false);
+
+	m_pTextEntryChat1 = new vgui::TextEntry(this, "MyTextEntry");
+	//m_pTextEntryChat1->SetPos(150, 310);
+	//m_pTextEntryChat1->SetSize(100, 20);
+
+	//SetPos(10,10);
+	//SetSize(500, 400);
+	//m_pTextEntryChat1->SetPos
 
 	//m_pOKButton = new Button(this, "PlayButton", "", this, "Play");
 	//m_pCancelButton = new Button(this, "CancelButton", "", this, "Cancel");
