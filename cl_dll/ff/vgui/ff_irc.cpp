@@ -39,7 +39,44 @@ CFFIRCPanel::CFFIRCPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFIRCPanel" 
 	//m_pIRCTabs->SetActivePage(m_pLobbyTab);
 	//m_pIRCTabs->SetDragEnabled(false);
 
-	m_pTextEntryChat1 = new vgui::TextEntry(this, "MyTextEntry");
+	m_pTextEntry_ChatEntry = new vgui::TextEntry(this, "TextEntry_ChatEntry");
+	m_pRichText_LobbyChat = new vgui::RichText(this, "RichText_LobbyChat");
+
+	m_pTextEntry_ChatEntry->SendNewLine(true); // Pressing enter in the text box triggers a new line message
+	m_pTextEntry_ChatEntry->AddActionSignalTarget( this ); // Something about sending messages to the right panel?
+
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+	m_pRichText_LobbyChat->InsertString("Test\n");
+
 	//m_pTextEntryChat1->SetPos(150, 310);
 	//m_pTextEntryChat1->SetSize(100, 20);
 
@@ -61,3 +98,17 @@ CFFIRCPanel::CFFIRCPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFIRCPanel" 
 	//SetSizeable(false);
 	//SetMoveable(false);
 } 
+
+void CFFIRCPanel::OnNewLineMessage(KeyValues *data)
+{
+	char szCommand[256];
+	m_pTextEntry_ChatEntry->GetText(szCommand, sizeof(szCommand));
+                 
+	//const char* text = data->GetString("text");
+	m_pRichText_LobbyChat->InsertString(szCommand);
+	m_pRichText_LobbyChat->InsertString("\n");
+	m_pTextEntry_ChatEntry->SetText("");
+	m_pRichText_LobbyChat->GotoTextEnd();
+	//m_pRichText_LobbyChat->InsertString("LOLOLOL\n");
+}
+

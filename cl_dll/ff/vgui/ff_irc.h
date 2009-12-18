@@ -6,10 +6,12 @@
 #endif
 
 #include "vgui_helpers.h"
+#include "KeyValues.h"
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/PropertySheet.h>
 #include <vgui_controls/PropertyPage.h>
 #include <vgui_controls/TextEntry.h>
+#include <vgui_controls/RichText.h>
 #include "ff_gameui.h"
 
 using namespace vgui;
@@ -41,17 +43,22 @@ public:
 	CFFIRCPanel( vgui::VPANEL parent );
 
 
+
 private:
 
+	MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine",data); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
 	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	
+	//void CFFIRCPanel::OnNewLineMessage(KeyValues *data);
+
 	vgui::PropertySheet		*m_pIRCTabs;
 	//CFFIRCLobbyTab			*m_pLobbyTab;
 	//CFFIRCGameTab			*m_pGame1Tab;
 	vgui::PropertyPage			*m_pLobbyTab;
 	vgui::PropertyPage			*m_pGame1Tab;
 
-	vgui::TextEntry*		m_pTextEntryChat1;
+	vgui::TextEntry*		m_pTextEntry_ChatEntry;
+	vgui::RichText*		m_pRichText_LobbyChat;
 
 	//vgui::Button			*m_pOKButton;
 	//vgui::Button			*m_pCancelButton;
