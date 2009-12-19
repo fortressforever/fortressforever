@@ -22,7 +22,16 @@ class CFFIRCLobbyTab : public vgui::PropertyPage
 	DECLARE_CLASS_SIMPLE(CFFIRCLobbyTab, PropertyPage);
 
 public:
-	CFFIRCLobbyTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName) {}
+	CFFIRCLobbyTab(Panel *parent, char const *panelName);
+
+private:
+	
+	MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine", data ); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
+	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+
+	vgui::TextEntry*	m_pTextEntry_ChatEntry;
+	vgui::RichText*		m_pRichText_LobbyChat;
+	vgui::RichText*		m_pRichText_LobbyUserList;
 
 };
 
@@ -31,7 +40,16 @@ class CFFIRCGameTab : public vgui::PropertyPage
 	DECLARE_CLASS_SIMPLE(CFFIRCGameTab, PropertyPage);
 
 public:
-	CFFIRCGameTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName) {}
+	CFFIRCGameTab(Panel *parent, char const *panelName);
+	
+private:
+	
+	MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine", data ); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
+	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+
+	vgui::TextEntry*	m_pTextEntry_ChatEntry;
+	vgui::RichText*		m_pRichText_GameChat;
+	vgui::RichText*		m_pRichText_GameUserList;
 
 };
 
@@ -45,9 +63,6 @@ public:
 
 
 private:
-
-	MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine",data); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
-	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	
 	//void CFFIRCPanel::OnNewLineMessage(KeyValues *data);
 
@@ -56,9 +71,6 @@ private:
 	//CFFIRCGameTab			*m_pGame1Tab;
 	vgui::PropertyPage			*m_pLobbyTab;
 	vgui::PropertyPage			*m_pGame1Tab;
-
-	vgui::TextEntry*		m_pTextEntry_ChatEntry;
-	vgui::RichText*		m_pRichText_LobbyChat;
 
 	//vgui::Button			*m_pOKButton;
 	//vgui::Button			*m_pCancelButton;
