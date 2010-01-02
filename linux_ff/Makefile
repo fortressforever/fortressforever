@@ -17,14 +17,14 @@ MOD_CONFIG=server_ff_ReleaseFFWin32
 
 # the directory the base binaries (tier0_i486.so, etc) are located
 #GAME_DIR=../../
-GAME_DIR=~/srcds
+GAME_DIR=~/srcds/
 
 # compiler options (gcc 3.4.1 or above is required)
-CC=gcc-3.4.4
-CPLUS=g++-3.4.4
-CLINK=gcc-3.4.4
+CC=gcc
+CPLUS=g++
+CLINK=gcc
 #CPP_LIB="/usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.5/libstdc++.a /usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.5/libgcc_eh.a"
-CPP_LIB="/usr/lib/gcc/i686-pc-linux-gnu/3.4.4/libstdc++.a /usr/lib/gcc/i686-pc-linux-gnu/3.4.4/libgcc_eh.a"
+CPP_LIB="/usr/lib/gcc/i386-redhat-linux/3.4.3/libstdc++.a /usr/lib/gcc/i386-redhat-linux/3.4.3/libgcc_eh.a"
 
 # put any compiler flags you want passed here
 USER_CFLAGS=-g
@@ -40,7 +40,7 @@ LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ld
 #XERCES_INC_DIR=/home/alfred/tmp/xerces-c-src_2_6_0/include
 #XERCES_LIB_DIR=/home/alfred/tmp/xerces-c-src_2_6_0/lib
 # if you have xerces installed already you should be able to use the two lines below
-XERCES_INC_DIR=/usr/include/xercesc
+XERCES_INC_DIR=/usr/include
 XERCES_LIB_DIR=/usr/lib
 
 
