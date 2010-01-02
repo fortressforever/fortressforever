@@ -17,41 +17,18 @@
 using namespace vgui;
 
 
-class CFFIRCLobbyTab : public vgui::PropertyPage
+class CFFIRCTab : public vgui::PropertyPage
 {
-	DECLARE_CLASS_SIMPLE(CFFIRCLobbyTab, PropertyPage);
+	DECLARE_CLASS_SIMPLE(CFFIRCTab, PropertyPage);
 
 public:
-	CFFIRCLobbyTab(Panel *parent, char const *panelName);
-
-private:
-	
-	MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine", data ); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
-	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
-
-	vgui::TextEntry*	m_pTextEntry_ChatEntry;
-	vgui::RichText*		m_pRichText_LobbyChat;
-	vgui::RichText*		m_pRichText_LobbyUserList;
+	CFFIRCTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName) {}
 
 };
 
-class CFFIRCGameTab : public vgui::PropertyPage
-{
-	DECLARE_CLASS_SIMPLE(CFFIRCGameTab, PropertyPage);
-
-public:
-	CFFIRCGameTab(Panel *parent, char const *panelName);
-	
-private:
-	
-	MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine", data ); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
-	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
-
-	vgui::TextEntry*	m_pTextEntry_ChatEntry;
-	vgui::RichText*		m_pRichText_GameChat;
-	vgui::RichText*		m_pRichText_GameUserList;
-
-};
+//-----------------------------------------------------------------------------
+// IRC Panel
+//-----------------------------------------------------------------------------
 
 class CFFIRCPanel : public Frame
 {
@@ -60,17 +37,25 @@ class CFFIRCPanel : public Frame
 public:
 	CFFIRCPanel( vgui::VPANEL parent );
 
-
+	void AddGameTab();
+	void RemoveGameTab( CFFIRCTab *pTab );
 
 private:
+
+	//MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine",data); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
+	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	
 	//void CFFIRCPanel::OnNewLineMessage(KeyValues *data);
 
 	vgui::PropertySheet		*m_pIRCTabs;
-	//CFFIRCLobbyTab			*m_pLobbyTab;
+	//CFFIRCLobbyTab		*m_pLobbyTab;
 	//CFFIRCGameTab			*m_pGame1Tab;
-	vgui::PropertyPage			*m_pLobbyTab;
-	vgui::PropertyPage			*m_pGame1Tab;
+	vgui::PropertyPage		*m_pGameTab;
+	vgui::PropertyPage		*m_pLobbyTab;
+
+	vgui::TextEntry*		m_pTextEntry_ChatEntry;
+	vgui::RichText*		m_pRichText_LobbyChat;
 
 	//vgui::Button			*m_pOKButton;
 	//vgui::Button			*m_pCancelButton;
