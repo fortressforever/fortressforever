@@ -249,7 +249,7 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 		// if we have a globalscript, shoot it down the intertubes too
 		if( sv_luaglobalscript.GetString()[0] != '0' && globalscript_filename[0] )
 		{
-			V_FixSlashes(filename);
+			V_FixSlashes(globalscript_filename);
 			if(filesystem->FileExists(globalscript_filename))
 			{
 				Util_AddDownload(globalscript_filename);
