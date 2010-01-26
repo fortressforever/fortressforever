@@ -338,13 +338,13 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 		if (buf[firstspace_pos])
 		{
 			// commands shouldn't be bigger than 30 chars, right?
-			char command[30];
+			char command[31];
 			int paramstart=0;
 
 			// command/response code can be parsed now, they both come after the first space
 			int i=0;
-			command[29] = '\0';
-			for(int ti=firstspace_pos+1;ti<firstspace_pos+30;++ti)
+			command[30] = '\0';
+			for(int ti=firstspace_pos+1;ti<firstspace_pos+31;++ti)
 			{
 				if (buf[ti] == ' ')
 				{
@@ -365,7 +365,7 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 			if (buf[excl_pos] && firstspace_pos > excl_pos)
 			{
 				// MAXNICKLEN is 30
-				char from[30];
+				char from[31];
 				
 				for(int ti=1;ti<excl_pos;++ti)
 				{
@@ -413,11 +413,37 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 						DevMsg("[IRC] Strange PRIVMSG syntax: %s", buf);
 					}
 				}
+				// NICK
+				//		:squeektest!~squeektes@76-201-84-238.lightspeed.frokca.sbcglobal.net NICK :squeektest2
+				else if (Q_strcmp(command,"NICK") == 0)
+				{
+					// new nickname is preceded by a colon
+					if (buf[0] == ':')
+					{
+						// skip to the nick (past the colon)
+						buf += 1;
+
+						// need to tell all open tabs
+						if (m_pLobbyTab)
+						{
+							m_pLobbyTab->SystemMessage( VarArgs("%s is now known as %s", from, buf) );
+							m_pLobbyTab->UserList_UpdateUserName(from, buf);
+							return;
+						}
+					}
+				}
 				// QUIT
 				//		:squeek!~squeek502@squeek.user.gamesurge QUIT :Reason
 				else if (Q_strcmp(command,"QUIT") == 0)
 				{
 					// need to update all open tabs
+					if (m_pLobbyTab)
+					{
+						char *msg = strchr(buf,':') + 1;
+
+						m_pLobbyTab->SystemMessage( VarArgs("%s has quit (%s)", from, (msg ? msg : "Unknown reason")) );
+						m_pLobbyTab->UserList_RemoveUser(from);
+					}
 					return;
 				}
 				// JOIN
@@ -432,6 +458,7 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 						{
 							if (m_pLobbyTab)
 							{
+								m_pLobbyTab->SystemMessage( VarArgs("%s has joined the room", from) );
 								m_pLobbyTab->UserList_AddUser(from);
 								return;
 							}
@@ -450,10 +477,86 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 						{
 							if (m_pLobbyTab)
 							{
+								m_pLobbyTab->SystemMessage( VarArgs("%s has left the room", from) );
 								m_pLobbyTab->UserList_RemoveUser(from);
 								return;
 							}
 						}
+					}
+				}
+				// KICK
+				//		:ChanServ!ChanServ@Services.GameSurge.net KICK #FortressForever squeektest :(squeek) test
+				else if (Q_strcmp(command,"KICK") == 0)
+				{
+					// just to make sure a channel is being parted
+					if (buf[0] == '#')
+					{
+						// #fortressforever
+						if (Q_strnicmp((buf+1), "fortressforever", 15) == 0)
+						{
+							// skip the chan param, go to the next (kicked user)
+							buf = strchr(buf,' ') + 1;
+
+							// MAXNICKLEN is 30
+							char kicked[31];
+							kicked[30] = '\0';
+							
+							for(int ti=0;ti<30;++ti)
+							{
+								if (buf[ti] == ' ')
+								{
+									kicked[ti] = '\0';
+									break;
+								}
+								kicked[ti]=buf[ti];
+							}
+							
+							// skip to the reason
+							buf = strchr(buf,':') + 1;
+
+							if (m_pLobbyTab)
+							{
+								m_pLobbyTab->SystemMessage( VarArgs("%s has been kicked by %s (Reason: %s)", kicked, from, (buf ? buf : "No reason given")) );
+								m_pLobbyTab->UserList_RemoveUser(kicked);
+								return;
+							}
+						}
+					}
+				}
+				// NOTICE
+				//		:squeek!~squeek502@squeek.user.gamesurge NOTICE #fortressforever :test
+				//		:ChanServ!ChanServ@Services.GameSurge.net NOTICE squeektest :(#FortressForever) www.fortress-forever.com ...
+				if (Q_strcmp(command,"NOTICE") == 0)
+				{
+					// going to a channel
+					if (buf[0] == '#')
+					{
+						// #fortressforever
+						if (Q_strnicmp((buf+1), "fortressforever", 15) == 0)
+						{
+							if (m_pLobbyTab)
+							{
+								char *msg = strchr(buf,':') + 1;
+
+								m_pLobbyTab->UserMessage(from, msg, Color(244,244,190,255));
+								return;
+							}
+						}
+					}
+					// going to the local user
+					else if (Q_strncmp(buf, irc_user.nick, Q_strlen(irc_user.nick)) == 0)
+					{
+						if (m_pLobbyTab)
+						{
+							char *msg = strchr(buf,':') + 1;
+
+							m_pLobbyTab->SystemMessage(VarArgs("Notice from %s: %s", from, msg), Color(244,244,190,255));
+							return;
+						}
+					}
+					else 
+					{
+						DevMsg("[IRC] Strange NOTICE syntax: %s", buf);
 					}
 				}
 			}

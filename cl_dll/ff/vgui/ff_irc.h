@@ -83,11 +83,31 @@ public:
 		m_pRichText_Chat->GotoTextEnd();
 	}
 	
+	void UserMessage( const char *user, const char *message, Color clr )
+	{
+		m_pRichText_Chat->InsertColorChange( clr );
+		m_pRichText_Chat->InsertString( VarArgs("%s: %s\n", user, message) );
+		m_pRichText_Chat->InsertColorChange( m_pRichText_Chat->GetFgColor() );
+		m_pRichText_Chat->GotoTextEnd();
+	}
+	
 	void SystemMessage( const char *message )
 	{
+		m_pRichText_Chat->InsertColorChange( Color(255,255,255,255) );
 		m_pRichText_Chat->InsertString( "< " );
 		m_pRichText_Chat->InsertString( message );
 		m_pRichText_Chat->InsertString( " >\n" );
+		m_pRichText_Chat->InsertColorChange( m_pRichText_Chat->GetFgColor() );
+		m_pRichText_Chat->GotoTextEnd();
+	}
+
+	void SystemMessage( const char *message, Color clr )
+	{
+		m_pRichText_Chat->InsertColorChange( clr );
+		m_pRichText_Chat->InsertString( "< " );
+		m_pRichText_Chat->InsertString( message );
+		m_pRichText_Chat->InsertString( " >\n" );
+		m_pRichText_Chat->InsertColorChange( m_pRichText_Chat->GetFgColor() );
 		m_pRichText_Chat->GotoTextEnd();
 	}
 
