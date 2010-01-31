@@ -4011,6 +4011,14 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				Name="irc"
 				>
 				<File
+					RelativePath=".\ff\irc\ff_irc_thread.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\irc\ff_irc_thread.h"
+					>
+				</File>
+				<File
 					RelativePath=".\ff\irc\ff_socks.cpp"
 					>
 				</File>

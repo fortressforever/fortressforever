@@ -1,3 +1,14 @@
+//	=============== Fortress Forever ==============
+//	======== A modification for Half-Life 2 =======
+//
+//	@file ff_irc.h
+//	@author Ryan Liptak (squeek)
+//	@date 30/01/2010
+//	@brief IRC interface
+//
+//	REVISIONS
+//	---------
+
 #ifndef FF_IRC_H
 #define FF_IRC_H
 
@@ -13,30 +24,11 @@
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/RichText.h>
 #include <vgui_controls/ListPanel.h>
+#include <vgui_controls/Button.h>
 #include "ff_gameui.h"
 
 using namespace vgui;
 
-//-----------------------------------------------------------------------------
-// Thread Test
-//-----------------------------------------------------------------------------
-
-class CThreadTest : public CThread
-{
-	DECLARE_CLASS_SIMPLE( CThreadTest, CThread );
-	
-	public:
-		int Run();
-		bool IsRunning() { return m_bIsRunning; };
-		static CThreadTest& GetInstance(); 
-		
-	protected:
-		CThreadTest( void );
-		~CThreadTest( void );
-
-	private:
-		bool m_bIsRunning;
-};
 
 //-----------------------------------------------------------------------------
 // IRC Tab
@@ -188,10 +180,12 @@ public:
 			KeyValues *kv = m_pUserList->GetItem( index );
 			DevMsg("[IRC] Updating user name from %s to: %s\n", username, newname);
 			kv->SetString( "name", newname );
+			m_pUserList->ApplyItemChanges( index );
+			m_pUserList->SortList();
 		}
 	}
 	
-	void UserList_UpdateUserAccess( const char *username, int newaccess )
+	void UserList_UpdateUserAccess( const char *username, int newaccess, bool bCanSetLower=true )
 	{
 		int index = UserList_FindUserByName( username );
 
@@ -199,7 +193,13 @@ public:
 		{
 			KeyValues *kv = m_pUserList->GetItem( index );
 			DevMsg("[IRC] Updating user access for %s to: %d\n", username, newaccess);
-			kv->SetInt( "access", newaccess );
+			// only go through with the update if its necessary to
+			if(kv->GetInt("access") != newaccess && bCanSetLower || (!bCanSetLower && newaccess > kv->GetInt("access")))
+			{
+				kv->SetInt( "access", newaccess );
+				m_pUserList->ApplyItemChanges( index );
+				m_pUserList->SortList();
+			}
 		}
 	}
 	
@@ -263,10 +263,20 @@ public:
 
 	void AddGameTab();
 	void RemoveGameTab( CFFIRCTab *pTab );
+	void SetVisible(bool state);
 	
 	void ParseServerMessage( char *buf );
 
 	MESSAGE_FUNC( Close, "Close" );
+	
+	struct cUser
+	{
+		char nick[30]; 
+		char ident[100];
+		char email[100];
+		char status;
+	};
+	cUser irc_user;
 
 private:
 
@@ -285,14 +295,36 @@ private:
 	vgui::TextEntry*		m_pTextEntry_ChatEntry;
 	vgui::RichText*			m_pRichText_LobbyChat;
 
-	CThreadTest				*m_pThread;
-
-	//vgui::Button			*m_pOKButton;
-	//vgui::Button			*m_pCancelButton;
-	//vgui::Button			*m_pApplyButton;
-
 };
 
 DECLARE_GAMEUI(CFFIRC, CFFIRCPanel, ffirc);
+
+//=============================================================================
+// Popup window that displays status, allows login, etc
+//=============================================================================
+class CFFIRCConnectPanel : public Frame
+{
+	DECLARE_CLASS_SIMPLE(CFFIRCConnectPanel, Frame);
+
+public:
+	CFFIRCConnectPanel( vgui::VPANEL parent );
+
+	void Reset();
+	
+	void SetVisible(bool state);
+	void UpdateStatus( const char *status );
+	void ConnectFailed();
+	void Connected();
+
+private:
+	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+
+private:
+	vgui::TextEntry* m_pTextEntry_NickEntry;
+	vgui::Label* m_pStatusLabel;
+
+};
+
+DECLARE_GAMEUI(CFFIRCConnect, CFFIRCConnectPanel, ffircconnect);
 
 #endif // FF_IRC_H 

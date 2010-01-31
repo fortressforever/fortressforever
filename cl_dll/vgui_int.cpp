@@ -189,6 +189,7 @@ void VGui_CreateGlobalPanels( void )
 	ffgamemodes->Create(uiParent);
 	ffsplash->Create(uiParent);
 	ffirc->Create(uiParent);
+	ffircconnect->Create(uiParent);
 	// <-- Mirv
 }
 
