@@ -28,7 +28,6 @@
 	#include "ff_scriptman.h"
 	#include "ff_luacontext.h"
 	#include "ff_scheduleman.h"
-	#include "ff_timerman.h"
 	#include "ff_utils.h"
 	#include "ff_buildableobjects_shared.h"
 	#include "ff_menuman.h"
@@ -545,11 +544,6 @@ ConVar mp_prematch( "mp_prematch",
 			_scheduleman.Shutdown();
 			// Start schedule manager
 			_scheduleman.Init();
-			
-			// Shutdown timer manager
-			_timerman.Shutdown();
-			// Start timer manager
-			_timerman.Init();
 
 			// Re-start entsys for the map
 			_scriptman.LevelInit(STRING(gpGlobals->mapname));
