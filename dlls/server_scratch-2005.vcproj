@@ -4611,14 +4611,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_menuman.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ff\ff_menuman.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ff\ff_minecart.cpp"
 				>
 			</File>

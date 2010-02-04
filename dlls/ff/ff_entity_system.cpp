@@ -23,7 +23,6 @@
 #include "ff_entity_system.h"
 #include "ff_luacontext.h"
 #include "ff_scheduleman.h"
-#include "ff_menuman.h"
 #include "ff_scriptman.h"
 #include "ff_utils.h"
 
@@ -79,7 +78,6 @@ void CFFEntitySystemHelper::OnThink()
 	VPROF_BUDGET( "CFFEntitySystemHelper::OnThink", VPROF_BUDGETGROUP_FF_LUA );
 
 	_scheduleman.Update();
-	//_menuman.Update();
 	SetNextThink(gpGlobals->curtime + TICK_INTERVAL);
 }
 
