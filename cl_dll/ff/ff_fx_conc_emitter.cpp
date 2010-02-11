@@ -75,6 +75,35 @@ ConVar ffdev_conc_effect_radius2("ffdev_conc_effect_radius2", "520", FCVAR_CHEAT
 #define CONC_RADIUS2			ffdev_conc_effect_radius2.GetFloat()
 
 
+ConVar ffdev_conc2_effect_framerate("ffdev_conc2_effect_framerate", "1", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_width("ffdev_conc2_effect_width", "20", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_width2("ffdev_conc2_effect_width2", "0", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_width3("ffdev_conc2_effect_width3", "10", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_spread("ffdev_conc2_effect_spread", "0", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_amplitude("ffdev_conc2_effect_amplitude", "0", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_lifetime("ffdev_conc2_effect_lifetime", ".3", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_r("ffdev_conc2_effect_r", "255", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_g("ffdev_conc2_effect_g", "255", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_b("ffdev_conc2_effect_b", "225", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_a("ffdev_conc2_effect_a", "178", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_radius("ffdev_conc2_effect_radius", "120", FCVAR_CHEAT);
+ConVar ffdev_conc2_effect_radius2("ffdev_conc2_effect_radius2", "520", FCVAR_CHEAT);
+
+#define CONC2_FRAMERATE		ffdev_conc2_effect_framerate.GetFloat()
+#define CONC2_WIDTH			ffdev_conc2_effect_width.GetFloat()
+#define CONC2_WIDTH2			ffdev_conc2_effect_width2.GetFloat()
+#define CONC2_WIDTH3			ffdev_conc2_effect_width3.GetFloat()
+#define CONC2_SPREAD			ffdev_conc2_effect_spread.GetFloat()
+#define CONC2_AMPLITUDE		ffdev_conc2_effect_amplitude.GetFloat()
+#define CONC2_LIFETIME		ffdev_conc2_effect_lifetime.GetFloat()
+#define CONC2_R				ffdev_conc2_effect_r.GetFloat()
+#define CONC2_G				ffdev_conc2_effect_g.GetFloat()
+#define CONC2_B				ffdev_conc2_effect_b.GetFloat()
+#define CONC2_A				ffdev_conc2_effect_a.GetFloat()
+#define CONC2_RADIUS			ffdev_conc2_effect_radius.GetFloat()
+#define CONC2_RADIUS2			ffdev_conc2_effect_radius2.GetFloat()
+
+
 //========================================================================
 // Ragdoll stuff
 //========================================================================
@@ -378,13 +407,7 @@ void C_ConcEffect::ClientThink( void )
 //-----------------------------------------------------------------------------
 void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 {
-	/*
-	voogru: not enough time for this shit, spent 3-4 hours fucking with this and ragdolls are being a fucking pain in the ass, 
-	I'm able to affect them, but not the way I want them to behave.
 
-	CRagdollConcEnumerator ragdollEnum(data.m_vOrigin);
-	partition->EnumerateElementsInSphere( PARTITION_CLIENT_RESPONSIVE_EDICTS, data.m_vOrigin, data.m_flRadius, false, &ragdollEnum );
-	*/
 #define TE_EXPLFLAG_NODLIGHTS	0x2	// do not render dynamic lights
 #define TE_EXPLFLAG_NOSOUND		0x4	// do not play client explosion sound
 
@@ -664,3 +687,4 @@ void FF_FX_ConcussionEffectHandheld_Callback(const CEffectData &data)
 }
 
 DECLARE_CLIENT_EFFECT("FF_ConcussionEffect", FF_FX_ConcussionEffect_Callback);
+DECLARE_CLIENT_EFFECT("FF_ConcussionEffectHandheld", FF_FX_ConcussionEffectHandheld_Callback);
