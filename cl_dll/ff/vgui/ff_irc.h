@@ -29,6 +29,20 @@
 
 using namespace vgui;
 
+// quakenet.org server info:
+//		:xs4all.nl.quakenet.org 005 squeektest 
+//			WHOX WALLCHOPS WALLVOICES USERIP CPRIVMSG CNOTICE SILENCE=15 
+//			MODES=6 MAXCHANNELS=20 MAXBANS=45 NICKLEN=15 :are supported by this server
+//		:xs4all.nl.quakenet.org 005 squeektest 
+//			MAXNICKLEN=15 TOPICLEN=250 AWAYLEN=160 KICKLEN=250 CHANNELLEN=200 
+//			MAXCHANNELLEN=200 CHANTYPES=#& PREFIX=(ov)@+ STATUSMSG=@+ 
+//			CHANMODES=b,k,l,imnpstrDducCNMT CASEMAPPING=rfc1459 
+//			NETWORK=QuakeNet :are supported by this server
+
+#define IRC_MAX_CHANLEN 200
+#define IRC_MAX_NICKLEN 15
+#define IRC_MAX_TOPICLEN 250
+#define IRC_USERMODES "ovb"
 
 //-----------------------------------------------------------------------------
 // IRC Tab
@@ -56,6 +70,8 @@ public:
 		m_pUserList->SetSortFunc( 0, &(UserList_SortFunc) ); // access, name
 		m_pUserList->SetSortColumn( 0 ); // access
 		m_pUserList->SetColumnSortable( 1, false ); // turn off by-name-only sorting
+
+		m_szChannel[0] = 0;
 		
 		UserList_SetReceiving( false );
 	}
@@ -69,6 +85,19 @@ public:
 		m_pUserList->SetFont( pScheme->GetFont( "DefaultVerySmall" ) );
 	}
 	
+	void SetChannel( const char *channel, bool joinchannel = true )
+	{
+		if(channel[0] == '#')
+			Q_strncpy( m_szChannel, channel+1, IRC_MAX_CHANLEN );
+		else
+			Q_strncpy( m_szChannel, channel, IRC_MAX_CHANLEN );
+	}
+	
+	const char* GetChannel()
+	{
+		return m_szChannel;
+	}
+
 	void UserMessage( const char *user, const char *message )
 	{
 		m_pRichText_Chat->InsertString( VarArgs("%s: %s\n", user, message) );
@@ -171,6 +200,16 @@ public:
 		}
 	}
 	
+	bool UserList_IsInList( const char *username )
+	{
+		int index = UserList_FindUserByName( username );
+
+		if (m_pUserList->IsValidItemID(index))
+			return true;
+		else
+			return false;
+	}
+	
 	void UserList_UpdateUserName( const char *username, const char *newname )
 	{
 		int index = UserList_FindUserByName( username );
@@ -216,7 +255,6 @@ public:
 	}
 
 protected:
-
 	static int UserList_SortFunc( ListPanel *pPanel, const ListPanelItem &item1, const ListPanelItem &item2 )
 	{
 		const vgui::ListPanelItem *p1 = &item1;
@@ -238,16 +276,55 @@ protected:
 	}
 
 protected:
-
-	vgui::TextEntry			*m_pTextEntry_ChatEntry;
-	vgui::RichText			*m_pRichText_Chat;
-	vgui::ListPanel			*m_pUserList;
+	vgui::TextEntry		*m_pTextEntry_ChatEntry;
+	vgui::RichText		*m_pRichText_Chat;
+	vgui::ListPanel		*m_pUserList;
+	char				m_szChannel[IRC_MAX_CHANLEN+1];
 
 private:
-	
 	bool m_bReceivingNames;
 
 };
+
+
+//-----------------------------------------------------------------------------
+// CFFIRCLobbyTab
+//-----------------------------------------------------------------------------
+
+class CFFIRCLobbyTab : public CFFIRCTab
+{
+	DECLARE_CLASS_SIMPLE(CFFIRCLobbyTab, CFFIRCTab);
+
+public:
+	CFFIRCLobbyTab(Panel *parent, char const *panelName);
+	virtual void ApplySchemeSettings( IScheme *pScheme );
+	
+private:
+	MESSAGE_FUNC_PARAMS(OnNewLineMessage, "TextNewLine", data);
+	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+
+	vgui::ListPanel			*m_pGameList;
+
+};
+
+
+//-----------------------------------------------------------------------------
+// CFFIRCGameTab
+//-----------------------------------------------------------------------------
+
+class CFFIRCGameTab : public CFFIRCTab
+{
+	DECLARE_CLASS_SIMPLE(CFFIRCGameTab, CFFIRCTab);
+
+public:
+	CFFIRCGameTab(Panel *parent, char const *panelName);
+
+private:
+	MESSAGE_FUNC_PARAMS(OnNewLineMessage, "TextNewLine", data);
+	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+
+};
+
 
 //-----------------------------------------------------------------------------
 // IRC Panel
@@ -261,8 +338,10 @@ public:
 	CFFIRCPanel( vgui::VPANEL parent );
 	~CFFIRCPanel();
 
-	void AddGameTab();
-	void RemoveGameTab( CFFIRCTab *pTab );
+	void AddGameTab( const char *name, const char *channel );
+	void RemoveGameTab( CFFIRCGameTab *pTab );
+	CFFIRCGameTab* GetGameTabByChannel( const char * );
+
 	void SetVisible(bool state);
 	
 	void ParseServerMessage( char *buf );
@@ -271,7 +350,7 @@ public:
 	
 	struct cUser
 	{
-		char nick[30]; 
+		char nick[IRC_MAX_NICKLEN+1]; 
 		char ident[100];
 		char email[100];
 		char status;
@@ -279,18 +358,15 @@ public:
 	cUser irc_user;
 
 private:
-
 	//MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine",data); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
 	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	//MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	
 	//void CFFIRCPanel::OnNewLineMessage(KeyValues *data);
 
-	vgui::PropertySheet		*m_pIRCTabs;
-	//CFFIRCLobbyTab		*m_pLobbyTab;
-	//CFFIRCGameTab			*m_pGame1Tab;
-	CFFIRCTab				*m_pGameTab;
-	CFFIRCTab				*m_pLobbyTab;
+	vgui::PropertySheet			*m_pIRCTabs;
+	CUtlVector<CFFIRCGameTab*>	m_pGameTabs;
+	CFFIRCLobbyTab				*m_pLobbyTab;
 
 	vgui::TextEntry*		m_pTextEntry_ChatEntry;
 	vgui::RichText*			m_pRichText_LobbyChat;

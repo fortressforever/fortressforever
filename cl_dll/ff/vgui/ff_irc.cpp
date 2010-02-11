@@ -28,136 +28,138 @@ CFFIRCConnectPanel *g_pIRCConnectPanel = NULL;
 // CFFIRCLobbyTab
 //-----------------------------------------------------------------------------
 
-class CFFIRCLobbyTab : public CFFIRCTab
+CFFIRCLobbyTab::CFFIRCLobbyTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
 {
-	DECLARE_CLASS_SIMPLE(CFFIRCLobbyTab, CFFIRCTab);
+	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme");
+	SetScheme( scheme );
 
-public:
+	m_pGameList = new ListPanel(this, "ListPanel_GameList");
+
+	m_pGameList->AddActionSignalTarget( this );
 	
-	CFFIRCLobbyTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
-	{
-		m_pGameList = new ListPanel(this, "ListPanel_GameList");
+    m_pGameList->AddColumnHeader( 0, "players" , "Players" , 20, ListPanel::COLUMN_RESIZEWITHWINDOW );
+    m_pGameList->AddColumnHeader( 1, "name" , "Game Name" , 200, ListPanel::COLUMN_RESIZEWITHWINDOW );
+	m_pGameList->AddColumnHeader( 2, "map" , "Map Name" , 150, ListPanel::COLUMN_RESIZEWITHWINDOW  );
 
-		m_pGameList->AddActionSignalTarget( this );
-		
-        m_pGameList->AddColumnHeader( 0, "players" , "Players" , 20, ListPanel::COLUMN_RESIZEWITHWINDOW );
-        m_pGameList->AddColumnHeader( 1, "name" , "Game Name" , 200, ListPanel::COLUMN_RESIZEWITHWINDOW );
-		m_pGameList->AddColumnHeader( 2, "map" , "Map Name" , 150, ListPanel::COLUMN_RESIZEWITHWINDOW  );	// |-- Mirv: Current class
+	KeyValues *kv = new KeyValues( "LI" );
+	kv->SetString( "players", "1/8" );
+	kv->SetString( "name", "4v4 1500+ pros" );
+	kv->SetString( "map", "ff_monkey" );
+	m_pGameList->AddItem( kv, 0, false, false );
+	kv->deleteThis();
 
-		KeyValues *kv = new KeyValues( "LI" );
-		kv->SetString( "players", "1/8" );
-		kv->SetString( "name", "4v4 1500+ pros" );
-		kv->SetString( "map", "ff_monkey" );
-		m_pGameList->AddItem( kv, 0, false, false );
-		kv->deleteThis();
+	LoadControlSettings("resource/ui/FFIRCLobbyTab.res");
+}
 
-		LoadControlSettings("resource/ui/FFIRCLobbyTab.res");
-	}
+void CFFIRCLobbyTab::ApplySchemeSettings( IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
+
+	m_pGameList->SetFont( pScheme->GetFont( "DefaultVerySmall" ) );
+}
+
+void CFFIRCLobbyTab::OnNewLineMessage(KeyValues *data)
+{
+	char szCommand[256];
+	m_pTextEntry_ChatEntry->GetText(szCommand, sizeof(szCommand));
 	
-	virtual void ApplySchemeSettings( IScheme *pScheme )
-	{
-		BaseClass::ApplySchemeSettings( pScheme );
+	if ( !g_IRCSocket.Send( VarArgs("PRIVMSG #fortressforever :%s\r\n", szCommand) ) )
+		Msg("[IRC] Unable to send message: %s\n", szCommand);
+                 
+	//const char* text = data->GetString("text");
+	m_pRichText_Chat->InsertString( VarArgs("%s: %s",g_pIRCPanel->irc_user.nick, szCommand) );
+	m_pRichText_Chat->InsertString("\n");
+	m_pTextEntry_ChatEntry->SetText("");
+	m_pRichText_Chat->GotoTextEnd();
+}
 
-		m_pGameList->SetFont( pScheme->GetFont( "DefaultVerySmall" ) );
-	}
-	
-	MESSAGE_FUNC_PARAMS(OnNewLineMessage, "TextNewLine", data)
-	{
-		char szCommand[256];
-		m_pTextEntry_ChatEntry->GetText(szCommand, sizeof(szCommand));
-		
-		if ( !g_IRCSocket.Send( VarArgs("PRIVMSG #fortressforever :%s\r\n", szCommand) ) )
-			Msg("[IRC] Unable to send message: %s\n", szCommand);
-	                 
-		//const char* text = data->GetString("text");
-		m_pRichText_Chat->InsertString( VarArgs("%s: %s",g_pIRCPanel->irc_user.nick, szCommand) );
-		m_pRichText_Chat->InsertString("\n");
-		m_pTextEntry_ChatEntry->SetText("");
-		m_pRichText_Chat->GotoTextEnd();
-	}
+void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
+{
+	const char *pszCommand = data->GetString("command");
+	static int i=0;
 
-	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data)
+	if (Q_strcmp(pszCommand, "AddGame") == 0)
 	{
-		const char *pszCommand = data->GetString("command");
+		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
 
-		if (Q_strcmp(pszCommand, "AddGame") == 0)
+		if (parent)
 		{
-			CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
-
-			if (parent)
-			{
-				parent->AddGameTab();
-			}
-		}
-		if (Q_strcmp(pszCommand, "Disconnect") == 0)
-		{
-			CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
-
-			if (parent)
-			{
-				parent->irc_user.status = 0;
-
-				if ( !g_IRCSocket.Send( "QUIT\r\n" ) )
-					Msg("[IRC] Unable to send message: QUIT\n");
-
-				parent->SetVisible( false );
-				g_pIRCConnectPanel->Reset();
-				g_pIRCConnectPanel->SetVisible( true );
-			}
+			parent->AddGameTab( "Game Name", VarArgs( "#ffirc%d", i ) );
+			++i;
 		}
 	}
+	if (Q_strcmp(pszCommand, "Disconnect") == 0)
+	{
+		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
 
-	vgui::ListPanel			*m_pGameList;
+		if (parent)
+		{
+			parent->irc_user.status = 0;
 
-};
+			if ( !g_IRCSocket.Send( "QUIT\r\n" ) )
+				Msg("[IRC] Unable to send message: QUIT\n");
+
+			parent->SetVisible( false );
+			g_pIRCConnectPanel->Reset();
+			g_pIRCConnectPanel->SetVisible( true );
+		}
+	}
+}
 
 //-----------------------------------------------------------------------------
 // CFFIRCGameTab
 //-----------------------------------------------------------------------------
 
-class CFFIRCGameTab : public CFFIRCTab
+CFFIRCGameTab::CFFIRCGameTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
 {
-	DECLARE_CLASS_SIMPLE(CFFIRCGameTab, CFFIRCTab);
+	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme");
+	SetScheme( scheme );
 
-public:
+	LoadControlSettings("resource/ui/FFIRCGameTab.res");
+}
+
+void CFFIRCGameTab::OnNewLineMessage(KeyValues *data)
+{
+	char szCommand[256];
+	m_pTextEntry_ChatEntry->GetText(szCommand, sizeof(szCommand));
 	
-	CFFIRCGameTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
+	if ( !g_IRCSocket.Send( VarArgs("PRIVMSG #%s :%s\r\n", GetChannel(), szCommand) ) )
+		Msg("[IRC] Unable to send message: %s\n", szCommand);
+    
+	//const char* text = data->GetString("text");
+	m_pRichText_Chat->InsertString( VarArgs("%s: %s",g_pIRCPanel->irc_user.nick, szCommand) );
+	m_pRichText_Chat->InsertString("\n");
+	m_pTextEntry_ChatEntry->SetText("");
+	m_pRichText_Chat->GotoTextEnd();
+
+	/*
+	char szCommand[256];
+	m_pTextEntry_ChatEntry->GetText(szCommand, sizeof(szCommand));
+    
+	if ( !g_IRCSocket.Send( VarArgs("%s\r\n", szCommand) ) )
+		Msg("[IRC] Unable to send message: %s\n", szCommand);
+
+	//const char* text = data->GetString("text");
+	m_pRichText_Chat->InsertString(szCommand);
+	m_pRichText_Chat->InsertString("\n");
+	m_pTextEntry_ChatEntry->SetText("");
+	m_pRichText_Chat->GotoTextEnd();*/
+}
+
+void CFFIRCGameTab::OnButtonCommand(KeyValues *data)
+{
+	const char *pszCommand = data->GetString("command");
+
+	if (Q_strcmp(pszCommand, "RemoveGame") == 0)
 	{
+		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
 
-		LoadControlSettings("resource/ui/FFIRCGameTab.res");
-	}
-
-	MESSAGE_FUNC_PARAMS(OnNewLineMessage, "TextNewLine", data)
-	{
-		char szCommand[256];
-		m_pTextEntry_ChatEntry->GetText(szCommand, sizeof(szCommand));
-	    
-		if ( !g_IRCSocket.Send( VarArgs("%s\r\n", szCommand) ) )
-			Msg("[IRC] Unable to send message: %s\n", szCommand);
-
-		//const char* text = data->GetString("text");
-		m_pRichText_Chat->InsertString(szCommand);
-		m_pRichText_Chat->InsertString("\n");
-		m_pTextEntry_ChatEntry->SetText("");
-		m_pRichText_Chat->GotoTextEnd();
-	}
-	
-	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data)
-	{
-		const char *pszCommand = data->GetString("command");
-
-		if (Q_strcmp(pszCommand, "RemoveGame") == 0)
+		if (parent)
 		{
-			CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
-
-			if (parent)
-			{
-				parent->RemoveGameTab( this );
-			}
+			parent->RemoveGameTab( this );
 		}
 	}
-
-};
+}
 
 //-----------------------------------------------------------------------------
 // CFFIRCPanel gameui definition
@@ -294,16 +296,42 @@ void CFFIRCPanel::Close()
 	}
 }
 
-
-void CFFIRCPanel::AddGameTab()
+void CFFIRCPanel::AddGameTab( const char *name, const char *channel )
 {
-	m_pGameTab = new CFFIRCGameTab(this, "IRCGameTab");
-	m_pIRCTabs->AddPage(m_pGameTab, "Game Name");
+	CFFIRCGameTab *pGameTab = new CFFIRCGameTab(this, "IRCGameTab");
+	pGameTab->SetChannel( channel );
+	
+	char joinmsg[IRC_MAX_CHANLEN+10];
+	sprintf( joinmsg, "JOIN %s\n\r", channel );
+	// join new channel
+	if (!g_IRCSocket.Send( joinmsg ))
+		Msg("[IRC] Could not send JOIN to server\n");
+
+	m_pGameTabs.AddToTail( pGameTab );
+	m_pIRCTabs->AddPage(pGameTab, name);
+	m_pIRCTabs->SetActivePage(pGameTab);
 }
 
-void CFFIRCPanel::RemoveGameTab( CFFIRCTab *pTab )
+void CFFIRCPanel::RemoveGameTab( CFFIRCGameTab *pTab )
 {
-	m_pIRCTabs->DeletePage(pTab);
+	m_pGameTabs.FindAndRemove( pTab );
+	m_pIRCTabs->DeletePage( pTab );
+}
+
+CFFIRCGameTab* CFFIRCPanel::GetGameTabByChannel( const char *channel )
+{
+	for(int i=0; i<m_pGameTabs.Count(); ++i)
+	{
+		if (m_pGameTabs.IsValidIndex(i))
+		{
+			CFFIRCGameTab *pGameTab = m_pGameTabs.Element( i );
+			if(Q_stricmp(pGameTab->GetChannel(), channel) == 0)
+			{
+				return pGameTab;
+			}
+		}
+	}
+	return (CFFIRCGameTab*)NULL;
 }
 
 void CFFIRCPanel::ParseServerMessage( char *buf )
@@ -319,6 +347,17 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 		g_IRCSocket.Send( VarArgs("%s\r\n", buf) );
 		return;
 	}
+
+	// quakenet.org server info:
+	//		:xs4all.nl.quakenet.org 005 squeektest 
+	//			WHOX WALLCHOPS WALLVOICES USERIP CPRIVMSG CNOTICE SILENCE=15 
+	//			MODES=6 MAXCHANNELS=20 MAXBANS=45 NICKLEN=15 :are supported by this server
+	//		:xs4all.nl.quakenet.org 005 squeektest 
+	//			MAXNICKLEN=15 TOPICLEN=250 AWAYLEN=160 KICKLEN=250 CHANNELLEN=200 
+	//			MAXCHANNELLEN=200 CHANTYPES=#& PREFIX=(ov)@+ STATUSMSG=@+ 
+	//			CHANMODES=b,k,l,imnpstrDducCNMT CASEMAPPING=rfc1459 
+	//			NETWORK=QuakeNet :are supported by this server
+
 
 	// standard IRC server messages always start with a colon
 	//		:nick!host@mask COMMAND parameter1 parameter2 ... [:param with spaces]
@@ -357,8 +396,7 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 			// if there is a !, and the ! is before the first space, then the message is being sent by someone
 			if (buf[excl_pos] && firstspace_pos > excl_pos)
 			{
-				// MAXNICKLEN is 30
-				char from[31];
+				char from[IRC_MAX_NICKLEN+1];
 				
 				for(int ti=1;ti<excl_pos;++ti)
 				{
@@ -378,14 +416,34 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 					// going to a channel
 					if (buf[0] == '#')
 					{
+						char *msg = strchr(buf,':') + 1;
+
 						// #fortressforever
 						if (Q_strnicmp((buf+1), "fortressforever", 15) == 0)
 						{
 							if (m_pLobbyTab)
 							{
-								char *msg = strchr(buf,':') + 1;
-
 								m_pLobbyTab->UserMessage(from, msg);
+								return;
+							}
+						}
+						/*
+						else if (Q_strnicmp((buf+1), "ffirc-global", 12) == 0)
+						{
+
+						}
+						*/
+						else
+						{
+							// skip the #, we know it's there
+							buf+=1;
+
+							char *pChannel = strtok(buf, " ");
+
+							CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
+							if (pGameTab)
+							{
+								pGameTab->UserMessage(from, msg);
 								return;
 							}
 						}
@@ -423,23 +481,55 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 						// need to tell all open tabs
 						if (m_pLobbyTab)
 						{
-							m_pLobbyTab->SystemMessage( VarArgs("%s is now known as %s", from, buf) );
-							m_pLobbyTab->UserList_UpdateUserName(from, buf);
-							return;
+							if(m_pLobbyTab->UserList_IsInList(from))
+							{
+								m_pLobbyTab->SystemMessage( VarArgs("%s is now known as %s", from, buf) );
+								m_pLobbyTab->UserList_UpdateUserName(from, buf);
+							}
 						}
+						// tell game tabs
+						for(int i=0; i<m_pGameTabs.Count(); ++i)
+						{
+							if(m_pGameTabs.IsValidIndex(i))
+							{
+								CFFIRCGameTab *pGameTab = m_pGameTabs.Element(i);
+								if(pGameTab->UserList_IsInList(from))
+								{
+									pGameTab->SystemMessage( VarArgs("%s is now known as %s", from, buf) );
+									pGameTab->UserList_UpdateUserName(from, buf);
+								}
+							}
+						}
+						return;
 					}
 				}
 				// QUIT
 				//		:squeek!~squeek502@squeek.user.gamesurge QUIT :Reason
 				else if (Q_strcmp(command,"QUIT") == 0)
 				{
+					char *msg = strchr(buf,':') + 1;
+
 					// need to update all open tabs
 					if (m_pLobbyTab)
 					{
-						char *msg = strchr(buf,':') + 1;
-
-						m_pLobbyTab->SystemMessage( VarArgs("%s has quit (%s)", from, (msg ? msg : "Unknown reason")) );
-						m_pLobbyTab->UserList_RemoveUser(from);
+						if(m_pLobbyTab->UserList_IsInList(from))
+						{
+							m_pLobbyTab->SystemMessage( VarArgs("%s has quit (%s)", from, (msg ? msg : "Unknown reason")) );
+							m_pLobbyTab->UserList_RemoveUser(from);
+						}
+					}
+					// tell game tabs
+					for(int i=0; i<m_pGameTabs.Count(); ++i)
+					{
+						if(m_pGameTabs.IsValidIndex(i))
+						{
+							CFFIRCGameTab *pGameTab = m_pGameTabs.Element(i);
+							if(pGameTab->UserList_IsInList(from))
+							{
+								pGameTab->SystemMessage( VarArgs("%s has quit (%s)", from, (msg ? msg : "Unknown reason")) );
+								pGameTab->UserList_RemoveUser(from);
+							}
+						}
 					}
 					return;
 				}
@@ -457,6 +547,22 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 							{
 								m_pLobbyTab->SystemMessage( VarArgs("%s has joined the room", from) );
 								m_pLobbyTab->UserList_AddUser(from);
+								return;
+							}
+						}
+						// game tab?
+						else
+						{
+							// skip the #, we know it's there
+							buf+=1;
+
+							char *pChannel = strtok(buf, " ");
+
+							CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
+							if (pGameTab)
+							{
+								pGameTab->SystemMessage( VarArgs("%s has joined the room", from) );
+								pGameTab->UserList_AddUser(from);
 								return;
 							}
 						}
@@ -479,6 +585,22 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 								return;
 							}
 						}
+						// game tab?
+						else
+						{
+							// skip the #, we know it's there
+							buf+=1;
+
+							char *pChannel = strtok(buf, " ");
+
+							CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
+							if (pGameTab)
+							{
+								pGameTab->SystemMessage( VarArgs("%s has left the room", from) );
+								pGameTab->UserList_RemoveUser(from);
+								return;
+							}
+						}
 					}
 				}
 				// MODE
@@ -488,50 +610,56 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 					// just to make sure a channel is being moded
 					if (buf[0] == '#')
 					{
-						// #fortressforever
-						if (Q_strnicmp((buf+1), "fortressforever", 15) == 0)
+						// skip the #, we know it's there
+						buf+=1;
+
+						char *pChannel = buf;
+
+						// skip the chan param, go to the next (modes)
+						buf = strchr(buf,' ') + 1;
+
+						pChannel = strtok(pChannel, " ");
+
+						char *params = strchr(buf,' ');
+						
+						// if there are more spaces, then user modes are being set
+						// we'll just ignore channel modes
+						if (params)
 						{
-							// skip the chan param, go to the next (modes)
-							buf = strchr(buf,' ') + 1;
+							// skip the space char
+							params++;
 
-							char *users = strchr(buf,' ');
-							
-							// if there are more spaces, then user modes are being set
-							if (users)
+							char modifier = 0;
+							char mode;
+							for (int i=0; buf[i] != ' '; ++i)
 							{
-								// skip the space char
-								users++;
-
-								char modifier = 0;
-								char mode;
-								for (int i=0; buf[i] != ' '; ++i)
+								if (buf[i] == '+')
+									modifier='+';
+								else if (buf[i] == '-')
+									modifier='-';
+								else if (buf[i] == 'o' || buf[i] == 'v' || buf[i] == 'b')
 								{
-									if (buf[i] == '+')
-										modifier='+';
-									else if (buf[i] == '-')
-										modifier='-';
-									else
+									// if no modifier yet, things are not going well
+									if( !modifier )
+										continue;
+
+									mode = buf[i];
+									
+									char moded[IRC_MAX_NICKLEN+1];
+									moded[IRC_MAX_NICKLEN] = '\0';
+									
+									for(int ti=0;ti<IRC_MAX_NICKLEN;++ti)
 									{
-										// if no modifier yet, things are not going well
-										if( !modifier )
-											continue;
-
-										mode = buf[i];
-										
-										// MAXNICKLEN is 30
-										char moded[31];
-										moded[30] = '\0';
-										
-										for(int ti=0;ti<30;++ti)
+										if (params[ti] == ' ')
 										{
-											if (users[ti] == ' ')
-											{
-												moded[ti] = '\0';
-												break;
-											}
-											moded[ti]=users[ti];
+											moded[ti] = '\0';
+											break;
 										}
+										moded[ti]=params[ti];
+									}
 
+									if (Q_stricmp(pChannel, "fortressforever") == 0)
+									{
 										if (m_pLobbyTab)
 										{
 											m_pLobbyTab->SystemMessage( VarArgs("%s sets mode: %c%c %s", from, modifier, mode, moded) );
@@ -557,33 +685,42 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 												//if (mode=='b')
 											}
 										}
-
-										users = strchr(users,' ');
 									}
-								}
-							}
-							// else channel modes are being set
-							else
-							{
-								char modifier = 0;
-								char mode;
-								for (int i=0; buf[i] != ' '; ++i)
-								{
-									if (buf[i] == '+')
-										modifier='+';
-									else if (buf[i] == '-')
-										modifier='-';
+									// game tab?
 									else
 									{
-										// if no modifier yet, things are not going well
-										if( !modifier )
-											continue;
-
-										mode = buf[i];
+										CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
+										if (pGameTab)
+										{
+											pGameTab->SystemMessage( VarArgs("%s sets mode: %c%c %s", from, modifier, mode, moded) );
+											// +
+											if( modifier=='+' )
+											{
+												// op +o
+												if (mode=='o')
+													pGameTab->UserList_UpdateUserAccess( moded, 2 );
+												// vip +v
+												else if (mode=='v')
+													pGameTab->UserList_UpdateUserAccess( moded, 1, false );
+												// ban +b
+												//else if (mode=='b')
+											}
+											// -
+											else
+											{
+												// delop delvip -o -v
+												if (mode=='v' || mode=='o')
+													pGameTab->UserList_UpdateUserAccess( moded, 0 );
+												// unban -b
+												//if (mode=='b')
+											}
+										}
 									}
+
+									params = strchr(params,' ');
 								}
-							}
-						}
+							} // end for
+						} // end if (params)
 					}
 				}
 				// KICK
@@ -593,33 +730,50 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 					// just to make sure a channel is being parted
 					if (buf[0] == '#')
 					{
+						// skip the chan param, go to the next (kicked user)
+						char *pKicked = strchr(buf,' ') + 1;
+
+						// MAXNICKLEN is 30
+						char kicked[IRC_MAX_NICKLEN+1];
+						kicked[IRC_MAX_NICKLEN] = '\0';
+						
+						for(int ti=0;ti<30;++ti)
+						{
+							if (pKicked[ti] == ' ')
+							{
+								kicked[ti] = '\0';
+								break;
+							}
+							kicked[ti]=pKicked[ti];
+						}
+						
+						// skip to the reason
+						char *pReason = strchr(buf,':') + 1;
+
 						// #fortressforever
 						if (Q_strnicmp((buf+1), "fortressforever", 15) == 0)
 						{
-							// skip the chan param, go to the next (kicked user)
-							buf = strchr(buf,' ') + 1;
-
-							// MAXNICKLEN is 30
-							char kicked[31];
-							kicked[30] = '\0';
-							
-							for(int ti=0;ti<30;++ti)
-							{
-								if (buf[ti] == ' ')
-								{
-									kicked[ti] = '\0';
-									break;
-								}
-								kicked[ti]=buf[ti];
-							}
-							
-							// skip to the reason
-							buf = strchr(buf,':') + 1;
 
 							if (m_pLobbyTab)
 							{
-								m_pLobbyTab->SystemMessage( VarArgs("%s has been kicked by %s (Reason: %s)", kicked, from, (buf ? buf : "No reason given")) );
+								m_pLobbyTab->SystemMessage( VarArgs("%s has been kicked by %s (Reason: %s)", kicked, from, (pReason ? pReason : "No reason given")) );
 								m_pLobbyTab->UserList_RemoveUser(kicked);
+								return;
+							}
+						}
+						// game tab?
+						else
+						{
+							// skip the #, we know it's there
+							buf+=1;
+
+							char *pChannel = strtok(buf, " ");
+
+							CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
+							if (pGameTab)
+							{
+								pGameTab->SystemMessage( VarArgs("%s has been kicked by %s (Reason: %s)", kicked, from, (pReason ? pReason : "No reason given")) );
+								pGameTab->UserList_RemoveUser(kicked);
 								return;
 							}
 						}
@@ -630,6 +784,8 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 				//		:ChanServ!ChanServ@Services.GameSurge.net NOTICE squeektest :(#FortressForever) www.fortress-forever.com ...
 				else if (Q_strcmp(command,"NOTICE") == 0)
 				{
+					char *msg = strchr(buf,':') + 1;
+
 					// going to a channel
 					if (buf[0] == '#')
 					{
@@ -638,9 +794,22 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 						{
 							if (m_pLobbyTab)
 							{
-								char *msg = strchr(buf,':') + 1;
-								
 								m_pLobbyTab->UserMessage(from, msg, Color(244,244,190,255));
+								return;
+							}
+						}
+						// game tab?
+						else
+						{
+							// skip the #, we know it's there
+							buf+=1;
+
+							char *pChannel = strtok(buf, " ");
+
+							CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
+							if (pGameTab)
+							{
+								pGameTab->UserMessage(from, msg, Color(244,244,190,255));
 								return;
 							}
 						}
@@ -650,8 +819,6 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 					{
 						if (m_pLobbyTab)
 						{
-							char *msg = strchr(buf,':') + 1;
-
 							// if it's from global, print to the console and return
 							if (Q_strcmp(from, "Global") == 0)
 							{
@@ -684,8 +851,10 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 				if (Q_strcmp(command,"001") == 0)
 				{
 					char *pUser = strtok(buf, " ");
+					// if the server changed our nickname automatically
 					if (Q_strcmp(pUser, irc_user.nick) != 0)
 					{
+						// update ours to what the server says it is
 						sprintf(irc_user.nick, pUser);
 						Msg("[IRC] Nickname auto-changed to %s", irc_user.nick);
 					}
@@ -702,7 +871,6 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 					// if not connected, bad news
 					if(!irc_user.status)
 					{
-						g_pIRCConnectPanel->UpdateStatus("ERROR: Nickname already in use");
 						g_pIRCConnectPanel->UpdateStatus("Nickname already in use");
 						g_pIRCConnectPanel->ConnectFailed();
 					}
@@ -722,14 +890,29 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 					char *pszChan = strchr(buf,'#');
 					if (pszChan)
 					{
+						char *msg = strchr(pszChan,':') + 1;
+
 						// #fortressforever
 						if (Q_strnicmp((pszChan+1), "fortressforever", 15) == 0)
 						{
 							if (m_pLobbyTab)
 							{
-								char *msg = strchr(pszChan,':') + 1;
-								
 								m_pLobbyTab->UserList_Fill(msg);
+								return;
+							}
+						}
+						// game tab?
+						else
+						{
+							// skip the #, we know it's there
+							pszChan+=1;
+
+							char *pChannel = strtok(pszChan, " ");
+
+							CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
+							if (pGameTab)
+							{
+								pGameTab->UserList_Fill(msg);
 								return;
 							}
 						}
@@ -748,6 +931,21 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 							if (m_pLobbyTab)
 							{
 								m_pLobbyTab->UserList_SetReceiving( false );
+								return;
+							}
+						}
+						// game tab?
+						else
+						{
+							// skip the #, we know it's there
+							pszChan+=1;
+
+							char *pChannel = strtok(pszChan, " ");
+
+							CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
+							if (pGameTab)
+							{
+								pGameTab->UserList_SetReceiving( false );
 								return;
 							}
 						}
@@ -848,6 +1046,8 @@ void CFFIRCConnectPanel::OnButtonCommand(KeyValues *data)
 		m_pTextEntry_NickEntry->GetText(szNick, sizeof(szNick));
 		sprintf(g_pIRCPanel->irc_user.nick, szNick);
 
+		CFFIRCThread::GetInstance().Start();
+
 		if (g_pIRCPanel->irc_user.status)
 		{
 			if (!g_IRCSocket.Send( "QUIT\n\r" ))
@@ -863,7 +1063,7 @@ void CFFIRCConnectPanel::OnButtonCommand(KeyValues *data)
 		}
 
 		// Connect to remote host
-		if (!g_IRCSocket.Connect("irc.gamesurge.net", 6667)) 
+		if (!g_IRCSocket.Connect("irc.quakenet.org", 6667)) 
 		{
 			Msg("[IRC] Could not connect to server\n");
 		}
