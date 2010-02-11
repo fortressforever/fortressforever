@@ -84,7 +84,7 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("ClearRenderFx",		&CBaseEntity::ClearRenderFx)
 
 			.def("GetFriction",			&CBaseEntity::GetFriction)
-			.def("SetFriction",			&CBaseEntity::GetFriction),
+			.def("SetFriction",			&CBaseEntity::SetFriction),
 
 		// CFFInfoScript
 		class_<CFFInfoScript, CBaseEntity>("InfoScript")
