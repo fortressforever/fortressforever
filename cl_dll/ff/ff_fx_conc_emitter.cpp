@@ -419,6 +419,145 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 			CONC_A,					// a
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+	
+		te->BeamRingPoint(filter,
+			0,						// delay
+			( data.m_vOrigin + Vector( 0.0f, 0.0f, 32.0f ) ),			// origin
+			1.0f,					// start radius
+			CONC_RADIUS2,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH2,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+		te->BeamRingPoint(filter,
+			0,						// delay
+			( data.m_vOrigin + Vector( 0.0f, 0.0f, -32.0f ) ),			// origin
+			1.0f,					// start radius
+			CONC_RADIUS2,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH2,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+		// Outer bounding rings on thrown concs
+		te->BeamRingPoint(filter,
+			0,						// delay
+			data.m_vOrigin,			// origin
+			CONC_RADIUS - 1,					// start radius
+			CONC_RADIUS,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH3,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+		//GaussExplosion adds some cool white ember explosion to the conc -GreenMushy
+		te->GaussExplosion( filter, 0, data.m_vOrigin, Vector( 0, 0, 1 ), 1);
+
+	}
+	else
+	{
+		// Okay so apparently dx7 is not so good for the 3d conc effect
+		// So instead we use the flat one for those systems
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() > 70)
+		{
+			C_ConcEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin );
+		}
+		else
+		{
+			CSmartPtr<CConcEmitter> concEffect = CConcEmitter::Create("ConcussionEffect");
+
+			float offset = 0;
+
+			for (int i = 0; i < conc_ripples.GetInt(); i++)
+			{
+				ConcParticle *c = concEffect->AddConcParticle();
+
+				if (c)
+				{
+					c->m_flDieTime = conc_speed.GetFloat();
+					c->m_Pos = data.m_vOrigin;
+					c->m_flRefract = conc_refract.GetFloat();
+					c->m_flOffset = offset;
+
+					offset += conc_ripple_period.GetFloat();
+				}
+			}
+		}
+	}
+
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Callback function for the concussion effect (HANDHELD)
+//-----------------------------------------------------------------------------
+void FF_FX_ConcussionEffectHandheld_Callback(const CEffectData &data)
+{
+
+#define TE_EXPLFLAG_NODLIGHTS	0x2	// do not render dynamic lights
+#define TE_EXPLFLAG_NOSOUND		0x4	// do not play client explosion sound
+
+	// If underwater, just do a bunch of gas
+	if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
+	{
+		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, TE_EXPLFLAG_NODLIGHTS|TE_EXPLFLAG_NOSOUND);
+		if (cl_conc_refract.GetBool())
+			return;
+	}
+
+	if (!cl_conc_refract.GetBool())
+	{
+		CBroadcastRecipientFilter filter;
+
+		te->BeamRingPoint(filter,
+			0,						// delay
+			data.m_vOrigin,			// origin
+			1.0f,					// start radius
+			CONC_RADIUS,			// end radius
+			g_iConcRingTexture,		// texture index
+			0,						// halo index
+			0,						// start frame
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
+			0,						// speed
+			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
 
 		te->BeamRingPoint(filter,
 			0,						// delay
@@ -460,27 +599,35 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
 
+		
+
 
 		// Outer bounding rings
+		//Commenting out the outer ring on HH's. -Green Mushy
+
+		/*
 		te->BeamRingPoint(filter,
 			0,						// delay
 			data.m_vOrigin,			// origin
-			CONC_RADIUS - 1,					// start radius
-			CONC_RADIUS,			// end radius
+			CONC2_RADIUS - 1,					// start radius
+			CONC2_RADIUS,			// end radius
 			g_iConcRingTexture,		// texture index
 			0,						// halo index
 			0,						// start frame
-			CONC_FRAMERATE,			// frame rate
-			CONC_LIFETIME,			// life
-			CONC_WIDTH3,				// width
-			CONC_SPREAD,			// spread (10x end width)
-			CONC_AMPLITUDE,			// amplitude
-			CONC_R,					// r
-			CONC_G,					// g
-			CONC_B,					// b
-			CONC_A,					// a
+			CONC2_FRAMERATE,			// frame rate
+			CONC2_LIFETIME,			// life
+			(CONC2_WIDTH3/ 2),				// width
+			CONC2_SPREAD,			// spread (10x end width)
+			CONC2_AMPLITUDE,			// amplitude
+			CONC2_R,					// r
+			CONC2_G,					// g
+			CONC2_B,					// b
+			CONC2_A,					// a
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+			*/
+
+		te->GaussExplosion( filter, 0, data.m_vOrigin, Vector( 0, 0, 1 ), 1);
 
 	}
 	else
