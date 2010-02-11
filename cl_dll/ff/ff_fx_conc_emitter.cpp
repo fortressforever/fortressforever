@@ -442,7 +442,7 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 			CONC_A,					// a
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
-
+	
 		te->BeamRingPoint(filter,
 			0,						// delay
 			( data.m_vOrigin + Vector( 0.0f, 0.0f, 32.0f ) ),			// origin
@@ -483,8 +483,7 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
 
-
-		// Outer bounding rings
+		// Outer bounding rings on thrown concs
 		te->BeamRingPoint(filter,
 			0,						// delay
 			data.m_vOrigin,			// origin
@@ -504,6 +503,9 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 			CONC_A,					// a
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+		//GaussExplosion adds some cool white ember explosion to the conc -GreenMushy
+		te->GaussExplosion( filter, 0, data.m_vOrigin, Vector( 0, 0, 1 ), 1);
 
 	}
 	else
@@ -564,19 +566,19 @@ void FF_FX_ConcussionEffectHandheld_Callback(const CEffectData &data)
 			0,						// delay
 			data.m_vOrigin,			// origin
 			1.0f,					// start radius
-			CONC2_RADIUS,			// end radius
+			CONC_RADIUS,			// end radius
 			g_iConcRingTexture,		// texture index
 			0,						// halo index
 			0,						// start frame
-			CONC2_FRAMERATE,			// frame rate
-			CONC2_LIFETIME,			// life
-			CONC2_WIDTH,				// width
-			CONC2_SPREAD,			// spread (10x end width)
-			CONC2_AMPLITUDE,			// amplitude
-			CONC2_R,					// r
-			CONC2_G,					// g
-			CONC2_B,					// b
-			CONC2_A,					// a
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
 
@@ -584,19 +586,19 @@ void FF_FX_ConcussionEffectHandheld_Callback(const CEffectData &data)
 			0,						// delay
 			( data.m_vOrigin + Vector( 0.0f, 0.0f, 32.0f ) ),			// origin
 			1.0f,					// start radius
-			CONC2_RADIUS2,			// end radius
+			CONC_RADIUS2,			// end radius
 			g_iConcRingTexture,		// texture index
 			0,						// halo index
 			0,						// start frame
-			CONC2_FRAMERATE,			// frame rate
-			CONC2_LIFETIME,			// life
-			CONC2_WIDTH2,				// width
-			CONC2_SPREAD,			// spread (10x end width)
-			CONC2_AMPLITUDE,			// amplitude
-			CONC2_R,					// r
-			CONC2_G,					// g
-			CONC2_B,					// b
-			CONC2_A,					// a
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH2,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
 
@@ -604,24 +606,29 @@ void FF_FX_ConcussionEffectHandheld_Callback(const CEffectData &data)
 			0,						// delay
 			( data.m_vOrigin + Vector( 0.0f, 0.0f, -32.0f ) ),			// origin
 			1.0f,					// start radius
-			CONC2_RADIUS2,			// end radius
+			CONC_RADIUS2,			// end radius
 			g_iConcRingTexture,		// texture index
 			0,						// halo index
 			0,						// start frame
-			CONC2_FRAMERATE,			// frame rate
-			CONC2_LIFETIME,			// life
-			(CONC2_WIDTH2 / 2),				// width
-			CONC2_SPREAD,			// spread (10x end width)
-			CONC2_AMPLITUDE,			// amplitude
-			CONC2_R,					// r
-			CONC2_G,					// g
-			CONC2_B,					// b
-			CONC2_A,					// a
+			CONC_FRAMERATE,			// frame rate
+			CONC_LIFETIME,			// life
+			CONC_WIDTH2,				// width
+			CONC_SPREAD,			// spread (10x end width)
+			CONC_AMPLITUDE,			// amplitude
+			CONC_R,					// r
+			CONC_G,					// g
+			CONC_B,					// b
+			CONC_A,					// a
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
 
+		
+
 
 		// Outer bounding rings
+		//Commenting out the outer ring on HH's. -Green Mushy
+
+		/*
 		te->BeamRingPoint(filter,
 			0,						// delay
 			data.m_vOrigin,			// origin
@@ -641,6 +648,9 @@ void FF_FX_ConcussionEffectHandheld_Callback(const CEffectData &data)
 			CONC2_A,					// a
 			0,						// speed
 			FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+			*/
+
+		te->GaussExplosion( filter, 0, data.m_vOrigin, Vector( 0, 0, 1 ), 1);
 
 	}
 	else
