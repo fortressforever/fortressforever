@@ -323,6 +323,14 @@ namespace FFLib
 		g_Disable_Timelimit = _b;
 	}
 
+	bool HasGameStarted()
+	{
+		if (FFGameRules())
+			return FFGameRules()->HasGameStarted();
+		else
+			return true;
+	}
+
 	bool ApplyToParseFlags( const luabind::adl::object& table, bool *pbFlags )
 	{
 		if( table.is_valid() && ( luabind::type( table ) == LUA_TTABLE ) )
@@ -2332,6 +2340,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("GetTriggerScriptByName",	&FFLib::GetTriggerScriptByName),
 		def("DisableTimeLimit",			(void(*)())&FFLib::DisableTimeLimit),
 		def("DisableTimeLimit",			(void(*)(bool))&FFLib::DisableTimeLimit),
+		def("HasGameStarted",			&FFLib::HasGameStarted),
 		def("GoToIntermission",			&FFLib::GoToIntermission),
 		def("IncludeScript",			&FFLib::IncludeScript),
 		def("IsPlayer",					&FFLib::IsPlayer),
