@@ -155,10 +155,13 @@ void CFFManCannon::OnJumpPadThink( void )
 		m_iJumpPadState++;
 		break;
 	case JUMPPAD_REMOVE:
+		//Removing this bit so it doesnt tell you it expired -GreenMushy
+		/*
 		CFFPlayer *pOwner = GetOwnerPlayer();
 		if ( pOwner )
 			ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_MANCANNON_TIMEOUT" );
-		//Detonate();
+		Detonate();
+		*/
 		break;
 	}
 }
@@ -200,7 +203,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	}
 
 	// Only trigger when the player hits his jump key
-	if ( !(pPlayer->m_nButtons & IN_JUMP) )
+	if ( !(pPlayer->m_nButtons & IN_JUMP) || pPlayer->m_nButtons & IN_DUCK )//So u dont activate when u duck -GreenMushy
 		return;
 
 	// Launch the guy
