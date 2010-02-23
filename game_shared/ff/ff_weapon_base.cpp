@@ -461,15 +461,37 @@ int CFFWeaponBase::DrawModel( int flags )
 
 		if( !pPlayer->IsCloaked() )
 		{
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
+			//Removing all cloak textures -GreenMushy
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_BLUE);
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_RED);	
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW);
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_GREEN);
 		}
 		else
-		{
+		{	
+			//Disabling full invisibility on no-motion cloak -GreenMushy
+			/*
 			// don't draw if cloaked and basically not moving
 			if ( pPlayer->GetLocalVelocity().Length() < 1.0f )
 				return 1;
+			*/
 
-			FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
+			//Getting team number and applying the right cloak texture -GreenMushy
+			switch( pPlayer->GetTeamNumber() )
+			{
+			case 2:
+				FindOverrideMaterial(FF_CLOAK_MATERIAL_BLUE, FF_CLOAK_TEXTURE_GROUP);
+				break;
+			case 3:
+				FindOverrideMaterial(FF_CLOAK_MATERIAL_RED, FF_CLOAK_TEXTURE_GROUP);
+				break;
+			case 4:
+				FindOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW, FF_CLOAK_TEXTURE_GROUP);
+				break;
+			case 5:
+				FindOverrideMaterial(FF_CLOAK_MATERIAL_GREEN, FF_CLOAK_TEXTURE_GROUP);
+				break;
+			}
 		}
 	}
 

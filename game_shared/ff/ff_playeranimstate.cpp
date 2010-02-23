@@ -478,8 +478,11 @@ Activity CFFPlayerAnimState::CalcMainActivity()
 					{	
 						if ( pPlayer->GetFlags() & FL_INWATER ) // But not if we're swimming!
 							idealActivity = ACT_SWIM;
+						//Commenting this out so spy stays running even when cloaked -GreenMushy
+						/*  
 						else if ( pPlayer->IsCloaked() )
 							idealActivity = ACT_WALK;
+						*/
 						else
 							idealActivity = ACT_RUN;
 					}

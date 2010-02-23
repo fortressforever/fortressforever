@@ -471,7 +471,8 @@ class CCloakedEffect : public CBaseEffect
 	virtual const char *pszEffect() { return "effects/cloak_view"; }
 };
 
-ADD_SCREENSPACE_EFFECT( CCloakedEffect, cloakedeffect );
+//Commenting out the effect on ur screen when u cloak -GreenMushy
+//ADD_SCREENSPACE_EFFECT( CCloakedEffect, cloakedeffect );
 
 //-----------------------------------------------------------------------------
 // Purpose: 

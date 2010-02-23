@@ -124,6 +124,11 @@ CLIENTEFFECT_REGISTER_END()
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecachePlayerCloakMaterial )
 CLIENTEFFECT_MATERIAL( FF_CLOAK_MATERIAL )
+//Dno what this does for cloak - GreenMushy
+CLIENTEFFECT_MATERIAL( FF_CLOAK_MATERIAL_BLUE )
+CLIENTEFFECT_MATERIAL( FF_CLOAK_MATERIAL_RED )
+CLIENTEFFECT_MATERIAL( FF_CLOAK_MATERIAL_YELLOW )
+CLIENTEFFECT_MATERIAL( FF_CLOAK_MATERIAL_GREEN )
 CLIENTEFFECT_REGISTER_END()
 
 bool g_StealMouseForAimSentry = false;
@@ -363,6 +368,7 @@ void CC_PrimeOne( void )
 
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
+
 }
 
 void CC_PrimeTwo( void )
@@ -444,6 +450,7 @@ void CC_PrimeTwo( void )
 
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
+	
 }
 void CC_ThrowGren( void )
 {
@@ -1402,12 +1409,16 @@ void C_FFPlayer::Spawn( void )
 	// Reset pipebomb counter!
 	GetPipebombCounter()->Reset();
 
+	
+
 	// Stop grenade 1 timers if they're playing
 	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
 	{
 		// TODO: Stop sound
 		if( g_pGrenade1Timer->ActiveTimer() )
+		{
 			g_pGrenade1Timer->ResetTimer();
+		}
 	}
 
 	// Stop grenade 2 timers if they're playing
@@ -1415,7 +1426,9 @@ void C_FFPlayer::Spawn( void )
 	{
 		// TODO: Stop sound
 		if( g_pGrenade2Timer->ActiveTimer() )
+		{
 			g_pGrenade2Timer->ResetTimer();
+		}
 	}
 
 	// Jiggles: Start Hint Code
@@ -1598,6 +1611,14 @@ void C_FFPlayer::Death()
 
 	// Reset pipebomb counter!
 	GetPipebombCounter()->Reset();
+
+	//Stop the grenade timer.wavs when the player dies. -Green Mushy
+	//WOOOO dno how to count how many active grens there are!
+	//so im doing it 3 times and this is a bug if u prime more then 3 grens and die.
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	pLocalPlayer->StopSound( pLocalPlayer->entindex(), 0, g_szTimerFile );
+	pLocalPlayer->StopSound( pLocalPlayer->entindex(), 0, g_szTimerFile );
+	pLocalPlayer->StopSound( pLocalPlayer->entindex(), 0, g_szTimerFile );
 
 	// Reset these
 	m_iHallucinationIndex = 0;
@@ -1811,7 +1832,11 @@ int C_FFPlayer::DrawModel( int flags )
 
 	if ( !IsCloaked() )
 	{
-		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
+		//Removing all cloak textures -GreenMushy
+		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_BLUE);
+		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_RED);	
+		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW);
+		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_GREEN);
 	}
 	else
 	{
@@ -1820,7 +1845,23 @@ int C_FFPlayer::DrawModel( int flags )
 		if ( GetLocalVelocity().Length() < 1.0f )
 			return 1;
 		*/
-		FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
+		
+		//Getting team number and applying the right cloak texture -GreenMushy
+		switch( this->GetTeamNumber() )
+		{
+		case 2:
+			FindOverrideMaterial(FF_CLOAK_MATERIAL_BLUE, FF_CLOAK_TEXTURE_GROUP);
+			break;
+		case 3:
+			FindOverrideMaterial(FF_CLOAK_MATERIAL_RED, FF_CLOAK_TEXTURE_GROUP);
+			break;
+		case 4:
+			FindOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW, FF_CLOAK_TEXTURE_GROUP);
+			break;
+		case 5:
+			FindOverrideMaterial(FF_CLOAK_MATERIAL_GREEN, FF_CLOAK_TEXTURE_GROUP);
+			break;
+		}
 	}
 
 	// If we're hallucinating, players intermittently get swapped.  But only for
@@ -2145,7 +2186,7 @@ void C_FFPlayer::ClientThink( void )
 	{
 		// Player is infected & emitter is NULL, start it up!
 		if( !m_pInfectionEmitter1 )
-			m_pInfectionEmitter1 = CInfectionEmitter::Create( "InfectionEmitter" );				
+			m_pInfectionEmitter1 = CInfectionEmitter::Create( "InfectionEmitter" );			
 
 		if( !m_pInfectionEmitter2 )
 			m_pInfectionEmitter2 = CInfectionEmitter::Create( "InfectionEmitter" );

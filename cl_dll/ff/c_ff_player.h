@@ -48,6 +48,10 @@ class C_FFManCannon;
 
 // moved this here from ff_shareddefs.h, because it's client-only and needs to stop wasting server compile time
 #define FF_CLOAK_MATERIAL "effects/cloak"
+#define FF_CLOAK_MATERIAL_BLUE "effects/cloak_blue"
+#define FF_CLOAK_MATERIAL_RED "effects/cloak_red"
+#define FF_CLOAK_MATERIAL_YELLOW "effects/cloak_yellow"
+#define FF_CLOAK_MATERIAL_GREEN "effects/cloak_green"
 #define FF_CLOAK_TEXTURE_GROUP TEXTURE_GROUP_CLIENT_EFFECTS
 
 extern ConVar r_selfshadows;
