@@ -1473,7 +1473,8 @@ void CFFPlayer::Command_SpySmartCloak( void )
 	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
 	{
 		// normal cloak
-		m_bCloakFadeType = false;
+		//Changing this to true so it will always do the silent cloak -GreenMushy
+		m_bCloakFadeType = true;
 	}
 	else
 	{
@@ -1482,6 +1483,9 @@ void CFFPlayer::Command_SpySmartCloak( void )
 	}
 
 	Cloak();
+	//Adding a cloak noises -GreenMushy
+	EmitSoundShared( "Player.Cloak" );
+	EmitSoundShared( "Player.Cloak_Zap" );
 
 #ifdef GAME_DLL
 	SpyCloakFadeIn();
