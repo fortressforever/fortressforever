@@ -461,7 +461,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		// Add it to our list of death notices
 		m_DeathNotices.AddToTail( deathMsg );
 
-		Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s %s", deathMsg.Victim.szName, deathMsg.objectiveText );
+		Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s %s\n", deathMsg.Victim.szName, deathMsg.objectiveText );
 	}
 	// death notice
 	else
