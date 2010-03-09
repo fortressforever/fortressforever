@@ -542,7 +542,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 		if ( pVictim == pScorer )  
 		{
 			// Players lose a frag for killing themselves
-			//Commenting this out so players dont actually lose stuff on suicides
+			//Commenting this out so players dont actually lose stuff on suicides -GreenMushy
 			//pVictim->IncrementFragCount( -1 );
 			//pScorer->AddFortPoints( -100, "#FF_FORTPOINTS_SUICIDE" );
 		}
@@ -576,7 +576,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 				return;
 
 			// Players lose a frag for letting the world kill them
-			pVictim->IncrementFragCount( -1 );
+			//pVictim->IncrementFragCount( -1 );
 		}
 	}
 

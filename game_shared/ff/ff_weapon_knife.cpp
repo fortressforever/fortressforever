@@ -59,7 +59,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_knife);
 // CFFWeaponKnife implementation
 //=============================================================================
 
-ConVar ffdev_knife_backstab_angle("ffdev_knife_backstab_angle", "0.643", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_knife_cloakstab_damage("ffdev_knife_cloakstab_damage", "75", FCVAR_REPLICATED );
 
 //----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -103,75 +103,25 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 
 		if (g_pGameRules->FCanTakeDamage(pPlayer, pTarget)) 
 		{
-			// check to see if we got a backstab
-
-			// get the displacement between the players
-			Vector vDisplacement = pTarget->GetAbsOrigin() - pPlayer->GetAbsOrigin();
-			vDisplacement.z = 0;
-			vDisplacement.NormalizeInPlace();
-	
-			// get the direction the target is facing
-			Vector vFacing;
-			AngleVectors(pTarget->GetLocalAngles(), &vFacing);
-			vFacing.z = 0;
-			vFacing.NormalizeInPlace();
-
-			// see if they are facing the same direction
-			float angle = vFacing.Dot(vDisplacement);
-			if (angle > ffdev_knife_backstab_angle.GetFloat()/*.707*/) // cos(45deg) 
+			if( pPlayer->IsCloaked() )
 			{
-				//DevMsg("BACKSTAB!!!!!\n");
-				// we get to totally kerplown this guy
+				//Adding "cloakstab" -GreenMushy
 
-				// Mulch: armor doesn't protect against DMG_DIRECT
 				Vector hitDirection;
 				pPlayer->EyeVectors(&hitDirection, NULL, NULL);
 				VectorNormalize(hitDirection);
 
-				CTakeDamageInfo info(this, pPlayer, 108, DMG_DIRECT);
+				CTakeDamageInfo info(this, pPlayer,(ffdev_knife_cloakstab_damage.GetFloat() * ( gpGlobals->curtime - pPlayer->GetCloakTime() )), DMG_GENERIC);
 				info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 				info.SetCustomKill(KILLTYPE_BACKSTAB);
 
 				pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 				ApplyMultiDamage();
 
-				// Is the guy dead? If so then take his clothes because we are cool
-				if (pHitEntity->IsPlayer() && !pHitEntity->IsAlive() && pPlayer->IsDisguised())
-				{
-					CFFPlayer *pVictim = ToFFPlayer(pHitEntity);
-					pPlayer->SetDisguise(pVictim->GetTeamNumber(), pVictim->GetClassSlot(), true);
-
-#ifndef CLIENT_DLL
-				
-					FF_SendHint( pPlayer, SPY_GANKDISGUISE, -1, PRIORITY_NORMAL, "#FF_HINT_SPY_GANKDISGUISE" );
-#endif
-
-					CBaseEntity *pRagdoll = pVictim->m_hRagdoll.Get();
-
-					// Ragdoll should die very soon
-					if (pRagdoll)
-					{
-						pRagdoll->SetNextThink(gpGlobals->curtime + 2.5f);
-					}
-				}
-				else
-				{
-					// He's not dead, so lose our disguise as normal
-					pPlayer->ResetDisguise();
-				}
-
-				// we don't need to call BaseClass since we already did damage.
 				return;
 			}
-
-			//DevMsg("Test Backstab: (%.2f, %.2f) dot(%.2f, %.2f) = %.2f\n", vDisplacement.x, vDisplacement.y, vFacing.x, vFacing.y, angle);
-
 		}
 	}
-
-	// It wasn't a backstab (which returned early), so remove any disguise here
-	pPlayer->ResetDisguise();
-
 #endif
 
 #ifdef CLIENT_DLL
@@ -186,7 +136,16 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 		if (g_pGameRules->FCanTakeDamage(pPlayer, pTarget)) 
 		{
 			// we scored a hit, so play the knife slash sound
-			WeaponSound(SPECIAL2);
+			// adding a "cloakstab" noise -GreenMushy
+			if( pPlayer->IsCloaked())
+			{
+				EmitSoundShared( "Player.knife_stab" );
+				EmitSoundShared( "Player.knife_discharge" );
+			}
+			else
+			{
+				WeaponSound(SPECIAL2);
+			}
 		}
 	}
 #endif

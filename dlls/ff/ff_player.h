@@ -55,6 +55,7 @@ enum SpeedEffectType
 	SE_LEGSHOT,
 	SE_TRANQ,
 	SE_CALTROP,
+	SE_CLOAK,
 	SE_LUA1,	// a speed effect that lua can set
 	SE_LUA2,	// a speed effect that lua can set
 	SE_LUA3,	// a speed effect that lua can set
@@ -665,6 +666,8 @@ public:
 	void Command_SpySilentCloak( void );
 	void Command_SpySmartCloak( void );
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
+	//Returns the time cloak started -GreenMushy
+	float GetCloakTime( void ) const { return m_flCloakTime; }
 private:
 	void Cloak( void );	
 	//unsigned int m_iCloaked;

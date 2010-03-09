@@ -88,9 +88,9 @@ void CFFWeaponMeleeBase::Precache()
 void CFFWeaponMeleeBase::PrimaryAttack() 
 {
 	CANCEL_IF_BUILDING();
-	CANCEL_IF_CLOAKED();
-
 	Swing();
+	//Cancels the cloak AFTER you swing so we can check if u did a cloakstab. -GreenMushy
+	CANCEL_IF_CLOAKED();
 }
 
 //----------------------------------------------------------------------------

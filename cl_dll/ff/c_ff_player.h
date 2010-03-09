@@ -500,6 +500,8 @@ private:
 public:
 	// Returns true if the player can cloak
 	bool IsCloakable( void ) const		{ return m_bCloakable != 0; }
+	//Returns the time the cloak started -GreenMushy
+	float GetCloakTime( void ) const    { return m_flCloakTime; }
 private:
 	unsigned int m_bCloakable;
 	// ----------------------------------

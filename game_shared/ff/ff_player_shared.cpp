@@ -98,6 +98,9 @@ ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "8.5", FCVAR_REPLICATED | FCV
 
 ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED | FCVAR_CHEAT, "Spy must be moving at least this slow to scloak." );
 
+ConVar ffdev_cloakspeed( "ffdev_cloakspeed", "1.5", FCVAR_REPLICATED );
+#define FF_CLOAKSPEED ffdev_cloakspeed.GetFloat()
+
 //ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_SNIPER_MINPUSH 2.5f // sniperrifle_pushmin.GetFloat()
 
@@ -1483,9 +1486,15 @@ void CFFPlayer::Command_SpySmartCloak( void )
 	}
 
 	Cloak();
+
+#ifdef GAME_DLL
+	//Adding the speed boost to cloak -GreenMushy
+	AddSpeedEffect( SE_CLOAK, 4, FF_CLOAKSPEED );
+#endif
 	//Adding a cloak noises -GreenMushy
 	EmitSoundShared( "Player.Cloak" );
 	EmitSoundShared( "Player.Cloak_Zap" );
+	EmitSoundShared( "Player.knife_charge" );
 
 #ifdef GAME_DLL
 	SpyCloakFadeIn();
@@ -1572,7 +1581,11 @@ void CFFPlayer::Cloak( void )
 		// Yeah we're not Cloaked anymore bud
 		m_iCloaked = 0;
 
-#ifdef GAME_DLL 		
+#ifdef GAME_DLL
+
+		//Removes the cloak speed effect -GreenMushy
+		RemoveSpeedEffect( SE_CLOAK );
+		
 		if( !m_bCloakFadeType )
 		{
 			// Cleanup ragdoll

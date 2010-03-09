@@ -1323,7 +1323,8 @@ void C_FFPlayer::PreThink( void )
 	// Do some spy stuff
 	if (GetClassSlot() == CLASS_SPY)
 	{
-		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > 3.5f ) )
+		//Somebody did this awful way for setting cloaktime cloakduration -GreenMushy
+		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > 4 ) )
 			Cloak();
 	}
 
