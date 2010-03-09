@@ -132,6 +132,9 @@ extern ConVar sv_maxspeed;
 //ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_REPLICATED, "To tweak z factor of velocity when spy is cloaked" );
 #define FFDEV_SPY_CLOAKZVEL 0.5f
 
+ConVar ffdev_spy_cloakduration( "ffdev_spy_cloakduration", "4.0f", FCVAR_REPLICATED );
+#define FFDEV_SPY_CLOAKDURATION ffdev_spy_cloakduration.GetFloat()
+
 ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
 
 ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "jumpdown", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
@@ -692,7 +695,8 @@ void CFFPlayer::PreThink(void)
 		//float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
 		//float flSpeed = m_flCloakSpeed;
 
-		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > 3.5f ) )
+		//Somebody did this awful way for setting cloaktime cloakduration -GreenMushy
+		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > 4.0f ) )
 			Uncloak( true );
 		/* AfterShock: Don't uncloak when moving fast now
 		// Jiggles: Nope, let's try it this way instead
@@ -6647,6 +6651,8 @@ void CFFPlayer::FlashlightTurnOff()
 //-----------------------------------------------------------------------------
 void CFFPlayer::Touch(CBaseEntity *pOther)
 {
+	//Commenting out this stupid spy uncovering carryover -GreenMushy
+	/*
 	if (GetClassSlot() == CLASS_SCOUT || GetClassSlot() == CLASS_SPY)
 	{
 		CFFPlayer *ffplayer = dynamic_cast<CFFPlayer *> (pOther);
@@ -6711,7 +6717,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 			}
 		}
 	}
-
+*/
 	BaseClass::Touch(pOther);
 }
 //-----------------------------------------------------------------------------
