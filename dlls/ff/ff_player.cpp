@@ -132,9 +132,6 @@ extern ConVar sv_maxspeed;
 //ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_REPLICATED, "To tweak z factor of velocity when spy is cloaked" );
 #define FFDEV_SPY_CLOAKZVEL 0.5f
 
-ConVar ffdev_spy_cloakduration( "ffdev_spy_cloakduration", "4.0f", FCVAR_REPLICATED );
-#define FFDEV_SPY_CLOAKDURATION ffdev_spy_cloakduration.GetFloat()
-
 ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
 
 ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "jumpdown", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");

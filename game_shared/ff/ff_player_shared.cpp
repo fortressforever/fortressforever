@@ -1620,6 +1620,10 @@ void CFFPlayer::Cloak( void )
 	{
 		// Announce being cloaked
 		m_iCloaked = 1;
+#ifdef CLIENT_DLL
+		//Swap to knife on cloak -GreenMushy
+		SwapToWeapon(FF_WEAPON_KNIFE);
+#endif
 
 		// If regular cloak, scream
 		if( !m_bCloakFadeType )
