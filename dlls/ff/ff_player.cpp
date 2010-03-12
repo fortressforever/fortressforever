@@ -829,6 +829,12 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("infected.saveme");
 	PrecacheScriptSound("ammo.saveme");
 	PrecacheScriptSound("overpressure.explode");
+	//Cloak noises -GreenMushy
+	PrecacheScriptSound("Player.Cloak" );
+	PrecacheScriptSound("Player.Cloak_Zap" );
+	PrecacheScriptSound("Player.knife_stab");
+	PrecacheScriptSound("Player.knife_charge");
+	PrecacheScriptSound("Player.knife_discharge");
 	
 	// Precache gib sound -> Defrag
 	PrecacheScriptSound("Player.Gib");
