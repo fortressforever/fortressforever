@@ -767,6 +767,7 @@ public:
 	bool LuaOwnsWeaponType(const char *_name);
 	bool LuaGiveWeapon(const char *_name, bool _autoselect);
 	void LuaRemoveAllWeapons();
+	float LuaGetMovementSpeed();
 	int LuaGetAmmoCount( int iAmmoType );
 	int GetAmmoInClip();
 	int GetAmmoInClip( const char *_name );

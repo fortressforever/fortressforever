@@ -109,6 +109,9 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 //ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
 #define FFDEV_OVERHEALTH_FREQ 3.0f
 
+ConVar ffdev_friendlyfire_dmg_percent("ffdev_friendlyfire_dmg_percent","0.5",FCVAR_REPLICATED ,"Sets the percentage of friendly fire damage players take when friendly fire is on");
+#define FFDEV_FRIENDLYFIRE_DMG_PERCENT ffdev_friendlyfire_dmg_percent.GetFloat()
+
 ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED ,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW ffdev_dmgforfullslow.GetFloat()
 
@@ -826,12 +829,6 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("infected.saveme");
 	PrecacheScriptSound("ammo.saveme");
 	PrecacheScriptSound("overpressure.explode");
-	//Cloak noises -GreenMushy
-	PrecacheScriptSound("Player.Cloak" );
-	PrecacheScriptSound("Player.Cloak_Zap" );
-	PrecacheScriptSound("Player.knife_stab");
-	PrecacheScriptSound("Player.knife_charge");
-	PrecacheScriptSound("Player.knife_discharge");
 	
 	// Precache gib sound -> Defrag
 	PrecacheScriptSound("Player.Gib");
@@ -5025,6 +5022,13 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !IsAlive() )
 		return 0;
 
+	// Reduce friendly fire damage across the board
+	CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
+	if( pAttacker && pAttacker->GetTeamNumber() == GetTeamNumber() && pAttacker != this )
+	{
+		info.ScaleDamage( FFDEV_FRIENDLYFIRE_DMG_PERCENT );
+	}
+
 	// call script: player_ondamage(player, damageinfo)	
 	CFFLuaSC func;
 	func.Push(this);
@@ -5222,7 +5226,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	}
 	
 	// Send hit indicator to attacker
-	CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
 	if( pAttacker && pAttacker != this )
 	{
 		CSingleUserRecipientFilter filter(pAttacker);
@@ -6375,6 +6378,14 @@ void CFFPlayer::LuaRemoveAllWeapons()
 {
 	RemoveAllItems(false);
 }
+
+float CFFPlayer::LuaGetMovementSpeed()
+{
+	Vector vecVelocity = GetAbsVelocity();
+	Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+	return vecLatVelocity.Length();
+}
+
 
 int CFFPlayer::GetAmmoInClip()
 {
