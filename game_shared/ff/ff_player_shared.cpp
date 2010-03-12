@@ -101,6 +101,9 @@ ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "
 ConVar ffdev_cloakspeed( "ffdev_cloakspeed", "1.5", FCVAR_REPLICATED );
 #define FF_CLOAKSPEED ffdev_cloakspeed.GetFloat()
 
+//ConVar for cloaktime externed to c_ff_player and ffplayer -GreenMushy
+ConVar ffdev_cloaktime( "ffdev_cloaktime", "4", FCVAR_REPLICATED );
+
 //ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_SNIPER_MINPUSH 2.5f // sniperrifle_pushmin.GetFloat()
 

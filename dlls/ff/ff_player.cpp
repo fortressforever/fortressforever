@@ -132,6 +132,9 @@ extern ConVar sv_maxspeed;
 //ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_REPLICATED, "To tweak z factor of velocity when spy is cloaked" );
 #define FFDEV_SPY_CLOAKZVEL 0.5f
 
+//Adding an extern for the cloak duration -GreenMushy
+extern ConVar ffdev_cloaktime;
+
 ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
 
 ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "jumpdown", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
@@ -693,7 +696,7 @@ void CFFPlayer::PreThink(void)
 		//float flSpeed = m_flCloakSpeed;
 
 		//Somebody did this awful way for setting cloaktime cloakduration -GreenMushy
-		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > 4.0f ) )
+		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > ffdev_cloaktime.GetFloat() ) )
 			Uncloak( true );
 		/* AfterShock: Don't uncloak when moving fast now
 		// Jiggles: Nope, let's try it this way instead

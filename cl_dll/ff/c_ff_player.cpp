@@ -90,6 +90,9 @@ static char g_szKillBeepFile[MAX_PATH];
 void KillBeepChange_Callback(ConVar *var, char const *pOldString);
 ConVar cl_killbeepwav("cl_killbeepsound", "deathbeep1", FCVAR_ARCHIVE, "Death beep file to use", KillBeepChange_Callback);
 
+//Adding an extern for the cloak duration -GreenMushy
+extern ConVar ffdev_cloaktime;
+
 // Get around the ambiguous symbol problem
 extern IFileSystem **pFilesystem;
 
@@ -1324,7 +1327,7 @@ void C_FFPlayer::PreThink( void )
 	if (GetClassSlot() == CLASS_SPY)
 	{
 		//Somebody did this awful way for setting cloaktime cloakduration -GreenMushy
-		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > 4 ) )
+		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > ffdev_cloaktime.GetFloat() ) )
 			Cloak();
 	}
 
@@ -1612,14 +1615,6 @@ void C_FFPlayer::Death()
 
 	// Reset pipebomb counter!
 	GetPipebombCounter()->Reset();
-
-	//Stop the grenade timer.wavs when the player dies. -Green Mushy
-	//WOOOO dno how to count how many active grens there are!
-	//so im doing it 3 times and this is a bug if u prime more then 3 grens and die.
-	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
-	pLocalPlayer->StopSound( pLocalPlayer->entindex(), 0, g_szTimerFile );
-	pLocalPlayer->StopSound( pLocalPlayer->entindex(), 0, g_szTimerFile );
-	pLocalPlayer->StopSound( pLocalPlayer->entindex(), 0, g_szTimerFile );
 
 	// Reset these
 	m_iHallucinationIndex = 0;
