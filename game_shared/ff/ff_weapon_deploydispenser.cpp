@@ -354,7 +354,8 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		}
 
 		// Close enough to dismantle
-		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f)
+		// and if it is even built -GreenMushy
+		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f && pDispenser->IsBuilt())
 		{
 			// Bug #0000333: Buildable Behavior (non build slot) while building
 			pPlayer->GiveAmmo(65.0f, AMMO_CELLS, true);

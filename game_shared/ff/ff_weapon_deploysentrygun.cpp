@@ -312,7 +312,8 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		}
 
 		// Close enough to dismantle
-		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f) 
+		// and if it is even built -GreenMushy
+		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f && pSentry->IsBuilt()) 
 		{
 			pPlayer->GiveAmmo(pSentry->GetLevel() * (65 / 2), AMMO_CELLS, true);
 

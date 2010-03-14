@@ -1886,63 +1886,66 @@ void CFFSentryGun::MaliciouslySabotage(CFFPlayer *pSaboteur)
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Detonate()
 {
-	VPROF_BUDGET( "CFFSentryGun::Detonate", VPROF_BUDGETGROUP_FF_BUILDABLE );
-
-	// Fire an event.
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("sentry_detonated");						
-	if(pEvent)
+	if( IsBuilt() )
 	{
-		if (m_hOwner.Get())
+		VPROF_BUDGET( "CFFSentryGun::Detonate", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("sentry_detonated");						
+		if(pEvent)
 		{
-			CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
-			pEvent->SetInt("userid", pOwner->GetUserID());
-			pEvent->SetInt("level", GetLevel());
-			gameeventmanager->FireEvent(pEvent, true);
-		}
-	}
-
-	CBaseEntity *enemy = GetEnemy();
-
-	if ( enemy && enemy->IsPlayer() )
-	{
-		CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
-		user.MakeReliable();
-
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-			WRITE_FLOAT(0.0);
-		MessageEnd();
-	}
-
-	// AfterShock: Create bag when detonate
-	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
-
-	if( pBackpack )
-	{
-		//pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
-		//pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
-
-		int cells = 0;
-		if ( m_iLevel == 1)
-		{
-			cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL1 ;
-			//if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
-			//	--cells;
-		}
-		else if ( m_iLevel == 2)
-			cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL2 ;
-		else if ( m_iLevel == 3)
-		{
-			cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL3 ;
-			//if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
-			//	--cells;
+			if (m_hOwner.Get())
+			{
+				CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
+				pEvent->SetInt("userid", pOwner->GetUserID());
+				pEvent->SetInt("level", GetLevel());
+				gameeventmanager->FireEvent(pEvent, true);
+			}
 		}
 
-		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
-		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
-	}
+		CBaseEntity *enemy = GetEnemy();
 
-	CFFBuildableObject::Detonate();
+		if ( enemy && enemy->IsPlayer() )
+		{
+			CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+			user.MakeReliable();
+
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+				WRITE_FLOAT(0.0);
+			MessageEnd();
+		}
+
+		// AfterShock: Create bag when detonate
+		CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
+
+		if( pBackpack )
+		{
+			//pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ), m_iRockets/2 );
+			//pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ), m_iShells/2 );
+
+			int cells = 0;
+			if ( m_iLevel == 1)
+			{
+				cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL1 ;
+				//if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
+				//	--cells;
+			}
+			else if ( m_iLevel == 2)
+				cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL2 ;
+			else if ( m_iLevel == 3)
+			{
+				cells = ((float)m_iHealth / (float)m_iMaxHealth) * SG_DETONATECELLS_BASE_LEVEL3 ;
+				//if ( cells == SG_DETONATECELLS_BASE_LEVEL1 * 2 )
+				//	--cells;
+			}
+
+			pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
+			pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
+		}
+
+		CFFBuildableObject::Detonate();
+	}
 }
 
 //-----------------------------------------------------------------------------
