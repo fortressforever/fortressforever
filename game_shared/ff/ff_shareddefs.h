@@ -142,7 +142,7 @@ enum KillTypes_t
 	KILLTYPE_GASSED,
 	KILLTYPE_BACKSTAB,
 	KILLTYPE_SENTRYGUN_DET,
-	KILLTYPE_MARIO
+	KILLTYPE_HEADCRUSH
 };
 
 extern ConVar sniperrifle_chargetime;

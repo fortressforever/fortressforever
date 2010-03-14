@@ -3546,7 +3546,7 @@ void CGameMovement::CheckFalling( void )
 
 					if (pCrushedPlayer && pCrushedPlayer != player)
 					{
-						CTakeDamageInfo info( player, player, ffdev_headcrush_damage.GetFloat(), DMG_DIRECT, KILLTYPE_MARIO );
+						CTakeDamageInfo info( player, player, ffdev_headcrush_damage.GetFloat(), DMG_DIRECT, KILLTYPE_HEADCRUSH );
 						pCrushedPlayer->TakeDamage(info);
 					}
 				}
