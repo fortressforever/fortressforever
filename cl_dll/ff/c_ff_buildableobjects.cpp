@@ -687,6 +687,8 @@ C_FFManCannon *C_FFManCannon::CreateClientSideManCannon( const Vector& vecOrigin
 	// someone accesses the m_hOwner.Get() and wants to return something
 	// that isn't NULL!
 	pManCannon->m_hOwner = (C_BaseEntity *)C_BasePlayer::GetLocalPlayer();
+	//Team Coloring -GreenMushy
+	pManCannon->m_nSkin = ( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() - 1 );
 	pManCannon->SetClientSideOnly( true );
 	pManCannon->SetNextClientThink( CLIENT_THINK_ALWAYS );
 
