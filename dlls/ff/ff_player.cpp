@@ -1900,6 +1900,10 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	StopSound( "maintenance.saveme" );
 	StopSound( "ammo.saveme" );
 
+	//Stop spy charging noises on death -GreenMushy
+	StopSound( "Player.knife_charge" );
+	StopSound( "Player.Cloak" );
+
 	// --> Mirv: Create backpack moved here to stop crash
 	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
 
