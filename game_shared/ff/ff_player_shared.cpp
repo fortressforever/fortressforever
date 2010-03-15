@@ -94,7 +94,7 @@ ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_REPLICATED );
 //ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
 			
 // Time in seconds you have to wait until you can cloak again
-ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "8.5", FCVAR_REPLICATED | FCVAR_CHEAT, "Time in seconds you have to wait until you can cloak again" );
+ConVar ffdev_spy_nextcloak( "ffdev_cloakcooldown", "8.0", FCVAR_REPLICATED, "Time in seconds you have to wait until you can cloak again" );
 
 ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED | FCVAR_CHEAT, "Spy must be moving at least this slow to scloak." );
 
