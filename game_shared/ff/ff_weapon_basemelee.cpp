@@ -21,7 +21,11 @@
 	#include "ilagcompensationmanager.h"
 #endif
 
-#define MELEE_HULL_DIM		16 //If this is changed, need to change the hardcoded cube root of 2 around line 305
+ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "16", FCVAR_REPLICATED);
+#define MELEE_HULL_DIM	ffdev_melee_hull_dim.GetFloat() //If this is changed, need to change the hardcoded cube root of 2 around line 305
+
+ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "1.732", FCVAR_REPLICATED);
+#define MELEE_HULL_DIM_BACKOFF	ffdev_melee_hull_backoffradius.GetFloat() //If this is changed, need to change the hardcoded cube root of 2 around line 305
 
 static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
@@ -302,7 +306,8 @@ void CFFWeaponMeleeBase::Swing()
 
 	if (traceHit.fraction == 1.0) 
 	{
-		float meleeHullRadius = 1.732f * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
+		float meleeHullRadius = MELEE_HULL_DIM_BACKOFF * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
+		//float meleeHullRadius = 1.732f * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
 
 		// Back off by hull "radius"
 		swingEnd -= forward * meleeHullRadius;
