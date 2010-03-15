@@ -94,7 +94,7 @@ ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_REPLICATED );
 //ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
 			
 // Time in seconds you have to wait until you can cloak again
-ConVar ffdev_spy_nextcloak( "ffdev_cloakcooldown", "8.0", FCVAR_REPLICATED, "Time in seconds you have to wait until you can cloak again" );
+ConVar ffdev_spy_nextcloak( "ffdev_cloakcooldown", "7.0", FCVAR_REPLICATED, "Time in seconds you have to wait until you can cloak again" );
 
 ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED | FCVAR_CHEAT, "Spy must be moving at least this slow to scloak." );
 
@@ -102,7 +102,7 @@ ConVar ffdev_cloakspeed( "ffdev_cloakspeed", "1.5", FCVAR_REPLICATED );
 #define FF_CLOAKSPEED ffdev_cloakspeed.GetFloat()
 
 //ConVar for cloaktime externed to c_ff_player and ffplayer -GreenMushy
-ConVar ffdev_cloaktime( "ffdev_cloaktime", "4", FCVAR_REPLICATED );
+ConVar ffdev_cloaktime( "ffdev_cloaktime", "3", FCVAR_REPLICATED );
 
 //ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_SNIPER_MINPUSH 2.5f // sniperrifle_pushmin.GetFloat()
@@ -1583,6 +1583,11 @@ void CFFPlayer::Cloak( void )
 
 		// Yeah we're not Cloaked anymore bud
 		m_iCloaked = 0;
+
+		//Stop spy charging noises because cloak is over -GreenMushy
+		StopSound( "Player.knife_charge" );
+		StopSound( "Player.Cloak" );
+
 
 #ifdef GAME_DLL
 

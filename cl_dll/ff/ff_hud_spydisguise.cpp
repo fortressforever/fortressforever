@@ -32,7 +32,11 @@
 
 using namespace vgui;
 
-#define SPY_CLOAK_TIME 3.5f
+extern ConVar ffdev_cloaktime;
+extern ConVar ffdev_spy_nextcloak;
+
+#define SPY_CLOAK_COOLDOWN	ffdev_spy_nextcloak.GetFloat()
+#define SPY_CLOAK_TIME		ffdev_cloaktime.GetFloat()
 
 inline void MapClassToGlyph( int iClass, char& cGlyph )
 {
@@ -152,7 +156,8 @@ void CHudSpyDisguise::Paint( void )
 	// Let's calculate and draw the disguising progress bar
 	if ( pPlayer->IsCloaked() )
 	{	
-		float iProgressPercent = ( ( 1 - ( gpGlobals->curtime - pPlayer->GetCloakStartTime() ) / SPY_CLOAK_TIME ) );
+		//New cloak percent timer -GreenMushy
+		float iProgressPercent = ( 1 + ( pPlayer->GetCloakStartTime() - gpGlobals->curtime ) / SPY_CLOAK_TIME );
 	
 		// Paint foreground/background stuff
 		BaseClass::PaintBackground();
@@ -161,9 +166,10 @@ void CHudSpyDisguise::Paint( void )
 		surface()->DrawSetColor( m_BarColor );
 		surface()->DrawFilledRect( image1_xpos, image1_ypos, image1_xpos + bar_width * iProgressPercent, image1_ypos + bar_height );
 	}
-	else if ( pPlayer->GetCloakNextTime() > gpGlobals->curtime )
+	else if ( (pPlayer->GetCloakNextTime()) > gpGlobals->curtime )
 	{
-		float iProgressPercent = ( ( 1 - ( pPlayer->GetCloakNextTime() - gpGlobals->curtime ) / 5.0f ) );
+		//New cloak percent timer -GreenMushy
+		float iProgressPercent = 1 - (( pPlayer->GetCloakNextTime()) - gpGlobals->curtime )/ ( SPY_CLOAK_COOLDOWN - SPY_CLOAK_TIME );
 	
 		// Paint foreground/background stuff
 		BaseClass::PaintBackground();

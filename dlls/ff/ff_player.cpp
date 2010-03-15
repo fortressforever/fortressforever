@@ -698,7 +698,7 @@ void CFFPlayer::PreThink(void)
 		//float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
 		//float flSpeed = m_flCloakSpeed;
 
-		//Somebody did this awful way for setting cloaktime cloakduration -GreenMushy
+		//Setting the cloaktime -GreenMushy
 		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > ffdev_cloaktime.GetFloat() ) )
 			Uncloak( true );
 		/* AfterShock: Don't uncloak when moving fast now

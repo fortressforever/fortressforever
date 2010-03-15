@@ -59,7 +59,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_knife);
 // CFFWeaponKnife implementation
 //=============================================================================
 
-ConVar ffdev_knife_cloakstab_damage("ffdev_knife_cloakstab_damage", "75", FCVAR_REPLICATED );
+ConVar ffdev_knife_cloakstab_damage("ffdev_knife_cloakstab_damage", "100", FCVAR_REPLICATED );
 
 //----------------------------------------------------------------------------
 // Purpose: Constructor
