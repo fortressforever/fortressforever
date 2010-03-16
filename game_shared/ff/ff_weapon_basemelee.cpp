@@ -21,11 +21,14 @@
 	#include "ilagcompensationmanager.h"
 #endif
 
-ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "16", FCVAR_REPLICATED);
+ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "16", FCVAR_REPLICATED); //16.0f
 #define MELEE_HULL_DIM	ffdev_melee_hull_dim.GetFloat() //If this is changed, need to change the hardcoded cube root of 2 around line 305
 
-ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "1.732", FCVAR_REPLICATED);
-#define MELEE_HULL_DIM_BACKOFF	ffdev_melee_hull_backoffradius.GetFloat() //If this is changed, need to change the hardcoded cube root of 2 around line 305
+ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "1.732", FCVAR_REPLICATED); //1.732f
+#define MELEE_HULL_DIM_BACKOFF	ffdev_melee_hull_backoffradius.GetFloat()
+
+ConVar ffdev_melee_maxhitangle("ffdev_melee_maxhitangle", "0.70721", FCVAR_REPLICATED); //0.70721f
+#define MELEE_HIT_MAX_ANGLE	ffdev_melee_maxhitangle.GetFloat()
 
 static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
@@ -322,7 +325,7 @@ void CFFWeaponMeleeBase::Swing()
 			float dot = vecToTarget.Dot(forward);
 
 			// YWB:  Make sure they are sort of facing the guy at least...
-			if (dot < 0.70721f) 
+			if (dot < MELEE_HIT_MAX_ANGLE) // 0.70721f
 			{
 				// Force amiss
 				traceHit.fraction = 1.0f;
