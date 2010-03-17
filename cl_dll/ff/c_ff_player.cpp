@@ -90,8 +90,11 @@ static char g_szKillBeepFile[MAX_PATH];
 void KillBeepChange_Callback(ConVar *var, char const *pOldString);
 ConVar cl_killbeepwav("cl_killbeepsound", "deathbeep1", FCVAR_ARCHIVE, "Death beep file to use", KillBeepChange_Callback);
 
-//Adding an extern for the cloak duration -GreenMushy
+//Adding an extern for the cloak duration  -GreenMushy
 extern ConVar ffdev_cloaktime;
+
+//Adding an extern for the cloak duration  -GreenMushy
+extern ConVar ffdev_spy_nextcloak;
 
 // Get around the ambiguous symbol problem
 extern IFileSystem **pFilesystem;
@@ -1326,7 +1329,7 @@ void C_FFPlayer::PreThink( void )
 	// Do some spy stuff
 	if (GetClassSlot() == CLASS_SPY)
 	{
-		//Somebody did this awful way for setting cloaktime cloakduration -GreenMushy
+		//Setting the cloaktime -GreenMushy
 		if( IsCloaked() && ( gpGlobals->curtime - m_flCloakTime > ffdev_cloaktime.GetFloat() ) )
 			Cloak();
 	}
