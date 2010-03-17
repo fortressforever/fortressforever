@@ -125,9 +125,9 @@ void CFFWeaponHookGun::ItemPostFrame()
 		{
 			m_pHook->RemoveHook();
 			m_pHook = NULL;
-			m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f;
+			//m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f; //enable refiring
 		}
-		else if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+		/*else*/ if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
 		{
 			if (!pOwner->GetAmmoCount(m_iPrimaryAmmoType))
 			{
@@ -141,14 +141,21 @@ void CFFWeaponHookGun::ItemPostFrame()
 		else
 		{
 			 // create a hook and dont allow firing until they release the attack key
+			// If the firing button was just pressed, reset the firing time
+			CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+			if (pPlayer && pPlayer->m_afButtonPressed & IN_ATTACK)
+			{
+				m_flNextPrimaryAttack = gpGlobals->curtime;
+			}
 			PrimaryAttack();
-			m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f;
+			//m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f;
 		}
 	}
+	/* Commenting this because it makes u fire when you spawn - shok
 	else if ( !(pOwner->m_nButtons & IN_ATTACK) )
 	{
 		m_flNextPrimaryAttack = 0.0f; // enable firing again if they release the attack key
-	}
+	}*/
 
 	if (pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload)
 	{
@@ -205,7 +212,9 @@ void CFFWeaponHookGun::ItemPostFrame()
 		WeaponIdle();
 		return;
 	}
-}//----------------------------------------------------------------------------
+}
+
+//----------------------------------------------------------------------------
 // Purpose: Override animations
 //----------------------------------------------------------------------------
 bool CFFWeaponHookGun::SendWeaponAnim(int iActivity) 
@@ -255,4 +264,18 @@ bool CFFWeaponHookGun::SendWeaponAnim(int iActivity)
 	}
 
 	return BaseClass::SendWeaponAnim(iActivity);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CFFWeaponHookGun::Holster(CBaseCombatWeapon *pSwitchingTo) 
+{
+	if ( m_pHook ) // Remove any hooks if you change weapon
+	{
+		m_pHook->RemoveHook();
+		m_pHook = NULL;
+	}
+
+	return BaseClass::Holster(pSwitchingTo);
 }
