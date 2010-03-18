@@ -59,13 +59,32 @@ ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATE
 // CFFProjectileHook tables
 //=============================================================================
 
+class CRecvProxyData;
+extern void RecvProxy_LocalVelocityX(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern void RecvProxy_LocalVelocityY(const CRecvProxyData *pData, void *pStruct, void *pOut);
+extern void RecvProxy_LocalVelocityZ(const CRecvProxyData *pData, void *pStruct, void *pOut);
+
 IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileHook, DT_FFProjectileHook)
 
 BEGIN_NETWORK_TABLE(CFFProjectileHook, DT_FFProjectileHook)
+#ifdef CLIENT_DLL
+	RecvPropFloat		( RECVINFO(m_vecVelocity[0]), 0, RecvProxy_LocalVelocityX ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[1]), 0, RecvProxy_LocalVelocityY ),
+	RecvPropFloat		( RECVINFO(m_vecVelocity[2]), 0, RecvProxy_LocalVelocityZ ),
+#else
+	// Increased range for this because it goes at a mad speed
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[0]"),
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[1]"),
+	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[2]"),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 0), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 1), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+#endif
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(ff_projectile_hook, CFFProjectileHook);
 PRECACHE_WEAPON_REGISTER(ff_projectile_hook);
+
 
 //=============================================================================
 // CFFProjectileHook implementation
@@ -79,7 +98,6 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_hook);
 		DEFINE_ENTITYFUNC( HookTouch ),
 	END_DATADESC()
 #endif
-
 
 
 	//----------------------------------------------------------------------------
