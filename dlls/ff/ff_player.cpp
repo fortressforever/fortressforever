@@ -832,6 +832,7 @@ void CFFPlayer::Precache()
 	//Cloak noises -GreenMushy
 	PrecacheScriptSound("Player.Cloak" );
 	PrecacheScriptSound("Player.Cloak_Zap" );
+	PrecacheScriptSound("Player.Cloak_End" );
 	PrecacheScriptSound("Player.knife_stab");
 	PrecacheScriptSound("Player.knife_charge");
 	PrecacheScriptSound("Player.knife_discharge");

@@ -265,7 +265,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				QAngle angDirection;
 				VectorAngles(vecDir, angDirection);
 
-				float flDuration = (pPlayer->GetClassSlot() == CLASS_MEDIC || pPlayer->GetClassSlot() == CLASS_SCOUT ) ? 5.0f : 10.0f;
+				float flDuration = 7.5f;
 				float flIconDuration = flDuration;
 				if( pPlayer->LuaRunEffect( LUA_EF_CONC, GetOwnerEntity(), &flDuration, &flIconDuration ) )
 				{

@@ -1585,6 +1585,7 @@ void CFFPlayer::Cloak( void )
 		m_iCloaked = 0;
 
 		//Stop spy charging noises because cloak is over -GreenMushy
+		EmitSoundShared( "Player.Cloak_End" );
 		StopSound( "Player.knife_charge" );
 		StopSound( "Player.Cloak" );
 
