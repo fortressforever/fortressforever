@@ -146,7 +146,7 @@ void CFFGrenadeLaser::Precache()
 		pBeamA->SetBrightness( 255 );
 		pBeamA->SetColor( 255, 255, 255 );
 //		pBeamA->RelinkBeam();
-		pBeamA->LiveForTime( 4.0f );
+		pBeamA->LiveForTime( lasertime.GetFloat() );
 
 		pBeamB = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
 		pBeamB->SetWidth( 1 );
