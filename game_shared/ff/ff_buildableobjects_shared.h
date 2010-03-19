@@ -887,8 +887,6 @@ public:
 	virtual void DoExplosionDamage( void );
 
 	static CFFManCannon *Create( const Vector& vecOrigin, const QAngle& vecAngles, CBaseEntity *pentOwner = NULL );
-
-	int m_iJumpPadState;
 #endif
 };
 
