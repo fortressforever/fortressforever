@@ -82,14 +82,15 @@ static ConVar tranq_on("ffdev_tranq_on", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Sh
 
 static ConVar concuss_alwaysOn("ffdev_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? Default: 0 (boolean 0 or 1)"); 
 
-static ConVar concuss_spriteSize("ffdev_concuss_spriteSize", "4.0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Size of sprite. Default: 4"); 
+static ConVar concuss_spriteSize("ffdev_concuss_spriteSize", "8.0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Size of sprite. Default: 8"); 
+static ConVar concuss_spriteNum("ffdev_concuss_spriteNum", "5", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Number of sprites. Default: 5"); 
 static ConVar concuss_color_r("ffdev_concuss_color_r", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Red Component. Default: 255"); 
 static ConVar concuss_color_g("ffdev_concuss_color_g", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Green Component. Default: 255"); 
 static ConVar concuss_color_b("ffdev_concuss_color_b", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status Component. Default: 0"); 
-static ConVar concuss_color_a("ffdev_concuss_color_a", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status Component. Default: 255"); 
-static ConVar concuss_verticalDistance("ffdev_concuss_verticalDistance", "3", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
+static ConVar concuss_color_a("ffdev_concuss_color_a", "128", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status Component. Default: 128"); 
+static ConVar concuss_verticalDistance("ffdev_concuss_verticalDistance", "4", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
 static ConVar concuss_verticalSpeed("ffdev_concuss_verticalSpeed", "100", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Time taken for the sprite to up and down. Default: 100 (milliseconds)" );
-static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "90", FCVAR_CLIENTDLL | FCVAR_CHEAT, "How far (in degrees) the sprite rotates in 1 second. Must be a factor of 360 to operate smoothly. E.g. 360 180 120 90 45. Default: 90"  );
+static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "50", FCVAR_CLIENTDLL | FCVAR_CHEAT, "The speed at which the sprites spin (multiplier)"  );
 static ConVar concuss_radius("ffdev_concuss_radius", "10", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite should be drawn from the origin. Default: 10 (hammer units)" );
 static ConVar concuss_height("ffdev_concuss_height", "6", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Height at which the sprite is drawn from the origin. Default: 6 (hammer units)");
 
@@ -1838,7 +1839,7 @@ void C_FFPlayer::DrawPlayerIcons()
 	// --------------------------------
 	// Check for "concussed"
 	// --------------------------------
-	if(m_flConcTime > gpGlobals->curtime || concuss_alwaysOn.GetBool())
+	if(m_flConcTime > gpGlobals->curtime || m_flConcTime == -1 || concuss_alwaysOn.GetBool())
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_concussed", TEXTURE_GROUP_CLIENT_EFFECTS );
 		if( pMaterial )
@@ -1852,22 +1853,23 @@ void C_FFPlayer::DrawPlayerIcons()
 			int radius = concuss_radius.GetInt();
 			int height = concuss_height.GetInt();
 			int spinSpeed = concuss_spinSpeed.GetInt();
-			//position around head
-			
-			float yawAngle = ((float)((int)(time*100) % spinSpeed) * 360/spinSpeed);
-			//360 or 180*2 or 90*4 etc.... -->> getting faster
+			int numSprites = concuss_spriteNum.GetInt();
+
+			//moving potition around head to be referenced from
+			float yawAngle = time * 10 * spinSpeed;
 
 			//output from AngleVectors
 			Vector vecDirection; 
 			//origin of player at eye height + 12 units
 			Vector vecOrigin = Vector( EyePosition().x, EyePosition().y, EyePosition().z + height );
-			//for the wavey effect
+			//for the wavey effect (two for a more random feel.. might be a simpler way)
 			Vector vecVerticalOffset;
 			Vector vecVerticalOffset2;
+			Vector vecVerticalOffset3;
 
 			//make the wavey effect
 			int verticalSpeed = concuss_verticalSpeed.GetInt(); //speed (higher is slower)
-			float maxVerticalDistance = concuss_verticalDistance.GetFloat();//goes negative
+			float maxVerticalDistance = concuss_verticalDistance.GetFloat();//goes negative too (+/- about the origin)
 
 			float wave = (int)(time*100) % verticalSpeed;
 
@@ -1891,25 +1893,34 @@ void C_FFPlayer::DrawPlayerIcons()
 			else
 				vecVerticalOffset2 = Vector( 0, 0, (verticalSpeed - wave2)/(verticalSpeed/4) * -maxVerticalDistance);
 
-			AngleVectors(QAngle(0.0f, yawAngle, 0.0f), &vecDirection);
-			VectorNormalizeFast(vecDirection);
-			DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset, spriteSize, spriteSize, c );
-			DrawSprite( vecOrigin - vecDirection*radius + vecVerticalOffset, spriteSize, spriteSize, c );
-
-			AngleVectors(QAngle(0.0f, yawAngle+45, 0.0f), &vecDirection);
-			VectorNormalizeFast(vecDirection);
-			DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset, spriteSize, spriteSize, c );
-			DrawSprite( vecOrigin - vecDirection*radius - vecVerticalOffset, spriteSize, spriteSize, c );
-
-			AngleVectors(QAngle(0.0f, yawAngle+90, 0), &vecDirection);
-			VectorNormalizeFast(vecDirection);
-			DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset2, spriteSize, spriteSize, c );
-			DrawSprite( vecOrigin - vecDirection*radius + vecVerticalOffset2, spriteSize, spriteSize, c );			
-			
-			AngleVectors(QAngle(0.0f, yawAngle+135, 0), &vecDirection);
-			VectorNormalizeFast(vecDirection);
-			DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset2, spriteSize, spriteSize, c );
-			DrawSprite( vecOrigin - vecDirection*radius - vecVerticalOffset2, spriteSize, spriteSize, c );			
+			for( int i = 0; i < numSprites; i++ )
+			{
+				AngleVectors(QAngle(0.0f, yawAngle + 360/numSprites * i, 0.0f), &vecDirection);
+				VectorNormalizeFast(vecDirection);
+		
+				if(i%4 >= 2)
+				{
+					if(i%2)
+					{
+						DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset, spriteSize, spriteSize, c );
+					}
+					else
+					{
+						DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset2, spriteSize, spriteSize, c );
+					}
+				}
+				else
+				{
+					if(i%2)
+					{
+						DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset2, spriteSize, spriteSize, c );
+					}
+					else
+					{
+						DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset, spriteSize, spriteSize, c );
+					}
+				}
+			}
 		}
 	}
 
