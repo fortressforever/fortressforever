@@ -42,6 +42,7 @@
 	ConVar laserdamage("ffdev_laserdamage", "10", FCVAR_CHEAT, "Damage tick of LG laser");
 	ConVar lasertime("ffdev_lasertime", "3", FCVAR_CHEAT, "Laser activation time");
 	ConVar laserangv("ffdev_laserangv", "7.5", FCVAR_CHEAT, "Laser angular velocity");
+	ConVar laserexplode("ffdev_laserexplode", "1" FCVAR_CHEAT, "Explosion at end of fuse");
 //	ConVar laserstreams( "ffdev_lasergren_streams", "2", FCVAR_CHEAT );
 
 #endif
@@ -71,6 +72,7 @@ public:
 	virtual void BeamEmit();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual void DoDamage( CBaseEntity *pTarget );
+	virtual void Detonate();
 
 protected:
 	float	m_flAngleOffset;
@@ -250,6 +252,17 @@ void CFFGrenadeLaser::Precache()
 		}
 	}
 
+	void CFFGrenadeLaser::Detonate()
+	{
+		// Remove if not allowed by Lua 
+		if ( !laserexplode.GetBool() )
+		{
+			UTIL_Remove(this);
+			return;
+		}
+
+		BaseClass::Detonate();
+	}
 
 #endif
 
