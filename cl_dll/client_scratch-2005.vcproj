@@ -5063,6 +5063,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_napalm.cpp"
 				>
 			</File>
