@@ -89,6 +89,7 @@ enum Class_T
 	CLASS_GREN_VERT,
 	CLASS_GREN_ARMORSTRIP,
 	CLASS_GREN_DISABLE,
+	CLASS_GREN_LASER,
 	// END: Added by Mulchman
 
 	//-- Added by L0ki --
