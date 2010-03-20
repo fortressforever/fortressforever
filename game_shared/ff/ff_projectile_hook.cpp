@@ -349,6 +349,15 @@ void CFFProjectileHook::HookThink()
 		VectorNormalize( vecPullDir );
 		vecPullDir*= HOOK_PULLSPEED;
 		pOwner->SetAbsVelocity( vecPullDir );
+
+		// caes: remove hook if we are hooked and pressing jump
+		CFFPlayer *pPlayer = ToFFPlayer( pOwner );
+		if ( pPlayer->m_nButtons & IN_JUMP )
+		{
+			RemoveHook();
+			return;
+		}
+		// caes
 	}
 
 #ifdef GAME_DLL
