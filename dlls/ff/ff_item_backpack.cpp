@@ -17,6 +17,7 @@
 //		Cleaned up a tad
 
 #include "cbase.h"
+#include "IEffects.h"
 #include "ff_item_backpack.h"
 #include "ff_gamerules.h"
 #include "tier0/memdbgon.h"
@@ -25,6 +26,7 @@
 
 BEGIN_DATADESC( CFFItemBackpack )
 	DEFINE_ENTITYFUNC( RestockTouch ),
+	DEFINE_THINKFUNC( PreDespawnThink ),
 END_DATADESC();
 
 LINK_ENTITY_TO_CLASS( ff_item_backpack, CFFItemBackpack );
@@ -69,9 +71,18 @@ void CFFItemBackpack::Spawn()
 	
 	CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT);
 
-	SetNextThink( gpGlobals->curtime + 30.0f );
+	SetNextThink( gpGlobals->curtime + 15.0f );
 
 	SetTouch(&CFFItemBackpack::RestockTouch);
+	SetThink(&CFFItemBackpack::PreDespawnThink);
+}
+
+void CFFItemBackpack::PreDespawnThink()
+{
+	Vector vecUp(0, 0, 1.0f);
+	g_pEffects->Sparks(GetAbsOrigin(), 5, 1, &vecUp);
+
+	SetNextThink( gpGlobals->curtime + 5.0f );
 	SetThink(&CFFItemBackpack::SUB_Remove);
 }
 

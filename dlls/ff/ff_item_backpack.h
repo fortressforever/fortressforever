@@ -35,6 +35,7 @@ public:
 	void Spawn		( void );
 	void Precache	( void );
 	void RestockTouch	(CBaseEntity *);
+	void PreDespawnThink ( void );
 
 	void SetSpawnFlags( int flags );
 
