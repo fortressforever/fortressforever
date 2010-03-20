@@ -248,7 +248,8 @@ void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
 void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 {
     int iHealth = (int) msg.ReadByte();
-    int iArmor = (int) msg.ReadByte();
+    int iMaxHP = (int) msg.ReadByte();
+    //int iArmor = (int) msg.ReadByte();
     //int iAmmo = (int) msg.ReadByte();
 	int iLevel = (int) msg.ReadByte();
 
@@ -262,7 +263,7 @@ void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 		iAmmo -= 128;
 	}
 */
-	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% %s: %i%%", iLevel , m_szHealth, iHealth, m_szArmor,  iArmor);
+	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% (of %i HP)", iLevel , m_szHealth, iHealth, iMaxHP);
 }
 
 void CHudBuildState::MsgFunc_ManCannonMsg(bf_read &msg)

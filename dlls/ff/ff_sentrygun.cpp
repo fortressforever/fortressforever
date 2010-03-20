@@ -95,17 +95,25 @@
 
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f  // sg_explosiondamage_base.GetFloat()
-//ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "4.0", FCVAR_REPLICATED, "SG bullet push force");
-#define SG_BULLETPUSH 4.0f //ffdev_sg_bulletpush.GetFloat()
+ConVar ffdev_sg_bulletpush_lvl1("ffdev_sg_bulletpush_lvl1", "4.0", FCVAR_REPLICATED, "SG bullet push force");
+#define SG_BULLETPUSH_LVL1 ffdev_sg_bulletpush_lvl1.GetFloat()
+ConVar ffdev_sg_bulletpush_lvl2("ffdev_sg_bulletpush_lvl2", "5.0", FCVAR_REPLICATED, "SG bullet push force");
+#define SG_BULLETPUSH_LVL2 ffdev_sg_bulletpush_lvl2.GetFloat()
+ConVar ffdev_sg_bulletpush_lvl3("ffdev_sg_bulletpush_lvl3", "8.0", FCVAR_REPLICATED, "SG bullet push force");
+#define SG_BULLETPUSH_LVL3 ffdev_sg_bulletpush_lvl3.GetFloat()
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
-//ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "7.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL1 7.0f //ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
-//ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "4.0", FCVAR_REPLICATED, "SG level 2 ground bullet push multiplier");
+ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "5.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL1 ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
+//ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "5.0", FCVAR_REPLICATED, "SG level 2 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL2 SG_GROUNDPUSH_MULTIPLIER_LVL1 //5.0f // ffdev_sg_groundpush_multiplier_lvl2.GetFloat()
-//ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_REPLICATED, "SG level 3 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL3 SG_GROUNDPUSH_MULTIPLIER_LVL1 //5.0f // ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
-//ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "14", FCVAR_REPLICATED, "SG bullet damage");
-#define SG_BULLETDAMAGE 14.0f //ffdev_sg_bulletdamage.GetInt()
+ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "5.0", FCVAR_REPLICATED, "SG level 3 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL3 ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
+ConVar ffdev_sg_bulletdamage_lvl1("ffdev_sg_bulletdamage_lvl1", "14", FCVAR_REPLICATED, "SG bullet damage for level 1");
+#define SG_BULLETDAMAGE_LVL1 ffdev_sg_bulletdamage_lvl1.GetInt()
+ConVar ffdev_sg_bulletdamage_lvl2("ffdev_sg_bulletdamage_lvl12", "14", FCVAR_REPLICATED, "SG bullet damage for level 2");
+#define SG_BULLETDAMAGE_LVL2 ffdev_sg_bulletdamage_lvl2.GetInt()
+ConVar ffdev_sg_bulletdamage_lvl3("ffdev_sg_bulletdamage_lvl3", "17", FCVAR_REPLICATED, "SG bullet damage for level 3");
+#define SG_BULLETDAMAGE_LVL3 ffdev_sg_bulletdamage_lvl3.GetInt()
 
 // AfterShock; These values will be rounded by the ActiveThink time (at time of writing 0.01), so 0.125 = 0.13
 //ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG time between shots");
@@ -258,6 +266,7 @@ CFFSentryGun::CFFSentryGun()
 	//m_iMaxRockets = 0;
 	//m_iRockets = 0;
 	m_iShellDamage = 15;
+	m_flDamageTaken = 0.0f;
 	m_bLeftBarrel = true;
 	m_bRocketLeftBarrel = true;
 
@@ -1162,7 +1171,21 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
 	info.m_iDamage = m_iShellDamage;
-	info.m_flDamageForceScale = SG_BULLETPUSH;
+
+	//info.m_flDamageForceScale = SG_BULLETPUSH; //Level specific bulletpush now
+	switch (m_iLevel)
+	{
+		case 1:
+			info.m_flDamageForceScale *= SG_BULLETPUSH_LVL1;
+			break;
+		case 2:
+			info.m_flDamageForceScale *= SG_BULLETPUSH_LVL2;
+			break;
+		case 3:
+			info.m_flDamageForceScale *= SG_BULLETPUSH_LVL3;
+			break;
+	}
+
 	// Jiggles: A HACK to address the fact that it takes a lot more force to push players around on the ground than in the air
 	CFFPlayer *pEnemyTarget = ToFFPlayer( GetEnemy() );
 	if ( pEnemyTarget && (pEnemyTarget->GetFlags() & FL_ONGROUND) )
@@ -1618,6 +1641,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			bUpgraded = true;
 			bRetval = true;
 			m_iLevel++;
+			m_flDamageTaken = 0.0f;
 		}
 
 		float flAimPitch = GetPoseParameter( SG_BC_PITCH );
@@ -1635,7 +1659,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			//m_iMaxShells = 100;
 			//m_iMaxRockets = 0;
-			m_iShellDamage = SG_BULLETDAMAGE;
+			m_iShellDamage = SG_BULLETDAMAGE_LVL1;
 
 			//m_flShellCycleTime = 0.2f;
 			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL1;
@@ -1658,7 +1682,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			//m_iMaxShells = 125;
 			//m_iMaxRockets = 0;
-			m_iShellDamage = SG_BULLETDAMAGE;
+			m_iShellDamage = SG_BULLETDAMAGE_LVL2;
 
 			//m_flShellCycleTime = 0.1f;
 			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL2;
@@ -1685,7 +1709,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			//m_iMaxShells = 150;
 			//m_iMaxRockets = 20;
-			m_iShellDamage = SG_BULLETDAMAGE;
+			m_iShellDamage = SG_BULLETDAMAGE_LVL3;
 
 			//m_flShellCycleTime = 0.1f;
 			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL3;
@@ -1718,7 +1742,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 	}
 	else
 	{
-		m_iSGArmor = clamp( m_iSGArmor + iCells * 5.0f, 0, m_iMaxSGArmor );
+		m_iHealth = clamp( m_iHealth + iCells * 5.0f, 0, m_iMaxHealth );
 		//m_iShells = clamp( m_iShells + iShells, 0, m_iMaxShells );
 		//m_iRockets = clamp( m_iRockets + iRockets, 0, m_iMaxRockets );
 
@@ -2003,7 +2027,8 @@ void CFFSentryGun::PhysicsSimulate()
 			return;
 
 		int iHealth = (int) (100.0f * GetHealth() / GetMaxHealth());
-		int iArmor = (int) ( 100.0f * m_iSGArmor / m_iMaxSGArmor);
+		int iMaxHP = (int) ( GetMaxHealth() );
+		//int iArmor = (int) ( 100.0f * m_iSGArmor / m_iMaxSGArmor); // no more armor, just reduce max health - shok
 		//int iAmmo = (int) (100.0f * (float) m_iShells / m_iMaxShells);
 
 		// Last bit of ammo signifies whether the SG needs rockets
@@ -2011,7 +2036,7 @@ void CFFSentryGun::PhysicsSimulate()
 		//	m_iAmmoPercent += 128;
 
 		// If things haven't changed then do nothing more
-		int iState = iHealth + (iArmor << 8);
+		int iState = iHealth + (iMaxHP << 8);
 		if (m_iLastState == iState)
 			return;
 
@@ -2020,11 +2045,25 @@ void CFFSentryGun::PhysicsSimulate()
 
 		UserMessageBegin(user, "SentryMsg");
 			WRITE_BYTE(iHealth);
-			WRITE_BYTE(iArmor);
+			WRITE_BYTE(iMaxHP);
 			//WRITE_BYTE(iAmmo);
 			WRITE_BYTE(GetLevel());
 		MessageEnd();
 
 		m_iLastState = iState;
 	}
+}
+
+int CFFSentryGun::GetInitialHealth() 
+{
+	if ( m_iLevel == 1)
+		return SG_HEALTH_LEVEL1;
+	else if ( m_iLevel == 2)
+		return SG_HEALTH_LEVEL2;
+	else if ( m_iLevel == 3)
+		return SG_HEALTH_LEVEL3;
+
+	Warning("SG isnt level 1 2 or 3.. where are you calling this from... returnin 1 maxHP\n");
+	return 1;
+
 }

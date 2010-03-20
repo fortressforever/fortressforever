@@ -60,6 +60,13 @@
 
 extern short	g_sModelIndexFireball;
 
+ConVar ffdev_sg_maxhp_damagetoreduceratio("ffdev_sg_maxhp_damagetoreduceratio", "5", FCVAR_REPLICATED, "How much damage a SG takes to reduce it's max HP (in terms of how many times it's initial HP)");
+#define SG_MAXHP_DAMAGETOREDUCERATIO ffdev_sg_maxhp_damagetoreduceratio.GetFloat() 
+ConVar ffdev_sg_maxhp_hpratiotoreduceby("ffdev_sg_maxhp_hpratiotoreduceby", "0.2", FCVAR_REPLICATED, "How much to reduce it's max HP when it receives enough damage (in terms of how many times it's initial HP)");
+#define SG_MAXHP_HPRATIOTOREDUCEBY ffdev_sg_maxhp_hpratiotoreduceby.GetFloat()
+ConVar ffdev_sg_maxhp_minmaxhpratio("ffdev_sg_maxhp_minmaxhpratio", "0.5", FCVAR_REPLICATED, "Minimum max HP. When max HP reaches this amount, don't reduce it any more (in terms of how many times it's initial HP)");
+#define SG_MAXHP_MINMAXHPRATIO ffdev_sg_maxhp_minmaxhpratio.GetFloat()  
+
 extern ConVar ffdev_disable_duration;
 #define DISABLE_GREN_DURATION ffdev_disable_duration.GetFloat()
 
@@ -1025,9 +1032,34 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 
 	if ( Classify() == CLASS_SENTRYGUN )
 	{
+
+		// take damage
+		// add damage to total damage
+		// if total damage > damage to reduceMaxHP
+		//		reduce max hp
+		//		reset total damage and roll over
+	/*
+#define SG_MAXHP_DAMAGETOREDUCERATIO 5 
+#define SG_MAXHP_HPRATIOTOREDUCEBY 0.2 
+#define SG_MAXHP_MINMAXHPRATIO 0.5 
+*/
+
 		CFFSentryGun *pSentrygun = FF_ToSentrygun( this );
 		if ( pSentrygun )
 		{
+
+			pSentrygun->m_flDamageTaken = pSentrygun->m_flDamageTaken + adjustedDamage.GetDamage();
+			float damagetaken = pSentrygun->m_flDamageTaken;
+			if (damagetaken > ( SG_MAXHP_DAMAGETOREDUCERATIO * pSentrygun->GetInitialHealth() ) ) 
+			{
+				// reduce HP
+				if ( pSentrygun->GetMaxHealth() > pSentrygun->GetInitialHealth() * SG_MAXHP_MINMAXHPRATIO)
+				{
+					pSentrygun->SetMaxHealth( pSentrygun->GetMaxHealth() - ( pSentrygun->GetInitialHealth() * SG_MAXHP_HPRATIOTOREDUCEBY ) );
+					pSentrygun->m_flDamageTaken = damagetaken - ( SG_MAXHP_DAMAGETOREDUCERATIO * pSentrygun->GetInitialHealth() );
+				}
+			}
+
 			int damage = adjustedDamage.GetDamage();
 			float armorToRemove = (float) damage * SG_ARMOR_MULTIPLIER;
 			int armorToRemoveTruncated;
