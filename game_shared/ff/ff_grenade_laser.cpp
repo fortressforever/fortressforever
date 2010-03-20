@@ -202,7 +202,10 @@ void CFFGrenadeLaser::Precache()
 				vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
 			
 			pBeam[i]->PointsInit( vecOrigin, tr.endpos );
-			
+
+			if ( tr.m_pEnt )
+				DoDamage( tr.m_pEnt );
+
 			angRadial.y += flDeltaAngle;
 		}
 		
