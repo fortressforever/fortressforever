@@ -16,6 +16,7 @@
 #include "const.h"
 #include "ff_gamerules.h"
 #include "ff_utils.h"
+#include "IEffects.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -131,6 +132,10 @@ void CFFManCannon::OnJumpPadThink( void )
 	{
 		m_iHealth = min( ( m_iHealth + ffdev_mancannon_health_regen.GetInt() ), ffdev_mancannon_health.GetInt() );
 		DevMsg("[S] Jumppad health regen: %i\n", m_iHealth);
+
+		// spark when health regens (slightly above origin so it's on the jumppad not in it)
+		Vector vecUp(0, 0, 1.0f);
+		g_pEffects->Sparks(GetAbsOrigin() + (vecUp*8), 2, 4, &vecUp);
 	}
 	SetNextThink( gpGlobals->curtime + 1.0f );
 	// caes
