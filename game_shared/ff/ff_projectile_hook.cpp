@@ -51,8 +51,9 @@ ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED |
 ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATED );
 #define FFDEV_HOOK_ROPE_SEGMENTS ffdev_hook_rope_segments.GetInt()
 
-// caes: testing
-ConVar ffdev_hook_jumptoend( "ffdev_hook_jumptoend", "1", FCVAR_REPLICATED, "remove hook if we are hooked and pressing jump" );
+// caes: end hook when you come back to ground or repress jump
+ConVar ffdev_hook_end_on_landing( "ffdev_hook_end_on_landing", "1", FCVAR_REPLICATED, "end hook if on ground and have ever been in air since hook attached" );
+ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if jumping and have ever had jump not pressed since hook attached" );
 // caes
 
 //#define PREDICTED_ROCKETS
@@ -278,6 +279,10 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 	SetLocalAngularVelocity(QAngle(0, 0, 0));	// stop spinning
 	SetAbsVelocity(Vector(0,0,0));				// stop moving
 	bHooked = true;
+	// caes: remember if we've ever been in air and had jump not pressed since hook attached
+	bBeenInAir = false;
+	bBeenNotJumping = false;
+	// caes
 }
 
 //----------------------------------------------------------------------------
@@ -344,25 +349,51 @@ void CFFProjectileHook::HookThink()
 			SetMoveType( MOVETYPE_NONE );
 	}
 
-	// This is the actual code for how the hook moves the player
+	// hook attached
 	if ( bHooked )
 	{
+		CFFPlayer *pPlayer = ToFFPlayer( pOwner );
+
+		// end hook if on ground and have ever been in air since hook attached
+		if ( ffdev_hook_end_on_landing.GetBool() )
+		{
+			if ( pPlayer->IsOnGround() )
+			{
+				if ( bBeenInAir )
+				{
+					RemoveHook();
+					return;
+				}
+			}
+			else if ( !bBeenInAir )
+			{
+				bBeenInAir = true;
+			}
+		}
+
+		// end hook if jumping and have ever had jump not pressed since hook attached
+		if ( ffdev_hook_end_on_jump.GetBool() )
+		{
+			if ( pPlayer->m_nButtons & IN_JUMP )
+			{
+				if ( bBeenNotJumping )
+				{
+					RemoveHook();
+					return;
+				}
+			}
+			else if ( !bBeenNotJumping )
+			{
+				bBeenNotJumping = true;
+			}
+		}
+		// caes
+
+		// This is the actual code for how the hook moves the player
 		Vector vecPullDir = GetAbsOrigin() - pOwner->GetAbsOrigin();
 		VectorNormalize( vecPullDir );
 		vecPullDir*= HOOK_PULLSPEED;
 		pOwner->SetAbsVelocity( vecPullDir );
-
-		// caes: remove hook if we are hooked and pressing jump
-		if ( ffdev_hook_jumptoend.GetInt() )
-		{
-			CFFPlayer *pPlayer = ToFFPlayer( pOwner );
-			if ( pPlayer->m_nButtons & IN_JUMP )
-			{
-				RemoveHook();
-				return;
-			}
-		}
-		// caes
 	}
 
 #ifdef GAME_DLL

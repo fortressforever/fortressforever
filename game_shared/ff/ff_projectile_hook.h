@@ -59,6 +59,10 @@ public:
 	virtual void Spawn();
 
 	bool bHooked;
+	// caes: remember if we've ever been in air and had jump not pressed since hook attached
+	bool bBeenInAir;
+	bool bBeenNotJumping;
+	// caes
 	CBaseEntity * m_pOwnerGun;
 
 #ifdef GAME_DLL

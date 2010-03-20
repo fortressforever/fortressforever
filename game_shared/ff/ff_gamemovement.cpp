@@ -189,6 +189,9 @@ bool CFFGameMovement::CheckJumpButton(void)
 	}
 #endif
 
+	// caes: don't allow bhop when hook is attached (the onground flag doesn't always work if you bhop)
+	// TODO
+	// caes
 
 	// Don't allow jumping when the player is in a stasis field.
 	if ( player->m_Local.m_bSlowMovement )
