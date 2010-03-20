@@ -22,8 +22,8 @@
 
 ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1024", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "150", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "5", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "125", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 //=============================================================================
 //
