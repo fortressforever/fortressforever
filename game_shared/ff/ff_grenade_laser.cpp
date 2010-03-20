@@ -35,15 +35,18 @@
 	#define CFFGrenadeLaser C_FFGrenadeLaser
 #endif
 
-
+#define MAX_BEAMS 16
 
 #ifdef GAME_DLL
 
-	ConVar laserdamage("ffdev_laserdamage", "10", FCVAR_CHEAT, "Damage tick of LG laser");
-	ConVar lasertime("ffdev_lasertime", "3", FCVAR_CHEAT, "Laser activation time");
-	ConVar laserangv("ffdev_laserangv", "7.5", FCVAR_CHEAT, "Laser angular velocity");
-	ConVar laserexplode("ffdev_laserexplode", "1", FCVAR_CHEAT, "Explosion at end of fuse");
-//	ConVar laserstreams( "ffdev_lasergren_streams", "2", FCVAR_CHEAT );
+	ConVar laserdamage("ffdev_lasergrenade_damage", "10", FCVAR_CHEAT, "Damage of laser");
+	ConVar lasertime("ffdev_lasergrenade_time", "3", FCVAR_CHEAT, "Laser active time");
+	ConVar laserangv("ffdev_lasergrenade_angv", "3.75", FCVAR_CHEAT, "Laser angular increment");
+	ConVar laserexplode("ffdev_lasergrenade_explode", "0", FCVAR_CHEAT, "Explosion at end of active time");
+	ConVar laserbeams( "ffdev_lasergrenade_beams", "2", FCVAR_CHEAT, "Number of laser beams", true, 1, true, MAX_BEAMS);
+	ConVar laserdistance( "ffdev_lasergrenade_distance", "256", FCVAR_CHEAT, "Laser beam max radius",true, 0, true, 4096 );
+	ConVar laserjump( "ffdev_lasergrenade_jump", "80", FCVAR_CHEAT, "Laser grenade jump distance" );
+	ConVar laserbob( "ffdev_lasergrenade_bob", "20", FCVAR_CHEAT, "Laser grenade bob factor" );
 
 #endif
 
@@ -72,11 +75,10 @@ public:
 	virtual void BeamEmit();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual void DoDamage( CBaseEntity *pTarget );
-	virtual void Detonate();
 
 protected:
 	float	m_flAngleOffset;
-	CBeam	*pBeamA, *pBeamB;
+	CBeam	*pBeam[MAX_BEAMS];
 
 	float	m_flLastThinkTime;
 
@@ -142,84 +144,68 @@ void CFFGrenadeLaser::Precache()
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);
 
-		pBeamA = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
-		pBeamA->SetWidth( 1 );
-		pBeamA->SetEndWidth( 0.05f );
-		pBeamA->SetBrightness( 255 );
-		pBeamA->SetColor( 255, 255, 255 );
-//		pBeamA->RelinkBeam();
-		pBeamA->LiveForTime( lasertime.GetFloat() );
-
-		pBeamB = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
-		pBeamB->SetWidth( 1 );
-		pBeamB->SetEndWidth( 0.05f );
-		pBeamB->SetBrightness( 255 );
-		pBeamB->SetColor( 255, 255, 255 );
-//		pBeamB->RelinkBeam();
-		pBeamB->LiveForTime( lasertime.GetFloat() );
-
-		// Go into nail mode
+		char i;
+		for( i=0; i < laserbeams.GetInt(); i++ )
+		{
+			pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
+			pBeam[i]->SetWidth( 1 );
+			pBeam[i]->SetEndWidth( 0.05f );
+			pBeam[i]->SetBrightness( 255 );
+			pBeam[i]->SetColor( 255, 255, 255 );
+	//		pBeam[i]->RelinkBeam();
+			pBeam[i]->LiveForTime( lasertime.GetFloat() );
+		}
 		SetThink(&CFFGrenadeLaser::BeamEmit);
 		SetNextThink(gpGlobals->curtime);
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: Spin round emitting nails
+	// Purpose: Spin round emitting lasers
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeLaser::BeamEmit() 
 	{
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
-			Detonate();
+			if( laserexplode.GetBool() )
+				Detonate();
+			else
+				UTIL_Remove( this );
 			return;
 		}
 
 		float flRisingheight = 0;
 
 		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
-		if (m_flDetonateTime - gpGlobals->curtime > 2.6 && !m_fIsHandheld)
-			flRisingheight = 80;
+		if (m_flDetonateTime - gpGlobals->curtime > lasertime.GetFloat() - 0.3 && !m_fIsHandheld)
+			flRisingheight = laserjump.GetFloat();
 
-		SetAbsVelocity(Vector(0, 0, flRisingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
+		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(GetAbsAngles().y))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
 
-		Vector vecOrigin = GetAbsOrigin();
 		Vector vecDirection;
-		AngleVectors(GetAbsAngles(), &vecDirection);
-		VectorNormalizeFast(vecDirection);
+		Vector vecOrigin = GetAbsOrigin();
+		QAngle angRadial = GetAbsAngles();
 
 		float flSize = 20.0f;
+		trace_t tr;
+		char i;
 
-			//DrawBeam(vecOrigin + vecDirection * flSize, angRadial);
-		trace_t trA, trB;
-		UTIL_TraceLine(vecOrigin + vecDirection * flSize, vecOrigin + vecDirection * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trA);
-		UTIL_TraceLine(vecOrigin - vecDirection * flSize, vecOrigin - vecDirection * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trB);
+		float flDeltaAngle = 360.0f / laserbeams.GetInt();
 
-		pBeamA->PointsInit( vecOrigin, trA.endpos );
-		pBeamB->PointsInit( vecOrigin, trB.endpos );
+		for( i = 0; i < laserbeams.GetInt(); i++ )
+		{
+			AngleVectors(angRadial, &vecDirection);
+			VectorNormalizeFast(vecDirection);
 
-		if ( trA.m_pEnt )
-			DoDamage( trA.m_pEnt );
-
-		if ( trB.m_pEnt )
-			DoDamage( trB.m_pEnt );
-
-//		EmitSound("NailGrenade.shoot");
+			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
+				vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+			
+			pBeam[i]->PointsInit( vecOrigin, tr.endpos );
+			
+			angRadial.y += flDeltaAngle;
+		}
 		
-/*		CEffectData data;
-		data.m_vOrigin = vecOrigin;
-		data.m_vAngles = QAngle(0, 0, 0);
-
-#ifdef GAME_DLL
-			data.m_nEntIndex = entindex();
-#else
-			data.m_hEntity = this;
-#endif
-*/
-
-
-
 		SetNextThink(gpGlobals->curtime);
 	}
 
@@ -250,18 +236,6 @@ void CFFGrenadeLaser::Precache()
 				}
 			}
 		}
-	}
-
-	void CFFGrenadeLaser::Detonate()
-	{
-		// Remove if not allowed by Lua 
-		if ( !laserexplode.GetBool() )
-		{
-			UTIL_Remove(this);
-			return;
-		}
-
-		BaseClass::Detonate();
 	}
 
 #endif
