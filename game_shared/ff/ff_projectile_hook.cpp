@@ -51,7 +51,9 @@ ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED |
 ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATED );
 #define FFDEV_HOOK_ROPE_SEGMENTS ffdev_hook_rope_segments.GetInt()
 
-
+// caes: testing
+ConVar ffdev_hook_jumptoend( "ffdev_hook_jumptoend", "1", FCVAR_REPLICATED, "remove hook if we are hooked and pressing jump" );
+// caes
 
 //#define PREDICTED_ROCKETS
 
@@ -351,11 +353,14 @@ void CFFProjectileHook::HookThink()
 		pOwner->SetAbsVelocity( vecPullDir );
 
 		// caes: remove hook if we are hooked and pressing jump
-		CFFPlayer *pPlayer = ToFFPlayer( pOwner );
-		if ( pPlayer->m_nButtons & IN_JUMP )
+		if ( ffdev_hook_jumptoend.GetInt() )
 		{
-			RemoveHook();
-			return;
+			CFFPlayer *pPlayer = ToFFPlayer( pOwner );
+			if ( pPlayer->m_nButtons & IN_JUMP )
+			{
+				RemoveHook();
+				return;
+			}
 		}
 		// caes
 	}
