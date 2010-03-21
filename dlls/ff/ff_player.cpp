@@ -5118,6 +5118,7 @@ void CFFPlayer::GrenadeThink(void)
 	// Bug #0000993: Holding(HHing) an emp bugs the pre-det sound
 	// Because the grenade doesn't actually exist yet for the bug,
 	// we've gotta play the sound here if applicable
+	/*
 	if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_iGrenadeState == FF_GREN_PRIMETWO ) )
 	{
 		if( !m_bEngyGrenWarned && ( gpGlobals->curtime > ( m_flServerPrimeTime + GREN_TIMER - 0.685f ) ) )
@@ -5126,6 +5127,7 @@ void CFFPlayer::GrenadeThink(void)
 			EmitSound( EMP_SOUND );
 		}
 	}	
+	*/
 
 	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= GREN_THROW_DELAY)
 	{

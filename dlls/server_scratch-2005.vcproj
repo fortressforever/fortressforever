@@ -693,6 +693,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\game_shared\ff\ff_grenade_hoverturret.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\game_shared\ff\ff_grenade_laser.cpp"
 					>
 				</File>

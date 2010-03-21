@@ -85,6 +85,7 @@ enum Class_T
 	CLASS_GREN_GAS,		// Gas grenade
 	CLASS_GREN_CONC,	// Conc grenade
 	CLASS_GREN_LASER,
+	CLASS_GREN_HOVERTURRET,
 	CLASS_GREN_SLOWFIELD,
 	// END: Added by Mulchman
 
