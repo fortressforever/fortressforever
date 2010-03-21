@@ -56,18 +56,18 @@ void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
 }
 
 //static ConVar ffdev_nailradial_number("ffdev_nailradial_number", "8");
-#define NAILRADIAL_NUMBER 8
+#define NAILRADIAL_NUMBER 2
+extern ConVar laser_ng_nailspeed, laser_ng_nailstreams;
 
 void FF_FX_Projectile_Nail_Radial_Callback(const CEffectData &data)
 {
-	int nNails = NAILRADIAL_NUMBER;
-
+	int nNails = laser_ng_nailstreams.GetInt()/*NAILRADIAL_NUMBER*/;
 	float flDeltaAngle = 360.0f / nNails;
-	QAngle angRadial = QAngle(0.0f, random->RandomFloat(0.0f, flDeltaAngle), 0.0f);
+	QAngle angRadial = data.m_vAngles;
 	
 	while (nNails-- > 0)
 	{
-		tempents->FFProjectile(data.m_vOrigin, angRadial, NAIL_SPEED, FF_PROJECTILE_NAIL_NG, 
+		tempents->FFProjectile(data.m_vOrigin, angRadial, laser_ng_nailspeed.GetInt() /*NAIL_SPEED*/, FF_PROJECTILE_NAIL_NG, 
 #ifdef GAME_DLL
 			data.m_nEntIndex
 #else
