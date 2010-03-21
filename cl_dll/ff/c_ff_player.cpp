@@ -1930,7 +1930,7 @@ void C_FFPlayer::DrawPlayerIcons()
 	// --------------------------------
 	// Check for "tranquilized"
 	// --------------------------------
-	if( IsConcussed() > gpGlobals->curtime && tranq_on.GetBool())
+	if( IsConcussed() && tranq_on.GetBool())
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_tranquilized", TEXTURE_GROUP_CLIENT_EFFECTS );
 		if( pMaterial )
