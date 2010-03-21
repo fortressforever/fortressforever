@@ -23,11 +23,11 @@
 
 ConVar ffdev_hook_range( "ffdev_hook_range", "1000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook range" );
 #define HOOK_RANGE ffdev_hook_range.GetFloat()
-ConVar ffdev_hook_closerange( "ffdev_hook_closerange", "80.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook close range" );
+ConVar ffdev_hook_closerange( "ffdev_hook_closerange", "200.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook close range" );
 #define HOOK_CLOSERANGE ffdev_hook_closerange.GetFloat()
 ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1500.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook fire speed" );
 #define HOOK_FIRESPEED ffdev_hook_firespeed.GetFloat()
-ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
+ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "300.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
 #define HOOK_PULLSPEED ffdev_hook_pullspeed.GetFloat()
 
 #define ROPE_MATERIAL			"cable/rope_b.vmt"
@@ -51,9 +51,9 @@ ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED |
 ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATED );
 #define FFDEV_HOOK_ROPE_SEGMENTS ffdev_hook_rope_segments.GetInt()
 
-// caes: end hook when you come back to ground or repress jump
-ConVar ffdev_hook_end_on_landing( "ffdev_hook_end_on_landing", "1", FCVAR_REPLICATED, "end hook if on ground and have ever been in air since hook attached" );
-ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if jumping and have ever had jump not pressed since hook attached" );
+// caes: testing
+ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
+ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "enable swinging (conserve radial velocity)" );
 // caes
 
 //#define PREDICTED_ROCKETS
@@ -279,8 +279,7 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 	SetLocalAngularVelocity(QAngle(0, 0, 0));	// stop spinning
 	SetAbsVelocity(Vector(0,0,0));				// stop moving
 	bHooked = true;
-	// caes: remember if we've ever been in air and had jump not pressed since hook attached
-	bBeenInAir = false;
+	// caes: end hook if pressing jump and have ever had jump not pressed since last on ground
 	bBeenNotJumping = false;
 	// caes
 }
@@ -352,48 +351,62 @@ void CFFProjectileHook::HookThink()
 	// hook attached
 	if ( bHooked )
 	{
-		CFFPlayer *pPlayer = ToFFPlayer( pOwner );
-
-		// end hook if on ground and have ever been in air since hook attached
-		if ( ffdev_hook_end_on_landing.GetBool() )
-		{
-			if ( pPlayer->IsOnGround() )
-			{
-				if ( bBeenInAir )
-				{
-					RemoveHook();
-					return;
-				}
-			}
-			else if ( !bBeenInAir )
-			{
-				bBeenInAir = true;
-			}
-		}
-
-		// end hook if jumping and have ever had jump not pressed since hook attached
+		// caes: end hook if pressing jump and have ever had jump not pressed since last on ground
 		if ( ffdev_hook_end_on_jump.GetBool() )
 		{
-			if ( pPlayer->m_nButtons & IN_JUMP )
+			CFFPlayer *pPlayer = ToFFPlayer( pOwner );
+			if ( !pPlayer->IsOnGround() )
 			{
-				if ( bBeenNotJumping )
+				if ( pPlayer->m_nButtons & IN_JUMP )
 				{
-					RemoveHook();
-					return;
+					if ( bBeenNotJumping )
+					{
+						RemoveHook();
+						return;
+					}
+				}
+				else if ( !bBeenNotJumping )
+				{
+					bBeenNotJumping = true;
 				}
 			}
-			else if ( !bBeenNotJumping )
+			else
 			{
-				bBeenNotJumping = true;
+				bBeenNotJumping = false;
 			}
 		}
 		// caes
 
-		// This is the actual code for how the hook moves the player
-		Vector vecPullDir = GetAbsOrigin() - pOwner->GetAbsOrigin();
-		VectorNormalize( vecPullDir );
-		vecPullDir*= HOOK_PULLSPEED;
-		pOwner->SetAbsVelocity( vecPullDir );
+		// caes: testing original movement and swinging movement
+		if ( !ffdev_hook_swing.GetInt() )
+		{
+			// This is the actual code for how the hook moves the player
+			Vector vecPullDir = GetAbsOrigin() - pOwner->GetAbsOrigin();
+			VectorNormalize( vecPullDir );
+			vecPullDir*= HOOK_PULLSPEED;
+			pOwner->SetAbsVelocity( vecPullDir );
+		}
+		else
+		{
+			// get direction from player to hook
+			Vector vecPullDir = GetAbsOrigin() - pOwner->GetAbsOrigin();
+			VectorNormalize( vecPullDir );
+
+			// get player velocity
+			Vector vecVel;
+			pOwner->GetVelocity( &vecVel );
+
+			// calculate swing direction
+			Vector vecSwingDir = CrossProduct( CrossProduct( vecPullDir, vecVel ), vecPullDir );
+			VectorNormalize( vecSwingDir );
+
+			// calculate conserved swing speed (player velocity projected onto swing direction)
+			float flSwingSpeed = DotProduct( vecVel, vecSwingDir );
+
+			// calculate resultant velocity (fixed radial speed, conserved swing speed)
+			pOwner->SetAbsVelocity( vecPullDir*HOOK_PULLSPEED + vecSwingDir*flSwingSpeed );
+		}
+		// caes
 	}
 
 #ifdef GAME_DLL

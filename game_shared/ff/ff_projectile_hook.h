@@ -59,8 +59,7 @@ public:
 	virtual void Spawn();
 
 	bool bHooked;
-	// caes: remember if we've ever been in air and had jump not pressed since hook attached
-	bool bBeenInAir;
+	// caes: end hook if pressing jump and have ever had jump not pressed since last on ground
 	bool bBeenNotJumping;
 	// caes
 	CBaseEntity * m_pOwnerGun;
