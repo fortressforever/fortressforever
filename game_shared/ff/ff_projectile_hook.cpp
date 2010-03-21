@@ -53,7 +53,7 @@ ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATE
 
 // caes: testing
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
-ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "enable swinging (conserve radial velocity)" );
+ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "enable swinging (conserve swing velocity)" );
 // caes
 
 //#define PREDICTED_ROCKETS
