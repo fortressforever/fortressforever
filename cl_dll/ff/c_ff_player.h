@@ -372,11 +372,11 @@ public:
 
 	float		m_flNextMapGuideTime;
 	// <-- Mirv: Map guide stuff
-
+	
 	// --> Mirv: Conc stuff
 	float m_flConcTime;
 	QAngle m_angConced, m_angConcedTest;
-	
+
 	virtual const QAngle &EyeAngles();
 	virtual void CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
 	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
@@ -452,27 +452,37 @@ protected:
 	// ----------------------------------
 	// SaveMe stuffs
 public:
-	bool IsInSaveMe( void ) const { return m_iSaveMe != 0; }
+	bool IsInSaveMe( void ) const { return m_bSaveMe; }
 protected:
-	unsigned int m_iSaveMe;
-	float m_flSaveMeTime;
+	bool m_bSaveMe;
+	float m_flSaveMeTime; //Also used for EngyMe and AmmoMe
 	// ----------------------------------
 
 	// ----------------------------------
 	// EngyMe stuffs
 public:
-	bool IsInEngyMe( void ) const { return m_iEngyMe != 0; }
+	bool IsInEngyMe( void ) const { return m_bEngyMe; }
 protected:
-	unsigned int m_iEngyMe;
+	bool m_bEngyMe;
 	// ----------------------------------
 	
 	// ----------------------------------
 	// AmmoMe stuffs
 public:
-	bool IsInAmmoMe( void ) const { return m_iAmmoMe != 0; }
+	bool IsInAmmoMe( void ) const { return m_bAmmoMe; }
 protected:
-	unsigned int m_iAmmoMe;
+	bool m_bAmmoMe;
 	// ----------------------------------
+
+// ELMO ***
+	// ----------------------------------
+	// Concussion
+public:
+	bool IsConcussed( void ) const { return m_bConcussed; }
+protected:
+	bool m_bConcussed;
+	// ----------------------------------
+// *** ELMO 
 
 	// ----------------------------------
 	// Cloak stuff

@@ -813,30 +813,40 @@ public:
 	// **********************************
 	// SaveMe stuffs
 public:
-	bool IsInSaveMe( void ) const { return m_iSaveMe != 0; }
+	bool IsInSaveMe( void ) const { return m_bSaveMe; }
 protected:
 	//CHandle< CFFSaveMe >	m_hSaveMe;
-	CNetworkVar( unsigned int, m_iSaveMe );
-	float m_flSaveMeTime;
+	CNetworkVar( bool, m_bSaveMe );
+	float m_flSaveMeTime; //Also used for EngyMe and AmmoMe (see below)
 	// **********************************
 
 	// **********************************
 	// EngyMe stuffs
 public:
-	bool IsInEngyMe( void ) const { return m_iEngyMe != 0; }
+	bool IsInEngyMe( void ) const { return m_bEngyMe; }
 protected:
-	CNetworkVar( unsigned int, m_iEngyMe );
+	CNetworkVar( bool, m_bEngyMe );
 	// 0001339: Share m_flSaveMeTime with the medic call.
 	// **********************************
 	
 	// **********************************
 	// AmmoMe stuffs
 public:
-	bool IsInAmmoMe( void ) const { return m_iAmmoMe != 0; }
+	bool IsInAmmoMe( void ) const { return m_bAmmoMe; }
 protected:
-	CNetworkVar( unsigned int, m_iAmmoMe );
+	CNetworkVar( bool, m_bAmmoMe );
 	// 0001339: Share m_flSaveMeTime with the medic call.
 	// **********************************
+	
+	// **********************************
+	// Concussion stuffs
+public:
+	bool IsConcussed( void ) const { return m_bConcussed; }
+protected:
+	CNetworkVar( bool, m_bConcussed );
+	// **********************************
+
+
 
 public:
 	// Some luabind functions

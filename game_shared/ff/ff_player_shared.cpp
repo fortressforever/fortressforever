@@ -1708,7 +1708,7 @@ void CFFPlayer::Command_AmmoMe( void )
 	if( m_flSaveMeTime < gpGlobals->curtime )
 	{
 #ifdef GAME_DLL
-		m_iAmmoMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+		m_bAmmoMe = true; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
 #endif
 		// Set the time we can do another saveme/engyme/ammome at
 		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
@@ -1727,7 +1727,7 @@ void CFFPlayer::Command_SaveMe( void )
 	if( m_flSaveMeTime < gpGlobals->curtime )
 	{
 #ifdef GAME_DLL
-		m_iSaveMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+		m_bSaveMe = true; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
 #endif
 		// Set the time we can do another saveme at
 		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
@@ -1763,7 +1763,7 @@ void CFFPlayer::Command_EngyMe( void )
 	if( m_flSaveMeTime < gpGlobals->curtime )
 	{
 #ifdef GAME_DLL
-		m_iEngyMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+		m_bEngyMe = true; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
 #endif
 		// Set the time we can do another engyme at
 		m_flSaveMeTime = gpGlobals->curtime + 5.0f;

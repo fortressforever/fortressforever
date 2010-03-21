@@ -77,22 +77,22 @@ extern ConVar cl_ffdlight_flashlight;
 //static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
 static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
 
-
+// ELMO *** Concussion icon (above player head) 1 of 2
 static ConVar tranq_on("ffdev_tranq_on", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Show tranq icon when conced. Default: 0 (boolean 0 or 1)"); 
 
 static ConVar concuss_alwaysOn("ffdev_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? Default: 0 (boolean 0 or 1)"); 
-
 static ConVar concuss_spriteSize("ffdev_concuss_spriteSize", "8.0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Size of sprite. Default: 8"); 
 static ConVar concuss_spriteNum("ffdev_concuss_spriteNum", "5", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Number of sprites. Default: 5"); 
 static ConVar concuss_color_r("ffdev_concuss_color_r", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Red Component. Default: 255"); 
 static ConVar concuss_color_g("ffdev_concuss_color_g", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Green Component. Default: 255"); 
-static ConVar concuss_color_b("ffdev_concuss_color_b", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status Component. Default: 0"); 
-static ConVar concuss_color_a("ffdev_concuss_color_a", "128", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status Component. Default: 128"); 
+static ConVar concuss_color_b("ffdev_concuss_color_b", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Blue Component. Default: 0"); 
+static ConVar concuss_color_a("ffdev_concuss_color_a", "128", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Alpha Component. Default: 128"); 
 static ConVar concuss_verticalDistance("ffdev_concuss_verticalDistance", "4", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
-static ConVar concuss_verticalSpeed("ffdev_concuss_verticalSpeed", "100", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Time taken for the sprite to up and down. Default: 100 (milliseconds)" );
-static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "50", FCVAR_CLIENTDLL | FCVAR_CHEAT, "The speed at which the sprites spin (multiplier)"  );
+static ConVar concuss_verticalSpeed("ffdev_concuss_verticalSpeed", "200", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Time taken for the sprite to loop up and down. Default: 200 (milliseconds)" );
+static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "30", FCVAR_CLIENTDLL | FCVAR_CHEAT, "The speed at which the sprites spin. Default: 30 (multiplier)"  );
 static ConVar concuss_radius("ffdev_concuss_radius", "10", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite should be drawn from the origin. Default: 10 (hammer units)" );
-static ConVar concuss_height("ffdev_concuss_height", "6", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Height at which the sprite is drawn from the origin. Default: 6 (hammer units)");
+static ConVar concuss_height("ffdev_concuss_height", "10", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Height at which the sprite is drawn from the origin. Default: 10 (hammer units)");
+// *** ELMO
 
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
 
@@ -771,9 +771,10 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 
 	RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
 	
-	RecvPropInt( RECVINFO( m_iSaveMe ) ),
-	RecvPropInt( RECVINFO( m_iEngyMe ) ),
-	RecvPropInt( RECVINFO( m_iAmmoMe ) ),
+	RecvPropBool( RECVINFO( m_bSaveMe ) ),
+	RecvPropBool( RECVINFO( m_bEngyMe ) ),
+	RecvPropBool( RECVINFO( m_bAmmoMe ) ),
+	RecvPropBool( RECVINFO( m_bConcussed ) ),
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
@@ -1189,6 +1190,7 @@ C_FFPlayer::C_FFPlayer() :
 	m_pOldActiveWeapon = NULL;
 
 	m_flConcTime = 0;
+	m_bConcussed = false;
 
 	m_flSpeedModifier = 1.0f;
 	
@@ -1836,10 +1838,11 @@ void C_FFPlayer::DrawPlayerIcons()
 		}
 	}
 
+// ELMO *** Concussion icon (above player head) 2 of 2
 	// --------------------------------
 	// Check for "concussed"
 	// --------------------------------
-	if(m_flConcTime > gpGlobals->curtime || m_flConcTime == -1 || concuss_alwaysOn.GetBool())
+	if(IsConcussed() || concuss_alwaysOn.GetBool())
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_concussed", TEXTURE_GROUP_CLIENT_EFFECTS );
 		if( pMaterial )
@@ -1861,11 +1864,10 @@ void C_FFPlayer::DrawPlayerIcons()
 			//output from AngleVectors
 			Vector vecDirection; 
 			//origin of player at eye height + 12 units
-			Vector vecOrigin = Vector( EyePosition().x, EyePosition().y, EyePosition().z + height );
+			Vector vecOrigin = Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + height );
 			//for the wavey effect (two for a more random feel.. might be a simpler way)
 			Vector vecVerticalOffset;
 			Vector vecVerticalOffset2;
-			Vector vecVerticalOffset3;
 
 			//make the wavey effect
 			int verticalSpeed = concuss_verticalSpeed.GetInt(); //speed (higher is slower)
@@ -1923,11 +1925,12 @@ void C_FFPlayer::DrawPlayerIcons()
 			}
 		}
 	}
-
+// *** ELMO
+// ELMO *** Tranquilized icon (above player head) 1 of 1
 	// --------------------------------
 	// Check for "tranquilized"
 	// --------------------------------
-	if( m_flConcTime > gpGlobals->curtime && tranq_on.GetBool())
+	if( IsConcussed() > gpGlobals->curtime && tranq_on.GetBool())
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_tranquilized", TEXTURE_GROUP_CLIENT_EFFECTS );
 		if( pMaterial )
@@ -1941,9 +1944,9 @@ void C_FFPlayer::DrawPlayerIcons()
 			color32 c2 = { 255, 255, 255, clamp(alpha-255,0,255) };
 			color32 c3 = { 255, 255, 255, clamp(alpha-510,0,255) };
 			
-			DrawSprite( Vector( EyePosition().x+6.0f, EyePosition().y+6.0f, EyePosition().z + 12.0f ), 2.0f, 2.0f, c1 );
-			DrawSprite( Vector( EyePosition().x+8.0f, EyePosition().y+8.0f, EyePosition().z + 14.0f ), 4.0f, 4.0f, c2 );
-			DrawSprite( Vector( EyePosition().x+12.0f, EyePosition().y+12.0f, EyePosition().z + 18.0f ), 8.0f, 8.0f, c3 );
+			DrawSprite( Vector( GetAbsOrigin().x+6.0f, GetAbsOrigin().y+6.0f, EyePosition().z + 12.0f ), 2.0f, 2.0f, c1 );
+			DrawSprite( Vector( GetAbsOrigin().x+8.0f, GetAbsOrigin().y+8.0f, EyePosition().z + 14.0f ), 4.0f, 4.0f, c2 );
+			DrawSprite( Vector( GetAbsOrigin().x+12.0f, GetAbsOrigin().y+12.0f, EyePosition().z + 18.0f ), 8.0f, 8.0f, c3 );
 		}
 	}
 }
