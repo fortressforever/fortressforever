@@ -646,17 +646,21 @@ void CFFPlayer::PreThink(void)
 		m_pWhoTaggedMe = NULL;
 	}
 
-	// See if it's time to reset our saveme status
-	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_bSaveMe ) )
+
+	if( ( m_flSaveMeTime < gpGlobals->curtime ) )
+	{
+		// See if it's time to reset our saveme status
+		if( m_bSaveMe ) 
 		m_bSaveMe = false;
 
-	// See if it's time to reset our engyme status
-	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_bEngyMe ) )
-		m_bEngyMe = false;
+		// See if it's time to reset our engyme status
+		if( m_bEngyMe )
+			m_bEngyMe = false;
 	
-	// See if it's time to reset our engyme status
-	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_bAmmoMe ) )
-		m_bAmmoMe = false;
+		// See if it's time to reset our engyme status
+		if( m_bAmmoMe )
+			m_bAmmoMe = false;
+	}
 
 	// See if it's time to reset our concussion status
 	if( ( m_flConcTime < gpGlobals->curtime ) && ( m_bConcussed ) )
