@@ -362,7 +362,7 @@ public:
 
 	virtual bool CanDisable() const { return false; }
 	virtual bool IsDisabled() const;
-	virtual void Disable();
+	virtual void Disable( float flDisableDuration );
 
 	virtual bool HasMalfunctioned( void ) const;
 

@@ -719,16 +719,16 @@ bool CFFBuildableObject::IsDisabled() const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Spy gren disable
+// Purpose: Sentry Disable
 //-----------------------------------------------------------------------------
-void CFFBuildableObject::Disable()
+void CFFBuildableObject::Disable( float flDisableDuration )
 {
 	VPROF_BUDGET( "CFFBuildableObject::Disable", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if ( !CanDisable() )
 		return;
 
-	m_flDisableTime = gpGlobals->curtime + DISABLE_GREN_DURATION;
+	m_flDisableTime = gpGlobals->curtime + flDisableDuration;
 	m_flSavedThink = GetNextThink();
 	SetNextThink( gpGlobals->curtime + 0.029f );
 }

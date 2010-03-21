@@ -155,7 +155,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_disable );
 
 				if( g_pGameRules->FCanTakeDamage( pBuildable, pOwner ) )
 				{
-					pBuildable->Disable();
+					pBuildable->Disable( DISABLE_DURATION );
 				}
 			}
 		}
