@@ -37,7 +37,7 @@
 
 #define MAX_BEAMS 16
 
-ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "300", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
 ConVar laser_ng_nailstreams( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 #ifdef GAME_DLL
@@ -49,17 +49,18 @@ ConVar laser_ng_nailstreams( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED | 
 	ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_CHEAT, "Laser beam max radius",true, 0, true, 4096 );
 	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_CHEAT, "Laser grenade jump distance" );
 	ConVar laserbob( "ffdev_lasergren_bob", "20", FCVAR_CHEAT, "Laser grenade bob factor" );
-	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.02", FCVAR_CHEAT, "Laser grenade update time" );
+	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_CHEAT, "Laser grenade update time" );
 
 	ConVar usenails( "ffdev_lasergren_usenails", "1", FCVAR_CHEAT | FCVAR_NOTIFY, "Use nails instead of lasers" );
+	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_CHEAT, "Bob Frequency");
 	
 	ConVar laserexplode("ffdev_lasergren_explode", "1", FCVAR_CHEAT, "Explosion at end of active time");
-	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "180", FCVAR_CHEAT, "Explosion damage at end of active period" );
-	ConVar explosionradius("ffdev_lasergren_explosionradius", "270", FCVAR_CHEAT, "Explosion radius at end of active period" );
+	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "180", FCVAR_CHEAT | FCVAR_NOTIFY, "Explosion damage at end of active period" );
+	ConVar explosionradius("ffdev_lasergren_explosionradius", "270", FCVAR_CHEAT | FCVAR_NOTIFY, "Explosion radius at end of active period" );
 
 	/******************************************************************/
 	ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_CHEAT);
-	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.02", FCVAR_CHEAT );
+	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.075", FCVAR_CHEAT );
 	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", FCVAR_CHEAT );
 	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
 	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
@@ -330,7 +331,7 @@ void CFFGrenadeLaser::Precache()
 		if (m_flDetonateTime - gpGlobals->curtime > lasertime.GetFloat() - 0.3 && !m_fIsHandheld)
 			flRisingheight = laserjump.GetFloat();
 
-		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(GetAbsAngles().y))));
+		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(gpGlobals->curtime * 360 * bobfrequency.GetFloat()))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
 
 		if( m_flBeams < gpGlobals->curtime )
@@ -442,7 +443,7 @@ void CFFGrenadeLaser::Precache()
 		if (m_flDetonateTime - gpGlobals->curtime > lasertime.GetFloat() - 0.3 && !m_fIsHandheld)
 			flRisingheight = laserjump.GetFloat();
 
-		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(GetAbsAngles().y))));
+		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(gpGlobals->curtime * 360 * bobfrequency.GetFloat()))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
 
 		Vector vecOrigin = GetAbsOrigin();
