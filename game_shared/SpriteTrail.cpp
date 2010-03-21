@@ -434,7 +434,7 @@ int CSpriteTrail::DrawModel( int flags )
 	CBaseEntity *pParent = GetMoveParent();
 
 	if (grenadetrails.GetBool() == false && 
-		pParent && pParent->Classify() >= CLASS_GREN && pParent->Classify() <= CLASS_GREN_LASER)
+		pParent && pParent->Classify() >= CLASS_GREN && pParent->Classify() <= CLASS_GREN_HOVERTURRET)
 		return 0;
 
 	if (pipetrails.GetBool() == false && 
