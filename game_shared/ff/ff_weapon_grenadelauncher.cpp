@@ -25,6 +25,10 @@
 	#include "ff_player.h"
 #endif
 
+ConVar ffdev_bluepipes_syncwithyellows("ffdev_bluepipes_syncwithyellows", "0.0", FCVAR_REPLICATED, "Whether blues and yellows share clip");
+#define FFDEV_BLUEPIPES_SYNCWITHYELLOWS ffdev_bluepipes_syncwithyellows.GetBool()
+
+
 //=============================================================================
 // CFFWeaponGrenadeLauncher
 //=============================================================================
@@ -193,21 +197,24 @@ bool CFFWeaponGrenadeLauncher::Holster(CBaseCombatWeapon *pSwitchingTo)
 //----------------------------------------------------------------------------
 void CFFWeaponGrenadeLauncher::Synchronise()
 {
-	CFFPlayer *pPlayer = GetPlayerOwner();
-
-	// Player was NULL once in an mdmp on build 3101
-	if( !pPlayer )
-		return;
-
-	// We could probably just do GetWeapon(2) 
-	for (int i = 0; i < MAX_WEAPON_SLOTS; i++) 
+	if ( FFDEV_BLUEPIPES_SYNCWITHYELLOWS )
 	{
-		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i)); // This gets holstered weapon numbers. 0=crowbar, 1=shotgun, (gren launcher is deployed), 2=pipelauncher 3=detpack
+		CFFPlayer *pPlayer = GetPlayerOwner();
 
-		if (w && w->GetWeaponID() == FF_WEAPON_PIPELAUNCHER)
+		// Player was NULL once in an mdmp on build 3101
+		if( !pPlayer )
+			return;
+
+		// We could probably just do GetWeapon(2) 
+		for (int i = 0; i < MAX_WEAPON_SLOTS; i++) 
 		{
-			w->m_iClip1 = m_iClip1;
-			break;
+			CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i)); // This gets holstered weapon numbers. 0=crowbar, 1=shotgun, (gren launcher is deployed), 2=pipelauncher 3=detpack
+
+			if (w && w->GetWeaponID() == FF_WEAPON_PIPELAUNCHER)
+			{
+				w->m_iClip1 = m_iClip1;
+				break;
+			}
 		}
 	}
 }

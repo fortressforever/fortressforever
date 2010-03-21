@@ -29,6 +29,8 @@
 ConVar pipe_damage_radius( "ffdev_pipe_damage_radius", "130", FCVAR_REPLICATED, "Pipe explosion radius" );
 #define PIPE_DAMAGERADIUS pipe_damage_radius.GetInt()
 
+extern ConVar ffdev_bluepipes_syncwithyellows;
+#define FFDEV_BLUEPIPES_SYNCWITHYELLOWS ffdev_bluepipes_syncwithyellows.GetBool()
 //----------------------------------------------------------------------------
 // Purpose: Send special hint on firing first pipe
 //----------------------------------------------------------------------------
@@ -239,20 +241,23 @@ bool CFFWeaponPipeLauncher::Holster(CBaseCombatWeapon *pSwitchingTo)
 //----------------------------------------------------------------------------
 void CFFWeaponPipeLauncher::Synchronise()
 {
-	CFFPlayer *pPlayer = GetPlayerOwner();
-
-	if( !pPlayer )
-		return;
-
-	// We could probably just do GetWeapon(2) 
-	for (int i = 0; i < MAX_WEAPON_SLOTS; i++) 
+	if ( FFDEV_BLUEPIPES_SYNCWITHYELLOWS )
 	{
-		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i)); // This gets holstered weapon numbers. 0=crowbar, 1=shotgun, (pipelauncher is deployed), 2=grenlauncher 3=detpack
+		CFFPlayer *pPlayer = GetPlayerOwner();
 
-		if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER)
+		if( !pPlayer )
+			return;
+
+		// We could probably just do GetWeapon(2) 
+		for (int i = 0; i < MAX_WEAPON_SLOTS; i++) 
 		{
-			w->m_iClip1 = m_iClip1;
-			break;
+			CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i)); // This gets holstered weapon numbers. 0=crowbar, 1=shotgun, (pipelauncher is deployed), 2=grenlauncher 3=detpack
+
+			if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER)
+			{
+				w->m_iClip1 = m_iClip1;
+				break;
+			}
 		}
 	}
 }

@@ -25,7 +25,8 @@
 //=============================================================================
 
 	BEGIN_DATADESC(CFFProjectileGrenade) 
-		DEFINE_THINKFUNC(GrenadeThink), 
+		DEFINE_THINKFUNC( GrenadeThink ), 
+		DEFINE_ENTITYFUNC( ExplodeTouch ),
 	END_DATADESC() 
 #endif
 
@@ -46,10 +47,16 @@ ConVar projectile_gren_elasticity("ffdev_projectile_gren_elasticity", "0.5", FCV
 ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT, "");
 //ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.3", FCVAR_REPLICATED | FCVAR_CHEAT, "");
 #define FF_PROJECTILE_GREN_FUSETIME 1.3f //projectile_gren_fusetime.GetFloat();
-ConVar projectile_gren_bonusdirectdmg("ffdev_projectile_gren_bonusdirectdmg", "28.0", FCVAR_REPLICATED, "");
-#define FF_PROJECTILE_GREN_BONUSDIRECTDMG projectile_gren_bonusdirectdmg.GetFloat()
-ConVar projectile_gren_normaldmg("ffdev_projectile_gren_normaldmg", "80.0", FCVAR_REPLICATED, "");
-#define FF_PROJECTILE_GREN_NORMALDMG projectile_gren_normaldmg.GetFloat()
+ConVar ffdev_bluepipes_bonusdirectdmg("ffdev_bluepipes_bonusdirectdmg", "18.0", FCVAR_REPLICATED, "");
+#define FF_PROJECTILE_GREN_BONUSDIRECTDMG ffdev_bluepipes_bonusdirectdmg.GetFloat()
+ConVar ffdev_bluepipes_normaldmg("ffdev_bluepipes_normaldmg", "70.0", FCVAR_REPLICATED, "");
+#define FF_PROJECTILE_GREN_NORMALDMG ffdev_bluepipes_normaldmg.GetFloat()
+ConVar ffdev_bluepipes_explodeontouch("ffdev_bluepipes_explodeontouch", "1.0", FCVAR_REPLICATED, "");
+#define FFDEV_BLUEPIPES_EXPLODEONTOUCH ffdev_bluepipes_explodeontouch.GetBool()
+ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(int) size of bounding box, 1-5 are good values");
+#define FFDEV_BLUEPIPES_SIZE ffdev_bluepipes_size.GetInt()
+
+
 #ifdef GAME_DLL
 
 	//----------------------------------------------------------------------------
@@ -90,11 +97,21 @@ ConVar projectile_gren_normaldmg("ffdev_projectile_gren_normaldmg", "80.0", FCVA
 		SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 
 		// smaller, cube bounding box so we rest on the ground
-		SetSize(Vector(-5, -5, -5), Vector(5, 5, 5));
+		SetSize(Vector(-FFDEV_BLUEPIPES_SIZE, -FFDEV_BLUEPIPES_SIZE, -FFDEV_BLUEPIPES_SIZE), Vector(FFDEV_BLUEPIPES_SIZE, FFDEV_BLUEPIPES_SIZE, FFDEV_BLUEPIPES_SIZE));
 
 		// Set the think
-		SetThink(&CFFProjectileGrenade::GrenadeThink);		// |-- Mirv: Account for GCC strictness
+		if ( ( FFDEV_BLUEPIPES_EXPLODEONTOUCH ) && ( Classify() == CLASS_GLGRENADE ) ) // AfterShock: This is because pipebombs inherit from here!		
+		{
+			SetTouch(&CFFProjectileGrenade::ExplodeTouch);
+			SetThink(NULL);
+		}
+		else
+		{
+			SetThink(&CFFProjectileGrenade::GrenadeThink);		// |-- Mirv: Account for GCC strictness
+		}
+
 		SetNextThink(gpGlobals->curtime);
+
 
 		// Creates the smoke trail
 		CreateProjectileEffects();
