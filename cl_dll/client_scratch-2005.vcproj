@@ -5027,10 +5027,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_grenade_caltrop.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\game_shared\ff\ff_grenade_concussion.cpp"
 				>
 			</File>
