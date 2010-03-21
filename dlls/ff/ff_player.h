@@ -54,7 +54,6 @@ enum SpeedEffectType
 	SE_ASSAULTCANNON,
 	SE_LEGSHOT,
 	SE_TRANQ,
-	SE_CALTROP,
 	SE_CLOAK,
 	SE_LUA1,	// a speed effect that lua can set
 	SE_LUA2,	// a speed effect that lua can set

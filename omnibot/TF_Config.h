@@ -107,7 +107,6 @@ typedef enum eTF_EntityCategory
 //		TF_CLASSEX_NAPALM_GRENADE - Napalm Grenade entity.
 //		TF_CLASSEX_GAS_GRENADE - Gas Grenade entity.
 //		TF_CLASSEX_CONC_GRENADE - Concussion Grenade entity.
-//		TF_CLASSEX_CALTROP - Caltrop Grenade entity.
 //		TF_CLASSEX_PIPE - Pipe Grenade entity.
 //		TF_CLASSEX_ROCKET - Rocket Grenade entity.
 //		TF_CLASSEX_BACKPACK_AMMO - Backpack entity.
@@ -147,7 +146,6 @@ typedef enum eTF_EntityClass
 	TF_CLASSEX_NAPALM_GRENADE,
 	TF_CLASSEX_GAS_GRENADE,
 	TF_CLASSEX_CONC_GRENADE,
-	TF_CLASSEX_CALTROP,
 	TF_CLASSEX_PIPE,
 	TF_CLASSEX_GLGRENADE,
 	TF_CLASSEX_ROCKET,
@@ -169,7 +167,6 @@ typedef enum eTF_EntityClass
 //		TF_ENT_SNIPERAIMING - This entity is aiming a scoped weapon.
 //		TF_ENT_ASSAULTFIRING - This entity is shooting an assault weapon.
 //		TF_ENT_LEGSHOT - This entity is suffering from a leg shot.
-//		TF_ENT_CALTROP - This entity is suffering from a caltrop.
 //		TF_ENT_RADIOTAGGED - This entity has been radio tagged.
 //		TF_ENT_CAN_SABOTAGE - This entity can be sabotaged.
 //		TF_ENT_SABOTAGED - This entity has been sabotaged.
@@ -188,7 +185,6 @@ typedef enum eTF_EntityFlags
 	TF_ENT_FLAG_GASSED,
 	TF_ENT_FLAG_ASSAULTFIRING,
 	TF_ENT_FLAG_LEGSHOT,
-	TF_ENT_FLAG_CALTROP,
 	TF_ENT_FLAG_RADIOTAGGED,
 	TF_ENT_FLAG_CAN_SABOTAGE,
 	TF_ENT_FLAG_SABOTAGED,
@@ -302,7 +298,6 @@ typedef enum eTF_Weapon
 	TF_WP_GRENADE_NAIL,
 	TF_WP_GRENADE_MIRV,
 	TF_WP_GRENADE_GAS,
-	TF_WP_GRENADE_CALTROPS,
 	TF_WP_GRENADE_NAPALM,
 
 	// THIS MUST STAY LAST
