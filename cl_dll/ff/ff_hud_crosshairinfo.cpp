@@ -568,7 +568,7 @@ void CHudCrosshairInfo::OnTick( void )
 					//Q_snprintf( szArmor, 5, "%i%%", iArmor );
 
 					
-					wchar_t wszHealth[ 10 ], /*wszRockets[ 10 ], wszShells[ 10 ],*/ wszLevel[ 10 ], wszArmor[ 10 ];
+					wchar_t wszHealth[ 10 ], /*wszRockets[ 10 ], wszShells[ 10 ],*/ wszLevel[ 10 ];//, wszArmor[ 10 ];
 
                     vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
 					//vgui::localize()->ConvertANSIToUnicode( szRockets, wszRockets, sizeof( wszRockets ) );
