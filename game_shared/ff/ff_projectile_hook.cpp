@@ -27,7 +27,7 @@ ConVar ffdev_hook_closerange( "ffdev_hook_closerange", "200.0", FCVAR_REPLICATED
 #define HOOK_CLOSERANGE ffdev_hook_closerange.GetFloat()
 ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1500.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook fire speed" );
 #define HOOK_FIRESPEED ffdev_hook_firespeed.GetFloat()
-ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "300.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
+ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "700.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
 #define HOOK_PULLSPEED ffdev_hook_pullspeed.GetFloat()
 
 #define ROPE_MATERIAL			"cable/rope_b.vmt"
@@ -53,7 +53,9 @@ ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATE
 
 // caes: testing
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
-ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "enable swinging (conserve swing velocity)" );
+ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "enable swinging system" );
+ConVar ffdev_hook_pullspeed_min( "ffdev_hook_pullspeed_min", "200.0", FCVAR_REPLICATED, "minimum hook pull speed (remember gravity is done later by the engine)" );
+ConVar ffdev_hook_pullspeed_falloff( "ffdev_hook_pullspeed_falloff", "0.5", FCVAR_REPLICATED, "how fast hook pull speed falls off as swing speed increases" );
 // caes
 
 //#define PREDICTED_ROCKETS
@@ -400,11 +402,18 @@ void CFFProjectileHook::HookThink()
 			Vector vecSwingDir = CrossProduct( CrossProduct( vecPullDir, vecVel ), vecPullDir );
 			VectorNormalize( vecSwingDir );
 
-			// calculate conserved swing speed (player velocity projected onto swing direction)
+			// calculate current speed in swing direction
 			float flSwingSpeed = DotProduct( vecVel, vecSwingDir );
 
-			// calculate resultant velocity (fixed radial speed, conserved swing speed)
-			pOwner->SetAbsVelocity( vecPullDir*HOOK_PULLSPEED + vecSwingDir*flSwingSpeed );
+			// apply centripetal force and make the winch not infinitely powerful (pull speed falls off linearly the faster you swing)
+			float flPullSpeed = HOOK_PULLSPEED - flSwingSpeed*ffdev_hook_pullspeed_falloff.GetFloat();
+			flPullSpeed = max( flPullSpeed, ffdev_hook_pullspeed_min.GetFloat() );
+
+			// it's a rope, so only allow tension not compression
+			flPullSpeed = max( flPullSpeed, DotProduct( vecVel, vecPullDir ) );
+
+			// set resultant velocity (gravity is done later by the engine)
+			pOwner->SetAbsVelocity( vecPullDir*flPullSpeed + vecSwingDir*flSwingSpeed );
 		}
 		// caes
 	}
