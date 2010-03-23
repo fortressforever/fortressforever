@@ -314,8 +314,12 @@ void CFFWeaponMeleeBase::Swing()
 
 		// Back off by hull "radius"
 		swingEnd -= forward * meleeHullRadius;
-
-		UTIL_TraceHull(swingStart, swingEnd, g_meleeMins, g_meleeMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
+		//swingStart += forward * meleeHullRadius;
+		
+		Vector meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
+		Vector meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
+		
+		UTIL_TraceHull(swingStart, swingEnd, meleeMins, meleeMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
 
 		if (traceHit.fraction < 1.0 && traceHit.m_pEnt) 
 		{
@@ -332,7 +336,7 @@ void CFFWeaponMeleeBase::Swing()
 			}
 			else
 			{
-				nHitActivity = ChooseIntersectionPointAndActivity(traceHit, g_meleeMins, g_meleeMaxs, pOwner);
+				nHitActivity = ChooseIntersectionPointAndActivity(traceHit, meleeMins, meleeMaxs, pOwner);
 			}
 		}
 	}
