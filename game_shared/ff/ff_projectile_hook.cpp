@@ -54,9 +54,13 @@ ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATE
 
 // caes: testing
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
-ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "enable swinging or original system" );
-ConVar ffdev_hook_pullspeed_falloff( "ffdev_hook_pullspeed_falloff", "0.3", FCVAR_REPLICATED, "how fast hook pull speed falls off as centripetal force increases (due to the winch's power)" );
-ConVar ffdev_hook_angvel_cap( "ffdev_hook_angvel_cap", "3.0", FCVAR_REPLICATED, "end hook if rotating around it too fast" );
+ConVar ffdev_hook_swing( "ffdev_hook_swing", "2", FCVAR_REPLICATED, "[0/1/2] - winch system 1: pull speed falls off linearly as force on rope increases; rope can't extend. winch system 2: applies constant force on rope when in air; rope can't extend; max pull speed capped; when on ground sets you to max pull speed if pull is horizontal and gives small kick if pull is vertical." );
+ConVar ffdev_hook_swing_break( "ffdev_hook_swing_break", "3.0", FCVAR_REPLICATED, "end hook if radial velocity exceeds this" );
+ConVar ffdev_hook_swing1_speed( "ffdev_hook_swing1_speed", "750.0", FCVAR_REPLICATED, "pull speed when no force on rope" );
+ConVar ffdev_hook_swing1_falloff( "ffdev_hook_swing1_falloff", "0.3", FCVAR_REPLICATED, "rate pull speed falls off as force on rope increases" );
+ConVar ffdev_hook_swing2_speed( "ffdev_hook_swing2_speed", "750.0", FCVAR_REPLICATED, "max pull speed cap (and horizontal pull speed when on ground)" );
+ConVar ffdev_hook_swing2_speed_v( "ffdev_hook_swing2_speed_v", "100.0", FCVAR_REPLICATED, "vertical pull speed when on ground" );
+ConVar ffdev_hook_swing2_force( "ffdev_hook_swing2_force", "2000.0", FCVAR_REPLICATED, "constant force applied on rope when in air" );
 // caes
 
 //#define PREDICTED_ROCKETS
@@ -380,8 +384,9 @@ void CFFProjectileHook::HookThink()
 		}
 		// caes
 
-		// caes: testing original movement and swinging movement
-		if ( !ffdev_hook_swing.GetInt() )
+
+		// caes: testing different movement systems
+		if ( ffdev_hook_swing.GetInt() == 0 )
 		{
 			// This is the actual code for how the hook moves the player
 			Vector vecPullDir = GetAbsOrigin() - pOwner->GetAbsOrigin();
@@ -389,6 +394,7 @@ void CFFProjectileHook::HookThink()
 			vecPullDir*= HOOK_PULLSPEED;
 			pOwner->SetAbsVelocity( vecPullDir );
 		}
+
 		else
 		{
 			// get direction from player to hook
@@ -403,31 +409,65 @@ void CFFProjectileHook::HookThink()
 			Vector vecSwingDir = CrossProduct( CrossProduct( vecPullDir, vecVel ), vecPullDir );
 			VectorNormalize( vecSwingDir );
 
-			// calculate current speed in swing and radial directions
+			// current speed in swing and radial directions
 			float flSwingSpeed = DotProduct( vecVel, vecSwingDir );
 			float flRadialSpeed = DotProduct( vecVel, vecPullDir );
 
-			// unscrew hook if angular velocity too high
-			if ( flSwingSpeed / flDistance > ffdev_hook_angvel_cap.GetFloat() )
+			// radial accelerations needed for rope to stay the same length
+			float flCentripetalAccel = flSwingSpeed * flSwingSpeed / flDistance;
+			float flRadialGravityAccel = sv_gravity.GetFloat() * DotProduct( Vector(0.0f,0.0f,1.0f), vecPullDir );
+
+			// end hook if radial velocity too high
+			if ( abs( flSwingSpeed ) / flDistance > ffdev_hook_swing_break.GetFloat() )
 			{
 				RemoveHook();
 				return;
 			}
 
-			// centripetal force (mass is constant so force is proportional to accel)
-			float flCentripetalAccel = flSwingSpeed * flSwingSpeed / flDistance;
+			// just here while testing
+			float flPullSpeed;
 
-			// calculate how hard the winch can pull (pull speed falls off linearly). gravity is added later.
-			float flPullSpeed = HOOK_PULLSPEED - flCentripetalAccel * ffdev_hook_pullspeed_falloff.GetFloat();
+			// winch system 1: pull speed falls off linearly as force on rope increases;rope can't extend.
+			if ( ffdev_hook_swing.GetInt() == 1 )
+			{
+				// positive radial acceleration needed from tension in the rope for it to stay the same length
+				float flRadialAccel = max( 0.0f, flCentripetalAccel + flRadialGravityAccel );
+				// winch pull speed falls off linearly as the tension in the rope increases (mass is constant so within the cvar) and can't be negative
+				flPullSpeed = max( 0.0f, ffdev_hook_swing1_speed.GetFloat() - ffdev_hook_swing1_falloff.GetFloat() * flRadialAccel );
+				// stop gravity changing radial speed during the next tick (we already took gravity into account above)
+				flPullSpeed += flRadialGravityAccel * gpGlobals->interval_per_tick;
+			}
 
-			// it's a rope, so only allow tension not compression
+			// winch system 2: applies constant force on rope when in air; rope can't extend; max pull speed capped; when on ground sets you to max pull speed if pull is horizontal and gives small kick if pull is vertical.
+			else if ( ffdev_hook_swing.GetInt() == 2 )
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( pOwner );
+				if ( !pPlayer->IsOnGround() )
+				{
+					// radial acceleration available to counter gravity and pull player in (mass is constant so within the cvar)
+					float flRadialAccel = ffdev_hook_swing2_force.GetFloat() - flCentripetalAccel;
+					// apply radial acceleration to player's radial speed
+					flPullSpeed = flRadialSpeed + flRadialAccel * gpGlobals->interval_per_tick;
+					// make sure pull speed is enough for gravity not to extend the rope in the next tick
+					flPullSpeed = max( flPullSpeed, flRadialGravityAccel * gpGlobals->interval_per_tick );
+					// cap maximum speed winch can pull you in at
+					flPullSpeed = min( flPullSpeed, ffdev_hook_swing2_speed.GetFloat() );
+				}
+				else
+				{
+					// calculate forwards direction
+					Vector vecForwardDir = CrossProduct( CrossProduct( Vector(0.0f,0.0f,1.0f), vecPullDir ), Vector(0.0f,0.0f,1.0f) );
+					VectorNormalize( vecForwardDir );
+					// calculate ground kick vector
+					Vector vecGroundKick = vecForwardDir*ffdev_hook_swing2_speed.GetFloat() + Vector(0.0f,0.0f,1.0f)*ffdev_hook_swing2_speed_v.GetFloat();
+					// project ground kick onto pull direction
+					flPullSpeed = DotProduct( vecPullDir, vecGroundKick );
+				}
+			}
+
+			// rope can only do tension, so don't decrease player's radial speed
 			flPullSpeed = max( flPullSpeed, flRadialSpeed );
-
-			// rope can't stretch, so make sure pull speed is more than gravity projected radially
-			float flGravityRadial = sv_gravity.GetFloat() * DotProduct( Vector(0.0f,0.0f,1.0f), vecPullDir );
-			flPullSpeed = max( flPullSpeed, gpGlobals->interval_per_tick * flGravityRadial );
-
-			// set resultant velocity (gravity is added later by the engine)
+			// set resultant velocity (gravity is applied by the game later)
 			pOwner->SetAbsVelocity( vecPullDir*flPullSpeed + vecSwingDir*flSwingSpeed );
 		}
 		// caes
