@@ -143,14 +143,13 @@ void CFFGrenadeHoverTurret::Precache()
 		m_iDamageDone = 0;
 		m_takedamage = DAMAGE_YES;
 		m_iHealth = m_iMaxHealth = 1;
-		SetSize( -Vector(6,6,6), Vector(6,6,6) );
+		SetSize( -Vector(10,10,10), Vector(10,10,10) );
 		SetCollisionGroup( COLLISION_GROUP_PLAYER );
 		SetSolid( SOLID_BBOX );
 		RemoveSolidFlags( FSOLID_NOT_SOLID );
 		RemoveSolidFlags( FSOLID_NOT_STANDABLE );
 		//AddSolidFlags( FSOLID_TRIGGER );
 		//CreateVPhysics();
-
 	}
 
 	//-----------------------------------------------------------------------------
