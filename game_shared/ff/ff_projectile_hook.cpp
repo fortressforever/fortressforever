@@ -336,6 +336,7 @@ void CFFProjectileHook::HookThink()
 	// remove if we can't see our owner any more
 	if ( !FVisible( pOwner->GetAbsOrigin() ) )
 	{
+		EmitSound("hookgun.rope_snap");		
 		RemoveHook();
 		return;
 	}
@@ -344,6 +345,7 @@ void CFFProjectileHook::HookThink()
 	float flDistance = WorldSpaceCenter().DistTo( pOwner->GetAbsOrigin() );
 	if ( flDistance > HOOK_RANGE || ( bHooked && flDistance < HOOK_CLOSERANGE ) )
 	{
+		EmitSound("hookgun.rope_snap");
 		RemoveHook();
 		return;
 	}
@@ -368,6 +370,7 @@ void CFFProjectileHook::HookThink()
 				{
 					if ( bBeenNotJumping )
 					{
+						EmitSound("hookgun.rope_snap");
 						RemoveHook();
 						return;
 					}
@@ -421,11 +424,12 @@ void CFFProjectileHook::HookThink()
 			if ( abs( flSwingSpeed ) / flDistance > ffdev_hook_swing_break.GetFloat() )
 			{
 				RemoveHook();
+				EmitSound("hookgun.rope_snap");
 				return;
 			}
 
 			// just here while testing
-			float flPullSpeed;
+			float flPullSpeed = 0.0f;
 
 			// winch system 1: pull speed falls off linearly as force on rope increases;rope can't extend.
 			if ( ffdev_hook_swing.GetInt() == 1 )

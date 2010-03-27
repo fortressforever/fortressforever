@@ -40,6 +40,7 @@ public:
 	CFFWeaponHookGun();
 
 	virtual void		Fire();
+	virtual void		Precache();
 	virtual void		ItemPostFrame();
 	virtual bool		Holster(CBaseCombatWeapon *pSwitchingTo);
 	virtual bool		SendWeaponAnim(int iActivity);
