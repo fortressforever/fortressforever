@@ -46,6 +46,9 @@
 //static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
+//Convar for the spy's max cloakspeed.
+extern ConVar ffdev_cloakspeed;
+
 #ifdef CLIENT_DLL
 	extern ConVar cl_bunnyhop_disablepogojump;
 #endif
@@ -246,6 +249,18 @@ bool CFFGameMovement::CheckJumpButton(void)
 		if (speed > cap_soft)
 		{
 			float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
+			float multi = applied_cap / speed;
+
+			mv->m_vecVelocity[0] *= multi;
+			mv->m_vecVelocity[1] *= multi;
+
+			Assert(multi <= 1.0f);
+		}
+
+		//Checks if a cloaked spy is too much over his cloakspeed.-GreenMushy
+		if( ffplayer->IsCloaked() && speed > ( ffplayer->MaxSpeed() * ffdev_cloakspeed.GetFloat() ))
+		{
+			float applied_cap = ( ffplayer->MaxSpeed() * ffdev_cloakspeed.GetFloat() );
 			float multi = applied_cap / speed;
 
 			mv->m_vecVelocity[0] *= multi;
