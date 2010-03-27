@@ -54,7 +54,7 @@ ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATE
 
 // caes: testing
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
-ConVar ffdev_hook_swing( "ffdev_hook_swing", "2", FCVAR_REPLICATED, "[0/1/2] - winch system 1: pull speed falls off linearly as force on rope increases; rope can't extend. winch system 2: applies constant force on rope when in air; rope can't extend; max pull speed capped; when on ground sets you to max pull speed if pull is horizontal and gives small kick if pull is vertical." );
+ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "[0/1/2] - winch system 1: pull speed falls off linearly as force on rope increases; rope can't extend. winch system 2: applies constant force on rope when in air; rope can't extend; max pull speed capped; when on ground sets you to max pull speed if pull is horizontal and gives small kick if pull is vertical." );
 ConVar ffdev_hook_swing_break( "ffdev_hook_swing_break", "3.0", FCVAR_REPLICATED, "end hook if radial velocity exceeds this" );
 ConVar ffdev_hook_swing1_speed( "ffdev_hook_swing1_speed", "750.0", FCVAR_REPLICATED, "pull speed when no force on rope" );
 ConVar ffdev_hook_swing1_falloff( "ffdev_hook_swing1_falloff", "0.3", FCVAR_REPLICATED, "rate pull speed falls off as force on rope increases" );
