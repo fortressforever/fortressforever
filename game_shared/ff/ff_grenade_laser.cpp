@@ -39,22 +39,22 @@
 
 ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
 ConVar laser_ng_nailstreams( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_REPLICATED | FCVAR_CHEAT, "Number of laser beams", true, 1, true, MAX_BEAMS);
+ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED | FCVAR_CHEAT, "Laser beam max radius",true, 0, true, 4096 );
+ConVar lasertime("ffdev_lasergren_time", "3", FCVAR_REPLICATED | FCVAR_CHEAT, "Laser active time");
 
 #ifdef GAME_DLL
 
 	ConVar laserdamage("ffdev_lasergren_damage", "10", FCVAR_CHEAT, "Damage of laser");
-	ConVar lasertime("ffdev_lasergren_time", "3", FCVAR_CHEAT, "Laser active time");
 	ConVar laserangv("ffdev_lasergren_angv", "3.75", FCVAR_CHEAT, "Laser angular increment");
-	ConVar laserbeams( "ffdev_lasergren_beams", "2", FCVAR_CHEAT, "Number of laser beams", true, 1, true, MAX_BEAMS);
-	ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_CHEAT, "Laser beam max radius",true, 0, true, 4096 );
 	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_CHEAT, "Laser grenade jump distance" );
 	ConVar laserbob( "ffdev_lasergren_bob", "20", FCVAR_CHEAT, "Laser grenade bob factor" );
 	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_CHEAT, "Laser grenade update time" );
 
-	ConVar usenails( "ffdev_lasergren_usenails", "1", FCVAR_CHEAT | FCVAR_NOTIFY, "Use nails instead of lasers" );
+	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_CHEAT | FCVAR_NOTIFY, "Use nails instead of lasers" );
 	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_CHEAT, "Bob Frequency");
 	
-	ConVar laserexplode("ffdev_lasergren_explode", "1", FCVAR_CHEAT, "Explosion at end of active time");
+	ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_CHEAT, "Explosion at end of active time");
 	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "180", FCVAR_CHEAT | FCVAR_NOTIFY, "Explosion damage at end of active period" );
 	ConVar explosionradius("ffdev_lasergren_explosionradius", "270", FCVAR_CHEAT | FCVAR_NOTIFY, "Explosion radius at end of active period" );
 
@@ -202,9 +202,19 @@ public:
 
 	virtual color32 GetColour() { color32 col = { 128, 225, 255, GREN_ALPHA_DEFAULT }; return col; }
 
+	CNetworkVar( unsigned int, m_bIsOn );
+
 #ifdef CLIENT_DLL
 	CFFGrenadeLaser() {}
 	CFFGrenadeLaser(const CFFGrenadeLaser&) {}
+	virtual void ClientThink();
+	virtual void OnDataChanged(DataUpdateType_t updateType);
+	virtual void UpdateOnRemove( void );
+protected:
+	CBeam	*pBeam[MAX_BEAMS];
+	IMaterial	*m_pMaterial;
+
+public:
 #else
 	DECLARE_DATADESC(); // Since we're adding new thinks etc
 	virtual void Spawn();
@@ -216,6 +226,7 @@ public:
 	virtual float GetGrenadeDamage()		{ return explosiondamage.GetFloat(); }
 	virtual float GetGrenadeRadius()		{ return explosionradius.GetFloat(); }
 
+
 private:
 	void ShootNail( const Vector& vecOrigin, const QAngle& vecAngles );
 
@@ -223,7 +234,6 @@ protected:
 	float	m_flBeams;
 	float	m_flNailSpit;
 	float	m_flAngleOffset;
-	CBeam	*pBeam[MAX_BEAMS];
 
 	CUtlVector< PseudoNail > m_NailsVector;
 
@@ -242,6 +252,11 @@ protected:
 IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeLaser, DT_FFGrenadeLaser)
 
 BEGIN_NETWORK_TABLE(CFFGrenadeLaser, DT_FFGrenadeLaser)
+#ifdef GAME_DLL
+SendPropInt(SENDINFO(m_bIsOn), 1, SPROP_UNSIGNED),
+#else
+RecvPropInt(RECVINFO(m_bIsOn)),
+#endif
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(ff_grenade_laser, CFFGrenadeLaser);
@@ -270,7 +285,7 @@ void CFFGrenadeLaser::Precache()
 	{
 		SetModel(NAILGRENADE_MODEL);
 		BaseClass::Spawn();
-
+		m_bIsOn = 0;
 		m_flAngleOffset = 0.0f;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
 	}
@@ -292,21 +307,13 @@ void CFFGrenadeLaser::Precache()
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);
 
-		char i;
-		for( i=0; i < laserbeams.GetInt(); i++ )
-		{
-			pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
-			pBeam[i]->SetWidth( 1 );
-			pBeam[i]->SetEndWidth( 0.05f );
-			pBeam[i]->SetBrightness( 255 );
-			pBeam[i]->SetColor( 255, 255, 255 );
-	//		pBeam[i]->RelinkBeam();
-			pBeam[i]->LiveForTime( lasertime.GetFloat() );
-		}
 		if( usenails.GetBool() )
 			SetThink(&CFFGrenadeLaser::NailEmit);
 		else
+		{
+			m_bIsOn = 1;
 			SetThink(&CFFGrenadeLaser::BeamEmit);
+		}
 		SetNextThink(gpGlobals->curtime);
 	}
 
@@ -334,35 +341,28 @@ void CFFGrenadeLaser::Precache()
 		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(gpGlobals->curtime * 360 * bobfrequency.GetFloat()))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
 
-		if( m_flBeams < gpGlobals->curtime )
+		Vector vecDirection;
+		Vector vecOrigin = GetAbsOrigin();
+		QAngle angRadial = GetAbsAngles();
+
+		float flSize = 20.0f;
+		trace_t tr;
+		char i;
+
+		float flDeltaAngle = 360.0f / laserbeams.GetInt();
+
+		for( i = 0; i < laserbeams.GetInt(); i++ )
 		{
+			AngleVectors(angRadial, &vecDirection);
+			VectorNormalizeFast(vecDirection);
 
-			Vector vecDirection;
-			Vector vecOrigin = GetAbsOrigin();
-			QAngle angRadial = GetAbsAngles();
+			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
+				vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+			
+			if ( tr.m_pEnt )
+				DoDamage( tr.m_pEnt );
 
-			float flSize = 20.0f;
-			trace_t tr;
-			char i;
-
-			float flDeltaAngle = 360.0f / laserbeams.GetInt();
-
-			for( i = 0; i < laserbeams.GetInt(); i++ )
-			{
-				AngleVectors(angRadial, &vecDirection);
-				VectorNormalizeFast(vecDirection);
-
-				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
-					vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
-				
-				pBeam[i]->PointsInit( vecOrigin, tr.endpos );
-
-				if ( tr.m_pEnt )
-					DoDamage( tr.m_pEnt );
-
-				angRadial.y += flDeltaAngle;
-			}
-			m_flBeams = gpGlobals->curtime + laserbeamtime.GetFloat();
+			angRadial.y += flDeltaAngle;
 		}
 		SetNextThink( gpGlobals->curtime );
 	}
@@ -484,66 +484,9 @@ void CFFGrenadeLaser::Precache()
 
 			DispatchEffect("Projectile_Nail_Radial", data);
 
-			// Default to 45 degrees
-/*			int iNailSpreadInterval = 360 / ((iStreams == 0) ? 45 : iStreams);
-
-			// Start position (0 to (360 - iNailSpreadInterval))
-			int iNailStartPos = (rand() % iStreams) * iNailSpreadInterval;
-
-			int iNailOffset = rand() % laser_ng_angleoffset.GetInt();
-
-			Vector vecNailDir;
-			QAngle vecAngles( 0.f, iNailStartPos + iNailOffset, 0.f );
-
-			for( int i = 0; i < iStreams; i++ )
-			{
-				AngleVectors( vecAngles, &vecNailDir );
-				VectorNormalizeFast( vecNailDir );
-
-				ShootNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, ( i == 0 ) ? true : false );
-
-				// Update next position
-				vecAngles.y += (iNailSpreadInterval + iNailOffset);
-			}*/
-
 			// Set up next nail spit time
 			m_flNailSpit = gpGlobals->curtime + laser_ng_spittime.GetFloat();
 		}
-
-		/*
-		// Bug #0000674: Nail grenade doesn't shoot nails out like TFC nail grenade
-		//	Otherwise known as: Make nail grens look rubbish again		
-
-		// Time to spit out nails again?
-		if( m_flNailSpit < gpGlobals->curtime )
-		{
-			// Do the classic TFC pattern.
-			// 9/27/2006 - upping from 12 to 24 and change angle from 30 to 15
-			for( int i = 0; i < 23; i++ )
-			{
-				Vector vecNailDir;
-				QAngle vecAngles = GetAbsAngles() + QAngle( 0, ( 15.0f * i ) + m_flAngleOffset, 0 );				
-				AngleVectors( vecAngles, &vecNailDir );
-				VectorNormalizeFast( vecNailDir );
-
-				CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), laser_ng_naildamage.GetInt(), laser_ng_nailspeed.GetInt());
-				if(pNail)
-					pNail->m_bNailGrenadeNail = true;				
-			}
-
-			// Increment the starting spot for nails a bit so we
-			// don't have gaps due to the angular pattern we shoot with
-			m_flAngleOffset += laser_ng_angleoffset.GetFloat();
-
-			// TODO: Get tang to make this sound sound like 12 nails being shot out
-			// Play this each time we spawn a nail?
-			EmitSound( "NailGrenade.shoot" );
-
-			// Set up next nail spit time
-			m_flNailSpit = gpGlobals->curtime + laser_ng_spittime.GetFloat();
-		}
-		*/
-
 		SetNextThink(gpGlobals->curtime);
 		m_flLastThinkTime = gpGlobals->curtime;
 	}
@@ -553,22 +496,82 @@ void CFFGrenadeLaser::Precache()
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeLaser::ShootNail( const Vector& vecOrigin, const QAngle& vecAngles )
 	{
-		/*
-		// Create the nail and tell it it's a nail grenade nail
-		// We don't do a clientside nail with this because that is being done itself
-		CFFProjectileNail *pNail = CFFProjectileNail::CreateNail( this, vecOrigin, vecAngles, GetOwnerEntity(), laser_ng_naildamage.GetInt(), laser_ng_nailspeed.GetInt(), true );
-
-		if (!pNail)
-			return;
-
-		pNail->m_bNailGrenadeNail = true;
-
-		float flFlatten = ffdev_nailgren_flatten.GetFloat();
-		Vector vecFlattened = Vector(flFlatten, flFlatten, 1.0f);
-		pNail->SetSize(-vecFlattened, vecFlattened);
-		*/
-		
 		m_NailsVector.AddToTail( PseudoNail( vecOrigin, vecAngles ) );
+	}
+
+#else
+	void CFFGrenadeLaser::UpdateOnRemove( void )
+	{
+		int i;
+		for( i = 0; i < laserbeams.GetInt(); i++ )
+		{
+			if( pBeam[i] )
+			{
+				delete pBeam[i];
+			}
+		}
+
+		BaseClass::UpdateOnRemove();
+	}
+	//-----------------------------------------------------------------------------
+	// Purpose: Emit gas.
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeLaser::ClientThink()
+	{
+		if ( m_bIsOn )
+		{
+			Vector vecDirection;
+			Vector vecOrigin = GetAbsOrigin();
+			QAngle angRadial = GetAbsAngles();
+
+			float flSize = 20.0f;
+			trace_t tr;
+			char i;
+
+			float flDeltaAngle = 360.0f / laserbeams.GetInt();
+		
+			for( i = 0; i < laserbeams.GetInt(); i++ )
+			{
+				AngleVectors(angRadial, &vecDirection);
+				VectorNormalizeFast(vecDirection);
+
+				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
+								vecOrigin + vecDirection * laserdistance.GetFloat(), 
+								MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+				
+				if( !pBeam[i] )
+				{
+					pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
+					pBeam[i]->SetWidth( 1 );
+					pBeam[i]->SetEndWidth( 0.05f );
+					pBeam[i]->SetBrightness( 255 );
+					pBeam[i]->SetColor( 255, 255, 255 );
+					pBeam[i]->LiveForTime( lasertime.GetFloat()  );
+				}
+				pBeam[i]->PointsInit( vecOrigin, tr.endpos );
+
+				angRadial.y += flDeltaAngle;
+			}
+		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Called when data changes on the server
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeLaser::OnDataChanged(DataUpdateType_t updateType)
+	{
+		// NOTE: We MUST call the base classes' implementation of this function
+//		BaseClass::OnDataChanged(updateType);
+
+		// Setup our entity's particle system on creation
+		if (updateType == DATA_UPDATE_CREATED)
+		{
+			m_pMaterial = materials->FindMaterial("effects/blueblacklargebeam", TEXTURE_GROUP_CLIENT_EFFECTS);
+			m_pMaterial->IncrementReferenceCount();
+
+			// Call our ClientThink() function once every client frame
+			SetNextClientThink(CLIENT_THINK_ALWAYS);
+		}
 	}
 
 #endif
