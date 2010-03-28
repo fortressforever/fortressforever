@@ -29,7 +29,7 @@
 #endif
 
 #define GRENADE_BEAM_SPRITE			"effects/bluelaser1.vmt"
-#define HOVERGRENADE_MODEL			"models/grenades/conc/conc.mdl"
+#define HOVERGRENADE_MODEL			"models/grenades/nailgren/nailgren.mdl"
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeHoverTurret C_FFGrenadeHoverTurret
@@ -41,13 +41,13 @@ ConVar ffdev_hovergren_lifetime("ffdev_hovergren_lifetime", "5", FCVAR_REPLICATE
 #define FFDEV_HOVERGREN_LIFETIME ffdev_hovergren_lifetime.GetFloat()
 ConVar ffdev_hovergren_risetime("ffdev_hovergren_risetime", "0.3", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade: time it takes to rise to full height ");
 #define FFDEV_HOVERGREN_RISETIME ffdev_hovergren_risetime.GetFloat()
-ConVar ffdev_hovergren_risespeed("ffdev_hovergren_risespeed", "200", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: speed it rises to off the floor ");
+ConVar ffdev_hovergren_risespeed("ffdev_hovergren_risespeed", "140", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: speed it rises to off the floor ");
 #define FFDEV_HOVERGREN_RISESPEED ffdev_hovergren_risespeed.GetFloat()
-ConVar ffdev_hovergren_bulletdamage("ffdev_hovergren_bulletdamage", "4", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Bullet damage ");
+ConVar ffdev_hovergren_bulletdamage("ffdev_hovergren_bulletdamage", "6", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Bullet damage ");
 #define FFDEV_HOVERGREN_BULLETDAMAGE ffdev_hovergren_bulletdamage.GetFloat()
-ConVar ffdev_hovergren_bulletpush("ffdev_hovergren_bulletpush", "2", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Bullet damage ");
+ConVar ffdev_hovergren_bulletpush("ffdev_hovergren_bulletpush", "3", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Bullet damage ");
 #define FFDEV_HOVERGREN_BULLETPUSH ffdev_hovergren_bulletpush.GetFloat()
-ConVar ffdev_hovergren_rof("ffdev_hovergren_rof", "0.1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: rate of fire ");
+ConVar ffdev_hovergren_rof("ffdev_hovergren_rof", "0.3", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: rate of fire ");
 #define FFDEV_HOVERGREN_ROF ffdev_hovergren_rof.GetFloat()
 ConVar ffdev_hovergren_endcells("ffdev_hovergren_endcells", "50", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Cells to drop on death ");
 #define FFDEV_HOVERGREN_ENDCELLS ffdev_hovergren_endcells.GetInt()
@@ -55,6 +55,16 @@ ConVar ffdev_hovergren_bagcells("ffdev_hovergren_bagcells", "30", FCVAR_REPLICAT
 #define FFDEV_HOVERGREN_BAGCELLS ffdev_hovergren_bagcells.GetInt()
 ConVar ffdev_hovergren_damagetodropbag("ffdev_hovergren_damagetodropbag", "30", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Cells to drop on death ");
 #define FFDEV_HOVERGREN_DAMAGETODROPBAG ffdev_hovergren_damagetodropbag.GetInt()
+ConVar ffdev_hovergren_scansoundtime("ffdev_hovergren_scansoundtime", "1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Time between scan sounds ");
+#define FFDEV_HOVERGREN_SCANSOUNDTIME ffdev_hovergren_scansoundtime.GetFloat()
+ConVar ffdev_hovergren_bagthrowforce("ffdev_hovergren_bagthrowforce", "1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: horizontal throw force on bags");
+#define FFDEV_HOVERGREN_BAGTHROWFORCE ffdev_hovergren_bagthrowforce.GetFloat()
+ConVar ffdev_hovergren_bagspawndist("ffdev_hovergren_bagspawndist", "1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: distance below turret of bags spawning ");
+#define FFDEV_HOVERGREN_BAGSPAWNDIST ffdev_hovergren_bagspawndist.GetFloat()
+ConVar ffdev_hovergren_bagthrowforceup("ffdev_hovergren_bagthrowforceup", "400", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: vertical throw force on bags ");
+#define FFDEV_HOVERGREN_BAGTHROWFORCEUP ffdev_hovergren_bagthrowforceup.GetFloat()
+
+
 
 
 class CFFGrenadeHoverTurret : public CFFGrenadeBase
@@ -92,8 +102,9 @@ protected:
 
 	//float	m_flLastThinkTime;
 	CFFPlayer*	m_pTarget;
-	float m_flLastFireTime;
-	int m_iDamageDone;
+	float		m_flLastFireTime;
+	float		m_flScanTime;
+	int			m_iDamageDone;
 
 #endif
 };
@@ -121,7 +132,8 @@ void CFFGrenadeHoverTurret::Precache()
 {
 	PrecacheModel(HOVERGRENADE_MODEL);
 	PrecacheModel(GRENADE_BEAM_SPRITE);
-	PrecacheScriptSound( "NailGrenade.shoot" );
+	PrecacheScriptSound( "HoverTurret.Shoot" );
+	PrecacheScriptSound( "HoverTurret.Scan" );
 
 	BaseClass::Precache();
 }
@@ -140,6 +152,7 @@ void CFFGrenadeHoverTurret::Precache()
 		//SetLocalAngularVelocity(QAngle(0, 15, 0));
 		m_pTarget = NULL;
 		m_flLastFireTime = 0.0f;
+		m_flScanTime = 0.0f;
 		m_iDamageDone = 0;
 		m_takedamage = DAMAGE_YES;
 		m_iHealth = m_iMaxHealth = 1;
@@ -162,7 +175,7 @@ void CFFGrenadeHoverTurret::Precache()
 		{
 
 			// AfterShock: Create bag when detonate
-			CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), GetAbsAngles() );
+			CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), QAngle(0, random->RandomFloat(0.0f, 359.0f), 0) );
 			if( pBackpack )
 			{
 				pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_HOVERGREN_BAGCELLS );
@@ -203,11 +216,12 @@ void CFFGrenadeHoverTurret::Precache()
 		{
 			flRisingspeed = FFDEV_HOVERGREN_RISESPEED;
 		}
-
 		SetAbsVelocity(Vector(0, 0, flRisingspeed));
+		
 		//SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
 
-		SetAbsAngles(GetAbsAngles() + QAngle(30, 0, 0));
+		//SetAbsAngles( QAngle((GetAbsAngles().x + 30), 0, 90) ); // this spins and faces the player
+		SetAbsAngles( QAngle(0, (GetAbsAngles().y + 50), 90) );
 
 		if ( m_pTarget )
 		{
@@ -215,93 +229,107 @@ void CFFGrenadeHoverTurret::Precache()
 
 	// is this target still valid
 			if ( !FVisible( m_pTarget ) )
+			{
 				m_pTarget = NULL;
+				DevMsg("Cant see target\n");
+			}
 			else if( WorldSpaceCenter().DistTo( m_pTarget->GetAbsOrigin() ) > FFDEV_HOVERGREN_RANGE)
+			{
 				m_pTarget = NULL;
+				DevMsg("Target gone out of range\n");
+			}
+
 			else if ( !m_pTarget->IsAlive() )
+			{
 				m_pTarget = NULL;
+				DevMsg("Target dead\n");
+			}
 		}
 
-		if (( m_pTarget ) && ( gpGlobals->curtime > m_flLastFireTime + FFDEV_HOVERGREN_ROF ) )
+		if ( m_pTarget )
 		{
 			// fire !
 
-			FireBulletsInfo_t info;
-			Vector vecDir;
-			vecDir = m_pTarget->GetAbsOrigin() - GetAbsOrigin();
-
-			info.m_vecSrc = GetAbsOrigin();
-			info.m_vecDirShooting = vecDir;
-			info.m_iTracerFreq = 0;	// Mirv: Doing tracers down below now
-			info.m_iShots = 1;
-			// Jiggles: We want to fire more than 1 shot if the SG's think rate is too slow to keep up with the cycle time value
-			//			Since we can't fire partial bullets, we have to accumulate them
-			// But don't do it if it has been longer than the SG's think time
-
-			//info.m_pAttacker = this;
-			info.m_pAttacker = GetOwnerEntity();
-			info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
-			info.m_flDistance = MAX_COORD_RANGE;
-			info.m_iAmmoType = GetAmmoDef()->Index( AMMO_SHELLS );
-			info.m_iDamage = FFDEV_HOVERGREN_BULLETDAMAGE;
-			info.m_flDamageForceScale = FFDEV_HOVERGREN_BULLETPUSH;
-
-
-			// Jiggles: A HACK to address the fact that it takes a lot more force to push players around on the ground than in the air
-			if ( m_pTarget && (m_pTarget->GetFlags() & FL_ONGROUND) )
+			if ( gpGlobals->curtime > m_flLastFireTime + FFDEV_HOVERGREN_ROF )
 			{
-					info.m_flDamageForceScale *= 5.0f; // see ff_sentrygun.cpp for updated numbers.. 5 is correct at time of writing
-			}
+				FireBulletsInfo_t info;
+				Vector vecDir;
+				vecDir = m_pTarget->GetAbsOrigin() - GetAbsOrigin();
 
-			FireBullets( info );
-			EmitSound( "Sentry.Fire" );
+				info.m_vecSrc = GetAbsOrigin();
+				info.m_vecDirShooting = vecDir;
+				info.m_iTracerFreq = 0;	// Mirv: Doing tracers down below now
+				info.m_iShots = 1;
+				// Jiggles: We want to fire more than 1 shot if the SG's think rate is too slow to keep up with the cycle time value
+				//			Since we can't fire partial bullets, we have to accumulate them
+				// But don't do it if it has been longer than the SG's think time
 
-			m_flLastFireTime = gpGlobals->curtime;
+				//info.m_pAttacker = this;
+				info.m_pAttacker = GetOwnerEntity();
+				info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
+				info.m_flDistance = MAX_COORD_RANGE;
+				info.m_iAmmoType = GetAmmoDef()->Index( AMMO_SHELLS );
+				info.m_iDamage = FFDEV_HOVERGREN_BULLETDAMAGE;
+				info.m_flDamageForceScale = FFDEV_HOVERGREN_BULLETPUSH;
 
-			// try normal tracers first
 
-			QAngle vecAngles;
-			VectorAngles( vecDir, vecAngles );
-
-			//int iAttachment = GetLevel() > 2 ? (m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment) : m_iMuzzleAttachment;
-
-			trace_t tr;
-			UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + vecDir * (FFDEV_HOVERGREN_RANGE * 1.5), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
-
-			/*
-			CEffectData data;
-			data.m_vStart = GetAbsOrigin() + vecDir * 20;
-			data.m_vOrigin = data.m_vStart;
-			data.m_nEntIndex = GetBaseAnimating()->entindex();
-			data.m_flScale = 4.0f;
-			//data.m_nAttachmentIndex = iAttachment;
-			data.m_fFlags = MUZZLEFLASH_TYPE_DEFAULT;
-
-			DispatchEffect("MuzzleFlash", data);
-*/
-
-			CEffectData data2;
-			data2.m_vStart = GetAbsOrigin();
-			data2.m_vOrigin = tr.endpos;
-			//data2.m_nEntIndex = GetBaseAnimating()->entindex();
-			data2.m_flScale = 0.0f;
-			//data2.m_nAttachmentIndex = iAttachment;
-			DispatchEffect("AR2Tracer", data2);
-			
-
-			// Bags!
-
-			m_iDamageDone += FFDEV_HOVERGREN_BULLETDAMAGE;
-			if (m_iDamageDone >= FFDEV_HOVERGREN_DAMAGETODROPBAG)
-			{
-				// AfterShock: Create bag when detonate
-				CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 0.0f) ), GetAbsAngles() );
-				if( pBackpack )
+				// Jiggles: A HACK to address the fact that it takes a lot more force to push players around on the ground than in the air
+				if ( m_pTarget && (m_pTarget->GetFlags() & FL_ONGROUND) )
 				{
-					pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_HOVERGREN_BAGCELLS );
-					pBackpack->SetAbsVelocity( Vector( random->RandomFloat(-100.0f, 100.0f), random->RandomFloat(-100.0f, 100.0f), random->RandomFloat(20.0f, 100.0f) ) );
+						info.m_flDamageForceScale *= 5.0f; // see ff_sentrygun.cpp for updated numbers.. 5 is correct at time of writing
 				}
-				m_iDamageDone -= FFDEV_HOVERGREN_DAMAGETODROPBAG;
+
+				FireBullets( info );
+				EmitSound( "HoverTurret.Shoot" );
+
+				m_flLastFireTime = gpGlobals->curtime;
+
+				// try normal tracers first
+
+				QAngle vecAngles;
+				VectorAngles( vecDir, vecAngles );
+
+				//int iAttachment = GetLevel() > 2 ? (m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment) : m_iMuzzleAttachment;
+
+				trace_t tr;
+				UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + vecDir * (FFDEV_HOVERGREN_RANGE * 1.5), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
+
+				/*
+				CEffectData data;
+				data.m_vStart = GetAbsOrigin() + vecDir * 20;
+				data.m_vOrigin = data.m_vStart;
+				data.m_nEntIndex = GetBaseAnimating()->entindex();
+				data.m_flScale = 4.0f;
+				//data.m_nAttachmentIndex = iAttachment;
+				data.m_fFlags = MUZZLEFLASH_TYPE_DEFAULT;
+
+				DispatchEffect("MuzzleFlash", data);
+	*/
+
+				CEffectData data2;
+				data2.m_vStart = GetAbsOrigin();
+				data2.m_vOrigin = tr.endpos;
+				//data2.m_nEntIndex = GetBaseAnimating()->entindex();
+				data2.m_flScale = 0.0f;
+				//data2.m_nAttachmentIndex = iAttachment;
+				DispatchEffect("AR2Tracer", data2);
+				
+
+				// Bags!
+
+				m_iDamageDone += FFDEV_HOVERGREN_BULLETDAMAGE;
+				if (m_iDamageDone >= FFDEV_HOVERGREN_DAMAGETODROPBAG)
+				{
+					// AfterShock: Create bag when enough damage is dealt
+					CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", ( (GetAbsOrigin() - vecDir *0.1) + Vector(0.0f, 0.0f, -FFDEV_HOVERGREN_BAGSPAWNDIST) ), QAngle(0, random->RandomFloat(0.0f, 359.0f), 0) );
+					if( pBackpack )
+					{
+						pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_HOVERGREN_BAGCELLS );
+						//pBackpack->SetAbsVelocity( Vector( random->RandomFloat(-100.0f, 0.0f), random->RandomFloat(-100.0f, 100.0f), random->RandomFloat(20.0f, 100.0f) ) );
+						pBackpack->SetAbsVelocity( Vector(-vecDir.x, -vecDir.y, FFDEV_HOVERGREN_BAGTHROWFORCEUP) * FFDEV_HOVERGREN_BAGTHROWFORCE );
+					}
+					m_iDamageDone -= FFDEV_HOVERGREN_DAMAGETODROPBAG;
+				}
 			}
 		}
 		else
@@ -309,6 +337,12 @@ void CFFGrenadeHoverTurret::Precache()
 			// get a new target (players only)
 
 			m_pTarget = NULL;
+
+			if ( m_flScanTime < gpGlobals->curtime )
+			{
+				EmitSound( "HoverTurret.Scan" );
+				m_flScanTime = gpGlobals->curtime + FFDEV_HOVERGREN_SCANSOUNDTIME;
+			}
 
 			float currentTargetDistance = 1000.0f;
 			CBaseEntity *pEntity = NULL;
