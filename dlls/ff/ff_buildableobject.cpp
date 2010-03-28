@@ -60,9 +60,9 @@
 
 extern short	g_sModelIndexFireball;
 
-ConVar ffdev_sg_maxhp_damagetoreduceratio("ffdev_sg_maxhp_damagetoreduceratio", "5", FCVAR_REPLICATED, "How much damage a SG takes to reduce it's max HP (in terms of how many times it's initial HP)");
+ConVar ffdev_sg_maxhp_damagetoreduceratio("ffdev_sg_maxhp_damagetoreduceratio", "2", FCVAR_REPLICATED, "How much damage a SG takes to reduce it's max HP (in terms of how many times it's initial HP)");
 #define SG_MAXHP_DAMAGETOREDUCERATIO ffdev_sg_maxhp_damagetoreduceratio.GetFloat() 
-ConVar ffdev_sg_maxhp_hpratiotoreduceby("ffdev_sg_maxhp_hpratiotoreduceby", "0.2", FCVAR_REPLICATED, "How much to reduce it's max HP when it receives enough damage (in terms of how many times it's initial HP)");
+ConVar ffdev_sg_maxhp_hpratiotoreduceby("ffdev_sg_maxhp_hpratiotoreduceby", "0.1", FCVAR_REPLICATED, "How much to reduce it's max HP when it receives enough damage (in terms of how many times it's initial HP)");
 #define SG_MAXHP_HPRATIOTOREDUCEBY ffdev_sg_maxhp_hpratiotoreduceby.GetFloat()
 ConVar ffdev_sg_maxhp_minmaxhpratio("ffdev_sg_maxhp_minmaxhpratio", "0.5", FCVAR_REPLICATED, "Minimum max HP. When max HP reaches this amount, don't reduce it any more (in terms of how many times it's initial HP)");
 #define SG_MAXHP_MINMAXHPRATIO ffdev_sg_maxhp_minmaxhpratio.GetFloat()  
