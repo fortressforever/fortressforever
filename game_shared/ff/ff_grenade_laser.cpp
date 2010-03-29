@@ -37,37 +37,37 @@
 
 #define MAX_BEAMS 16
 
-ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
-ConVar laser_ng_nailstreams( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_REPLICATED | FCVAR_CHEAT, "Number of laser beams", true, 1, true, MAX_BEAMS);
-ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED | FCVAR_CHEAT, "Laser beam max radius",true, 0, true, 4096 );
-ConVar lasertime("ffdev_lasergren_time", "3", FCVAR_REPLICATED | FCVAR_CHEAT, "Laser active time");
+ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICATED );
+ConVar laser_ng_nailstreams( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED );
+ConVar laserbeams( "ffdev_lasergren_beams", "2", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
+ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
+ConVar lasertime("ffdev_lasergren_time", "3", FCVAR_REPLICATED, "Laser active time");
 
 #ifdef GAME_DLL
 
-	ConVar laserdamage("ffdev_lasergren_damage", "10", FCVAR_CHEAT, "Damage of laser");
-	ConVar laserangv("ffdev_lasergren_angv", "3.75", FCVAR_CHEAT, "Laser angular increment");
-	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_CHEAT, "Laser grenade jump distance" );
-	ConVar laserbob( "ffdev_lasergren_bob", "20", FCVAR_CHEAT, "Laser grenade bob factor" );
+	ConVar laserdamage("ffdev_lasergren_damage", "10", 0, "Damage of laser");
+	ConVar laserangv("ffdev_lasergren_angv", "3.75", 0, "Laser angular increment");
+	ConVar laserjump( "ffdev_lasergren_jump", "80", 0, "Laser grenade jump distance" );
+	ConVar laserbob( "ffdev_lasergren_bob", "20", 0, "Laser grenade bob factor" );
 	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_CHEAT, "Laser grenade update time" );
 
-	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_CHEAT | FCVAR_NOTIFY, "Use nails instead of lasers" );
-	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_CHEAT, "Bob Frequency");
+	ConVar usenails( "ffdev_lasergren_usenails", "1", FCVAR_NOTIFY, "Use nails instead of lasers" );
+	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", 0, "Bob Frequency");
 	
-	ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_CHEAT, "Explosion at end of active time");
-	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "180", FCVAR_CHEAT | FCVAR_NOTIFY, "Explosion damage at end of active period" );
-	ConVar explosionradius("ffdev_lasergren_explosionradius", "270", FCVAR_CHEAT | FCVAR_NOTIFY, "Explosion radius at end of active period" );
+	ConVar laserexplode("ffdev_lasergren_explode", "1", FCVAR_NOTIFY, "Explosion at end of active time");
+	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "90", FCVAR_NOTIFY, "Explosion damage at end of active period" );
+	ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_NOTIFY, "Explosion radius at end of active period" );
 
 	/******************************************************************/
-	ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_CHEAT);
-	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.075", FCVAR_CHEAT );
-	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", FCVAR_CHEAT );
+	ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_NOTIFY);
+	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.075", FCVAR_NOTIFY );
+	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", 0 );
 	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
 	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
 
-	ConVar laser_ng_nail_bounds("ffdev_lasergren_ng_nail_bounds", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT, "NG Nails bbox");
+	ConVar laser_ng_nail_bounds("ffdev_lasergren_ng_nail_bounds", "5.0", FCVAR_REPLICATED, "NG Nails bbox");
 	ConVar laser_ng_visualizenails("ffdev_lasergren_ng_visualizenails", "0", FCVAR_CHEAT, "Show NG nails trace");
-	ConVar laser_ng_nail_length("ffdev_lasergren_ng_nail_length", "5.0", FCVAR_CHEAT, "Length of NG nails");
+	ConVar laser_ng_nail_length("ffdev_lasergren_ng_nail_length", "5.0", 0, "Length of NG nails");
 
 
 
