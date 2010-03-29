@@ -37,7 +37,7 @@
 
 ConVar ffdev_hovergren_range("ffdev_hovergren_range", "500", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade range ");
 #define FFDEV_HOVERGREN_RANGE ffdev_hovergren_range.GetFloat()
-ConVar ffdev_hovergren_lifetime("ffdev_hovergren_lifetime", "5", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade: life time ");
+ConVar ffdev_hovergren_lifetime("ffdev_hovergren_lifetime", "7", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade: life time ");
 #define FFDEV_HOVERGREN_LIFETIME ffdev_hovergren_lifetime.GetFloat()
 ConVar ffdev_hovergren_risetime("ffdev_hovergren_risetime", "0.3", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade: time it takes to rise to full height ");
 #define FFDEV_HOVERGREN_RISETIME ffdev_hovergren_risetime.GetFloat()
