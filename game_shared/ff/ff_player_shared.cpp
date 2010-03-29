@@ -1383,33 +1383,17 @@ void CFFPlayer::Command_SpyCloak( void )
 		// Can only cloak every ffdev_spy_nextcloak seconds
 		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 		Cloak();
-#ifdef GAME_DLL
-		SpyCloakFadeOut();
-#endif
 		return;
 	}
 
 	if( !IsCloakable() )
 	{		
-#ifdef GAME_DLL
-		Omnibot::Notify_CantCloak(this);
-#endif
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
 		return;
 	}
 
-	// 0001379: can cloak only if on the ground
-	// added: or also not swimming
-	/* AfterShock: Can cloak even in the air now
-	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
-		return;
-	}
-	*/
-
 	// Check if we can cloak yet
-	if( m_flNextCloak > gpGlobals->curtime )
+	if( gpGlobals->curtime < m_flNextCloak )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_TIMELIMIT" );
 		return;
@@ -1418,14 +1402,7 @@ void CFFPlayer::Command_SpyCloak( void )
 	// Can only cloak every ffdev_spy_nextcloak seconds
 	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 
-	// Regular cloak
-	m_bCloakFadeType = false;
-
 	Cloak();
-
-#ifdef GAME_DLL
-	SpyCloakFadeIn();
-#endif	
 }
 
 //-----------------------------------------------------------------------------
@@ -1439,32 +1416,17 @@ void CFFPlayer::Command_SpySmartCloak( void )
 		// Can only cloak every ffdev_spy_nextcloak seconds
 		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 		Cloak();
-#ifdef GAME_DLL
-		SpyCloakFadeOut();
-#endif
 		return;
 	}
 
 	if( !IsCloakable() )
 	{
-#ifdef GAME_DLL
-		Omnibot::Notify_CantCloak(this);
-#endif
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
 		return;
 	}
 
-	// 0001379: can cloak only if on the ground
-	// added: or also not swimming
-	/* AfterShock: Can cloak even in the air now
-	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
-		return;
-	}
-	*/
 	// Check if we can cloak yet
-	if( m_flNextCloak > gpGlobals->curtime )
+	if( gpGlobals->curtime < m_flNextCloak )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_TIMELIMIT" );
 		return;
@@ -1473,35 +1435,7 @@ void CFFPlayer::Command_SpySmartCloak( void )
 	// Can only cloak every ffdev_spy_nextcloak seconds
 	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 
-	// Silent cloak must be done while not moving! But if we're
-	// already cloaked we'll allow it so the player can uncloak
-	// Jon: adding in minimum allowed speed cvar
-	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
-	{
-		// normal cloak
-		//Changing this to true so it will always do the silent cloak -GreenMushy
-		m_bCloakFadeType = true;
-	}
-	else
-	{
-		// Silent cloak
-		m_bCloakFadeType = true;
-	}
-
 	Cloak();
-
-#ifdef GAME_DLL
-	//Adding the speed boost to cloak -GreenMushy
-	AddSpeedEffect( SE_CLOAK, 4, FF_CLOAKSPEED );
-#endif
-	//Adding a cloak noises -GreenMushy
-	EmitSoundShared( "Player.Cloak" );
-	EmitSoundShared( "Player.Cloak_Zap" );
-	EmitSoundShared( "Player.knife_charge" );
-
-#ifdef GAME_DLL
-	SpyCloakFadeIn();
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1515,32 +1449,17 @@ void CFFPlayer::Command_SpySilentCloak( void )
 		// Can only cloak every ffdev_spy_nextcloak seconds
 		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 		Cloak();
-#ifdef GAME_DLL
-		SpyCloakFadeOut();
-#endif
 		return;
 	}
 
 	if( !IsCloakable() )
 	{
-#ifdef GAME_DLL
-		Omnibot::Notify_CantCloak(this);
-#endif
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
 		return;
 	}
 
-	// 0001379: can cloak only if on the ground
-	// added: or also not swimming
-	/* AfterShock: Can cloak even in the air now
-	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
-		return;
-	}
-	*/
 	// Check if we can cloak yet
-	if( m_flNextCloak > gpGlobals->curtime )
+	if( gpGlobals->curtime < m_flNextCloak )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_TIMELIMIT" );
 		return;
@@ -1549,26 +1468,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	// Can only cloak every ffdev_spy_nextcloak seconds
 	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 
-	// Silent cloak must be done while not moving! But if we're
-	// already cloaked we'll allow it so the player can uncloak
-	// Jon: adding in minimum allowed speed cvar
-	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
-	{
-		// Reset next cloak time since player technically didn't cloak yet
-		m_flNextCloak = gpGlobals->curtime + 0.2;
-
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_SILENTCLOAK_MUSTBESTILL" );
-		return;
-	}
-
-	// Silent cloak
-	m_bCloakFadeType = true;
-
 	Cloak();
-
-#ifdef GAME_DLL
-	SpyCloakFadeIn();
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1589,29 +1489,11 @@ void CFFPlayer::Cloak( void )
 		StopSound( "Player.knife_charge" );
 		StopSound( "Player.Cloak" );
 
-
 #ifdef GAME_DLL
 
 		//Removes the cloak speed effect -GreenMushy
 		RemoveSpeedEffect( SE_CLOAK );
 		
-		if( !m_bCloakFadeType )
-		{
-			// Cleanup ragdoll
-			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
-			if( pRagdoll )
-			{
-				// Check if the ragdoll had flames on it
-				CEntityFlame *pFlame = dynamic_cast< CEntityFlame * >( pRagdoll->GetEffectEntity() );
-				if( pFlame )
-					pFlame->Extinguish();
-
-				// Remove the ragdoll instantly
-				pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
-				pRagdoll->SetNextThink( gpGlobals->curtime );
-			}
-		}		
-
 		// Fire an event.
 		IGameEvent *pEvent = gameeventmanager->CreateEvent( "uncloaked" );
 		if( pEvent )
@@ -1619,52 +1501,34 @@ void CFFPlayer::Cloak( void )
 			pEvent->SetInt( "userid", this->GetUserID() );
 			gameeventmanager->FireEvent( pEvent, true );
 		}
-#endif		
-		// We are uncloaking so reset this
-		m_bCloakFadeType = false;
+#endif
 	}
-
 	// Not already cloaked
 	else
 	{
 		// Announce being cloaked
 		m_iCloaked = 1;
+
+		//Adding a cloak noises -GreenMushy
+		EmitSoundShared( "Player.Cloak" );
+		EmitSoundShared( "Player.Cloak_Zap" );
+		EmitSoundShared( "Player.knife_charge" );
+
 #ifdef CLIENT_DLL
 		//Swap to knife on cloak -GreenMushy
 		SwapToWeapon(FF_WEAPON_KNIFE);
 #endif
 
-		// If regular cloak, scream
-		if( !m_bCloakFadeType )
-			EmitSoundShared( "Player.Death" );
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );		
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );	
 
 		m_flCloakTime = gpGlobals->curtime;
 
-		// If we're currently disguising, add on some time (50%)
-		//if( m_flFinishDisguise > gpGlobals->curtime )
-		//	m_flFinishDisguise += ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
-
-		//// Holster our current weapon
-		//if( GetActiveWeapon() )
-		//	GetActiveWeapon()->Holster( NULL );
-
 		// Remove any decals on us
 		RemoveAllDecals();		
-#ifdef GAME_DLL
-		// If regular cloak, create ragdoll
-		if( !m_bCloakFadeType )
-		{
-			// Create our ragdoll using this function (we could just c&p it and modify it i guess)
-			CreateRagdollEntity();
 
-			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
-			if( pRagdoll )
-			{
-				pRagdoll->m_vecRagdollVelocity = 100.0f * GetLocalVelocity();
-				pRagdoll->SetThink( NULL );
-			}
-		}	
+#ifdef GAME_DLL
+		//Adding the speed boost to cloak -GreenMushy
+		AddSpeedEffect( SE_CLOAK, 4, FF_CLOAKSPEED );
 
 		CFFLuaSC hOwnerCloak( 1, this );
 		// Find any items that we are in control of and let them know we Cloaked
