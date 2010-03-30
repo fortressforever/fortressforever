@@ -37,8 +37,10 @@
 
 #define MAX_BEAMS 16
 
+//ConVar laser_ng_streams("ffdev_lasergren_ng_streams", "2", FCVAR_REPLICATED, "Number of streams per arm" );
+ConVar laser_ng_offset("ffdev_lasergren_ng_offset", "8", FCVAR_REPLICATED, "Stream offset" );
 ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICATED );
-ConVar laser_ng_nailstreams( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED );
+ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED );
 ConVar laserbeams( "ffdev_lasergren_beams", "2", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
 ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
 ConVar lasertime("ffdev_lasergren_time", "3", FCVAR_REPLICATED, "Laser active time");
@@ -60,7 +62,7 @@ ConVar lasertime("ffdev_lasergren_time", "3", FCVAR_REPLICATED, "Laser active ti
 
 	/******************************************************************/
 	ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_NOTIFY);
-	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.075", FCVAR_NOTIFY );
+	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.025", FCVAR_NOTIFY );
 	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", 0 );
 	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
 	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
@@ -234,6 +236,7 @@ protected:
 	float	m_flBeams;
 	float	m_flNailSpit;
 	float	m_flAngleOffset;
+	int		m_iOffset;
 
 	CUtlVector< PseudoNail > m_NailsVector;
 
@@ -287,6 +290,7 @@ void CFFGrenadeLaser::Precache()
 		BaseClass::Spawn();
 		m_bIsOn = 0;
 		m_flAngleOffset = 0.0f;
+		m_iOffset = 0;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
 	}
 
@@ -451,21 +455,28 @@ void CFFGrenadeLaser::Precache()
 		// Time to spit out nails again?
 		if( m_flNailSpit < gpGlobals->curtime )
 		{
-			int iStreams = laser_ng_nailstreams.GetInt();
+			int iArms = laser_ng_arms.GetInt();
 			//float flSize = ffdev_nailgren_flatten.GetFloat();
 			float flSize = 20.0f;
 
-			float flDeltaAngle = 360.0f / iStreams;
+			float flDeltaAngle = 360.0f / iArms;
 			QAngle angRadial = GetAbsAngles();
 			
-			Vector vecDirection;
+			//float flOffset = (m_iOffset % laser_ng_streams.GetInt()) - (laser_ng_streams.GetInt() / 2 );
+			//DevMsg("flOffset: %f\n", flOffset);
+			Vector vecDirection, vecOffset;
+			float flOffset = laser_ng_offset.GetFloat();
+			if( m_iOffset % 2 )
+				flOffset *= -1;
 
-			while (iStreams-- > 0)
+			while (iArms-- > 0)
 			{
 				AngleVectors(angRadial, &vecDirection);
 				VectorNormalizeFast(vecDirection);
+				VectorRotate( Vector( 0, flOffset, 0 ), angRadial, vecOffset );
 
-				ShootNail(vecOrigin + vecDirection * flSize, angRadial);
+
+				ShootNail(vecOrigin + vecDirection * flSize + vecOffset, angRadial);
 				angRadial.y += flDeltaAngle;
 			}
 
@@ -474,6 +485,7 @@ void CFFGrenadeLaser::Precache()
 			CEffectData data;
 			data.m_vOrigin = vecOrigin;
 			data.m_vAngles = GetAbsAngles();
+			data.m_nDamageType = m_iOffset;
 
 
 #ifdef GAME_DLL
@@ -484,6 +496,7 @@ void CFFGrenadeLaser::Precache()
 
 			DispatchEffect("Projectile_Nail_Radial", data);
 
+			m_iOffset++;
 			// Set up next nail spit time
 			m_flNailSpit = gpGlobals->curtime + laser_ng_spittime.GetFloat();
 		}
