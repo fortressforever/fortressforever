@@ -78,6 +78,11 @@ ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.
 ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 
+ConVar ffdev_overpressure_friendlyscale( "ffdev_overpressure_friendlyscale", "1.0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define OVERPRESSURE_FRIENDLYSCALE ffdev_overpressure_friendlyscale.GetFloat()
+ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define OVERPRESSURE_IGNOREFRIENDLY ffdev_overpressure_friendlyignore.GetBool()
+
 
 ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_REPLICATED );
 #define FF_AC_BULLETSIZE ffdev_ac_bulletsize.GetFloat()
@@ -579,8 +584,6 @@ void CFFPlayer::ClassSpecificSkill()
 	CFFWeaponBase *pWeapon = GetActiveFFWeapon();		
 #endif
 
-	CEffectData data;
-
 	switch (GetClassSlot())
 	{
 #ifdef GAME_DLL
@@ -633,123 +636,7 @@ void CFFPlayer::ClassSpecificSkill()
 			{
 				SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
 			}*/
-			
-			if (IsAlive())
-			{
-
-				data.m_vOrigin = GetLegacyAbsOrigin();
-				
-				DispatchEffect(OVERPRESSURE_EFFECT, data);
-
-				// Play a sound
-				EmitSoundShared("overpressure.explode");
-
-#ifdef GAME_DLL
-
-				CBaseEntity *pEntity = NULL;
-
-				float fRadius = ffdev_overpressure_radius.GetFloat();
-
-				for( CEntitySphereQuery sphere( GetLegacyAbsOrigin(), fRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-				{
-					if (!pEntity || !pEntity->IsPlayer())
-						continue;
-
-					CFFPlayer *pPlayer = ToFFPlayer(pEntity);
-
-					if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
-						continue;
-
-					// Some useful things to know
-					Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetLegacyAbsOrigin();
-					float flDistance = vecDisplacement.Length();
-					Vector vecDir = vecDisplacement / flDistance;
-
-					// People who are building shouldn't be pushed around by anything
-					if (pPlayer->IsStaticBuilding())
-						continue;
-
-					// TFC considers a displacement < 16units to be a hh
-					Vector vecResult;
-					if ((pEntity == this) || (flDistance < 16.0f))
-					{
-						float fSelfLateral = ffdev_overpressure_selfpush_horizontal.GetFloat();
-						float fSelfVertical = ffdev_overpressure_selfpush_vertical.GetFloat();
-
-						Vector vecVelocity = pPlayer->GetAbsVelocity();
-						Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-						float flHorizontalSpeed = vecLatVelocity.Length();
-
-						// apply push force
-						if (pPlayer->GetFlags() & FL_ONGROUND)
-						{
-							vecResult = Vector(vecVelocity.x * fSelfLateral, vecVelocity.y  * fSelfLateral, (vecVelocity.z + 90)* fSelfVertical);
-							DevMsg("[HW attack2] on ground (%f)\n", flHorizontalSpeed);
-						}
-						else
-						{
-							vecResult = Vector(vecVelocity.x * fSelfLateral, vecVelocity.y * fSelfLateral, vecVelocity.z * fSelfVertical);
-							DevMsg("[HW attack2] in air (%f)\n", flHorizontalSpeed);
-						}
-					}
-					else
-					{
-						QAngle angDirection;
-						VectorAngles(vecDir, angDirection);
-
-						pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
-
-						Vector vecVelocity = pPlayer->GetAbsVelocity();
-						Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-						float flHorizontalSpeed = vecLatVelocity.Length();
-
-						float fSpeedPercent = ffdev_overpressure_speed_percent.GetFloat();
-
-						float fLateral = ffdev_overpressure_push_horizontal.GetFloat();
-						float fVertical = ffdev_overpressure_push_vertical.GetFloat();
-
-						if (flHorizontalSpeed > pPlayer->MaxSpeed() * fSpeedPercent)
-						{
-							float fSpeedMultiplier = flHorizontalSpeed / pPlayer->MaxSpeed() - fSpeedPercent + 1;
-
-							float fSpeedMultiplierHorizontal = ffdev_overpressure_speed_multiplier_horizontal.GetFloat() * fSpeedMultiplier;
-							float fSpeedMultiplierVertical = ffdev_overpressure_speed_multiplier_vertical.GetFloat() * fSpeedMultiplier;
-
-							vecResult = Vector(vecDir.x * fLateral * fSpeedMultiplierHorizontal, vecDir.y * fLateral * fSpeedMultiplierHorizontal, vecDir.z * fVertical * fSpeedMultiplierVertical);
-							DevMsg("[HW attack2] enemy going supersonic (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
-						}
-						else
-						{
-							// apply push force
-							if (pPlayer->GetFlags() & FL_ONGROUND)
-							{
-								float fGroundPush = ffdev_overpressure_groundpush_multiplier.GetFloat();
-
-								vecResult = Vector(vecDir.x * fLateral * fGroundPush, vecDir.y  * fLateral * fGroundPush, vecDir.z * fVertical);
-								DevMsg("[HW attack2] enemy on ground, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
-							}
-							else
-							{
-								vecResult = Vector(vecDir.x * fLateral, vecDir.y * fLateral, vecDir.z * fVertical);
-								DevMsg("[HW attack2] enemy in air, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
-							}
-						}
-					}
-
-					// cap mancannon + overpressure speed
-					if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
-					{
-						if ( vecResult.Length() > 1700.0f )
-						{
-							vecResult.NormalizeInPlace();
-							vecResult *= 1700.0f;
-						}
-					}
-					pPlayer->SetAbsVelocity(vecResult);
-				}
-
-#endif
-			}
+			Overpressure();
 			m_flNextClassSpecificSkill = gpGlobals->curtime + ffdev_overpressure_delay.GetFloat();
 
 			break;
@@ -1549,6 +1436,141 @@ void CFFPlayer::Cloak( void )
 			pEvent->SetInt( "userid", this->GetUserID() );
 			gameeventmanager->FireEvent( pEvent, true );
 		}
+#endif
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: HW attack2
+//-----------------------------------------------------------------------------
+void CFFPlayer::Overpressure( void )
+{
+	if (IsAlive())
+	{
+		CEffectData data;
+
+		data.m_vOrigin = GetLegacyAbsOrigin();
+		
+		DispatchEffect(OVERPRESSURE_EFFECT, data);
+
+		// Play a sound
+		EmitSoundShared("overpressure.explode");
+
+#ifdef GAME_DLL
+
+		CBaseEntity *pEntity = NULL;
+
+		float fRadius = ffdev_overpressure_radius.GetFloat();
+
+		for( CEntitySphereQuery sphere( GetLegacyAbsOrigin(), fRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if (!pEntity || !pEntity->IsPlayer())
+				continue;
+
+			CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+
+			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+				continue;
+			
+			// Ignore people that can't take damage (teammates when friendly fire is off)
+			if (OVERPRESSURE_IGNOREFRIENDLY && !g_pGameRules->FCanTakeDamage( pPlayer, this ))
+				continue;
+
+			// Some useful things to know
+			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetLegacyAbsOrigin();
+			float flDistance = vecDisplacement.Length();
+			Vector vecDir = vecDisplacement;
+			vecDir.NormalizeInPlace();
+
+			// People who are building shouldn't be pushed around by anything
+			if (pPlayer->IsStaticBuilding())
+				continue;
+
+			// TFC considers a displacement < 16units to be a hh
+			Vector vecResult;
+			if ((pEntity == this) || (flDistance < 16.0f))
+			{
+				float flSelfLateral = ffdev_overpressure_selfpush_horizontal.GetFloat();
+				float flSelfVertical = ffdev_overpressure_selfpush_vertical.GetFloat();
+
+				Vector vecVelocity = pPlayer->GetAbsVelocity();
+				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+				float flHorizontalSpeed = vecLatVelocity.Length();
+
+				// apply push force
+				if (pPlayer->GetFlags() & FL_ONGROUND)
+				{
+					vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y  * flSelfLateral, (vecVelocity.z + 90)* flSelfVertical);
+					DevMsg("[HW attack2] on ground (%f)\n", flHorizontalSpeed);
+				}
+				else
+				{
+					vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y * flSelfLateral, vecVelocity.z * flSelfVertical);
+					DevMsg("[HW attack2] in air (%f)\n", flHorizontalSpeed);
+				}
+			}
+			else
+			{
+				float flFriendlyScale = 1.0f;
+
+				// Check if is a teammate and scale accordingly
+				if (g_pGameRules->PlayerRelationship(pPlayer, this) == GR_TEAMMATE)
+					flFriendlyScale = OVERPRESSURE_FRIENDLYSCALE;
+
+				QAngle angDirection;
+				VectorAngles(vecDir, angDirection);
+
+				pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
+
+				Vector vecVelocity = pPlayer->GetAbsVelocity();
+				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+				float flHorizontalSpeed = vecLatVelocity.Length();
+
+				float flSpeedPercent = ffdev_overpressure_speed_percent.GetFloat();
+
+				float flLateral = ffdev_overpressure_push_horizontal.GetFloat() * flFriendlyScale;
+				float flVertical = ffdev_overpressure_push_vertical.GetFloat() * flFriendlyScale;
+
+				if (flHorizontalSpeed > pPlayer->MaxSpeed() * flSpeedPercent)
+				{
+					float flSpeedMultiplier = flHorizontalSpeed / pPlayer->MaxSpeed() - flSpeedPercent + 1;
+
+					float flSpeedMultiplierHorizontal = ffdev_overpressure_speed_multiplier_horizontal.GetFloat() * flSpeedMultiplier;
+					float flSpeedMultiplierVertical = ffdev_overpressure_speed_multiplier_vertical.GetFloat() * flSpeedMultiplier;
+
+					vecResult = Vector(vecDir.x * flLateral * flSpeedMultiplierHorizontal, vecDir.y * flLateral * flSpeedMultiplierHorizontal, vecDir.z * flVertical * flSpeedMultiplierVertical);
+					DevMsg("[HW attack2] enemy going supersonic (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+				}
+				else
+				{
+					// apply push force
+					if (pPlayer->GetFlags() & FL_ONGROUND)
+					{
+						float flGroundPush = ffdev_overpressure_groundpush_multiplier.GetFloat();
+
+						vecResult = Vector(vecDir.x * flLateral * flGroundPush, vecDir.y  * flLateral * flGroundPush, vecDir.z * flVertical);
+						DevMsg("[HW attack2] enemy on ground, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+					}
+					else
+					{
+						vecResult = Vector(vecDir.x * flLateral, vecDir.y * flLateral, vecDir.z * flVertical);
+						DevMsg("[HW attack2] enemy in air, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+					}
+				}
+			}
+
+			// cap mancannon + overpressure speed
+			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
+			{
+				if ( vecResult.Length() > 1700.0f )
+				{
+					vecResult.NormalizeInPlace();
+					vecResult *= 1700.0f;
+				}
+			}
+			pPlayer->SetAbsVelocity(vecResult);
+		}
+
 #endif
 	}
 }

@@ -672,6 +672,8 @@ private:
 	void Cloak( void );	
 	//unsigned int m_iCloaked;
 	CNetworkVar( unsigned int, m_iCloaked ); //gotta network this since lots of serverside-only code calls it, e.g. when touching a scout
+public:
+	void Overpressure( void );
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)

@@ -516,6 +516,12 @@ private:
 	unsigned int m_bCloakable;
 	// ----------------------------------
 
+	// ----------------------------------
+    // Overpressure stuff
+public:
+	void Overpressure( void );
+	// ----------------------------------
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 
