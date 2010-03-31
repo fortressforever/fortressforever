@@ -21,6 +21,7 @@
 #include "ff_esp_shared.h"
 #include "utlvector.h"
 #include "ff_weapon_base.h"
+#include "ff_grenade_base.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_modelglyph.h"
 #include "in_buttons.h"
@@ -31,6 +32,8 @@ class CFFDetpack;
 class CFFDispenser;
 class CFFSentryGun;
 class CFFManCannon;
+
+class CFFGrenadeBase;
 
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
@@ -632,6 +635,13 @@ protected:
 
 	// Added by Mulchman - the detpack fuse time
 	int m_iDetpackTime;
+
+public:
+	CFFGrenadeBase *GetActiveSlowfield( void ) const { return m_pActiveSlowfield; }
+	void SetActiveSlowfield( CFFGrenadeBase *pActiveSlowfield ) { m_pActiveSlowfield = pActiveSlowfield; };
+
+private:
+	CFFGrenadeBase *m_pActiveSlowfield;
 
 public:
 	// --> Mirv: Various things
