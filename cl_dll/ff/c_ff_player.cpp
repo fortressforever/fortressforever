@@ -1423,6 +1423,7 @@ void C_FFPlayer::Spawn( void )
 	m_flNextCloak = 0.0f;
 	m_flCloakTime = 0.0f;
 	m_bCloakFadeType = false; // assume regular cloaking and not silent coaking
+	m_flNextClassSpecificSkill = 0.0f;
 	
 	// Bug #0001448: Spy menu stuck on screen.  |----> Defrag
 	HudContextForceClose();
