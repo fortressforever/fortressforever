@@ -594,14 +594,16 @@ void CHudCrosshairInfo::OnTick( void )
 				// else CROSSHAIRTYPE_NORMAL
 				else if( ( iHealth != -1 ) && ( iArmor != -1 ) )
 				{
-					char szHealth[ 5 ];
+					char szHealth[ 5 ], szArmor[ 5 ];
 					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+					Q_snprintf( szArmor, 5, "%i%%", iArmor );
 					
-					wchar_t wszHealth[ 10 ];
-					
-					vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+					wchar_t wszHealth[ 10 ], wszArmor[ 10 ];
 
-					_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth);
+                       vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+					vgui::localize()->ConvertANSIToUnicode( szArmor, wszArmor, sizeof( wszArmor ) );
+
+					_snwprintf( m_pText, 255, L"(%s) %s - H: %s, A: %s", wszClass, wszName, wszHealth, wszArmor );
 				}
 				else
 					_snwprintf( m_pText, 255, L"(%s) %s", wszClass, wszName );
