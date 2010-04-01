@@ -286,5 +286,6 @@ bool CFFWeaponHookGun::Holster(CBaseCombatWeapon *pSwitchingTo)
 void CFFWeaponHookGun::Precache()
 {
 	PrecacheScriptSound("hookgun.rope_snap");
+	PrecacheScriptSound("hookgun.winch");
 	BaseClass::Precache();
 }

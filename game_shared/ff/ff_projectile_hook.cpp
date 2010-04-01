@@ -58,12 +58,15 @@ ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATE
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
 ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "[0/1/2] - winch system 1: pull speed falls off linearly as force on rope increases; rope can't extend. winch system 2: applies constant force on rope when in air; rope can't extend; max pull speed capped; when on ground sets you to max pull speed if pull is horizontal and gives small kick if pull is vertical." );
 ConVar ffdev_hook_swing_break( "ffdev_hook_swing_break", "0.8", FCVAR_REPLICATED, "end hook " );
-ConVar ffdev_hook_swing1_speed( "ffdev_hook_swing1_speed", "750.0", FCVAR_REPLICATED, "pull speed when no force on rope" );
-ConVar ffdev_hook_swing1_falloff( "ffdev_hook_swing1_falloff", "0.0001", FCVAR_REPLICATED, "rate pull speed falls off as force on rope increases" );
-ConVar ffdev_hook_swing1_falloff_power( "ffdev_hook_swing1_falloff_power", "2.0", FCVAR_REPLICATED, "" );
+ConVar ffdev_hook_swing1_speed( "ffdev_hook_swing1_speed", "850.0", FCVAR_REPLICATED, "pull speed when no force on rope" );
+ConVar ffdev_hook_swing1_falloff( "ffdev_hook_swing1_falloff", "0.2", FCVAR_REPLICATED, "rate pull speed falls off as force on rope increases" );
+ConVar ffdev_hook_swing1_falloff_power( "ffdev_hook_swing1_falloff_power", "1.0", FCVAR_REPLICATED, "" );
 ConVar ffdev_hook_swing2_speed( "ffdev_hook_swing2_speed", "750.0", FCVAR_REPLICATED, "max pull speed cap (and horizontal pull speed when on ground)" );
 ConVar ffdev_hook_swing2_speed_v( "ffdev_hook_swing2_speed_v", "100.0", FCVAR_REPLICATED, "vertical pull speed when on ground" );
 ConVar ffdev_hook_swing2_force( "ffdev_hook_swing2_force", "2000.0", FCVAR_REPLICATED, "constant force applied on rope when in air" );
+
+ConVar ffdev_hook_pitch1( "ffdev_hook_pitch1", "20", FCVAR_REPLICATED, "" );
+ConVar ffdev_hook_pitch2( "ffdev_hook_pitch2", "100", FCVAR_REPLICATED, "" );
 
 ConVar ffdev_hook_swing2_elasticity( "ffdev_hook_swing2_elasticity", "1.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook swing2 system elasticity - lower numbers will snap the rope easier if you pull on it" );
 #define FFDEV_HOOK_SWING2_ELASTICITY ffdev_hook_swing2_elasticity.GetFloat()
@@ -436,6 +439,25 @@ void CFFProjectileHook::HookThink()
 				float flRadialAccel = max( 0.0f, flCentripetalAccel + flRadialGravityAccel );
 				// winch pull speed falls off linearly as the tension in the rope increases (mass is constant so within the cvar) and can't be negative
 				flPullSpeed = max( 0.0f, ffdev_hook_swing1_speed.GetFloat() - ffdev_hook_swing1_falloff.GetFloat() * pow( flRadialAccel, ffdev_hook_swing1_falloff_power.GetFloat() ) );
+				
+				// winch sound
+				StopSound("hookgun.winch");
+				CSoundParameters params;
+				if ( GetParametersForSound( "hookgun.winch", params, NULL ) )
+				{
+					CPASAttenuationFilter filter( pOwner, params.soundlevel );
+
+					EmitSound_t ep;
+					ep.m_nChannel = params.channel;
+					ep.m_pSoundName = params.soundname;
+					ep.m_SoundLevel = params.soundlevel;
+					ep.m_pOrigin = &GetAbsOrigin();
+					ep.m_flVolume = params.volume;
+					ep.m_nPitch = ffdev_hook_pitch1.GetInt() + ( ffdev_hook_pitch2.GetInt() - ffdev_hook_pitch1.GetInt() ) * flPullSpeed / ffdev_hook_swing1_speed.GetFloat();
+
+					EmitSound( filter, entindex(), ep );
+				}
+				
 				// stop gravity changing radial speed during the next tick (we already took gravity into account above)
 				flPullSpeed += flRadialGravityAccel * gpGlobals->interval_per_tick;
 			}
