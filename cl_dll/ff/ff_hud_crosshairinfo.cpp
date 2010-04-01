@@ -41,6 +41,8 @@ static ConVar hud_centerid( "hud_centerid", "0", FCVAR_ARCHIVE );
 #define CROSSHAIRTYPE_DISPENSER 1
 #define CROSSHAIRTYPE_SENTRYGUN 2
 #define CROSSHAIRTYPE_DETPACK 3
+#define CROSSHAIRTYPE_ENEMY_SENTRYGUN 4
+#define CROSSHAIRTYPE_FRIENDLY_SENTRYGUN 5
 
 //=============================================================================
 //
@@ -339,10 +341,8 @@ void CHudCrosshairInfo::OnTick( void )
 						}
 						else if( pBuildable->Classify() == CLASS_SENTRYGUN )
 						{
-							iArmor = ((C_FFSentryGun *)pBuildable)->GetSGArmorPercent();
-
-							//if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
-							//	iArmor -= 128;
+							//You see a friendly sentrygun -GreenMushy
+							CROSSHAIRTYPE = CROSSHAIRTYPE_FRIENDLY_SENTRYGUN;
 						}
 						else if( pBuildable->Classify() == CLASS_MANCANNON )
 						{
@@ -362,7 +362,6 @@ void CHudCrosshairInfo::OnTick( void )
 				}
 				else
 				{
-
 					if( bBuildable )
 					{
 						C_FFBuildableObject *pBuildable = (C_FFBuildableObject *)tr.m_pEnt;
@@ -375,10 +374,8 @@ void CHudCrosshairInfo::OnTick( void )
 						}
 						else if( pBuildable->Classify() == CLASS_SENTRYGUN )
 						{
-							iArmor = ((C_FFSentryGun *)pBuildable)->GetSGArmorPercent();
-
-							//if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
-							//	iArmor -= 128;
+							//Enemy sentrygun -GreenMushy
+							CROSSHAIRTYPE = CROSSHAIRTYPE_ENEMY_SENTRYGUN;
 						}
 						else if( pBuildable->Classify() == CLASS_MANCANNON )
 						{
@@ -590,6 +587,27 @@ void CHudCrosshairInfo::OnTick( void )
                     vgui::localize()->ConvertANSIToUnicode( szFuseTime, wszFuseTime, sizeof( wszFuseTime ) );
 					
 					_snwprintf( m_pText, 255, L"Your %s Second Detpack", wszFuseTime );
+				}
+				else if( CROSSHAIRTYPE == CROSSHAIRTYPE_ENEMY_SENTRYGUN )
+				{
+					char szHealth[ 5 ];
+					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+					
+					wchar_t wszHealth[ 10 ];
+					vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+
+					_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
+				}
+				else if( CROSSHAIRTYPE == CROSSHAIRTYPE_FRIENDLY_SENTRYGUN )
+				{
+					char szHealth[ 5 ];
+					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+					
+					wchar_t wszHealth[ 10 ];
+					vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+
+					_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
+
 				}
 				// else CROSSHAIRTYPE_NORMAL
 				else if( ( iHealth != -1 ) && ( iArmor != -1 ) )
