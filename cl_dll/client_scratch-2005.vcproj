@@ -5335,6 +5335,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_laserrifle.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_grenadelauncher.cpp"
 				>
 			</File>

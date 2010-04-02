@@ -130,6 +130,7 @@ typedef enum
 	// Sniper specific
 	FF_WEAPON_AUTORIFLE, 
 	FF_WEAPON_SNIPERRIFLE, 
+	FF_WEAPON_LASERRIFLE,
 
 	// Pyro specific
 	FF_WEAPON_FLAMETHROWER, 
