@@ -56,17 +56,17 @@ ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATE
 
 // caes: testing
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
-ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "[0/1/2] - winch system 1: pull speed falls off linearly as force on rope increases; rope can't extend. winch system 2: applies constant force on rope when in air; rope can't extend; max pull speed capped; when on ground sets you to max pull speed if pull is horizontal and gives small kick if pull is vertical." );
-ConVar ffdev_hook_swing_break( "ffdev_hook_swing_break", "0.8", FCVAR_REPLICATED, "end hook " );
+ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "[0/1/2] - winch system 1: pull speed falls off as force on rope increases; rope can't extend. winch system 2: applies constant force on rope when in air; rope can't extend; max pull speed capped; when on ground sets you to max pull speed if pull is horizontal and gives small kick if pull is vertical." );
+ConVar ffdev_hook_swing_break( "ffdev_hook_swing_break", "0.8", FCVAR_REPLICATED, "amount you have to be moving updwards to end hook if swinging" );
 ConVar ffdev_hook_swing1_speed( "ffdev_hook_swing1_speed", "850.0", FCVAR_REPLICATED, "pull speed when no force on rope" );
 ConVar ffdev_hook_swing1_falloff( "ffdev_hook_swing1_falloff", "0.2", FCVAR_REPLICATED, "rate pull speed falls off as force on rope increases" );
-ConVar ffdev_hook_swing1_falloff_power( "ffdev_hook_swing1_falloff_power", "1.0", FCVAR_REPLICATED, "" );
+ConVar ffdev_hook_swing1_falloff_power( "ffdev_hook_swing1_falloff_power", "1.0", FCVAR_REPLICATED, "pull speed = ffdev_hook_swing1_speed - ffdev_hook_swing1_falloff * ( force_on_rope ^ ffdev_hook_swing1_falloff_power )" );
 ConVar ffdev_hook_swing2_speed( "ffdev_hook_swing2_speed", "750.0", FCVAR_REPLICATED, "max pull speed cap (and horizontal pull speed when on ground)" );
 ConVar ffdev_hook_swing2_speed_v( "ffdev_hook_swing2_speed_v", "100.0", FCVAR_REPLICATED, "vertical pull speed when on ground" );
 ConVar ffdev_hook_swing2_force( "ffdev_hook_swing2_force", "2000.0", FCVAR_REPLICATED, "constant force applied on rope when in air" );
 
-ConVar ffdev_hook_pitch1( "ffdev_hook_pitch1", "20", FCVAR_REPLICATED, "" );
-ConVar ffdev_hook_pitch2( "ffdev_hook_pitch2", "100", FCVAR_REPLICATED, "" );
+ConVar ffdev_hook_pitch1( "ffdev_hook_pitch1", "20", FCVAR_REPLICATED, "pitch of winch sound at zero pull speed" );
+ConVar ffdev_hook_pitch2( "ffdev_hook_pitch2", "100", FCVAR_REPLICATED, "pitch of winch sound at max pull speed" );
 
 ConVar ffdev_hook_swing2_elasticity( "ffdev_hook_swing2_elasticity", "1.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook swing2 system elasticity - lower numbers will snap the rope easier if you pull on it" );
 #define FFDEV_HOOK_SWING2_ELASTICITY ffdev_hook_swing2_elasticity.GetFloat()
@@ -295,9 +295,8 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 	SetLocalAngularVelocity(QAngle(0, 0, 0));	// stop spinning
 	SetAbsVelocity(Vector(0,0,0));				// stop moving
 	bHooked = true;
-	// caes: end hook if pressing jump and have ever had jump not pressed since last on ground
 	bBeenNotJumping = false;
-	// caes
+	flLastSwingSpeed = 0.0f;
 }
 
 //----------------------------------------------------------------------------
@@ -425,6 +424,17 @@ void CFFProjectileHook::HookThink()
 			float flSwingSpeed = DotProduct( vecVel, vecSwingDir );
 			float flRadialSpeed = DotProduct( vecVel, vecPullDir );
 
+			// rollerskates! use swing speed from last time if now on ground
+			CFFPlayer *pPlayer = ToFFPlayer( pOwner );
+			if ( pPlayer->IsOnGround() )
+			{
+				flSwingSpeed = flLastSwingSpeed;
+			}
+			else
+			{
+				flLastSwingSpeed = flSwingSpeed;
+			}
+
 			// radial accelerations needed for rope to stay the same length
 			float flCentripetalAccel = flSwingSpeed * flSwingSpeed / flDistance;
 			float flRadialGravityAccel = sv_gravity.GetFloat() * DotProduct( Vector(0.0f,0.0f,1.0f), vecPullDir );
@@ -495,7 +505,7 @@ void CFFProjectileHook::HookThink()
 			Vector VecNewVel = vecPullDir*flPullSpeed + vecSwingDir*flSwingSpeed;
 			pOwner->SetAbsVelocity( VecNewVel );
 
-			// testing end hook ideas
+			// end hook if swinging and moving updwards enough
 			VectorNormalize( VecNewVel );
 			float flNewUp = DotProduct( VecNewVel, Vector(0.0f,0.0f,1.0f) );
 			if ( ( flSwingSpeed > flPullSpeed ) && ( flNewUp >= ffdev_hook_swing_break.GetFloat() ) )

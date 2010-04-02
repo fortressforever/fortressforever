@@ -59,9 +59,8 @@ public:
 	virtual void Spawn();
 
 	bool bHooked;
-	// caes: end hook if pressing jump and have ever had jump not pressed since last on ground
 	bool bBeenNotJumping;
-	// caes
+	float flLastSwingSpeed;
 	CBaseEntity * m_pOwnerGun;
 
 #ifdef GAME_DLL
