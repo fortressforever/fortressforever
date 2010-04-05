@@ -271,56 +271,28 @@ void CFFWeaponLaserBeam::SetLaserPosition(const Vector &origin)
 			if (tr.surface.flags & SURF_SKY)
 				fDrawDot = false;
 
-			// Okay so beams. yes.
-			if (!pOwner->IsLocalPlayer()) 
+			color32 colour = { 255, 0, 0, alpha };
+			
+
+			// We still trace from eye position, but we want to draw from the gun muzzle
+			Vector vecFalseOrigin;
+			QAngle angFalseAngles;
+			if ( pOwner->IsLocalPlayer() )
 			{
-//				Vector v1 = tr.endpos - tr.startpos;
-//				Vector v2 = C_BasePlayer::GetLocalPlayer()->EyePosition() - tr.startpos;
+				C_BaseViewModel *pWeapon = pOwner->GetViewModel();
+				pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
 
-#if 1
-//				v1.NormalizeInPlace();
-//				v2.NormalizeInPlace();
-
-//				float flDot = v1.Dot(v2);
-//				float flDotBounds = cos(laser_beam_angle.GetFloat());
-
-//				if (flDot < 0.0f)
-//					flDot *= -1.0f;
-
-//				if (flDot > flDotBounds)
-//				{
-//					float flVisibility = (flDot - flDotBounds) / (1.0f - flDotBounds);
-					color32 colour = { 255, 0, 0, alpha /** flVisibility*/ };
-					
-
-					// We still trace from eye position, but we want to draw from the gun muzzle
-					Vector vecFalseOrigin;
-					QAngle angFalseAngles;
-					C_FFWeaponBase *pWeapon = pOwner->GetActiveFFWeapon();
-
-					pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
-
-					FX_DrawLine(vecFalseOrigin, tr.endpos, 1 /*flVisibility*/, m_pMaterial, colour);
-//				}
-
-#else
-				Vector vecCross = v1.Cross(v2);
-
-				// Area of parallelogram
-				float flLength = vecCross.Length();
-				flLength /= v1.Length();
-
-#define MAX_DIST	60.0f
-
-				if (flLength < MAX_DIST)
-				{
-					float flVisibility = (MAX_DIST - flLength) / MAX_DIST;
-					color32 colour = { 255, 0, 0, alpha * flVisibility };
-
-					FX_DrawLine(tr.startpos, tr.endpos, flVisibility, m_pMaterial, colour);
-				}
-#endif
 			}
+			else
+			{
+				C_FFWeaponBase *pWeapon = pOwner->GetActiveFFWeapon();
+				pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
+			}
+
+
+			FX_DrawLine(vecFalseOrigin, tr.endpos, 1, m_pMaterial, colour);
+
+
 		}
 		else
 		{
