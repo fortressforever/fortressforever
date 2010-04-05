@@ -19,7 +19,7 @@
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponLaserRifle C_FFWeaponLaserRifle
-	#define CFFFlameJet C_FFFlameJet
+	#define CFFWeaponLaserBeam C_FFWeaponLaserBeam
 
 	#include "c_ff_player.h"
 	#include "c_ff_env_flamejet.h"
@@ -33,14 +33,343 @@
 	#include "ilagcompensationmanager.h"
 #endif
 
-ConVar ffdev_laserrifle_zoomfov("ffdev_laserrifle_zoomfov", "25", FCVAR_REPLICATED, "fov of the rifle zoom (+attack2). smaller value = more zoomed in.");
-ConVar ffdev_laserrifle_dmg("ffdev_laserrifle_dmg", "10", 0, "damage of the laser rifle" );
-ConVar ffdev_laserrifle_dmg_bmult("ffdev_laserrifle_dmg_bmult", "1", 0, "damage multiplier for buildables" );
+ConVar ffdev_laserrifle_zoomfov("ffdev_laserrifle_zoomfov", "40", FCVAR_REPLICATED, "fov of the rifle zoom (+attack2). smaller value = more zoomed in.");
+ConVar ffdev_laserrifle_laserdot_scale("ffdev_laserrifle_laserdot_scale", "0.15", FCVAR_REPLICATED, "Scale of the sniper rifle laser dot");
 
 #ifdef GAME_DLL
-	ConVar ffdev_laserrifle_showtrace("ffdev_laserrifle_showtrace", "0", FCVAR_CHEAT, "Show flame trace");
-	//ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "18", FCVAR_ARCHIVE );
+ConVar ffdev_laserrifle_dmg("ffdev_laserrifle_dmg", "14", 0, "damage of the laser rifle" );
+ConVar ffdev_laserrifle_dmg_bmult("ffdev_laserrifle_dmg_bmult", "1.2", 0, "damage multiplier for buildables" );
+ConVar ffdev_laserrifle_showtrace("ffdev_laserrifle_showtrace", "0", FCVAR_CHEAT, "Show laser trace");
 #endif
+
+
+
+
+
+//=============================================================================
+// CFFWeaponLaserBeam
+//=============================================================================
+
+//=============================================================================
+// CFFWeaponLaserDot
+//=============================================================================
+
+class CFFWeaponLaserBeam : public CSprite
+{
+public:
+	DECLARE_CLASS(CFFWeaponLaserBeam, CSprite);
+
+	DECLARE_NETWORKCLASS();
+	DECLARE_DATADESC();
+
+#ifdef CLIENT_DLL
+	CFFWeaponLaserBeam();
+	virtual void GetRenderBounds(Vector& mins, Vector& maxs);
+#endif
+
+	static	CFFWeaponLaserBeam *Create(const Vector &origin, CBaseEntity *pOwner = NULL);
+
+	void	SetLaserPosition(const Vector &origin);
+
+	bool	IsOn() const		{ return m_bIsOn; }
+
+	void	TurnOn() 		{ m_bIsOn = true; }
+	void	TurnOff() 		{ m_bIsOn = false; }
+	void	Toggle() 		{ m_bIsOn = !m_bIsOn; }
+
+	int		ObjectCaps() { return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DONT_SAVE; }
+
+#ifdef CLIENT_DLL
+
+	virtual bool			IsTransparent() { return true; }
+	virtual RenderGroup_t	GetRenderGroup() { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
+	virtual int				DrawModel(int flags);
+	virtual void			OnDataChanged(DataUpdateType_t updateType);
+	virtual bool			ShouldDraw() { return (IsEffectActive(EF_NODRAW) ==false); }
+
+	IMaterial	*m_pMaterial;
+#endif
+
+	CNetworkVar(float, m_flStartTime);
+
+protected:
+	bool				m_bIsOn;
+
+};
+
+
+//=============================================================================
+// CFFWeaponLaserBeam tables
+//=============================================================================
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponLaserBeam, DT_FFWeaponLaserBeam) 
+
+BEGIN_NETWORK_TABLE(CFFWeaponLaserBeam, DT_FFWeaponLaserBeam) 
+#ifdef CLIENT_DLL
+	RecvPropFloat(RECVINFO(m_flStartTime)) 
+#else
+	SendPropFloat(SENDINFO(m_flStartTime)) 
+#endif
+END_NETWORK_TABLE() 
+
+LINK_ENTITY_TO_CLASS(env_fflaserbeam, CFFWeaponLaserBeam);
+
+BEGIN_DATADESC(CFFWeaponLaserBeam) 
+	DEFINE_FIELD(m_bIsOn, 				FIELD_BOOLEAN), 
+END_DATADESC() 
+
+//=============================================================================
+// CFFWeaponLaserBeam implementation
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a laser dot
+// Input  : &origin - 
+// Output : CFFWeaponLaserBeam
+//-----------------------------------------------------------------------------
+CFFWeaponLaserBeam *CFFWeaponLaserBeam::Create(const Vector &origin, CBaseEntity *pOwner) 
+{
+#ifdef GAME_DLL
+	CFFWeaponLaserBeam *pLaserDot = (CFFWeaponLaserBeam *) CBaseEntity::Create("env_fflaserbeam", origin, QAngle(0, 0, 0));
+
+	if (pLaserDot == NULL) 
+		return NULL;
+
+	pLaserDot->SetRenderMode((RenderMode_t) 9);
+
+	pLaserDot->SetMoveType(MOVETYPE_NONE);
+	pLaserDot->AddSolidFlags(FSOLID_NOT_SOLID);
+	pLaserDot->AddEffects(EF_NOSHADOW);
+	//UTIL_SetSize(pLaserDot, -Vector(4, 4, 4), Vector(4, 4, 4));
+	UTIL_SetSize(pLaserDot, vec3_origin, vec3_origin);
+
+	pLaserDot->SetOwnerEntity(pOwner);
+
+	pLaserDot->AddEFlags(EFL_FORCE_CHECK_TRANSMIT);
+
+	pLaserDot->SpriteInit(SNIPER_DOT, origin);
+	pLaserDot->SetName(AllocPooledString("TEST"));
+	pLaserDot->SetTransparency(kRenderWorldGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+	pLaserDot->SetScale(ffdev_laserrifle_laserdot_scale.GetFloat());
+	pLaserDot->SetOwnerEntity(pOwner);
+//	pLaserDot->SetContextThink(LaserThink, gpGlobals->curtime + 0.1f, g_pLaserDotThink);
+	pLaserDot->SetSimulatedEveryTick(true);
+
+
+	return pLaserDot;
+#else
+	return NULL;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Need to recompute the collision bounds to include the player too
+//			so that the laser dot is active on the client at the right times
+//-----------------------------------------------------------------------------
+void CFFWeaponLaserBeam::SetLaserPosition(const Vector &origin) 
+{
+	SetAbsOrigin(origin);
+
+	CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
+
+	Vector vecAbsStart = GetAbsOrigin();
+	Vector vecAbsEnd = pOwner->Weapon_ShootPosition();
+
+	Vector vecBeamMin, vecBeamMax;
+	VectorMin(vecAbsStart, vecAbsEnd, vecBeamMin);
+	VectorMax(vecAbsStart, vecAbsEnd, vecBeamMax);
+
+	SetCollisionBounds(vecBeamMin - GetAbsOrigin(), vecBeamMax - GetAbsOrigin());
+}
+
+#ifdef CLIENT_DLL
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Constructor, get the right materials
+	//-----------------------------------------------------------------------------
+	CFFWeaponLaserBeam::CFFWeaponLaserBeam()
+	{
+		m_pMaterial = materials->FindMaterial("effects/blueblacklargebeam", TEXTURE_GROUP_CLIENT_EFFECTS);
+		m_pMaterial->IncrementReferenceCount();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Need to make sure that the render bounds include the source
+	//			player too
+	//-----------------------------------------------------------------------------
+	void CFFWeaponLaserBeam::GetRenderBounds(Vector& mins, Vector& maxs)
+	{
+		// Hey, this is throwing a C_FFPlayer::ToFFPlayer( NULL ) assert... 
+		CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
+
+		if (!pOwner)
+		{
+			BaseClass::GetRenderBounds(mins, maxs);
+			return;
+		}
+
+		Vector vecAbsStart = GetAbsOrigin();
+		Vector vecAbsEnd = pOwner->Weapon_ShootPosition();
+
+		for (int i = 0; i < 3; ++i)
+		{
+			if (vecAbsStart[i] < vecAbsEnd[i])
+			{
+				mins[i] = vecAbsStart[i];
+				maxs[i] = vecAbsEnd[i];
+			}
+			else
+			{
+				mins[i] = vecAbsEnd[i];
+				maxs[i] = vecAbsStart[i];
+			}
+		}
+
+		Vector vecAbsOrigin = GetAbsOrigin();
+		mins -= vecAbsOrigin;
+		maxs -= vecAbsOrigin;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Draw our sprite
+	//-----------------------------------------------------------------------------
+	int CFFWeaponLaserBeam::DrawModel(int flags) 
+	{
+		//See if we should draw
+		if (!IsVisible() || (m_bReadyToDraw == false)) 
+			return 0;
+
+		//Must be a sprite
+		if (modelinfo->GetModelType(GetModel()) != mod_sprite) 
+		{
+			assert(0);
+			return 0;
+		}
+
+		float renderscale;
+		Vector vecAttachment, vecDir, endPos;
+		bool fDrawDot = true;
+
+		int alpha = clamp(150 + 15 * (gpGlobals->curtime - m_flStartTime), 0, 255);
+
+		CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (GetOwnerEntity());
+
+		// We're going to predict it using the players' angles
+		if (pOwner != NULL && pOwner->IsDormant() == false) 
+		{
+			// Take the eye position and direction
+			vecAttachment = pOwner->Weapon_ShootPosition();
+			AngleVectors(pOwner->EyeAngles(), &vecDir);
+
+			trace_t tr;
+			UTIL_TraceLine(vecAttachment, vecAttachment + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pOwner, COLLISION_GROUP_LASER, &tr);
+
+			// Backup without using the normal (for trackerid: #0000866)
+			endPos = tr.endpos - vecDir;
+
+			// Bug #0000376: Sniper dot is drawn on sky brushes
+			if (tr.surface.flags & SURF_SKY)
+				fDrawDot = false;
+
+			// Okay so beams. yes.
+			if (!pOwner->IsLocalPlayer()) 
+			{
+//				Vector v1 = tr.endpos - tr.startpos;
+//				Vector v2 = C_BasePlayer::GetLocalPlayer()->EyePosition() - tr.startpos;
+
+#if 1
+//				v1.NormalizeInPlace();
+//				v2.NormalizeInPlace();
+
+//				float flDot = v1.Dot(v2);
+//				float flDotBounds = cos(laser_beam_angle.GetFloat());
+
+//				if (flDot < 0.0f)
+//					flDot *= -1.0f;
+
+//				if (flDot > flDotBounds)
+//				{
+//					float flVisibility = (flDot - flDotBounds) / (1.0f - flDotBounds);
+					color32 colour = { 255, 0, 0, alpha /** flVisibility*/ };
+					
+
+					// We still trace from eye position, but we want to draw from the gun muzzle
+					Vector vecFalseOrigin;
+					QAngle angFalseAngles;
+					C_FFWeaponBase *pWeapon = pOwner->GetActiveFFWeapon();
+
+					pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
+
+					FX_DrawLine(vecFalseOrigin, tr.endpos, 1 /*flVisibility*/, m_pMaterial, colour);
+//				}
+
+#else
+				Vector vecCross = v1.Cross(v2);
+
+				// Area of parallelogram
+				float flLength = vecCross.Length();
+				flLength /= v1.Length();
+
+#define MAX_DIST	60.0f
+
+				if (flLength < MAX_DIST)
+				{
+					float flVisibility = (MAX_DIST - flLength) / MAX_DIST;
+					color32 colour = { 255, 0, 0, alpha * flVisibility };
+
+					FX_DrawLine(tr.startpos, tr.endpos, flVisibility, m_pMaterial, colour);
+				}
+#endif
+			}
+		}
+		else
+		{
+			// Just use our position if we can't predict it otherwise
+			endPos = GetAbsOrigin();
+		}
+
+		// Randomly flutter
+		//renderscale = 16.0f + random->RandomFloat(-2.0f, 2.0f);	
+		renderscale = ffdev_laserrifle_laserdot_scale.GetFloat() + random->RandomFloat(-0.005f, 0.005f);
+
+		if (!fDrawDot)
+			return 0;
+
+		//Draw it
+		int drawn = DrawSprite(
+			this, 
+			GetModel(), 
+			endPos, 
+			GetAbsAngles(), 
+			m_flFrame, 				// sprite frame to render
+			m_hAttachedToEntity, 	// attach to
+			m_nAttachment, 			// attachment point
+			GetRenderMode(), 		// rendermode
+			m_nRenderFX, 
+			alpha, 		// alpha
+			m_clrRender->r, 
+			m_clrRender->g, 
+			m_clrRender->b, 
+			renderscale);			// sprite scale
+
+		return drawn;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Setup our sprite reference
+	//-----------------------------------------------------------------------------
+	void CFFWeaponLaserBeam::OnDataChanged(DataUpdateType_t updateType) 
+	{
+		BaseClass::OnDataChanged( updateType );
+
+		if (updateType == DATA_UPDATE_CREATED) 
+		{
+			SetNextClientThink( CLIENT_THINK_ALWAYS );
+		}
+	}
+#endif
+
+
 
 //=============================================================================
 // CFFWeaponLaserRifle
@@ -61,8 +390,6 @@ public:
 	virtual bool Deploy();
 	virtual void Precache();
 	virtual void ItemPostFrame();
-	//virtual void WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
-
 
 	virtual FFWeaponID GetWeaponID() const { return FF_WEAPON_LASERRIFLE; }
 
@@ -83,7 +410,7 @@ private:
 #endif
 
 #ifdef GAME_DLL
-	CHandle<CFFWeaponLaserDot>	m_hLaserDot;
+	CHandle<CFFWeaponLaserBeam>	m_hLaserDot;
 #endif
 
 CFFWeaponLaserRifle(const CFFWeaponLaserRifle &);
@@ -278,7 +605,7 @@ void CFFWeaponLaserRifle::ToggleZoom()
 
 	// Set the fov cvar (which we ignore on the client) so that the server is up
 	// to date. Not the best way of doing it REALLY
-	pPlayer->m_iFOV = m_bZoomed ? 25 : 0;
+	pPlayer->m_iFOV = m_bZoomed ? ffdev_laserrifle_zoomfov.GetFloat() : 0;
 #endif
 }
 /*
@@ -317,7 +644,7 @@ void CFFWeaponLaserRifle::ItemPostFrame()
 		return;
 
 	// Keep track of fire duration for anywhere else it may be needed
-	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
+	//m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
 
 	// Player is holding down fire
 	if (pOwner->m_nButtons & IN_ATTACK)
@@ -328,6 +655,11 @@ void CFFWeaponLaserRifle::ItemPostFrame()
 			// Out of ammo
 			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 			{
+				WeaponSound(STOP);
+#ifdef GAME_DLL
+				if (m_hLaserDot != NULL)
+					UTIL_Remove(m_hLaserDot);
+#endif
 				HandleFireOnEmpty();
 				m_flNextPrimaryAttack = gpGlobals->curtime + 0.2f;
 			}
@@ -384,9 +716,8 @@ void CFFWeaponLaserRifle::UpdateLaserPosition()
 	
 		if (pOwner != NULL) 
 		{
-			m_hLaserDot = CFFWeaponLaserDot::Create(GetAbsOrigin(), GetOwner());
+			m_hLaserDot = CFFWeaponLaserBeam::Create(GetAbsOrigin(), pOwner);
 			m_hLaserDot->TurnOff();
-
 			m_hLaserDot->m_flStartTime = gpGlobals->curtime;
 
 			UpdateLaserPosition();
