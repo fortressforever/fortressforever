@@ -135,7 +135,10 @@ void CFFWeaponHookGun::ItemPostFrame()
 			}
 			else if (!m_bInReload)
 			{
-				StartReload();
+				if (!m_pHook)
+				{
+					StartReload();
+				}
 			}
 		}
 		else
@@ -160,7 +163,10 @@ void CFFWeaponHookGun::ItemPostFrame()
 	if (pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload)
 	{
 		// reload when reload is pressed, or if no buttons are down and weapon is empty.
-		StartReload();
+		if (!m_pHook)
+		{
+			StartReload();
+		}
 	}
 	else 
 	{
@@ -181,10 +187,13 @@ void CFFWeaponHookGun::ItemPostFrame()
 			// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
 			if (m_iClip1 <= 0 && m_flTimeWeaponIdle < gpGlobals->curtime && m_flNextPrimaryAttack < gpGlobals->curtime)
 			{
-				if (StartReload())
+				if (!m_pHook)
 				{
-					// if we've successfully started to reload, we're done
-					return;
+					if (StartReload())
+					{
+						// if we've successfully started to reload, we're done
+						return;
+					}
 				}
 			}
 
@@ -203,7 +212,10 @@ void CFFWeaponHookGun::ItemPostFrame()
 				{
 					if(pOwner->IsAlive())
 					{
-						StartReload();
+						if (!m_pHook)
+						{
+							StartReload();
+						}
 					}
 				}
 			}
