@@ -77,6 +77,7 @@ protected:
 	virtual void ResolveFlyCollisionCustom(trace_t &trace, Vector &vecVelocity);
 	
 	float m_flDetonateTime;
+	int m_nNumBounces;
 
 #endif
 };

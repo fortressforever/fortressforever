@@ -51,10 +51,13 @@ ConVar ffdev_bluepipes_bonusdirectdmg("ffdev_bluepipes_bonusdirectdmg", "18.0", 
 #define FF_PROJECTILE_GREN_BONUSDIRECTDMG ffdev_bluepipes_bonusdirectdmg.GetFloat()
 ConVar ffdev_bluepipes_normaldmg("ffdev_bluepipes_normaldmg", "70.0", FCVAR_REPLICATED, "");
 #define FF_PROJECTILE_GREN_NORMALDMG ffdev_bluepipes_normaldmg.GetFloat()
-ConVar ffdev_bluepipes_explodeontouch("ffdev_bluepipes_explodeontouch", "1.0", FCVAR_REPLICATED, "");
-#define FFDEV_BLUEPIPES_EXPLODEONTOUCH ffdev_bluepipes_explodeontouch.GetBool()
 ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(int) size of bounding box, 1-5 are good values");
+ConVar ffdev_bluepipes_usefusetime("ffdev_bluepipes_usefusetime", "0", FCVAR_REPLICATED,"Use the blue pipe fuse time?" );
+ConVar ffdev_bluepipes_num_bounces("ffdev_bluepipes_num_bounces", "1", FCVAR_REPLICATED );
+
+#define FFDEV_BLUEPIPES_NUM_BOUNCES ffdev_bluepipes_num_bounces.GetInt()
 #define FFDEV_BLUEPIPES_SIZE ffdev_bluepipes_size.GetInt()
+#define FFDEV_BLUEPIPES_USEFUSETIME ffdev_bluepipes_usefusetime.GetBool()
 
 
 #ifdef GAME_DLL
@@ -87,7 +90,8 @@ ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(i
 	{
 		// Setup
 		SetModel(GRENADE_MODEL);
-		m_nSkin = 1;	// Blue skin(#2) 
+		m_nSkin = 1;	// Blue skin(#2)
+		m_nNumBounces = 0;
 
 		SetSolidFlags(FSOLID_NOT_STANDABLE);
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
@@ -98,18 +102,8 @@ ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(i
 
 		// smaller, cube bounding box so we rest on the ground
 		SetSize(Vector(-FFDEV_BLUEPIPES_SIZE, -FFDEV_BLUEPIPES_SIZE, -FFDEV_BLUEPIPES_SIZE), Vector(FFDEV_BLUEPIPES_SIZE, FFDEV_BLUEPIPES_SIZE, FFDEV_BLUEPIPES_SIZE));
-
-		// Set the think
-		if ( ( FFDEV_BLUEPIPES_EXPLODEONTOUCH ) && ( Classify() == CLASS_GLGRENADE ) ) // AfterShock: This is because pipebombs inherit from here!		
-		{
-			SetTouch(&CFFProjectileGrenade::ExplodeTouch);
-			SetThink(NULL);
-		}
-		else
-		{
-			SetThink(&CFFProjectileGrenade::GrenadeThink);		// |-- Mirv: Account for GCC strictness
-		}
-
+		
+		SetThink(&CFFProjectileGrenade::GrenadeThink);		// |-- Mirv: Account for GCC strictness
 		SetNextThink(gpGlobals->curtime);
 
 
@@ -144,7 +138,8 @@ ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(i
 				CBasePlayer *pVictim = dynamic_cast< CBasePlayer* > ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to player here
 				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , DMG_BLAST ) );
 							//CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
-				Detonate(); 
+				Detonate();
+				return;
 			}
 			else
 				flSurfaceElasticity = 0.3;
@@ -160,7 +155,15 @@ ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(i
 				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , DMG_BLAST ) );
 							//CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
 				Detonate();// TODO: (AFTERSHOCK): Extra damage applied to buildable here
+				return;
 			}
+		}
+
+		//Check if it should blow up or continue bouncing -GreenMushy
+		if( trace.m_pEnt && Classify() == CLASS_GLGRENADE && m_nNumBounces >= FFDEV_BLUEPIPES_NUM_BOUNCES )
+		{
+			Detonate();
+			return;
 		}
 
 		float flTotalElasticity = GetElasticity() * flSurfaceElasticity;
@@ -257,6 +260,7 @@ ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(i
 		}
 		
 		BounceSound();
+		m_nNumBounces++;
 	}
 
 
@@ -328,7 +332,7 @@ void CFFProjectileGrenade::GrenadeThink()
 	}
 
 	// Blow up if we've reached the end of our fuse
-	if (gpGlobals->curtime > m_flDetonateTime) 
+	if ( FFDEV_BLUEPIPES_USEFUSETIME && gpGlobals->curtime > m_flDetonateTime) 
 	{
 		Detonate();
 		return;
