@@ -53,7 +53,7 @@ ConVar ffdev_bluepipes_normaldmg("ffdev_bluepipes_normaldmg", "70.0", FCVAR_REPL
 #define FF_PROJECTILE_GREN_NORMALDMG ffdev_bluepipes_normaldmg.GetFloat()
 ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(int) size of bounding box, 1-5 are good values");
 ConVar ffdev_bluepipes_usefusetime("ffdev_bluepipes_usefusetime", "0", FCVAR_REPLICATED,"Use the blue pipe fuse time?" );
-ConVar ffdev_bluepipes_num_bounces("ffdev_bluepipes_num_bounces", "1", FCVAR_REPLICATED );
+ConVar ffdev_bluepipes_num_bounces("ffdev_bluepipes_num_bounces", "0", FCVAR_REPLICATED );
 
 #define FFDEV_BLUEPIPES_NUM_BOUNCES ffdev_bluepipes_num_bounces.GetInt()
 #define FFDEV_BLUEPIPES_SIZE ffdev_bluepipes_size.GetInt()
