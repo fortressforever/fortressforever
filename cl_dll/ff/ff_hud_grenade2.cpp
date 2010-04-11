@@ -11,12 +11,14 @@
 *********************************************************************/
 
 #include "cbase.h"
+#include "ff_hud_hint.h"
 #include "hud.h"
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "hud_numericdisplay.h"
 #include "iclientmode.h"
 #include "iclientvehicle.h"
+#include "ff_playerclass_parse.h"
 
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
@@ -29,6 +31,8 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern IFileSystem **pFilesystem;
 
 using namespace vgui;
 
@@ -59,10 +63,11 @@ protected:
 
 	void UpdateGrenadeDisplays();
 	void UpdatePlayerGrenade(C_BasePlayer *player);
-
 private:
+	void	GetHUDIcon();
 	int		m_iGrenade;
-
+	bool	bIconLoaded;
+	CHudTexture *icon;
 	// Last recorded player class
 	int		m_iClass;
 
@@ -78,6 +83,7 @@ DECLARE_HUDELEMENT(CHudGrenade2);
 CHudGrenade2::CHudGrenade2(const char *pElementName) : BaseClass(NULL, "HudGrenade2"), CHudElement(pElementName) 
 {
 	SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
+	bIconLoaded = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -183,9 +189,19 @@ void CHudGrenade2::UpdatePlayerGrenade(C_BasePlayer *player)
 			SetShouldDisplaySecondaryValue(true);
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasTwoGrenades");
 		}
+		// force reload of class nade icon
+		bIconLoaded = false;
 
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasGrenades");
 		m_iClass = ffplayer->GetClassSlot();
+	}
+	
+	if( !bIconLoaded )
+	{
+		//icon = gHUD.GetIcon("death_grenade_normal");
+		//if( icon )
+		//	bIconLoaded = true;
+		GetHUDIcon();
 	}
 }
 
@@ -251,6 +267,7 @@ void CHudGrenade2::Paint()
 	if (ffplayer->GetTeamNumber() < TEAM_BLUE || ffplayer->GetTeamNumber() > TEAM_GREEN)
 		return;
 
+	/* dexter - this isnt used atm
 	int gren_num = 0;
 
 	// Get the correct grenade to display
@@ -282,6 +299,7 @@ void CHudGrenade2::Paint()
 			gren_num = 4;
 			break;
 	}
+	*/
 
 	// Draw background box
 	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
@@ -293,5 +311,63 @@ void CHudGrenade2::Paint()
 	//surface()->DrawSetColor(255, 255, 255, 255);
 	//surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
 
+	if( bIconLoaded ) 
+	{
+		int iconWide = 0;
+		int iconTall = 0;
+		if( icon->bRenderUsingFont )
+		{
+			iconWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
+			iconTall = surface()->GetFontTall( icon->hFont );
+		}
+		icon->DrawSelf( icon_xpos, icon_ypos - (iconTall/2), iconWide, iconTall, m_HudForegroundColour );
+	}
+
 	BaseClass::Paint();
+}
+
+void CHudGrenade2::GetHUDIcon()
+{
+	const char *szClassNames[] = { "scout", "sniper", "soldier", 
+								 "demoman", "medic", "hwguy", 
+								 "pyro", "spy", "engineer", 
+								 "civilian" };
+	// First get the class
+	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
+
+	if (pLocalPlayer == NULL)
+		return;
+		
+	C_FFPlayer *ffplayer = ToFFPlayer(pLocalPlayer);
+
+	PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
+	bool bReadInfo = ReadPlayerClassDataFromFileForSlot(*pFilesystem, szClassNames[ffplayer->GetClassSlot() - 1], &hClassInfo, NULL);
+
+	if (!bReadInfo)
+		return;
+
+	const CFFPlayerClassInfo *pClassInfo = GetFilePlayerClassInfoFromHandle(hClassInfo);
+
+	if (!pClassInfo)
+		return;
+
+	if ( strcmp( pClassInfo->m_szPrimaryClassName, "None" ) != 0 )
+	{
+		
+		const char *grenade_name = pClassInfo->m_szSecondaryClassName;
+
+		if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
+		{
+			//UTIL_LogPrintf( "  begins with ff_, removing\n" );
+			grenade_name += 3;
+		}
+		char grenade_icon_name[256];
+		Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
+		icon = gHUD.GetIcon(grenade_icon_name);
+		if( icon )
+		{
+			bIconLoaded = true;
+			//return true;
+		}
+	}
 }
