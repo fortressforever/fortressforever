@@ -531,6 +531,14 @@ bool CFFWeaponLaserRifle::Holster(CBaseCombatWeapon *pSwitchingTo)
 #endif
 		WeaponSound( STOP );
 
+#ifdef GAME_DLL
+	if (m_hLaserDot != NULL)
+	{
+		UTIL_Remove(m_hLaserDot);
+		m_hLaserDot = NULL;
+	}
+#endif
+
 	return BaseClass::Holster();
 }
 
@@ -578,11 +586,11 @@ void CFFWeaponLaserRifle::ToggleZoom()
 	{
 		CSingleUserRecipientFilter filter(pPlayer);
 		EmitSound(filter, pPlayer->entindex(), m_bZoomed ? "SniperRifle.zoom_in" : "SniperRifle.zoom_out");
+		// Set the fov cvar (which we ignore on the client) so that the server is up
+		// to date. Not the best way of doing it REALLY
+		pPlayer->m_iFOV = m_bZoomed ? ffdev_laserrifle_zoomfov.GetFloat() : 0;
 	}
 
-	// Set the fov cvar (which we ignore on the client) so that the server is up
-	// to date. Not the best way of doing it REALLY
-	pPlayer->m_iFOV = m_bZoomed ? ffdev_laserrifle_zoomfov.GetFloat() : 0;
 #endif
 }
 
@@ -611,8 +619,11 @@ void CFFWeaponLaserRifle::ItemPostFrame()
 			{
 				WeaponSound(STOP);
 #ifdef GAME_DLL
-				if (m_hLaserDot != NULL)
-					UTIL_Remove(m_hLaserDot);
+			if (m_hLaserDot != NULL)
+			{
+				UTIL_Remove(m_hLaserDot);
+				m_hLaserDot = NULL;
+			}
 #endif
 				HandleFireOnEmpty();
 				m_flNextPrimaryAttack = gpGlobals->curtime + 0.2f;
@@ -641,7 +652,11 @@ void CFFWeaponLaserRifle::ItemPostFrame()
 	{
 		WeaponSound(STOP);
 #ifdef GAME_DLL
-		UTIL_Remove(m_hLaserDot);
+		if (m_hLaserDot != NULL)
+		{
+			UTIL_Remove(m_hLaserDot);
+			m_hLaserDot = NULL;
+		}
 #endif
 		WeaponIdle();
 	}
