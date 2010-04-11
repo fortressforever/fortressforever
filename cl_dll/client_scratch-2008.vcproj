@@ -4850,6 +4850,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ProxySpyCharge.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ProxyTeam.cpp"
 				>
 			</File>

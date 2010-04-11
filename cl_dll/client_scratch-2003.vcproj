@@ -3932,6 +3932,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ProxyMap.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ProxyOverpressure.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ProxySpyCharge.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ProxyTeam.cpp">
 			</File>
 			<Filter
