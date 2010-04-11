@@ -78,6 +78,10 @@ ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCV
 ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", "1.0", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When selfignore is 0, modifies the slow amount for the thrower");
 #define SLOWFIELD_SELFSCALE ffdev_slowfield_selfscale.GetFloat()
 
+ConVar ffdev_slowfield_fastspeedmod_start("ffdev_slowfield_fastspeedmod_start", "800", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When the slowed person is above this speed, they get slowed more depending on how fast they are moving");
+#define SLOWFIELD_FASTSPEEDMOD_START ffdev_slowfield_fastspeedmod_start.GetFloat()
+
+
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeSlowfield C_FFGrenadeSlowfield
@@ -323,8 +327,14 @@ void CFFGrenadeSlowfield::Precache()
 				else if (pPlayer == pSlower)
 					flFriendlyScale = SLOWFIELD_SELFSCALE;
 
-				float flLaggedMovement = SimpleSplineRemapVal(flDistance, 0.0f, SLOWFIELD_RADIUS, min( 1.0f, (flFriendlyScale > 0) ? (SLOWFIELD_MIN_SLOW / flFriendlyScale) : (1.0f) ), 1.0f);
+				Vector vecVelocity = pPlayer->GetAbsVelocity();
+				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+				float flHorizontalSpeed = vecLatVelocity.Length();
 
+				float flFastSpeedMod = 1 / max(1.0f, flHorizontalSpeed / SLOWFIELD_FASTSPEEDMOD_START);
+
+				float flLaggedMovement = SimpleSplineRemapVal(flDistance, 0.0f, SLOWFIELD_RADIUS, min( 1.0f, (flFriendlyScale > 0) ? (SLOWFIELD_MIN_SLOW / flFriendlyScale * flFastSpeedMod) : (1.0f) ), 1.0f);
+				
 				// only change players active slowfield if they will be going slower
 				if (pPlayer->GetActiveSlowfield() != this && pPlayer->GetLaggedMovementValue() > flLaggedMovement)
 				{
