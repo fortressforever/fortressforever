@@ -584,6 +584,10 @@ void CFFWeaponBase::PrimaryAttack()
 	// Fire now
 	Fire();
 
+#ifdef CLIENT_DLL
+	pPlayer->m_flTrueAimTime = gpGlobals->curtime;
+#endif
+
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
 
 	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)

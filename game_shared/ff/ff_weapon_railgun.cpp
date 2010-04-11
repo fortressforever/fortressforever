@@ -339,6 +339,11 @@ void CFFWeaponRailgun::Precache( void )
 //----------------------------------------------------------------------------
 void CFFWeaponRailgun::Fire( void )
 {
+#ifdef CLIENT_DLL
+	CFFPlayer *pPlayer = GetPlayerOwner();
+	pPlayer->m_flTrueAimTime = gpGlobals->curtime;
+#endif
+
 #ifdef GAME_DLL
 
 	CFFPlayer *pPlayer = GetPlayerOwner();
