@@ -172,6 +172,9 @@ void CFFWeaponLaserBeam::SetLaserPosition(const Vector &origin)
 
 	CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
 
+	if (!pOwner)
+		return;
+
 	Vector vecAbsStart = GetAbsOrigin();
 	Vector vecAbsEnd = pOwner->Weapon_ShootPosition();
 
@@ -280,13 +283,15 @@ void CFFWeaponLaserBeam::SetLaserPosition(const Vector &origin)
 			if ( pOwner->IsLocalPlayer() )
 			{
 				C_BaseViewModel *pWeapon = pOwner->GetViewModel();
-				pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
+				if (pWeapon)
+					pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
 
 			}
 			else
 			{
 				C_FFWeaponBase *pWeapon = pOwner->GetActiveFFWeapon();
-				pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
+				if (pWeapon)
+					pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
 			}
 
 
