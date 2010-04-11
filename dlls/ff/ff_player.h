@@ -422,6 +422,13 @@ public:
 		else
 			return m_iLastLocationTeam;
 	}
+	int GetLocationId( void ) const
+	{ 
+		if(m_Locations.Count() > 0)
+			return m_Locations[0].entindex; 
+		else
+			return m_iClientLocation;
+	}
 private:
 	char m_szLastLocation[1024];
 	int	m_iLastLocationTeam;

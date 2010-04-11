@@ -533,7 +533,10 @@ namespace FFLib
 
 		return dynamic_cast<CFFTeam*>(g_Teams[teamId]);
 	}
-
+	int GetTeamNumber(CFFTeam* team)
+	{
+		return team->m_iTeamNum;
+	}
 	CBaseEntity* GetEntity(int item_id)
 	{
 		return UTIL_EntityByIndex(item_id);
@@ -608,7 +611,14 @@ namespace FFLib
 		
 		return NULL;
 	}
-
+	CFuncFFScript* GetTriggerScriptById(int item_id)
+	{
+		CBaseEntity *pEntity = UTIL_EntityByIndex( item_id );
+		if( pEntity && ( pEntity->Classify() == CLASS_TRIGGERSCRIPT ) )
+			return dynamic_cast< CFuncFFScript * >( pEntity );
+		
+		return NULL;
+	}
 	CFFPlayer* CastToPlayer( CBaseEntity* pEntity )
 	{
 		if( !pEntity )
@@ -2625,6 +2635,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("GetServerTime",			&FFLib::GetServerTime),
 		def("GetSteamID",				&FFLib::GetSteamID),
 		def("GetTeam",					&FFLib::GetTeam),
+		def("GetTeamNumber",			&FFLib::GetTeamNumber),
+		def("GetTriggerScriptById",		&FFLib::GetTriggerScriptById),
 		def("GetTriggerScriptByName",	&FFLib::GetTriggerScriptByName),
 		def("DisableTimeLimit",			(void(*)())&FFLib::DisableTimeLimit),
 		def("DisableTimeLimit",			(void(*)(bool))&FFLib::DisableTimeLimit),

@@ -40,6 +40,7 @@ ConVar ffdev_laserrifle_laserdot_scale("ffdev_laserrifle_laserdot_scale", "0.15"
 ConVar ffdev_laserrifle_dmg("ffdev_laserrifle_dmg", "14", 0, "damage of the laser rifle" );
 ConVar ffdev_laserrifle_dmg_bmult("ffdev_laserrifle_dmg_bmult", "1.2", 0, "damage multiplier for buildables" );
 ConVar ffdev_laserrifle_showtrace("ffdev_laserrifle_showtrace", "0", FCVAR_CHEAT, "Show laser trace");
+ConVar ffdev_laserrifle_slowdownfactor("ffdev_laserrifle_slowdownfactor", "1", 0, "Slowdown factor per damage infliction");
 #endif
 
 
@@ -172,9 +173,6 @@ void CFFWeaponLaserBeam::SetLaserPosition(const Vector &origin)
 
 	CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
 
-	if (!pOwner)
-		return;
-
 	Vector vecAbsStart = GetAbsOrigin();
 	Vector vecAbsEnd = pOwner->Weapon_ShootPosition();
 
@@ -283,15 +281,13 @@ void CFFWeaponLaserBeam::SetLaserPosition(const Vector &origin)
 			if ( pOwner->IsLocalPlayer() )
 			{
 				C_BaseViewModel *pWeapon = pOwner->GetViewModel();
-				if (pWeapon)
-					pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
+				pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
 
 			}
 			else
 			{
 				C_FFWeaponBase *pWeapon = pOwner->GetActiveFFWeapon();
-				if (pWeapon)
-					pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
+				pWeapon->GetAttachment( pWeapon->LookupAttachment("1"), vecFalseOrigin, angFalseAngles );
 			}
 
 
@@ -486,8 +482,12 @@ void CFFWeaponLaserRifle::Fire()
 				if (pTarget->IsPlayer() )
 				{
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
-
 					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, ffdev_laserrifle_dmg.GetFloat() /* GetFFWpnData().m_iDamage */, DMG_ENERGYBEAM ) );
+					float flVelocityFactor = ffdev_laserrifle_slowdownfactor.GetFloat();
+					if ( flVelocityFactor != 1.0 && !(pPlayerTarget->GetFlags() & FL_ONGROUND) )
+						pPlayerTarget->SetAbsVelocity( Vector(	pPlayerTarget->GetAbsVelocity().x * flVelocityFactor , 
+																pPlayerTarget->GetAbsVelocity().y * flVelocityFactor, 
+																pPlayerTarget->GetAbsVelocity().z > 0 ? pPlayerTarget->GetAbsVelocity().z * flVelocityFactor : pPlayerTarget->GetAbsVelocity().z));
 				}
 				// TODO: Check water level for dispensers & sentryguns!
 				else if( FF_IsDispenser( pTarget ) )
@@ -585,30 +585,7 @@ void CFFWeaponLaserRifle::ToggleZoom()
 	pPlayer->m_iFOV = m_bZoomed ? ffdev_laserrifle_zoomfov.GetFloat() : 0;
 #endif
 }
-/*
-//----------------------------------------------------------------------------
-// Purpose: Turn flame jet on or off
-//----------------------------------------------------------------------------
-void CFFWeaponLaserRifle::EmitFlames(bool bEmit)
-{
-	// We're using m_flNextSecondaryAttack to make sure we don't draw the flames
-	// before we're allowed to fire (set by DefaultDeploy)
-	if (bEmit && m_flNextSecondaryAttack > gpGlobals->curtime)
-	{
-		WeaponSound(STOP);
-		return;
-	}
-	// Spawn the FlameJet if necessary
-//	if(m_hFlameJet)
-//		m_hFlameJet->FlameEmit(bEmit);
-	// If we are going to Emit play the sound, otherwise don't play anything.
-	if (bEmit)
-		WeaponSound(BURST);
-	else
-		WeaponSound(STOP);
-	return;
-}
-*/
+
 //====================================================================================
 // WEAPON BEHAVIOUR
 //====================================================================================
