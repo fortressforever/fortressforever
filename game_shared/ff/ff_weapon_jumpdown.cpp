@@ -312,6 +312,8 @@ void CFFWeaponJumpdown::Fire( void )
 	if (!pPlayer)
 		return;
 
+	pPlayer->m_flTrueAimTime = gpGlobals->curtime;
+
 	Vector vecForward, vecRight, vecUp;
 	pPlayer->EyeVectors( &vecForward, &vecRight, &vecUp);
 	VectorNormalizeFast( vecForward );
