@@ -31,9 +31,11 @@
 	#include "ai_basenpc.h"
 #endif
 
+#define CONCUSSION_SOUND				"ConcussionGrenade.Explode"
+#define CONCUSSION_EFFECT_HANDHELD		"FF_ConcussionEffectHandheld" // "ConcussionExplosion"
 
 // 0000819: gas gren radius too large
-ConVar ffdev_gasgrenradius("ffdev_gasgrenradius", "125.0", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_gasgrenradius("ffdev_gasgrenradius", "280.0", FCVAR_REPLICATED | FCVAR_CHEAT);
 
 class CFFGrenadeGas : public CFFGrenadeBase
 {
@@ -167,7 +169,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 		//}
 
 		// Been detonated for 10 secs now, so fade out
-		if (gpGlobals->curtime > m_flDetonateTime + 10.0f)
+		if (gpGlobals->curtime > m_flDetonateTime + 0.0f)
 		{
 			SetThink(&CBaseGrenade::SUB_FadeOut);
 		}		
@@ -203,7 +205,14 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 				m_iSequence = SelectWeightedSequence( m_Activity );
 				SetSequence( m_iSequence );
 
-				EmitSound(GAS_SOUND);
+				//EmitSound(GAS_SOUND);
+				EmitSound(CONCUSSION_SOUND);
+				CEffectData data;
+				data.m_vOrigin = GetAbsOrigin();
+				data.m_flScale = 1.0f;
+				data.m_flRadius = GetGrenadeRadius();
+				DispatchEffect(CONCUSSION_EFFECT_HANDHELD, data);
+				UTIL_Remove(this);
 			}
 
 			CBaseEntity *pEntity = NULL;
@@ -224,7 +233,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 				if( !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 					continue;
 
-				pPlayer->Gas(10.0f, 10.0f, pGasser);
+				pPlayer->Gas(7.5f, 7.5f, pGasser);
 			}
 		}
 
