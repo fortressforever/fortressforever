@@ -728,6 +728,10 @@ void CFFBuildableObject::Disable( float flDisableDuration )
 	if ( !CanDisable() )
 		return;
 
+	// if the new disable would shorten a currently active disable, ignore the new disable
+	if (m_flDisableTime >= gpGlobals->curtime + flDisableDuration)
+		return;
+
 	m_flDisableTime = gpGlobals->curtime + flDisableDuration;
 	m_flSavedThink = GetNextThink();
 	SetNextThink( gpGlobals->curtime + 0.029f );

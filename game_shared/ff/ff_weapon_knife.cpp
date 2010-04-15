@@ -17,8 +17,14 @@
 	#define CFFWeaponKnife C_FFWeaponKnife
 #endif
 
+ConVar ffdev_cloakstab_damage("ffdev_cloakstab_damage", "100", FCVAR_REPLICATED );
+ConVar ffdev_cloakstab_disable_modifier( "ffdev_cloakstab_disable_modifier", "1.5", FCVAR_REPLICATED );
+ConVar ffdev_cloakstab_disable_min( "ffdev_cloakstab_disable_min", "2", FCVAR_REPLICATED );
+ConVar ffdev_knife_disable_duration("ffdev_knife_disable_duration", "0.1", FCVAR_REPLICATED );
+
 #define FF_CLOAKSTAB_DISABLE_MOD ffdev_cloakstab_disable_modifier.GetFloat()
 #define FF_CLOAKSTAB_DISABLE_MIN ffdev_cloakstab_disable_min.GetFloat()
+#define FF_KNIFE_DISABLE_DURATION ffdev_knife_disable_duration.GetFloat()
 
 //=============================================================================
 // CFFWeaponKnife
@@ -61,10 +67,6 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_knife);
 //=============================================================================
 // CFFWeaponKnife implementation
 //=============================================================================
-
-ConVar ffdev_cloakstab_damage("ffdev_cloakstab_damage", "100", FCVAR_REPLICATED );
-ConVar ffdev_cloakstab_disable_modifier( "ffdev_cloakstab_disable_modifier", "1.5", FCVAR_REPLICATED );
-ConVar ffdev_cloakstab_disable_min( "ffdev_cloakstab_disable_min", "2", FCVAR_REPLICATED );
 
 //----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -133,6 +135,14 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 			return;
 		}
 	}
+	// if havent returned by now, then check if you're hitting a sentrygun
+	if ( pHitEntity != NULL && FF_IsSentrygun( pHitEntity ) ) 
+	{
+		CFFBuildableObject *pBuildable = FF_ToBuildableObject( pHitEntity );
+		if( g_pGameRules->FCanTakeDamage(pPlayer, pBuildable))
+			pBuildable->Disable( FF_KNIFE_DISABLE_DURATION );
+		return;
+	}
 #endif
 
 #ifdef CLIENT_DLL
@@ -165,6 +175,12 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				WeaponSound(SPECIAL2);
 			return;
 		}
+	}
+	// if havent returned by now, then check if you're hitting a sentrygun
+	if ( pHitEntity != NULL && FF_IsSentrygun( pHitEntity ) ) 
+	{
+		WeaponSound(SPECIAL2);
+		return;
 	}
 #endif
 
