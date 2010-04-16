@@ -163,6 +163,31 @@ namespace FFLib
 		return IsOfClass( pEntity, CLASS_TURRET );
 	}
 
+	void ChatToAll(const char *szMessage)
+	{
+		bool bChat = true;
+		CBroadcastRecipientFilter filter;
+		UserMessageBegin( filter, "SayText" );
+			WRITE_BYTE( 0 ); // world, dedicated server says
+			WRITE_STRING( szMessage );
+			WRITE_BYTE( bChat );
+		MessageEnd();
+	}
+
+	void ChatToPlayer(CFFPlayer *pPlayer, const char *szMessage)
+	{
+		if (!pPlayer)
+			return;
+
+		bool bChat = true;
+		CSingleUserRecipientFilter filter(pPlayer);
+		UserMessageBegin( filter, "SayText" );
+			WRITE_BYTE( 0 ); // world, dedicated server says
+			WRITE_STRING( szMessage );
+			WRITE_BYTE( bChat );
+		MessageEnd();
+	}
+
 	void BroadcastMessage(const char* szMessage)
 	{
 		CBroadcastRecipientFilter filter;
@@ -2598,6 +2623,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
 		def("AreTeamsAllied",			(bool(*)(CTeam*, CTeam*))&FFLib::AreTeamsAllied),
 		def("AreTeamsAllied",			(bool(*)(int, int))&FFLib::AreTeamsAllied),
+		def("ChatToAll",				&FFLib::ChatToAll),
+		def("ChatToPlayer",				&FFLib::ChatToPlayer),
 		def("BroadCastMessage",			(void(*)(const char*))&FFLib::BroadcastMessage),
 		def("BroadCastMessage",			(void(*)(const char*, float))&FFLib::BroadcastMessage),
 		def("BroadCastMessage",			(void(*)(const char*, float, int))&FFLib::BroadcastMessage),
