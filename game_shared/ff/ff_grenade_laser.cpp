@@ -266,6 +266,11 @@ protected:
 IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeLaser, DT_FFGrenadeLaser)
 
 BEGIN_NETWORK_TABLE(CFFGrenadeLaser, DT_FFGrenadeLaser)
+#ifdef CLIENT_DLL
+	RecvPropFloat(RECVINFO(m_flDetonateTime)), 
+#else
+	SendPropFloat(SENDINFO(m_flDetonateTime)),
+#endif
 #ifdef GAME_DLL
 SendPropInt(SENDINFO(m_bIsOn), 1, SPROP_UNSIGNED),
 #else
@@ -303,7 +308,7 @@ float CFFGrenadeLaser::getLengthPercent()
 	if(gpGlobals->curtime > growTillTime && gpGlobals->curtime < startShrinkTime && m_flDetonateTime > 0)
 		return 1.0f;
 	else if(gpGlobals->curtime >= startShrinkTime && m_flDetonateTime > 0)
-		return (gpGlobals->curtime - startShrinkTime) / m_flDetonateTime;
+		return 1 - (gpGlobals->curtime - startShrinkTime) / m_flDetonateTime;
 	else if(gpGlobals->curtime < growTillTime && m_flDetonateTime > 0)
 		return (gpGlobals->curtime - spawnTime) / (growTillTime - spawnTime);
 	else
@@ -392,7 +397,7 @@ float CFFGrenadeLaser::getLengthPercent()
 			VectorNormalizeFast(vecDirection);
 
 			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
-				vecOrigin + vecDirection * laserdistance.GetFloat() /* * getLengthPercent() */, MASK_PLAYERSOLID, NULL, COLLISION_GROUP_PLAYER, &tr );
+				vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), MASK_PLAYERSOLID, NULL, COLLISION_GROUP_PLAYER, &tr );
 			
 			if ( tr.m_pEnt )
 				DoDamage( tr.m_pEnt );
@@ -591,8 +596,8 @@ float CFFGrenadeLaser::getLengthPercent()
 				VectorNormalizeFast(vecDirection);
 
 				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
-								vecOrigin + vecDirection * laserdistance.GetFloat() /* * getLengthPercent() */, 
-								MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+								vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), 
+								MASK_PLAYERSOLID, this, COLLISION_GROUP_LASER, &tr );
 				
 				if( !pBeam[i] )
 				{
@@ -617,6 +622,8 @@ float CFFGrenadeLaser::getLengthPercent()
 				pBeam[i]->PointsInit( vecOrigin, tr.endpos );
 
 				angRadial.y += flDeltaAngle;
+
+				UTIL_DecalTrace( &tr, "Scorch" );
 			}
 		}
 	}
