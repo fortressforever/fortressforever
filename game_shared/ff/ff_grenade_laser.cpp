@@ -308,7 +308,7 @@ float CFFGrenadeLaser::getLengthPercent()
 	if(gpGlobals->curtime > growTillTime && gpGlobals->curtime < startShrinkTime && m_flDetonateTime > 0)
 		return 1.0f;
 	else if(gpGlobals->curtime >= startShrinkTime && m_flDetonateTime > 0)
-		return 1 - (gpGlobals->curtime - startShrinkTime) / m_flDetonateTime;
+		return 1 - (gpGlobals->curtime - startShrinkTime) / (m_flDetonateTime - startShrinkTime);
 	else if(gpGlobals->curtime < growTillTime && m_flDetonateTime > 0)
 		return (gpGlobals->curtime - spawnTime) / (growTillTime - spawnTime);
 	else
