@@ -43,7 +43,7 @@ ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICAT
 ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED );
 ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
 ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
-ConVar lasertime("ffdev_lasergren_time", "5", FCVAR_REPLICATED, "Laser active time");
+ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active time");
 
 #ifdef CLIENT_DLL
 	ConVar ffdev_lasergren_widthcreate("ffdev_lasergren_widthcreate", "0.5", FCVAR_REPLICATED, "Width given in the constructor; not used");
@@ -56,11 +56,13 @@ ConVar lasertime("ffdev_lasergren_time", "5", FCVAR_REPLICATED, "Laser active ti
 
 #ifdef GAME_DLL
 
-	ConVar laserdamage("ffdev_lasergren_damage", "10", FCVAR_NOTIFY, "Damage of laser");
+	ConVar laserdamage("ffdev_lasergren_damage", "660", FCVAR_NOTIFY, "Damage of laser");
+	#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
 	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "1", FCVAR_NOTIFY, "Damage multiplier of laser against buildables");
-	ConVar laserangv("ffdev_lasergren_angv", "3.75", FCVAR_NOTIFY, "Laser angular increment");
+	ConVar laserangv("ffdev_lasergren_angv", "66", FCVAR_NOTIFY, "Laser angular increment");
+	#define LASERGREN_ROTATION_PER_TICK laserangv.GetFloat()*gpGlobals->interval_per_tick
 	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_NOTIFY, "Laser grenade jump distance" );
-	ConVar laserbob( "ffdev_lasergren_bob", "20", FCVAR_NOTIFY, "Laser grenade bob factor" );
+	ConVar laserbob( "ffdev_lasergren_bob", "10", FCVAR_NOTIFY, "Laser grenade bob factor" );
 	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_CHEAT, "Laser grenade update time" );
 
 	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_NOTIFY, "Use nails instead of lasers" );
@@ -361,7 +363,7 @@ void CFFGrenadeLaser::Precache()
 			flRisingheight = laserjump.GetFloat();
 
 		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(gpGlobals->curtime * 360 * bobfrequency.GetFloat()))));
-		SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
+		SetAbsAngles(GetAbsAngles() + QAngle(0, LASERGREN_ROTATION_PER_TICK, 0));
 
 		Vector vecDirection;
 		Vector vecOrigin = GetAbsOrigin();
@@ -400,25 +402,25 @@ void CFFGrenadeLaser::Precache()
 				if (pTarget->IsPlayer() )
 				{
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
-					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat(), DMG_ENERGYBEAM ) );
+					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK, DMG_ENERGYBEAM ) );
 				}
 				else if( FF_IsDispenser( pTarget ) )
 				{
 					CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
 					if( pDispenser )
-						pDispenser->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat() * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
+						pDispenser->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
 				}
 				else if( FF_IsSentrygun( pTarget ) )
 				{
 					CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
 					if( pSentrygun )
-						pSentrygun->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat() * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
+						pSentrygun->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
 				}
 				else /*if( FF_IsManCannon( pTarget ) )*/
 				{
 					CFFManCannon *pManCannon = FF_ToManCannon( pTarget );
 					if( pManCannon )
-						pManCannon->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat() * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
+						pManCannon->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
 				}
 			}
 		}
@@ -472,7 +474,7 @@ void CFFGrenadeLaser::Precache()
 			flRisingheight = laserjump.GetFloat();
 
 		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(gpGlobals->curtime * 360 * bobfrequency.GetFloat()))));
-		SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
+		SetAbsAngles(GetAbsAngles() + QAngle(0, LASERGREN_ROTATION_PER_TICK, 0));
 
 		Vector vecOrigin = GetAbsOrigin();
 
