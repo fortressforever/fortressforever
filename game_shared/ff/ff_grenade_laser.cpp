@@ -216,6 +216,7 @@ public:
 
 	CNetworkVar( unsigned int, m_bIsOn );
 	float getLengthPercent();
+	bool m_bPlayingDeploySound;
 
 #ifdef CLIENT_DLL
 	CFFGrenadeLaser() {}
@@ -292,6 +293,7 @@ void CFFGrenadeLaser::Precache()
 	PrecacheModel(GRENADE_BEAM_SPRITE);
 	PrecacheScriptSound( "NailGrenade.shoot" );
 	PrecacheScriptSound( "NailGrenade.LaserLoop" );
+	PrecacheScriptSound( "NailGrenade.LaserDeploy" );
 
 	BaseClass::Precache();
 }
@@ -306,11 +308,32 @@ float CFFGrenadeLaser::getLengthPercent()
 	float startShrinkTime = m_flDetonateTime - shrinkTime.GetFloat();
 
 	if(gpGlobals->curtime > growTillTime && gpGlobals->curtime < startShrinkTime && m_flDetonateTime > 0)
+	{
+		if ( m_bPlayingDeploySound )
+		{
+			StopSound("NailGrenade.LaserDeploy");
+			m_bPlayingDeploySound = 0;
+		}
 		return 1.0f;
+	}
 	else if(gpGlobals->curtime >= startShrinkTime && m_flDetonateTime > 0)
+	{
+		if ( !m_bPlayingDeploySound )
+		{
+			EmitSound("NailGrenade.LaserDeploy");
+			m_bPlayingDeploySound = 1;
+		}
 		return 1 - (gpGlobals->curtime - startShrinkTime) / (m_flDetonateTime - startShrinkTime);
+	}
 	else if(gpGlobals->curtime < growTillTime && m_flDetonateTime > 0)
+	{
+		if ( !m_bPlayingDeploySound )
+		{
+			EmitSound("NailGrenade.LaserDeploy");
+			m_bPlayingDeploySound = 1;
+		}
 		return (gpGlobals->curtime - spawnTime) / (growTillTime - spawnTime);
+	}
 	else
 		return 0.0f;
 }
@@ -328,6 +351,8 @@ float CFFGrenadeLaser::getLengthPercent()
 		m_flAngleOffset = 0.0f;
 		m_iOffset = 0;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
+
+		m_bPlayingDeploySound = 0;
 	}
 
 	//-----------------------------------------------------------------------------
@@ -557,6 +582,7 @@ float CFFGrenadeLaser::getLengthPercent()
 	void CFFGrenadeLaser::UpdateOnRemove( void )
 	{
 		StopSound("NailGrenade.LaserLoop");
+		StopSound("NailGrenade.LaserDeploy");
 
 		int i;
 		for( i = 0; i < laserbeams.GetInt(); i++ )
