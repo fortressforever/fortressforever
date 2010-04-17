@@ -2012,6 +2012,7 @@ int C_FFPlayer::DrawModel( int flags )
 	{
 		if (pLocalPlayer->GetTeamNumber() != GetTeamNumber())
 		{
+			/*
 			int nSkin = entindex() + pLocalPlayer->m_iHallucinationIndex;
 
 			// It doesn't really matter if this is actually odd or even, 
@@ -2030,10 +2031,13 @@ int C_FFPlayer::DrawModel( int flags )
 			{
 				m_nSkin = nSkin;
 			}
+			*/
+			SetModel( "models/player/civilian/civilian.mdl" );
 		}
 	}
 	else
 	{
+		/*
 		int nRealSkin = (IsDisguised() ? GetDisguisedTeam() : GetTeamNumber()) - TEAM_BLUE;
 
 		// Make sure hallucinations are reset!
@@ -2041,6 +2045,25 @@ int C_FFPlayer::DrawModel( int flags )
 		{
 			m_nSkin = nRealSkin;
 		}
+		*/
+		if ( GetClassSlot() == 1 )
+			SetModel( "models/player/scout/scout.mdl" );
+		else if ( GetClassSlot() == 2 )
+			SetModel( "models/player/sniper/sniper.mdl" );
+		else if ( GetClassSlot() == 3 )
+			SetModel( "models/player/soldier/soldier.mdl" );
+		else if ( GetClassSlot() == 4 )
+			SetModel( "models/player/demoman/demoman.mdl" );
+		else if ( GetClassSlot() == 5 )
+			SetModel( "models/player/medic/medic.mdl" );
+		else if ( GetClassSlot() == 6 )
+			SetModel( "models/player/hwguy/hwguy.mdl" );
+		else if ( GetClassSlot() == 7 )
+			SetModel( "models/player/pyro/pyro.mdl" );
+		else if ( GetClassSlot() == 8 )
+			SetModel( "models/player/spy/spy.mdl" );
+		else if ( GetClassSlot() == 9 )
+			SetModel( "models/player/engineer/engineer.mdl" );
 	}
 
 	return BaseClass::DrawModel( flags );
