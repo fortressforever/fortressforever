@@ -426,7 +426,7 @@ float CFFGrenadeLaser::getLengthPercent()
 
 			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
 				vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), MASK_PLAYERSOLID, NULL, COLLISION_GROUP_PLAYER, &tr );
-			
+
 			if ( tr.m_pEnt )
 				DoDamage( tr.m_pEnt );
 
@@ -652,7 +652,10 @@ float CFFGrenadeLaser::getLengthPercent()
 
 				angRadial.y += flDeltaAngle;
 
-				UTIL_DecalTrace( &tr, "Scorch" );
+				UTIL_DecalTrace( &tr, "LaserBurn" );
+
+				if(tr.fraction != 1)
+					g_pEffects->Smoke(tr.endpos, -1, 6, -1);
 			}
 		}
 	}
