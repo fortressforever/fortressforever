@@ -652,7 +652,9 @@ float CFFGrenadeLaser::getLengthPercent()
 
 				angRadial.y += flDeltaAngle;
 
-				UTIL_DecalTrace( &tr, "LaserBurn" );
+				g_pEffects->Sparks(tr.endpos);
+
+				//UTIL_DecalTrace( &tr, "LaserBurn" );
 
 				if(tr.fraction != 1)
 					g_pEffects->Smoke(tr.endpos, -1, 6, -1);
