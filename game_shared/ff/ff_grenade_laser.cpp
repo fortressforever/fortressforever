@@ -393,7 +393,10 @@ float CFFGrenadeLaser::getLengthPercent()
 			if( laserexplode.GetBool() )
 				Detonate();
 			else
+			{
+				g_pEffects->EnergySplash(GetAbsOrigin(), Vector(0, 0, 1.0f), true);
 				UTIL_Remove( this );
+			}
 			return;
 		}
 
@@ -583,8 +586,6 @@ float CFFGrenadeLaser::getLengthPercent()
 	{
 		StopSound("NailGrenade.LaserLoop");
 		StopSound("NailGrenade.LaserDeploy");
-
-		g_pEffects->EnergySplash(GetAbsOrigin(), Vector(0, 0, 1.0f), true);
 
 		int i;
 		for( i = 0; i < laserbeams.GetInt(); i++ )
