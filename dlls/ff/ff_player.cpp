@@ -3692,7 +3692,7 @@ void CFFPlayer::StatusEffectsThink( void )
 		{
 			if(m_flNextGas < gpGlobals->curtime)
 			{
-				CFFPlayer *pGasser = GetGasser();
+				/*CFFPlayer *pGasser = GetGasser();
 				if( pGasser )
 				{
 					CTakeDamageInfo info(pGasser, pGasser, vec3_origin, GetAbsOrigin(), 1.0f, DMG_DIRECT);
@@ -3706,7 +3706,7 @@ void CFFPlayer::StatusEffectsThink( void )
 					info.SetCustomKill(KILLTYPE_GASSED);
 
 					TakeDamage(info);
-				}
+				}*/
 
 				CSingleUserRecipientFilter user( ( CBasePlayer * )this );
 				user.MakeReliable();

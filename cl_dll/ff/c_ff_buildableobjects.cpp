@@ -575,7 +575,7 @@ C_FFSentryGun *C_FFSentryGun::CreateClientSideSentryGun( const Vector& vecOrigin
 int C_FFSentryGun::DrawModel(int flags)
 {
 	int nRet = BaseClass::DrawModel(flags);
-
+/*
 	if (m_iLevel <= 0)
 		return nRet;
 
@@ -626,7 +626,7 @@ int C_FFSentryGun::DrawModel(int flags)
 	}
 
 	m_iLocalHallucinationIndex = nNewLevel;
-
+*/
 	return nRet;
 }
 

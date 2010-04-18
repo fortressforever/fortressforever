@@ -234,6 +234,27 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 					continue;
 
 				pPlayer->Gas(7.5f, 7.5f, pGasser);
+
+				// Concuss the player
+				Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
+				float flDistance = vecDisplacement.Length();
+				Vector vecDir = vecDisplacement / flDistance;
+
+				if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
+				{
+					QAngle angDirection;
+					VectorAngles(vecDir, angDirection);
+
+					float flDuration = 7.5f;
+					float flIconDuration = flDuration;
+					if( pPlayer->LuaRunEffect( LUA_EF_CONC, GetOwnerEntity(), &flDuration, &flIconDuration ) )
+					{
+						if( pPlayer == GetOwnerEntity() )
+							pPlayer->Concuss( flDuration, flIconDuration, NULL, flDistance);
+						else
+							pPlayer->Concuss( flDuration, flIconDuration, &angDirection, flDistance);
+					}					
+				}
 			}
 		}
 
