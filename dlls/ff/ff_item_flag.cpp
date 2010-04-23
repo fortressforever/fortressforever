@@ -40,8 +40,9 @@ extern "C"
 
 #define ITEM_PICKUP_BOX_BLOAT		12
 ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_CHEAT );
-ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "810.0", FCVAR_CHEAT );
-ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "0.1", FCVAR_CHEAT );
+ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "820.0", FCVAR_CHEAT );
+ConVar ffdev_flag_float_force2( "ffdev_flag_float_force2", "750.0", FCVAR_CHEAT );
+ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "1.0", FCVAR_CHEAT );
 ConVar ffdev_flag_rotation( "ffdev_flag_rotation", "50.0", FCVAR_CHEAT );
 
 int ACT_INFO_RETURNED;
@@ -961,7 +962,12 @@ void CFFInfoScript::OnThink( void )
 		else if ( m_bFloatActive )
 		{
 			// set speed to 0 so it slowly falls back down and bobs (might need to do something better here)
-			SetAbsVelocity( Vector( 0.0f, 0.0f, 0.0f ) );
+			//SetAbsVelocity( Vector( 0.0f, 0.0f, 0.0f ) );
+
+			// apply a reduced upwards force if float is out of water
+			float flFloatForce = ffdev_flag_float_force2.GetFloat() - ( ffdev_flag_float_drag.GetFloat() * float( GetAbsVelocity().z ) );
+			float flFloatSpeed = float( GetAbsVelocity().z ) + flFloatForce * gpGlobals->interval_per_tick;
+			SetAbsVelocity( Vector( 0.0f, 0.0f, flFloatSpeed ) );
 		}
 
 		// make flag rotate
