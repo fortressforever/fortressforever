@@ -43,6 +43,7 @@ ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_CHEAT );
 ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "820.0", FCVAR_CHEAT );
 ConVar ffdev_flag_float_force2( "ffdev_flag_float_force2", "750.0", FCVAR_CHEAT );
 ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "1.0", FCVAR_CHEAT );
+ConVar ffdev_flag_float_offset( "ffdev_flag_float_offset", "40.0", FCVAR_CHEAT );
 ConVar ffdev_flag_rotation( "ffdev_flag_rotation", "50.0", FCVAR_CHEAT );
 
 int ACT_INFO_RETURNED;
@@ -935,7 +936,8 @@ void CFFInfoScript::OnThink( void )
 	else
 	{
 		// flag in water
-		if ( PhysicsCheckWater() )
+		//if ( PhysicsCheckWater() )
+		if ( UTIL_PointContents( GetAbsOrigin() + Vector( 0.0f, 0.0f, ffdev_flag_float_offset.GetFloat() ) ) & CONTENTS_WATER )
 		{
 			// activate float when flag touches bottom
 			if ( ( GetGroundEntity() != NULL ) && !m_bFloatActive )
