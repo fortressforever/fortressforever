@@ -51,7 +51,7 @@ static ConVar hud_ci_intensity_orange( "hud_ci_intensity_orange", "50", FCVAR_AR
 static ConVar hud_ci_intensity_yellow( "hud_ci_intensity_yellow", "70", FCVAR_ARCHIVE, "Crosshair color alpha component");
 static ConVar hud_ci_intensity_green( "hud_ci_intensity_green", "100", FCVAR_ARCHIVE, "Crosshair color green component");
 
-static ConVar hud_ci_showBar( "hud_ci_showBar", "0", FCVAR_ARCHIVE, "Show Bar");
+static ConVar hud_ci_showBar( "hud_ci_showBar", "1", FCVAR_ARCHIVE, "Show Bar");
 static ConVar hud_ci_showBarBackground( "hud_ci_showBarBackground", "1", FCVAR_ARCHIVE, "Show Bar Background");
 static ConVar hud_ci_showBarBorder( "hud_ci_showBarBorder", "1", FCVAR_ARCHIVE, "Show Bar Boarder");
 static ConVar hud_ci_showIcon( "hud_ci_showIcon", "1", FCVAR_ARCHIVE, "Show Icon");
@@ -70,7 +70,7 @@ static ConVar hud_ci_barBorderWidth( "hud_ci_barBorderWidth", "1", FCVAR_ARCHIVE
 static ConVar hud_ci_ColorBar_r( "hud_ci_ColorBar_r", "255", FCVAR_ARCHIVE, "Bar color red component");
 static ConVar hud_ci_ColorBar_g( "hud_ci_ColorBar_g", "255", FCVAR_ARCHIVE, "Bar color green component");
 static ConVar hud_ci_ColorBar_b( "hud_ci_ColorBar_b", "255", FCVAR_ARCHIVE, "Bar color blue component");
-static ConVar hud_ci_ColorBar_a( "hud_ci_ColorBar_a", "96", FCVAR_ARCHIVE, "Bar color alpha component");
+static ConVar hud_ci_ColorBar_a( "hud_ci_ColorBar_a", "160", FCVAR_ARCHIVE, "Bar color alpha component");
 static ConVar hud_ci_ColorBarBackground_r( "hud_ci_ColorBarBackground_r", "255", FCVAR_ARCHIVE, "Bar Background  background color red component");
 static ConVar hud_ci_ColorBarBackground_g( "hud_ci_ColorBarBackground_g", "255", FCVAR_ARCHIVE, "Bar Background color green component");
 static ConVar hud_ci_ColorBarBackground_b( "hud_ci_ColorBarBackground_b", "255", FCVAR_ARCHIVE, "Bar Background color blue component");
@@ -146,8 +146,8 @@ public:
 
 		vgui::ivgui()->AddTickSignal( GetVPanel() );
 
-		m_flDuration = 0.2f;
-		m_flDrawDuration = 2.0f;
+		m_flDuration = 0.1f;
+		m_flDrawDuration = 1.0f;
 		
 		m_qbIdent = new CHudQuantityBar();
 		m_qbHealth = new CHudQuantityBar();
