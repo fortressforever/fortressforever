@@ -20,6 +20,7 @@
 #include "omnibot_interface.h"
 #include "ai_basenpc.h"
 #include "IEffects.h"
+#include "movevars_shared.h"
 
 // Lua includes
 extern "C"
@@ -40,10 +41,10 @@ extern "C"
 
 #define ITEM_PICKUP_BOX_BLOAT		12
 ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_CHEAT );
-ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "820.0", FCVAR_CHEAT );
-ConVar ffdev_flag_float_force2( "ffdev_flag_float_force2", "750.0", FCVAR_CHEAT );
+ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "1.05", FCVAR_CHEAT );
+ConVar ffdev_flag_float_force2( "ffdev_flag_float_force2", "0.9", FCVAR_CHEAT );
 ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "1.0", FCVAR_CHEAT );
-ConVar ffdev_flag_float_offset( "ffdev_flag_float_offset", "40.0", FCVAR_CHEAT );
+ConVar ffdev_flag_float_offset( "ffdev_flag_float_offset", "48.0", FCVAR_CHEAT );
 ConVar ffdev_flag_rotation( "ffdev_flag_rotation", "50.0", FCVAR_CHEAT );
 
 int ACT_INFO_RETURNED;
@@ -936,7 +937,6 @@ void CFFInfoScript::OnThink( void )
 	else
 	{
 		// flag in water
-		//if ( PhysicsCheckWater() )
 		if ( UTIL_PointContents( GetAbsOrigin() + Vector( 0.0f, 0.0f, ffdev_flag_float_offset.GetFloat() ) ) & CONTENTS_WATER )
 		{
 			// activate float when flag touches bottom
@@ -955,7 +955,7 @@ void CFFInfoScript::OnThink( void )
 			if ( m_bFloatActive )
 			{
 				// very simple drag model to stop the flag carrying on accelerating
-				float flFloatForce = ffdev_flag_float_force.GetFloat() - ( ffdev_flag_float_drag.GetFloat() * float( GetAbsVelocity().z ) );
+				float flFloatForce = ( ffdev_flag_float_force.GetFloat() * sv_gravity.GetFloat() ) - ( ffdev_flag_float_drag.GetFloat() * float( GetAbsVelocity().z ) );
 				float flFloatSpeed = float( GetAbsVelocity().z ) + flFloatForce * gpGlobals->interval_per_tick;
 				SetAbsVelocity( Vector( 0.0f, 0.0f, flFloatSpeed ) );
 			}
@@ -963,11 +963,8 @@ void CFFInfoScript::OnThink( void )
 		// flag not in water but float has been activated
 		else if ( m_bFloatActive )
 		{
-			// set speed to 0 so it slowly falls back down and bobs (might need to do something better here)
-			//SetAbsVelocity( Vector( 0.0f, 0.0f, 0.0f ) );
-
 			// apply a reduced upwards force if float is out of water
-			float flFloatForce = ffdev_flag_float_force2.GetFloat() - ( ffdev_flag_float_drag.GetFloat() * float( GetAbsVelocity().z ) );
+			float flFloatForce = ( ffdev_flag_float_force2.GetFloat() * sv_gravity.GetFloat() ) - ( ffdev_flag_float_drag.GetFloat() * float( GetAbsVelocity().z ) );
 			float flFloatSpeed = float( GetAbsVelocity().z ) + flFloatForce * gpGlobals->interval_per_tick;
 			SetAbsVelocity( Vector( 0.0f, 0.0f, flFloatSpeed ) );
 		}
