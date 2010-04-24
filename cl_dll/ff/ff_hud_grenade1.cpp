@@ -33,12 +33,10 @@
 using namespace vgui;
 
 // Yeah macros suck, but this is the quickest way to do it
-/* Dexter - comment this out :)
 #define ADD_GRENADE_ICON(id, filename) \
 	m_pPrimaryGrenade[id] = new CHudTexture(); \
 	m_pPrimaryGrenade[id]->textureId = surface()->CreateNewTextureID(); \
 	surface()->DrawSetTextureFile(m_pPrimaryGrenade[id]->textureId, filename, true, false);
-*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current ammunition level
@@ -67,8 +65,7 @@ private:
 
 	// Last recorded player class
 	int		m_iClass;
-	CHudTexture *icon;
-	bool bIconLoaded;
+
 	//CHudTexture	*m_pHudElementTexture;
 	//CHudTexture *m_pPrimaryGrenade[2];
 };
@@ -81,7 +78,6 @@ DECLARE_HUDELEMENT(CHudGrenade1);
 CHudGrenade1::CHudGrenade1(const char *pElementName) : BaseClass(NULL, "HudGrenade1"), CHudElement(pElementName) 
 {
 	SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
-	bIconLoaded = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -113,7 +109,7 @@ void CHudGrenade1::VidInit()
 	//m_pHudElementTexture = new CHudTexture();
 	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
 	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_ammo1", true, false);
-	
+
 	// Add the grenades icons(only these 2 are needed) 
 	//ADD_GRENADE_ICON(0, "vgui/hud_grenade_frag");
 	//ADD_GRENADE_ICON(1, "vgui/hud_grenade_caltop");
@@ -173,9 +169,7 @@ void CHudGrenade1::UpdatePlayerGrenade(C_BasePlayer *player)
 		SetGrenade(Grenade1, false);
 
 		// Update whether to show one or two grenades(only 1 for sniper) 
-		// Dexter - removed this complete because it was commented out and optimized away anyhow
-		/*
-			if (ffplayer->GetClassSlot() == CLASS_SNIPER) 
+		if (ffplayer->GetClassSlot() == CLASS_SNIPER) 
 		{
 			//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasOneGrenade");
 			//SetShouldDisplaySecondaryValue(false);
@@ -185,16 +179,9 @@ void CHudGrenade1::UpdatePlayerGrenade(C_BasePlayer *player)
 			//SetShouldDisplaySecondaryValue(true);
 			//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasTwoGrenades");
 		}
-		*/ 
+
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasGrenades");
 		m_iClass = ffplayer->GetClassSlot();
-	}
-
-	if( !bIconLoaded )
-	{
-		icon = gHUD.GetIcon("death_grenade_normal");
-		if( icon )
-			bIconLoaded = true;
 	}
 }
 
@@ -271,19 +258,9 @@ void CHudGrenade1::Paint()
 	//surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 
 	// Draw grenade icon
+	//surface()->DrawSetTexture(m_pPrimaryGrenade[gren_num]->textureId);
+	//surface()->DrawSetColor(255, 255, 255, 255);
+	//surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
 
-	//CHudTexture *icon = gHUD.GetIcon("death_grenade_normal");
-	if( bIconLoaded ) 
-	{
-		int iconWide = 0;
-		int iconTall = 0;
-		if( icon->bRenderUsingFont )
-		{
-			iconWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
-			iconTall = surface()->GetFontTall( icon->hFont );
-		}
-		icon->DrawSelf( icon_xpos, icon_ypos - (iconTall/2), iconWide, iconTall, m_HudForegroundColour );
-	}
-	
 	BaseClass::Paint();
 }
