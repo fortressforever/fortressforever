@@ -128,9 +128,20 @@ public:
 // --> FF
 #define HIDEHUD_SPECTATING			( 1<<11 )	// Hide while spectating
 #define HIDEHUD_UNASSIGNED			( 1<<12 )	// Hide while the local player has not chosen a class or team
+#define HIDEHUD_NOTSCOUT			( 1<<13 )	// Hide when not a scout
+#define HIDEHUD_NOTSNIPER			( 1<<14 )	// Hide when not a sniper
+#define HIDEHUD_NOTSOLDIER			( 1<<15 )	// Hide when not a soldier
+#define HIDEHUD_NOTDEMOMAN			( 1<<16 )	// Hide when not a demoman
+#define HIDEHUD_NOTMEDIC			( 1<<17 )	// Hide when not a medic
+#define HIDEHUD_NOTHWGUY			( 1<<18 )	// Hide when not a HWguy
+#define HIDEHUD_NOTPYRO				( 1<<19 )	// Hide when not a pryo
+#define HIDEHUD_NOTSPY				( 1<<20 )	// Hide when not a spy
+#define HIDEHUD_NOTENGINEER			( 1<<21 )	// Hide when not a engineer
+#define HIDEHUD_NOTCIVILIAN			( 1<<22 )	// Hide when not a civilian
+#define HIDEHUD_ALWAYS				( 1<<23 )	// HIDEHUD_ALL didnt seem to work?!
 // <-- FF
 
-#define HIDEHUD_BITCOUNT			13
+#define HIDEHUD_BITCOUNT			24
 
 //===================================================================================================================
 // suit usage bits

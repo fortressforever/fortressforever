@@ -746,6 +746,9 @@ bool CHud::IsHidden( int iHudFlags )
 		return true;
 
 	// --> FF
+	if ( iHudFlags & HIDEHUD_ALWAYS )
+		return true;
+
 	if ( ( iHudFlags & HIDEHUD_SPECTATING ) && ( pPlayer->IsObserver() ) )
 		return true;
 
@@ -773,6 +776,78 @@ bool CHud::IsHidden( int iHudFlags )
 	// Need the HEV suit ( HL2 )
 	if ( ( iHudFlags & HIDEHUD_NEEDSUIT ) && ( !pPlayer->IsSuitEquipped() ) )
 		return true;
+
+	if( ( iHudFlags & ( 
+		HIDEHUD_NOTSCOUT | 
+		HIDEHUD_NOTSNIPER |
+		HIDEHUD_NOTSOLDIER |
+		HIDEHUD_NOTDEMOMAN |
+		HIDEHUD_NOTMEDIC |
+		HIDEHUD_NOTHWGUY |
+		HIDEHUD_NOTPYRO |
+		HIDEHUD_NOTSPY |
+		HIDEHUD_NOTENGINEER |
+		HIDEHUD_NOTCIVILIAN 
+		) ) )
+	{
+		C_FFPlayer *pFFPlayer = ToFFPlayer(pPlayer);
+
+		// If the player is an FFPlayer
+		if ( pFFPlayer )
+		{
+			switch( pFFPlayer->GetClassSlot() )
+			{
+			case CLASS_SCOUT:
+				if( !( iHudFlags & HIDEHUD_NOTSCOUT ) )
+					return true;
+				break;
+			case CLASS_SNIPER:
+				if( !( iHudFlags & HIDEHUD_NOTSNIPER ) )
+					return true;
+				break;
+			case CLASS_SOLDIER:
+				if( !( iHudFlags & HIDEHUD_NOTSOLDIER ) )
+					return true;
+				break;
+			case CLASS_DEMOMAN:
+				if( !( iHudFlags & HIDEHUD_NOTDEMOMAN ) )
+					return true;
+				break;
+			case CLASS_MEDIC:
+				if( !( iHudFlags & HIDEHUD_NOTMEDIC ) )
+					return true;
+				break;
+			case CLASS_HWGUY:
+				if( !( iHudFlags & HIDEHUD_NOTHWGUY ) )
+					return true;
+				break;
+			case CLASS_PYRO:
+				if( !( iHudFlags & HIDEHUD_NOTPYRO ) )
+					return true;
+				break;
+			case CLASS_SPY:
+				if( !( iHudFlags & HIDEHUD_NOTSPY ) )
+					return true;
+				break;
+			case CLASS_ENGINEER:
+				if( !( iHudFlags & HIDEHUD_NOTENGINEER ) )
+					return true;
+				break;
+			case CLASS_CIVILIAN:
+				if( !( iHudFlags & HIDEHUD_NOTCIVILIAN ) )
+					return true;
+				break;
+			default:
+				return true;
+			}
+		}
+		//we're not any class
+		else
+		//we should hide
+		{
+			return true;
+		}
+	}
 
 	return ( ( iHudFlags & iHideHud ) != 0);
 }

@@ -423,6 +423,22 @@
 					>
 				</File>
 				<File
+					RelativePath=".\ff\vgui\ff_colorpicker.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_colorpicker.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_colorpickerdialog.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_colorpickerdialog.h"
+					>
+				</File>
+				<File
 					RelativePath=".\ff\vgui\ff_frame.h"
 					>
 				</File>
@@ -472,6 +488,26 @@
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_panel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantityhelper.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantityitem.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantityitem.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitypanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitypanel.h"
 					>
 				</File>
 				<File
@@ -526,6 +562,54 @@
 						>
 					</File>
 					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_itemstylepresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_itemstylepresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_newpresetdialog.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_newpresetdialog.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_panelstylepresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_panelstylepresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.h"
+						>
+					</File>
+					<File
 						RelativePath=".\ff\vgui\ff_dlightoptions.cpp"
 						>
 					</File>
@@ -551,6 +635,14 @@
 					</File>
 					<File
 						RelativePath=".\ff\vgui\ff_optionspage.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_optionspresetpage.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_optionspresetpage.h"
 						>
 					</File>
 					<File
@@ -600,6 +692,46 @@
 				</File>
 				<File
 					RelativePath=".\ff\ff_hud_buildstate.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_detpack.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_detpack.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_dispenser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_dispenser.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_mancannon.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_mancannon.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_pipe.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_pipe.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_sentry.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_sentry.h"
 					>
 				</File>
 				<File
@@ -1861,6 +1993,10 @@
 				</File>
 				<File
 					RelativePath="..\public\tier0\fasttimer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantityhelper.cpp"
 					>
 				</File>
 				<File
