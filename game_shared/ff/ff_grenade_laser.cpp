@@ -660,6 +660,12 @@ float CFFGrenadeLaser::getLengthPercent()
 				if(tr.fraction != 1)
 					g_pEffects->Smoke(tr.endpos, -1, 6, -1);
 				*/
+
+				if ( tr.fraction == 1.0f )
+					g_pEffects->MetalSparks( tr.endpos, vecDirection );
+				else
+					g_pEffects->MetalSparks( tr.endpos, -vecDirection );
+
 			}
 		}
 	}
