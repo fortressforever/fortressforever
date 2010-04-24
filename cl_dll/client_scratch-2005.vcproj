@@ -4767,6 +4767,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_quantitybar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_quantitybar.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_radiotag.cpp"
 				>
 			</File>

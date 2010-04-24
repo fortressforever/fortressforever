@@ -3350,11 +3350,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
@@ -3678,11 +3678,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
@@ -4763,6 +4763,14 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_objectiveicon.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_quantitybar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_quantitybar.h"
 				>
 			</File>
 			<File
