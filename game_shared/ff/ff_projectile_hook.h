@@ -61,6 +61,7 @@ public:
 	bool bHooked;
 	bool bBeenNotJumping;
 	float flLastSwingSpeed;
+	Vector vecFirstPullDirXY;
 	CBaseEntity * m_pOwnerGun;
 
 #ifdef GAME_DLL

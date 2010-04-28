@@ -57,9 +57,10 @@ ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATE
 // caes: testing
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "1", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
 ConVar ffdev_hook_swing( "ffdev_hook_swing", "1", FCVAR_REPLICATED, "[0/1/2] - winch system 1: pull speed falls off as force on rope increases; rope can't extend. winch system 2: applies constant force on rope when in air; rope can't extend; max pull speed capped; when on ground sets you to max pull speed if pull is horizontal and gives small kick if pull is vertical." );
-ConVar ffdev_hook_swing_break( "ffdev_hook_swing_break", "0.8", FCVAR_REPLICATED, "amount you have to be moving updwards to end hook if swinging" );
-ConVar ffdev_hook_swing1_speed( "ffdev_hook_swing1_speed", "850.0", FCVAR_REPLICATED, "pull speed when no force on rope" );
-ConVar ffdev_hook_swing1_falloff( "ffdev_hook_swing1_falloff", "0.2", FCVAR_REPLICATED, "rate pull speed falls off as force on rope increases" );
+ConVar ffdev_hook_swing_break_v( "ffdev_hook_swing_break_v", "0.8", FCVAR_REPLICATED, "amount you have to be moving updwards to end hook if swinging" );
+ConVar ffdev_hook_swing_break_h( "ffdev_hook_swing_break_h", "0.7071", FCVAR_REPLICATED, "horizontal plane release system" );
+ConVar ffdev_hook_swing1_speed( "ffdev_hook_swing1_speed", "650.0", FCVAR_REPLICATED, "pull speed when no force on rope" );
+ConVar ffdev_hook_swing1_falloff( "ffdev_hook_swing1_falloff", "0.1", FCVAR_REPLICATED, "rate pull speed falls off as force on rope increases" );
 ConVar ffdev_hook_swing1_falloff_power( "ffdev_hook_swing1_falloff_power", "1.0", FCVAR_REPLICATED, "pull speed = ffdev_hook_swing1_speed - ffdev_hook_swing1_falloff * ( force_on_rope ^ ffdev_hook_swing1_falloff_power )" );
 ConVar ffdev_hook_swing2_speed( "ffdev_hook_swing2_speed", "750.0", FCVAR_REPLICATED, "max pull speed cap (and horizontal pull speed when on ground)" );
 ConVar ffdev_hook_swing2_speed_v( "ffdev_hook_swing2_speed_v", "100.0", FCVAR_REPLICATED, "vertical pull speed when on ground" );
@@ -297,6 +298,7 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 	bHooked = true;
 	bBeenNotJumping = false;
 	flLastSwingSpeed = 0.0f;
+	vecFirstPullDirXY = Vector( 0.0f, 0.0f, 0.0f );
 }
 
 //----------------------------------------------------------------------------
@@ -412,6 +414,13 @@ void CFFProjectileHook::HookThink()
 			Vector vecPullDir = GetAbsOrigin() - pOwner->GetAbsOrigin();
 			VectorNormalize( vecPullDir );
 
+			// remember the first pull direction for horizontal plane release system
+			if ( vecFirstPullDirXY == Vector( 0.0f, 0.0f, 0.0f ) )
+			{
+				vecFirstPullDirXY = Vector( float( vecPullDir.x ), float( vecPullDir.y ), 0.0f );
+				VectorNormalize( vecFirstPullDirXY );
+			}
+
 			// get player velocity
 			Vector vecVel;
 			pOwner->GetVelocity( &vecVel );
@@ -502,17 +511,35 @@ void CFFProjectileHook::HookThink()
 			// rope can only do tension, so don't decrease player's radial speed
 			flPullSpeed = max( flPullSpeed, flRadialSpeed );
 			// set resultant velocity (gravity is applied by the game later)
-			Vector VecNewVel = vecPullDir*flPullSpeed + vecSwingDir*flSwingSpeed;
-			pOwner->SetAbsVelocity( VecNewVel );
+			Vector vecNewVel = vecPullDir*flPullSpeed + vecSwingDir*flSwingSpeed;
 
-			// end hook if swinging and moving updwards enough
-			VectorNormalize( VecNewVel );
-			float flNewUp = DotProduct( VecNewVel, Vector(0.0f,0.0f,1.0f) );
-			if ( ( flSwingSpeed > flPullSpeed ) && ( flNewUp >= ffdev_hook_swing_break.GetFloat() ) )
+			// XYZ projection of new velocity direction in upwards direction
+			Vector vecNewVelDir = vecNewVel;
+			VectorNormalize( vecNewVelDir );
+			float flVelDirUp = DotProduct( vecNewVelDir, Vector(0.0f,0.0f,1.0f) );
+
+			// XY projection of new velocity direction in first pull direction
+			Vector vecNewVelDirXY = Vector( float( vecNewVel.x ), float( vecNewVel.y ), 0.0f );
+			VectorNormalize( vecNewVelDirXY );
+			float flVelDirForwards = DotProduct( vecNewVelDirXY, vecFirstPullDirXY );
+
+			// XY projection of new pull direction in first pull direction
+			Vector vecPullDirXY = Vector( float( vecPullDir.x ), float( vecPullDir.y ), 0.0f );
+			VectorNormalize( vecPullDirXY );
+			float flPullDirForwards = DotProduct( vecPullDirXY, vecFirstPullDirXY );
+
+			//DevMsg( "flVelDirForwards = %f, flPullDirForwards = %f\n", flVelDirForwards, flPullDirForwards );
+
+			// release hook
+			if ( ( flSwingSpeed > flPullSpeed && flVelDirUp > ffdev_hook_swing_break_v.GetFloat() ) || ( max( flPullDirForwards, flVelDirForwards ) < ffdev_hook_swing_break_h.GetFloat() ) )
 			{
 				RemoveHook();
 				EmitSound("hookgun.rope_snap");
 				return;
+			}
+			else
+			{
+				pOwner->SetAbsVelocity( vecNewVel );
 			}
 		}
 		// caes
