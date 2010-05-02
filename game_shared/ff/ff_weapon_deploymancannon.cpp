@@ -14,6 +14,7 @@
 #include "cbase.h"
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
+#include "in_buttons.h"
 
 #if defined( CLIENT_DLL )
 	#define CFFWeaponDeployManCannon C_FFWeaponDeployManCannon
@@ -52,6 +53,7 @@ public:
 	virtual bool CanBeSelected( void );
 	virtual bool CanDeploy( void );
 	virtual bool Deploy( void );
+	virtual void ItemPostFrame( void );
 
 	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYMANCANNON; }
 
@@ -105,6 +107,52 @@ CFFWeaponDeployManCannon::CFFWeaponDeployManCannon( void )
 	m_pBuildable = NULL;
 	m_bInSetTimerMenu = false;
 #endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: A modified ItemPostFrame to allow for different cycledecrements
+//-----------------------------------------------------------------------------
+void CFFWeaponDeployManCannon::ItemPostFrame()
+{
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
+
+	//Track the duration of the fire
+	//FIXME: Check for IN_ATTACK2 as well?
+	//FIXME: What if we're calling ItemBusyFrame?
+	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
+
+	// if just released the attack, then reset nextfiretime
+	if (pOwner->m_afButtonReleased & IN_ATTACK)
+		m_flNextPrimaryAttack = gpGlobals->curtime;
+
+	if ((pOwner->m_nButtons & IN_ATTACK || pOwner->m_afButtonPressed & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+	{
+			PrimaryAttack();
+	}
+
+	// -----------------------
+	//  Reload pressed / Clip Empty
+	// -----------------------
+	if (pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload)
+	{
+		// reload when reload is pressed, or if no buttons are down and weapon is empty.
+		Reload();
+		m_fFireDuration = 0.0f;
+	}
+
+	// -----------------------
+	//  No buttons down
+	// -----------------------
+	if (! ((pOwner->m_nButtons & IN_ATTACK) || /* (pOwner->m_nButtons & IN_ATTACK2) ||*/ (pOwner->m_nButtons & IN_RELOAD))) // |-- Mirv: Removed attack2 so things can continue while in menu
+	{
+		// no fire buttons down or reloading
+		if (!ReloadOrSwitchWeapons() && (m_bInReload == false))
+		{
+			WeaponIdle();
+		}
+	}
 }
 
 //----------------------------------------------------------------------------
