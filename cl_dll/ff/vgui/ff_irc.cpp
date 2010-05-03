@@ -88,6 +88,16 @@ void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
 			++i;
 		}
 	}
+	if (Q_strcmp(pszCommand, "HostGame") == 0)
+	{
+		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
+
+		if (parent)
+		{
+			parent->AddGameTab( "Game Name", "#ffirc-system" );
+			++i;
+		}
+	}
 	if (Q_strcmp(pszCommand, "Disconnect") == 0)
 	{
 		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
@@ -314,6 +324,12 @@ void CFFIRCPanel::AddGameTab( const char *name, const char *channel )
 
 void CFFIRCPanel::RemoveGameTab( CFFIRCGameTab *pTab )
 {
+	// leave the game room
+	if (irc_user.status)
+	{
+		if (!g_IRCSocket.Send( VarArgs("PART #%s\n\r", pTab->GetChannel() ) ))
+			Msg("[IRC] Could not send PART to server\n");
+	}
 	m_pGameTabs.FindAndRemove( pTab );
 	m_pIRCTabs->DeletePage( pTab );
 }
