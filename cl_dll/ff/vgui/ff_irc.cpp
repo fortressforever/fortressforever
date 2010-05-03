@@ -90,12 +90,16 @@ void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
 	}
 	if (Q_strcmp(pszCommand, "HostGame") == 0)
 	{
+
+		if ( !g_IRCSocket.Send( "PRIVMSG ff-systembot :!host 313\r\n" ) )
+			Msg("[IRC] Unable to send message: !host 313\n");
+
+		// this should be commented once threading is gone, and the gametab should be created on receipt of the !join privmsg from the bot
 		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
 
 		if (parent)
 		{
-			parent->AddGameTab( "Game Name", "#ffirc-system" );
-			++i;
+			parent->AddGameTab( "Hosted Game", "#ffgame-313" );
 		}
 	}
 	if (Q_strcmp(pszCommand, "Disconnect") == 0)
@@ -288,6 +292,8 @@ void CFFIRCPanel::SetVisible(bool state)
 		// join main lobby
 		if (!g_IRCSocket.Send( VarArgs("JOIN %s\n\r", "#fortressforever") ))
 			Msg("[IRC] Could not send JOIN to server\n");
+		if (!g_IRCSocket.Send( VarArgs("JOIN %s\n\r", "#ffirc-system") ))
+			Msg("[IRC] Could not send JOIN to server\n");
 	}
 
 	BaseClass::SetVisible(state);
@@ -471,6 +477,38 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 						if(Q_strcmp(from, "CTCP") == 0)
 							return;
 
+						// if PM from the system bot
+						if((Q_strcmp(from, "ff-systembot") == 0) || (Q_strcmp(from, "AfterShok") == 0)) // the only 2 cool dudes on IRC
+						{
+
+							// DEBUG MESSAGE TO SAY RECEIVED MESSAGE
+							//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: received message from the bot\r\n" ) )
+							//	Msg("[IRC] Unable to send message\n");
+
+
+							char *msg = strchr(buf,':') + 1;
+
+							// IF JOIN, THEN JOIN ROOM
+							//char *pToken = NULL;
+							//pToken = strtok(msg, " ");
+							//if (Q_strcmp(pToken, "!join") == 0)
+							if (Q_strnicmp(msg, "!join", 5) == 0)
+							{
+								//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: message is a !join message\r\n" ) )
+								//	Msg("[IRC] Unable to send message\n");
+
+								//pToken = strtok(NULL, " ");
+
+								//g_pIRCPanel->AddGameTab(  VarArgs( "%s",pToken ), VarArgs( "%s",pToken ) );
+
+								// This crashes because this is currently inside a thread
+								//AddGameTab( "#ffgame-313", "#ffgame-313"); 
+
+
+							}
+						}
+
+						// else, normal PM:
 						if (m_pLobbyTab)
 						{
 							char *msg = strchr(buf,':') + 1;
@@ -1050,6 +1088,13 @@ void CFFIRCConnectPanel::Connected()
 {
 	g_pIRCPanel->SetVisible( true );
 	SetVisible( false );
+
+	// this is producing random crashes as it's inside a thread
+	/*
+	if (g_pIRCPanel)
+	{
+		g_pIRCPanel->AddGameTab( "Debug", "#ffirc-system" );
+	}*/
 }
 
 void CFFIRCConnectPanel::OnButtonCommand(KeyValues *data)
