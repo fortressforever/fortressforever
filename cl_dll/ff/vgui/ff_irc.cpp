@@ -173,6 +173,11 @@ void CFFIRCGameTab::OnButtonCommand(KeyValues *data)
 			parent->RemoveGameTab( this );
 		}
 	}
+	else if (Q_strcmp(pszCommand, "StartGame") == 0)
+	{
+		if ( !g_IRCSocket.Send( VarArgs("PRIVMSG #%s :%s\r\n", GetChannel(), "!start") ) )
+			Msg("[IRC] Unable to send message: !start\n");
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -505,6 +510,17 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 								//AddGameTab( "#ffgame-313", "#ffgame-313"); 
 
 
+							}
+							else if (Q_strnicmp(msg, "!connect", 8) == 0)
+							{
+								// obviously need to parse this, maybe just trim the first char?
+
+								//char *pToken = NULL;
+								//pToken = strtok(msg, " ");
+								//pToken = strtok(NULL, " ");
+								//char *p
+
+								engine->ClientCmd("connect 85.234.148.13:27025"); // zE palace for a placeholder, this wont connect as its obvious not running ff_dev :)
 							}
 						}
 
