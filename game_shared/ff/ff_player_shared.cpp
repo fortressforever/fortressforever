@@ -15,6 +15,7 @@
 #include "ff_weapon_sniperrifle.h"
 #include "ff_weapon_assaultcannon.h"
 #include "ff_projectile_hook.h"
+#include "movevars_shared.h"
 
 #ifdef CLIENT_DLL
 	
@@ -83,6 +84,12 @@ ConVar ffdev_overpressure_friendlyscale( "ffdev_overpressure_friendlyscale", "1.
 ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define OVERPRESSURE_IGNOREFRIENDLY ffdev_overpressure_friendlyignore.GetBool()
 
+// caes: testing
+ConVar ffdev_overpressure_caes( "ffdev_overpressure_caes", "1", FCVAR_REPLICATED );
+ConVar ffdev_overpressure_caes_radius( "ffdev_overpressure_caes_radius", "500.0", FCVAR_REPLICATED );
+ConVar ffdev_overpressure_caes_speed( "ffdev_overpressure_caes_speed", "500.0", FCVAR_REPLICATED );
+ConVar ffdev_overpressure_caes_offset( "ffdev_overpressure_caes_offset", "-16.0", FCVAR_REPLICATED );
+// caes
 
 ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_REPLICATED );
 #define FF_AC_BULLETSIZE ffdev_ac_bulletsize.GetFloat()
@@ -1447,6 +1454,79 @@ void CFFPlayer::Overpressure( void )
 {
 	if (IsAlive())
 	{
+
+// caes: testing
+if( ffdev_overpressure_caes.GetBool() )
+{
+	m_flOverpressureTime = gpGlobals->curtime;
+	m_vecOverpressurePosition = GetAbsOrigin() + Vector( 0.0f, 0.0f, ffdev_overpressure_caes_offset.GetFloat() );
+
+	EmitSoundShared( "overpressure.explode" );
+
+	SetThink( &CFFPlayer::OverpressureThink );
+	SetNextThink( gpGlobals->curtime );
+
+	// shock wave colours
+	int iShockWave_r;
+	int iShockWave_g;
+	int iShockWave_b;
+	if( GetTeamNumber() == TEAM_RED )
+	{
+		iShockWave_r = 255;
+		iShockWave_g = 64;
+		iShockWave_b = 64;
+	}
+	else if( GetTeamNumber() == TEAM_BLUE )
+	{
+		iShockWave_r = 64;
+		iShockWave_g = 128;
+		iShockWave_b = 255;
+	}
+	else if( GetTeamNumber() == TEAM_GREEN )
+	{
+		iShockWave_r = 153;
+		iShockWave_g = 255;
+		iShockWave_b = 153;
+	}
+	else if( GetTeamNumber() == TEAM_YELLOW )
+	{
+		iShockWave_r = 255;
+		iShockWave_g = 178;
+		iShockWave_b = 0;
+	}
+	else
+	{
+		iShockWave_r = 255;
+		iShockWave_g = 255;
+		iShockWave_b = 255;
+	}
+
+	// shock wave
+	CBroadcastRecipientFilter filter;
+	te->BeamRingPoint( 
+		filter, 0.0f, m_vecOverpressurePosition,	//origin
+		1.0f,							//start radius
+		ffdev_overpressure_caes_radius.GetFloat() * 2.0f,		//end radius
+		PrecacheModel( "sprites/lgtning.vmt" ),	//texture
+		0,								//halo index
+		0,								//start frame
+		0,								//framerate
+		ffdev_overpressure_caes_radius.GetFloat() / ffdev_overpressure_caes_speed.GetFloat(),//life
+		16,								//width
+		0,								//spread
+		0,								//amplitude
+		iShockWave_r,							//r
+		iShockWave_g,							//g
+		iShockWave_b,							//b
+		255,							//a
+		0,								//speed
+		0x00000008
+		);
+}
+else
+{
+// caes
+
 		CEffectData data;
 
 		data.m_vOrigin = GetLegacyAbsOrigin();
@@ -1572,6 +1652,7 @@ void CFFPlayer::Overpressure( void )
 		}
 
 #endif
+} // caes: testing
 	}
 }
 
@@ -1671,5 +1752,49 @@ void CFFPlayer::Command_EngyMe( void )
 		}
 		// End Hint Code
 #endif
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: HW attack2
+//-----------------------------------------------------------------------------
+void CFFPlayer::OverpressureThink( void )
+{
+	CBaseEntity *pEntity = NULL;
+
+	float flRadius = ( gpGlobals->curtime - m_flOverpressureTime ) * ffdev_overpressure_caes_speed.GetFloat();
+
+	for( CEntitySphereQuery sphere( m_vecOverpressurePosition, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
+		if ( !pEntity || !pEntity->IsPlayer() )
+			continue;
+
+		CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+
+		if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+			continue;
+		
+		// Ignore people that can't take damage (teammates when friendly fire is off)
+		if( !g_pGameRules->FCanTakeDamage( pPlayer, this ) )
+			continue;
+
+		// People who are building shouldn't be pushed around by anything
+		if( pPlayer->IsStaticBuilding() )
+			continue;
+
+		if( pEntity == this )
+			continue;
+
+		Vector vecDisplacement = pPlayer->GetAbsOrigin() - m_vecOverpressurePosition;
+		VectorNormalize( vecDisplacement );
+
+		Vector vecNewVel = vecDisplacement * ffdev_overpressure_caes_speed.GetFloat();
+		vecNewVel += Vector( 0.0f, 0.0f, sv_gravity.GetFloat() ) * gpGlobals->interval_per_tick;
+		pPlayer->SetAbsVelocity( vecNewVel );
+	}
+
+	if( gpGlobals->curtime < m_flOverpressureTime + ( ffdev_overpressure_caes_radius.GetFloat() / ffdev_overpressure_caes_speed.GetFloat() ) )
+	{
+		SetNextThink( gpGlobals->curtime + 0.01f );
 	}
 }

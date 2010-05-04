@@ -522,6 +522,9 @@ private:
     // Overpressure stuff
 public:
 	void Overpressure( void );
+	void OverpressureThink( void );
+	float m_flOverpressureTime;
+	Vector m_vecOverpressurePosition;
 	// ----------------------------------
 
 private:

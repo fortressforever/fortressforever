@@ -691,6 +691,9 @@ private:
 	CNetworkVar( unsigned int, m_iCloaked ); //gotta network this since lots of serverside-only code calls it, e.g. when touching a scout
 public:
 	void Overpressure( void );
+	void OverpressureThink( void );
+	float m_flOverpressureTime;
+	Vector m_vecOverpressurePosition;
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)
