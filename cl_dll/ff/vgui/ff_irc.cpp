@@ -41,11 +41,13 @@ CFFIRCLobbyTab::CFFIRCLobbyTab(Panel *parent, char const *panelName) : BaseClass
     m_pGameList->AddColumnHeader( 0, "players" , "Players" , 20, ListPanel::COLUMN_RESIZEWITHWINDOW );
     m_pGameList->AddColumnHeader( 1, "name" , "Game Name" , 200, ListPanel::COLUMN_RESIZEWITHWINDOW );
 	m_pGameList->AddColumnHeader( 2, "map" , "Map Name" , 150, ListPanel::COLUMN_RESIZEWITHWINDOW  );
+	m_pGameList->AddColumnHeader( 3, "channel" , "Channel" , 0, ListPanel::COLUMN_HIDDEN  );
 
 	KeyValues *kv = new KeyValues( "LI" );
 	kv->SetString( "players", "1/8" );
-	kv->SetString( "name", "4v4 1500+ pros" );
+	kv->SetString( "name", "Default test game - won't have bot in" );
 	kv->SetString( "map", "ff_monkey" );
+	kv->SetString( "channel", "ffgame-0" );
 	m_pGameList->AddItem( kv, 0, false, false );
 	kv->deleteThis();
 
@@ -77,7 +79,6 @@ void CFFIRCLobbyTab::OnNewLineMessage(KeyValues *data)
 void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
 {
 	const char *pszCommand = data->GetString("command");
-	static int i=0;
 
 	if (Q_strcmp(pszCommand, "AddGame") == 0)
 	{
@@ -85,8 +86,8 @@ void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
 
 		if (parent)
 		{
-			parent->AddGameTab( "Game Name", VarArgs( "#ffirc%d", i ) );
-			++i;
+			KeyValues *KV = m_pGameList->GetItem( m_pGameList->GetSelectedItem(0) );
+			parent->AddGameTab( KV->GetString("channel"), KV->GetString("channel") );
 		}
 	}
 	if (Q_strcmp(pszCommand, "HostGame") == 0)
@@ -458,12 +459,45 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 								return;
 							}
 						}
-						/*
-						else if (Q_strnicmp((buf+1), "ffirc-global", 12) == 0)
+						// #ffirc-system
+						else if (Q_strnicmp((buf+1), "ffirc-system", 12) == 0)
 						{
+							// if PM from the system bot
+							if((Q_strcmp(from, "ff-systembot") == 0) || (Q_strcmp(from, "AfterShok") == 0)) // the only 2 cool dudes on IRC
+							{
+								char *msg = strchr(buf,':') + 1;
 
+								// IF JOIN, THEN JOIN ROOM
+								if (Q_strnicmp(msg, "!new", 4) == 0)
+								{
+									//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: message is a !join message\r\n" ) )
+									//	Msg("[IRC] Unable to send message\n");
+
+
+									// !new #ffgame-313 ff_monkey 1/8 1500+ pros only!
+
+									char *pToken = NULL;
+									pToken = strtok(msg, " "); // !join
+									pToken = strtok(NULL, " "); // #ffgame-331
+
+									KeyValues *kv = new KeyValues( "LI" );
+									kv->SetString( "channel", pToken );
+
+									pToken = strtok(NULL, " "); // ff_monkey
+									kv->SetString( "map", pToken );
+
+									pToken = strtok(NULL, " "); // 1/8
+									kv->SetString( "players", pToken );
+
+									pToken = strtok(NULL, "\n\r"); // 4v4 1500+ pros
+									kv->SetString( "name", pToken );
+
+									m_pLobbyTab->m_pGameList->AddItem( kv, 0, false, false );
+									kv->deleteThis();
+								}
+							}
 						}
-						*/
+						
 						else
 						{
 							// skip the #, we know it's there

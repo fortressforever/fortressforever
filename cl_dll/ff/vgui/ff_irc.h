@@ -298,12 +298,14 @@ class CFFIRCLobbyTab : public CFFIRCTab
 public:
 	CFFIRCLobbyTab(Panel *parent, char const *panelName);
 	virtual void ApplySchemeSettings( IScheme *pScheme );
-	
+
+	vgui::ListPanel			*m_pGameList;
+
 private:
 	MESSAGE_FUNC_PARAMS(OnNewLineMessage, "TextNewLine", data);
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 
-	vgui::ListPanel			*m_pGameList;
+
 
 };
 
