@@ -14,6 +14,7 @@
 
 #include "irc/ff_socks.h"
 #include "irc/ff_irc_thread.h"
+#include <vgui/IVgui.h>
 
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
@@ -263,6 +264,8 @@ CFFIRCPanel::CFFIRCPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFIRCPanel" 
 
 	// create the response thread
 	CFFIRCThread::GetInstance();
+	vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
+	m_bDataReady = false;
 
 	LoadControlSettings("Resource/UI/FFIRC.res");
 	//CenterThisPanelOnScreen();//keep in mind, hl2 supports widescreen 
@@ -1023,6 +1026,58 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 				}
 			}
 		}
+	}
+}
+
+void CFFIRCPanel::OnTick()
+{
+	if (m_bDataReady)
+	{
+		m_bDataReady = false;
+		RetrieveServerMessage();
+	}
+
+	BaseClass::OnTick();
+}
+
+void CFFIRCPanel::RetrieveServerMessage()
+{
+	static char buf[3000];
+	int a = g_IRCSocket.RecvNoCheck(buf, sizeof(buf)-1);
+
+	// if length of message is bigger than 1
+	if (a > 1)
+	{
+		buf[a] = '\0';
+
+		//Msg("%s\n", buf);
+
+		int ichar =0;
+		char *p = buf;
+
+		// loop through each char
+		for (int t=0;t<(int)strlen(buf);t++)
+		{
+			// break at '\r' and send it off for parsing
+			if(p[ichar]=='\r')
+			{
+				p[ichar] = '\0';
+
+				if (g_pIRCPanel != NULL)
+					g_pIRCPanel->ParseServerMessage(p);
+				
+				p[ichar] = '\r';
+				// '\r' char is always followed by '\n'
+				p = (p+ichar+2);
+				ichar=0;
+				continue;
+			}
+			ichar++;
+		}
+
+		// send whatevers left, if it has substantial content
+		if (g_pIRCPanel != NULL && strlen(p) > 1)
+			g_pIRCPanel->ParseServerMessage(p);
 	}
 }
 

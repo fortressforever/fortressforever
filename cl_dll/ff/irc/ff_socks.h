@@ -28,6 +28,8 @@ public:
 	bool	Open(int type, int protocol);
 	bool	Connect(const char *hostname, unsigned short port);
 	bool	Send(const char *buffer);
+	bool	CheckBuffer();
+	int		RecvNoCheck(void *buffer, int bufferlen);
 	int		Recv(void *buffer, int bufferlen);
 	bool	Close();
 

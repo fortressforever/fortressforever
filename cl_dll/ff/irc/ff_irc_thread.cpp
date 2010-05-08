@@ -41,52 +41,24 @@ CFFIRCThread::~CFFIRCThread( void )
 
 int CFFIRCThread::Run()
 {
-	int a = 0;
+	bool a = false;
 	//int i = 0;
-	char buf[3000];
+	//char buf[3000];
 
 	m_bIsRunning = true;
 
 	while(IsAlive())
 	{
-		a = g_IRCSocket.Recv(buf, sizeof(buf)-1);
+		a = g_IRCSocket.CheckBuffer();
 
 		// if length of message is bigger than 1
-		if (a > 1)
+		if (a)
 		{
-			buf[a] = '\0';
-
-			//Msg("%s\n", buf);
-
-			int ichar =0;
-			char *p = buf;
-
-			// loop through each char
-			for (int t=0;t<(int)strlen(buf);t++)
-			{
-				// break at '\r' and send it off for parsing
-				if(p[ichar]=='\r')
-				{
-					p[ichar] = '\0';
-
-					if (g_pIRCPanel != NULL)
-						g_pIRCPanel->ParseServerMessage(p);
-					
-					p[ichar] = '\r';
-					// '\r' char is always followed by '\n'
-					p = (p+ichar+2);
-					ichar=0;
-					continue;
-				}
-				ichar++;
-			}
-
-			// send whatevers left, if it has substantial content
-			if (g_pIRCPanel != NULL && strlen(p) > 1)
-				g_pIRCPanel->ParseServerMessage(p);
+			if (g_pIRCPanel != NULL)
+				g_pIRCPanel->m_bDataReady = true;
 		}
 
-		a=0;
+		a=false;
 	}
 
 	m_bIsRunning = false;

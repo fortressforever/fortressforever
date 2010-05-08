@@ -181,6 +181,45 @@ bool Socks::Send(const char *buffer)
 }
 
 /**
+* Check if there is data to recieve
+*
+* @param buffer Buffer to store received data
+* @param bufferlen Length of buffer
+*/
+bool Socks::CheckBuffer() 
+{
+	fd_set socks;
+
+	FD_ZERO(&socks);
+	FD_SET(m_iSocket, &socks);
+
+	struct timeval timeout;
+	timeout.tv_sec = TIMEOUT;
+	timeout.tv_usec = 0;
+
+	// We're waiting here for data to be available
+	int readsocks = select(m_iSocket + 1, &socks, (fd_set *) 0, (fd_set *) 0, &timeout);
+
+	// No sockets ready with data, so abandon plan
+	if (readsocks < 1)
+		return false;
+
+	return true;
+}
+
+/**
+* Receive data without checking if there is data to recieve
+*
+* @param buffer Buffer to store received data
+* @param bufferlen Length of buffer
+*/
+int Socks::RecvNoCheck(void *buffer, int bufferlen) 
+{
+	// Get whatever data there was
+	return recv(m_iSocket, (raw_type *) buffer, bufferlen, 0);
+}
+
+/**
 * Receive data
 *
 * @param buffer Buffer to store received data

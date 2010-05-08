@@ -343,8 +343,10 @@ public:
 	CFFIRCGameTab* GetGameTabByChannel( const char * );
 
 	void SetVisible(bool state);
+	void RetrieveServerMessage();
 	
 	void ParseServerMessage( char *buf );
+	virtual void OnTick();
 
 	MESSAGE_FUNC( Close, "Close" );
 	
@@ -356,6 +358,7 @@ public:
 		char status;
 	};
 	cUser irc_user;
+	bool m_bDataReady;
 
 private:
 	//MESSAGE_FUNC_PARAMS( OnNewLineMessage, "TextNewLine",data); // When TextEntry sends a TextNewLine message (when user presses enter), trigger the function OnNewLineMessage
