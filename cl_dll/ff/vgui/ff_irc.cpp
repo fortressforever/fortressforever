@@ -92,16 +92,17 @@ void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
 	if (Q_strcmp(pszCommand, "HostGame") == 0)
 	{
 
-		if ( !g_IRCSocket.Send( "PRIVMSG ff-systembot :!host 313\r\n" ) )
-			Msg("[IRC] Unable to send message: !host 313\n");
+		if ( !g_IRCSocket.Send( "PRIVMSG ff-systembot :!host\r\n" ) )
+			Msg("[IRC] Unable to send message: !hos\n");
 
 		// this should be commented once threading is gone, and the gametab should be created on receipt of the !join privmsg from the bot
+		/*
 		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
 
 		if (parent)
 		{
 			parent->AddGameTab( "Hosted Game", "#ffgame-313" );
-		}
+		}*/
 	}
 	if (Q_strcmp(pszCommand, "Disconnect") == 0)
 	{
@@ -505,15 +506,17 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 								//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: message is a !join message\r\n" ) )
 								//	Msg("[IRC] Unable to send message\n");
 
-								//pToken = strtok(NULL, " ");
+								char *pToken = NULL;
+								pToken = strtok(msg, " "); // !join
+								pToken = strtok(NULL, " "); // #ffgame-331
 
-								//g_pIRCPanel->AddGameTab(  VarArgs( "%s",pToken ), VarArgs( "%s",pToken ) );
+								AddGameTab(  VarArgs( "%s",pToken ), VarArgs( "%s",pToken ) );
 
 								// This crashes because this is currently inside a thread
 								//AddGameTab( "#ffgame-313", "#ffgame-313"); 
 
-
 							}
+							//else if (Q_strcmp(pToken, "!connect") == 0)
 							else if (Q_strnicmp(msg, "!connect", 8) == 0)
 							{
 								// obviously need to parse this, maybe just trim the first char?
@@ -521,9 +524,9 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 								//char *pToken = NULL;
 								//pToken = strtok(msg, " ");
 								//pToken = strtok(NULL, " ");
-								//char *p
 
-								engine->ClientCmd("connect 85.234.148.13:27025"); // zE palace for a placeholder, this wont connect as its obvious not running ff_dev :)
+								char *msg = strchr(buf,':') + 2; // skip the ! and get everything else
+								engine->ClientCmd( msg ); // connect xxx.xx.xx.xx:xxx password xxxx 
 							}
 						}
 
