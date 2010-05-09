@@ -321,6 +321,8 @@ class CFFIRCGameTab : public CFFIRCTab
 public:
 	CFFIRCGameTab(Panel *parent, char const *panelName);
 
+	vgui::ListPanel			*m_pTeam1List;
+	vgui::ListPanel			*m_pTeam2List;
 private:
 	MESSAGE_FUNC_PARAMS(OnNewLineMessage, "TextNewLine", data);
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);

@@ -136,6 +136,16 @@ CFFIRCGameTab::CFFIRCGameTab(Panel *parent, char const *panelName) : BaseClass(p
 	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme");
 	SetScheme( scheme );
 
+	m_pTeam1List = new ListPanel(this, "ListPanel_Team1List");
+	m_pTeam1List->AddActionSignalTarget( this );
+    m_pTeam1List->AddColumnHeader( 0, "players" , "Team 1 Players" , 200, ListPanel::COLUMN_RESIZEWITHWINDOW );
+    m_pTeam1List->AddColumnHeader( 1, "ranking" , "Ranking" , 20, ListPanel::COLUMN_RESIZEWITHWINDOW );
+
+	m_pTeam2List = new ListPanel(this, "ListPanel_Team2List");
+	m_pTeam2List->AddActionSignalTarget( this );
+    m_pTeam2List->AddColumnHeader( 0, "players" , "Team 2 Players" , 200, ListPanel::COLUMN_RESIZEWITHWINDOW );
+    m_pTeam2List->AddColumnHeader( 1, "ranking" , "Ranking" , 20, ListPanel::COLUMN_RESIZEWITHWINDOW );
+
 	LoadControlSettings("resource/ui/FFIRCGameTab.res");
 }
 
