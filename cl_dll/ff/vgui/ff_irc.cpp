@@ -42,11 +42,15 @@ CFFIRCLobbyTab::CFFIRCLobbyTab(Panel *parent, char const *panelName) : BaseClass
     m_pGameList->AddColumnHeader( 1, "name" , "Game Name" , 200, ListPanel::COLUMN_RESIZEWITHWINDOW );
 	m_pGameList->AddColumnHeader( 2, "map" , "Map Name" , 150, ListPanel::COLUMN_RESIZEWITHWINDOW  );
 	m_pGameList->AddColumnHeader( 3, "channel" , "Channel" , 0, ListPanel::COLUMN_HIDDEN  );
+	m_pGameList->AddColumnHeader( 4, "serverip" , "Server IP" , 0, ListPanel::COLUMN_HIDDEN  );
+	m_pGameList->AddColumnHeader( 5, "serverpassword" , "Server Password" , 0, ListPanel::COLUMN_HIDDEN  );
 
 	KeyValues *kv = new KeyValues( "LI" );
 	kv->SetString( "players", "1/8" );
 	kv->SetString( "name", "Default test game - won't have bot in" );
 	kv->SetString( "map", "ff_monkey" );
+	kv->SetString( "serverip", "123.23.23.23:27015" );
+	kv->SetString( "serverpassword", "ffpickup" );
 	kv->SetString( "channel", "ffgame-0" );
 	m_pGameList->AddItem( kv, 0, false, false );
 	kv->deleteThis();
@@ -93,7 +97,7 @@ void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
 	if (Q_strcmp(pszCommand, "HostGame") == 0)
 	{
 
-		if ( !g_IRCSocket.Send( "PRIVMSG ff-systembot :!host\r\n" ) )
+		if ( !g_IRCSocket.Send( "PRIVMSG ff-systembot :!host ff_monkey 8 1.2.1.2:27016 ffpassword Test game bla bla \r\n" ) )
 			Msg("[IRC] Unable to send message: !hos\n");
 
 		// this should be commented once threading is gone, and the gametab should be created on receipt of the !join privmsg from the bot
@@ -467,7 +471,8 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 							{
 								char *msg = strchr(buf,':') + 1;
 
-								// IF JOIN, THEN JOIN ROOM
+								// If new game, then create a new entry in the gamelist
+								// CURRENTLY NOT USED, USE !game INSTEAD
 								if (Q_strnicmp(msg, "!new", 4) == 0)
 								{
 									//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: message is a !join message\r\n" ) )
@@ -482,6 +487,7 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 
 									KeyValues *kv = new KeyValues( "LI" );
 									kv->SetString( "channel", pToken );
+									kv->SetName( pToken ); // used as a unique identifier to the game
 
 									pToken = strtok(NULL, " "); // ff_monkey
 									kv->SetString( "map", pToken );
@@ -495,6 +501,83 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 									m_pLobbyTab->m_pGameList->AddItem( kv, 0, false, false );
 									kv->deleteThis();
 								}
+								// If new game, then create a new entry in the gamelist
+								else if (Q_strnicmp(msg, "!game", 5) == 0)
+								{
+									//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: message is a !join message\r\n" ) )
+									//	Msg("[IRC] Unable to send message\n");
+
+
+									// !new #ffgame-313 ff_monkey 1/8 1500+ pros only!
+
+									char *pToken = NULL;
+									pToken = strtok(msg, " "); // !game
+									pToken = strtok(NULL, " "); // #ffgame-331
+
+									int i = m_pLobbyTab->m_pGameList->GetItem( pToken );
+
+									if ( i > -1 ) // game already exists, just update it
+									{
+										KeyValues *kv2 = m_pLobbyTab->m_pGameList->GetItem( i );
+
+										pToken = strtok(NULL, " "); // ff_monkey
+										kv2->SetString( "map", pToken );
+
+										pToken = strtok(NULL, " "); // 1/8
+										kv2->SetString( "players", pToken );
+
+										pToken = strtok(NULL, " "); // 123.23.23.23:27013
+										kv2->SetString( "serverip", pToken );
+
+										pToken = strtok(NULL, " "); // ffpickup
+										kv2->SetString( "serverpassword", pToken );
+
+										pToken = strtok(NULL, "\n\r"); // 4v4 1500+ pros
+										kv2->SetString( "name", pToken );
+
+										m_pLobbyTab->m_pGameList->ApplyItemChanges( i );
+
+									}
+									else // new game
+									{
+										KeyValues *kv = new KeyValues( "LI" );
+										kv->SetString( "channel", pToken );
+										kv->SetName( pToken ); // used as a unique identifier to the game
+									
+										pToken = strtok(NULL, " "); // ff_monkey
+										kv->SetString( "map", pToken );
+
+										pToken = strtok(NULL, " "); // 1/8
+										kv->SetString( "players", pToken );
+
+										pToken = strtok(NULL, " "); // 123.23.23.23:27013
+										kv->SetString( "serverip", pToken );
+
+										pToken = strtok(NULL, " "); // ffpickup
+										kv->SetString( "serverpassword", pToken );
+
+										pToken = strtok(NULL, "\n\r"); // 4v4 1500+ pros
+										kv->SetString( "name", pToken );
+
+										m_pLobbyTab->m_pGameList->AddItem( kv, 0, false, false );
+										kv->deleteThis();
+									}									
+								}
+								// if a game starts, remove it from the game list
+								else if (Q_strnicmp(msg, "!started", 8) == 0)
+								{
+									//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: message is a !join message\r\n" ) )
+									//	Msg("[IRC] Unable to send message\n");
+
+									// !started #ffgame-313
+
+									char *pToken = NULL;
+									pToken = strtok(msg, " "); // !game
+									pToken = strtok(NULL, " "); // #ffgame-331
+
+									int i = m_pLobbyTab->m_pGameList->GetItem( pToken );
+									m_pLobbyTab->m_pGameList->RemoveItem( i );
+								}
 							}
 						}
 						
@@ -502,12 +585,28 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 						{
 							// skip the #, we know it's there
 							buf+=1;
+							
+							char *bufcopy = new char[ strlen(buf) ];
+							strcpy( bufcopy, buf ); // necessary because strtok changes the contents of buf
 
 							char *pChannel = strtok(buf, " ");
 
 							CFFIRCGameTab *pGameTab = GetGameTabByChannel( pChannel );
 							if (pGameTab)
 							{
+								// if from the system bot
+								if((Q_strcmp(from, "ff-systembot") == 0) || (Q_strcmp(from, "AfterShok") == 0)) // the only 2 cool dudes on IRC
+								{
+									char *msg = strchr(bufcopy,':') + 1;
+
+									if (Q_strnicmp(msg, "!connect", 8) == 0)
+									{
+										char *msg = strchr(bufcopy,':') + 2; // skip the ! and get everything else
+										engine->ClientCmd( msg ); // connect xxx.xx.xx.xx:xxx password xxxx 
+										return;								
+									}
+								}
+						
 								pGameTab->UserMessage(from, msg);
 								return;
 							}
