@@ -4938,6 +4938,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\ff\vgui\ff_training.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_training.h"
+					>
+				</File>
+				<File
 					RelativePath=".\ff\vgui\ff_vgui_timer.cpp"
 					>
 				</File>

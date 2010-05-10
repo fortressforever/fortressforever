@@ -3995,6 +3995,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 					RelativePath=".\ff\vgui\ff_panel.h">
 				</File>
 				<File
+					RelativePath=".\ff\vgui\ff_training.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_training.h">
+				</File>
+				<File
 					RelativePath=".\ff\vgui\ff_vgui_timer.cpp">
 				</File>
 				<File
