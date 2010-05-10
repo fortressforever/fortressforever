@@ -501,10 +501,9 @@ bool CHudLua::TranslateKeyCommand( const char *szMessage, char *szTranslated, in
 			{
 				i++;
 
-				// This shouldn't happen unless someone used the {} incorrectly
+				// This shouldn't happen unless someone used %bind% incorrectly
 				if ( szMessage[i] == '\0' || iKeyIndex > 30 )
 				{
-					Warning( "Error: Received a HudText message that was formatted incorrectly!\n" );
 					return false;
 				}
 				// We've got the whole command -- now find out what key it's bound to
