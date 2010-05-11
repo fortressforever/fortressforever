@@ -25,6 +25,7 @@
 #include <vgui_controls/RichText.h>
 #include <vgui_controls/ListPanel.h>
 #include <vgui_controls/Button.h>
+#include <vgui_controls/ComboBox.h>
 #include "ff_gameui.h"
 
 using namespace vgui;
@@ -409,5 +410,57 @@ private:
 };
 
 DECLARE_GAMEUI(CFFIRCConnect, CFFIRCConnectPanel, ffircconnect);
+
+
+//=============================================================================
+// Popup window for hosting a game
+//=============================================================================
+class CFFIRCHostRankedTab : public vgui::PropertyPage
+{
+	DECLARE_CLASS_SIMPLE(CFFIRCHostRankedTab, PropertyPage);
+
+public:
+	CFFIRCHostRankedTab(Panel *parent, char const *panelName);
+
+	void LoadMaps();
+
+	vgui::ListPanel *m_pMapList;
+
+private:
+	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+};
+
+
+class CFFIRCHostUnrankedTab : public vgui::PropertyPage
+{
+	DECLARE_CLASS_SIMPLE(CFFIRCHostUnrankedTab, PropertyPage);
+
+public:
+	CFFIRCHostUnrankedTab(Panel *parent, char const *panelName);
+
+	vgui::TextEntry* m_pTextEntry_MapEntry;
+	vgui::TextEntry* m_pTextEntry_NameEntry;
+	vgui::ComboBox *m_pPlayersCombo;
+
+private:
+	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+};
+
+
+class CFFIRCHostPanel : public Frame
+{
+	DECLARE_CLASS_SIMPLE(CFFIRCHostPanel, Frame);
+
+public:
+	CFFIRCHostPanel( vgui::VPANEL parent );
+	void SetVisible(bool state);
+
+	vgui::PropertySheet			*m_pIRCHostTabs;
+	CFFIRCHostRankedTab			*m_pRankedTab;
+	CFFIRCHostUnrankedTab		*m_pUnrankedTab;
+};
+
+DECLARE_GAMEUI(CFFIRCHost, CFFIRCHostPanel, ffirchost);
+
 
 #endif // FF_IRC_H 

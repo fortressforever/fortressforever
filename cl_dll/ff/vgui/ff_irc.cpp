@@ -24,6 +24,7 @@ using namespace vgui;
 Socks g_IRCSocket;
 CFFIRCPanel *g_pIRCPanel = NULL;
 CFFIRCConnectPanel *g_pIRCConnectPanel = NULL;
+CFFIRCHostPanel *g_pIRCHostPanel = NULL;
 
 //-----------------------------------------------------------------------------
 // CFFIRCLobbyTab
@@ -96,9 +97,11 @@ void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
 	}
 	if (Q_strcmp(pszCommand, "HostGame") == 0)
 	{
-
+		/*
 		if ( !g_IRCSocket.Send( "PRIVMSG ff-systembot :!host ff_monkey 8 1.2.1.2:27016 ffpassword Test game bla bla \r\n" ) )
 			Msg("[IRC] Unable to send message: !hos\n");
+		*/
+		ffirchost->GetPanel()->SetVisible(true);
 
 		// this should be commented once threading is gone, and the gametab should be created on receipt of the !join privmsg from the bot
 		/*
@@ -203,6 +206,7 @@ void CFFIRCGameTab::OnButtonCommand(KeyValues *data)
 
 DEFINE_GAMEUI(CFFIRC, CFFIRCPanel, ffirc);
 DEFINE_GAMEUI(CFFIRCConnect, CFFIRCConnectPanel, ffircconnect);
+DEFINE_GAMEUI(CFFIRCHost, CFFIRCHostPanel, ffirchost);
 
 CON_COMMAND(ToggleIRCPanel,NULL)
 {
@@ -1367,4 +1371,178 @@ void CFFIRCConnectPanel::OnButtonCommand(KeyValues *data)
 	}
 	if (Q_strcmp(pszCommand, "Cancel") == 0)
 		SetVisible(false);
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Catch the buttons. We have OK (save + close), Cancel (close) and
+//			Apply (save).
+//-----------------------------------------------------------------------------
+CFFIRCHostPanel::CFFIRCHostPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFIRCHostPanel" )
+{
+	if (g_pIRCHostPanel == NULL)
+		g_pIRCHostPanel = this;
+
+	m_pRankedTab = new CFFIRCHostRankedTab(this, "IRCHostRankedTab");
+	m_pUnrankedTab = new CFFIRCHostUnrankedTab(this, "IRCHostUnrankedTab");
+	m_pIRCHostTabs = new vgui::PropertySheet(this, "IRCHostTabs", true);
+
+	m_pIRCHostTabs->AddPage(m_pRankedTab, "Ranked Game");
+	m_pIRCHostTabs->AddPage(m_pUnrankedTab, "Unranked Game");
+	m_pIRCHostTabs->SetActivePage(m_pRankedTab);
+	m_pIRCHostTabs->SetDragEnabled(false);
+
+	SetSizeable(false);
+	LoadControlSettings("resource/ui/FFIRCHost.res");
+}
+
+void CFFIRCHostPanel::SetVisible(bool state)
+{
+	if (state)
+	{		
+		// Centre this panel on the screen for consistency.
+		int nWide = GetWide();
+		int nTall = GetTall();
+
+		SetPos((ScreenWidth() - nWide) / 2, (ScreenHeight() - nTall) / 2);
+
+		RequestFocus();
+		MoveToFront();
+	}
+	BaseClass::SetVisible(state);
+}
+
+CFFIRCHostRankedTab::CFFIRCHostRankedTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
+{
+	new Button(this, "CreateButton", "", this, "Create");
+	new Button(this, "CancelButton", "", this, "Cancel");
+
+	m_pMapList = new ListPanel(this, "ListPanel_MapList");
+	m_pMapList->AddColumnHeader( 0, "mapname" , "Map Name", 150, ListPanel::COLUMN_RESIZEWITHWINDOW );
+    m_pMapList->AddColumnHeader( 1, "gametype" , "Gametype", 200, ListPanel::COLUMN_RESIZEWITHWINDOW );
+    m_pMapList->AddColumnHeader( 2, "players" , "Players", 100, ListPanel::COLUMN_RESIZEWITHWINDOW );
+
+	LoadControlSettings("resource/ui/FFIRCHostRankedTab.res");
+	LoadMaps();
+}
+
+void CFFIRCHostRankedTab::OnButtonCommand(KeyValues *data)
+{
+	const char *pszCommand = data->GetString("command");
+
+	if (Q_strcmp(pszCommand, "Create") == 0)
+	{
+		KeyValues *KV = m_pMapList->GetItem( m_pMapList->GetSelectedItem(0) );
+
+		char szCommand[256];
+		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s Ranked Game - %s\r\n", KV->GetString("mapname"), KV->GetString("players"), "ip", "password", KV->GetString("gametype") );
+
+		if ( !g_IRCSocket.Send( szCommand ) )
+			Msg("[IRC] Unable to send message: !hos\n");
+
+		g_pIRCHostPanel->SetVisible(false);
+	}
+
+	if (Q_strcmp(pszCommand, "Cancel") == 0)
+		g_pIRCHostPanel->SetVisible(false);
+}
+
+void CFFIRCHostRankedTab::LoadMaps()
+{
+	KeyValues *kv = new KeyValues( "LI" );
+
+	kv->SetString( "gametype", "Capture the Flag" );
+	kv->SetString( "players", "8" );
+	kv->SetString( "mapname", "ff_monkey" );
+	m_pMapList->AddItem( kv, 0, false, false );
+	kv->SetString( "mapname", "ff_destroy" );
+	m_pMapList->AddItem( kv, 0, false, false );
+	kv->SetString( "mapname", "ff_schtop" );
+	m_pMapList->AddItem( kv, 0, false, false );
+	kv->SetString( "mapname", "ff_shutdown2" );
+	m_pMapList->AddItem( kv, 0, false, false );
+	kv->SetString( "mapname", "ff_bases" );
+	m_pMapList->AddItem( kv, 0, false, false );
+	kv->SetString( "mapname", "ff_2fort" );
+	m_pMapList->AddItem( kv, 0, false, false );
+
+	kv->SetString( "gametype", "Attack and Defend" );
+	kv->SetString( "players", "10" );
+	kv->SetString( "mapname", "ff_ksour" );
+	m_pMapList->AddItem( kv, 0, false, false );
+	kv->SetString( "mapname", "ff_napoli" );
+	m_pMapList->AddItem( kv, 0, false, false );
+	kv->SetString( "mapname", "ff_palermo" );
+	m_pMapList->AddItem( kv, 0, false, false );
+	kv->SetString( "mapname", "ff_dustbowl" );
+	m_pMapList->AddItem( kv, 0, false, false );
+
+	kv->SetString( "gametype", "Command Point" );
+	kv->SetString( "players", "12" );
+	kv->SetString( "mapname", "ff_warpath" );
+	m_pMapList->AddItem( kv, 0, false, false );
+
+	kv->deleteThis();
+	m_pMapList->SetSingleSelectedItem(0);
+}
+
+CFFIRCHostUnrankedTab::CFFIRCHostUnrankedTab(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
+{
+	new Button(this, "CreateButton", "", this, "Create");
+	new Button(this, "CancelButton", "", this, "Cancel");
+
+	m_pTextEntry_MapEntry = new vgui::TextEntry(this, "MapEntry");
+	m_pTextEntry_NameEntry = new vgui::TextEntry(this, "NameEntry");
+
+	m_pPlayersCombo = new ComboBox(this, "Players", 0, true);
+
+	KeyValues *kv = new KeyValues( "LI" );
+	kv->SetString( "players", "2" );
+	m_pPlayersCombo->AddItem("1v1", kv);
+	kv->SetString( "players", "4" );
+	m_pPlayersCombo->AddItem("2v2", kv);
+	kv->SetString( "players", "6" );
+	m_pPlayersCombo->AddItem("3v3", kv);
+	kv->SetString( "players", "8" );
+	m_pPlayersCombo->AddItem("4v4", kv);
+	kv->SetString( "players", "10" );
+	m_pPlayersCombo->AddItem("5v5", kv);
+	kv->SetString( "players", "12" );
+	m_pPlayersCombo->AddItem("6v6", kv);
+	kv->SetString( "players", "14" );
+	m_pPlayersCombo->AddItem("7v7", kv);
+	kv->SetString( "players", "16" );
+	m_pPlayersCombo->AddItem("8v8", kv);
+	kv->deleteThis();
+
+	m_pPlayersCombo->ActivateItem(3);
+
+	LoadControlSettings("resource/ui/FFIRCHostUnrankedTab.res");
+}
+
+void CFFIRCHostUnrankedTab::OnButtonCommand(KeyValues *data)
+{
+	const char *pszCommand = data->GetString("command");
+
+	if (Q_strcmp(pszCommand, "Create") == 0)
+	{
+		KeyValues *KVPlayers = m_pPlayersCombo->GetActiveItemUserData();
+
+		char szName[41];
+		m_pTextEntry_NameEntry->GetText(szName, sizeof(szName));
+
+		char szMap[21];
+		m_pTextEntry_MapEntry->GetText(szMap, sizeof(szMap));
+
+		char szCommand[256];
+		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s Unranked Game - %s\r\n", szMap, KVPlayers->GetString("players"), "ip", "password", szName );
+
+		if ( !g_IRCSocket.Send( szCommand ) )
+			Msg("[IRC] Unable to send message: !hos\n");
+
+		g_pIRCHostPanel->SetVisible(false);
+	}
+
+	if (Q_strcmp(pszCommand, "Cancel") == 0)
+		g_pIRCHostPanel->SetVisible(false);
 }

@@ -23,6 +23,7 @@
 extern Socks g_IRCSocket;
 extern CFFIRCPanel *g_pIRCPanel;
 extern CFFIRCConnectPanel *g_pIRCConnectPanel;
+extern CFFIRCHostPanel *g_pIRCHostPanel;
 
 //-----------------------------------------------------------------------------
 // CFFIRCThread

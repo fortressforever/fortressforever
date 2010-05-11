@@ -191,6 +191,7 @@ void VGui_CreateGlobalPanels( void )
 	ffsplash->Create(uiParent);
 	ffirc->Create(uiParent);
 	ffircconnect->Create(uiParent);
+	ffirchost->Create(uiParent);
 	fftraining->Create(uiParent);
 	// <-- Mirv
 }
@@ -221,6 +222,7 @@ void VGui_Shutdown()
 	ffsplash->Destroy();
 	ffirc->Destroy();
 	ffircconnect->Destroy();
+	ffirchost->Destroy();
 	fftraining->Destroy();
 	// <-- Mirv
 
