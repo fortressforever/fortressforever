@@ -289,6 +289,20 @@ private:
 
 
 //-----------------------------------------------------------------------------
+// CFFIRCLobbyGameList
+//-----------------------------------------------------------------------------
+
+class CFFIRCLobbyGameList : public vgui::ListPanel
+{
+	DECLARE_CLASS_SIMPLE(CFFIRCLobbyGameList, vgui::ListPanel);
+
+public:
+	CFFIRCLobbyGameList(Panel *parent, char const *panelName);
+	virtual void CFFIRCLobbyGameList::OnMouseDoublePressed(MouseCode code);
+};
+
+
+//-----------------------------------------------------------------------------
 // CFFIRCLobbyTab
 //-----------------------------------------------------------------------------
 
@@ -300,7 +314,7 @@ public:
 	CFFIRCLobbyTab(Panel *parent, char const *panelName);
 	virtual void ApplySchemeSettings( IScheme *pScheme );
 
-	vgui::ListPanel			*m_pGameList;
+	CFFIRCLobbyGameList		*m_pGameList;
 
 private:
 	MESSAGE_FUNC_PARAMS(OnNewLineMessage, "TextNewLine", data);

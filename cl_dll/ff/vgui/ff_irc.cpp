@@ -26,6 +26,28 @@ CFFIRCPanel *g_pIRCPanel = NULL;
 CFFIRCConnectPanel *g_pIRCConnectPanel = NULL;
 CFFIRCHostPanel *g_pIRCHostPanel = NULL;
 
+
+//-----------------------------------------------------------------------------
+// CFFIRCLobbyGameList
+//-----------------------------------------------------------------------------
+
+CFFIRCLobbyGameList::CFFIRCLobbyGameList(Panel *parent, char const *panelName) : BaseClass(parent, panelName) {}
+
+void CFFIRCLobbyGameList::OnMouseDoublePressed(MouseCode code)
+{
+	if( code == 0 )
+	{
+		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent()->GetParent());
+
+		if( parent && GetItem( GetSelectedItem(0) ) )
+		{
+			KeyValues *KV = GetItem( GetSelectedItem(0) );
+			parent->AddGameTab( KV->GetString("channel"), KV->GetString("channel") );
+		}
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // CFFIRCLobbyTab
 //-----------------------------------------------------------------------------
@@ -35,7 +57,7 @@ CFFIRCLobbyTab::CFFIRCLobbyTab(Panel *parent, char const *panelName) : BaseClass
 	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme");
 	SetScheme( scheme );
 
-	m_pGameList = new ListPanel(this, "ListPanel_GameList");
+	m_pGameList = new CFFIRCLobbyGameList(this, "ListPanel_GameList");
 
 	m_pGameList->AddActionSignalTarget( this );
 	
@@ -89,7 +111,7 @@ void CFFIRCLobbyTab::OnButtonCommand(KeyValues *data)
 	{
 		CFFIRCPanel *parent = dynamic_cast <CFFIRCPanel *> (GetParent()->GetParent());
 
-		if (parent)
+		if( parent && m_pGameList->GetItem( m_pGameList->GetSelectedItem(0) ) )
 		{
 			KeyValues *KV = m_pGameList->GetItem( m_pGameList->GetSelectedItem(0) );
 			parent->AddGameTab( KV->GetString("channel"), KV->GetString("channel") );
