@@ -1457,7 +1457,7 @@ void CFFIRCHostRankedTab::OnButtonCommand(KeyValues *data)
 		KeyValues *KV = m_pMapList->GetItem( m_pMapList->GetSelectedItem(0) );
 
 		char szCommand[256];
-		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s Ranked Game - %s\r\n", KV->GetString("mapname"), KV->GetString("players"), "ip", "password", KV->GetString("gametype") );
+		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s ranked 1 %s\r\n", KV->GetString("mapname"), KV->GetString("players"), "ip", "password", KV->GetString("gametype") );
 
 		if ( !g_IRCSocket.Send( szCommand ) )
 			Msg("[IRC] Unable to send message: !hos\n");
@@ -1517,6 +1517,7 @@ CFFIRCHostUnrankedTab::CFFIRCHostUnrankedTab(Panel *parent, char const *panelNam
 	m_pTextEntry_NameEntry = new vgui::TextEntry(this, "NameEntry");
 
 	m_pPlayersCombo = new ComboBox(this, "Players", 0, true);
+	m_pAutoTeamsCheck = new CheckButton(this, "AutoTeams", "Auto-Assign Teams Using Player Rankings");
 
 	KeyValues *kv = new KeyValues( "LI" );
 	kv->SetString( "players", "2" );
@@ -1557,7 +1558,7 @@ void CFFIRCHostUnrankedTab::OnButtonCommand(KeyValues *data)
 		m_pTextEntry_MapEntry->GetText(szMap, sizeof(szMap));
 
 		char szCommand[256];
-		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s Unranked Game - %s\r\n", szMap, KVPlayers->GetString("players"), "ip", "password", szName );
+		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s unranked %d %s\r\n", szMap, KVPlayers->GetString("players"), "ip", "password", m_pAutoTeamsCheck->IsSelected(), szName );
 
 		if ( !g_IRCSocket.Send( szCommand ) )
 			Msg("[IRC] Unable to send message: !hos\n");

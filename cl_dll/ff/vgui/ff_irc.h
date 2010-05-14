@@ -26,6 +26,7 @@
 #include <vgui_controls/ListPanel.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ComboBox.h>
+#include <vgui_controls/CheckButton.h>
 #include "ff_gameui.h"
 
 using namespace vgui;
@@ -455,6 +456,7 @@ public:
 	vgui::TextEntry* m_pTextEntry_MapEntry;
 	vgui::TextEntry* m_pTextEntry_NameEntry;
 	vgui::ComboBox *m_pPlayersCombo;
+	vgui::CheckButton *m_pAutoTeamsCheck;
 
 private:
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
