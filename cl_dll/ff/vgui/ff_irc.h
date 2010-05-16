@@ -453,8 +453,11 @@ class CFFIRCHostUnrankedTab : public vgui::PropertyPage
 public:
 	CFFIRCHostUnrankedTab(Panel *parent, char const *panelName);
 
-	vgui::TextEntry* m_pTextEntry_MapEntry;
+	void LoadMaps();
+	void AddMap( const char *mapname );
+
 	vgui::TextEntry* m_pTextEntry_NameEntry;
+	vgui::ComboBox *m_pMapCombo;
 	vgui::ComboBox *m_pPlayersCombo;
 	vgui::CheckButton *m_pAutoTeamsCheck;
 

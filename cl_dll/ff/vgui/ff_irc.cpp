@@ -1420,8 +1420,16 @@ CFFIRCHostPanel::CFFIRCHostPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFIR
 
 void CFFIRCHostPanel::SetVisible(bool state)
 {
+	// set unranked game name if it's empty
+	if( m_pUnrankedTab->m_pTextEntry_NameEntry->GetTextLength() == 0 )
+	{
+		char szGameName[32];
+		sprintf( szGameName, "%s's game", g_pIRCPanel->irc_user.nick );
+		m_pUnrankedTab->m_pTextEntry_NameEntry->SetText( szGameName );
+	}
+
 	if (state)
-	{		
+	{
 		// Centre this panel on the screen for consistency.
 		int nWide = GetWide();
 		int nTall = GetTall();
@@ -1513,8 +1521,11 @@ CFFIRCHostUnrankedTab::CFFIRCHostUnrankedTab(Panel *parent, char const *panelNam
 	new Button(this, "CreateButton", "", this, "Create");
 	new Button(this, "CancelButton", "", this, "Cancel");
 
-	m_pTextEntry_MapEntry = new vgui::TextEntry(this, "MapEntry");
 	m_pTextEntry_NameEntry = new vgui::TextEntry(this, "NameEntry");
+
+	m_pMapCombo = new ComboBox(this, "Map", 0, true);
+	LoadMaps();
+	m_pMapCombo->ActivateItem(0);
 
 	m_pPlayersCombo = new ComboBox(this, "Players", 0, true);
 	m_pAutoTeamsCheck = new CheckButton(this, "AutoTeams", "Auto-Assign Teams Using Player Rankings");
@@ -1550,15 +1561,13 @@ void CFFIRCHostUnrankedTab::OnButtonCommand(KeyValues *data)
 	if (Q_strcmp(pszCommand, "Create") == 0)
 	{
 		KeyValues *KVPlayers = m_pPlayersCombo->GetActiveItemUserData();
+		KeyValues *KVMap = m_pMapCombo->GetActiveItemUserData();
 
 		char szName[41];
 		m_pTextEntry_NameEntry->GetText(szName, sizeof(szName));
 
-		char szMap[21];
-		m_pTextEntry_MapEntry->GetText(szMap, sizeof(szMap));
-
 		char szCommand[256];
-		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s unranked %d %s\r\n", szMap, KVPlayers->GetString("players"), "ip", "password", m_pAutoTeamsCheck->IsSelected(), szName );
+		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s unranked %d %s\r\n", KVMap->GetString("map"), KVPlayers->GetString("players"), "ip", "password", m_pAutoTeamsCheck->IsSelected(), szName );
 
 		if ( !g_IRCSocket.Send( szCommand ) )
 			Msg("[IRC] Unable to send message: !hos\n");
@@ -1568,4 +1577,54 @@ void CFFIRCHostUnrankedTab::OnButtonCommand(KeyValues *data)
 
 	if (Q_strcmp(pszCommand, "Cancel") == 0)
 		g_pIRCHostPanel->SetVisible(false);
+}
+
+void CFFIRCHostUnrankedTab::LoadMaps()
+{
+	// list of all the maps on the server
+	// my plan is to have it load this list from a text file hosted online so we can easily update it as maps are added to the server
+	// for now, here's a hardcoded list of all the maps on my laptop...
+
+	AddMap( "ff_2fort" );
+	AddMap( "ff_2morforever" );
+	AddMap( "ff_aardvark" );
+	AddMap( "ff_anticitizen" );
+	AddMap( "ff_attrition" );
+	AddMap( "ff_bases" );
+	AddMap( "ff_cornfield" );
+	AddMap( "ff_crossover" );
+	AddMap( "ff_cz2" );
+	AddMap( "ff_destroy" );
+	AddMap( "ff_dm" );
+	AddMap( "ff_dropdown" );
+	AddMap( "ff_dustbowl" );
+	AddMap( "ff_epicenter" );
+	AddMap( "ff_fusion" );
+	AddMap( "ff_genesis" );
+	AddMap( "ff_hunted" );
+	AddMap( "ff_impact" );
+	AddMap( "ff_ksour" );
+	AddMap( "ff_ksour_classic" );
+	AddMap( "ff_monkey" );
+	AddMap( "ff_napoli" );
+	AddMap( "ff_openfire" );
+	AddMap( "ff_palermo" );
+	AddMap( "ff_pitfall" );
+	AddMap( "ff_push" );
+	AddMap( "ff_roasted" );
+	AddMap( "ff_schtop" );
+	AddMap( "ff_shutdown2" );
+	AddMap( "ff_siden_b2" );
+	AddMap( "ff_tiger" );
+	AddMap( "ff_vertigo" );
+	AddMap( "ff_waterpolo" );
+	AddMap( "ff_well" );
+}
+
+void CFFIRCHostUnrankedTab::AddMap( const char *mapname )
+{
+	KeyValues *kv = new KeyValues( "LI" );
+	kv->SetString( "map", mapname );
+	m_pMapCombo->AddItem( mapname, kv );
+	kv->deleteThis();
 }
