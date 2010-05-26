@@ -199,42 +199,11 @@ BEGIN_DATADESC(CFFSentryGun)
 	DEFINE_THINKFUNC( OnSearchThink ), 
 END_DATADESC() 
 
-// Array of char *'s to sentrygun models
-const char *g_pszFFSentryGunModels[] =
-{
-	FF_SENTRYGUN_MODEL, 
-	FF_SENTRYGUN_MODEL_LVL2, 
-	FF_SENTRYGUN_MODEL_LVL3, 
-	NULL
-};
+extern const char *g_pszFFSentryGunModels[];
+extern const char *g_pszFFSentryGunGibModels[];
+extern const char *g_pszFFSentryGunSounds[];
 
-// Array of char *'s to gib models
-const char *g_pszFFSentryGunGibModels[] =
-{
-	NULL
-};
-
-// Array of char *'s to sounds
-const char *g_pszFFSentryGunSounds[] =
-{
-	FF_SENTRYGUN_BUILD_SOUND, 
-	FF_SENTRYGUN_EXPLODE_SOUND, 
-	"Sentry.Fire", 
-	"Sentry.Spot", 
-	"Sentry.Scan", 
-	"Sentry.Two", 
-	"Sentry.Three", 
-	"Sentry.Aim",
-	FF_SENTRYGUN_UNBUILD_SOUND,
-	"Spanner.HitSG",
-	"Sentry.RocketFire",
-	"Sentry.SabotageActivate",
-	//"Sentry.SabotageFinish",
-	"Sentry.CloakDetection",
-	"Sentry.CloakSonar",
-	"DoSpark",
-	NULL
-};
+extern const char *g_pszFFGenGibModels[];
 
 //-----------------------------------------------------------------------------
 // Constructor

@@ -462,6 +462,7 @@ C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin
 	// someone accesses the m_hOwner.Get() and wants to return something
 	// that isn't NULL!
 	pDispenser->m_hOwner = ( C_BaseEntity * )C_BasePlayer::GetLocalPlayer();
+	pDispenser->m_nSkin = clamp(CBasePlayer::GetLocalPlayer()->GetTeamNumber() + 1 - TEAM_BLUE, 0, 4); // dispenser skin 0 is neutral
 	pDispenser->SetClientSideOnly( true );
 	pDispenser->SetNextClientThink( CLIENT_THINK_ALWAYS );
 
