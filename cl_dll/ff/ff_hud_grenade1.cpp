@@ -33,11 +33,11 @@
 using namespace vgui;
 
 // Yeah macros suck, but this is the quickest way to do it
-#define ADD_GRENADE_ICON(id, filename) \
+/*#define ADD_GRENADE_ICON(id, filename) \
 	m_pPrimaryGrenade[id] = new CHudTexture(); \
 	m_pPrimaryGrenade[id]->textureId = surface()->CreateNewTextureID(); \
 	surface()->DrawSetTextureFile(m_pPrimaryGrenade[id]->textureId, filename, true, false);
-
+*/
 //-----------------------------------------------------------------------------
 // Purpose: Displays current ammunition level
 //-----------------------------------------------------------------------------
@@ -68,6 +68,7 @@ private:
 
 	//CHudTexture	*m_pHudElementTexture;
 	//CHudTexture *m_pPrimaryGrenade[2];
+	CHudTexture *iconTexture;
 };
 
 DECLARE_HUDELEMENT(CHudGrenade1);
@@ -247,10 +248,12 @@ void CHudGrenade1::Paint()
 	if (ffplayer->GetTeamNumber() < TEAM_BLUE || ffplayer->GetTeamNumber() > TEAM_GREEN)
 		return;
 
+	/* comment this out - was used for caltrops
 	int gren_num = 0;
 
 	if (ffplayer->GetClassSlot() == CLASS_SCOUT) 
 		gren_num = 1;
+	*/
 
 	// Draw background box
 	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
@@ -258,9 +261,20 @@ void CHudGrenade1::Paint()
 	//surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 
 	// Draw grenade icon
-	//surface()->DrawSetTexture(m_pPrimaryGrenade[gren_num]->textureId);
-	//surface()->DrawSetColor(255, 255, 255, 255);
-	//surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
+	if( !iconTexture )
+		iconTexture = gHUD.GetIcon("death_grenade_normal");
+	
+	if(iconTexture)
+	{
+		Color iconColor( 255, 255, 255, 125 );
+		int iconWide;
+		int iconTall;
+		// always use font rendering method
+		iconWide = surface()->GetCharacterWidth( iconTexture->hFont, iconTexture->cCharacterInFont );
+		iconTall = surface()->GetFontTall( iconTexture->hFont );
+		//If we're using a font char, this will ignore iconTall and iconWide
+		iconTexture->DrawSelf( icon_xpos, icon_ypos - (iconTall / 2), iconWide, iconTall, iconColor );
+	}
 
 	BaseClass::Paint();
 }
