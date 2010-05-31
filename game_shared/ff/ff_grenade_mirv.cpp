@@ -51,7 +51,7 @@ public:
 	virtual const char *GetBounceSound() { return "MirvGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_MIRV; }
 
-	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
+//	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeMirv() {}
@@ -136,6 +136,7 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 		UTIL_SetOrigin( pMirvlet, vecSrc );
 		pMirvlet->SetAbsAngles(QAngle(0,0,0)); //make the model stand on end
 		pMirvlet->SetLocalAngularVelocity(angRotate);
+		pMirvlet->ChangeTeam( pOwner->GetTeamNumber() );  // dexter - move changeteam here so createtrail can use team# (called from spawn)
 		pMirvlet->Spawn();
 		pMirvlet->SetOwnerEntity( pOwner );
 
@@ -148,7 +149,6 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 		pMirvlet->SetDetonateTimerLength( RandomFloat(2.0f,3.0f) );
 		pMirvlet->SetElasticity( GetGrenadeElasticity() );
 
-		pMirvlet->ChangeTeam( pOwner->GetTeamNumber() );
 		pMirvlet->SetThrower( (CBaseCombatCharacter*)pOwner ); 
 		pMirvlet->SetGravity( GetGrenadeGravity() + 0.2f );
 		pMirvlet->SetFriction( GetGrenadeFriction() );

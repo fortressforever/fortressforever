@@ -17,7 +17,12 @@
 #include "Sprite.h"
 #include "SpriteTrail.h"
 
-#define GREN_ALPHA_DEFAULT	200
+#define GREN_ALPHA_DEFAULT	225
+const color32 GREN_COLOR_DEFAULT =  { 255, 64, 64, GREN_ALPHA_DEFAULT };
+const color32 GREN_COLOR_BLUE = { 0, 0, 255, GREN_ALPHA_DEFAULT };
+const color32 GREN_COLOR_RED = { 255, 32, 32, GREN_ALPHA_DEFAULT };
+const color32 GREN_COLOR_GREEN = { 32, 255, 32, GREN_ALPHA_DEFAULT };
+const color32 GREN_COLOR_YELLOW = { 255, 255, 0, GREN_ALPHA_DEFAULT };
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeBase C_FFGrenadeBase
@@ -35,6 +40,7 @@
 	extern ConVar gren_elas;
 	extern ConVar gren_fric_conc;
 	extern ConVar gren_elas_conc;
+	extern ConVar gren_teamcolored_trails;
 #endif
 
 //=============================================================================

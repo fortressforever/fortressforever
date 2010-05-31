@@ -4952,11 +4952,12 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		else
 			vecVelocity = Vector(0, 0, 0);
 
-		pGrenade->Spawn();
-		pGrenade->SetAbsVelocity(vecVelocity);
-		pGrenade->SetThrower(this);
-		pGrenade->SetOwnerEntity(this);
+		// dexter - moved stuff before Spawn - spawn expects team to be set for createtrail if they're teamcolored
 		pGrenade->ChangeTeam(GetTeamNumber());
+		pGrenade->Spawn();
+		pGrenade->SetThrower(this);
+		pGrenade->SetOwnerEntity(this);		
+		pGrenade->SetAbsVelocity(vecVelocity);				
 
 		pGrenade->SetDetonateTimerLength( fTimer );
 		pGrenade->m_flSpawnTime = gpGlobals->curtime - (3.0f - fTimer);	// This shold be done in a neater way!!

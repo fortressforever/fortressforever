@@ -73,6 +73,7 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 #define GREN_WATER_VEL_DEC 0.5f
 //ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define GREN_WATER_REDUCE_THINK 0.2f
+ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
 
 //=============================================================================
 // CFFGrenadeBase implementation
@@ -603,6 +604,35 @@ void CFFGrenadeBase::Precache()
 
 color32 CFFGrenadeBase::GetColour()
 {
-	color32 col = { 255, 0, 250, 200 };
-	return col;
+	if(gren_teamcolored_trails.GetFloat())
+	{
+		//dexter - dont do this, grenades have a team id or should
+		/* 
+		CBaseEntity *pEntity = GetThrower();
+		if(pEntity && pEntity->IsPlayer())
+		{
+			CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+			int teamID = pPlayer->GetTeamNumber();
+		*/
+		switch(GetTeamNumber())
+		{
+		case FF_TEAM_BLUE:
+			return GREN_COLOR_BLUE;
+			break;
+		case FF_TEAM_RED:
+			return GREN_COLOR_RED;
+			break;
+		case FF_TEAM_GREEN:
+			return GREN_COLOR_GREEN;
+			break;
+		case FF_TEAM_YELLOW:
+			return GREN_COLOR_YELLOW;
+			break;
+		default:
+			return GREN_COLOR_DEFAULT;
+			break;
+		}
+	}
+	else
+		return GREN_COLOR_DEFAULT;		
 }

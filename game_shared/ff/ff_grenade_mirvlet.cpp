@@ -32,7 +32,7 @@ public:
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "MirvletGrenade.Bounce"; }
 
-	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
+//	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeMirvlet() {}

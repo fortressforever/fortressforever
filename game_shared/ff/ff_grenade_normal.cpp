@@ -15,6 +15,13 @@
 #include "cbase.h"
 #include "ff_grenade_base.h"
 
+// these are for player and team info
+#ifdef CLIENT_DLL
+	#include "c_ff_player.h"
+#else
+	#include "ff_player.h"
+#endif
+
 #define NORMALGRENADE_MODEL "models/grenades/frag/frag.mdl"
 
 #ifdef CLIENT_DLL
@@ -38,7 +45,8 @@ public:
 	virtual float GetGrenadeRadius()		{ return 270.0f; }
 #endif
 
-	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
+//	virtual color32 GetColour()  { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
+//	virtual color32 GetColour()  { return BaseClass::GetColour(); }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeNormal() {}
