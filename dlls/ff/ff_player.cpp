@@ -3828,13 +3828,23 @@ void CFFPlayer::StatusEffectsThink( void )
 		if( m_hInfector )
 		{
 			CFFPlayer *pInfector = ToFFPlayer( m_hInfector );
-
-			AssertMsg( pInfector, "[Infect] pInfector == NULL\n" );
-		
-			// Medic changed teams
-			// dexter - added remove infection if player switched from medic class
-			if( pInfector->GetTeamNumber() != m_iInfectedTeam || !pInfector->GetClassSlot() || pInfector->GetClassSlot() != CLASS_MEDIC )
+			
+			// dexter - reworked this a lil and removed the assert
+			//AssertMsg( pInfector, "[Infect] pInfector == NULL\n" );
+			if( pInfector )
+			{				
+				// Medic changed teams / switched class				
+				if( pInfector->GetTeamNumber() != m_iInfectedTeam || !pInfector->GetClassSlot() || pInfector->GetClassSlot() != CLASS_MEDIC )
+				{
+					//DevMsg("Removing infection from %s because infector %s changed class or team\n", this->m_szNetname, pInfector->m_szNetname);
+					m_bInfected = 0;
+				}
+			}
+			else
+			{
+				// dexter - this is a ghetto catch all incase the EHANDLE is good but isnt CFFPlayer (how the fuck)
 				m_bInfected = 0;
+			}
 		}
 		else
 		{
