@@ -127,8 +127,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release FF|Win32"
-			OutputDirectory="$(ConfigurationName)/2005"
-			IntermediateDirectory="$(ConfigurationName)/2005"
+			OutputDirectory="$(ConfigurationName)/2008"
+			IntermediateDirectory="$(ConfigurationName)/2008"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
@@ -3350,11 +3350,11 @@
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
@@ -3678,11 +3678,11 @@
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
