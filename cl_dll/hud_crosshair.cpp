@@ -287,7 +287,35 @@ void CHudCrosshair::Paint( void )
 	// <-- Mirv
 
 	// Mulch: Draw charge bar!
-	if( (weaponID == FF_WEAPON_ASSAULTCANNON) && (cl_acchargebar.GetBool()) )
+	if( (weaponID == FF_WEAPON_HOOKGUN) )
+	{
+		Vector vecForward;
+		pPlayer->EyeVectors( &vecForward );
+
+		VectorNormalize( vecForward );
+
+		// Get eye position
+		Vector vecOrigin = pPlayer->EyePosition();
+
+		trace_t tr;
+		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1000.0f ), MASK_SOLID, pPlayer, COLLISION_GROUP_DEBRIS, &tr );
+
+		// If we hit something...
+		if( tr.DidHit() )
+		{
+			int iLeft = x_chargebar - charOffsetX;
+			int iTop = y_chargebar + charOffsetY;
+			int iRight = iLeft + (charOffsetX * 2);
+			int iBottom = iTop + 10;
+
+			surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
+			surface()->DrawFilledRect( iLeft, iTop, iRight, iBottom );
+
+			surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
+			surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+		}
+	}
+	else if( (weaponID == FF_WEAPON_ASSAULTCANNON) && (cl_acchargebar.GetBool()) )
 	{
 		extern float GetAssaultCannonCharge();
 		float flCharge = GetAssaultCannonCharge();
