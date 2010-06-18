@@ -72,6 +72,10 @@ void CHudQuantityBar::setLabelText(char *newLabelText)
 		vgui::localize()->ConvertANSIToUnicode( szLabel, m_wszLabel, sizeof( m_wszLabel ) );
 	}
 }
+void CHudQuantityBar::setLabelText(wchar_t *newLabelText)
+{
+	wcscpy( m_wszLabel, newLabelText );
+}
 
 void CHudQuantityBar::setPosition(int newPositionX, int newPositionY) { m_iLeft = newPositionX; m_iTop = newPositionY; }
 void CHudQuantityBar::setScaleX(float newScaleX){ m_flScaleX = newScaleX; }

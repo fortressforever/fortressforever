@@ -39,85 +39,85 @@ using namespace vgui;
 #include "ff_hud_quantityBar.h"
 
 static ConVar hud_centerid( "hud_centerid", "0", FCVAR_ARCHIVE );
-static ConVar hud_ci_newStyle( "hud_ci_newStyle", "1", FCVAR_ARCHIVE, "Crosshair info new style (0 Off, 1 On)");
-static ConVar hud_ci_update( "hud_ci_update", "1", FCVAR_ARCHIVE, "Used to update the look (does not happen on value change as there are so many values to set)");
-static ConVar hud_ci_updateAlways( "hud_ci_updateAlways", "0", FCVAR_ARCHIVE, "For perfromance reasons, only have this on while editing your settings.");
+static ConVar hud_xhairinfo_newStyle( "hud_xhairinfo_newStyle", "1", FCVAR_NONE, "Crosshair info new style (0 Off, 1 On)");
+static ConVar hud_xhairinfo_update( "hud_xhairinfo_update", "1", FCVAR_NONE, "Used to update the look (does not happen on value change as there are so many values to set)");
+static ConVar hud_xhairinfo_updateAlways( "hud_xhairinfo_updateAlways", "1", FCVAR_NONE, "For perfromance reasons, only have this on while editing your settings.");
 
-static ConVar hud_ci_x( "hud_ci_x", "200", FCVAR_ARCHIVE, "Crosshair info X Position on 640 480 Resolution");
-static ConVar hud_ci_y( "hud_ci_y", "300", FCVAR_ARCHIVE, "Crosshair info Y Position on 640 480 Resolution");
+static ConVar hud_xhairinfo_x( "hud_xhairinfo_x", "200", FCVAR_NONE, "Crosshair info X Position on 640 480 Resolution");
+static ConVar hud_xhairinfo_y( "hud_xhairinfo_y", "300", FCVAR_NONE, "Crosshair info Y Position on 640 480 Resolution");
 
-static ConVar hud_ci_intensity_red( "hud_ci_intensity_red", "20", FCVAR_ARCHIVE, "item bar color red component");
-static ConVar hud_ci_intensity_orange( "hud_ci_intensity_orange", "50", FCVAR_ARCHIVE, "Crosshair color blue component");
-static ConVar hud_ci_intensity_yellow( "hud_ci_intensity_yellow", "70", FCVAR_ARCHIVE, "Crosshair color alpha component");
-static ConVar hud_ci_intensity_green( "hud_ci_intensity_green", "100", FCVAR_ARCHIVE, "Crosshair color green component");
+static ConVar hud_xhairinfo_intensity_red( "hud_xhairinfo_intensity_red", "20", FCVAR_NONE, "item bar color red component");
+static ConVar hud_xhairinfo_intensity_orange( "hud_xhairinfo_intensity_orange", "50", FCVAR_NONE, "Crosshair color blue component");
+static ConVar hud_xhairinfo_intensity_yellow( "hud_xhairinfo_intensity_yellow", "70", FCVAR_NONE, "Crosshair color alpha component");
+static ConVar hud_xhairinfo_intensity_green( "hud_xhairinfo_intensity_green", "100", FCVAR_NONE, "Crosshair color green component");
 
-static ConVar hud_ci_showBar( "hud_ci_showBar", "1", FCVAR_ARCHIVE, "Show Bar");
-static ConVar hud_ci_showBarBackground( "hud_ci_showBarBackground", "1", FCVAR_ARCHIVE, "Show Bar Background");
-static ConVar hud_ci_showBarBorder( "hud_ci_showBarBorder", "1", FCVAR_ARCHIVE, "Show Bar Boarder");
-static ConVar hud_ci_showIcon( "hud_ci_showIcon", "1", FCVAR_ARCHIVE, "Show Icon");
-static ConVar hud_ci_showLabel( "hud_ci_showLabel", "1", FCVAR_ARCHIVE, "Show label");
-static ConVar hud_ci_showAmount( "hud_ci_showAmount", "1", FCVAR_ARCHIVE, "Show amount");
-static ConVar hud_ci_showIdent( "hud_ci_showIdent", "1", FCVAR_ARCHIVE, "Show Identifier (Class,Icon)");
+static ConVar hud_xhairinfo_showBar( "hud_xhairinfo_showBar", "1", FCVAR_NONE, "Show Bar");
+static ConVar hud_xhairinfo_showBarBackground( "hud_xhairinfo_showBarBackground", "1", FCVAR_NONE, "Show Bar Background");
+static ConVar hud_xhairinfo_showBarBorder( "hud_xhairinfo_showBarBorder", "1", FCVAR_NONE, "Show Bar Boarder");
+static ConVar hud_xhairinfo_showIcon( "hud_xhairinfo_showIcon", "1", FCVAR_NONE, "Show Icon");
+static ConVar hud_xhairinfo_showLabel( "hud_xhairinfo_showLabel", "0", FCVAR_NONE, "Show label");
+static ConVar hud_xhairinfo_showAmount( "hud_xhairinfo_showAmount", "0", FCVAR_NONE, "Show amount");
+static ConVar hud_xhairinfo_showIdent( "hud_xhairinfo_showIdent", "1", FCVAR_NONE, "Show Identifier (Class,Icon)");
 
-static ConVar hud_ci_itemsPerRow( "hud_ci_itemsPerRow", "2", FCVAR_ARCHIVE, "Crosshair  height gap on 640 480 Resolution");
-static ConVar hud_ci_itemOffsetX( "hud_ci_itemOffsetX", "120", FCVAR_ARCHIVE, "Crosshair  height gap on 640 480 Resolution");
-static ConVar hud_ci_itemOffsetY( "hud_ci_itemOffsetY", "20", FCVAR_ARCHIVE, "Crosshair  height gap on 640 480 Resolution");
+static ConVar hud_xhairinfo_itemsPerRow( "hud_xhairinfo_itemsPerRow", "2", FCVAR_NONE, "Crosshair  height gap on 640 480 Resolution");
+static ConVar hud_xhairinfo_itemOffsetX( "hud_xhairinfo_itemOffsetX", "40", FCVAR_NONE, "Crosshair  height gap on 640 480 Resolution");
+static ConVar hud_xhairinfo_itemOffsetY( "hud_xhairinfo_itemOffsetY", "20", FCVAR_NONE, "Crosshair  height gap on 640 480 Resolution");
 
-static ConVar hud_ci_barWidth( "hud_ci_barWidth", "70", FCVAR_ARCHIVE, "Bar width on 640 480 Resolution");
-static ConVar hud_ci_barHeight( "hud_ci_barHeight", "13", FCVAR_ARCHIVE, "Bar height on 640 480 Resolution");
-static ConVar hud_ci_barBorderWidth( "hud_ci_barBorderWidth", "1", FCVAR_ARCHIVE, "Bar border width (non-scaleable)");
+static ConVar hud_xhairinfo_barWidth( "hud_xhairinfo_barWidth", "25", FCVAR_NONE, "Bar width on 640 480 Resolution");
+static ConVar hud_xhairinfo_barHeight( "hud_xhairinfo_barHeight", "4", FCVAR_NONE, "Bar height on 640 480 Resolution");
+static ConVar hud_xhairinfo_barBorderWidth( "hud_xhairinfo_barBorderWidth", "1", FCVAR_NONE, "Bar border width (non-scaleable)");
 
-static ConVar hud_ci_ColorBar_r( "hud_ci_ColorBar_r", "255", FCVAR_ARCHIVE, "Bar color red component");
-static ConVar hud_ci_ColorBar_g( "hud_ci_ColorBar_g", "255", FCVAR_ARCHIVE, "Bar color green component");
-static ConVar hud_ci_ColorBar_b( "hud_ci_ColorBar_b", "255", FCVAR_ARCHIVE, "Bar color blue component");
-static ConVar hud_ci_ColorBar_a( "hud_ci_ColorBar_a", "160", FCVAR_ARCHIVE, "Bar color alpha component");
-static ConVar hud_ci_ColorBarBackground_r( "hud_ci_ColorBarBackground_r", "255", FCVAR_ARCHIVE, "Bar Background  background color red component");
-static ConVar hud_ci_ColorBarBackground_g( "hud_ci_ColorBarBackground_g", "255", FCVAR_ARCHIVE, "Bar Background color green component");
-static ConVar hud_ci_ColorBarBackground_b( "hud_ci_ColorBarBackground_b", "255", FCVAR_ARCHIVE, "Bar Background color blue component");
-static ConVar hud_ci_ColorBarBackground_a( "hud_ci_ColorBarBackground_a", "96", FCVAR_ARCHIVE, "Bar Background color alpha component");
-static ConVar hud_ci_ColorBarBorder_r( "hud_ci_ColorBarBorder_r", "255", FCVAR_ARCHIVE, "Bar Border color red component");
-static ConVar hud_ci_ColorBarBorder_g( "hud_ci_ColorBarBorder_g", "255", FCVAR_ARCHIVE, "Bar Border color green component");
-static ConVar hud_ci_ColorBarBorder_b( "hud_ci_ColorBarBorder_b", "255", FCVAR_ARCHIVE, "Bar Border color blue component");
-static ConVar hud_ci_ColorBarBorder_a( "hud_ci_ColorBarBorder_a", "255", FCVAR_ARCHIVE, "Bar Border color alpha component");
-static ConVar hud_ci_ColorIcon_r( "hud_ci_ColorIcon_r", "0", FCVAR_ARCHIVE, "Icon color red component");
-static ConVar hud_ci_ColorIcon_g( "hud_ci_ColorIcon_g", "0", FCVAR_ARCHIVE, "Icon color green component");
-static ConVar hud_ci_ColorIcon_b( "hud_ci_ColorIcon_b", "0", FCVAR_ARCHIVE, "Icon color blue component");
-static ConVar hud_ci_ColorIcon_a( "hud_ci_ColorIcon_a", "255", FCVAR_ARCHIVE, "Icon color alpha component");
-static ConVar hud_ci_ColorLabel_r( "hud_ci_ColorLabel_r", "0", FCVAR_ARCHIVE, "Label color red component");
-static ConVar hud_ci_ColorLabel_g( "hud_ci_ColorLabel_g", "0", FCVAR_ARCHIVE, "Label color green component");
-static ConVar hud_ci_ColorLabel_b( "hud_ci_ColorLabel_b", "0", FCVAR_ARCHIVE, "Label color blue component");
-static ConVar hud_ci_ColorLabel_a( "hud_ci_ColorLabel_a", "255", FCVAR_ARCHIVE, "Label color alpha component");
-static ConVar hud_ci_ColorAmount_r( "hud_ci_ColorAmount_r", "255", FCVAR_ARCHIVE, "Amount color red component");
-static ConVar hud_ci_ColorAmount_g( "hud_ci_ColorAmount_g", "255", FCVAR_ARCHIVE, "Amount color green component");
-static ConVar hud_ci_ColorAmount_b( "hud_ci_ColorAmount_b", "255", FCVAR_ARCHIVE, "Amount color blue component");
-static ConVar hud_ci_ColorAmount_a( "hud_ci_ColorAmount_a", "255", FCVAR_ARCHIVE, "Amount color alpha component");
-static ConVar hud_ci_ColorIdent_r( "hud_ci_ColorIdent_r", "255", FCVAR_ARCHIVE, "Identifier (Class,Icon) color red component");
-static ConVar hud_ci_ColorIdent_g( "hud_ci_ColorIdent_g", "255", FCVAR_ARCHIVE, "Identifier (Class,Icon) color green component");
-static ConVar hud_ci_ColorIdent_b( "hud_ci_ColorIdent_b", "255", FCVAR_ARCHIVE, "Identifier (Class,Icon) color blue component");
-static ConVar hud_ci_ColorIdent_a( "hud_ci_ColorIdent_a", "255", FCVAR_ARCHIVE, "Identifier (Class,Icon) color alpha component");
+static ConVar hud_xhairinfo_ColorBar_r( "hud_xhairinfo_ColorBar_r", "255", FCVAR_NONE, "Bar color red component");
+static ConVar hud_xhairinfo_ColorBar_g( "hud_xhairinfo_ColorBar_g", "255", FCVAR_NONE, "Bar color green component");
+static ConVar hud_xhairinfo_ColorBar_b( "hud_xhairinfo_ColorBar_b", "255", FCVAR_NONE, "Bar color blue component");
+static ConVar hud_xhairinfo_ColorBar_a( "hud_xhairinfo_ColorBar_a", "200", FCVAR_NONE, "Bar color alpha component");
+static ConVar hud_xhairinfo_ColorBarBackground_r( "hud_xhairinfo_ColorBarBackground_r", "255", FCVAR_NONE, "Bar Background  background color red component");
+static ConVar hud_xhairinfo_ColorBarBackground_g( "hud_xhairinfo_ColorBarBackground_g", "255", FCVAR_NONE, "Bar Background color green component");
+static ConVar hud_xhairinfo_ColorBarBackground_b( "hud_xhairinfo_ColorBarBackground_b", "255", FCVAR_NONE, "Bar Background color blue component");
+static ConVar hud_xhairinfo_ColorBarBackground_a( "hud_xhairinfo_ColorBarBackground_a", "96", FCVAR_NONE, "Bar Background color alpha component");
+static ConVar hud_xhairinfo_ColorBarBorder_r( "hud_xhairinfo_ColorBarBorder_r", "255", FCVAR_NONE, "Bar Border color red component");
+static ConVar hud_xhairinfo_ColorBarBorder_g( "hud_xhairinfo_ColorBarBorder_g", "255", FCVAR_NONE, "Bar Border color green component");
+static ConVar hud_xhairinfo_ColorBarBorder_b( "hud_xhairinfo_ColorBarBorder_b", "255", FCVAR_NONE, "Bar Border color blue component");
+static ConVar hud_xhairinfo_ColorBarBorder_a( "hud_xhairinfo_ColorBarBorder_a", "255", FCVAR_NONE, "Bar Border color alpha component");
+static ConVar hud_xhairinfo_ColorIcon_r( "hud_xhairinfo_ColorIcon_r", "0", FCVAR_NONE, "Icon color red component");
+static ConVar hud_xhairinfo_ColorIcon_g( "hud_xhairinfo_ColorIcon_g", "0", FCVAR_NONE, "Icon color green component");
+static ConVar hud_xhairinfo_ColorIcon_b( "hud_xhairinfo_ColorIcon_b", "0", FCVAR_NONE, "Icon color blue component");
+static ConVar hud_xhairinfo_ColorIcon_a( "hud_xhairinfo_ColorIcon_a", "255", FCVAR_NONE, "Icon color alpha component");
+static ConVar hud_xhairinfo_ColorLabel_r( "hud_xhairinfo_ColorLabel_r", "0", FCVAR_NONE, "Label color red component");
+static ConVar hud_xhairinfo_ColorLabel_g( "hud_xhairinfo_ColorLabel_g", "0", FCVAR_NONE, "Label color green component");
+static ConVar hud_xhairinfo_ColorLabel_b( "hud_xhairinfo_ColorLabel_b", "0", FCVAR_NONE, "Label color blue component");
+static ConVar hud_xhairinfo_ColorLabel_a( "hud_xhairinfo_ColorLabel_a", "255", FCVAR_NONE, "Label color alpha component");
+static ConVar hud_xhairinfo_ColorAmount_r( "hud_xhairinfo_ColorAmount_r", "255", FCVAR_NONE, "Amount color red component");
+static ConVar hud_xhairinfo_ColorAmount_g( "hud_xhairinfo_ColorAmount_g", "255", FCVAR_NONE, "Amount color green component");
+static ConVar hud_xhairinfo_ColorAmount_b( "hud_xhairinfo_ColorAmount_b", "255", FCVAR_NONE, "Amount color blue component");
+static ConVar hud_xhairinfo_ColorAmount_a( "hud_xhairinfo_ColorAmount_a", "255", FCVAR_NONE, "Amount color alpha component");
+static ConVar hud_xhairinfo_ColorIdent_r( "hud_xhairinfo_ColorIdent_r", "255", FCVAR_NONE, "Identifier (Class,Icon) color red component");
+static ConVar hud_xhairinfo_ColorIdent_g( "hud_xhairinfo_ColorIdent_g", "255", FCVAR_NONE, "Identifier (Class,Icon) color green component");
+static ConVar hud_xhairinfo_ColorIdent_b( "hud_xhairinfo_ColorIdent_b", "255", FCVAR_NONE, "Identifier (Class,Icon) color blue component");
+static ConVar hud_xhairinfo_ColorIdent_a( "hud_xhairinfo_ColorIdent_a", "255", FCVAR_NONE, "Identifier (Class,Icon) color alpha component");
 
-static ConVar hud_ci_ShadowIcon( "hud_ci_ShadowIcon", "0", FCVAR_ARCHIVE, "Icon Shadow (0 Off, 1 On)");
-static ConVar hud_ci_ShadowLabel( "hud_ci_ShadowLabel", "0", FCVAR_ARCHIVE, "Label Shadow (0 Off, 1 On)");
-static ConVar hud_ci_ShadowAmount( "hud_ci_ShadowAmount", "1", FCVAR_ARCHIVE, "Amount Shadow (0 Off, 1 On)");
+static ConVar hud_xhairinfo_ShadowIcon( "hud_xhairinfo_ShadowIcon", "0", FCVAR_NONE, "Icon Shadow (0 Off, 1 On)");
+static ConVar hud_xhairinfo_ShadowLabel( "hud_xhairinfo_ShadowLabel", "0", FCVAR_NONE, "Label Shadow (0 Off, 1 On)");
+static ConVar hud_xhairinfo_ShadowAmount( "hud_xhairinfo_ShadowAmount", "1", FCVAR_NONE, "Amount Shadow (0 Off, 1 On)");
 
-static ConVar hud_ci_ColorModeBar( "hud_ci_ColorModeBar", "2", FCVAR_ARCHIVE, "Bar color mode");
-static ConVar hud_ci_ColorModeBarBackground( "hud_ci_ColorModeBarBackground", "2", FCVAR_ARCHIVE, "Bar Background color mode");
-static ConVar hud_ci_ColorModeBarBorder( "hud_ci_ColorModeBarBorder", "3", FCVAR_ARCHIVE, "Bar Border color mode");
-static ConVar hud_ci_ColorModeIcon( "hud_ci_ColorModeIcon", "0", FCVAR_ARCHIVE, "Icon color mode");
-static ConVar hud_ci_ColorModeLabel( "hud_ci_ColorModeLabel", "0", FCVAR_ARCHIVE, "Label color mode");
-static ConVar hud_ci_ColorModeAmount( "hud_ci_ColorModeAmount", "0", FCVAR_ARCHIVE, "Amount color mode");
-static ConVar hud_ci_ColorModeIdent( "hud_ci_ColorModeIdent", "0", FCVAR_ARCHIVE, "Identifier (Class,Icon) color mode");
+static ConVar hud_xhairinfo_ColorModeBar( "hud_xhairinfo_ColorModeBar", "2", FCVAR_NONE, "Bar color mode");
+static ConVar hud_xhairinfo_ColorModeBarBackground( "hud_xhairinfo_ColorModeBarBackground", "2", FCVAR_NONE, "Bar Background color mode");
+static ConVar hud_xhairinfo_ColorModeBarBorder( "hud_xhairinfo_ColorModeBarBorder", "2", FCVAR_NONE, "Bar Border color mode");
+static ConVar hud_xhairinfo_ColorModeIcon( "hud_xhairinfo_ColorModeIcon", "2", FCVAR_NONE, "Icon color mode");
+static ConVar hud_xhairinfo_ColorModeLabel( "hud_xhairinfo_ColorModeLabel", "0", FCVAR_NONE, "Label color mode");
+static ConVar hud_xhairinfo_ColorModeAmount( "hud_xhairinfo_ColorModeAmount", "0", FCVAR_NONE, "Amount color mode");
+static ConVar hud_xhairinfo_ColorModeIdent( "hud_xhairinfo_ColorModeIdent", "3", FCVAR_NONE, "Identifier (Class,Icon) color mode");
 
-static ConVar hud_ci_offsetXBar( "hud_ci_offsetXBar", "0", FCVAR_ARCHIVE, "Bar offset x");
-static ConVar hud_ci_offsetYBar( "hud_ci_offsetYBar", "0", FCVAR_ARCHIVE, "Bar offset y");
-static ConVar hud_ci_offsetXIcon( "hud_ci_offsetXIcon", "65", FCVAR_ARCHIVE, "Icon offset x");
-static ConVar hud_ci_offsetYIcon( "hud_ci_offsetYIcon", "0", FCVAR_ARCHIVE, "Icon offset y");
-static ConVar hud_ci_offsetXLabel( "hud_ci_offsetXLabel", "1", FCVAR_ARCHIVE, "label offset x");
-static ConVar hud_ci_offsetYLabel( "hud_ci_offsetYLabel", "0", FCVAR_ARCHIVE, "label offset y");
-static ConVar hud_ci_offsetXAmount( "hud_ci_offsetXAmount", "-25", FCVAR_ARCHIVE, "Amount offset x");
-static ConVar hud_ci_offsetYAmount( "hud_ci_offsetYAmount", "0", FCVAR_ARCHIVE, "Amount offset y");
-static ConVar hud_ci_offsetXIdent( "hud_ci_offsetXIdent", "0", FCVAR_ARCHIVE, "Identifier (Class,Name,Icon) offset x");
-static ConVar hud_ci_offsetYIdent( "hud_ci_offsetYIdent", "-30", FCVAR_ARCHIVE, "Identifier (Class,Name,Icon) offset y");
+static ConVar hud_xhairinfo_offsetXBar( "hud_xhairinfo_offsetXBar", "0", FCVAR_NONE, "Bar offset x");
+static ConVar hud_xhairinfo_offsetYBar( "hud_xhairinfo_offsetYBar", "0", FCVAR_NONE, "Bar offset y");
+static ConVar hud_xhairinfo_offsetXIcon( "hud_xhairinfo_offsetXIcon", "-5", FCVAR_NONE, "Icon offset x");
+static ConVar hud_xhairinfo_offsetYIcon( "hud_xhairinfo_offsetYIcon", "-2", FCVAR_NONE, "Icon offset y");
+static ConVar hud_xhairinfo_offsetXLabel( "hud_xhairinfo_offsetXLabel", "1", FCVAR_NONE, "label offset x");
+static ConVar hud_xhairinfo_offsetYLabel( "hud_xhairinfo_offsetYLabel", "0", FCVAR_NONE, "label offset y");
+static ConVar hud_xhairinfo_offsetXAmount( "hud_xhairinfo_offsetXAmount", "-25", FCVAR_NONE, "Amount offset x");
+static ConVar hud_xhairinfo_offsetYAmount( "hud_xhairinfo_offsetYAmount", "0", FCVAR_NONE, "Amount offset y");
+static ConVar hud_xhairinfo_offsetXIdent( "hud_xhairinfo_offsetXIdent", "0", FCVAR_NONE, "Identifier (Class,Name,Icon) offset x");
+static ConVar hud_xhairinfo_offsetYIdent( "hud_xhairinfo_offsetYIdent", "-30", FCVAR_NONE, "Identifier (Class,Name,Icon) offset y");
 
 #define CROSSHAIRTYPE_NORMAL 0
 #define CROSSHAIRTYPE_DISPENSER 1
@@ -263,7 +263,7 @@ void CHudCrosshairInfo::VidInit( void )
 	m_iTeam = 0;
 	m_iClass = 0;
 	
-	hud_ci_update.SetValue(1);
+	hud_xhairinfo_update.SetValue(1);
 
 	m_qbIdent->setIconFont(m_hQuantityBarClassGlyphHUD);
 	m_qbIdent->setLabelFont(m_hQuantityBarClassNameHUD);
@@ -666,31 +666,31 @@ void CHudCrosshairInfo::OnTick( void )
 				// "map" screen res to 640/480
 				float flXScale = 640.0f / iScreenWide;
 				float flYScale = 480.0f / iScreenTall;
+				
+				const char *pszOldName = szName;
+				int iBufSize = ( int )strlen( pszOldName ) * 2;
+				char *pszNewName = ( char * )_alloca( iBufSize );
 
-				if(!hud_ci_newStyle.GetBool())
+				UTIL_MakeSafeName( pszOldName, pszNewName, iBufSize );
+
+				wchar_t wszName[ 256 ];
+				vgui::localize()->ConvertANSIToUnicode( pszNewName, wszName, sizeof( wszName ) );
+
+				wchar_t wszClass[ 256 ];					
+				wchar_t *pszTemp = vgui::localize()->Find( szClass );
+				if( pszTemp )
+					wcscpy( wszClass, pszTemp );
+				else
+				{
+					wcscpy( wszClass, L"CLASS" );	// TODO: fix to show English version of class name :/
+				}
+
+				if(!hud_xhairinfo_newStyle.GetBool())
 				{
 					// NOW! Remember team is 1 higher than the actual team
 					// If health/armor are -1 then we don't show it
 
 					// Convert to unicode & localize stuff
-
-					const char *pszOldName = szName;
-					int iBufSize = ( int )strlen( pszOldName ) * 2;
-					char *pszNewName = ( char * )_alloca( iBufSize );
-
-					UTIL_MakeSafeName( pszOldName, pszNewName, iBufSize );
-
-					wchar_t wszName[ 256 ];
-					vgui::localize()->ConvertANSIToUnicode( pszNewName, wszName, sizeof( wszName ) );
-
-					wchar_t wszClass[ 256 ];					
-					wchar_t *pszTemp = vgui::localize()->Find( szClass );
-					if( pszTemp )
-						wcscpy( wszClass, pszTemp );
-					else
-					{
-						wcscpy( wszClass, L"CLASS" );	// TODO: fix to show English version of class name :/
-					}
 					
 					if (CROSSHAIRTYPE == CROSSHAIRTYPE_DISPENSER)
 					{
@@ -803,164 +803,172 @@ void CHudCrosshairInfo::OnTick( void )
 				}
 				else
 				{
+					wchar_t wsz_Label[256];
 					if(Q_stricmp(szClass,"#FF_PLAYER_SCOUT") == 0)
 					{
 						m_qbIdent->setIconChar("!");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_SNIPER") == 0)
 					{
 						m_qbIdent->setIconChar("@");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_SOLDIER") == 0)
 					{
 						m_qbIdent->setIconChar("#");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_DEMOMAN") == 0)
 					{
 						m_qbIdent->setIconChar("$");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_MEDIC") == 0)
 					{
 						m_qbIdent->setIconChar("%");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_HWGUY") == 0)
 					{
 						m_qbIdent->setIconChar("^");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_SPY") == 0)
 					{
 						m_qbIdent->setIconChar("*");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_PYRO") == 0)
 					{
 						m_qbIdent->setIconChar("?");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_ENGINEER") == 0)
 					{
 						m_qbIdent->setIconChar("(");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_CIVILIAN") == 0)
 					{
 						m_qbIdent->setIconChar(")");
-						m_qbIdent->setLabelText(szClass);
+						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_SENTRYGUN") == 0)
 					{
 						m_qbIdent->setIconChar("R");
-						m_qbIdent->setLabelText(szClass);
+						if (CROSSHAIRTYPE == CROSSHAIRTYPE_SENTRYGUN)
+							_snwprintf( wsz_Label, 255, L"Your Sentry Gun" );
+						else
+							_snwprintf( wsz_Label, 255, L"%s's Sentry Gun", wszName );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_DISPENSER") == 0)
 					{
 						m_qbIdent->setIconChar("Q");
-						m_qbIdent->setLabelText(szClass);
+						if (CROSSHAIRTYPE == CROSSHAIRTYPE_DISPENSER)
+							_snwprintf( wsz_Label, 255, L"Your Dispenser" );
+						else
+							_snwprintf( wsz_Label, 255, L"%s's Dispenser", wszName );
 					}
 					else
 					{
 						m_qbIdent->setIconChar("_");
-						m_qbIdent->setLabelText("#FF_PLAYER_INVALID");
+						_snwprintf( wsz_Label, 255, L"" );
 					}
+					m_qbIdent->setLabelText(wsz_Label);
 
-					if(hud_ci_update.GetBool() || hud_ci_updateAlways.GetBool())
+					if(hud_xhairinfo_update.GetBool() || hud_xhairinfo_updateAlways.GetBool())
 					{
 						//reset it so that it does not update again
-						hud_ci_update.SetValue(0);
+						hud_xhairinfo_update.SetValue(0);
 
-						int barWidth = hud_ci_barWidth.GetInt();
-						int barHeight = hud_ci_barHeight.GetInt();
-						int barBorderWidth = hud_ci_barBorderWidth.GetInt();
+						int barWidth = hud_xhairinfo_barWidth.GetInt();
+						int barHeight = hud_xhairinfo_barHeight.GetInt();
+						int barBorderWidth = hud_xhairinfo_barBorderWidth.GetInt();
 
-						int barColorMode = hud_ci_ColorModeBar.GetInt();
-						int barBackgroundColorMode = hud_ci_ColorModeBarBackground.GetInt();
-						int barBorderColorMode =  hud_ci_ColorModeBarBorder.GetInt();
-						int iconColorMode = hud_ci_ColorModeIcon.GetInt();
-						int labelColorMode = hud_ci_ColorModeLabel.GetInt();
-						int amountColorMode = hud_ci_ColorModeAmount.GetInt();
-						int identColorMode = hud_ci_ColorModeIdent.GetInt();
+						int barColorMode = hud_xhairinfo_ColorModeBar.GetInt();
+						int barBackgroundColorMode = hud_xhairinfo_ColorModeBarBackground.GetInt();
+						int barBorderColorMode =  hud_xhairinfo_ColorModeBarBorder.GetInt();
+						int iconColorMode = hud_xhairinfo_ColorModeIcon.GetInt();
+						int labelColorMode = hud_xhairinfo_ColorModeLabel.GetInt();
+						int amountColorMode = hud_xhairinfo_ColorModeAmount.GetInt();
+						int identColorMode = hud_xhairinfo_ColorModeIdent.GetInt();
 						
 						Color barColor = *new Color(
-							hud_ci_ColorBar_r.GetInt(),
-							hud_ci_ColorBar_g.GetInt(),
-							hud_ci_ColorBar_b.GetInt(),
-							hud_ci_ColorBar_a.GetInt());
+							hud_xhairinfo_ColorBar_r.GetInt(),
+							hud_xhairinfo_ColorBar_g.GetInt(),
+							hud_xhairinfo_ColorBar_b.GetInt(),
+							hud_xhairinfo_ColorBar_a.GetInt());
 						Color barBackgroundColor = *new Color(
-							hud_ci_ColorBarBackground_r.GetInt(),
-							hud_ci_ColorBarBackground_g.GetInt(),
-							hud_ci_ColorBarBackground_b.GetInt(),
-							hud_ci_ColorBarBackground_a.GetInt());
+							hud_xhairinfo_ColorBarBackground_r.GetInt(),
+							hud_xhairinfo_ColorBarBackground_g.GetInt(),
+							hud_xhairinfo_ColorBarBackground_b.GetInt(),
+							hud_xhairinfo_ColorBarBackground_a.GetInt());
 						Color barBorderColor = *new Color(
-							hud_ci_ColorBarBorder_r.GetInt(),
-							hud_ci_ColorBarBorder_g.GetInt(),
-							hud_ci_ColorBarBorder_b.GetInt(),
-							hud_ci_ColorBarBorder_a.GetInt());
+							hud_xhairinfo_ColorBarBorder_r.GetInt(),
+							hud_xhairinfo_ColorBarBorder_g.GetInt(),
+							hud_xhairinfo_ColorBarBorder_b.GetInt(),
+							hud_xhairinfo_ColorBarBorder_a.GetInt());
 						Color iconColor = *new Color(
-							hud_ci_ColorIcon_r.GetInt(),
-							hud_ci_ColorIcon_g.GetInt(),
-							hud_ci_ColorIcon_b.GetInt(),
-							hud_ci_ColorIcon_a.GetInt());
+							hud_xhairinfo_ColorIcon_r.GetInt(),
+							hud_xhairinfo_ColorIcon_g.GetInt(),
+							hud_xhairinfo_ColorIcon_b.GetInt(),
+							hud_xhairinfo_ColorIcon_a.GetInt());
 						Color labelColor = *new Color(
-							hud_ci_ColorLabel_r.GetInt(),
-							hud_ci_ColorLabel_g.GetInt(),
-							hud_ci_ColorLabel_b.GetInt(),
-							hud_ci_ColorLabel_a.GetInt());
+							hud_xhairinfo_ColorLabel_r.GetInt(),
+							hud_xhairinfo_ColorLabel_g.GetInt(),
+							hud_xhairinfo_ColorLabel_b.GetInt(),
+							hud_xhairinfo_ColorLabel_a.GetInt());
 						Color amountColor = *new Color(
-							hud_ci_ColorAmount_r.GetInt(),
-							hud_ci_ColorAmount_g.GetInt(),
-							hud_ci_ColorAmount_b.GetInt(),
-							hud_ci_ColorAmount_a.GetInt());
+							hud_xhairinfo_ColorAmount_r.GetInt(),
+							hud_xhairinfo_ColorAmount_g.GetInt(),
+							hud_xhairinfo_ColorAmount_b.GetInt(),
+							hud_xhairinfo_ColorAmount_a.GetInt());
 						Color identColor = *new Color(
-							hud_ci_ColorIdent_r.GetInt(),
-							hud_ci_ColorIdent_g.GetInt(),
-							hud_ci_ColorIdent_b.GetInt(),
-							hud_ci_ColorIdent_a.GetInt());
+							hud_xhairinfo_ColorIdent_r.GetInt(),
+							hud_xhairinfo_ColorIdent_g.GetInt(),
+							hud_xhairinfo_ColorIdent_b.GetInt(),
+							hud_xhairinfo_ColorIdent_a.GetInt());
 						
 						m_qbIdent->setIconColor(identColor);
 						m_qbIdent->setLabelColor(identColor);
 						m_qbIdent->setIconColorMode(identColorMode);
 						m_qbIdent->setLabelColorMode(identColorMode);
 			
-						int red = hud_ci_intensity_red.GetInt();
-						int orange = hud_ci_intensity_orange.GetInt();
-						int yellow = hud_ci_intensity_yellow.GetInt();
-						int green = hud_ci_intensity_green.GetInt();
+						int red = hud_xhairinfo_intensity_red.GetInt();
+						int orange = hud_xhairinfo_intensity_orange.GetInt();
+						int yellow = hud_xhairinfo_intensity_yellow.GetInt();
+						int green = hud_xhairinfo_intensity_green.GetInt();
 
-						bool showBar = hud_ci_showBar.GetBool();
-						bool showBarBackground = hud_ci_showBarBackground.GetBool();
-						bool showBarBorder = hud_ci_showBarBorder.GetBool();
-						bool showIcon = hud_ci_showIcon.GetBool();
-						bool showLabel = hud_ci_showLabel.GetBool();
-						bool showAmount = hud_ci_showAmount.GetBool();
+						bool showBar = hud_xhairinfo_showBar.GetBool();
+						bool showBarBackground = hud_xhairinfo_showBarBackground.GetBool();
+						bool showBarBorder = hud_xhairinfo_showBarBorder.GetBool();
+						bool showIcon = hud_xhairinfo_showIcon.GetBool();
+						bool showLabel = hud_xhairinfo_showLabel.GetBool();
+						bool showAmount = hud_xhairinfo_showAmount.GetBool();
 						
-						int barOffsetX = hud_ci_offsetXBar.GetInt();
-						int barOffsetY = hud_ci_offsetYBar.GetInt();
-						int iconOffsetX = hud_ci_offsetXIcon.GetInt();
-						int iconOffsetY = hud_ci_offsetYIcon.GetInt();
-						int labelOffsetX = hud_ci_offsetXLabel.GetInt();
-						int labelOffsetY = hud_ci_offsetYLabel.GetInt();
-						int amountOffsetX = hud_ci_offsetXAmount.GetInt();
-						int amountOffsetY = hud_ci_offsetYAmount.GetInt();
+						int barOffsetX = hud_xhairinfo_offsetXBar.GetInt();
+						int barOffsetY = hud_xhairinfo_offsetYBar.GetInt();
+						int iconOffsetX = hud_xhairinfo_offsetXIcon.GetInt();
+						int iconOffsetY = hud_xhairinfo_offsetYIcon.GetInt();
+						int labelOffsetX = hud_xhairinfo_offsetXLabel.GetInt();
+						int labelOffsetY = hud_xhairinfo_offsetYLabel.GetInt();
+						int amountOffsetX = hud_xhairinfo_offsetXAmount.GetInt();
+						int amountOffsetY = hud_xhairinfo_offsetYAmount.GetInt();
 						
 						vgui::HFont amountFont,iconFont,labelFont;
 
-						if(hud_ci_ShadowIcon.GetBool())
+						if(hud_xhairinfo_ShadowIcon.GetBool())
 							iconFont = m_hQuantityBarIconShadowHUD;
 						else
 							iconFont = m_hQuantityBarIconHUD;
 
-						if(hud_ci_ShadowLabel.GetBool())
+						if(hud_xhairinfo_ShadowLabel.GetBool())
 							labelFont = m_hQuantityBarShadowHUD;
 						else
 							labelFont = m_hQuantityBarHUD;
 
-						if(hud_ci_ShadowAmount.GetBool())
+						if(hud_xhairinfo_ShadowAmount.GetBool())
 							amountFont = m_hQuantityBarShadowHUD;
 						else
 							amountFont = m_hQuantityBarHUD;
@@ -1221,19 +1229,19 @@ void CHudCrosshairInfo::OnTick( void )
 					Color teamColor;
 					SetColorByTeam( m_iTeam, teamColor );
 
-					int iLeft = hud_ci_x.GetInt(), iTop = hud_ci_y.GetInt();
-					int itemOffsetY = hud_ci_itemOffsetY.GetInt();
-					int itemOffsetX = hud_ci_itemOffsetX.GetInt();
-					int itemsPerRow = hud_ci_itemsPerRow.GetInt();
+					int iLeft = hud_xhairinfo_x.GetInt(), iTop = hud_xhairinfo_y.GetInt();
+					int itemOffsetY = hud_xhairinfo_itemOffsetY.GetInt();
+					int itemOffsetX = hud_xhairinfo_itemOffsetX.GetInt();
+					int itemsPerRow = hud_xhairinfo_itemsPerRow.GetInt();
 					int iRow = 0,iOffsetY = 0,iOffsetX = 0;
 					
-					if(hud_ci_showIdent.GetBool())
+					if(hud_xhairinfo_showIdent.GetBool())
 					{
 						m_qbIdent->setAmount(iHealth);
 						m_qbIdent->setTeamColor(teamColor);
 						m_qbIdent->setScaleX(flXScale);
 						m_qbIdent->setScaleY(flYScale);
-						m_qbIdent->setPosition(iLeft + hud_ci_offsetXIdent.GetInt(), iTop + hud_ci_offsetYIdent.GetInt());
+						m_qbIdent->setPosition(iLeft + hud_xhairinfo_offsetXIdent.GetInt(), iTop + hud_xhairinfo_offsetYIdent.GetInt());
 					}
 					if(iHealth > -1)
 					{
@@ -1421,7 +1429,7 @@ void CHudCrosshairInfo::Paint( void )
 	if( ( m_flDrawTime + m_flDrawDuration ) > gpGlobals->curtime )
 	{
 
-		if(!hud_ci_newStyle.GetBool())
+		if(!hud_xhairinfo_newStyle.GetBool())
 		{
 			// draw xhair info
 			if( hud_centerid.GetInt() )

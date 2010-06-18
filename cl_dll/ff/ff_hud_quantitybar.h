@@ -59,6 +59,7 @@ public:
 
 	void setIconChar(char *newIconChar);
 	void setLabelText(char *newLabelText);
+	void setLabelText(wchar_t *newLabelText);
 
 	void setBarWidth(int newBarWidth);
 	void setBarHeight(int newBarHeight);
