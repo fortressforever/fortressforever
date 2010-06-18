@@ -695,9 +695,15 @@ void CFFDispenser::DoExplosionDamage()
 //-----------------------------------------------------------------------------
 void CFFDispenser::SpawnGibs()
 {
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	
+	if( !pOwner ) 
+		return;
+
 	CEffectData data;
 		data.m_nEntIndex = entindex();
 		data.m_vOrigin = GetAbsOrigin();
+		data.m_nMaterial = clamp( pOwner->GetTeamNumber() + 1 - TEAM_BLUE, 0, 4 ); // using this for skin, not sure what it's meant to be used for
 	DispatchEffect("DispenserGib", data);
 }
 
