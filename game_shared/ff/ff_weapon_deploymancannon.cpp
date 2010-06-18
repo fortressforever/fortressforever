@@ -263,6 +263,16 @@ bool CFFWeaponDeployManCannon::CanDeploy( void )
 //----------------------------------------------------------------------------
 bool CFFWeaponDeployManCannon::CanBeSelected( void )
 {
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if( !pPlayer )
+		return false;
+
+	if( pPlayer->GetManCannon() )
+	{
+		return false;
+	}
+
 	return BaseClass::CanBeSelected();
 }
 
