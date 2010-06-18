@@ -65,6 +65,8 @@ void CFFManCannon::Spawn( void )
 		m_nSkin = ( pOwner->GetTeamNumber() - 1 ); 
 
 	m_bTakesDamage = true;//Making the jumppad take damage -GreenMushy
+	m_flLastClientUpdate = 0;
+	m_iLastState = 0;
 	// caes: changed GetFloat to GetInt
 	m_iHealth = ffdev_mancannon_health.GetInt();
 	// caes
@@ -200,6 +202,47 @@ CFFManCannon *CFFManCannon::Create( const Vector& vecOrigin, const QAngle& vecAn
 	pObject->Spawn();
 
 	return pObject;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Update the client
+//-----------------------------------------------------------------------------
+void CFFManCannon::PhysicsSimulate()
+{
+	BaseClass::PhysicsSimulate();
+
+	// Update the client every 0.2 seconds
+	if (gpGlobals->curtime > m_flLastClientUpdate + 0.2f)
+	{
+		m_flLastClientUpdate = gpGlobals->curtime;
+
+		CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (m_hOwner.Get());
+
+		if (!pPlayer)
+			return;
+
+		int iHealth = (int) (100.0f * GetHealth() / ffdev_mancannon_health.GetInt());
+		//int iArmor = (int) ( 100.0f * m_iSGArmor / m_iMaxSGArmor); // no more armor, just reduce max health - shok
+		//int iAmmo = (int) (100.0f * (float) m_iShells / m_iMaxShells);
+
+		// Last bit of ammo signifies whether the SG needs rockets
+		//if (m_iMaxRockets && !m_iRockets) 
+		//	m_iAmmoPercent += 128;
+
+		// If things haven't changed then do nothing more
+		int iState = iHealth;
+		if (m_iLastState == iState)
+			return;
+
+		CSingleUserRecipientFilter user(pPlayer);
+		user.MakeReliable();
+
+		UserMessageBegin(user, "ManCannonMsg");
+			WRITE_BYTE(iHealth);
+		MessageEnd();
+
+		m_iLastState = iState;
+	}
 }
 
 //-----------------------------------------------------------------------------

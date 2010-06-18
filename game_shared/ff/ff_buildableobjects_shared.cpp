@@ -791,6 +791,8 @@ CFFManCannon::CFFManCannon( void )
 	m_ppszSounds = g_pszFFManCannonSounds;
 
 	m_bUsePhysics = true;
+	m_flLastClientUpdate = 0;
+	m_iLastState = 0;
 #endif
 
 	// Health
@@ -810,6 +812,7 @@ void DispenserGib_Callback(const CEffectData &data)
 {
 	Vector vecPosition = data.m_vOrigin;
 	Vector vecOffset;
+	int nSkin = data.m_nMaterial;
 
 	// Now spawn a number of gibs
 	int iGib = 0;
@@ -819,6 +822,7 @@ void DispenserGib_Callback(const CEffectData &data)
 	
 		if (pGib)
 		{
+			pGib->m_nSkin = nSkin;
 			pGib->LeaveBloodDecal(false);
 		}
 		++iGib;

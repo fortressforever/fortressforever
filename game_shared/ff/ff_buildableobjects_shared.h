@@ -863,6 +863,11 @@ public:
 
 	void OnObjectTouch( CBaseEntity *pOther );
 	void OnJumpPadThink( void );
+	
+	// These are for updating the user
+	virtual void	PhysicsSimulate();
+	float			m_flLastClientUpdate;
+	int				m_iLastState;
 
 	virtual bool CanSabotage( void ) const { return false; }
 	virtual bool IsSabotaged( void ) const { return false; }
