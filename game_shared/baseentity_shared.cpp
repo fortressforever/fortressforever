@@ -512,6 +512,30 @@ bool CBaseEntity::KeyValue( const char *szKeyName, Vector vec )
 //-----------------------------------------------------------------------------
 bool CBaseEntity::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
+	// --> hlstriker: No team collisions
+	switch(GetTeamNumber())
+	{
+		case TEAM_BLUE:
+			if( contentsMask & CONTENTS_TEAM_BLUE )
+				return false;
+			break;
+		case TEAM_RED:
+			if( contentsMask & CONTENTS_TEAM_RED )
+				return false;
+			break;
+		case TEAM_YELLOW:
+			if( contentsMask & CONTENTS_TEAM_YELLOW )
+				return false;
+			break;
+		case TEAM_GREEN:
+			if( contentsMask & CONTENTS_TEAM_GREEN )
+				return false;
+			break;
+		default:
+			break;
+	}
+	// <--
+
 	if ( m_CollisionGroup == COLLISION_GROUP_DEBRIS )
 	{
 		if ( ! (contentsMask & CONTENTS_DEBRIS) )

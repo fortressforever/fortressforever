@@ -194,7 +194,35 @@ CGameMovement::~CGameMovement( void )
 //-----------------------------------------------------------------------------
 unsigned int CGameMovement::PlayerSolidMask( bool brushOnly )
 {
-	return ( brushOnly ) ? MASK_PLAYERSOLID_BRUSHONLY : MASK_PLAYERSOLID;
+	// --> hlstriker: Modified for no team collisions
+	int iMask = -1;
+	switch(player->GetTeamNumber())
+	{
+		case TEAM_BLUE:
+			iMask = CONTENTS_TEAM_BLUE;
+			break;
+		case TEAM_RED:
+			iMask = CONTENTS_TEAM_RED;
+			break;
+		case TEAM_YELLOW:
+			iMask = CONTENTS_TEAM_YELLOW;
+			break;
+		case TEAM_GREEN:
+			iMask = CONTENTS_TEAM_GREEN;
+			break;
+		default:
+			break;
+	}
+
+	if(iMask != -1)
+		iMask = (( brushOnly ) ? MASK_PLAYERSOLID_BRUSHONLY : MASK_PLAYERSOLID) | iMask;
+	else
+		iMask = ( brushOnly ) ? MASK_PLAYERSOLID_BRUSHONLY : MASK_PLAYERSOLID;
+
+	return iMask;
+	// <-- hlstriker
+
+	// return ( brushOnly ) ? MASK_PLAYERSOLID_BRUSHONLY : MASK_PLAYERSOLID;
 }
 
 //-----------------------------------------------------------------------------
