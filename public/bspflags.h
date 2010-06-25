@@ -40,10 +40,11 @@
 // unused 
 // NOTE: If it's visible, grab from the top + update LAST_VISIBLE_CONTENTS
 // if not visible, then grab from the bottom.
-#define CONTENTS_TEAM_BLUE		0x200
-#define CONTENTS_TEAM_RED		0x4000
-#define CONTENTS_TEAM_YELLOW	0x800	// per team contents used to differentiate collisions 
-#define CONTENTS_TEAM_GREEN		0x1000	// between players and objects on different teams
+#define CONTENTS_UNUSED5		0x200
+#define CONTENTS_UNUSED6		0x4000
+
+#define CONTENTS_TEAM1			0x800	// per team contents used to differentiate collisions 
+#define CONTENTS_TEAM2			0x1000	// between players and objects on different teams
 
 // ignore CONTENTS_OPAQUE on surfaces that have SURF_NODRAW
 #define CONTENTS_IGNORE_NODRAW_OPAQUE	0x2000
