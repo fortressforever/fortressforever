@@ -234,7 +234,7 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kClipTeamYellow",	LUA_CLIP_FLAG_TEAMYELLOW),
 				value("kClipTeamGreen",		LUA_CLIP_FLAG_TEAMGREEN),
 				value("kClipGrenades",		LUA_CLIP_FLAG_GRENADES),
-				value("kClipProjectiles",	LUA_CLIP_FLAG_PROJECTILES)
+				value("kClipTeamEntities",	LUA_CLIP_FLAG_TEAM_ENTITIES)
 			],
 		class_<CFFEntity_SpecMode>("SpecMode")
 			.enum_("SpecMode")
