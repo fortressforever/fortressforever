@@ -64,14 +64,16 @@ CFFIRCLobbyTab::CFFIRCLobbyTab(Panel *parent, char const *panelName) : BaseClass
     m_pGameList->AddColumnHeader( 0, "players" , "Players" , 20, ListPanel::COLUMN_RESIZEWITHWINDOW );
     m_pGameList->AddColumnHeader( 1, "name" , "Game Name" , 200, ListPanel::COLUMN_RESIZEWITHWINDOW );
 	m_pGameList->AddColumnHeader( 2, "map" , "Map Name" , 150, ListPanel::COLUMN_RESIZEWITHWINDOW  );
-	m_pGameList->AddColumnHeader( 3, "channel" , "Channel" , 0, ListPanel::COLUMN_HIDDEN  );
-	m_pGameList->AddColumnHeader( 4, "serverip" , "Server IP" , 0, ListPanel::COLUMN_HIDDEN  );
-	m_pGameList->AddColumnHeader( 5, "serverpassword" , "Server Password" , 0, ListPanel::COLUMN_HIDDEN  );
+	m_pGameList->AddColumnHeader( 3, "ranked" , "Ranked?" , 20, ListPanel::COLUMN_RESIZEWITHWINDOW  );
+	m_pGameList->AddColumnHeader( 4, "channel" , "Channel" , 0, ListPanel::COLUMN_HIDDEN  );
+	m_pGameList->AddColumnHeader( 5, "serverip" , "Server IP" , 0, ListPanel::COLUMN_HIDDEN  );
+	m_pGameList->AddColumnHeader( 6, "serverpassword" , "Server Password" , 0, ListPanel::COLUMN_HIDDEN  );
 
 	KeyValues *kv = new KeyValues( "LI" );
 	kv->SetString( "players", "1/8" );
 	kv->SetString( "name", "Default test game - won't have bot in" );
 	kv->SetString( "map", "ff_monkey" );
+	kv->SetString( "ranked", "Ranked" );
 	kv->SetString( "serverip", "123.23.23.23:27015" );
 	kv->SetString( "serverpassword", "ffpickup" );
 	kv->SetString( "channel", "ffgame-0" );
@@ -544,7 +546,7 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 									//	Msg("[IRC] Unable to send message\n");
 
 
-									// !new #ffgame-313 ff_monkey 1/8 1500+ pros only!
+									// !game #ffgame-313 ff_monkey 1/8 1500+ pros only!
 
 									char *pToken = NULL;
 									pToken = strtok(msg, " "); // !game
@@ -562,6 +564,9 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 										pToken = strtok(NULL, " "); // 1/8
 										kv2->SetString( "players", pToken );
 
+										pToken = strtok(NULL, " "); // Ranked
+										kv2->SetString( "ranked", pToken );
+
 										pToken = strtok(NULL, " "); // 123.23.23.23:27013
 										kv2->SetString( "serverip", pToken );
 
@@ -574,7 +579,7 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 										m_pLobbyTab->m_pGameList->ApplyItemChanges( i );
 
 									}
-									else // new game
+									else // new game // !game #ffgame-313 ff_monkey 1/8 ranked 123.23.23.23:27013 ffpickup 1500+ pros only!
 									{
 										KeyValues *kv = new KeyValues( "LI" );
 										kv->SetString( "channel", pToken );
@@ -585,6 +590,9 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 
 										pToken = strtok(NULL, " "); // 1/8
 										kv->SetString( "players", pToken );
+
+										pToken = strtok(NULL, " "); // Ranked
+										kv->SetString( "ranked", pToken );
 
 										pToken = strtok(NULL, " "); // 123.23.23.23:27013
 										kv->SetString( "serverip", pToken );
@@ -608,7 +616,7 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 									// !started #ffgame-313
 
 									char *pToken = NULL;
-									pToken = strtok(msg, " "); // !game
+									pToken = strtok(msg, " "); // !started
 									pToken = strtok(NULL, " "); // #ffgame-331
 
 									int i = m_pLobbyTab->m_pGameList->GetItem( pToken );
@@ -638,9 +646,59 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 									if (Q_strnicmp(msg, "!connect", 8) == 0)
 									{
 										char *msg = strchr(bufcopy,':') + 2; // skip the ! and get everything else
-										engine->ClientCmd( msg ); // connect xxx.xx.xx.xx:xxx password xxxx 
+										engine->ClientCmd( msg ); // connect xxx.xx.xx.xx:xxx; password xxxx 
 										return;								
 									}
+
+									// teams listing
+									else if (Q_strnicmp(msg, "!team1", 6) == 0)
+									{
+										//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: message is a !join message\r\n" ) )
+										//	Msg("[IRC] Unable to send message\n");
+
+										// !team1: one two three four !team2: five six seven eight
+
+
+										pGameTab->m_pTeam1List->RemoveAll();
+										pGameTab->m_pTeam2List->RemoveAll();
+
+										char *msgcopy = new char[ strlen(msg) ];
+										strcpy( msgcopy, msg ); // necessary because strtok changes the contents of msg
+
+
+										char *pToken = NULL;
+										pToken = strtok(msg, " "); // !team1
+										//pToken = strtok(NULL, " "); // #ffgame-331
+
+										KeyValues *kv = new KeyValues( "LI" );
+										int iTeam = 0;
+
+										while ( pToken )
+										{
+											if (Q_strnicmp(pToken, "!", 1) == 0)
+											{
+												pToken = strtok(NULL, " ");
+												iTeam++;
+											}
+											
+											while (pToken && Q_strnicmp(pToken, "!", 1) != 0)
+											{
+												kv->SetString( "players", pToken );
+												kv->SetString( "ranking", "1500" );
+
+												if ( iTeam == 1 )
+													pGameTab->m_pTeam1List->AddItem( kv, 0, false, false );
+												else if ( iTeam == 2 )
+													pGameTab->m_pTeam2List->AddItem( kv, 0, false, false );
+
+												pToken = strtok(NULL, " "); // 4v4 1500+ pros											
+											}
+										}
+
+										kv->deleteThis();
+
+									}
+
 								}
 						
 								pGameTab->UserMessage(from, msg);
@@ -1465,7 +1523,7 @@ void CFFIRCHostRankedTab::OnButtonCommand(KeyValues *data)
 		KeyValues *KV = m_pMapList->GetItem( m_pMapList->GetSelectedItem(0) );
 
 		char szCommand[256];
-		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s ranked 1 %s\r\n", KV->GetString("mapname"), KV->GetString("players"), "ip", "password", KV->GetString("gametype") );
+		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s ranked 0 %s\r\n", KV->GetString("mapname"), KV->GetString("players"), "ip", "password", KV->GetString("gametype") );
 
 		if ( !g_IRCSocket.Send( szCommand ) )
 			Msg("[IRC] Unable to send message: !hos\n");
@@ -1568,7 +1626,7 @@ void CFFIRCHostUnrankedTab::OnButtonCommand(KeyValues *data)
 
 		char szCommand[256];
 		sprintf( szCommand, "PRIVMSG ff-systembot :!host %s %s %s %s unranked %d %s\r\n", KVMap->GetString("map"), KVPlayers->GetString("players"), "ip", "password", m_pAutoTeamsCheck->IsSelected(), szName );
-
+		
 		if ( !g_IRCSocket.Send( szCommand ) )
 			Msg("[IRC] Unable to send message: !hos\n");
 
@@ -1583,7 +1641,7 @@ void CFFIRCHostUnrankedTab::LoadMaps()
 {
 	// list of all the maps on the server
 	// my plan is to have it load this list from a text file hosted online so we can easily update it as maps are added to the server
-	// for now, here's a hardcoded list of all the maps on my laptop...
+	// for now, here's a hardcoded list of all the maps on my laptop... - caes
 
 	AddMap( "ff_2fort" );
 	AddMap( "ff_2morforever" );
