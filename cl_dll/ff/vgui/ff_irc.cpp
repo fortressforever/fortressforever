@@ -222,6 +222,21 @@ void CFFIRCGameTab::OnButtonCommand(KeyValues *data)
 		if ( !g_IRCSocket.Send( VarArgs("PRIVMSG #%s :%s\r\n", GetChannel(), "!start") ) )
 			Msg("[IRC] Unable to send message: !start\n");
 	}
+	else if (Q_strcmp(pszCommand, "JoinTeam1") == 0)
+	{
+		if ( !g_IRCSocket.Send( VarArgs("PRIVMSG #%s :%s\r\n", GetChannel(), "!jointeam 1") ) )
+			Msg("[IRC] Unable to send message: !jointeam 1\n");
+	}
+	else if (Q_strcmp(pszCommand, "JoinTeam2") == 0)
+	{
+		if ( !g_IRCSocket.Send( VarArgs("PRIVMSG #%s :%s\r\n", GetChannel(), "!jointeam 2") ) )
+			Msg("[IRC] Unable to send message: !jointeam 2\n");
+	}
+	else if (Q_strcmp(pszCommand, "LeaveTeam") == 0)
+	{
+		if ( !g_IRCSocket.Send( VarArgs("PRIVMSG #%s :%s\r\n", GetChannel(), "!leaveteam") ) )
+			Msg("[IRC] Unable to send message: !leaveteam\n");
+	}
 }
 
 //-----------------------------------------------------------------------------
