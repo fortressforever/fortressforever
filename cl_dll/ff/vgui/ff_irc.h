@@ -459,7 +459,7 @@ public:
 	vgui::TextEntry* m_pTextEntry_NameEntry;
 	vgui::ComboBox *m_pMapCombo;
 	vgui::ComboBox *m_pPlayersCombo;
-	vgui::CheckButton *m_pAutoTeamsCheck;
+	//vgui::CheckButton *m_pAutoTeamsCheck;
 
 private:
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
