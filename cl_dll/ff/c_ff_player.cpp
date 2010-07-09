@@ -44,6 +44,8 @@
 
 #include "ff_hud_chat.h"
 
+#include "collisionutils.h" // hlstriker: For player avoidance
+
 #if defined( CFFPlayer )
 	#undef CFFPlayer
 #endif
@@ -1675,6 +1677,8 @@ void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 		// to override this function and then not call the baseclass?
 		// Certainly remove it and ignore me if it's not needed :P - Mulch
 		//BaseClass::CreateMove( flInputSampleTime, pCmd );
+
+		AvoidPlayers( pCmd ); // hlstriker
 	}
 }
 
@@ -2959,6 +2963,256 @@ float C_FFPlayer::GetFOV()
 
 	return default_fov.GetFloat() + (flNormalisedFOVModifier * ffdev_dynamicfov_range.GetFloat());
 }
+
+// --> hlstriker: Taken directly from OB code
+//-----------------------------------------------------------------------------
+// Purpose: Try to steer away from any players and objects we might interpenetrate
+//-----------------------------------------------------------------------------
+#define SDK_AVOID_MAX_RADIUS_SQR		5184.0f			// Based on player extents and max buildable extents.
+#define SDK_OO_AVOID_MAX_RADIUS_SQR		0.00029f
+
+ConVar sdk_max_separation_force ( "sdk_max_separation_force", "180", FCVAR_CHEAT );
+
+extern ConVar cl_forwardspeed;
+extern ConVar cl_backspeed;
+extern ConVar cl_sidespeed;
+
+// Is an entities mins/maxs intersecting with the boxs mins/maxs
+bool C_FFPlayer::IsEntIntersectingBox( C_BaseEntity *pEnt, const Vector& boxMin, const Vector& boxMax )
+{
+	if( !pEnt )
+		return false;
+
+	Vector vecAvoidCenter, vecAvoidMin, vecAvoidMax;
+	vecAvoidCenter = pEnt->GetAbsOrigin();
+
+	if( pEnt->IsPlayer() )
+	{
+		C_FFPlayer *pPlayer = static_cast< C_FFPlayer * >( pEnt );
+		vecAvoidMin = pPlayer->GetPlayerMins();
+		vecAvoidMax = pPlayer->GetPlayerMaxs();
+	}
+	else
+	{
+		vecAvoidMin = pEnt->WorldAlignMins();
+		vecAvoidMax = pEnt->WorldAlignMaxs();
+	}
+
+	//flZHeight = vecAvoidMax.z - vecAvoidMin.z;
+	//vecAvoidCenter.z += 0.5f * flZHeight;
+	VectorAdd( vecAvoidMin, vecAvoidCenter, vecAvoidMin );
+	VectorAdd( vecAvoidMax, vecAvoidCenter, vecAvoidMax );
+
+	if ( IsBoxIntersectingBox( boxMin, boxMax, vecAvoidMin, vecAvoidMax ) )
+		return true;
+
+	return false;
+}
+
+// Finds a team entity that is intersecting with the box mins/maxs
+C_BaseEntity* C_FFPlayer::FindTeamIntersect( C_Team *pTeam, const Vector& boxMin, const Vector& boxMax )
+{
+	C_BaseEntity *pAvoidEnt = NULL;
+
+	for ( int i = 0; i < pTeam->Get_Number_Players(); ++i )
+	{
+		C_FFPlayer *pAvoidPlayer = static_cast< C_FFPlayer * >( pTeam->GetPlayer( i ) );
+		if ( pAvoidPlayer == NULL )
+			continue;
+
+		// Check to see if the avoid player is dormant.
+		if ( pAvoidPlayer->IsDormant() )
+			continue;
+
+		// Is the avoid player solid?
+		if ( pAvoidPlayer->IsSolidFlagSet( FSOLID_NOT_SOLID ) )
+			continue;
+
+		// Check to see if should avoid engineers buildables
+		if( pAvoidPlayer->GetClassSlot() == CLASS_ENGINEER )
+		{
+			//pAvoidEnt = static_cast< C_BaseEntity * >( pAvoidPlayer->GetDispenser() );
+			pAvoidEnt = (C_BaseEntity *)pAvoidPlayer->GetDispenser();
+			if( IsEntIntersectingBox( pAvoidEnt, boxMin, boxMax ) )
+				return pAvoidEnt;
+
+			//pAvoidEnt = static_cast< C_BaseEntity * >( pAvoidPlayer->GetSentryGun() );
+			pAvoidEnt = (C_BaseEntity *)pAvoidPlayer->GetSentryGun();
+			if( IsEntIntersectingBox( pAvoidEnt, boxMin, boxMax ) )
+				return pAvoidEnt;
+		}
+
+		// Is the avoid player me?
+		if ( pAvoidPlayer == this )
+			continue;
+
+		pAvoidEnt = (C_BaseEntity *)pAvoidPlayer;
+		if( IsEntIntersectingBox( pAvoidEnt, boxMin, boxMax ) )
+			return pAvoidEnt;
+	}
+
+	return NULL;
+}
+
+// Push players out of teammates and allies (and their buildables)
+void C_FFPlayer::AvoidPlayers( CUserCmd *pCmd )
+{
+	// Don't test if the player doesn't exist or is dead.
+	if ( IsAlive() == false )
+		return;
+
+	C_FFTeam *pTeam = (C_FFTeam *)GetGlobalTeam( GetTeamNumber() );
+	if ( !pTeam )
+		return;
+
+	// Up vector.
+	static Vector vecUp( 0.0f, 0.0f, 1.0f );
+
+	Vector vecSDKPlayerCenter = GetAbsOrigin();
+	Vector vecSDKPlayerMin = GetPlayerMins();
+	Vector vecSDKPlayerMax = GetPlayerMaxs();
+
+	VectorAdd( vecSDKPlayerMin, vecSDKPlayerCenter, vecSDKPlayerMin );
+	VectorAdd( vecSDKPlayerMax, vecSDKPlayerCenter, vecSDKPlayerMax );
+
+	C_BaseEntity *pIntersectPlayer = NULL;
+	float flAvoidRadius = 0.0f;
+
+	// Check if allied teams should be avoided
+	int iAlliedTeams[TEAM_COUNT], iNumAllies;
+	iNumAllies = pTeam->GetAlliedTeams( iAlliedTeams );
+	iAlliedTeams[iNumAllies++] = GetTeamNumber(); // Add this players team
+
+	for ( int i = 0; i < iNumAllies; i++ )
+	{
+		C_Team *pTeam = GetGlobalTeam( iAlliedTeams[i] );
+		if ( !pTeam )
+			continue;
+
+		if( pIntersectPlayer = FindTeamIntersect( pTeam, vecSDKPlayerMin, vecSDKPlayerMax ) )
+			break;
+	}
+
+	// Anything to avoid?
+	if ( !pIntersectPlayer )
+		return;
+
+	// Calculate the push strength and direction.
+	Vector vecDelta;
+
+	// Avoid a player - they have precedence.
+	if ( pIntersectPlayer )
+	{
+		VectorSubtract( pIntersectPlayer->WorldSpaceCenter(), vecSDKPlayerCenter, vecDelta );
+
+		Vector vRad = pIntersectPlayer->WorldAlignMaxs() - pIntersectPlayer->WorldAlignMins();
+		vRad.z = 0;
+
+		flAvoidRadius = vRad.Length();
+	}
+
+	float flPushStrength = RemapValClamped( vecDelta.Length(), flAvoidRadius, 0, 0, sdk_max_separation_force.GetInt() ); //flPushScale;
+
+	//Msg( "PushScale = %f\n", flPushStrength );
+
+	// Check to see if we have enough push strength to make a difference.
+	if ( flPushStrength < 0.01f )
+		return;
+
+	Vector vecPush;
+	if ( GetAbsVelocity().Length2DSqr() > 0.1f )
+	{
+		Vector vecVelocity = GetAbsVelocity();
+		vecVelocity.z = 0.0f;
+		CrossProduct( vecUp, vecVelocity, vecPush );
+		VectorNormalize( vecPush );
+	}
+	else
+	{
+		// We are not moving, but we're still intersecting.
+		QAngle angView = pCmd->viewangles;
+		angView.x = 0.0f;
+		AngleVectors( angView, NULL, &vecPush, NULL );
+	}
+
+	// Move away from the other player/object.
+	Vector vecSeparationVelocity;
+	if ( vecDelta.Dot( vecPush ) < 0 )
+	{
+		vecSeparationVelocity = vecPush * flPushStrength;
+	}
+	else
+	{
+		vecSeparationVelocity = vecPush * -flPushStrength;
+	}
+
+	// Don't allow the max push speed to be greater than the max player speed.
+	float flMaxPlayerSpeed = MaxSpeed();
+	float flCropFraction = 1.33333333f;
+
+	if ( ( GetFlags() & FL_DUCKING ) && ( GetGroundEntity() != NULL ) )
+	{	
+		flMaxPlayerSpeed *= flCropFraction;
+	}	
+
+	float flMaxPlayerSpeedSqr = flMaxPlayerSpeed * flMaxPlayerSpeed;
+
+	if ( vecSeparationVelocity.LengthSqr() > flMaxPlayerSpeedSqr )
+	{
+		vecSeparationVelocity.NormalizeInPlace();
+		VectorScale( vecSeparationVelocity, flMaxPlayerSpeed, vecSeparationVelocity );
+	}
+
+	QAngle vAngles = pCmd->viewangles;
+	vAngles.x = 0;
+	Vector currentdir;
+	Vector rightdir;
+
+	AngleVectors( vAngles, &currentdir, &rightdir, NULL );
+
+	Vector vDirection = vecSeparationVelocity;
+
+	VectorNormalize( vDirection );
+
+	float fwd = currentdir.Dot( vDirection );
+	float rt = rightdir.Dot( vDirection );
+
+	float forward = fwd * flPushStrength;
+	float side = rt * flPushStrength;
+
+	//Msg( "fwd: %f - rt: %f - forward: %f - side: %f\n", fwd, rt, forward, side );
+
+	pCmd->forwardmove	+= forward;
+	pCmd->sidemove		+= side;
+
+	// Clamp the move to within legal limits, preserving direction. This is a little
+	// complicated because we have different limits for forward, back, and side
+
+	//Msg( "PRECLAMP: forwardmove=%f, sidemove=%f\n", pCmd->forwardmove, pCmd->sidemove );
+
+	float flForwardScale = 1.0f;
+	if ( pCmd->forwardmove > fabs( cl_forwardspeed.GetFloat() ) )
+	{
+		flForwardScale = fabs( cl_forwardspeed.GetFloat() ) / pCmd->forwardmove;
+	}
+	else if ( pCmd->forwardmove < -fabs( cl_backspeed.GetFloat() ) )
+	{
+		flForwardScale = fabs( cl_backspeed.GetFloat() ) / fabs( pCmd->forwardmove );
+	}
+
+	float flSideScale = 1.0f;
+	if ( fabs( pCmd->sidemove ) > fabs( cl_sidespeed.GetFloat() ) )
+	{
+		flSideScale = fabs( cl_sidespeed.GetFloat() ) / fabs( pCmd->sidemove );
+	}
+
+	float flScale = min( flForwardScale, flSideScale );
+	pCmd->forwardmove *= flScale;
+	pCmd->sidemove *= flScale;
+
+	//Msg( "Pforwardmove=%f, sidemove=%f\n", pCmd->forwardmove, pCmd->sidemove );
+}
+// <-- hlstriker
 
 //CON_COMMAND(ffdev_hallucinate, "hallucination!")
 //{
