@@ -2964,7 +2964,7 @@ float C_FFPlayer::GetFOV()
 	return default_fov.GetFloat() + (flNormalisedFOVModifier * ffdev_dynamicfov_range.GetFloat());
 }
 
-// --> hlstriker: Taken directly from OB code
+// --> hlstriker: Taken directly from OB code, modified to support allies and buildables
 //-----------------------------------------------------------------------------
 // Purpose: Try to steer away from any players and objects we might interpenetrate
 //-----------------------------------------------------------------------------
@@ -3089,7 +3089,8 @@ void C_FFPlayer::AvoidPlayers( CUserCmd *pCmd )
 		if ( !pTeam )
 			continue;
 
-		if( pIntersectPlayer = FindTeamIntersect( pTeam, vecSDKPlayerMin, vecSDKPlayerMax ) )
+		pIntersectPlayer = FindTeamIntersect( pTeam, vecSDKPlayerMin, vecSDKPlayerMax );
+		if( pIntersectPlayer )
 			break;
 	}
 
