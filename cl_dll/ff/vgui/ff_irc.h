@@ -420,6 +420,8 @@ private:
 
 private:
 	vgui::TextEntry* m_pTextEntry_NickEntry;
+	vgui::TextEntry* m_pTextEntry_UsernameEntry;
+	vgui::TextEntry* m_pTextEntry_PasswordEntry;
 	vgui::Label* m_pStatusLabel;
 
 };

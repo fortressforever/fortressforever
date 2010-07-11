@@ -554,6 +554,96 @@ void CFFIRCPanel::ParseServerMessage( char *buf )
 									m_pLobbyTab->m_pGameList->AddItem( kv, 0, false, false );
 									kv->deleteThis();
 								}
+								// gamelist
+								else if (Q_strnicmp(msg, "!games", 5) == 0)
+								{
+									//if ( !g_IRCSocket.Send( "PRIVMSG #ffirc-system :DEBUG: message is a !join message\r\n" ) )
+									//	Msg("[IRC] Unable to send message\n");
+
+
+									// !games #ffgame-0001 0/8 ff_monkey ranked Capture the Flag 
+
+									char *nextmsg = new char[ strlen(msg) ];
+									strcpy( nextmsg, msg ); // necessary because strtok changes the contents of msg
+
+
+									// think we have to use something other than strtok to get each game string, can then use strtok to get the games details afterwards.
+									//char *nextmsg = strchr(msgcopy,'#') + 1;
+
+									char *pToken = NULL;
+									pToken = strtok(msg, " "); // !games
+									pToken = strtok(NULL, " "); // #ffgame-331
+
+									while ( pToken )
+									{																		
+										int i = m_pLobbyTab->m_pGameList->GetItem( pToken );
+
+										if ( i > -1 ) // game already exists, just update it
+										{
+											KeyValues *kv2 = m_pLobbyTab->m_pGameList->GetItem( i );
+
+											pToken = strtok(NULL, " "); // ff_monkey
+											kv2->SetString( "map", pToken );
+
+											pToken = strtok(NULL, " "); // 1/8
+											kv2->SetString( "players", pToken );
+
+											pToken = strtok(NULL, " "); // Ranked
+											kv2->SetString( "ranked", pToken );
+/* no ip and password in games summary
+											pToken = strtok(NULL, " "); // 123.23.23.23:27013
+											kv2->SetString( "serverip", pToken );
+
+											pToken = strtok(NULL, " "); // ffpickup
+											kv2->SetString( "serverpassword", pToken );
+*/
+											pToken = strtok(NULL, "#\n\r"); // 4v4 1500+ pros
+											kv2->SetString( "name", pToken );
+
+											m_pLobbyTab->m_pGameList->ApplyItemChanges( i );
+
+										}
+										else // new game // !game #ffgame-313 ff_monkey 1/8 ranked 123.23.23.23:27013 ffpickup 1500+ pros only!
+										{
+											KeyValues *kv = new KeyValues( "LI" );
+											kv->SetString( "channel", pToken );
+											kv->SetName( pToken ); // used as a unique identifier to the game
+										
+											pToken = strtok(NULL, " "); // ff_monkey
+											kv->SetString( "map", pToken );
+
+											pToken = strtok(NULL, " "); // 1/8
+											kv->SetString( "players", pToken );
+
+											pToken = strtok(NULL, " "); // Ranked
+											kv->SetString( "ranked", pToken );
+/* no ip and password in games summary
+											pToken = strtok(NULL, " "); // 123.23.23.23:27013
+											kv->SetString( "serverip", pToken );
+
+											pToken = strtok(NULL, " "); // ffpickup
+											kv->SetString( "serverpassword", pToken );
+*/
+											pToken = strtok(NULL, "#\n\r"); // 4v4 1500+ pros
+											kv->SetString( "name", pToken );
+
+											m_pLobbyTab->m_pGameList->AddItem( kv, 0, false, false );
+											kv->deleteThis();
+										}		
+
+										// think we have to use something other than strtok to get each game string, can then use strtok to get the games details afterwards.
+										nextmsg = strchr(nextmsg,'#') + 1;
+										nextmsg = strchr(nextmsg,'#');
+										if ( nextmsg )
+										{
+											strcpy( msg, nextmsg );
+											pToken = strtok(msg, " "); // #ffgame-331
+										}
+										else
+											pToken = NULL;
+									}					
+								}
+
 								// If new game, then create a new entry in the gamelist
 								else if (Q_strnicmp(msg, "!game", 5) == 0)
 								{
@@ -1340,6 +1430,14 @@ CFFIRCConnectPanel::CFFIRCConnectPanel( vgui::VPANEL parent ) : BaseClass( NULL,
 	m_pTextEntry_NickEntry->SetEditable( true );
 	m_pTextEntry_NickEntry->SetText( "" );
 
+	m_pTextEntry_UsernameEntry = new vgui::TextEntry(this, "UsernameEntry");
+	m_pTextEntry_UsernameEntry->SetEditable( true );
+	m_pTextEntry_UsernameEntry->SetText( "" );
+
+	m_pTextEntry_PasswordEntry = new vgui::TextEntry(this, "PasswordEntry");
+	m_pTextEntry_PasswordEntry->SetEditable( true );
+	m_pTextEntry_PasswordEntry->SetText( "" );
+
 	m_pStatusLabel = new vgui::Label(this, "StatusLabel", "...");
 
 	new Button(this, "OKButton", "", this, "OK");
@@ -1369,11 +1467,14 @@ void CFFIRCConnectPanel::SetVisible(bool state)
 
 		char curname[31];
 		m_pTextEntry_NickEntry->GetText( curname, 30 );
+		m_pTextEntry_UsernameEntry->GetText( curname, 30 );
 
 		if ( cvar_name && !curname[0] )
+		{
 			m_pTextEntry_NickEntry->SetText(cvar_name->GetString());
-
-		m_pTextEntry_NickEntry->RequestFocus();
+			m_pTextEntry_UsernameEntry->SetText(cvar_name->GetString());
+		}
+		m_pTextEntry_UsernameEntry->RequestFocus();
 		//m_pTextEntry_NickEntry->SelectAllText( true );
 	}
 
@@ -1386,6 +1487,10 @@ void CFFIRCConnectPanel::Reset()
 	m_pStatusLabel->SetText( "..." );
 	m_pTextEntry_NickEntry->SetEditable( true );
 	m_pTextEntry_NickEntry->SetEnabled( true );
+	m_pTextEntry_UsernameEntry->SetEditable( true );
+	m_pTextEntry_UsernameEntry->SetEnabled( true );
+	m_pTextEntry_PasswordEntry->SetEditable( true );
+	m_pTextEntry_PasswordEntry->SetEnabled( true );
 }
 
 void CFFIRCConnectPanel::UpdateStatus( const char *status )
@@ -1422,6 +1527,8 @@ void CFFIRCConnectPanel::OnButtonCommand(KeyValues *data)
 		char szNick[30];
 		m_pTextEntry_NickEntry->GetText(szNick, sizeof(szNick));
 		sprintf(g_pIRCPanel->irc_user.nick, szNick);
+
+		// Need to store username and password here for later  - AfterShock
 
 		CFFIRCThread::GetInstance().Start();
 
@@ -1461,6 +1568,10 @@ void CFFIRCConnectPanel::OnButtonCommand(KeyValues *data)
 
 		m_pTextEntry_NickEntry->SetEditable( false );
 		m_pTextEntry_NickEntry->SetEnabled( false );
+		m_pTextEntry_UsernameEntry->SetEditable( false );
+		m_pTextEntry_UsernameEntry->SetEnabled( false );
+		m_pTextEntry_PasswordEntry->SetEditable( false );
+		m_pTextEntry_PasswordEntry->SetEnabled( false );
 		m_pStatusLabel->SetText( "Connecting..." );
 		m_pStatusLabel->SetVisible( true );
 	}
