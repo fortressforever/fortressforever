@@ -38,6 +38,10 @@ using namespace vgui;
 
 #include "ff_hud_quantityBar.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
+
 static ConVar hud_centerid( "hud_centerid", "0", FCVAR_ARCHIVE );
 static ConVar hud_xhairinfo_newStyle( "hud_xhairinfo_newStyle", "1", FCVAR_NONE, "Crosshair info new style (0 Off, 1 On)");
 static ConVar hud_xhairinfo_update( "hud_xhairinfo_update", "1", FCVAR_NONE, "Used to update the look (does not happen on value change as there are so many values to set)");
@@ -46,10 +50,10 @@ static ConVar hud_xhairinfo_updateAlways( "hud_xhairinfo_updateAlways", "1", FCV
 static ConVar hud_xhairinfo_x( "hud_xhairinfo_x", "200", FCVAR_NONE, "Crosshair info X Position on 640 480 Resolution");
 static ConVar hud_xhairinfo_y( "hud_xhairinfo_y", "300", FCVAR_NONE, "Crosshair info Y Position on 640 480 Resolution");
 
-static ConVar hud_xhairinfo_intensity_red( "hud_xhairinfo_intensity_red", "20", FCVAR_NONE, "item bar color red component");
-static ConVar hud_xhairinfo_intensity_orange( "hud_xhairinfo_intensity_orange", "50", FCVAR_NONE, "Crosshair color blue component");
-static ConVar hud_xhairinfo_intensity_yellow( "hud_xhairinfo_intensity_yellow", "70", FCVAR_NONE, "Crosshair color alpha component");
-static ConVar hud_xhairinfo_intensity_green( "hud_xhairinfo_intensity_green", "100", FCVAR_NONE, "Crosshair color green component");
+static ConVar hud_xhairinfo_intensity_red( "hud_xhairinfo_intensity_red", "20", FCVAR_NONE, "When using colormode stepped and faded this is the value at which the bar is red");
+static ConVar hud_xhairinfo_intensity_orange( "hud_xhairinfo_intensity_orange", "50", FCVAR_NONE, "When using colormode stepped and faded this is the value at which the bar is orange");
+static ConVar hud_xhairinfo_intensity_yellow( "hud_xhairinfo_intensity_yellow", "70", FCVAR_NONE, "When using colormode stepped and faded this is the value at which the bar is yellow");
+static ConVar hud_xhairinfo_intensity_green( "hud_xhairinfo_intensity_green", "100", FCVAR_NONE, "When using colormode stepped and faded this is the value at which the bar is green");
 
 static ConVar hud_xhairinfo_showBar( "hud_xhairinfo_showBar", "1", FCVAR_NONE, "Show Bar");
 static ConVar hud_xhairinfo_showBarBackground( "hud_xhairinfo_showBarBackground", "1", FCVAR_NONE, "Show Bar Background");
@@ -57,7 +61,7 @@ static ConVar hud_xhairinfo_showBarBorder( "hud_xhairinfo_showBarBorder", "1", F
 static ConVar hud_xhairinfo_showIcon( "hud_xhairinfo_showIcon", "1", FCVAR_NONE, "Show Icon");
 static ConVar hud_xhairinfo_showLabel( "hud_xhairinfo_showLabel", "0", FCVAR_NONE, "Show label");
 static ConVar hud_xhairinfo_showAmount( "hud_xhairinfo_showAmount", "0", FCVAR_NONE, "Show amount");
-static ConVar hud_xhairinfo_showIdent( "hud_xhairinfo_showIdent", "1", FCVAR_NONE, "Show Identifier (Class,Icon)");
+static ConVar hud_xhairinfo_showIdent( "hud_xhairinfo_showIdent", "1", FCVAR_NONE, "Show Identifier (Name,Icon)");
 
 static ConVar hud_xhairinfo_itemsPerRow( "hud_xhairinfo_itemsPerRow", "2", FCVAR_NONE, "Crosshair  height gap on 640 480 Resolution");
 static ConVar hud_xhairinfo_itemOffsetX( "hud_xhairinfo_itemOffsetX", "40", FCVAR_NONE, "Crosshair  height gap on 640 480 Resolution");
@@ -135,6 +139,7 @@ class CHudCrosshairInfo : public CHudElement, public vgui::Panel
 {
 private:
 	DECLARE_CLASS_SIMPLE( CHudCrosshairInfo, vgui::Panel );
+	void UpdateQuantityBars( void );
 
 public:
 	CHudCrosshairInfo( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudCrosshairInfo" )
@@ -148,46 +153,44 @@ public:
 
 		m_flDuration = 0.1f;
 		m_flDrawDuration = 1.0f;
+		/*
+		m_qbIdent = new CHudQuantityBar(this, "HudCrosshairInfoIdent");
+		m_qbHealth = new CHudQuantityBar(this, "HudCrosshairInfoHealth");
+		m_qbArmor = new CHudQuantityBar(this, "HudCrosshairInfoArmour");
+		m_qbCells = new CHudQuantityBar(this, "HudCrosshairInfoCells");
+		m_qbShells = new CHudQuantityBar(this, "HudCrosshairInfoShells");
+		m_qbRockets = new CHudQuantityBar(this, "HudCrosshairInfoRockets");
+		m_qbNails = new CHudQuantityBar(this, "HudCrosshairInfoNails");
+		m_qbLevel = new CHudQuantityBar(this, "HudCrosshairInfoLevel");
 		
-		m_qbIdent = new CHudQuantityBar();
-		m_qbHealth = new CHudQuantityBar();
-		m_qbArmor = new CHudQuantityBar();
-		m_qbCells = new CHudQuantityBar();
-		m_qbShells = new CHudQuantityBar();
-		m_qbRockets = new CHudQuantityBar();
-		m_qbNails = new CHudQuantityBar();
-		m_qbLevel = new CHudQuantityBar();
-		
-		m_qbIdent->showAmount(false);
-		m_qbIdent->showBar(false);
-		m_qbIdent->showBarBackground(false);
-		m_qbIdent->showBarBorder(false);		
-		m_qbLevel->setIntensityControl(1,2,2,3);
+		m_qbIdent->ShowAmount(false);
+		m_qbIdent->ShowBar(false);
+		m_qbIdent->ShowBarBackground(false);
+		m_qbIdent->ShowBarBorder(false);
 
-		m_qbRockets->showAmountMax(true);
-		m_qbCells->showAmountMax(true);
-		m_qbShells->showAmountMax(true);
-		m_qbNails->showAmountMax(true);
-		m_qbLevel->showAmountMax(true);
+		m_qbLevel->SetIntensityControl(1,2,2,3);
 
-		m_qbRockets->setAmountMax(50);
-		m_qbLevel->setAmountMax(3);
+		m_qbHealth->ShowAmountMax(false);
 
-		m_qbHealth->setLabelText("#FF_ITEM_HEALTH");
-		m_qbArmor->setLabelText("#FF_ITEM_ARMOR");
-		m_qbCells->setLabelText("#FF_ITEM_CELLS");
-		m_qbShells->setLabelText("#FF_ITEM_SHELLS");
-		m_qbRockets->setLabelText("#FF_ITEM_ROCKETS");
-		m_qbNails->setLabelText("#FF_ITEM_NAILS");
-		m_qbLevel->setLabelText("FF_ITEM_LEVEL");
+		m_qbRockets->SetAmountMax(50);
+		m_qbLevel->SetAmountMax(3);
 
-		m_qbHealth->setIconChar(":");
-		m_qbArmor->setIconChar(";");
-		m_qbCells->setIconChar("6");
-		m_qbShells->setIconChar("2");
-		m_qbRockets->setIconChar("8");
-		m_qbNails->setIconChar("7");
-		m_qbLevel->showIcon(false);
+		m_qbHealth->SetLabelText("#FF_ITEM_HEALTH");
+		m_qbArmor->SetLabelText("#FF_ITEM_ARMOR");
+		m_qbCells->SetLabelText("#FF_ITEM_CELLS");
+		m_qbShells->SetLabelText("#FF_ITEM_SHELLS");
+		m_qbRockets->SetLabelText("#FF_ITEM_ROCKETS");
+		m_qbNails->SetLabelText("#FF_ITEM_NAILS");
+		m_qbLevel->SetLabelText("FF_ITEM_LEVEL");
+
+		m_qbHealth->SetIconChar(":");
+		m_qbArmor->SetIconChar(";");
+		m_qbCells->SetIconChar("6");
+		m_qbShells->SetIconChar("2");
+		m_qbRockets->SetIconChar("8");
+		m_qbNails->SetIconChar("7");
+		m_qbLevel->ShowIcon(false);
+		*/
 }
 
 	~CHudCrosshairInfo( void ) {}
@@ -211,14 +214,13 @@ protected:
 	float		m_flDrawTime;
 	float		m_flDrawDuration;
 
-	// For center printing
-	float		m_flXOffset;
-	float		m_flYOffset;
+	float m_flXOffset;
+	float m_flYOffset;
 
 	// For color
 	int			m_iTeam;
 	int			m_iClass;
-	
+	/*
 	CHudQuantityBar *m_qbIdent;
 	CHudQuantityBar *m_qbHealth;
 	CHudQuantityBar *m_qbArmor;
@@ -227,16 +229,16 @@ protected:
 	CHudQuantityBar *m_qbShells;
 	CHudQuantityBar *m_qbNails;
 	CHudQuantityBar *m_qbLevel;
-
+*/
 private:
 	// Stuff we need to know 
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "ChatFont" );
-	CPanelAnimationVar( vgui::HFont, m_hQuantityBarHUD, "TextFont", "QuantityBarHUD" );
-	CPanelAnimationVar( vgui::HFont, m_hQuantityBarShadowHUD, "TextFont", "QuantityBarShadowHUD" );
-	CPanelAnimationVar( vgui::HFont, m_hQuantityBarIconHUD, "IconFont", "QuantityBarIconHUD" );
-	CPanelAnimationVar( vgui::HFont, m_hQuantityBarIconShadowHUD, "IconFont", "QuantityBarIconShadowHUD" );
-	CPanelAnimationVar( vgui::HFont, m_hQuantityBarClassNameHUD, "TextFont", "QuantityBarClassNameHUD" );
-	CPanelAnimationVar( vgui::HFont, m_hQuantityBarClassGlyphHUD, "IconFont", "QuantityBarClassGlyphHUD" );
+	CPanelAnimationVar( vgui::HFont, m_hCrosshairInfo, "TextFont", "CrosshairInfo" );
+	CPanelAnimationVar( vgui::HFont, m_hCrosshairInfoShadow, "TextFont", "CrosshairInfoShadow" );
+	CPanelAnimationVar( vgui::HFont, m_hCrosshairInfoIcon, "IconFont", "CrosshairInfoIcon" );
+	CPanelAnimationVar( vgui::HFont, m_hCrosshairInfoIconShadow, "IconFont", "CrosshairInfoIconShadow" );
+	CPanelAnimationVar( vgui::HFont, m_hCrosshairInfoPlayerName, "TextFont", "CrosshairInfoPlayerName" );
+	CPanelAnimationVar( vgui::HFont, m_hCrosshairInfoPlayerGlyph, "IconFont", "CrosshairInfoPlayerGlyph" );
 	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "20", "proportional_float" );
 };
@@ -250,7 +252,354 @@ void CHudCrosshairInfo::Init( void )
 {
 	m_pText[ 0 ] = '\0';
 }
+void CHudCrosshairInfo::UpdateQuantityBars( void )
+{
+//QBAR 
+/*
+	int barWidth = hud_xhairinfo_barWidth.GetInt();
+	int barHeight = hud_xhairinfo_barHeight.GetInt();
+	int barBorderWidth = hud_xhairinfo_barBorderWidth.GetInt();
 
+	int barColorMode = hud_xhairinfo_ColorModeBar.GetInt();
+	int barBackgroundColorMode = hud_xhairinfo_ColorModeBarBackground.GetInt();
+	int barBorderColorMode =  hud_xhairinfo_ColorModeBarBorder.GetInt();
+	int iconColorMode = hud_xhairinfo_ColorModeIcon.GetInt();
+	int labelColorMode = hud_xhairinfo_ColorModeLabel.GetInt();
+	int amountColorMode = hud_xhairinfo_ColorModeAmount.GetInt();
+	int identColorMode = hud_xhairinfo_ColorModeIdent.GetInt();
+	
+	Color barColor = *new Color(
+		hud_xhairinfo_ColorBar_r.GetInt(),
+		hud_xhairinfo_ColorBar_g.GetInt(),
+		hud_xhairinfo_ColorBar_b.GetInt(),
+		hud_xhairinfo_ColorBar_a.GetInt());
+	Color barBackgroundColor = *new Color(
+		hud_xhairinfo_ColorBarBackground_r.GetInt(),
+		hud_xhairinfo_ColorBarBackground_g.GetInt(),
+		hud_xhairinfo_ColorBarBackground_b.GetInt(),
+		hud_xhairinfo_ColorBarBackground_a.GetInt());
+	Color barBorderColor = *new Color(
+		hud_xhairinfo_ColorBarBorder_r.GetInt(),
+		hud_xhairinfo_ColorBarBorder_g.GetInt(),
+		hud_xhairinfo_ColorBarBorder_b.GetInt(),
+		hud_xhairinfo_ColorBarBorder_a.GetInt());
+	Color iconColor = *new Color(
+		hud_xhairinfo_ColorIcon_r.GetInt(),
+		hud_xhairinfo_ColorIcon_g.GetInt(),
+		hud_xhairinfo_ColorIcon_b.GetInt(),
+		hud_xhairinfo_ColorIcon_a.GetInt());
+	Color labelColor = *new Color(
+		hud_xhairinfo_ColorLabel_r.GetInt(),
+		hud_xhairinfo_ColorLabel_g.GetInt(),
+		hud_xhairinfo_ColorLabel_b.GetInt(),
+		hud_xhairinfo_ColorLabel_a.GetInt());
+	Color amountColor = *new Color(
+		hud_xhairinfo_ColorAmount_r.GetInt(),
+		hud_xhairinfo_ColorAmount_g.GetInt(),
+		hud_xhairinfo_ColorAmount_b.GetInt(),
+		hud_xhairinfo_ColorAmount_a.GetInt());
+	Color identColor = *new Color(
+		hud_xhairinfo_ColorIdent_r.GetInt(),
+		hud_xhairinfo_ColorIdent_g.GetInt(),
+		hud_xhairinfo_ColorIdent_b.GetInt(),
+		hud_xhairinfo_ColorIdent_a.GetInt());
+	
+	m_qbIdent->SetIconColor(identColor);
+	m_qbIdent->SetLabelColor(identColor);
+	m_qbIdent->SetIconColorMode(identColorMode);
+	m_qbIdent->SetLabelColorMode(identColorMode);
+
+	int red = hud_xhairinfo_intensity_red.GetInt();
+	int orange = hud_xhairinfo_intensity_orange.GetInt();
+	int yellow = hud_xhairinfo_intensity_yellow.GetInt();
+	int green = hud_xhairinfo_intensity_green.GetInt();
+
+	bool showBar = hud_xhairinfo_showBar.GetBool();
+	bool showBarBackground = hud_xhairinfo_showBarBackground.GetBool();
+	bool showBarBorder = hud_xhairinfo_showBarBorder.GetBool();
+	bool showIcon = hud_xhairinfo_showIcon.GetBool();
+	bool showLabel = hud_xhairinfo_showLabel.GetBool();
+	bool showAmount = hud_xhairinfo_showAmount.GetBool();
+	
+	int barOffsetX = hud_xhairinfo_offsetXBar.GetInt();
+	int barOffsetY = hud_xhairinfo_offsetYBar.GetInt();
+	int iconOffsetX = hud_xhairinfo_offsetXIcon.GetInt();
+	int iconOffsetY = hud_xhairinfo_offsetYIcon.GetInt();
+	int labelOffsetX = hud_xhairinfo_offsetXLabel.GetInt();
+	int labelOffsetY = hud_xhairinfo_offsetYLabel.GetInt();
+	int amountOffsetX = hud_xhairinfo_offsetXAmount.GetInt();
+	int amountOffsetY = hud_xhairinfo_offsetYAmount.GetInt();
+	
+	vgui::HFont amountFont,iconFont,labelFont;
+
+	if(hud_xhairinfo_ShadowIcon.GetBool())
+		iconFont = m_hCrosshairInfoIconShadow;
+	else
+		iconFont = m_hCrosshairInfoIcon;
+
+	if(hud_xhairinfo_ShadowLabel.GetBool())
+		labelFont = m_hCrosshairInfoShadow;
+	else
+		labelFont = m_hCrosshairInfo;
+
+	if(hud_xhairinfo_ShadowAmount.GetBool())
+		amountFont = m_hCrosshairInfoShadow;
+	else
+		amountFont = m_hCrosshairInfo;
+
+	m_qbHealth->SetBarOffsetX(barOffsetX);
+	m_qbArmor->SetBarOffsetX(barOffsetX);
+	m_qbLevel->SetBarOffsetX(barOffsetX);
+	m_qbCells->SetBarOffsetX(barOffsetX);
+	m_qbShells->SetBarOffsetX(barOffsetX);
+	m_qbRockets->SetBarOffsetX(barOffsetX);
+	m_qbNails->SetBarOffsetX(barOffsetX);
+
+	m_qbHealth->SetBarOffsetY(barOffsetY);
+	m_qbArmor->SetBarOffsetY(barOffsetY);
+	m_qbLevel->SetBarOffsetY(barOffsetY);
+	m_qbCells->SetBarOffsetY(barOffsetY);
+	m_qbShells->SetBarOffsetY(barOffsetY);
+	m_qbRockets->SetBarOffsetY(barOffsetY);
+	m_qbNails->SetBarOffsetY(barOffsetY);
+
+	m_qbHealth->SetIconOffsetX(iconOffsetX);
+	m_qbArmor->SetIconOffsetX(iconOffsetX);
+	m_qbLevel->SetIconOffsetX(iconOffsetX);
+	m_qbCells->SetIconOffsetX(iconOffsetX);
+	m_qbShells->SetIconOffsetX(iconOffsetX);
+	m_qbRockets->SetIconOffsetX(iconOffsetX);
+	m_qbNails->SetIconOffsetX(iconOffsetX);
+
+	m_qbHealth->SetIconOffsetY(iconOffsetY);
+	m_qbArmor->SetIconOffsetY(iconOffsetY);
+	m_qbLevel->SetIconOffsetY(iconOffsetY);
+	m_qbCells->SetIconOffsetY(iconOffsetY);
+	m_qbShells->SetIconOffsetY(iconOffsetY);
+	m_qbRockets->SetIconOffsetY(iconOffsetY);
+	m_qbNails->SetIconOffsetY(iconOffsetY);
+
+	m_qbHealth->SetLabelOffsetX(labelOffsetX);
+	m_qbArmor->SetLabelOffsetX(labelOffsetX);
+	m_qbLevel->SetLabelOffsetX(labelOffsetX);
+	m_qbCells->SetLabelOffsetX(labelOffsetX);
+	m_qbShells->SetLabelOffsetX(labelOffsetX);
+	m_qbRockets->SetLabelOffsetX(labelOffsetX);
+	m_qbNails->SetLabelOffsetX(labelOffsetX);
+
+	m_qbHealth->SetLabelOffsetY(labelOffsetY);
+	m_qbArmor->SetLabelOffsetY(labelOffsetY);
+	m_qbLevel->SetLabelOffsetY(labelOffsetY);
+	m_qbCells->SetLabelOffsetY(labelOffsetY);
+	m_qbShells->SetLabelOffsetY(labelOffsetY);
+	m_qbRockets->SetLabelOffsetY(labelOffsetY);
+	m_qbNails->SetLabelOffsetY(labelOffsetY);
+
+	m_qbHealth->SetAmountOffsetX(amountOffsetX);
+	m_qbArmor->SetAmountOffsetX(amountOffsetX);
+	m_qbLevel->SetAmountOffsetX(amountOffsetX);
+	m_qbCells->SetAmountOffsetX(amountOffsetX);
+	m_qbShells->SetAmountOffsetX(amountOffsetX);
+	m_qbRockets->SetAmountOffsetX(amountOffsetX);
+	m_qbNails->SetAmountOffsetX(amountOffsetX);
+
+	m_qbHealth->SetAmountOffsetY(amountOffsetY);
+	m_qbArmor->SetAmountOffsetY(amountOffsetY);
+	m_qbLevel->SetAmountOffsetY(amountOffsetY);
+	m_qbCells->SetAmountOffsetY(amountOffsetY);
+	m_qbShells->SetAmountOffsetY(amountOffsetY);
+	m_qbRockets->SetAmountOffsetY(amountOffsetY);
+	m_qbNails->SetAmountOffsetY(amountOffsetY);
+
+	m_qbHealth->SetBarWidth(barWidth);
+	m_qbArmor->SetBarWidth(barWidth);
+	m_qbLevel->SetBarWidth(barWidth);
+	m_qbCells->SetBarWidth(barWidth);
+	m_qbShells->SetBarWidth(barWidth);
+	m_qbRockets->SetBarWidth(barWidth);
+	m_qbNails->SetBarWidth(barWidth);
+
+	m_qbHealth->SetBarHeight(barHeight);
+	m_qbArmor->SetBarHeight(barHeight);
+	m_qbLevel->SetBarHeight(barHeight);
+	m_qbCells->SetBarHeight(barHeight);
+	m_qbShells->SetBarHeight(barHeight);
+	m_qbRockets->SetBarHeight(barHeight);
+	m_qbNails->SetBarHeight(barHeight);
+
+	m_qbHealth->SetBarBorderWidth(barBorderWidth);
+	m_qbArmor->SetBarBorderWidth(barBorderWidth);
+	m_qbLevel->SetBarBorderWidth(barBorderWidth);
+	m_qbCells->SetBarBorderWidth(barBorderWidth);
+	m_qbShells->SetBarBorderWidth(barBorderWidth);
+	m_qbRockets->SetBarBorderWidth(barBorderWidth);
+	m_qbNails->SetBarBorderWidth(barBorderWidth);
+
+	m_qbHealth->SetIntensityControl(red,orange,yellow,green);
+	m_qbArmor->SetIntensityControl(red,orange,yellow,green);
+	m_qbCells->SetIntensityControl(red,orange,yellow,green);
+	m_qbShells->SetIntensityControl(red,orange,yellow,green);
+	m_qbNails->SetIntensityControl(red,orange,yellow,green);
+	m_qbRockets->SetIntensityControl((int)red/2,(int)orange/2,(int)yellow/2,(int)green/2);
+	m_qbIdent->SetIntensityControl(red,orange,yellow,green);
+
+	m_qbArmor->SetBarColor(barColor);
+	m_qbHealth->SetBarColor(barColor);
+	m_qbLevel->SetBarColor(barColor);
+	m_qbCells->SetBarColor(barColor);
+	m_qbShells->SetBarColor(barColor);
+	m_qbRockets->SetBarColor(barColor);
+	m_qbNails->SetBarColor(barColor);
+	m_qbHealth->SetBarBackgroundColor(barBackgroundColor);
+	m_qbArmor->SetBarBackgroundColor(barBackgroundColor);
+	m_qbLevel->SetBarBackgroundColor(barBackgroundColor);
+	m_qbCells->SetBarBackgroundColor(barBackgroundColor);
+	m_qbShells->SetBarBackgroundColor(barBackgroundColor);
+	m_qbRockets->SetBarBackgroundColor(barBackgroundColor);
+	m_qbNails->SetBarBackgroundColor(barBackgroundColor);
+	m_qbHealth->SetBarBorderColor(barBorderColor);
+	m_qbArmor->SetBarBorderColor(barBorderColor);
+	m_qbLevel->SetBarBorderColor(barBorderColor);
+	m_qbCells->SetBarBorderColor(barBorderColor);
+	m_qbShells->SetBarBorderColor(barBorderColor);
+	m_qbRockets->SetBarBorderColor(barBorderColor);
+	m_qbNails->SetBarBorderColor(barBorderColor);
+
+	m_qbHealth->SetIconColor(iconColor);
+	m_qbArmor->SetIconColor(iconColor);
+	m_qbLevel->SetIconColor(iconColor);
+	m_qbCells->SetIconColor(iconColor);
+	m_qbShells->SetIconColor(iconColor);
+	m_qbRockets->SetIconColor(iconColor);
+	m_qbNails->SetIconColor(iconColor);
+	m_qbHealth->SetLabelColor(labelColor);
+	m_qbArmor->SetLabelColor(labelColor);
+	m_qbLevel->SetLabelColor(labelColor);
+	m_qbCells->SetLabelColor(labelColor);
+	m_qbShells->SetLabelColor(labelColor);
+	m_qbRockets->SetLabelColor(labelColor);
+	m_qbNails->SetLabelColor(labelColor);
+	m_qbHealth->SetAmountColor(amountColor);
+	m_qbArmor->SetAmountColor(amountColor);
+	m_qbLevel->SetAmountColor(amountColor);
+	m_qbCells->SetAmountColor(amountColor);
+	m_qbShells->SetAmountColor(amountColor);
+	m_qbRockets->SetAmountColor(amountColor);
+	m_qbNails->SetAmountColor(amountColor);
+
+	m_qbArmor->SetBarColorMode(barColorMode);
+	m_qbHealth->SetBarColorMode(barColorMode);
+	m_qbLevel->SetBarColorMode(barColorMode);
+	m_qbCells->SetBarColorMode(barColorMode);
+	m_qbShells->SetBarColorMode(barColorMode);
+	m_qbRockets->SetBarColorMode(barColorMode);
+	m_qbNails->SetBarColorMode(barColorMode);
+	m_qbHealth->SetBarBackgroundColorMode(barBackgroundColorMode);
+	m_qbArmor->SetBarBackgroundColorMode(barBackgroundColorMode);
+	m_qbLevel->SetBarBackgroundColorMode(barBackgroundColorMode);
+	m_qbCells->SetBarBackgroundColorMode(barBackgroundColorMode);
+	m_qbShells->SetBarBackgroundColorMode(barBackgroundColorMode);
+	m_qbRockets->SetBarBackgroundColorMode(barBackgroundColorMode);
+	m_qbNails->SetBarBackgroundColorMode(barBackgroundColorMode);
+	m_qbHealth->SetBarBorderColorMode(barBorderColorMode);
+	m_qbArmor->SetBarBorderColorMode(barBorderColorMode);
+	m_qbLevel->SetBarBorderColorMode(barBorderColorMode);
+	m_qbCells->SetBarBorderColorMode(barBorderColorMode);
+	m_qbShells->SetBarBorderColorMode(barBorderColorMode);
+	m_qbRockets->SetBarBorderColorMode(barBorderColorMode);
+	m_qbNails->SetBarBorderColorMode(barBorderColorMode);
+
+	m_qbHealth->SetIconColorMode(iconColorMode);
+	m_qbArmor->SetIconColorMode(iconColorMode);
+	m_qbLevel->SetIconColorMode(iconColorMode);
+	m_qbCells->SetIconColorMode(iconColorMode);
+	m_qbShells->SetIconColorMode(iconColorMode);
+	m_qbRockets->SetIconColorMode(iconColorMode);
+	m_qbNails->SetIconColorMode(iconColorMode);
+	m_qbHealth->SetLabelColorMode(labelColorMode);
+	m_qbArmor->SetLabelColorMode(labelColorMode);
+	m_qbLevel->SetLabelColorMode(labelColorMode);
+	m_qbCells->SetLabelColorMode(labelColorMode);
+	m_qbShells->SetLabelColorMode(labelColorMode);
+	m_qbRockets->SetLabelColorMode(labelColorMode);
+	m_qbNails->SetLabelColorMode(labelColorMode);
+	m_qbHealth->SetAmountColorMode(amountColorMode);
+	m_qbArmor->SetAmountColorMode(amountColorMode);
+	m_qbLevel->SetAmountColorMode(amountColorMode);
+	m_qbCells->SetAmountColorMode(amountColorMode);
+	m_qbShells->SetAmountColorMode(amountColorMode);
+	m_qbRockets->SetAmountColorMode(amountColorMode);
+	m_qbNails->SetAmountColorMode(amountColorMode);
+
+	m_qbHealth->ShowBar(showBar);
+	m_qbArmor->ShowBar(showBar);
+	m_qbLevel->ShowBar(showBar);
+	m_qbCells->ShowBar(showBar);
+	m_qbShells->ShowBar(showBar);
+	m_qbRockets->ShowBar(showBar);
+	m_qbNails->ShowBar(showBar);
+	m_qbHealth->ShowBarBackground(showBarBackground);
+	m_qbArmor->ShowBarBackground(showBarBackground);
+	m_qbLevel->ShowBarBackground(showBarBackground);
+	m_qbCells->ShowBarBackground(showBarBackground);
+	m_qbShells->ShowBarBackground(showBarBackground);
+	m_qbRockets->ShowBarBackground(showBarBackground);
+	m_qbNails->ShowBarBackground(showBarBackground);
+	m_qbHealth->ShowBarBorder(showBarBorder);
+	m_qbArmor->ShowBarBorder(showBarBorder);
+	m_qbLevel->ShowBarBorder(showBarBorder);
+	m_qbCells->ShowBarBorder(showBarBorder);
+	m_qbShells->ShowBarBorder(showBarBorder);
+	m_qbRockets->ShowBarBorder(showBarBorder);
+	m_qbNails->ShowBarBorder(showBarBorder);
+
+	m_qbHealth->ShowIcon(showIcon);
+	m_qbArmor->ShowIcon(showIcon);
+	m_qbLevel->ShowIcon(showIcon);
+	m_qbCells->ShowIcon(showIcon);
+	m_qbShells->ShowIcon(showIcon);
+	m_qbRockets->ShowIcon(showIcon);
+	m_qbNails->ShowIcon(showIcon);
+	m_qbHealth->ShowLabel(showLabel);
+	m_qbArmor->ShowLabel(showLabel);
+	m_qbLevel->ShowLabel(showLabel);
+	m_qbCells->ShowLabel(showLabel);
+	m_qbShells->ShowLabel(showLabel);
+	m_qbRockets->ShowLabel(showLabel);
+	m_qbNails->ShowLabel(showLabel);
+	m_qbHealth->ShowAmount(showAmount);
+	m_qbArmor->ShowAmount(showAmount);
+	m_qbLevel->ShowAmount(showAmount);
+	m_qbCells->ShowAmount(showAmount);
+	m_qbShells->ShowAmount(showAmount);
+	m_qbRockets->ShowAmount(showAmount);
+	m_qbNails->ShowAmount(showAmount);
+
+	m_qbHealth->SetAmountFont(amountFont);
+	m_qbArmor->SetAmountFont(amountFont);
+	m_qbLevel->SetAmountFont(amountFont);
+	m_qbCells->SetAmountFont(amountFont);
+	m_qbShells->SetAmountFont(amountFont);
+	m_qbRockets->SetAmountFont(amountFont);
+	m_qbNails->SetAmountFont(amountFont);
+
+	m_qbHealth->SetLabelFont(labelFont);
+	m_qbArmor->SetLabelFont(labelFont);
+	m_qbLevel->SetLabelFont(labelFont);
+	m_qbCells->SetLabelFont(labelFont);
+	m_qbShells->SetLabelFont(labelFont);
+	m_qbRockets->SetLabelFont(labelFont);
+	m_qbNails->SetLabelFont(labelFont);
+
+	m_qbHealth->SetIconFont(iconFont);
+	m_qbArmor->SetIconFont(iconFont);
+	m_qbLevel->SetIconFont(iconFont);
+	m_qbCells->SetIconFont(iconFont);
+	m_qbShells->SetIconFont(iconFont);
+	m_qbRockets->SetIconFont(iconFont);
+	m_qbNails->SetIconFont(iconFont);
+*/
+}
 //-----------------------------------------------------------------------------
 // Purpose: Reset on map/vgui load
 //-----------------------------------------------------------------------------
@@ -264,16 +613,10 @@ void CHudCrosshairInfo::VidInit( void )
 	m_iClass = 0;
 	
 	hud_xhairinfo_update.SetValue(1);
-
-	m_qbIdent->setIconFont(m_hQuantityBarClassGlyphHUD);
-	m_qbIdent->setLabelFont(m_hQuantityBarClassNameHUD);
-	m_qbIdent->setLabelOffsetX(12);
-	m_qbIdent->setLabelOffsetY(3);
-
-	// Make the panel as big as the screen
-	SetPos( 0, 0 );
-	SetWide( scheme()->GetProportionalScaledValue( 640 ) );
-	SetTall( scheme()->GetProportionalScaledValue( 480 ) );
+	/*
+	m_qbIdent->SetLabelOffsetX(-20);
+	m_qbIdent->SetLabelOffsetY(0);
+	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -395,6 +738,7 @@ void CHudCrosshairInfo::OnTick( void )
 				// Get their real name now (deal w/ non teammate/ally spies later)
 				Q_strcpy( szName, pGR->GetPlayerName( pHitPlayer->index ) );
 
+				//QBAR m_qbIdent->SetLabelText(szName);
 
 				if( bBuildable )
 				{
@@ -414,7 +758,6 @@ void CHudCrosshairInfo::OnTick( void )
 				else // Get the players' class always
 					Q_strcpy( szClass, Class_IntToResourceString( pGR->GetClass( pHitPlayer->index ) ) );
 								
-				m_qbIdent->setLabelText(szClass);
 				// Default
 				int iHealth = -1, iArmor = -1, iCells = -1, iRockets = -1, iNails = -1, iShells = -1, iLevel = -1, iFuseTime = -1;
 
@@ -422,7 +765,6 @@ void CHudCrosshairInfo::OnTick( void )
 				// Default
 				m_iTeam = pHitPlayer->GetTeamNumber();
 				m_iClass = pHitPlayer->GetTeamNumber();
-				m_qbArmor->showAmountMax(false);
 
 				if ( (pPlayer == pHitPlayer) && (bBuildable) ) // looking at our own buildable
 				{
@@ -437,8 +779,6 @@ void CHudCrosshairInfo::OnTick( void )
 						iCells = ( ( C_FFDispenser * )pBuildable )->GetCells();
 						iNails = ( ( C_FFDispenser* )pBuildable )->GetNails();
 						iArmor = ( ( C_FFDispenser * )pBuildable )->GetArmor();
-						
-						m_qbArmor->showAmountMax(true);
 					}
 					else if( pBuildable->Classify() == CLASS_SENTRYGUN )
 					{
@@ -484,7 +824,7 @@ void CHudCrosshairInfo::OnTick( void )
 						if( pBuildable->Classify() == CLASS_DISPENSER )
 						{
 							iArmor = ((C_FFDispenser *)pBuildable)->GetAmmoPercent();
-							m_qbArmor->showAmountMax(true);
+							//QBAR m_qbArmor->ShowAmountMax(true);
 						}
 						else if( pBuildable->Classify() == CLASS_SENTRYGUN )
 						{
@@ -505,6 +845,7 @@ void CHudCrosshairInfo::OnTick( void )
 					{						
 						iHealth = pHitPlayer->GetHealthPercentage();
 						iArmor = pHitPlayer->GetArmorPercentage();
+						//QBAR m_qbArmor->ShowAmountMax(false);
 					}
 				}
 				else
@@ -518,7 +859,6 @@ void CHudCrosshairInfo::OnTick( void )
 						if( pBuildable->Classify() == CLASS_DISPENSER )
 						{
 							iArmor = ((C_FFDispenser *)pBuildable)->GetAmmoPercent();
-							m_qbArmor->showAmountMax(true);
 						}
 						else if( pBuildable->Classify() == CLASS_SENTRYGUN )
 						{
@@ -544,6 +884,7 @@ void CHudCrosshairInfo::OnTick( void )
 							// Grab the real health/armor of this player
 							iHealth = pHitPlayer->GetHealthPercentage();
 							iArmor = pHitPlayer->GetArmorPercentage();
+							//QBAR m_qbArmor->ShowAmountMax(false);
 						//}
 							
 						if( bTheySpy )
@@ -785,8 +1126,10 @@ void CHudCrosshairInfo::OnTick( void )
 
 					if( hud_centerid.GetInt() )
 					{
-						int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
-						int iTall = surface()->GetFontTall( m_hTextFont );
+						int iWide;
+						int iTall;
+						
+						surface()->GetTextSize(m_hTextFont, m_pText, iWide, iTall);
 
 						// Adjust values to get below the crosshair and offset correctly
 						m_flXOffset = ( float )( iScreenWide / 2 ) - ( iWide / 2 );
@@ -806,425 +1149,89 @@ void CHudCrosshairInfo::OnTick( void )
 					wchar_t wsz_Label[256];
 					if(Q_stricmp(szClass,"#FF_PLAYER_SCOUT") == 0)
 					{
-						m_qbIdent->setIconChar("!");
+						//QBAR m_qbIdent->SetIconChar("!");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_SNIPER") == 0)
 					{
-						m_qbIdent->setIconChar("@");
+						//QBAR m_qbIdent->SetIconChar("@");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_SOLDIER") == 0)
 					{
-						m_qbIdent->setIconChar("#");
+						//QBAR m_qbIdent->SetIconChar("#");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_DEMOMAN") == 0)
 					{
-						m_qbIdent->setIconChar("$");
+						//QBAR m_qbIdent->SetIconChar("$");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_MEDIC") == 0)
 					{
-						m_qbIdent->setIconChar("%");
+						//QBAR m_qbIdent->SetIconChar("%");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_HWGUY") == 0)
 					{
-						m_qbIdent->setIconChar("^");
+						//QBAR m_qbIdent->SetIconChar("^");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_SPY") == 0)
 					{
-						m_qbIdent->setIconChar("*");
+						//QBAR m_qbIdent->SetIconChar("*");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_PYRO") == 0)
 					{
-						m_qbIdent->setIconChar("?");
+						//QBAR m_qbIdent->SetIconChar("?");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_ENGINEER") == 0)
 					{
-						m_qbIdent->setIconChar("(");
+						//QBAR m_qbIdent->SetIconChar("(");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_CIVILIAN") == 0)
 					{
-						m_qbIdent->setIconChar(")");
+						//QBAR m_qbIdent->SetIconChar(")");
 						_snwprintf( wsz_Label, 255, L"%s", wszName, wszClass );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_SENTRYGUN") == 0)
+
 					{
-						m_qbIdent->setIconChar("R");
+						//QBAR m_qbIdent->SetIconChar("R");
 						if (CROSSHAIRTYPE == CROSSHAIRTYPE_SENTRYGUN)
 							_snwprintf( wsz_Label, 255, L"Your Sentry Gun" );
 						else
 							_snwprintf( wsz_Label, 255, L"%s's Sentry Gun", wszName );
 					}
 					else if(Q_stricmp(szClass, "#FF_PLAYER_DISPENSER") == 0)
+
 					{
-						m_qbIdent->setIconChar("Q");
+						//QBAR m_qbIdent->SetIconChar("Q");
 						if (CROSSHAIRTYPE == CROSSHAIRTYPE_DISPENSER)
 							_snwprintf( wsz_Label, 255, L"Your Dispenser" );
 						else
 							_snwprintf( wsz_Label, 255, L"%s's Dispenser", wszName );
 					}
 					else
+
 					{
-						m_qbIdent->setIconChar("_");
+						//QBAR m_qbIdent->SetIconChar("_");
 						_snwprintf( wsz_Label, 255, L"" );
 					}
-					m_qbIdent->setLabelText(wsz_Label);
+					//QBAR m_qbIdent->SetLabelText(wsz_Label);
 
 					if(hud_xhairinfo_update.GetBool() || hud_xhairinfo_updateAlways.GetBool())
 					{
 						//reset it so that it does not update again
 						hud_xhairinfo_update.SetValue(0);
-
-						int barWidth = hud_xhairinfo_barWidth.GetInt();
-						int barHeight = hud_xhairinfo_barHeight.GetInt();
-						int barBorderWidth = hud_xhairinfo_barBorderWidth.GetInt();
-
-						int barColorMode = hud_xhairinfo_ColorModeBar.GetInt();
-						int barBackgroundColorMode = hud_xhairinfo_ColorModeBarBackground.GetInt();
-						int barBorderColorMode =  hud_xhairinfo_ColorModeBarBorder.GetInt();
-						int iconColorMode = hud_xhairinfo_ColorModeIcon.GetInt();
-						int labelColorMode = hud_xhairinfo_ColorModeLabel.GetInt();
-						int amountColorMode = hud_xhairinfo_ColorModeAmount.GetInt();
-						int identColorMode = hud_xhairinfo_ColorModeIdent.GetInt();
-						
-						Color barColor = *new Color(
-							hud_xhairinfo_ColorBar_r.GetInt(),
-							hud_xhairinfo_ColorBar_g.GetInt(),
-							hud_xhairinfo_ColorBar_b.GetInt(),
-							hud_xhairinfo_ColorBar_a.GetInt());
-						Color barBackgroundColor = *new Color(
-							hud_xhairinfo_ColorBarBackground_r.GetInt(),
-							hud_xhairinfo_ColorBarBackground_g.GetInt(),
-							hud_xhairinfo_ColorBarBackground_b.GetInt(),
-							hud_xhairinfo_ColorBarBackground_a.GetInt());
-						Color barBorderColor = *new Color(
-							hud_xhairinfo_ColorBarBorder_r.GetInt(),
-							hud_xhairinfo_ColorBarBorder_g.GetInt(),
-							hud_xhairinfo_ColorBarBorder_b.GetInt(),
-							hud_xhairinfo_ColorBarBorder_a.GetInt());
-						Color iconColor = *new Color(
-							hud_xhairinfo_ColorIcon_r.GetInt(),
-							hud_xhairinfo_ColorIcon_g.GetInt(),
-							hud_xhairinfo_ColorIcon_b.GetInt(),
-							hud_xhairinfo_ColorIcon_a.GetInt());
-						Color labelColor = *new Color(
-							hud_xhairinfo_ColorLabel_r.GetInt(),
-							hud_xhairinfo_ColorLabel_g.GetInt(),
-							hud_xhairinfo_ColorLabel_b.GetInt(),
-							hud_xhairinfo_ColorLabel_a.GetInt());
-						Color amountColor = *new Color(
-							hud_xhairinfo_ColorAmount_r.GetInt(),
-							hud_xhairinfo_ColorAmount_g.GetInt(),
-							hud_xhairinfo_ColorAmount_b.GetInt(),
-							hud_xhairinfo_ColorAmount_a.GetInt());
-						Color identColor = *new Color(
-							hud_xhairinfo_ColorIdent_r.GetInt(),
-							hud_xhairinfo_ColorIdent_g.GetInt(),
-							hud_xhairinfo_ColorIdent_b.GetInt(),
-							hud_xhairinfo_ColorIdent_a.GetInt());
-						
-						m_qbIdent->setIconColor(identColor);
-						m_qbIdent->setLabelColor(identColor);
-						m_qbIdent->setIconColorMode(identColorMode);
-						m_qbIdent->setLabelColorMode(identColorMode);
-			
-						int red = hud_xhairinfo_intensity_red.GetInt();
-						int orange = hud_xhairinfo_intensity_orange.GetInt();
-						int yellow = hud_xhairinfo_intensity_yellow.GetInt();
-						int green = hud_xhairinfo_intensity_green.GetInt();
-
-						bool showBar = hud_xhairinfo_showBar.GetBool();
-						bool showBarBackground = hud_xhairinfo_showBarBackground.GetBool();
-						bool showBarBorder = hud_xhairinfo_showBarBorder.GetBool();
-						bool showIcon = hud_xhairinfo_showIcon.GetBool();
-						bool showLabel = hud_xhairinfo_showLabel.GetBool();
-						bool showAmount = hud_xhairinfo_showAmount.GetBool();
-						
-						int barOffsetX = hud_xhairinfo_offsetXBar.GetInt();
-						int barOffsetY = hud_xhairinfo_offsetYBar.GetInt();
-						int iconOffsetX = hud_xhairinfo_offsetXIcon.GetInt();
-						int iconOffsetY = hud_xhairinfo_offsetYIcon.GetInt();
-						int labelOffsetX = hud_xhairinfo_offsetXLabel.GetInt();
-						int labelOffsetY = hud_xhairinfo_offsetYLabel.GetInt();
-						int amountOffsetX = hud_xhairinfo_offsetXAmount.GetInt();
-						int amountOffsetY = hud_xhairinfo_offsetYAmount.GetInt();
-						
-						vgui::HFont amountFont,iconFont,labelFont;
-
-						if(hud_xhairinfo_ShadowIcon.GetBool())
-							iconFont = m_hQuantityBarIconShadowHUD;
-						else
-							iconFont = m_hQuantityBarIconHUD;
-
-						if(hud_xhairinfo_ShadowLabel.GetBool())
-							labelFont = m_hQuantityBarShadowHUD;
-						else
-							labelFont = m_hQuantityBarHUD;
-
-						if(hud_xhairinfo_ShadowAmount.GetBool())
-							amountFont = m_hQuantityBarShadowHUD;
-						else
-							amountFont = m_hQuantityBarHUD;
-
-						m_qbHealth->setBarOffsetX(barOffsetX);
-						m_qbArmor->setBarOffsetX(barOffsetX);
-						m_qbLevel->setBarOffsetX(barOffsetX);
-						m_qbCells->setBarOffsetX(barOffsetX);
-						m_qbShells->setBarOffsetX(barOffsetX);
-						m_qbRockets->setBarOffsetX(barOffsetX);
-						m_qbNails->setBarOffsetX(barOffsetX);
-
-						m_qbHealth->setBarOffsetY(barOffsetY);
-						m_qbArmor->setBarOffsetY(barOffsetY);
-						m_qbLevel->setBarOffsetY(barOffsetY);
-						m_qbCells->setBarOffsetY(barOffsetY);
-						m_qbShells->setBarOffsetY(barOffsetY);
-						m_qbRockets->setBarOffsetY(barOffsetY);
-						m_qbNails->setBarOffsetY(barOffsetY);
-
-						m_qbHealth->setIconOffsetX(iconOffsetX);
-						m_qbArmor->setIconOffsetX(iconOffsetX);
-						m_qbLevel->setIconOffsetX(iconOffsetX);
-						m_qbCells->setIconOffsetX(iconOffsetX);
-						m_qbShells->setIconOffsetX(iconOffsetX);
-						m_qbRockets->setIconOffsetX(iconOffsetX);
-						m_qbNails->setIconOffsetX(iconOffsetX);
-
-						m_qbHealth->setIconOffsetY(iconOffsetY);
-						m_qbArmor->setIconOffsetY(iconOffsetY);
-						m_qbLevel->setIconOffsetY(iconOffsetY);
-						m_qbCells->setIconOffsetY(iconOffsetY);
-						m_qbShells->setIconOffsetY(iconOffsetY);
-						m_qbRockets->setIconOffsetY(iconOffsetY);
-						m_qbNails->setIconOffsetY(iconOffsetY);
-
-						m_qbHealth->setLabelOffsetX(labelOffsetX);
-						m_qbArmor->setLabelOffsetX(labelOffsetX);
-						m_qbLevel->setLabelOffsetX(labelOffsetX);
-						m_qbCells->setLabelOffsetX(labelOffsetX);
-						m_qbShells->setLabelOffsetX(labelOffsetX);
-						m_qbRockets->setLabelOffsetX(labelOffsetX);
-						m_qbNails->setLabelOffsetX(labelOffsetX);
-
-						m_qbHealth->setLabelOffsetY(labelOffsetY);
-						m_qbArmor->setLabelOffsetY(labelOffsetY);
-						m_qbLevel->setLabelOffsetY(labelOffsetY);
-						m_qbCells->setLabelOffsetY(labelOffsetY);
-						m_qbShells->setLabelOffsetY(labelOffsetY);
-						m_qbRockets->setLabelOffsetY(labelOffsetY);
-						m_qbNails->setLabelOffsetY(labelOffsetY);
-
-						m_qbHealth->setAmountOffsetX(amountOffsetX);
-						m_qbArmor->setAmountOffsetX(amountOffsetX);
-						m_qbLevel->setAmountOffsetX(amountOffsetX);
-						m_qbCells->setAmountOffsetX(amountOffsetX);
-						m_qbShells->setAmountOffsetX(amountOffsetX);
-						m_qbRockets->setAmountOffsetX(amountOffsetX);
-						m_qbNails->setAmountOffsetX(amountOffsetX);
-
-						m_qbHealth->setAmountOffsetY(amountOffsetY);
-						m_qbArmor->setAmountOffsetY(amountOffsetY);
-						m_qbLevel->setAmountOffsetY(amountOffsetY);
-						m_qbCells->setAmountOffsetY(amountOffsetY);
-						m_qbShells->setAmountOffsetY(amountOffsetY);
-						m_qbRockets->setAmountOffsetY(amountOffsetY);
-						m_qbNails->setAmountOffsetY(amountOffsetY);
-
-						m_qbHealth->setBarWidth(barWidth);
-						m_qbArmor->setBarWidth(barWidth);
-						m_qbLevel->setBarWidth(barWidth);
-						m_qbCells->setBarWidth(barWidth);
-						m_qbShells->setBarWidth(barWidth);
-						m_qbRockets->setBarWidth(barWidth);
-						m_qbNails->setBarWidth(barWidth);
-
-						m_qbHealth->setBarHeight(barHeight);
-						m_qbArmor->setBarHeight(barHeight);
-						m_qbLevel->setBarHeight(barHeight);
-						m_qbCells->setBarHeight(barHeight);
-						m_qbShells->setBarHeight(barHeight);
-						m_qbRockets->setBarHeight(barHeight);
-						m_qbNails->setBarHeight(barHeight);
-
-						m_qbHealth->setBarBorderWidth(barBorderWidth);
-						m_qbArmor->setBarBorderWidth(barBorderWidth);
-						m_qbLevel->setBarBorderWidth(barBorderWidth);
-						m_qbCells->setBarBorderWidth(barBorderWidth);
-						m_qbShells->setBarBorderWidth(barBorderWidth);
-						m_qbRockets->setBarBorderWidth(barBorderWidth);
-						m_qbNails->setBarBorderWidth(barBorderWidth);
-
-						m_qbHealth->setIntensityControl(red,orange,yellow,green);
-						m_qbArmor->setIntensityControl(red,orange,yellow,green);
-						m_qbCells->setIntensityControl(red,orange,yellow,green);
-						m_qbShells->setIntensityControl(red,orange,yellow,green);
-						m_qbNails->setIntensityControl(red,orange,yellow,green);
-						m_qbRockets->setIntensityControl((int)red/2,(int)orange/2,(int)yellow/2,(int)green/2);
-						m_qbIdent->setIntensityControl(red,orange,yellow,green);
-
-						m_qbArmor->setBarColor(barColor);
-						m_qbHealth->setBarColor(barColor);
-						m_qbLevel->setBarColor(barColor);
-						m_qbCells->setBarColor(barColor);
-						m_qbShells->setBarColor(barColor);
-						m_qbRockets->setBarColor(barColor);
-						m_qbNails->setBarColor(barColor);
-						m_qbHealth->setBarBackgroundColor(barBackgroundColor);
-						m_qbArmor->setBarBackgroundColor(barBackgroundColor);
-						m_qbLevel->setBarBackgroundColor(barBackgroundColor);
-						m_qbCells->setBarBackgroundColor(barBackgroundColor);
-						m_qbShells->setBarBackgroundColor(barBackgroundColor);
-						m_qbRockets->setBarBackgroundColor(barBackgroundColor);
-						m_qbNails->setBarBackgroundColor(barBackgroundColor);
-						m_qbHealth->setBarBorderColor(barBorderColor);
-						m_qbArmor->setBarBorderColor(barBorderColor);
-						m_qbLevel->setBarBorderColor(barBorderColor);
-						m_qbCells->setBarBorderColor(barBorderColor);
-						m_qbShells->setBarBorderColor(barBorderColor);
-						m_qbRockets->setBarBorderColor(barBorderColor);
-						m_qbNails->setBarBorderColor(barBorderColor);
-
-						m_qbHealth->setIconColor(iconColor);
-						m_qbArmor->setIconColor(iconColor);
-						m_qbLevel->setIconColor(iconColor);
-						m_qbCells->setIconColor(iconColor);
-						m_qbShells->setIconColor(iconColor);
-						m_qbRockets->setIconColor(iconColor);
-						m_qbNails->setIconColor(iconColor);
-						m_qbHealth->setLabelColor(labelColor);
-						m_qbArmor->setLabelColor(labelColor);
-						m_qbLevel->setLabelColor(labelColor);
-						m_qbCells->setLabelColor(labelColor);
-						m_qbShells->setLabelColor(labelColor);
-						m_qbRockets->setLabelColor(labelColor);
-						m_qbNails->setLabelColor(labelColor);
-						m_qbHealth->setAmountColor(amountColor);
-						m_qbArmor->setAmountColor(amountColor);
-						m_qbLevel->setAmountColor(amountColor);
-						m_qbCells->setAmountColor(amountColor);
-						m_qbShells->setAmountColor(amountColor);
-						m_qbRockets->setAmountColor(amountColor);
-						m_qbNails->setAmountColor(amountColor);
-
-						m_qbArmor->setBarColorMode(barColorMode);
-						m_qbHealth->setBarColorMode(barColorMode);
-						m_qbLevel->setBarColorMode(barColorMode);
-						m_qbCells->setBarColorMode(barColorMode);
-						m_qbShells->setBarColorMode(barColorMode);
-						m_qbRockets->setBarColorMode(barColorMode);
-						m_qbNails->setBarColorMode(barColorMode);
-						m_qbHealth->setBarBackgroundColorMode(barBackgroundColorMode);
-						m_qbArmor->setBarBackgroundColorMode(barBackgroundColorMode);
-						m_qbLevel->setBarBackgroundColorMode(barBackgroundColorMode);
-						m_qbCells->setBarBackgroundColorMode(barBackgroundColorMode);
-						m_qbShells->setBarBackgroundColorMode(barBackgroundColorMode);
-						m_qbRockets->setBarBackgroundColorMode(barBackgroundColorMode);
-						m_qbNails->setBarBackgroundColorMode(barBackgroundColorMode);
-						m_qbHealth->setBarBorderColorMode(barBorderColorMode);
-						m_qbArmor->setBarBorderColorMode(barBorderColorMode);
-						m_qbLevel->setBarBorderColorMode(barBorderColorMode);
-						m_qbCells->setBarBorderColorMode(barBorderColorMode);
-						m_qbShells->setBarBorderColorMode(barBorderColorMode);
-						m_qbRockets->setBarBorderColorMode(barBorderColorMode);
-						m_qbNails->setBarBorderColorMode(barBorderColorMode);
-
-						m_qbHealth->setIconColorMode(iconColorMode);
-						m_qbArmor->setIconColorMode(iconColorMode);
-						m_qbLevel->setIconColorMode(iconColorMode);
-						m_qbCells->setIconColorMode(iconColorMode);
-						m_qbShells->setIconColorMode(iconColorMode);
-						m_qbRockets->setIconColorMode(iconColorMode);
-						m_qbNails->setIconColorMode(iconColorMode);
-						m_qbHealth->setLabelColorMode(labelColorMode);
-						m_qbArmor->setLabelColorMode(labelColorMode);
-						m_qbLevel->setLabelColorMode(labelColorMode);
-						m_qbCells->setLabelColorMode(labelColorMode);
-						m_qbShells->setLabelColorMode(labelColorMode);
-						m_qbRockets->setLabelColorMode(labelColorMode);
-						m_qbNails->setLabelColorMode(labelColorMode);
-						m_qbHealth->setAmountColorMode(amountColorMode);
-						m_qbArmor->setAmountColorMode(amountColorMode);
-						m_qbLevel->setAmountColorMode(amountColorMode);
-						m_qbCells->setAmountColorMode(amountColorMode);
-						m_qbShells->setAmountColorMode(amountColorMode);
-						m_qbRockets->setAmountColorMode(amountColorMode);
-						m_qbNails->setAmountColorMode(amountColorMode);
-
-						m_qbHealth->showBar(showBar);
-						m_qbArmor->showBar(showBar);
-						m_qbLevel->showBar(showBar);
-						m_qbCells->showBar(showBar);
-						m_qbShells->showBar(showBar);
-						m_qbRockets->showBar(showBar);
-						m_qbNails->showBar(showBar);
-						m_qbHealth->showBarBackground(showBarBackground);
-						m_qbArmor->showBarBackground(showBarBackground);
-						m_qbLevel->showBarBackground(showBarBackground);
-						m_qbCells->showBarBackground(showBarBackground);
-						m_qbShells->showBarBackground(showBarBackground);
-						m_qbRockets->showBarBackground(showBarBackground);
-						m_qbNails->showBarBackground(showBarBackground);
-						m_qbHealth->showBarBorder(showBarBorder);
-						m_qbArmor->showBarBorder(showBarBorder);
-						m_qbLevel->showBarBorder(showBarBorder);
-						m_qbCells->showBarBorder(showBarBorder);
-						m_qbShells->showBarBorder(showBarBorder);
-						m_qbRockets->showBarBorder(showBarBorder);
-						m_qbNails->showBarBorder(showBarBorder);
-
-						m_qbHealth->showIcon(showIcon);
-						m_qbArmor->showIcon(showIcon);
-						m_qbLevel->showIcon(showIcon);
-						m_qbCells->showIcon(showIcon);
-						m_qbShells->showIcon(showIcon);
-						m_qbRockets->showIcon(showIcon);
-						m_qbNails->showIcon(showIcon);
-						m_qbHealth->showLabel(showLabel);
-						m_qbArmor->showLabel(showLabel);
-						m_qbLevel->showLabel(showLabel);
-						m_qbCells->showLabel(showLabel);
-						m_qbShells->showLabel(showLabel);
-						m_qbRockets->showLabel(showLabel);
-						m_qbNails->showLabel(showLabel);
-						m_qbHealth->showAmount(showAmount);
-						m_qbArmor->showAmount(showAmount);
-						m_qbLevel->showAmount(showAmount);
-						m_qbCells->showAmount(showAmount);
-						m_qbShells->showAmount(showAmount);
-						m_qbRockets->showAmount(showAmount);
-						m_qbNails->showAmount(showAmount);
-
-						m_qbHealth->setAmountFont(amountFont);
-						m_qbArmor->setAmountFont(amountFont);
-						m_qbLevel->setAmountFont(amountFont);
-						m_qbCells->setAmountFont(amountFont);
-						m_qbShells->setAmountFont(amountFont);
-						m_qbRockets->setAmountFont(amountFont);
-						m_qbNails->setAmountFont(amountFont);
-
-						m_qbHealth->setLabelFont(labelFont);
-						m_qbArmor->setLabelFont(labelFont);
-						m_qbLevel->setLabelFont(labelFont);
-						m_qbCells->setLabelFont(labelFont);
-						m_qbShells->setLabelFont(labelFont);
-						m_qbRockets->setLabelFont(labelFont);
-						m_qbNails->setLabelFont(labelFont);
-
-						m_qbHealth->setIconFont(iconFont);
-						m_qbArmor->setIconFont(iconFont);
-						m_qbLevel->setIconFont(iconFont);
-						m_qbCells->setIconFont(iconFont);
-						m_qbShells->setIconFont(iconFont);
-						m_qbRockets->setIconFont(iconFont);
-						m_qbNails->setIconFont(iconFont);
+						UpdateQuantityBars();
 					}
+
+					//QBAR 
+					/*
 
 					Color teamColor;
 					SetColorByTeam( m_iTeam, teamColor );
@@ -1234,23 +1241,34 @@ void CHudCrosshairInfo::OnTick( void )
 					int itemOffsetX = hud_xhairinfo_itemOffsetX.GetInt();
 					int itemsPerRow = hud_xhairinfo_itemsPerRow.GetInt();
 					int iRow = 0,iOffsetY = 0,iOffsetX = 0;
-					
+
+					// Get the screen width/height
+					int iScreenWide, iScreenTall;
+					surface()->GetScreenSize( iScreenWide, iScreenTall );
+
+					// "map" screen res to 640/480
+					float flXScale = 640.0f / iScreenWide;
+					float flYScale = 480.0f / iScreenTall;
+
 					if(hud_xhairinfo_showIdent.GetBool())
 					{
-						m_qbIdent->setAmount(iHealth);
-						m_qbIdent->setTeamColor(teamColor);
-						m_qbIdent->setScaleX(flXScale);
-						m_qbIdent->setScaleY(flYScale);
-						m_qbIdent->setPosition(iLeft + hud_xhairinfo_offsetXIdent.GetInt(), iTop + hud_xhairinfo_offsetYIdent.GetInt());
+						m_qbIdent->SetAmount(iHealth);
+						m_qbIdent->SetTeamColor(teamColor);
+						m_qbIdent->SetIconFont(m_hCrosshairInfoPlayerGlyph);
+						m_qbIdent->SetLabelFont(m_hCrosshairInfoPlayerName);
+						m_qbIdent->SetScaleX(flXScale);
+						m_qbIdent->SetScaleY(flYScale);
+						m_qbIdent->SetPosition(iLeft + hud_xhairinfo_offsetXIdent.GetInt(), iTop + hud_xhairinfo_offsetYIdent.GetInt());
+
 					}
 					if(iHealth > -1)
 					{
-						m_qbHealth->setAmount(iHealth);
-						m_qbHealth->setTeamColor(teamColor);
-						m_qbHealth->setScaleX(flXScale);
-						m_qbHealth->setScaleY(flYScale);
-						m_qbHealth->setPosition(iLeft + iOffsetX, iTop + iOffsetY);
-						m_qbHealth->setVisible(true);
+						m_qbHealth->SetAmount(iHealth);
+						m_qbHealth->SetTeamColor(teamColor);
+						m_qbHealth->SetScaleX(flXScale);
+						m_qbHealth->SetScaleY(flYScale);
+						m_qbHealth->SetPosition(iLeft + iOffsetX, iTop + iOffsetY);
+						m_qbHealth->SetVisible(true);
 						++iRow;
 						if(iRow >= itemsPerRow)	
 						{
@@ -1261,16 +1279,16 @@ void CHudCrosshairInfo::OnTick( void )
 							iOffsetX += itemOffsetX;
 					}
 					else
-						m_qbHealth->setVisible(false);
+						m_qbHealth->SetVisible(false);
 
 					if(iArmor > -1)
 					{
-						m_qbArmor->setAmount(iArmor);
-						m_qbArmor->setTeamColor(teamColor);
-						m_qbArmor->setScaleX(flXScale);
-						m_qbArmor->setScaleY(flYScale);
-						m_qbArmor->setPosition(iLeft + iOffsetX, iTop + iOffsetY);
-						m_qbArmor->setVisible(true);
+						m_qbArmor->SetAmount(iArmor);
+						m_qbArmor->SetTeamColor(teamColor);
+						m_qbArmor->SetScaleX(flXScale);
+						m_qbArmor->SetScaleY(flYScale);
+						m_qbArmor->SetPosition(iLeft + iOffsetX, iTop + iOffsetY);
+						m_qbArmor->SetVisible(true);
 						++iRow;
 						if(iRow >= itemsPerRow)	
 						{
@@ -1282,16 +1300,16 @@ void CHudCrosshairInfo::OnTick( void )
 							iOffsetX += itemOffsetX;
 					}
 					else
-						m_qbArmor->setVisible(false);
+						m_qbArmor->SetVisible(false);
 
 					if(iLevel > -1)
 					{
-						m_qbLevel->setAmount(iLevel);
-						m_qbLevel->setTeamColor(teamColor);
-						m_qbLevel->setScaleX(flXScale);
-						m_qbLevel->setScaleY(flYScale);
-						m_qbLevel->setPosition(iLeft + iOffsetX, iTop + iOffsetY);
-						m_qbLevel->setVisible(true);
+						m_qbLevel->SetAmount(iLevel);
+						m_qbLevel->SetTeamColor(teamColor);
+						m_qbLevel->SetScaleX(flXScale);
+						m_qbLevel->SetScaleY(flYScale);
+						m_qbLevel->SetPosition(iLeft + iOffsetX, iTop + iOffsetY);
+						m_qbLevel->SetVisible(true);
 						++iRow;
 						if(iRow >= itemsPerRow)	
 						{
@@ -1303,16 +1321,16 @@ void CHudCrosshairInfo::OnTick( void )
 							iOffsetX += itemOffsetX;
 					}
 					else
-						m_qbLevel->setVisible(false);
+						m_qbLevel->SetVisible(false);
 
 					if(iCells > -1)
 					{
-						m_qbCells->setAmount(iCells);
-						m_qbCells->setTeamColor(teamColor);
-						m_qbCells->setScaleX(flXScale);
-						m_qbCells->setScaleY(flYScale);
-						m_qbCells->setPosition(iLeft + iOffsetX, iTop + iOffsetY);
-						m_qbCells->setVisible(true);
+						m_qbCells->SetAmount(iCells);
+						m_qbCells->SetTeamColor(teamColor);
+						m_qbCells->SetScaleX(flXScale);
+						m_qbCells->SetScaleY(flYScale);
+						m_qbCells->SetPosition(iLeft + iOffsetX, iTop + iOffsetY);
+						m_qbCells->SetVisible(true);
 						++iRow;
 						if(iRow >= itemsPerRow)	
 						{
@@ -1324,16 +1342,16 @@ void CHudCrosshairInfo::OnTick( void )
 							iOffsetX += itemOffsetX;
 					}
 					else
-						m_qbCells->setVisible(false);
+						m_qbCells->SetVisible(false);
 
 					if(iShells > -1)
 					{
-						m_qbShells->setAmount(iShells);
-						m_qbShells->setTeamColor(teamColor);
-						m_qbShells->setScaleX(flXScale);
-						m_qbShells->setScaleY(flYScale);
-						m_qbShells->setPosition(iLeft + iOffsetX, iTop + iOffsetY);
-						m_qbShells->setVisible(true);
+						m_qbShells->SetAmount(iShells);
+						m_qbShells->SetTeamColor(teamColor);
+						m_qbShells->SetScaleX(flXScale);
+						m_qbShells->SetScaleY(flYScale);
+						m_qbShells->SetPosition(iLeft + iOffsetX, iTop + iOffsetY);
+						m_qbShells->SetVisible(true);
 						++iRow;
 						if(iRow >= itemsPerRow)	
 						{
@@ -1345,16 +1363,16 @@ void CHudCrosshairInfo::OnTick( void )
 							iOffsetX += itemOffsetX;
 					}
 					else
-						m_qbShells->setVisible(false);
+						m_qbShells->SetVisible(false);
 
 					if(iRockets > -1)
 					{
-						m_qbRockets->setAmount(iRockets);
-						m_qbRockets->setTeamColor(teamColor);
-						m_qbRockets->setScaleX(flXScale);
-						m_qbRockets->setScaleY(flYScale);
-						m_qbRockets->setPosition(iLeft + iOffsetX, iTop + iOffsetY);
-						m_qbRockets->setVisible(true);
+						m_qbRockets->SetAmount(iRockets);
+						m_qbRockets->SetTeamColor(teamColor);
+						m_qbRockets->SetScaleX(flXScale);
+						m_qbRockets->SetScaleY(flYScale);
+						m_qbRockets->SetPosition(iLeft + iOffsetX, iTop + iOffsetY);
+						m_qbRockets->SetVisible(true);
 						++iRow;
 						if(iRow >= itemsPerRow)	
 						{
@@ -1366,16 +1384,16 @@ void CHudCrosshairInfo::OnTick( void )
 							iOffsetX += itemOffsetX;
 					}
 					else
-						m_qbRockets->setVisible(false);
+						m_qbRockets->SetVisible(false);
 
 					if(iNails > -1)
 					{
-						m_qbNails->setAmount(iNails);
-						m_qbNails->setTeamColor(teamColor);
-						m_qbNails->setScaleX(flXScale);
-						m_qbNails->setScaleY(flYScale);
-						m_qbNails->setPosition(iLeft + iOffsetX, iTop + iOffsetY);
-						m_qbNails->setVisible(true);
+						m_qbNails->SetAmount(iNails);
+						m_qbNails->SetTeamColor(teamColor);
+						m_qbNails->SetScaleX(flXScale);
+						m_qbNails->SetScaleY(flYScale);
+						m_qbNails->SetPosition(iLeft + iOffsetX, iTop + iOffsetY);
+						m_qbNails->SetVisible(true);
 						++iRow;
 						if(iRow >= itemsPerRow)	
 						{
@@ -1387,7 +1405,8 @@ void CHudCrosshairInfo::OnTick( void )
 							iOffsetX += itemOffsetX;
 					}
 					else
-						m_qbNails->setVisible(false);
+						m_qbNails->SetVisible(false);
+					*/
 				}
 				// Start drawing
 				m_flDrawTime = gpGlobals->curtime;
@@ -1404,6 +1423,10 @@ void CHudCrosshairInfo::OnTick( void )
 			pPlayer->m_hCrosshairInfo.Set( "", 0, 0 );
 		}
 	}
+
+	SetPos( 0, 0);
+	SetWide( scheme()->GetProportionalScaledValue( 640 ) );
+	SetTall( scheme()->GetProportionalScaledValue( 480 ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -1446,25 +1469,9 @@ void CHudCrosshairInfo::Paint( void )
 			for( wchar_t *wch = m_pText; *wch != 0; wch++ )
 				surface()->DrawUnicodeChar( *wch );
 		}
-		else
-		{
-			//background then foreground so borders can be large and not cover over the next item.
-			m_qbHealth->paintBackground();
-			m_qbArmor->paintBackground();
-			m_qbLevel->paintBackground();
-			m_qbCells->paintBackground();
-			m_qbShells->paintBackground();
-			m_qbRockets->paintBackground();
-			m_qbNails->paintBackground();
-			m_qbHealth->paint();
-			m_qbArmor->paint();
-			m_qbLevel->paint();
-			m_qbCells->paint();
-			m_qbShells->paint();
-			m_qbRockets->paint();
-			m_qbNails->paint();
-			
-			m_qbIdent->paint();
-		}
+	}
+	else
+	{
+		//set the visible children panels to invis
 	}
 }

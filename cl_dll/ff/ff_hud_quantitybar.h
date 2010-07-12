@@ -9,21 +9,67 @@
 	
 	purpose:	Customisable Quanitity indicator
 *********************************************************************/
-
 #include "cbase.h"
-#include <vgui/IScheme.h>
+#include "hudelement.h"
+#include "hud_macros.h"
 
-class CHudQuantityBar
+/*
+#include <KeyValues.h>
+#include <vgui/ISystem.h>
+*/
+
+#include <vgui_controls/Panel.h>
+#include <vgui/IVGui.h>
+#include <vgui/ISurface.h>
+#include <vgui/ILocalize.h>
+
+class CHudQuantityBar : public CHudElement, public vgui::Panel
 {
+private:
+	DECLARE_CLASS_SIMPLE(CHudQuantityBar, vgui::Panel);
 public:
-	CHudQuantityBar()
+	CHudQuantityBar(vgui::Panel *parent, const char *pElementName) : CHudElement(pElementName), vgui::Panel(parent, pElementName) 
 	{
+		SetParent( parent );
+		SetSize(vgui::scheme()->GetProportionalScaledValue(640), vgui::scheme()->GetProportionalScaledValue(480));
+
 		m_flScaleX = 1.0f;
 		m_flScaleY = 1.0f;
-		m_iTop = 0;
-		m_iLeft = 0;
+		m_iTop = 50;
+		m_iLeft = 50;
 
-		setAmountMax(100); //use the function to generate the text
+		m_iBarWidth = 60;
+		m_iBarHeight = 13;
+		m_iBarBorderWidth = 1;
+		
+		m_iBarOrientation = ORIENTATION_HORIZONTAL;
+
+		m_iAlignLabel = ALIGN_RIGHT;
+		m_iAlignAmount = ALIGN_CENTER;
+
+		m_iOffsetXBar = 0;
+		m_iOffsetYBar = 0;
+		m_iOffsetXIcon = 5;
+		m_iOffsetYIcon = 0;
+		m_iOffsetXLabel = -5;
+		m_iOffsetYLabel = 0;
+		m_iOffsetXAmount = 35;
+		m_iOffsetYAmount = 0;
+
+		m_iIntenisityRed = 20;
+		m_iIntenisityOrange = 50;
+		m_iIntenisityYellow = 80;
+		m_iIntenisityGreen = 100;
+		m_bIntenisityInvertScale = false;
+
+		m_ColorModeBar = COLOR_MODE_STEPPED;
+		m_ColorModeBarBorder = COLOR_MODE_CUSTOM;
+		m_ColorModeBarBackground = COLOR_MODE_STEPPED;
+		m_ColorModeIcon = COLOR_MODE_CUSTOM;
+		m_ColorModeLabel = COLOR_MODE_CUSTOM;
+		m_ColorModeAmount = COLOR_MODE_CUSTOM;
+
+		SetAmountMax(100); //use the function to generate the text
 
 		m_bShowBar = true;
 		m_bShowBarBackground = true;
@@ -31,90 +77,114 @@ public:
 		m_bShowIcon = true;
 		m_bShowLabel = true;
 		m_bShowAmount = true;
-		m_bShowAmountMax = false;
+		m_bShowAmountMax = true;
 		m_bVisible = true;
 
-		m_iBarWidth = 100;
-		m_iBarHeight = 25;
-
-		m_ColorBarBorder.SetColor(255,255,255,255);
-		m_ColorBarBackground.SetColor(255,255,255,255);
+		m_ColorBarBorder.SetColor(192,192,192,255);
+		m_ColorBarBackground.SetColor(255,255,255,80);
 		m_ColorBar.SetColor(255,255,255,255);
 		m_ColorIcon.SetColor(255,255,255,255);
 		m_ColorLabel.SetColor(255,255,255,255);
 		m_ColorAmount.SetColor(255,255,255,255);
 	}
 
-	void setScaleX(float newScaleX);
-	void setScaleY(float newScaleY);
+	enum {
+		COLOR_MODE_CUSTOM=0,
+		COLOR_MODE_STEPPED,
+		COLOR_MODE_FADED,
+		COLOR_MODE_TEAMCOLORED
+	};
 
-	void setBarOffset(int x, int y);
+	enum {
+		ALIGN_LEFT=0,
+		ALIGN_CENTER,
+		ALIGN_RIGHT
+	};
 
-	void setAmountFont(vgui::HFont newAmountFont);
-	void setIconFont(vgui::HFont newIconFont);
-	void setLabelFont(vgui::HFont newLabelFont);
+	enum {
+		ORIENTATION_HORIZONTAL=0,
+		ORIENTATION_VERTICAL,
+		ORIENTATION_HORIZONTAL_INVERTED,
+		ORIENTATION_VERTICAL_INVERTED
+	};
 
-	void setAmount(int newAmount);
-	void setAmountMax(int newAmountMax);
+	void SetScaleX(float flScaleX);
+	void SetScaleY(float flScaleY);
 
-	void setIconChar(char *newIconChar);
-	void setLabelText(char *newLabelText);
-	void setLabelText(wchar_t *newLabelText);
+	//void SetBarOffset(int x, int y);
 
-	void setBarWidth(int newBarWidth);
-	void setBarHeight(int newBarHeight);
-	void setPosition(int newPositionX, int newPositionY);
-	void setBarBorderWidth(int newBarBorderWidth);
+	void SetAmountFont(vgui::HFont newAmountFont);
+	void SetIconFont(vgui::HFont newIconFont);
+	void SetLabelFont(vgui::HFont newLabelFont);
 
-	void setResolutionScaleX(float newScaleX);
-	void setResolutionScaleY(float newScaleY);
+	void SetAmount(int iAmount);
+	void SetAmountMax(int iAmountMax);
 
-	void showBar(bool showBar);
-	void showBarBorder(bool showBarBorder);
-	void showBarBackground(bool showBarBackground);
-	void showAmount(bool showAmount);
-	void showIcon(bool showIcon);
-	void showLabel(bool showLabel);
-	void showAmountMax(bool showAmountMax);
+	void SetIconChar(char *newIconChar);
+	void SetLabelText(char *newLabelText);
+	void SetLabelText(wchar_t *newLabelText);
 
-	void setVisible(bool isVisible);
+	void SetPosition(int iPositionX, int iPositionY);
+	void SetBarWidth(int iBarWidth);
+	void SetBarHeight(int iBarHeight);
+	void SetBarBorderWidth(int iBarBorderWidth);
+	void SetBarOrientation(int iOrientation);
 
-	void setBarColor( Color newColorBar );
-	void setBarBorderColor( Color newBarBorderColor );
-	void setBarBackgroundColor( Color newBarBorderColor );
-	void setAmountColor( Color newAmountColor );
-	void setIconColor( Color newIconColor );
-	void setLabelColor( Color newLabelColor );
-	void setTeamColor( Color newTeamColor );
+	void SetLabelAlignment(int iLabelAlign);
+	void SetAmountAlignment(int iAmountAlign);
 
-	void setBarOffsetX(int barOffsetX);
-	void setBarOffsetY(int barOffsetY);
-	void setIconOffsetX(int iconOffsetX);
-	void setIconOffsetY(int iconOffsetY);
-	void setLabelOffsetX(int labelOffsetX);
-	void setLabelOffsetY(int labelOffsetY);
-	void setAmountOffsetX(int amountOffsetX);
-	void setAmountOffsetY(int amountOffsetY);
+	void ShowBar(bool bShowBar);
+	void ShowBarBorder(bool bShowBarBorder);
+	void ShowBarBackground(bool bShowBarBackground);
+	void ShowAmount(bool bShowAmount);
+	void ShowIcon(bool bShowIcon);
+	void ShowLabel(bool bShowLabel);
+	void ShowAmountMax(bool bShowAmountMax);
 
-	void setBarColorMode( int newColorModeBar );
-	void setBarBorderColorMode( int newColorModeBarBorder );
-	void setBarBackgroundColorMode( int newColorModeBarBorder );
-	void setAmountColorMode( int newColorModeAmount );
-	void setIconColorMode( int newColorModeIcon );
-	void setLabelColorMode( int newColoModerLabel );
+	//void SetVisible(bool bIsVisible);
+
+	void SetBarColor( Color newColorBar );
+	void SetBarBorderColor( Color newBarBorderColor );
+	void SetBarBackgroundColor( Color newBarBorderColor );
+	void SetAmountColor( Color newAmountColor );
+	void SetIconColor( Color newIconColor );
+	void SetLabelColor( Color newLabelColor );
+	void SetTeamColor( Color newTeamColor );
+
+	void SetBarOffsetX(int barOffsetX);
+	void SetBarOffsetY(int barOffsetY);
+	void SetIconOffsetX(int iconOffsetX);
+	void SetIconOffsetY(int iconOffsetY);
+	void SetLabelOffsetX(int labelOffsetX);
+	void SetLabelOffsetY(int labelOffsetY);
+	void SetAmountOffsetX(int amountOffsetX);
+	void SetAmountOffsetY(int amountOffsetY);
+
+	void SetBarColorMode( int iColorModeBar );
+	void SetBarBorderColorMode( int iColorModeBarBorder );
+	void SetBarBackgroundColorMode( int iColorModeBarBorder );
+	void SetAmountColorMode( int iColorModeAmount );
+	void SetIconColorMode( int iColorModeIcon );
+	void SetLabelColorMode( int iColoModerLabel );
 	
-	void setIntensityControl(int red, int orange,int yellow, int green);
-	void setIntensityControl(int red, int orange,int yellow, int green, bool invert);
+	void SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen);
+	void SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale);
 
-	int getAmount();
+	int GetAmount();
 
-	void paint();
-	void paintBackground();
+	virtual void Paint();
+	virtual void PaintBackground();
+protected:
+ 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
-private:
-	vgui::HFont m_hAmount;
-	vgui::HFont m_hIcon;
-	vgui::HFont m_hLabel;
+	vgui::HFont m_hfAmount;
+	vgui::HFont m_hfIcon;
+	vgui::HFont m_hfLabel;
+	
+	vgui::HFont m_hfQuantityBarText;
+	vgui::HFont m_hfQuantityBarIcon;
+	vgui::HFont m_hfQuantityBarTextShadow;
+	vgui::HFont m_hfQuantityBarIconShadow;
 
 	float m_flScaleX;
 	float m_flScaleY;
@@ -127,6 +197,10 @@ private:
 	int m_iBarWidth;
 	int m_iBarHeight;
 	int m_iBarBorderWidth;
+	int m_iBarOrientation;
+
+	int m_iAlignLabel;
+	int m_iAlignAmount;
 
 	int m_iOffsetXBar;
 	int m_iOffsetYBar;

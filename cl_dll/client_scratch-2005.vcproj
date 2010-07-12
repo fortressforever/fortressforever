@@ -4663,6 +4663,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_buildstate_sentry.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_buildtimer.cpp"
 				>
 			</File>
@@ -4935,6 +4939,14 @@
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_panel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitypanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitypanel.h"
 					>
 				</File>
 				<File
