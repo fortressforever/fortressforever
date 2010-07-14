@@ -31,88 +31,71 @@ public:
 	CHudQuantityBar(vgui::Panel *parent, const char *pElementName) : CHudElement(pElementName), vgui::Panel(parent, pElementName) 
 	{
 		SetParent( parent );
-		SetSize(vgui::scheme()->GetProportionalScaledValue(640), vgui::scheme()->GetProportionalScaledValue(480));
+		SetSize(vgui::scheme()->GetProportionalScaledValue(640),vgui::scheme()->GetProportionalScaledValue(480));
 
-		m_flScaleX = 1.0f;
-		m_flScaleY = 1.0f;
-		m_iTop = 50;
-		m_iLeft = 50;
+		m_flScale = 1.0f;
 
-		m_iBarWidth = 60;
-		m_iBarHeight = 13;
-		m_iBarBorderWidth = 1;
-		
-		m_iBarOrientation = ORIENTATION_HORIZONTAL;
+		SetPos(0,0);
+		SetBarSize(60, 13);
+		SetBarBorderWidth(1);
 
-		m_iAlignLabel = ALIGN_RIGHT;
-		m_iAlignAmount = ALIGN_CENTER;
+		SetBarOrientation(ORIENTATION_HORIZONTAL);
 
-		m_iOffsetXBar = 0;
-		m_iOffsetYBar = 0;
-		m_iOffsetXIcon = 5;
-		m_iOffsetYIcon = 0;
-		m_iOffsetXLabel = -5;
-		m_iOffsetYLabel = 0;
-		m_iOffsetXAmount = 35;
-		m_iOffsetYAmount = 0;
+		m_iTextAlignLabel = TEXTALIGN_RIGHT;
+		m_iTextAlignAmount = TEXTALIGN_CENTER;
 
-		m_iIntenisityRed = 20;
-		m_iIntenisityOrange = 50;
-		m_iIntenisityYellow = 80;
-		m_iIntenisityGreen = 100;
-		m_bIntenisityInvertScale = false;
+		SetIconOffset(5,0);
+		SetLabelOffset(-5, 0);
+		SetAmountOffset(35, 0);
 
-		m_ColorModeBar = COLOR_MODE_STEPPED;
-		m_ColorModeBarBorder = COLOR_MODE_CUSTOM;
-		m_ColorModeBarBackground = COLOR_MODE_STEPPED;
-		m_ColorModeIcon = COLOR_MODE_CUSTOM;
-		m_ColorModeLabel = COLOR_MODE_CUSTOM;
-		m_ColorModeAmount = COLOR_MODE_CUSTOM;
+		SetIntensityControl(20,50,80,100);
 
-		SetAmountMax(100); //use the function to generate the text
+		SetBarBorderColor(Color(255,255,255,255));
+		SetBarBackgroundColor(Color(192,192,192,80));
+		SetBarColor(Color(255,255,255,255));
+		SetIconColor(Color(255,255,255,255));
+		SetLabelColor(Color(255,255,255,255));
+		SetAmountColor(Color(255,255,255,255));
 
-		m_bShowBar = true;
-		m_bShowBarBackground = true;
-		m_bShowBarBorder = true;
-		m_bShowIcon = true;
-		m_bShowLabel = true;
-		m_bShowAmount = true;
-		m_bShowAmountMax = true;
-		m_bVisible = true;
+		SetBarColorMode(COLOR_MODE_STEPPED);
+		SetBarBorderColorMode(COLOR_MODE_CUSTOM);
+		SetBarBackgroundColorMode(COLOR_MODE_STEPPED);
+		SetIconColorMode(COLOR_MODE_CUSTOM);
+		SetLabelColorMode(COLOR_MODE_CUSTOM);
+		SetAmountColorMode(COLOR_MODE_CUSTOM);
 
-		m_ColorBarBorder.SetColor(192,192,192,255);
-		m_ColorBarBackground.SetColor(255,255,255,80);
-		m_ColorBar.SetColor(255,255,255,255);
-		m_ColorIcon.SetColor(255,255,255,255);
-		m_ColorLabel.SetColor(255,255,255,255);
-		m_ColorAmount.SetColor(255,255,255,255);
+		SetAmountMax(100);
+
+		ShowBar(true);
+		ShowBarBackground(true);
+		ShowBarBorder(true);
+		ShowIcon(true);
+		ShowLabel(true);
+		ShowAmount(true);
+		ShowAmountMax(true);
+
+		vgui::ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
 	}
 
-	enum {
+	enum ColorMode {
 		COLOR_MODE_CUSTOM=0,
 		COLOR_MODE_STEPPED,
 		COLOR_MODE_FADED,
 		COLOR_MODE_TEAMCOLORED
 	};
 
-	enum {
-		ALIGN_LEFT=0,
-		ALIGN_CENTER,
-		ALIGN_RIGHT
+	enum TextAlignment {
+		TEXTALIGN_LEFT=0,
+		TEXTALIGN_CENTER,
+		TEXTALIGN_RIGHT
 	};
 
-	enum {
+	enum OrientationMode {
 		ORIENTATION_HORIZONTAL=0,
 		ORIENTATION_VERTICAL,
 		ORIENTATION_HORIZONTAL_INVERTED,
 		ORIENTATION_VERTICAL_INVERTED
 	};
-
-	void SetScaleX(float flScaleX);
-	void SetScaleY(float flScaleY);
-
-	//void SetBarOffset(int x, int y);
-
 	void SetAmountFont(vgui::HFont newAmountFont);
 	void SetIconFont(vgui::HFont newIconFont);
 	void SetLabelFont(vgui::HFont newLabelFont);
@@ -124,14 +107,14 @@ public:
 	void SetLabelText(char *newLabelText);
 	void SetLabelText(wchar_t *newLabelText);
 
-	void SetPosition(int iPositionX, int iPositionY);
 	void SetBarWidth(int iBarWidth);
 	void SetBarHeight(int iBarHeight);
+	void SetBarSize(int iBarWidth, int iBarHeight);
 	void SetBarBorderWidth(int iBarBorderWidth);
 	void SetBarOrientation(int iOrientation);
 
-	void SetLabelAlignment(int iLabelAlign);
-	void SetAmountAlignment(int iAmountAlign);
+	void SetLabelTextAlignment(int iLabelTextAlign);
+	void SetAmountTextAlignment(int iAmountTextAlign);
 
 	void ShowBar(bool bShowBar);
 	void ShowBarBorder(bool bShowBarBorder);
@@ -141,8 +124,6 @@ public:
 	void ShowLabel(bool bShowLabel);
 	void ShowAmountMax(bool bShowAmountMax);
 
-	//void SetVisible(bool bIsVisible);
-
 	void SetBarColor( Color newColorBar );
 	void SetBarBorderColor( Color newBarBorderColor );
 	void SetBarBackgroundColor( Color newBarBorderColor );
@@ -151,14 +132,15 @@ public:
 	void SetLabelColor( Color newLabelColor );
 	void SetTeamColor( Color newTeamColor );
 
-	void SetBarOffsetX(int barOffsetX);
-	void SetBarOffsetY(int barOffsetY);
 	void SetIconOffsetX(int iconOffsetX);
 	void SetIconOffsetY(int iconOffsetY);
+	void SetIconOffset(int iconOffsetX, int iconOffsetY);
 	void SetLabelOffsetX(int labelOffsetX);
 	void SetLabelOffsetY(int labelOffsetY);
+	void SetLabelOffset(int labelOffsetX, int labelOffsetY);
 	void SetAmountOffsetX(int amountOffsetX);
 	void SetAmountOffsetY(int amountOffsetY);
+	void SetAmountOffset(int amountOffsetX, int amountOffsetY);
 
 	void SetBarColorMode( int iColorModeBar );
 	void SetBarBorderColorMode( int iColorModeBarBorder );
@@ -167,14 +149,21 @@ public:
 	void SetIconColorMode( int iColorModeIcon );
 	void SetLabelColorMode( int iColoModerLabel );
 	
-	void SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen);
-	void SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale);
+	void SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale = false);
 
 	int GetAmount();
 
 	virtual void Paint();
-	virtual void PaintBackground();
+	virtual void OnTick();
+	virtual void SetPos(int iPositionX, int iPositionY);
+
 protected:
+	void CalculateAbsTextAlignmentOffset(int &outX, int &outY, int iAlignmentMode, vgui::HFont hfFont, wchar_t* wszString);
+	void RecalculateQuantity();
+	void RecalculateDimentions();
+
+	void RecalculateColor(int &colorMode, Color &color, Color &colorCustom);
+
  	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 	vgui::HFont m_hfAmount;
@@ -186,10 +175,15 @@ protected:
 	vgui::HFont m_hfQuantityBarTextShadow;
 	vgui::HFont m_hfQuantityBarIconShadow;
 
-	float m_flScaleX;
-	float m_flScaleY;
+	float m_flScale;
+
 	int m_iTop;
 	int m_iLeft;
+	
+	int m_iBarX0QuantityOffset;
+	int m_iBarY0QuantityOffset;
+	int m_iBarX1QuantityOffset;
+	int m_iBarY1QuantityOffset;
 
 	int m_iAmount;
 	int m_iMaxAmount;
@@ -199,11 +193,9 @@ protected:
 	int m_iBarBorderWidth;
 	int m_iBarOrientation;
 
-	int m_iAlignLabel;
-	int m_iAlignAmount;
+	int m_iTextAlignLabel;
+	int m_iTextAlignAmount;
 
-	int m_iOffsetXBar;
-	int m_iOffsetYBar;
 	int m_iOffsetXIcon;
 	int m_iOffsetYIcon;
 	int m_iOffsetXLabel;
@@ -216,6 +208,8 @@ protected:
 	wchar_t m_wszIcon[ 2 ];
 	wchar_t m_wszLabel[ 32 ];
 
+	wchar_t m_wszAmountString[ 10 ];
+
 	bool m_bShowBar;
 	bool m_bShowBarBackground;
 	bool m_bShowBarBorder;
@@ -224,23 +218,28 @@ protected:
 	bool m_bShowAmount;
 	bool m_bShowAmountMax;
 
-	bool m_bVisible;
-
 	int m_iIntenisityRed;
 	int m_iIntenisityOrange;
 	int m_iIntenisityYellow;
 	int m_iIntenisityGreen;
 	int m_bIntenisityInvertScale;
 
-	Color m_ColorBar;
-	Color m_ColorBarBorder;
-	Color m_ColorBarBackground;
-	Color m_ColorIcon;
-	Color m_ColorLabel;
-	Color m_ColorAmount;
+	Color m_ColorBarCustom;
+	Color m_ColorBarBorderCustom;
+	Color m_ColorBarBackgroundCustom;
+	Color m_ColorIconCustom;
+	Color m_ColorLabelCustom;
+	Color m_ColorAmountCustom;
 	Color m_ColorTeam;
 	Color m_ColorIntensityFaded;
 	Color m_ColorIntensityStepped;
+
+	Color m_ColorBarBorder;
+	Color m_ColorBarBackground;	
+	Color m_ColorBar;	
+	Color m_ColorIcon;
+	Color m_ColorLabel;
+	Color m_ColorAmount;
 
 	int m_ColorModeBar;
 	int m_ColorModeBarBorder;

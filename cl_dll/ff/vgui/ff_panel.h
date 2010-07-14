@@ -23,6 +23,7 @@ namespace vgui
 {
 	class FFPanel : public Panel
 	{
+	DECLARE_CLASS_SIMPLE( FFPanel, Panel );
 	public:
 		FFPanel() : Panel() { InitFFPanel(); }
 		FFPanel(Panel *parent) : Panel(parent) { InitFFPanel(); }
@@ -34,11 +35,9 @@ namespace vgui
 		virtual void FFPanel::PaintBackground();
 
 	private:
-
 		void InitFFPanel();
 
 	protected:
-
 		CHudTexture		*m_pHudForeground;
 		CHudTexture		*m_pHudBackground;
 

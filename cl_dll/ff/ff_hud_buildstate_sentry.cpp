@@ -11,7 +11,7 @@
 
 class CHudBuildStateSentry : public CHudElement, public vgui::FFQuantityPanel
 {
-	//DECLARE_CLASS_SIMPLE( CHudBuildStateSentry, vgui::FFQuantityPanel );
+	DECLARE_CLASS_SIMPLE( CHudBuildStateSentry, vgui::FFQuantityPanel );
 
 public:
 	CHudBuildStateSentry(const char *pElementName) : CHudElement(pElementName), vgui::FFQuantityPanel(NULL, "HudBuildStateSentry")
@@ -23,17 +23,18 @@ public:
 		m_qbSentryLevel = new CHudQuantityBar(this, "BuildStateSentryLevel"); 
 
 		m_bBuilt = false;
-		m_iBarPadding = 30;
 
-		vgui::ivgui()->AddTickSignal(GetVPanel()); //only update 4 times a second
+		m_flScale = 1.0f;
+
+		vgui::ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
 	}
 
 	~CHudBuildStateSentry( void ) {}
 
-	void	Init( void );
-	void	VidInit( void );
-	void	OnTick( void );
-	void	Paint( void );
+	virtual void	Init( void );
+	virtual void	VidInit( void );
+	virtual void	OnTick( void );
+	virtual void	Paint( void );
 
 	void	MsgFunc_SentryMsg(bf_read &msg);
 
@@ -42,7 +43,6 @@ protected:
 	CHudQuantityBar *m_qbSentryLevel; 
 
 	bool	m_bBuilt;
-	int		m_iBarPadding;
 };
 
 DECLARE_HUDELEMENT(CHudBuildStateSentry);
@@ -51,6 +51,7 @@ DECLARE_HUD_MESSAGE(CHudBuildStateSentry, SentryMsg);
 void CHudBuildStateSentry::Init() 
 {
 	HOOK_HUD_MESSAGE(CHudBuildStateSentry, SentryMsg);
+	//SetAutoResize(PIN_TOPLEFT,AUTORESIZE_DOWNANDRIGHT,0,0,0,0); <-- this would be nice??
 
 	wchar_t *tempString = vgui::localize()->Find("#FF_PLAYER_SENTRYGUN");
 
@@ -66,25 +67,27 @@ void CHudBuildStateSentry::Init()
 	
 	m_qbSentryHealth->SetLabelText("#FF_ITEM_HEALTH");
 	m_qbSentryHealth->SetIconChar(":");
-	m_qbSentryHealth->SetPosition(m_iBarPadding, m_iBarPadding + 15);
-	m_qbSentryHealth->SetLabelAlignment(m_qbSentryHealth->ALIGN_RIGHT);
 	m_qbSentryHealth->SetVisible(false);
+	m_qbSentryHealth->SetPos(40,40);
 
 	m_qbSentryLevel->SetLabelText("#FF_ITEM_LEVEL");
 	m_qbSentryLevel->SetAmountMax(3);
-	m_qbSentryLevel->SetPosition(m_iBarPadding, m_iBarPadding + 35);
-	m_qbSentryLevel->SetLabelAlignment(2);
 	m_qbSentryLevel->SetIntensityControl(1,2,2,3);
 	m_qbSentryLevel->SetVisible(false);
+	m_qbSentryLevel->SetPos(40,60);
 }
 void CHudBuildStateSentry::VidInit() 
 {
-	SetPos(  vgui::scheme()->GetProportionalScaledValue(100),  vgui::scheme()->GetProportionalScaledValue(100) );
-	SetWide( vgui::scheme()->GetProportionalScaledValue( 100 ) );
-	SetTall( vgui::scheme()->GetProportionalScaledValue( 100 ) );
 }
 void CHudBuildStateSentry::OnTick() 
 {
+	BaseClass::OnTick();
+
+	//TO-DO
+	//I think these should maybe be in VidInit - find out
+	SetPos( vgui::scheme()->GetProportionalScaledValue(10),  vgui::scheme()->GetProportionalScaledValue(325) );
+	SetSize(vgui::scheme()->GetProportionalScaledValue(120),vgui::scheme()->GetProportionalScaledValue(90));
+
 	if (!engine->IsInGame()) 
 		return;
 
@@ -123,20 +126,6 @@ void CHudBuildStateSentry::OnTick()
 		m_qbSentryHealth->SetVisible(true);
 		m_qbSentryLevel->SetVisible(true);
 	}
-
-
-	// Get the screen width/height
-	int iScreenWide, iScreenTall;
-	vgui::surface()->GetScreenSize( iScreenWide, iScreenTall );
-
-	// "map" screen res to 640/480
-	float flXScale = 640.0f / iScreenWide;
-	float flYScale = 480.0f / iScreenTall;
-
-	m_qbSentryHealth->SetScaleX(flXScale);
-	m_qbSentryLevel->SetScaleX(flXScale);
-	m_qbSentryHealth->SetScaleY(flYScale);
-	m_qbSentryLevel->SetScaleY(flYScale);
 }
 
 void CHudBuildStateSentry::Paint() 
@@ -151,12 +140,12 @@ void CHudBuildStateSentry::Paint()
 		pText = L"Not Built";	// wide char text
 		vgui::surface()->DrawSetTextFont( m_hfText ); // set the font	
 		vgui::surface()->DrawSetTextColor( m_ColorText );
-		vgui::surface()->DrawSetTextPos( 10, 50 ); // x,y position
+		vgui::surface()->DrawSetTextPos( 10 * m_flScale, 50 * m_flScale ); // x,y position
 		vgui::surface()->DrawPrintText( pText, wcslen(pText) ); // print text
 	}
-
+	
 	//paint header
-	FFQuantityPanel::Paint();
+	BaseClass::Paint();
 }
 
 void CHudBuildStateSentry::MsgFunc_SentryMsg(bf_read &msg)
