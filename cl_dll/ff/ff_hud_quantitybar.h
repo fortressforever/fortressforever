@@ -28,14 +28,16 @@ class CHudQuantityBar : public CHudElement, public vgui::Panel
 private:
 	DECLARE_CLASS_SIMPLE(CHudQuantityBar, vgui::Panel);
 public:
-	CHudQuantityBar(vgui::Panel *parent, const char *pElementName) : CHudElement(pElementName), vgui::Panel(parent, pElementName) 
+	CHudQuantityBar(vgui::Panel *parent, const char *pElementName, int childId = -1) : CHudElement(pElementName), vgui::Panel(parent, pElementName) 
 	{
+		m_iChildId = childId;
+
 		SetParent( parent );
 		SetSize(vgui::scheme()->GetProportionalScaledValue(640),vgui::scheme()->GetProportionalScaledValue(480));
 
 		m_flScale = 1.0f;
-
-		SetPos(0,0);
+		m_flScaleX = 1.0f;
+		m_flScaleY = 1.0f;
 		SetBarSize(60, 13);
 		SetBarBorderWidth(1);
 
@@ -96,9 +98,12 @@ public:
 		ORIENTATION_HORIZONTAL_INVERTED,
 		ORIENTATION_VERTICAL_INVERTED
 	};
-	void SetAmountFont(vgui::HFont newAmountFont);
-	void SetIconFont(vgui::HFont newIconFont);
-	void SetLabelFont(vgui::HFont newLabelFont);
+	void SetAmountFontShadow(bool bHasShadow);
+	void SetIconFontShadow(bool bHasShadow);
+	void SetLabelFontShadow(bool bHasShadow);
+	void SetIconFontGlyph(bool bIconIsGlyph);
+
+	void GetDimentions(int& iWidth, int& iHeight, int& iBarOffsetX, int&  iBarOffsetY);
 
 	void SetAmount(int iAmount);
 	void SetAmountMax(int iAmountMax);
@@ -158,28 +163,57 @@ public:
 	virtual void SetPos(int iPositionX, int iPositionY);
 
 protected:
-	void CalculateAbsTextAlignmentOffset(int &outX, int &outY, int iAlignmentMode, vgui::HFont hfFont, wchar_t* wszString);
+	void CalculateTextAlignmentOffset(int &outX, int &outY, int &iWide, int &iTall, int iAlignmentMode, vgui::HFont hfFont, wchar_t* wszString);
 	void RecalculateQuantity();
-	void RecalculateDimentions();
+	void RecalculateIconPosition();
+	void RecalculateLabelPosition();
+	void RecalculateAmountPosition();
 
 	void RecalculateColor(int &colorMode, Color &color, Color &colorCustom);
 
  	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-
-	vgui::HFont m_hfAmount;
-	vgui::HFont m_hfIcon;
-	vgui::HFont m_hfLabel;
 	
-	vgui::HFont m_hfQuantityBarText;
-	vgui::HFont m_hfQuantityBarIcon;
-	vgui::HFont m_hfQuantityBarTextShadow;
-	vgui::HFont m_hfQuantityBarIconShadow;
+	vgui::HFont m_hfQuantityBarText[3];
+	vgui::HFont m_hfQuantityBarIcon[3];
+	vgui::HFont m_hfQuantityBarGlyph[3];
+
+	bool m_bAmountFontShadow;
+	bool m_bLabelFontShadow;
+	bool m_bIconFontShadow;
+	bool m_bIconFontGlyph;
 
 	float m_flScale;
+	float m_flScaleX;
+	float m_flScaleY;
+
+	int m_iChildId;
 
 	int m_iTop;
 	int m_iLeft;
 	
+	// *** These get calculated ::
+	int m_iIconPosX;
+	int m_iIconPosY;
+	int m_iIconWidth;
+	int m_iIconHeight;
+	int m_iLabelPosX;
+	int m_iLabelPosY;
+	int m_iLabelWidth;
+	int m_iLabelHeight;
+	int m_iAmountPosX;
+	int m_iAmountPosY;
+	int m_iAmountWidth;
+	int m_iAmountHeight;
+	// *** These get calculated ^^
+
+	//these are needed because the font is scaled and so changes with resolution (font, text alignment, and string content)
+	int m_iIconAlignmentOffsetX;
+	int m_iIconAlignmentOffsetY;
+	int m_iLabelAlignmentOffsetX;
+	int m_iLabelAlignmentOffsetY;
+	int m_iAmountAlignmentOffsetX;
+	int m_iAmountAlignmentOffsetY;
+
 	int m_iBarX0QuantityOffset;
 	int m_iBarY0QuantityOffset;
 	int m_iBarX1QuantityOffset;

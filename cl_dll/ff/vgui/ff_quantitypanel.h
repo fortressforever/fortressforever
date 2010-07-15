@@ -15,6 +15,7 @@
 
 #include "cbase.h"
 #include <vgui_controls/Panel.h>
+#include "ff_hud_quantitybar.h"
 
 namespace vgui
 {
@@ -29,12 +30,16 @@ namespace vgui
 
 		void FFQuantityPanelInit() {
 			m_flScale = 1.0f;
+			m_flScaleX = 1.0f;
+			m_flScaleY = 1.0f;
+			m_iQBars = 0;
 			SetHeaderTextPosition(30,15);
 			SetHeaderIconPosition(10,10);
-			m_iQuantityBarSpacingX = 10;
-			m_iQuantityBarSpacingY = 10;
-			m_iQuantityBarPositionX = 35;
-			m_iQuantityBarPositionY = 35;
+			m_iQuantityBarSpacingX = 5;
+			m_iQuantityBarSpacingY = 5;
+			m_iNumQuantityBarColumns = 1;
+			m_iQuantityBarPositionX = 15;
+			m_iQuantityBarPositionY = 40;
 		}
 
 		virtual void FFQuantityPanel::Paint( void );
@@ -44,8 +49,8 @@ namespace vgui
 		void SetHeaderText(wchar_t *newHeaderText);
 		void SetHeaderIconChar(char *newHeaderIconChar);
 
-		void SetHeaderTextFont(vgui::HFont newHeaderTextFont);
-		void SetHeaderIconFont(vgui::HFont newHeaderIconFont);
+		void SetHeaderTextShadow(bool bHasShadow);
+		void SetHeaderIconShadow(bool bHasShadow);
 
 		void SetHeaderTextPosition( int iPositionX, int iPositionY );
 		void SetHeaderIconPosition( int iPositionX, int iPositionY );
@@ -53,14 +58,34 @@ namespace vgui
 		void SetHeaderTextColor( Color newHeaderTextColor );
 		void SetHeaderIconColor( Color newHeaderIconColor );
 
+		void UpdateQuantityBarPositions();
+	private:
+		MESSAGE_FUNC_PARAMS( OnChildDimentionsChanged, "ChildDimentionsChanged", data );
+		void RecalculateHeaderTextDimentions();
+		void RecalculateHeaderIconDimentions();
+
 	protected:
+		CHudQuantityBar* AddChild(const char *pElementName);
+
 		int m_iBorderWidth;
 
 		float m_flScale;
+		float m_flScaleX;
+		float m_flScaleY;
 
-		vgui::HFont m_hfHeaderText;
-		vgui::HFont m_hfHeaderIcon;
-		vgui::HFont m_hfText;
+		vgui::HFont m_hfHeaderText[3];
+		vgui::HFont m_hfHeaderIcon[3];
+		
+		bool m_bHeaderIconShadow;
+		bool m_bHeaderTextShadow;
+
+		//maybe try to make variable rather than 6 max
+		//if so, update fixed variables in UpdateQuantityBarPositions()
+		CHudQuantityBar* m_QBars[6];
+		int m_iQBars;
+
+		bool m_bCheckUpdates;
+		bool m_bUpdateRecieved[6];
 
 		int m_iHeaderTextX;
 		int m_iHeaderTextY;
@@ -74,16 +99,16 @@ namespace vgui
 		Color m_ColorHeaderIcon;
 		Color m_ColorText;
 
+		int m_iHeaderTextWidth;
+		int m_iHeaderTextHeight;
+		int m_iHeaderIconWidth;
+		int m_iHeaderIconHeight;
+
 		int m_iQuantityBarSpacingX;
 		int m_iQuantityBarSpacingY;
 		int m_iQuantityBarPositionX;
 		int m_iQuantityBarPositionY;
 		int m_iNumQuantityBarColumns;
-
-		int* m_iColumnOffset;
-		int* m_iColumnWidth;
-		int* m_iRowOffset;
-		int* m_iRowWidth;
 	};
 }
 
