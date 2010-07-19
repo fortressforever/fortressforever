@@ -128,6 +128,10 @@ void CHudGrenade1Timer::Paint()
 	// Draw fg & bg box
 	BaseClass::PaintBackground();
 	
+
+// AFTERSHOCK: THIS CODE IS HORRID! Why are we checking what class the player is, finding the right grenade icon, every single frame ?? CPU rape++
+
+
 	// First get the class
 	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
 
