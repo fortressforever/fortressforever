@@ -69,7 +69,7 @@
 #define FF_SENTRYGUN_MODEL					"models/buildable/sg/sg_lvl1.mdl"
 #define FF_SENTRYGUN_MODEL_LVL2				"models/buildable/sg/sg_lvl2.mdl"
 #define FF_SENTRYGUN_MODEL_LVL3				"models/buildable/sg/sg_lvl3.mdl"
-#define FF_SENTRYGUN_BUILD_SOUND			"Sentry.One"
+#define FF_SENTRYGUN_BUILD_SOUND			"Sentry.Onelonger"
 #define FF_SENTRYGUN_UNBUILD_SOUND			"Sentry.unbuild"
 #define FF_SENTRYGUN_EXPLODE_SOUND			"Sentry.Explode"
 

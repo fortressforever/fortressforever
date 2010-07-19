@@ -3048,8 +3048,8 @@ void CFFPlayer::Command_BuildManCannon( void )
 	PreBuildGenericThink();
 }
 
-//ConVar sg_buildtime("ffdev_sg_buildtime", "7.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Sentry Gun build time");
-#define SG_BUILDTIME 3.0f //sg_buildtime.GetFloat()  //
+ConVar sg_buildtime("ffdev_sg_buildtime", "3.5", FCVAR_REPLICATED | FCVAR_CHEAT, "Sentry Gun build time");
+#define SG_BUILDTIME sg_buildtime.GetFloat()  //
 
 void CFFPlayer::PreBuildGenericThink( void )
 {
