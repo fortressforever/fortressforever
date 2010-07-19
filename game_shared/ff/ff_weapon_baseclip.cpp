@@ -130,7 +130,12 @@ void CFFWeaponBaseClip::FillClip()
 	if (pOwner == NULL)
 		return;
 
-	int nAdd = GetFFWpnData().m_iCycleDecrement;
+	int nAdd;
+
+	if ( GetFFWpnData().m_bReloadClip ) // reload whole clip at once?
+		nAdd = GetMaxClip1() - m_iClip1;
+	else
+		nAdd = GetFFWpnData().m_iCycleDecrement; // Else reload one or two shells at at time
 
 	// Add them to the clip
 	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) >= nAdd)
