@@ -132,12 +132,17 @@ ConVar ffdev_sg_bulletdamage_lvl3("ffdev_sg_bulletdamage_lvl3", "17", FCVAR_REPL
 //ConVar sg_shoot_angle_distmult("ffdev_sg_shoot_angle_distmult", "0.008", FCVAR_REPLICATED, "The angle required to shoot the target is multiplied by (distance to target * this)");
 //#define SG_SHOOT_ANGLE_DISTMULT sg_shoot_angle_distmult.GetFloat()
 
-//ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_REPLICATED, "Level 1 SG lock on time");
-#define SG_LOCKONTIME_LVL1 0.2f //sg_lockontime_lvl1.GetFloat()
-//ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.20", FCVAR_REPLICATED, "Level 2 SG lock on time");
-#define SG_LOCKONTIME_LVL2 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl2.GetFloat()
-//ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, "Level 3 SG lock on time");
-#define SG_LOCKONTIME_LVL3 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl3.GetFloat()
+ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_REPLICATED, "Level 1 SG lock on time");
+//#define SG_LOCKONTIME_LVL1 0.2f //sg_lockontime_lvl1.GetFloat()
+ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.20", FCVAR_REPLICATED, "Level 2 SG lock on time");
+//#define SG_LOCKONTIME_LVL2 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl2.GetFloat()
+ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, "Level 3 SG lock on time");
+
+//#define SG_LOCKONTIME_LVL3 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl3.GetFloat()
+
+#define SG_LOCKONTIME_LVL1 sg_lockontime_lvl1.GetFloat()
+#define SG_LOCKONTIME_LVL2 sg_lockontime_lvl2.GetFloat()
+#define SG_LOCKONTIME_LVL3 sg_lockontime_lvl3.GetFloat()
 
 #define SG_DETONATECELLS_BASE_LEVEL1 65
 #define SG_DETONATECELLS_BASE_LEVEL2 100
