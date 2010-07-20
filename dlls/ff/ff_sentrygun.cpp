@@ -1628,7 +1628,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 		case 1:
 			SetModel( FF_SENTRYGUN_MODEL );
 			SetSolid( SOLID_VPHYSICS );
-			
+			EmitSound( sndFilter, entindex(), "Sentry.Two" );
+
 			//m_iShells = 20;
 
 			//m_iMaxShells = 100;
