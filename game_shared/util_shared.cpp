@@ -282,6 +282,9 @@ CTraceFilterSimple::CTraceFilterSimple( const IHandleEntity *passedict, int coll
 //-----------------------------------------------------------------------------
 bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
 {
+	if( contentsMask == MASK_SHOT )
+		return false;
+
 	CBaseEntity *pHandle = EntityFromEntityHandle( pHandleEntity );
 
 	const CBaseEntity *pPassEnt = NULL;
@@ -296,7 +299,45 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 			// This allows players to pass through any team object (another player or entity), includes allies
 			CFFTeam *pTeam = GetGlobalFFTeam(pPassEnt->GetTeamNumber());
 			if( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() || ( pTeam && ( pTeam->GetAllies() & ( 1 << pHandle->GetTeamNumber() ) ) ) )
+			{
+				// If player lands on top of a team entity make sure they hit
+				Vector vecOrigin = pPassEnt->GetAbsOrigin();
+				Vector vecTeamOrigin = pHandle->GetAbsOrigin();
+
+				Vector vecMin;
+				if( pPassEnt->IsPlayer() )
+				{
+					CFFPlayer *pPlayer = static_cast< CFFPlayer * >( const_cast< CBaseEntity * >( pPassEnt ) );
+					vecMin = pPlayer->GetPlayerMins();
+				}
+				else
+					vecMin = pPassEnt->WorldAlignMins();
+
+				Vector vecTeamMax;
+				if( pHandle->IsPlayer() )
+				{
+					CFFPlayer *pPlayer = static_cast< CFFPlayer * >( pHandle );
+					vecTeamMax = pPlayer->GetPlayerMaxs();
+				}
+				else
+					vecTeamMax = pHandle->WorldAlignMaxs();
+
+				float fMinZ = vecMin[2];
+				VectorAdd( vecMin, vecOrigin, vecMin );
+				VectorAdd( vecTeamMax, vecTeamOrigin, vecTeamMax );
+
+				// If players mins are greater than teams maxs - 2
+				if( vecMin[2] >= vecTeamMax[2] )
+					return true;
+				if( vecMin[2] > vecTeamMax[2] - 5.0f )
+				{
+					// If a player is jumping through an entity to the top make sure they don't get stuck
+					CBaseEntity *pEnt = const_cast< CBaseEntity * >( pPassEnt );
+					pEnt->SetAbsOrigin( Vector( vecOrigin[0], vecOrigin[1], vecTeamMax[2] - fMinZ ) );
+				}
+
 				return false;
+			}
 		}
 	}
 	// <--
