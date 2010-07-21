@@ -3790,6 +3790,15 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_hud_buildstate.h">
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_buildstate_base.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_base.h">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_sentry.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_buildtimer.cpp">
 			</File>
 			<File
@@ -3993,6 +4002,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_panel.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitypanel.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitypanel.h">
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_training.cpp">

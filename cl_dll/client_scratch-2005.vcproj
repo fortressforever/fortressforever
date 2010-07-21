@@ -4663,6 +4663,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_buildstate_base.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_base.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_buildstate_sentry.cpp"
 				>
 			</File>

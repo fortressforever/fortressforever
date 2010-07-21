@@ -291,32 +291,32 @@ void CHudQuantityBar::GetDimentions(int& iWidth, int& iHeight, int& iBarOffsetX,
 	int iX1 = m_iLeft + m_iBarWidth;
 	int iY1 = m_iTop + m_iBarHeight;
 
-	if( m_iIconPosX < iX0 )
+	if( m_bShowIcon && m_iIconPosX < iX0 )
 		iX0 = m_iIconPosX;
-	if( m_iLabelPosX < iX0 )
+	if( m_bShowLabel && m_iLabelPosX < iX0 )
 		iX0 = m_iLabelPosX;
-	if( m_iAmountPosX < iX0 )
+	if( m_bShowAmount && m_iAmountPosX < iX0 )
 		iX0 = m_iAmountPosX;
 
-	if( m_iIconPosY < iY0 )
+	if( m_bShowIcon && m_iIconPosY < iY0 )
 		iY0 = m_iIconPosY;
-	if( m_iLabelPosY < iY0 )
+	if( m_bShowLabel && m_iLabelPosY < iY0 )
 		iY0 = m_iLabelPosY;
-	if( m_iAmountPosY < iY0 )
+	if( m_bShowAmount && m_iAmountPosY < iY0 )
 		iY0 = m_iAmountPosY;
 
-	if( (m_iIconPosX + m_iIconWidth) > iX1 )
+	if( m_bShowIcon && (m_iIconPosX + m_iIconWidth) > iX1 )
 		iX1 = m_iIconPosX + m_iIconWidth;
-	if( (m_iLabelPosX + m_iLabelWidth) > iX1 )
+	if( m_bShowLabel && (m_iLabelPosX + m_iLabelWidth) > iX1 )
 		iX1 = m_iLabelPosX + m_iLabelWidth;
-	if( (m_iAmountPosX + m_iAmountWidth) > iX1 )
+	if( m_bShowAmount && (m_iAmountPosX + m_iAmountWidth) > iX1 )
 		iX1 = m_iAmountPosX + m_iAmountWidth;
 
-	if( (m_iIconPosY + m_iIconHeight) > iY1 )
+	if( m_bShowIcon && (m_iIconPosY + m_iIconHeight) > iY1 )
 		iY1 = m_iIconPosY + m_iIconHeight;
-	if( (m_iLabelPosY + m_iLabelHeight) > iY1 )
+	if( m_bShowLabel && (m_iLabelPosY + m_iLabelHeight) > iY1 )
 		iY1 = m_iLabelPosY + m_iLabelHeight;
-	if( (m_iAmountPosY + m_iAmountHeight) > iY1 )
+	if( m_bShowAmount && (m_iAmountPosY + m_iAmountHeight) > iY1 )
 		iY1 = m_iAmountPosY + m_iAmountHeight;
 
 	iWidth = iX1 - iX0;

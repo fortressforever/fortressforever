@@ -51,6 +51,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/EHsc"
 				Optimization="0"
 				AdditionalIncludeDirectories="../Public/tier1;.\ff\vgui;.\ff;..\game_shared\ff;.;.\..\Public;.\..\vgui2\include;.\..\vgui2\controls;..\game_shared;.\game_controls;..\g15lcd\Include;..\g15lcd\Samples\shared\lcdui"
 				PreprocessorDefinitions="_DEBUG;fopen=dont_use_fopen;FF_DLL;NO_STRING_T;CLIENT_DLL;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
@@ -161,6 +162,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/EHsc"
 				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
@@ -4659,6 +4661,14 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_buildstate.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_base.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_base.h"
 				>
 			</File>
 			<File
