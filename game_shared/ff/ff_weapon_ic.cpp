@@ -31,10 +31,10 @@ ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "0", FCVAR_REPLICATED | FCVAR_CH
 // CFFWeaponIC
 //=============================================================================
 
-class CFFWeaponIC : public CFFWeaponBase
+class CFFWeaponIC : public CFFWeaponBaseClip
 {
 public:
-	DECLARE_CLASS(CFFWeaponIC, CFFWeaponBase);
+	DECLARE_CLASS(CFFWeaponIC, CFFWeaponBaseClip);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
