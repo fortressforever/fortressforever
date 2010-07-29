@@ -284,7 +284,7 @@ void CHudQuantityBar::OnTick()
 	}
 }
 
-void CHudQuantityBar::GetDimentions(int& iWidth, int& iHeight, int& iBarOffsetX, int&  iBarOffsetY)
+void CHudQuantityBar::GetPanelPositioningData(int& iWidth, int& iHeight, int& iBarOffsetX, int&  iBarOffsetY)
 {
 	int iX0 = m_iLeft;
 	int iY0 = m_iTop;

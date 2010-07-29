@@ -156,7 +156,7 @@ namespace vgui
 		for(int i = 0; i < m_iQBars; ++i)
 		{
 			int iWidth, iHeight,iBarOffsetX, iBarOffsetY;
-			m_QBars[i]->GetDimentions(iWidth, iHeight,iBarOffsetX, iBarOffsetY);
+			m_QBars[i]->GetPanelPositioningData(iWidth, iHeight,iBarOffsetX, iBarOffsetY);
 
 			if(iBarOffsetX > m_iColumnOffset[iColumn])
 				m_iColumnOffset[iColumn] = iBarOffsetX;
@@ -288,7 +288,6 @@ namespace vgui
 		CHudQuantityBar* newQBar = new CHudQuantityBar(this, pElementName, m_iQBars); 
 		m_QBars[m_iQBars++] = newQBar;
 		return newQBar;
-
 	}
 	
 	void FFQuantityPanel::OnShowBarChanged(  )
@@ -436,5 +435,4 @@ namespace vgui
 		for(int i = 0; i < m_iQBars; i++)
 			m_QBars[i]->SetAmountOffset(m_qb_iOffsetAmountX, m_qb_iOffsetAmountY);
 	}
-
 }

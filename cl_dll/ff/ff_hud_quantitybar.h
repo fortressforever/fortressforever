@@ -103,7 +103,7 @@ public:
 	void SetLabelFontShadow(bool bHasShadow);
 	void SetIconFontGlyph(bool bIconIsGlyph);
 
-	void GetDimentions(int& iWidth, int& iHeight, int& iBarOffsetX, int&  iBarOffsetY);
+	void GetPanelPositioningData(int& iWidth, int& iHeight, int& iBarOffsetX, int&  iBarOffsetY);
 
 	void SetAmount(int iAmount);
 	void SetAmountMax(int iAmountMax);
