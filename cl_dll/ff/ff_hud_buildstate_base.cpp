@@ -5,13 +5,13 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
+/*
 static ConVar hud_buildstate_x( "hud_buildstate_x", "640", FCVAR_ARCHIVE, "Panel's X position on 640 480 Resolution", true, 0, true, 640);
 static ConVar hud_buildstate__y( "hud_buildstate_y", "190", FCVAR_ARCHIVE, "Panel's Y Position on 640 480 Resolution", true, 0, true, 640);
 static ConVar hud_buildstate_align_horiz( "hud_buildstate_align_horiz", "2", FCVAR_ARCHIVE, "Panel's alignment to the specified position (0=left, 1=center, 2=right", true, 0, true, 2);
 static ConVar hud_buildstate_align_vert( "hud_buildstate_align_vert", "2", FCVAR_ARCHIVE, "Panel's alignment to the specified position (0=left, 1=center, 2=right", true, 0, true, 2);
 static ConVar hud_buildstate_columns( "hud_buildstate_columns", "1", FCVAR_ARCHIVE, "Number of quantity bar columns", true, 1, true, 6);
-
+*/
 
 static ConVar hud_buildstate_pos_headerText_x( "hud_buildstate_pos_headerText_x", "30", FCVAR_ARCHIVE, "Header text X from top left", true, 0, true, 640);
 static ConVar hud_buildstate_pos_headerText_y( "hud_buildstate_pos_headerText_y", "15", FCVAR_ARCHIVE, "Header text Y from top left", true, 0, true, 640);
