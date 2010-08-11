@@ -25,6 +25,7 @@
 #include "ff_scriptman.h"
 #include "ff_luacontext.h"
 #include "beam_flags.h"
+#include "ff_gamerules.h"
 
 #ifdef _DEBUG
 #include "Color.h"
@@ -208,8 +209,9 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
     if( pPlayer->GetClassSlot() != 1 )
         return;
 
-	// Skip if person touching can't damage us
-	if( !g_pGameRules->FCanTakeDamage( ( ( CFFPlayer * )m_hOwner.Get() ), pPlayer ) )
+	// Skip if on the same team
+	//if( !g_pGameRules->FCanTakeDamage( ( ( CFFPlayer * )m_hOwner.Get() ), pPlayer ) )
+	if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( ( CFFPlayer * )m_hOwner.Get() )->GetTeamNumber() ) == GR_TEAMMATE )
 		return;
 
 	// Play defuse sound
