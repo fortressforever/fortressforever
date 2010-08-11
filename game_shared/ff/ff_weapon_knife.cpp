@@ -13,6 +13,7 @@
 #include "cbase.h"
 #include "ff_weapon_basemelee.h"
 #include "ff_utils.h"
+#include "ff_gamerules.h"
 #ifdef CLIENT_DLL
 	#define CFFWeaponKnife C_FFWeaponKnife
 #endif
@@ -110,7 +111,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 		if( FF_IsSentrygun( pHitEntity ) )
 		{
 			CFFBuildableObject *pBuildable = FF_ToBuildableObject( pHitEntity );
-			if( g_pGameRules->FCanTakeDamage(pPlayer, pBuildable))
+			if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), pBuildable->GetPlayerOwner()->GetTeamNumber() ) == GR_NOTTEAMMATE )
 				pBuildable->Disable( clamp( (gpGlobals->curtime - pPlayer->GetCloakTime()) * FF_CLOAKSTAB_DISABLE_MOD, FF_CLOAKSTAB_DISABLE_MIN, 999.0f));
 			return;
 		}
@@ -139,7 +140,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 	if ( pHitEntity != NULL && FF_IsSentrygun( pHitEntity ) ) 
 	{
 		CFFBuildableObject *pBuildable = FF_ToBuildableObject( pHitEntity );
-		if( g_pGameRules->FCanTakeDamage(pPlayer, pBuildable))
+		if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), pBuildable->GetPlayerOwner()->GetTeamNumber() ) == GR_NOTTEAMMATE )
 			pBuildable->Disable( FF_KNIFE_DISABLE_DURATION );
 		return;
 	}
