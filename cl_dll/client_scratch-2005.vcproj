@@ -3351,11 +3351,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
@@ -3679,11 +3679,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
@@ -5207,6 +5207,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_projectile_goop.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_goop.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_projectile_grenade.cpp"
 				>
 			</File>
@@ -5372,6 +5380,10 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_flamethrower.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_goopgun.cpp"
 				>
 			</File>
 			<File

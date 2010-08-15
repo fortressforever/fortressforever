@@ -31,6 +31,7 @@ enum
 	FF_SHELL_40MM,
 
 	// --> Mirv: FF Projectiles
+	FF_PROJECTILE_GOOP,
 	FF_PROJECTILE_NAIL,
 	FF_PROJECTILE_DART,
 	FF_PROJECTILE_NAIL_NG
@@ -176,6 +177,7 @@ private:
 
 	struct model_t			*m_pFF_Nail;
 	struct model_t			*m_pFF_Dart;
+	struct model_t			*m_pFF_Goop;
 #endif
 // <-- Mirv
 

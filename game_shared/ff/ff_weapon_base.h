@@ -151,6 +151,9 @@ typedef enum
 
 	// Soldier specific
 	FF_WEAPON_RPG, 
+
+	// Medic specific
+	FF_WEAPON_GOOPGUN,
 	
 	// Spy grappling hook gun
 	FF_WEAPON_HOOKGUN, 

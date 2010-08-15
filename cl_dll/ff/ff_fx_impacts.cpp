@@ -169,3 +169,36 @@ void DartImpactCallback(const CEffectData &data)
 }
 
 DECLARE_CLIENT_EFFECT("DartImpact", DartImpactCallback);
+
+//-----------------------------------------------------------------------------
+// Purpose: Handle weapon impacts
+//-----------------------------------------------------------------------------
+// copied from ff_projectile_goop.h
+enum GoopImpacts
+{
+	GOOP_IMPACT_HEAL = 0,
+	GOOP_IMPACT_DAMAGE,
+	GOOP_IMPACT_WORLD,
+
+	GOOP_IMPACT_INVALID,
+};
+
+void GoopImpactCallback(const CEffectData &data)
+{
+	//GaussExplosion adds some cool white ember explosion
+	CBroadcastRecipientFilter filter;
+	switch(data.m_nDamageType)
+	{
+	case GOOP_IMPACT_WORLD:
+		te->BloodSprite( filter, 0, &data.m_vOrigin, &data.m_vNormal, 255, 255, 255, 100, 10 );
+		break;
+	case GOOP_IMPACT_DAMAGE:
+		te->BloodSprite( filter, 0, &data.m_vOrigin, &data.m_vNormal, 200, 0, 0, 200, 10 );
+		break;
+	case GOOP_IMPACT_HEAL:
+		te->BloodSprite( filter, 0, &data.m_vOrigin, &data.m_vNormal, 40, 255, 40, 200, 10 );
+		break;
+	}
+}
+
+DECLARE_CLIENT_EFFECT("GoopImpact", GoopImpactCallback);

@@ -39,12 +39,15 @@ extern ConVar muzzleflash_light;
 
 #define TENT_WIND_ACCEL 50
 
+#define GOOP_EFFECT_MATERIAL "sprites/glow"
+
 //Precache the effects
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectMuzzleFlash )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1" )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2" )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1_noz" )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_noz" )
+CLIENTEFFECT_MATERIAL( GOOP_EFFECT_MATERIAL )
 
 CLIENTEFFECT_MATERIAL( "effects/muzzleflash1" )
 CLIENTEFFECT_MATERIAL( "effects/muzzleflash2" )
@@ -2363,6 +2366,7 @@ void CTempEnts::LevelInit()
 
 	m_pFF_Nail			= (model_t *) engine->LoadModel("models/projectiles/nail/w_nail.mdl");
 	m_pFF_Dart			= (model_t *) engine->LoadModel("models/projectiles/dart/w_dart.mdl");
+	m_pFF_Goop			= (model_t *) engine->LoadModel(VarArgs("%s.vmt", GOOP_EFFECT_MATERIAL));
 #endif
 // <-- Mirv
 }
@@ -2411,6 +2415,7 @@ void CTempEnts::Init (void)
 
 	m_pFF_Dart			= NULL;
 	m_pFF_Nail			= NULL;
+	m_pFF_Goop			= NULL;
 #endif
 
 	// Clear out lists to start
@@ -3420,6 +3425,10 @@ void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocit
 	case FF_PROJECTILE_DART:
 		pModel = m_pFF_Dart;
 		break;
+		
+	case FF_PROJECTILE_GOOP:
+		pModel = m_pFF_Goop;
+		break;
 	}
 
 	if (pModel == NULL)
@@ -3454,6 +3463,14 @@ void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocit
 	pTemp->die = gpGlobals->curtime + 10;
 
 	pTemp->clientIndex = entIndex;
+
+	if (projectileType == FF_PROJECTILE_GOOP)
+	{
+		pTemp->SetGravity(1.0f);
+		pTemp->flags = FTENT_FADEOUT | FTENT_GRAVITY | FTENT_COLLIDEKILL | FTENT_COLLIDEALL;
+		pTemp->m_flSpriteScale = 0.05f;
+		pTemp->SetRenderMode(kRenderTransAdd);
+	}
 
 	if (!AllowEffects(entIndex, 0.3f))
 		pTemp->flags |= FTENT_FFOPTEFFECT;

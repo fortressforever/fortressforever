@@ -38,6 +38,20 @@ void FF_FX_EjectBrass_40mm_Callback( const CEffectData &data )
 	FF_EjectBrass( FF_SHELL_40MM, data );
 }
 
+void FF_FX_Projectile_Goop_Callback(const CEffectData &data)
+{
+	// AfterShock - HACK: m_nDamageType used to pass the nail speed
+	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, data.m_nDamageType /*NAIL_SPEED*/, FF_PROJECTILE_GOOP, 
+	//tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, NAIL_SPEED, FF_PROJECTILE_NAIL, 
+
+#ifdef GAME_DLL
+		data.m_nEntIndex
+#else
+		data.m_hEntity.GetEntryIndex()
+#endif
+		);
+}
+
 //extern ConVar ffdev_nail_speed;
 #define NAIL_SPEED 2000.0f
 
@@ -91,5 +105,6 @@ DECLARE_CLIENT_EFFECT( "EjectBrass_9mm", FF_FX_EjectBrass_9mm_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_12Gauge",FF_FX_EjectBrass_12Gauge_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_40mm",FF_FX_EjectBrass_40mm_Callback );
 
+DECLARE_CLIENT_EFFECT("Projectile_Goop", FF_FX_Projectile_Goop_Callback);
 DECLARE_CLIENT_EFFECT("Projectile_Nail", FF_FX_Projectile_Nail_Callback);
 DECLARE_CLIENT_EFFECT("Projectile_Nail_Radial", FF_FX_Projectile_Nail_Radial_Callback);

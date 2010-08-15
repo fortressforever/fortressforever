@@ -57,6 +57,8 @@ const char *s_WeaponAliasInfo[] =
 
 	"tranq",		 	// FF_WEAPON_TRANQUILISER
 
+	"goopgun", 			// FF_WEAPON_GOOPGUN
+
 	"assaultcannon", 	// FF_WEAPON_ASSAULTCANNON
 
 	"rpg", 				// FF_WEAPON_RPG
