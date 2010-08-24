@@ -86,9 +86,9 @@ ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "
 
 // caes: testing
 ConVar ffdev_overpressure_caes( "ffdev_overpressure_caes", "1", FCVAR_REPLICATED );
-ConVar ffdev_overpressure_caes_radius( "ffdev_overpressure_caes_radius", "500.0", FCVAR_REPLICATED );
+ConVar ffdev_overpressure_caes_radius( "ffdev_overpressure_caes_radius", "600.0", FCVAR_REPLICATED );
 ConVar ffdev_overpressure_caes_speed( "ffdev_overpressure_caes_speed", "500.0", FCVAR_REPLICATED );
-ConVar ffdev_overpressure_caes_offset( "ffdev_overpressure_caes_offset", "-16.0", FCVAR_REPLICATED );
+ConVar ffdev_overpressure_caes_offset( "ffdev_overpressure_caes_offset", "-4.0", FCVAR_REPLICATED );
 // caes
 
 ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_REPLICATED );
@@ -1503,6 +1503,7 @@ if( ffdev_overpressure_caes.GetBool() )
 
 	// shock wave
 	CBroadcastRecipientFilter filter;
+	filter.AddAllPlayers();
 	te->BeamRingPoint( 
 		filter, 0.0f, m_vecOverpressurePosition,	//origin
 		1.0f,							//start radius
@@ -1522,6 +1523,10 @@ if( ffdev_overpressure_caes.GetBool() )
 		0,								//speed
 		0x00000008
 		);
+
+#ifdef GAME_DLL
+	UTIL_ScreenShake( m_vecOverpressurePosition, 25.0f, 150.0f, ffdev_overpressure_caes_radius.GetFloat() / ffdev_overpressure_caes_speed.GetFloat(), 5.0f*ffdev_overpressure_caes_radius.GetFloat(), SHAKE_START, true );
+#endif	
 }
 else
 {
@@ -1774,8 +1779,7 @@ void CFFPlayer::OverpressureThink( void )
 		if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
 			continue;
 		
-		// Ignore people that can't take damage (teammates when friendly fire is off)
-		if( !g_pGameRules->FCanTakeDamage( pPlayer, this ) )
+		if( pPlayer->GetTeamNumber() == this->GetTeamNumber() )
 			continue;
 
 		// People who are building shouldn't be pushed around by anything
@@ -1790,7 +1794,13 @@ void CFFPlayer::OverpressureThink( void )
 
 		Vector vecNewVel = vecDisplacement * ffdev_overpressure_caes_speed.GetFloat();
 		vecNewVel += Vector( 0.0f, 0.0f, sv_gravity.GetFloat() ) * gpGlobals->interval_per_tick;
+
+		if( vecNewVel.z >= 0.0f && pPlayer->GetGroundEntity() != NULL )
+			pPlayer->SetAbsOrigin( pPlayer->GetAbsOrigin() + Vector( 0.0f, 0.0f, 1.0f ) );
+
 		pPlayer->SetAbsVelocity( vecNewVel );
+
+		// todo: can we apply a speed affect or something to stop the player from stuttering when he tries to move?
 	}
 
 	if( gpGlobals->curtime < m_flOverpressureTime + ( ffdev_overpressure_caes_radius.GetFloat() / ffdev_overpressure_caes_speed.GetFloat() ) )
