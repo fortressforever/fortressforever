@@ -185,7 +185,7 @@ void CHudQuantityBar::SetTeamColor( Color newTeamColor ) {
 
 void CHudQuantityBar::SetBarColorMode( int iColorModeBar ) { 
 	m_ColorModeBar = iColorModeBar; 
-	RecalculateColor(m_ColorModeBar, m_ColorBarBorder, m_ColorBarCustom);
+	RecalculateColor(m_ColorModeBar, m_ColorBar, m_ColorBarCustom);
 }
 void CHudQuantityBar::SetBarBorderColorMode( int iColorModeBarBorder ) {
 	m_ColorModeBarBorder = iColorModeBarBorder;
@@ -243,11 +243,24 @@ void CHudQuantityBar::SetAmountTextAlignment(int iAmountTextAlign) { m_iTextAlig
 
 void CHudQuantityBar::SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale)
 {
-	m_iIntenisityRed = iRed;
-	m_iIntenisityOrange = iOrange;
-	m_iIntenisityYellow = iYellow;
-	m_iIntenisityGreen = iGreen;
-	m_bIntenisityInvertScale = bInvertScale;
+	m_iIntensityRed = iRed;
+	m_iIntensityOrange = iOrange;
+	m_iIntensityYellow = iYellow;
+	m_iIntensityGreen = iGreen;
+	m_bIntensityInvertScale = bInvertScale;
+}
+
+void CHudQuantityBar::SetIntensityAmountScaled(bool bAmountScaled)
+{
+	m_bIntensityAmountScaled = bAmountScaled;
+}
+void CHudQuantityBar::SetIntensityValuesFixed(bool bvaluesFixed)
+{
+	m_bIntensityValuesFixed = bvaluesFixed;
+}
+bool CHudQuantityBar::IsIntensityValuesFixed()
+{
+	return m_bIntensityValuesFixed;
 }
 
 void CHudQuantityBar::OnTick()
@@ -423,8 +436,16 @@ void CHudQuantityBar::RecalculateQuantity()
 //all this regardless of whether each item is actually being shown
 //(incase the user changes options during the game)
 {
-	m_ColorIntensityFaded = getIntensityColor(m_iAmount, m_iMaxAmount, 2, m_ColorBarCustom.a(), m_iIntenisityRed,m_iIntenisityOrange,m_iIntenisityYellow,m_iIntenisityGreen,m_bIntenisityInvertScale);
-	m_ColorIntensityStepped = getIntensityColor(m_iAmount, m_iMaxAmount, 1, m_ColorBarCustom.a(), m_iIntenisityRed,m_iIntenisityOrange,m_iIntenisityYellow,m_iIntenisityGreen,m_bIntenisityInvertScale);
+	if(m_bIntensityAmountScaled)
+	{
+		m_ColorIntensityFaded = getIntensityColor((int)((float)m_iAmount/(float)m_iMaxAmount * 100), 100, 2, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
+		m_ColorIntensityStepped = getIntensityColor((int)((float)m_iAmount/(float)m_iMaxAmount * 100), 100, 1, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
+	}
+	else
+	{
+		m_ColorIntensityFaded = getIntensityColor(m_iAmount, m_iMaxAmount, 2, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
+		m_ColorIntensityStepped = getIntensityColor(m_iAmount, m_iMaxAmount, 1, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
+	}
 
 	if(!m_bShowAmountMax)
 	{
@@ -452,7 +473,7 @@ void CHudQuantityBar::RecalculateQuantity()
 	if(m_ColorModeBarBorder == COLOR_MODE_FADED ) 
 		m_ColorBarBorder.SetColor(m_ColorIntensityFaded.r(),m_ColorIntensityFaded.g(),m_ColorIntensityFaded.b(),m_ColorBarBorderCustom.a());
 	else if(m_ColorModeBarBorder == COLOR_MODE_STEPPED )
-		m_ColorBarBorder.SetColor(m_ColorIntensityStepped.r(),m_ColorIntensityStepped.g(),m_ColorIntensityStepped.b(),m_ColorBarBorder.a());
+		m_ColorBarBorder.SetColor(m_ColorIntensityStepped.r(),m_ColorIntensityStepped.g(),m_ColorIntensityStepped.b(),m_ColorBarBorderCustom.a());
 
 	if(m_ColorModeBarBackground == COLOR_MODE_FADED ) 
 		m_ColorBarBackground.SetColor(m_ColorIntensityFaded.r(),m_ColorIntensityFaded.g(),m_ColorIntensityFaded.b(),m_ColorBarBackgroundCustom.a());
@@ -521,14 +542,14 @@ void CHudQuantityBar::RecalculateQuantity()
 	}
 }
 
-void CHudQuantityBar::RecalculateColor(int &colorMode, Color &color, Color &colorCustom)
+void CHudQuantityBar::RecalculateColor(int colorMode, Color &color, Color &colorCustom)
 {
 	if(colorMode == COLOR_MODE_STEPPED )
 		color.SetColor(m_ColorIntensityStepped.r(),m_ColorIntensityStepped.g(),m_ColorIntensityStepped.b(),colorCustom.a());
-	else if(m_ColorModeBarBackground == COLOR_MODE_TEAMCOLORED ) 
-		color.SetColor(m_ColorTeam.r(),m_ColorTeam.g(),m_ColorTeam.b(),colorCustom.a());
-	else if( m_ColorModeBarBorder == COLOR_MODE_FADED )
+	else if(colorMode == COLOR_MODE_FADED )
 		color.SetColor(m_ColorIntensityFaded.r(),m_ColorIntensityFaded.g(),m_ColorIntensityFaded.b(),colorCustom.a());
+	else if(colorMode >= COLOR_MODE_TEAMCOLORED ) 
+		color.SetColor(m_ColorTeam.r(),m_ColorTeam.g(),m_ColorTeam.b(),colorCustom.a());
 	else
 		color = colorCustom;
 }

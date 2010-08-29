@@ -69,8 +69,7 @@ namespace vgui
 
 	void FFQuantityPanel::OnTick()
 	{
-		int alignOffsetX;
-		int alignOffsetY;
+		int alignOffsetX, alignOffsetY;
 
 		switch(m_iHorizontalAlign)
 		{
@@ -98,9 +97,6 @@ namespace vgui
 			alignOffsetY = 0;
 		}
 
-		SetPos( vgui::scheme()->GetProportionalScaledValue(m_iX) + alignOffsetX,  vgui::scheme()->GetProportionalScaledValue(m_iY) + alignOffsetY);
-		SetSize( m_iWidth, m_iHeight );
-
 		if (!engine->IsInGame()) 
 			return;
 
@@ -122,6 +118,9 @@ namespace vgui
 			vgui::surface()->GetTextSize(m_hfHeaderText[2], m_wszHeaderText, m_iHeaderTextWidth, m_iHeaderTextHeight);
 			vgui::surface()->GetTextSize(m_hfHeaderIcon[2], m_wszHeaderIcon, m_iHeaderIconWidth, m_iHeaderIconHeight);
 		}
+
+		SetPos(m_flScaleX * m_iX + alignOffsetX,  m_flScaleY * m_iY + alignOffsetY);
+		SetSize( m_iWidth, m_iHeight );
 
 		if(m_bCheckUpdates)
 		{
@@ -335,7 +334,8 @@ namespace vgui
 	void FFQuantityPanel::OnIntensityValuesChanged(  )
 	{
 		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetIntensityControl(m_qb_iIntensity_red,m_qb_iIntensity_orange,m_qb_iIntensity_yellow,m_qb_iIntensity_green, false);
+			if(!m_QBars[i]->IsIntensityValuesFixed()) //so that we dont alter ones set in code! SG levels - Pipes (whatever/etc)
+				m_QBars[i]->SetIntensityControl(m_qb_iIntensity_red,m_qb_iIntensity_orange,m_qb_iIntensity_yellow,m_qb_iIntensity_green);
 	}
 	
 	void FFQuantityPanel::OnColorBarChanged(  )

@@ -206,7 +206,7 @@ Color getIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAl
 				innerCol = ColorFade( iAmount, iRed, iOrange, INTENSITYSCALE_COLOR_RED, INTENSITYSCALE_COLOR_ORANGE );
 			else
 				innerCol = INTENSITYSCALE_COLOR_ORANGE;	
-		else if(iAmount  <= iYellow && iColorSetting> 0)
+		else if(iAmount  <= iYellow && iColorSetting > 0)
 			if(iColorSetting == 2)
 				innerCol = ColorFade( iAmount, iOrange, iYellow, INTENSITYSCALE_COLOR_ORANGE, INTENSITYSCALE_COLOR_YELLOW );
 			else

@@ -5,13 +5,12 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-/*
+
 static ConVar hud_buildstate_x( "hud_buildstate_x", "640", FCVAR_ARCHIVE, "Panel's X position on 640 480 Resolution", true, 0, true, 640);
-static ConVar hud_buildstate__y( "hud_buildstate_y", "190", FCVAR_ARCHIVE, "Panel's Y Position on 640 480 Resolution", true, 0, true, 640);
+static ConVar hud_buildstate_y( "hud_buildstate_y", "190", FCVAR_ARCHIVE, "Panel's Y Position on 640 480 Resolution", true, 0, true, 480);
 static ConVar hud_buildstate_align_horiz( "hud_buildstate_align_horiz", "2", FCVAR_ARCHIVE, "Panel's alignment to the specified position (0=left, 1=center, 2=right", true, 0, true, 2);
 static ConVar hud_buildstate_align_vert( "hud_buildstate_align_vert", "2", FCVAR_ARCHIVE, "Panel's alignment to the specified position (0=left, 1=center, 2=right", true, 0, true, 2);
 static ConVar hud_buildstate_columns( "hud_buildstate_columns", "1", FCVAR_ARCHIVE, "Number of quantity bar columns", true, 1, true, 6);
-*/
 
 static ConVar hud_buildstate_pos_headerText_x( "hud_buildstate_pos_headerText_x", "30", FCVAR_ARCHIVE, "Header text X from top left", true, 0, true, 640);
 static ConVar hud_buildstate_pos_headerText_y( "hud_buildstate_pos_headerText_y", "15", FCVAR_ARCHIVE, "Header text Y from top left", true, 0, true, 640);
@@ -31,8 +30,8 @@ static ConVar hud_buildstate_show_Bar( "hud_buildstate_show_bar", "1", FCVAR_ARC
 static ConVar hud_buildstate_show_BarBackground( "hud_buildstate_show_barBackground", "1", FCVAR_ARCHIVE, "Show Bar Background", true, 0, true, 1);
 static ConVar hud_buildstate_show_BarBorder( "hud_buildstate_show_barBorder", "1", FCVAR_ARCHIVE, "Show Bar Boarder", true, 0, true, 1);
 static ConVar hud_buildstate_show_Icon( "hud_buildstate_show_icon", "1", FCVAR_ARCHIVE, "Show Icon", true, 0, true, 1);
-static ConVar hud_buildstate_show_Label( "hud_buildstate_show_label", "0", FCVAR_ARCHIVE, "Show label", true, 0, true, 1);
-static ConVar hud_buildstate_show_Amount( "hud_buildstate_show_amount", "0", FCVAR_ARCHIVE, "Show amount", true, 0, true, 1);
+static ConVar hud_buildstate_show_Label( "hud_buildstate_show_label", "1", FCVAR_ARCHIVE, "Show label", true, 0, true, 1);
+static ConVar hud_buildstate_show_Amount( "hud_buildstate_show_amount", "1", FCVAR_ARCHIVE, "Show amount", true, 0, true, 1);
 
 static ConVar hud_buildstate_bar_width( "hud_buildstate_bar_width", "25", FCVAR_ARCHIVE, "Bar width on 640 480 Resolution", true, 1, false, 0);
 static ConVar hud_buildstate_bar_height( "hud_buildstate_bar_height", "4", FCVAR_ARCHIVE, "Bar height on 640 480 Resolution", true, 1, false, 0);
@@ -65,26 +64,47 @@ static ConVar hud_buildstate_color_amount_a( "hud_buildstate_color_amount_a", "2
 
 static ConVar hud_buildstate_shadow_icon( "hud_buildstate_shadow_icon", "0", FCVAR_ARCHIVE, "Icon Shadow (0 Off, 1 On)");
 static ConVar hud_buildstate_shadow_label( "hud_buildstate_shadow_label", "0", FCVAR_ARCHIVE, "Label Shadow (0 Off, 1 On)");
-static ConVar hud_buildstate_shadow_amount( "hud_buildstate_shadow_amount", "1", FCVAR_ARCHIVE, "Amount Shadow (0 Off, 1 On)");
+static ConVar hud_buildstate_shadow_amount( "hud_buildstate_shadow_amount", "0", FCVAR_ARCHIVE, "Amount Shadow (0 Off, 1 On)");
 
-static ConVar hud_buildstate_colorMode_bar( "hud_buildstate_colorMode_bar", "2", FCVAR_ARCHIVE, "Bar color mode");
-static ConVar hud_buildstate_colorMode_barBackground( "hud_buildstate_colorMode_barBackground", "2", FCVAR_ARCHIVE, "Bar Background color mode");
-static ConVar hud_buildstate_colorMode_barBorder( "hud_buildstate_colorMode_barBorder", "2", FCVAR_ARCHIVE, "Bar Border color mode");
-static ConVar hud_buildstate_colorMode_icon( "hud_buildstate_colorMode_icon", "2", FCVAR_ARCHIVE, "Icon color mode");
-static ConVar hud_buildstate_colorMode_label( "hud_buildstate_colorMode_label", "0", FCVAR_ARCHIVE, "Label color mode");
-static ConVar hud_buildstate_colorMode_amount( "hud_buildstate_colorMode_amount", "0", FCVAR_ARCHIVE, "Amount color mode");
+static ConVar hud_buildstate_colorMode_bar( "hud_buildstate_colorMode_bar", "2", FCVAR_ARCHIVE, "Bar color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
+static ConVar hud_buildstate_colorMode_barBackground( "hud_buildstate_colorMode_barBackground", "2", FCVAR_ARCHIVE, "Bar Background color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
+static ConVar hud_buildstate_colorMode_barBorder( "hud_buildstate_colorMode_barBorder", "2", FCVAR_ARCHIVE, "Bar Border color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
+static ConVar hud_buildstate_colorMode_icon( "hud_buildstate_colorMode_icon", "2", FCVAR_ARCHIVE, "Icon color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
+static ConVar hud_buildstate_colorMode_label( "hud_buildstate_colorMode_label", "0", FCVAR_ARCHIVE, "Label color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
+static ConVar hud_buildstate_colorMode_amount( "hud_buildstate_colorMode_amount", "0", FCVAR_ARCHIVE, "Amount color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
 
 static ConVar hud_buildstate_offset_bar_x( "hud_buildstate_offset_bar_x", "0", FCVAR_ARCHIVE, "Bar offset x");
 static ConVar hud_buildstate_offset_bar_y( "hud_buildstate_offset_bar_y", "0", FCVAR_ARCHIVE, "Bar offset y");
-static ConVar hud_buildstate_offset_icon_x( "hud_buildstate_offset_icon_x", "-5", FCVAR_ARCHIVE, "Icon offset x");
+static ConVar hud_buildstate_offset_icon_x( "hud_buildstate_offset_icon_x", "-6", FCVAR_ARCHIVE, "Icon offset x");
 static ConVar hud_buildstate_offset_icon_y( "hud_buildstate_offset_icon_y", "0", FCVAR_ARCHIVE, "Icon offset y");
-static ConVar hud_buildstate_offset_label_x( "hud_buildstate_offset_label_x", "1", FCVAR_ARCHIVE, "label offset x");
+static ConVar hud_buildstate_offset_label_x( "hud_buildstate_offset_label_x", "-12", FCVAR_ARCHIVE, "label offset x");
 static ConVar hud_buildstate_offset_label_y( "hud_buildstate_offset_label_y", "0", FCVAR_ARCHIVE, "label offset y");
-static ConVar hud_buildstate_offset_amount_x( "hud_buildstate_offset_amount_x", "-25", FCVAR_ARCHIVE, "Amount offset x");
+static ConVar hud_buildstate_offset_amount_x( "hud_buildstate_offset_amount_x", "30", FCVAR_ARCHIVE, "Amount offset x");
 static ConVar hud_buildstate_offset_amount_y( "hud_buildstate_offset_amount_y", "0", FCVAR_ARCHIVE, "Amount offset y");
 
 void CHudBuildStateBase::CheckCvars(bool updateBarPositions)
 {
+	if(!m_bChildOverride)
+	{
+		if(m_iX != hud_buildstate_x.GetInt() || m_iY != hud_buildstate_y.GetInt())
+		{
+			m_iX = hud_buildstate_x.GetInt();
+			m_iY = hud_buildstate_y.GetInt();
+		}
+
+		if(m_iHorizontalAlign != hud_buildstate_align_horiz.GetInt())
+			m_iHorizontalAlign = hud_buildstate_align_horiz.GetInt();
+
+		if(m_iVerticalAlign != hud_buildstate_align_vert.GetInt())
+			m_iVerticalAlign = hud_buildstate_align_vert.GetInt();
+
+		if(m_qb_iColumns != hud_buildstate_columns.GetInt())
+		{
+			m_qb_iColumns = hud_buildstate_columns.GetInt();
+			updateBarPositions = true;
+		}	
+	}
+
 	if(m_iHeaderTextX != hud_buildstate_pos_headerText_x.GetInt() || m_iHeaderTextY != hud_buildstate_pos_headerText_y.GetInt())
 	{
 		m_iHeaderTextX = hud_buildstate_pos_headerText_x.GetInt();

@@ -6,11 +6,12 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar hud_buildstate_sg_x( "hud_buildstate_sg_x", "0", FCVAR_ARCHIVE, "Panel's X position on 640 480 Resolution");
-static ConVar hud_buildstate_sg_y( "hud_buildstate_sg_y", "0", FCVAR_ARCHIVE, "Panel's Y Position on 640 480 Resolution");
-static ConVar hud_buildstate_sg_align_horiz( "hud_buildstate_sg_align_horiz", "0", FCVAR_ARCHIVE, "Panel's horizontal alignment to the specified position (0=left, 1=center, 2=right");
-static ConVar hud_buildstate_sg_align_vert( "hud_buildstate_sg_align_vert", "0", FCVAR_ARCHIVE, "Panel's vertical alignment to the specified position (0=top, 1=middle, 2=bottom");
-static ConVar hud_buildstate_sg_columns( "hud_buildstate_sg_columns", "1", FCVAR_ARCHIVE, "Number of quantity bar columns");
+static ConVar hud_buildstate_sg_override( "hud_buildstate_sg_overrideSettings", "1", FCVAR_ARCHIVE, "Whether positioning, alignment and columns should override standard buildstate settings", true, 0, true, 1);
+static ConVar hud_buildstate_sg_x( "hud_buildstate_sg_x", "640", FCVAR_ARCHIVE, "Panel's X position on 640 480 Resolution", true, 0, true, 640);
+static ConVar hud_buildstate_sg_y( "hud_buildstate_sg_y", "0", FCVAR_ARCHIVE, "Panel's Y Position on 640 480 Resolution", true, 0, true, 480);
+static ConVar hud_buildstate_sg_align_horiz( "hud_buildstate_sg_align_horiz", "2", FCVAR_ARCHIVE, "Panel's horizontal alignment to the specified position (0=left, 1=center, 2=right", true, 0, true, 2);
+static ConVar hud_buildstate_sg_align_vert( "hud_buildstate_sg_align_vert", "0", FCVAR_ARCHIVE, "Panel's vertical alignment to the specified position (0=top, 1=middle, 2=bottom", true, 0, true, 2);
+static ConVar hud_buildstate_sg_columns( "hud_buildstate_sg_columns", "1", FCVAR_ARCHIVE, "Number of quantity bar columns", true, 1, true, 6);
 
 class CHudBuildStateSentry : public CHudElement, public CHudBuildStateBase
 {
@@ -52,6 +53,8 @@ DECLARE_HUD_MESSAGE(CHudBuildStateSentry, SentryMsg);
 void CHudBuildStateSentry::CheckCvars()
 {
 	bool updateBarPositions = false;
+	
+	m_bChildOverride = hud_buildstate_sg_override.GetBool();
 
 	if(m_iX != hud_buildstate_sg_x.GetInt() || m_iY != hud_buildstate_sg_y.GetInt())
 	{
@@ -89,13 +92,15 @@ void CHudBuildStateSentry::Init()
 	SetHeaderText(tempString);
 	SetHeaderIconChar("R");
 	
-	m_qbSentryHealth->SetLabelText("#FF_iTEM_HEALTH");
+	m_qbSentryHealth->SetLabelText("#FF_ITEM_HEALTH");
 	m_qbSentryHealth->SetIconChar(":");
 	m_qbSentryHealth->SetVisible(false);
+	m_qbSentryHealth->SetIntensityAmountScaled(true);//max changes (is not 100) so we need to scale to a percentage amount for calculation
 
-	m_qbSentryLevel->SetLabelText("#FF_iTEM_lEVEL");
+	m_qbSentryLevel->SetLabelText("#FF_ITEM_LEVEL");
 	m_qbSentryLevel->SetAmountMax(3);
 	m_qbSentryLevel->SetIntensityControl(1,2,2,3);
+	m_qbSentryLevel->SetIntensityValuesFixed(true);
 	m_qbSentryLevel->SetVisible(false);
 }
 

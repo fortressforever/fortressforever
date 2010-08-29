@@ -51,6 +51,8 @@ public:
 		SetAmountOffset(35, 0);
 
 		SetIntensityControl(20,50,80,100);
+		SetIntensityAmountScaled(false);
+		SetIntensityValuesFixed(false);
 
 		SetBarBorderColor(Color(255,255,255,255));
 		SetBarBackgroundColor(Color(192,192,192,80));
@@ -75,6 +77,10 @@ public:
 		ShowLabel(true);
 		ShowAmount(true);
 		ShowAmountMax(true);
+
+		SetAmountFontShadow(false);
+		SetIconFontShadow(false);
+		SetLabelFontShadow(false);
 
 		vgui::ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
 	}
@@ -155,6 +161,9 @@ public:
 	void SetLabelColorMode( int iColoModerLabel );
 	
 	void SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale = false);
+	void SetIntensityAmountScaled(bool bAmountScaled);
+	void SetIntensityValuesFixed(bool bIntensityValuesFixed); 
+	bool IsIntensityValuesFixed();
 
 	int GetAmount();
 
@@ -169,7 +178,7 @@ protected:
 	void RecalculateLabelPosition();
 	void RecalculateAmountPosition();
 
-	void RecalculateColor(int &colorMode, Color &color, Color &colorCustom);
+	void RecalculateColor(int colorMode, Color &color, Color &colorCustom);
 
  	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 	
@@ -252,11 +261,13 @@ protected:
 	bool m_bShowAmount;
 	bool m_bShowAmountMax;
 
-	int m_iIntenisityRed;
-	int m_iIntenisityOrange;
-	int m_iIntenisityYellow;
-	int m_iIntenisityGreen;
-	int m_bIntenisityInvertScale;
+	bool m_bIntensityAmountScaled; //make the amount a percentage and calculate against values
+	bool m_bIntensityValuesFixed; //values fixed by code and can't be changed on the fly
+	int m_iIntensityRed;
+	int m_iIntensityOrange;
+	int m_iIntensityYellow;
+	int m_iIntensityGreen;
+	int m_bIntensityInvertScale;
 
 	Color m_ColorBarCustom;
 	Color m_ColorBarBorderCustom;
