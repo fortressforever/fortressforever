@@ -124,6 +124,9 @@ void CHudBuildStateSentry::OnTick()
 		SetPaintBackgroundEnabled(false);
 		SetPaintBorderEnabled(false);
 		SetPaintEnabled(false);
+		m_qbSentryHealth->SetVisible(false);
+		m_qbSentryLevel->SetVisible(false);
+		SetVisible(false);
 		return; //return and don't continue
 	}
 	else

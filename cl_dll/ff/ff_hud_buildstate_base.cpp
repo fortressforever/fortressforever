@@ -9,8 +9,11 @@
 static ConVar hud_buildstate_x( "hud_buildstate_x", "640", FCVAR_ARCHIVE, "Panel's X position on 640 480 Resolution", true, 0, true, 640);
 static ConVar hud_buildstate_y( "hud_buildstate_y", "190", FCVAR_ARCHIVE, "Panel's Y Position on 640 480 Resolution", true, 0, true, 480);
 static ConVar hud_buildstate_align_horiz( "hud_buildstate_align_horiz", "2", FCVAR_ARCHIVE, "Panel's alignment to the specified position (0=left, 1=center, 2=right", true, 0, true, 2);
-static ConVar hud_buildstate_align_vert( "hud_buildstate_align_vert", "2", FCVAR_ARCHIVE, "Panel's alignment to the specified position (0=left, 1=center, 2=right", true, 0, true, 2);
+static ConVar hud_buildstate_align_vert( "hud_buildstate_align_vert", "2", FCVAR_ARCHIVE, "Panel's alignment to the specified position (0=top, 1=middle, 2=bottom", true, 0, true, 2);
 static ConVar hud_buildstate_columns( "hud_buildstate_columns", "1", FCVAR_ARCHIVE, "Number of quantity bar columns", true, 1, true, 6);
+
+static ConVar hud_buildstate_spacing_x( "hud_buildstate_spacing_x", "5", FCVAR_ARCHIVE, "Horizontal spacing between bars", true, 0, true, 40);
+static ConVar hud_buildstate_spacing_y( "hud_buildstate_spacing_y", "5", FCVAR_ARCHIVE, "Vertical spacing between bars", true, 0, true, 40);
 
 static ConVar hud_buildstate_pos_headerText_x( "hud_buildstate_pos_headerText_x", "30", FCVAR_ARCHIVE, "Header text X from top left", true, 0, true, 640);
 static ConVar hud_buildstate_pos_headerText_y( "hud_buildstate_pos_headerText_y", "15", FCVAR_ARCHIVE, "Header text Y from top left", true, 0, true, 640);
@@ -19,7 +22,7 @@ static ConVar hud_buildstate_pos_headericon_x( "hud_buildstate_pos_headericon_x"
 static ConVar hud_buildstate_pos_headericon_y( "hud_buildstate_pos_headericon_y", "10", FCVAR_ARCHIVE, "Header icon Y from top left", true, 0, true, 640);
 
 static ConVar hud_buildstate_pos_bars_x( "hud_buildstate_pos_bars_x", "35", FCVAR_ARCHIVE, "Quantity bars X offset from top left", true, 0, true, 640);
-static ConVar hud_buildstate_pos_bars_y( "hud_buildstate_pos_bars_y", "35", FCVAR_ARCHIVE, "Quantity bars Y offset from top left", true, 0, true, 640);
+static ConVar hud_buildstate_pos_bars_y( "hud_buildstate_pos_bars_y", "15", FCVAR_ARCHIVE, "Quantity bars Y offset from top left", true, 0, true, 640);
 
 static ConVar hud_buildstate_intensity_red( "hud_buildstate_intensity_red", "20", FCVAR_ARCHIVE, "When using colormodes stepped and faded this is the value at which the bar is red");
 static ConVar hud_buildstate_intensity_orange( "hud_buildstate_intensity_orange", "50", FCVAR_ARCHIVE, "When using colormodes stepped and faded this is the value at which the bar is orange");
@@ -103,6 +106,13 @@ void CHudBuildStateBase::CheckCvars(bool updateBarPositions)
 			m_qb_iColumns = hud_buildstate_columns.GetInt();
 			updateBarPositions = true;
 		}	
+	}
+		
+	if(m_qb_iSpacingX != hud_buildstate_spacing_x.GetInt() || m_qb_iSpacingY != hud_buildstate_spacing_y.GetInt())
+	{
+		m_qb_iSpacingX = hud_buildstate_spacing_x.GetInt();
+		m_qb_iSpacingY = hud_buildstate_spacing_y.GetInt();
+		updateBarPositions = true;
 	}
 
 	if(m_iHeaderTextX != hud_buildstate_pos_headerText_x.GetInt() || m_iHeaderTextY != hud_buildstate_pos_headerText_y.GetInt())
