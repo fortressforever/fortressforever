@@ -121,12 +121,15 @@ void CHudBuildStateSentry::OnTick()
 	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_ENGINEER)
 	//hide the panel
 	{
+		//TO-DO
+		//it should just be setvisible(false) to stop it from painting
+		//all children should follow and job done but for somereason it isn't
 		SetPaintBackgroundEnabled(false);
 		SetPaintBorderEnabled(false);
 		SetPaintEnabled(false);
 		m_qbSentryHealth->SetVisible(false);
 		m_qbSentryLevel->SetVisible(false);
-		SetVisible(false);
+		SetVisible(false); //sits here for good measure.. does nothing :/
 		return; //return and don't continue
 	}
 	else

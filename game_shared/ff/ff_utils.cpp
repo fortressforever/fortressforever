@@ -223,7 +223,8 @@ Color getIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAl
 	}
 	else
 	{
-		//not working
+		//not working - currently no use for it.. someone can write this when it's needed
+		// so that 0% will be green and red will be 100%
 		if( iAmount > iRed && iColorSetting > 0)
 			innerCol = INTENSITYSCALE_COLOR_RED;
 		else if(iAmount  > iOrange && iColorSetting > 0)

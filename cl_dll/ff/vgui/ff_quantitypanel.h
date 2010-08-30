@@ -53,8 +53,8 @@ namespace vgui
 			m_iHeaderIconX = 10;
 			m_iHeaderIconY = 10;
 
-			m_qb_iSpacingX = 5;
-			m_qb_iSpacingY = 5;
+			m_qb_iBarMarginHorizontal = 5;
+			m_qb_iBarMarginVertical = 5;
 			
 			m_qb_iPositionX = 15;
 			m_qb_iPositionY = 40;
@@ -243,8 +243,8 @@ namespace vgui
 		int m_iHeaderIconWidth;
 		int m_iHeaderIconHeight;
 
-		int m_qb_iSpacingX;
-		int m_qb_iSpacingY;
+		int m_qb_iBarMarginHorizontal;
+		int m_qb_iBarMarginVertical;
 		int m_qb_iPositionX;
 		int m_qb_iPositionY;
 		int m_qb_iColumns;

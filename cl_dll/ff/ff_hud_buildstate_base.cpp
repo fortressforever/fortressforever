@@ -12,9 +12,6 @@ static ConVar hud_buildstate_align_horiz( "hud_buildstate_align_horiz", "2", FCV
 static ConVar hud_buildstate_align_vert( "hud_buildstate_align_vert", "2", FCVAR_ARCHIVE, "Panel's alignment to the specified position (0=top, 1=middle, 2=bottom", true, 0, true, 2);
 static ConVar hud_buildstate_columns( "hud_buildstate_columns", "1", FCVAR_ARCHIVE, "Number of quantity bar columns", true, 1, true, 6);
 
-static ConVar hud_buildstate_spacing_x( "hud_buildstate_spacing_x", "5", FCVAR_ARCHIVE, "Horizontal spacing between bars", true, 0, true, 40);
-static ConVar hud_buildstate_spacing_y( "hud_buildstate_spacing_y", "5", FCVAR_ARCHIVE, "Vertical spacing between bars", true, 0, true, 40);
-
 static ConVar hud_buildstate_pos_headerText_x( "hud_buildstate_pos_headerText_x", "30", FCVAR_ARCHIVE, "Header text X from top left", true, 0, true, 640);
 static ConVar hud_buildstate_pos_headerText_y( "hud_buildstate_pos_headerText_y", "15", FCVAR_ARCHIVE, "Header text Y from top left", true, 0, true, 640);
 
@@ -39,6 +36,9 @@ static ConVar hud_buildstate_show_Amount( "hud_buildstate_show_amount", "1", FCV
 static ConVar hud_buildstate_bar_width( "hud_buildstate_bar_width", "25", FCVAR_ARCHIVE, "Bar width on 640 480 Resolution", true, 1, false, 0);
 static ConVar hud_buildstate_bar_height( "hud_buildstate_bar_height", "4", FCVAR_ARCHIVE, "Bar height on 640 480 Resolution", true, 1, false, 0);
 static ConVar hud_buildstate_bar_borderWidth( "hud_buildstate_bar_borderWidth", "1", FCVAR_ARCHIVE, "Bar border width on 640 480 Resolution", true, 0, false, 0);
+
+static ConVar hud_buildstate_bar_margin_horiz( "hud_buildstate_bar_margin_horiz", "5", FCVAR_ARCHIVE, "Horizontal margin around bars", true, 0, true, 50);
+static ConVar hud_buildstate_bar_margin_vert( "hud_buildstate_bar_margin_vert", "5", FCVAR_ARCHIVE, "Vertical margin around bars", true, 0, true, 50);
 
 static ConVar hud_buildstate_color_bar_r( "hud_buildstate_color_bar_r", "255", FCVAR_ARCHIVE, "Bar color red component");
 static ConVar hud_buildstate_color_bar_g( "hud_buildstate_color_bar_g", "255", FCVAR_ARCHIVE, "Bar color green component");
@@ -112,10 +112,10 @@ void CHudBuildStateBase::CheckCvars(bool updateBarPositions)
 		}	
 	}
 		
-	if(m_qb_iSpacingX != hud_buildstate_spacing_x.GetInt() || m_qb_iSpacingY != hud_buildstate_spacing_y.GetInt())
+	if(m_qb_iBarMarginHorizontal != hud_buildstate_bar_margin_horiz.GetInt() || m_qb_iBarMarginVertical != hud_buildstate_bar_margin_vert.GetInt())
 	{
-		m_qb_iSpacingX = hud_buildstate_spacing_x.GetInt();
-		m_qb_iSpacingY = hud_buildstate_spacing_y.GetInt();
+		m_qb_iBarMarginHorizontal = hud_buildstate_bar_margin_horiz.GetInt();
+		m_qb_iBarMarginVertical = hud_buildstate_bar_margin_vert.GetInt();
 		updateBarPositions = true;
 	}
 

@@ -189,8 +189,8 @@ namespace vgui
 		{
 			int iPosX, iPosY;
 	
-			iPosX = m_qb_iPositionX + iColumnWidths + m_iColumnOffset[iColumn] + (iColumn+1) * m_qb_iSpacingX * m_flScale;
-			iPosY = m_qb_iPositionY + iRowHeights + m_iRowOffset[iRow] + (iRow+1) * m_qb_iSpacingY * m_flScale;
+			iPosX = m_qb_iPositionX + iColumnWidths + m_iColumnOffset[iColumn] + (iColumn+1) * m_qb_iBarMarginHorizontal * m_flScale;
+			iPosY = m_qb_iPositionY + iRowHeights + m_iRowOffset[iRow] + (iRow+1) * m_qb_iBarMarginVertical * m_flScale;
 
 			m_QBars[i]->SetPos( iPosX, iPosY );
 					
@@ -204,8 +204,8 @@ namespace vgui
 				//include the height of the row
 				iRowHeights += m_iRowHeight[iRow++];
 
-				int iX1 = m_qb_iPositionX + iColumnWidths + (iColumn+1) * m_qb_iSpacingX * m_flScale;
-				int iY1 = m_qb_iPositionY + iRowHeights + (iRow+1) * m_qb_iSpacingY * m_flScale;
+				int iX1 = m_qb_iPositionX + iColumnWidths + (iColumn+1) * m_qb_iBarMarginHorizontal * m_flScale;
+				int iY1 = m_qb_iPositionY + iRowHeights + (iRow+1) * m_qb_iBarMarginVertical * m_flScale;
 
 				//these are used to get equal padding on either side
 				bool HeaderLeft = false;
