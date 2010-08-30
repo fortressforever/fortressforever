@@ -143,6 +143,10 @@ public:
 	void SetLabelColor( Color newLabelColor );
 	void SetTeamColor( Color newTeamColor );
 
+	void SetAmountSize( int newAmountSize );
+	void SetIconSize( int newIconSize );
+	void SetLabelSize( int newLabelSize );
+
 	void SetIconOffsetX(int iconOffsetX);
 	void SetIconOffsetY(int iconOffsetY);
 	void SetIconOffset(int iconOffsetX, int iconOffsetY);
@@ -182,9 +186,9 @@ protected:
 
  	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 	
-	vgui::HFont m_hfQuantityBarText[3];
-	vgui::HFont m_hfQuantityBarIcon[3];
-	vgui::HFont m_hfQuantityBarGlyph[3];
+	vgui::HFont m_hfQuantityBarText[15];
+	vgui::HFont m_hfQuantityBarIcon[15];
+	vgui::HFont m_hfQuantityBarGlyph[15];
 
 	bool m_bAmountFontShadow;
 	bool m_bLabelFontShadow;
@@ -252,6 +256,10 @@ protected:
 	wchar_t m_wszLabel[ 32 ];
 
 	wchar_t m_wszAmountString[ 10 ];
+
+	int m_iSizeAmount;
+	int m_iSizeIcon;
+	int m_iSizeLabel;
 
 	bool m_bShowBar;
 	bool m_bShowBarBackground;

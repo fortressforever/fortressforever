@@ -65,9 +65,13 @@ static ConVar hud_buildstate_color_amount_g( "hud_buildstate_color_amount_g", "2
 static ConVar hud_buildstate_color_amount_b( "hud_buildstate_color_amount_b", "255", FCVAR_ARCHIVE, "Amount color blue component");
 static ConVar hud_buildstate_color_amount_a( "hud_buildstate_color_amount_a", "255", FCVAR_ARCHIVE, "Amount color alpha component");
 
-static ConVar hud_buildstate_shadow_icon( "hud_buildstate_shadow_icon", "0", FCVAR_ARCHIVE, "Icon Shadow (0 Off, 1 On)");
-static ConVar hud_buildstate_shadow_label( "hud_buildstate_shadow_label", "0", FCVAR_ARCHIVE, "Label Shadow (0 Off, 1 On)");
-static ConVar hud_buildstate_shadow_amount( "hud_buildstate_shadow_amount", "0", FCVAR_ARCHIVE, "Amount Shadow (0 Off, 1 On)");
+static ConVar hud_buildstate_shadow_icon( "hud_buildstate_shadow_icon", "0", FCVAR_ARCHIVE, "Icon Shadow (0 Off, 1 On)", true, 0, true, 1);
+static ConVar hud_buildstate_shadow_label( "hud_buildstate_shadow_label", "0", FCVAR_ARCHIVE, "Label Shadow (0 Off, 1 On)", true, 0, true, 1);
+static ConVar hud_buildstate_shadow_amount( "hud_buildstate_shadow_amount", "0", FCVAR_ARCHIVE, "Amount Shadow (0 Off, 1 On)", true, 0, true, 1);
+
+static ConVar hud_buildstate_size_icon( "hud_buildstate_size_icon", "2", FCVAR_ARCHIVE, "Icon Size (0-4)", true, 0, true, 4);
+static ConVar hud_buildstate_size_label( "hud_buildstate_size_label", "2", FCVAR_ARCHIVE, "Label Shadow (0-4)", true, 0, true, 4);
+static ConVar hud_buildstate_size_amount( "hud_buildstate_size_amount", "2", FCVAR_ARCHIVE, "Amount Shadow (0-4)", true, 0, true, 4);
 
 static ConVar hud_buildstate_colorMode_bar( "hud_buildstate_colorMode_bar", "2", FCVAR_ARCHIVE, "Bar color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
 static ConVar hud_buildstate_colorMode_barBackground( "hud_buildstate_colorMode_barBackground", "2", FCVAR_ARCHIVE, "Bar Background color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
@@ -302,6 +306,26 @@ void CHudBuildStateBase::CheckCvars(bool updateBarPositions)
 	{
 		m_qb_iColorModeAmount = hud_buildstate_colorMode_amount.GetInt();
 		OnColorModeAmountChanged();
+	}
+
+	
+	if(m_qb_iSizeIcon != hud_buildstate_size_icon.GetInt())
+	{
+		m_qb_iSizeIcon = hud_buildstate_size_icon.GetInt();
+		OnSizeIconChanged();
+		updateBarPositions = true;
+	}
+	if(m_qb_iSizeLabel != hud_buildstate_size_label.GetInt())
+	{
+		m_qb_iSizeLabel = hud_buildstate_size_label.GetInt();
+		OnSizeLabelChanged();
+		updateBarPositions = true;
+	}
+	if(m_qb_iSizeAmount != hud_buildstate_size_amount.GetInt())
+	{
+		m_qb_iSizeAmount = hud_buildstate_size_amount.GetInt();
+		OnSizeAmountChanged();
+		updateBarPositions = true;
 	}
 
 	if(m_qb_iOffsetIconX != hud_buildstate_offset_icon_x.GetInt() || m_qb_iOffsetIconY != hud_buildstate_offset_icon_y.GetInt())

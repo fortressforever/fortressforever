@@ -162,6 +162,10 @@ namespace vgui
 		void OnShowIconChanged();
 		void OnShowLabelChanged();
 		void OnShowAmountChanged();
+
+		void OnSizeIconChanged();
+		void OnSizeLabelChanged();
+		void OnSizeAmountChanged();
 		
 		void OnColorBarChanged();
 		void OnColorBarBackgroundChanged();
@@ -289,6 +293,10 @@ namespace vgui
 		bool m_qb_bShadowIcon;
 		bool m_qb_bShadowLabel;
 		bool m_qb_bShadowAmount; 
+
+		int m_qb_iSizeIcon;
+		int m_qb_iSizeLabel;
+		int m_qb_iSizeAmount; 
 
 		int m_qb_iColorModeBar;
 		int m_qb_iColorModeBarBackground;

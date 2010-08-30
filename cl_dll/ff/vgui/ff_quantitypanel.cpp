@@ -25,12 +25,16 @@ namespace vgui
 
 		SetBorder(pScheme->GetBorder("ScoreBoardItemBorder"));
 
-		m_hfHeaderText[0] = pScheme->GetFont( "QuantityPanelHeader", true );
-		m_hfHeaderText[1] = pScheme->GetFont( "QuantityPanelHeaderShadow", true );
-		m_hfHeaderText[2] = pScheme->GetFont( "QuantityPanelHeader", false );
-		m_hfHeaderIcon[0] = pScheme->GetFont( "QuantityPanelHeaderIcon", true );
-		m_hfHeaderIcon[1] = pScheme->GetFont( "QuantityPanelHeaderIconShadow", true );
-		m_hfHeaderIcon[2] = pScheme->GetFont( "QuantityPanelHeaderIcon", false );
+		
+		vgui::HScheme QuantityBarScheme = vgui::scheme()->LoadSchemeFromFile("resource/QuantityPanelScheme.res", "QuantityPanelScheme");
+		vgui::IScheme *qbScheme = vgui::scheme()->GetIScheme(QuantityBarScheme);
+
+		m_hfHeaderText[0] = qbScheme->GetFont( "QuantityPanelHeader", true );
+		m_hfHeaderText[1] = qbScheme->GetFont( "QuantityPanelHeaderShadow", true );
+		m_hfHeaderText[2] = qbScheme->GetFont( "QuantityPanelHeader", false );
+		m_hfHeaderIcon[0] = qbScheme->GetFont( "QuantityPanelHeaderIcon", true );
+		m_hfHeaderIcon[1] = qbScheme->GetFont( "QuantityPanelHeaderIconShadow", true );
+		m_hfHeaderIcon[2] = qbScheme->GetFont( "QuantityPanelHeaderIcon", false );
 
 		BaseClass::ApplySchemeSettings( pScheme );
 	}
@@ -185,8 +189,8 @@ namespace vgui
 		{
 			int iPosX, iPosY;
 	
-			iPosX = m_qb_iPositionX + iColumnWidths + m_iColumnOffset[iColumn] + (iColumn) * m_qb_iSpacingX * m_flScale;
-			iPosY = m_qb_iPositionY + iRowHeights + m_iRowOffset[iRow] + (iRow) * m_qb_iSpacingY * m_flScale;
+			iPosX = m_qb_iPositionX + iColumnWidths + m_iColumnOffset[iColumn] + (iColumn+1) * m_qb_iSpacingX * m_flScale;
+			iPosY = m_qb_iPositionY + iRowHeights + m_iRowOffset[iRow] + (iRow+1) * m_qb_iSpacingY * m_flScale;
 
 			m_QBars[i]->SetPos( iPosX, iPosY );
 					
@@ -200,8 +204,8 @@ namespace vgui
 				//include the height of the row
 				iRowHeights += m_iRowHeight[iRow++];
 
-				int iX1 = m_qb_iPositionX + iColumnWidths + iColumn * m_qb_iSpacingX * m_flScale;
-				int iY1 = m_qb_iPositionY + iRowHeights + iRow * m_qb_iSpacingY * m_flScale;
+				int iX1 = m_qb_iPositionX + iColumnWidths + (iColumn+1) * m_qb_iSpacingX * m_flScale;
+				int iY1 = m_qb_iPositionY + iRowHeights + (iRow+1) * m_qb_iSpacingY * m_flScale;
 
 				//these are used to get equal padding on either side
 				bool HeaderLeft = false;
@@ -401,6 +405,22 @@ namespace vgui
 			m_QBars[i]->SetAmountColorMode(m_qb_iColorModeAmount);
 	}
 
+	void FFQuantityPanel::OnSizeLabelChanged(  )
+	{
+		for(int i = 0; i < m_iQBars; i++)
+			m_QBars[i]->SetLabelSize(m_qb_iSizeLabel);
+	}
+
+	void FFQuantityPanel::OnSizeIconChanged(  )
+	{
+		for(int i = 0; i < m_iQBars; i++)
+			m_QBars[i]->SetIconSize(m_qb_iSizeIcon);
+	}
+	void FFQuantityPanel::OnSizeAmountChanged(  )
+	{
+		for(int i = 0; i < m_iQBars; i++)
+			m_QBars[i]->SetAmountSize(m_qb_iSizeAmount);
+	}
 
 	void FFQuantityPanel::OnIconShadowChanged(  )
 	{
