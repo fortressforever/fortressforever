@@ -5248,6 +5248,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_projectile_goop.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_goop.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_projectile_grenade.cpp"
 				>
 			</File>
@@ -5413,6 +5421,10 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_flamethrower.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_goopgun.cpp"
 				>
 			</File>
 			<File
