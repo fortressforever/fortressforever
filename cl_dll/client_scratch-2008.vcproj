@@ -4891,10 +4891,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\ff\vgui\ff_buttons.h"
-					>
-				</File>
-				<File
 					RelativePath=".\ff\vgui\ff_frame.cpp"
 					>
 				</File>
@@ -4908,6 +4904,10 @@
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_gameui.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_inputslider.h"
 					>
 				</File>
 				<File
@@ -4932,14 +4932,6 @@
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_modelpanel.h"
-					>
-				</File>
-				<File
-					RelativePath=".\ff\vgui\ff_options.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ff\vgui\ff_options.h"
 					>
 				</File>
 				<File
@@ -4998,6 +4990,54 @@
 					RelativePath=".\ff\vgui\vgui_rootpanel_ff.h"
 					>
 				</File>
+				<Filter
+					Name="fortressoptions"
+					>
+					<File
+						RelativePath=".\ff\vgui\ff_crosshairoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_crosshairoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_dlightoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_dlightoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_miscoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_miscoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_options.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_options.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_optionspage.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_timeroptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_timeroptions.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="irc"
