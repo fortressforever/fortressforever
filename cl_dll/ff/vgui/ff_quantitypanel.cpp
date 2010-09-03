@@ -286,9 +286,9 @@ namespace vgui
 		}
 	}
 
-	CHudQuantityBar* FFQuantityPanel::AddChild(const char *pElementName)
+	FFQuantityBar* FFQuantityPanel::AddChild(const char *pElementName)
 	{
-		CHudQuantityBar* newQBar = new CHudQuantityBar(this, pElementName, m_iQBars); 
+		FFQuantityBar* newQBar = new FFQuantityBar(this, pElementName, m_iQBars); 
 		m_QBars[m_iQBars++] = newQBar;
 		return newQBar;
 	}

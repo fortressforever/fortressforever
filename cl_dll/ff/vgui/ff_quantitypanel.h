@@ -15,7 +15,7 @@
 
 #include "cbase.h"
 #include <vgui_controls/Panel.h>
-#include "ff_hud_quantitybar.h"
+#include "ff_quantitybar.h"
 
 
 namespace vgui
@@ -195,7 +195,7 @@ namespace vgui
 		MESSAGE_FUNC_PARAMS( OnChildDimentionsChanged, "ChildDimentionsChanged", data );
 
 	protected:
-		CHudQuantityBar* AddChild(const char *pElementName);
+		FFQuantityBar* AddChild(const char *pElementName);
 
 		int m_iBorderWidth;
 
@@ -211,7 +211,7 @@ namespace vgui
 
 		//maybe try to make variable rather than 6 max
 		//if so, update fixed variables in OnPositions function too
-		CHudQuantityBar* m_QBars[6];
+		FFQuantityBar* m_QBars[6];
 		int m_iQBars;
 
 		bool m_bCheckUpdates;
