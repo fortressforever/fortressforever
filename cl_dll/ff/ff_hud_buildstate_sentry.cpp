@@ -41,8 +41,8 @@ protected:
 private:
 	// could probably do this without these now
 	// but would need an alternative of selecting the one you want easily
-	CHudQuantityBar *m_qbSentryHealth;
-	CHudQuantityBar *m_qbSentryLevel;
+	FFQuantityBar *m_qbSentryHealth;
+	FFQuantityBar *m_qbSentryLevel;
 
 	bool	m_bBuilt;
 };

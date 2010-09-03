@@ -18,8 +18,9 @@ public:
 	}
 
 	~CHudBuildStateBase( void ) {}
+
 	void CheckCvars(bool updateBarPositions = false);
-	virtual void	ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 protected:
 	
