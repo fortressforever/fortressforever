@@ -27,6 +27,8 @@
 
 ConVar cl_teamcolourhud("cl_teamcolourhud", "1", FCVAR_ARCHIVE);
 
+extern ConVar cl_teamcolourhud;
+
 extern C_PlayerResource *g_PR;
 
 namespace vgui

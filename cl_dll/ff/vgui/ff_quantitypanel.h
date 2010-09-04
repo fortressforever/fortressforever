@@ -1,13 +1,12 @@
 /********************************************************************
-	created:	2006/02/04
-	created:	4:2:2006   15:58
-	filename: 	F:\cvs\code\cl_dll\ff\ff_hud_quantitypanel.h
-	file path:	F:\cvs\code\cl_dll\ff
-	file base:	ff_hud_quantitybar
+	created:	2010/08
+	filename: 	cl_dll\ff\ff_hud_quantitypanel.h
+	file path:	cl_dll\ff
+	file base:	ff_hud_quantitypanel
 	file ext:	h
 	author:		Elmo
 	
-	purpose:	Customisable Quanitity Panel
+	purpose:	Customisable Quanitity Panel for the HUD
 *********************************************************************/
 
 #ifndef FF_QUANTITYPANEL_H
@@ -15,8 +14,12 @@
 
 #include "cbase.h"
 #include <vgui_controls/Panel.h>
+#include "keyValues.h"
+
 #include "ff_quantitybar.h"
 
+//this is defined in the custom hud options page too, keep it in sync
+#define QUANTITYPANELFONTSIZES 10
 
 namespace vgui
 {
@@ -24,126 +27,24 @@ namespace vgui
 	{
 	DECLARE_CLASS_SIMPLE( FFQuantityPanel, Panel );
 	public:
-		FFQuantityPanel() : Panel() { FFQuantityPanelInit(); }
-		FFQuantityPanel(Panel *parent) : Panel(parent) { FFQuantityPanelInit(); }
-		FFQuantityPanel(Panel *parent, const char *panelName) : Panel(parent, panelName) { FFQuantityPanelInit(); }
-		FFQuantityPanel(Panel *parent, const char *panelName, HScheme scheme) : Panel(parent, panelName, scheme) { FFQuantityPanelInit(); }
+		FFQuantityPanel(Panel *parent, const char *panelName);
 
-		void FFQuantityPanelInit() {
-			m_flScale = 1.0f;
-			m_flScaleX = 1.0f;
-			m_flScaleY = 1.0f;
-			m_iQBars = 0;
-			//SetHeaderTextPosition(30,15);
-			//SetHeaderIconPosition(10,10);
+		virtual void Paint( void );
+		virtual void OnTick( void );
+		virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
-			//these values are irrelevant and get overridden by cvars
-			
-			//if the child class should take precidence over general
-			//buildstate_sg_x over buildstate_x
-			m_bChildOverride = false;
-
-			m_iX = 0;
-			m_iY = 0;
-			m_iWidth = 0;
-			m_iHeight = 0;
-			
-			m_iHeaderTextX = 30;
-			m_iHeaderTextY = 15;
-			m_iHeaderIconX = 10;
-			m_iHeaderIconY = 10;
-
-			m_qb_iBarMarginHorizontal = 5;
-			m_qb_iBarMarginVertical = 5;
-			
-			m_qb_iPositionX = 15;
-			m_qb_iPositionY = 40;
-			m_qb_iColumns = 1;
-
-			/*
-				rest is -1 so that it updates using cvar values
-				had a weird case where quantity bar colormode default was 1
-				this was 2 and cvar was 2 - It didn't detect a change and so 
-				didn't update the colormode thus maintaining a colourmode of 1 
-
-				obviously true false can't be helped... just making sure they're the same as quanitty bar defaults!
-			*/
-
-			m_qb_iIntensity_red = -1;
-			m_qb_iIntensity_orange = -1;
-			m_qb_iIntensity_yellow = -1;
-			m_qb_iIntensity_green = -1;
-
-			m_qb_bShowBar = true;
-			m_qb_bShowBarBackground = true;
-			m_qb_bShowBarBorder = true;
-			m_qb_bShowIcon = true;
-			m_qb_bShowLabel = true;
-			m_qb_bShowAmount = true;
-
-			m_qb_iBarWidth = -1;
-			m_qb_iBarHeight = -1;
-			m_qb_iBarBorderWidth = -1;
-
-			m_qb_iColorBar_r = -1;
-			m_qb_iColorBar_g = -1;
-			m_qb_iColorBar_b = -1;
-			m_qb_iColorBar_a = -1;
-			m_qb_iColorBarBackground_r = -1;
-			m_qb_iColorBarBackground_g = -1;
-			m_qb_iColorBarBackground_b = -1;
-			m_qb_iColorBarBackground_a = -1;
-			m_qb_iColorBarBorder_r = -1;
-			m_qb_iColorBarBorder_g = -1;
-			m_qb_iColorBarBorder_b = -1;
-			m_qb_iColorBarBorder_a = -1;
-			m_qb_iColorIcon_r = -1;
-			m_qb_iColorIcon_g = -1;
-			m_qb_iColorIcon_b = -1;
-			m_qb_iColorIcon_a = -1;
-			m_qb_iColorLabel_r = -1; 
-			m_qb_iColorLabel_g = -1;
-			m_qb_iColorLabel_b = -1;
-			m_qb_iColorLabel_a = -1;
-			m_qb_iColorAmount_r = -1; 
-			m_qb_iColorAmount_g = -1; 
-			m_qb_iColorAmount_b = -1;
-			m_qb_iColorAmount_a = -1;
-
-			m_qb_bShadowIcon = false;
-			m_qb_bShadowLabel = false;
-			m_qb_bShadowAmount = false; 
-
-			m_qb_iColorModeBar = -1;
-			m_qb_iColorModeBarBackground = -1;
-			m_qb_iColorModeBarBorder = -1;
-			m_qb_iColorModeIcon = -1;
-			m_qb_iColorModeLabel = -1;
-			m_qb_iColorModeAmount = -1; 
-			m_qb_iColorModeIdent = -1;
-
-			m_qb_iOffsetBarX = -1;
-			m_qb_iOffsetBarY = -1;
-			m_qb_iOffsetIconX = -1;
-			m_qb_iOffsetIconY = -1;
-			m_qb_iOffsetLabelX = -1;
-			m_qb_iOffsetLabelY = -1;
-			m_qb_iOffsetAmountX = -1;
-			m_qb_iOffsetAmountY = -1;
-			m_qb_iOffsetIdentX = -1;
-			m_qb_iOffsetIdentY = -1;
-		}
-
-		virtual void FFQuantityPanel::PaintBackground( void );
-		virtual void FFQuantityPanel::Paint( void );
-		virtual void FFQuantityPanel::ApplySchemeSettings( vgui::IScheme *pScheme );
-		virtual void FFQuantityPanel::OnTick( void );
-		
 		void SetHeaderText(wchar_t *newHeaderText);
 		void SetHeaderIconChar(char *newHeaderIconChar);
-
+	
+		void UpdateQBPositions();
 		void SetHeaderTextShadow(bool bHasShadow);
 		void SetHeaderIconShadow(bool bHasShadow);
+
+		void SetHeaderTextSize(int iSize);
+		void SetHeaderIconSize(int iSize);
+
+		void SetHeaderTextVisible(bool bIsVisible);
+		void SetHeaderIconVisible(bool bIsVisible);
 
 		void SetHeaderTextPosition( int iPositionX, int iPositionY );
 		void SetHeaderIconPosition( int iPositionX, int iPositionY );
@@ -151,6 +52,8 @@ namespace vgui
 		void SetHeaderTextColor( Color newHeaderTextColor );
 		void SetHeaderIconColor( Color newHeaderIconColor );
 		
+		void SetBarsVisible( bool bIsVisible );
+
 		void OnBarSizeChanged();
 		void OnIntensityValuesChanged();
 
@@ -174,8 +77,6 @@ namespace vgui
 		void OnColorIconChanged();
 		void OnColorLabelChanged();
 		void OnColorAmountChanged();
-		
-		void UpdateQBPositions();
 
 		void OnColorModeBarChanged();
 		void OnColorModeBarBackgroundChanged();
@@ -191,11 +92,20 @@ namespace vgui
 		void OnIconOffsetChanged();
 		void OnLabelOffsetChanged();
 		void OnAmountOffsetChanged();
+
 	private:
 		MESSAGE_FUNC_PARAMS( OnChildDimentionsChanged, "ChildDimentionsChanged", data );
 
 	protected:
+		void AddPanelToHudOptions(const char* szSelf, const char* szParent);
 		FFQuantityBar* AddChild(const char *pElementName);
+
+		bool m_bDraw;
+
+		char m_szSelf[128];
+		char m_szParent[128];
+		bool m_bAddToHud;
+		bool m_bAddToHudSent;
 
 		int m_iBorderWidth;
 
@@ -203,11 +113,22 @@ namespace vgui
 		float m_flScaleX;
 		float m_flScaleY;
 
-		vgui::HFont m_hfHeaderText[3];
-		vgui::HFont m_hfHeaderIcon[3];
+		vgui::HFont m_hfText;
+		vgui::HFont m_hfHeaderText[QUANTITYPANELFONTSIZES * 3];
+		vgui::HFont m_hfHeaderIcon[QUANTITYPANELFONTSIZES * 3];
 		
 		bool m_bHeaderIconShadow;
 		bool m_bHeaderTextShadow;
+
+		bool m_bShowHeaderText;
+		bool m_bShowHeaderIcon;
+
+		int m_iHeaderTextSize;
+		int m_iHeaderIconSize;
+		
+		int m_iTeamColourAlpha;
+		Color m_ColorTeamBackground;
+		Color m_ColorBackground;
 
 		//maybe try to make variable rather than 6 max
 		//if so, update fixed variables in OnPositions function too

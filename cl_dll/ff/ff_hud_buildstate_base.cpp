@@ -69,9 +69,9 @@ static ConVar hud_buildstate_shadow_icon( "hud_buildstate_shadow_icon", "0", FCV
 static ConVar hud_buildstate_shadow_label( "hud_buildstate_shadow_label", "0", FCVAR_ARCHIVE, "Label Shadow (0 Off, 1 On)", true, 0, true, 1);
 static ConVar hud_buildstate_shadow_amount( "hud_buildstate_shadow_amount", "0", FCVAR_ARCHIVE, "Amount Shadow (0 Off, 1 On)", true, 0, true, 1);
 
-static ConVar hud_buildstate_size_icon( "hud_buildstate_size_icon", "2", FCVAR_ARCHIVE, "Icon Size (0-4)", true, 0, true, 4);
-static ConVar hud_buildstate_size_label( "hud_buildstate_size_label", "2", FCVAR_ARCHIVE, "Label Shadow (0-4)", true, 0, true, 4);
-static ConVar hud_buildstate_size_amount( "hud_buildstate_size_amount", "2", FCVAR_ARCHIVE, "Amount Shadow (0-4)", true, 0, true, 4);
+static ConVar hud_buildstate_size_icon( "hud_buildstate_size_icon", "2", FCVAR_ARCHIVE, "Icon Size (0-9)", true, 0, true, 9);
+static ConVar hud_buildstate_size_label( "hud_buildstate_size_label", "2", FCVAR_ARCHIVE, "Label Shadow (0-9)", true, 0, true, 9);
+static ConVar hud_buildstate_size_amount( "hud_buildstate_size_amount", "2", FCVAR_ARCHIVE, "Amount Shadow (0-9)", true, 0, true, 9);
 
 static ConVar hud_buildstate_colorMode_bar( "hud_buildstate_colorMode_bar", "2", FCVAR_ARCHIVE, "Bar color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
 static ConVar hud_buildstate_colorMode_barBackground( "hud_buildstate_colorMode_barBackground", "2", FCVAR_ARCHIVE, "Bar Background color mode (0=Custom, 1=Stepped Intensity, 2=Faded Intensity, 3=Team Coloured)");
@@ -353,17 +353,3 @@ void CHudBuildStateBase::CheckCvars(bool updateBarPositions)
 	if(updateBarPositions)
 		UpdateQBPositions();
 }
-
-void CHudBuildStateBase::ApplySchemeSettings( vgui::IScheme *pScheme )
-{
-	m_hfText = pScheme->GetFont( "QuantityPanel", IsProportional() );
-	
-	SetPaintBackgroundType(2);
-	SetPaintBackgroundEnabled(false);
-	SetPaintBorderEnabled(false);
-	SetPaintEnabled(false);
-
-	UpdateQBPositions();
-	BaseClass::ApplySchemeSettings( pScheme );
-}
-

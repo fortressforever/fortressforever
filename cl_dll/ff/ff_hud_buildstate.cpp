@@ -11,116 +11,13 @@
 *********************************************************************/
 
 #include "cbase.h"
-#include "ff_hud_hint.h"
-#include "hudelement.h"
-#include "hud_macros.h"
+#include "ff_hud_buildstate.h"
 
-#include <KeyValues.h>
-#include <vgui/ISurface.h>
-#include <vgui/ISystem.h>
-#include <vgui_controls/AnimationController.h>
-#include <vgui/IVGui.h>
-
-#include <vgui/ILocalize.h>
-
-#include "c_ff_buildableobjects.h"
-#include "ff_buildableobjects_shared.h"
-
-using namespace vgui;
-
-enum {
-	RESET_PIPES=0,
-	INCREMENT_PIPES,
-	DECREMENT_PIPES
-};
-
-class CHudBuildState : public CHudElement, public vgui::Panel
+CHudBuildState::CHudBuildState(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildState") 
 {
-private:
-	DECLARE_CLASS_SIMPLE(CHudBuildState, vgui::Panel);
-
-	// Stuff we need to know
-	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "ChatFont");
-
-	CPanelAnimationVarAliasType(float, text1_xpos, "text1_xpos", "8", "proportional_float");
-	CPanelAnimationVarAliasType(float, text1_ypos, "text1_ypos", "20", "proportional_float");
-	CPanelAnimationVarAliasType(float, text2_xpos, "text2_xpos", "8", "proportional_float");
-	CPanelAnimationVarAliasType(float, text2_ypos, "text2_ypos", "20", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon1_xpos, "icon1_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon1_ypos, "icon1_ypos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon1_width, "icon1_width", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon1_height, "icon1_height", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon2_xpos, "icon2_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon2_ypos, "icon2_ypos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon2_width, "icon2_width", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon2_height, "icon2_height", "1", "proportional_float");
-
-	CHudTexture	*m_pHudElementTexture;
-
-	// Results of localising strings
-	wchar_t m_szHealth[32];
-	wchar_t m_szArmor[32];
-	wchar_t m_szAmmo[32];
-	//wchar_t m_szNoRockets[32];
-
-	// Icons
-	CHudTexture *m_pHudSentryLevel1;
-	CHudTexture *m_pHudSentryLevel2;
-	CHudTexture *m_pHudSentryLevel3;
-	CHudTexture *m_pHudDispenser;
-	CHudTexture *m_pHudManCannon;
-	CHudTexture *m_pHudDetpack;
-	CHudTexture *m_pHudPipes;
-
-	// Lines of information
-	wchar_t m_szDispenser[128];
-	wchar_t m_szSentry[128];
-	wchar_t m_szManCannon[128];
-	wchar_t m_szDetpack[128];
-	wchar_t m_szPipes[128];
-
-	bool m_bDrawDispenser;
-	bool m_bDrawSentry;
-	bool m_bDrawManCannon;
-	bool m_bDrawDetpack;
-	bool m_bDrawPipes;
-
-	int m_iSentryLevel;
-    float m_flManCannonTimeoutTime;
-    float m_flDetpackDetonateTime;
-	int m_iNumPipes;
-
-	void MsgFunc_DispenserMsg(bf_read &msg);
-	void MsgFunc_SentryMsg(bf_read &msg);
-	void MsgFunc_ManCannonMsg(bf_read &msg);
-	void MsgFunc_DetpackMsg(bf_read &msg);
-	void MsgFunc_PipeMsg(bf_read &msg);
-
-public:
-	CHudBuildState(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudBuildState") 
-	{
-		SetParent(g_pClientMode->GetViewport());
-		SetHiddenBits( 0 );
-	}
-
-	~CHudBuildState();
-
-	void	Init();
-	void	VidInit();
-	void	Paint();
-
-	void	OnTick();
-};
-
-CHudBuildState *g_pBuildState = NULL;
-
-DECLARE_HUDELEMENT(CHudBuildState);
-DECLARE_HUD_MESSAGE(CHudBuildState, DispenserMsg);
-DECLARE_HUD_MESSAGE(CHudBuildState, SentryMsg);
-DECLARE_HUD_MESSAGE(CHudBuildState, ManCannonMsg);
-DECLARE_HUD_MESSAGE(CHudBuildState, DetpackMsg);
-DECLARE_HUD_MESSAGE(CHudBuildState, PipeMsg);
-
+	SetParent(g_pClientMode->GetViewport());
+	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+}
 
 CHudBuildState::~CHudBuildState()
 {
@@ -128,8 +25,6 @@ CHudBuildState::~CHudBuildState()
 
 void CHudBuildState::VidInit()
 {
-	g_pBuildState = this;
-
 	SetPaintBackgroundEnabled(false);
 
 	// Precache the icons
@@ -209,9 +104,6 @@ void CHudBuildState::Init()
 
 void CHudBuildState::OnTick() 
 {
-	m_bDrawDispenser = m_bDrawSentry = m_bDrawManCannon = m_bDrawDetpack = m_bDrawPipes = false;
-	m_iSentryLevel = 0;
-
 	if (!engine->IsInGame()) 
 		return;
 
@@ -220,6 +112,9 @@ void CHudBuildState::OnTick()
 
 	if (!pPlayer) 
 		return;
+
+	m_bDrawDispenser = m_bDrawSentry = m_bDrawManCannon = m_bDrawDetpack = m_bDrawPipes = false;
+	m_iSentryLevel = 0;
 
 	C_FFDispenser *pDispenser = pPlayer->GetDispenser();
 	C_FFSentryGun *pSentryGun = pPlayer->GetSentryGun();

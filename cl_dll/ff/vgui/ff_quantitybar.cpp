@@ -20,7 +20,7 @@
 #include "tier0/memdbgon.h"
 
 
-FFQuantityBar::FFQuantityBar(vgui::Panel *parent, const char *pElementName, int childId) : CHudElement(pElementName), vgui::Panel(parent, pElementName) 
+FFQuantityBar::FFQuantityBar(vgui::Panel *parent, const char *pElementName, int childId) : CHudElement(pElementName), BaseClass(parent, pElementName) 
 {
 	m_iChildId = childId;
 
@@ -35,12 +35,21 @@ FFQuantityBar::FFQuantityBar(vgui::Panel *parent, const char *pElementName, int 
 
 	SetBarOrientation(ORIENTATION_HORIZONTAL);
 
-	m_iTextAlignLabel = TEXTALIGN_RIGHT;
-	m_iTextAlignAmount = TEXTALIGN_CENTER;
+	m_iAlignHLabel = ALIGN_RIGHT;
+	m_iAlignHAmount = ALIGN_CENTER;
+	m_iAlignHIcon = ALIGN_CENTER;
+
+	m_iAlignVLabel = ALIGN_MIDDLE;
+	m_iAlignVAmount = ALIGN_MIDDLE;
+	m_iAlignVIcon = ALIGN_MIDDLE;
 
 	SetIconOffset(5,0);
 	SetLabelOffset(-5, 0);
 	SetAmountOffset(35, 0);
+	
+	SetIconSize(3);
+	SetLabelSize(3);
+	SetAmountSize(3);
 
 	SetIntensityControl(20,50,80,100);
 	SetIntensityAmountScaled(false);
@@ -79,65 +88,34 @@ FFQuantityBar::FFQuantityBar(vgui::Panel *parent, const char *pElementName, int 
 
 void FFQuantityBar::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
-	//the non scaled fonts are used for positioning calculations
-	//for 'simplicity' and consistency everything is calculated as if in 640x480
-
-	//decided I'll make the text size variable too
-	//size*3 then offset for shadow and non proportional
-
 	vgui::HScheme QuantityBarScheme = vgui::scheme()->LoadSchemeFromFile("resource/QuantityPanelScheme.res", "QuantityPanelScheme");
 	vgui::IScheme *qbScheme = vgui::scheme()->GetIScheme(QuantityBarScheme);
 			
-	m_hfQuantityBarText[0] = qbScheme->GetFont( "QuantityBar0", true );
-	m_hfQuantityBarText[1] = qbScheme->GetFont( "QuantityBarShadow0", true );
-	m_hfQuantityBarText[2] = qbScheme->GetFont( "QuantityBar0", false );
-	m_hfQuantityBarText[3] = qbScheme->GetFont( "QuantityBar1", true );
-	m_hfQuantityBarText[4] = qbScheme->GetFont( "QuantityBarShadow1", true );
-	m_hfQuantityBarText[5] = qbScheme->GetFont( "QuantityBar1", false );
-	m_hfQuantityBarText[6] = qbScheme->GetFont( "QuantityBar2", true );
-	m_hfQuantityBarText[7] = qbScheme->GetFont( "QuantityBarShadow2", true );
-	m_hfQuantityBarText[8] = qbScheme->GetFont( "QuantityBar2", false );
-	m_hfQuantityBarText[9] = qbScheme->GetFont( "QuantityBar3", true );
-	m_hfQuantityBarText[10] = qbScheme->GetFont( "QuantityBarShadow3", true );
-	m_hfQuantityBarText[11] = qbScheme->GetFont( "QuantityBar3", false );
-	m_hfQuantityBarText[12] = qbScheme->GetFont( "QuantityBar4", true );
-	m_hfQuantityBarText[13] = qbScheme->GetFont( "QuantityBarShadow4", true );
-	m_hfQuantityBarText[14] = qbScheme->GetFont( "QuantityBar4", false );
-
-
-	m_hfQuantityBarIcon[0] = qbScheme->GetFont( "QuantityBarIcon0", true );
-	m_hfQuantityBarIcon[1] = qbScheme->GetFont( "QuantityBarIconShadow0", true );
-	m_hfQuantityBarIcon[2] = qbScheme->GetFont( "QuantityBarIcon0", false );
-	m_hfQuantityBarIcon[3] = qbScheme->GetFont( "QuantityBarIcon1", true );
-	m_hfQuantityBarIcon[4] = qbScheme->GetFont( "QuantityBarIconShadow1", true );
-	m_hfQuantityBarIcon[5] = qbScheme->GetFont( "QuantityBarIcon1", false );
-	m_hfQuantityBarIcon[6] = qbScheme->GetFont( "QuantityBarIcon2", true );
-	m_hfQuantityBarIcon[7] = qbScheme->GetFont( "QuantityBarIconShadow2", true );
-	m_hfQuantityBarIcon[8] = qbScheme->GetFont( "QuantityBarIcon2", false );
-	m_hfQuantityBarIcon[9] = qbScheme->GetFont( "QuantityBarIcon3", true );
-	m_hfQuantityBarIcon[10] = qbScheme->GetFont( "QuantityBarIconShadow3", true );
-	m_hfQuantityBarIcon[11] = qbScheme->GetFont( "QuantityBarIcon3", false );
-	m_hfQuantityBarIcon[12] = qbScheme->GetFont( "QuantityBarIcon4", true );
-	m_hfQuantityBarIcon[13] = qbScheme->GetFont( "QuantityBarIconShadow4", true );
-	m_hfQuantityBarIcon[14] = qbScheme->GetFont( "QuantityBarIcon4", false );
-
-	m_hfQuantityBarGlyph[0] = qbScheme->GetFont( "QuantityBarGlyph0", true );
-	m_hfQuantityBarGlyph[1] = qbScheme->GetFont( "QuantityBarGlyphShadow0", true );
-	m_hfQuantityBarGlyph[2] = qbScheme->GetFont( "QuantityBarGlyph0", false );
-	m_hfQuantityBarGlyph[3] = qbScheme->GetFont( "QuantityBarGlyph1", true );
-	m_hfQuantityBarGlyph[4] = qbScheme->GetFont( "QuantityBarGlyphShadow1", true );
-	m_hfQuantityBarGlyph[5] = qbScheme->GetFont( "QuantityBarGlyph1", false );
-	m_hfQuantityBarGlyph[6] = qbScheme->GetFont( "QuantityBarGlyph2", true );
-	m_hfQuantityBarGlyph[7] = qbScheme->GetFont( "QuantityBarGlyphShadow2", true );
-	m_hfQuantityBarGlyph[8] = qbScheme->GetFont( "QuantityBarGlyph2", false );
-	m_hfQuantityBarGlyph[9] = qbScheme->GetFont( "QuantityBarGlyph3", true );
-	m_hfQuantityBarGlyph[10] = qbScheme->GetFont( "QuantityBarGlyphShadow3", true );
-	m_hfQuantityBarGlyph[11] = qbScheme->GetFont( "QuantityBarGlyph3", false );
-	m_hfQuantityBarGlyph[12] = qbScheme->GetFont( "QuantityBarGlyph4", true );
-	m_hfQuantityBarGlyph[13] = qbScheme->GetFont( "QuantityBarGlyphShadow4", true );
-	m_hfQuantityBarGlyph[14] = qbScheme->GetFont( "QuantityBarGlyph4", false );
-
+	//the non scaled fonts are used for positioning calculations
+	//for 'simplicity' and consistency everything is calculated as if in 640x480
+	//decided I'll make the text size variable too
+	//size*3 then offset for shadow and non proportional
+	for(int i = 0; i < QUANTITYBARFONTSIZES; ++i)
+	{
+		m_hfQuantityBarText[i*3] = qbScheme->GetFont( VarArgs("QuantityBar%d",i), true );
+		m_hfQuantityBarText[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityBarShadow%d",i), true );
+		m_hfQuantityBarText[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityBar%d",i), false );
+	}	
+	for(int i = 0; i < QUANTITYBARICONSIZES; ++i)
+	{
+		m_hfQuantityBarIcon[i*3] = qbScheme->GetFont( VarArgs("QuantityBarIcon%d",i), true );
+		m_hfQuantityBarIcon[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityBarIconShadow%d",i), true );
+		m_hfQuantityBarIcon[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityBarIcon%d",i), false );
+		m_hfQuantityBarGlyph[i*3] = qbScheme->GetFont( VarArgs("QuantityBarGlyph%d",i), true );
+		m_hfQuantityBarGlyph[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityBarGlyphShadow%d",i), true );
+		m_hfQuantityBarGlyph[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityBarGlyph%d",i), false );
+	}
 	SetBorder(pScheme->GetBorder("ScoreBoardItemBorder"));
+
+	SetPaintBackgroundEnabled(true);
+	SetPaintBackgroundType(2);
+	SetPaintBorderEnabled(false);
+	SetPaintEnabled(true);
 
  	BaseClass::ApplySchemeSettings( pScheme );
 }
@@ -360,10 +338,15 @@ void FFQuantityBar::SetAmountOffset(int amountOffsetX, int amountOffsetY)
 }
 
 int FFQuantityBar::GetAmount() {return m_iAmount; }
-
-void FFQuantityBar::SetLabelTextAlignment(int iLabelTextAlign) { m_iTextAlignLabel = iLabelTextAlign; RecalculateLabelPosition(); }
-void FFQuantityBar::SetAmountTextAlignment(int iAmountTextAlign) { m_iTextAlignAmount = iAmountTextAlign; RecalculateAmountPosition(); }
-
+	
+void FFQuantityBar::SetLabelAlignmentHorizontal(int iAlignHLabel) { m_iAlignHLabel = iAlignHLabel; RecalculateLabelPosition(); }
+void FFQuantityBar::SetAmountAlignmentHorizontal(int iAlignHAmount) { m_iAlignHAmount = iAlignHAmount; RecalculateAmountPosition(); }
+void FFQuantityBar::SetIconAlignmentHorizontal(int iAlignHIcon) { m_iAlignHIcon = iAlignHIcon; RecalculateIconPosition(); }
+	
+void FFQuantityBar::SetLabelAlignmentVertical(int iAlignVLabel) { m_iAlignVLabel = iAlignVLabel; RecalculateLabelPosition(); }
+void FFQuantityBar::SetAmountAlignmentVertical(int iAlignVAmount) { m_iAlignVAmount = iAlignVAmount; RecalculateAmountPosition(); }
+void FFQuantityBar::SetIconAlignmentVertical(int iAlignVIcon) { m_iAlignVIcon = iAlignVIcon; RecalculateIconPosition(); }
+	
 void FFQuantityBar::SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale)
 {
 	m_iIntensityRed = iRed;
@@ -465,23 +448,23 @@ void FFQuantityBar::GetPanelPositioningData(int& iWidth, int& iHeight, int& iBar
 void FFQuantityBar::RecalculateIconPosition()
 {
 	if(m_bIconFontGlyph)
-		CalculateTextAlignmentOffset(m_iIconAlignmentOffsetX, m_iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, TEXTALIGN_CENTER, m_hfQuantityBarGlyph[m_iSizeIcon*3 + 2], m_wszIcon);
+		CalculateTextAlignmentOffset(m_iIconAlignmentOffsetX, m_iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarGlyph[m_iSizeIcon*3 + 2], m_wszIcon);
 	else
-		CalculateTextAlignmentOffset(m_iIconAlignmentOffsetX, m_iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, TEXTALIGN_CENTER, m_hfQuantityBarIcon[m_iSizeIcon*3 + 2], m_wszIcon);
+		CalculateTextAlignmentOffset(m_iIconAlignmentOffsetX, m_iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarIcon[m_iSizeIcon*3 + 2], m_wszIcon);
 	m_iIconPosX = m_iLeft + m_iOffsetXIcon + m_iIconAlignmentOffsetX;
 	m_iIconPosY = m_iTop + m_iOffsetYIcon + m_iIconAlignmentOffsetY;
 }
 
 void FFQuantityBar::RecalculateLabelPosition()
 {
-	CalculateTextAlignmentOffset(m_iLabelAlignmentOffsetX, m_iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iTextAlignLabel, m_hfQuantityBarText[m_iSizeLabel*3 + 2], m_wszLabel);
+	CalculateTextAlignmentOffset(m_iLabelAlignmentOffsetX, m_iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iAlignHLabel, m_iAlignVLabel, m_hfQuantityBarText[m_iSizeLabel*3 + 2], m_wszLabel);
 	m_iLabelPosX = m_iLeft + m_iOffsetXLabel + m_iLabelAlignmentOffsetX;
 	m_iLabelPosY = m_iTop + m_iOffsetYLabel + m_iLabelAlignmentOffsetY;
 }
 
 void FFQuantityBar::RecalculateAmountPosition()
 {
-	CalculateTextAlignmentOffset(m_iAmountAlignmentOffsetX, m_iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iTextAlignAmount, m_hfQuantityBarText[m_iSizeAmount*3 + 2], m_wszAmountString);
+	CalculateTextAlignmentOffset(m_iAmountAlignmentOffsetX, m_iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarText[m_iSizeAmount*3 + 2], m_wszAmountString);
 	m_iAmountPosX = m_iLeft + m_iOffsetXAmount + m_iAmountAlignmentOffsetX;
 	m_iAmountPosY = m_iTop + m_iOffsetYAmount + m_iAmountAlignmentOffsetY;
 }
@@ -489,7 +472,6 @@ void FFQuantityBar::RecalculateAmountPosition()
 void FFQuantityBar::Paint()
 {
 	// Set text position based on alignment & text
-
 	if(m_bShowBarBorder)
 	{
 		vgui::surface()->DrawSetColor( m_ColorBarBorder );
@@ -553,6 +535,8 @@ void FFQuantityBar::Paint()
 		vgui::surface()->DrawSetTextPos(m_iAmountPosX * m_flScale, m_iAmountPosY * m_flScale);
 		vgui::surface()->DrawUnicodeString( m_wszAmountString );
 	}
+
+	BaseClass::Paint();
 }
 
 void FFQuantityBar::RecalculateQuantity()
@@ -677,21 +661,33 @@ void FFQuantityBar::RecalculateColor(int colorMode, Color &color, Color &colorCu
 		color = colorCustom;
 }
 
-void FFQuantityBar::CalculateTextAlignmentOffset(int &outX, int &outY, int &iWide, int &iTall, int iAlignmentMode, vgui::HFont hfFont, wchar_t* wszString)
+void FFQuantityBar::CalculateTextAlignmentOffset(int &outX, int &outY, int &iWide, int &iTall, int iAlignH, int iAlignV, vgui::HFont hfFont, wchar_t* wszString)
 {
 	vgui::surface()->GetTextSize(hfFont, wszString, iWide, iTall);
 
-	outY = (m_iBarHeight - iTall) / 2;
-	switch(iAlignmentMode)
+	switch(iAlignH)
 	{
-	case TEXTALIGN_CENTER:
+	case ALIGN_CENTER:
 		outX = - iWide/2;
 		break;
-	case TEXTALIGN_RIGHT:
+	case ALIGN_RIGHT:
 		outX = - iWide;
 		break;
-	case TEXTALIGN_LEFT:
+	case ALIGN_LEFT:
 	default:
 		outX = 0;
+	}
+
+	switch(iAlignV)
+	{
+	case ALIGN_MIDDLE:
+		outY = - iTall/2;
+		break;
+	case ALIGN_BOTTOM:
+		outY = - iTall;
+		break;
+	case ALIGN_TOP:
+	default:
+		outY = 0;
 	}
 }

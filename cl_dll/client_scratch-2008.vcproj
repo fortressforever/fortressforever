@@ -4676,6 +4676,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_buildstate_sentry.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_buildtimer.cpp"
 				>
 			</File>
@@ -4777,14 +4781,6 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_objectiveicon.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_quantitybar.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_quantitybar.h"
 				>
 			</File>
 			<File
@@ -4940,6 +4936,14 @@
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_panel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitybar.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitybar.h"
 					>
 				</File>
 				<File

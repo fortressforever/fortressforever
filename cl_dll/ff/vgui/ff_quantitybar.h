@@ -9,6 +9,13 @@
 	
 	purpose:	Customisable Quanitity indicator
 *********************************************************************/
+
+#ifndef FF_QUANTITYBAR_H
+#define FF_QUANTITYBAR_H
+
+#define QUANTITYBARFONTSIZES 10
+#define QUANTITYBARICONSIZES 15
+
 #include "cbase.h"
 #include "hudelement.h"
 #include "hud_macros.h"
@@ -37,10 +44,16 @@ public:
 		COLOR_MODE_TEAMCOLORED
 	};
 
+	enum AlignmentHorizontal {
+		ALIGN_LEFT=0,
+		ALIGN_CENTER,
+		ALIGN_RIGHT
+	};
+
 	enum TextAlignment {
-		TEXTALIGN_LEFT=0,
-		TEXTALIGN_CENTER,
-		TEXTALIGN_RIGHT
+		ALIGN_TOP=0,
+		ALIGN_MIDDLE,
+		ALIGN_BOTTOM
 	};
 
 	enum OrientationMode {
@@ -69,8 +82,12 @@ public:
 	void SetBarBorderWidth(int iBarBorderWidth);
 	void SetBarOrientation(int iOrientation);
 
-	void SetLabelTextAlignment(int iLabelTextAlign);
-	void SetAmountTextAlignment(int iAmountTextAlign);
+	void SetLabelAlignmentHorizontal(int iAlignHLabel);
+	void SetAmountAlignmentHorizontal(int iAlignHAmount);
+	void SetIconAlignmentHorizontal(int iAlignHIcon);
+	void SetLabelAlignmentVertical(int iAlignVLabel);
+	void SetAmountAlignmentVertical(int iAlignVAmount);
+	void SetIconAlignmentVertical(int iAlignVIcon);
 
 	void ShowBar(bool bShowBar);
 	void ShowBarBorder(bool bShowBarBorder);
@@ -121,7 +138,7 @@ public:
 	virtual void SetPos(int iPositionX, int iPositionY);
 
 protected:
-	void CalculateTextAlignmentOffset(int &outX, int &outY, int &iWide, int &iTall, int iAlignmentMode, vgui::HFont hfFont, wchar_t* wszString);
+	void CalculateTextAlignmentOffset(int &outX, int &outY, int &iWide, int &iTall, int iAlignH, int iAlignV, vgui::HFont hfFont, wchar_t* wszString);
 	void RecalculateQuantity();
 	void RecalculateIconPosition();
 	void RecalculateLabelPosition();
@@ -131,9 +148,9 @@ protected:
 
  	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 	
-	vgui::HFont m_hfQuantityBarText[15];
-	vgui::HFont m_hfQuantityBarIcon[15];
-	vgui::HFont m_hfQuantityBarGlyph[15];
+	vgui::HFont m_hfQuantityBarText[QUANTITYBARFONTSIZES * 3];
+	vgui::HFont m_hfQuantityBarIcon[QUANTITYBARICONSIZES * 3];
+	vgui::HFont m_hfQuantityBarGlyph[QUANTITYBARICONSIZES * 3];
 
 	bool m_bAmountFontShadow;
 	bool m_bLabelFontShadow;
@@ -185,8 +202,13 @@ protected:
 	int m_iBarBorderWidth;
 	int m_iBarOrientation;
 
-	int m_iTextAlignLabel;
-	int m_iTextAlignAmount;
+	int m_iAlignHLabel;
+	int m_iAlignHAmount;
+	int m_iAlignHIcon;
+
+	int m_iAlignVLabel;
+	int m_iAlignVAmount;
+	int m_iAlignVIcon;
 
 	int m_iOffsetXIcon;
 	int m_iOffsetYIcon;
@@ -246,3 +268,4 @@ protected:
 	int m_ColorModeLabel;
 	int m_ColorModeAmount;
 };
+#endif
