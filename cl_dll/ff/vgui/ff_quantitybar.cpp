@@ -665,6 +665,7 @@ void FFQuantityBar::CalculateTextAlignmentOffset(int &outX, int &outY, int &iWid
 {
 	vgui::surface()->GetTextSize(hfFont, wszString, iWide, iTall);
 
+	outY = (m_iBarHeight - iTall) / 2;
 	switch(iAlignH)
 	{
 	case ALIGN_CENTER:
@@ -676,18 +677,5 @@ void FFQuantityBar::CalculateTextAlignmentOffset(int &outX, int &outY, int &iWid
 	case ALIGN_LEFT:
 	default:
 		outX = 0;
-	}
-
-	switch(iAlignV)
-	{
-	case ALIGN_MIDDLE:
-		outY = - iTall/2;
-		break;
-	case ALIGN_BOTTOM:
-		outY = - iTall;
-		break;
-	case ALIGN_TOP:
-	default:
-		outY = 0;
 	}
 }
