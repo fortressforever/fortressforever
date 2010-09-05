@@ -85,7 +85,7 @@ ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "
 #define OVERPRESSURE_IGNOREFRIENDLY ffdev_overpressure_friendlyignore.GetBool()
 
 // caes: testing
-ConVar ffdev_overpressure_caes( "ffdev_overpressure_caes", "1", FCVAR_REPLICATED );
+ConVar ffdev_overpressure_caes( "ffdev_overpressure_caes", "0", FCVAR_REPLICATED );
 ConVar ffdev_overpressure_caes_radius( "ffdev_overpressure_caes_radius", "600.0", FCVAR_REPLICATED );
 ConVar ffdev_overpressure_caes_speed( "ffdev_overpressure_caes_speed", "500.0", FCVAR_REPLICATED );
 ConVar ffdev_overpressure_caes_offset( "ffdev_overpressure_caes_offset", "-4.0", FCVAR_REPLICATED );

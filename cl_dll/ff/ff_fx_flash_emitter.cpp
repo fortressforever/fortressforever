@@ -20,9 +20,10 @@
 #include "c_te_effect_dispatch.h"
 
 #define FLASH_EFFECT_MATERIAL "effects/yellowflare"
+#define RING_EFFECT_MATERIAL "sprites/lgtning.vmt"
 
 ConVar flash_on				( "ffdev_flash_on", "1", FCVAR_CHEAT, "Turn the flash effect on or off - 1 or 0." );
-ConVar flash_scale			( "ffdev_flash_scale", "512.0", FCVAR_CHEAT, "How big the flash effect gets.");
+ConVar flash_scale			( "ffdev_flash_scale", "256.0", FCVAR_CHEAT, "How big the flash effect gets.");
 ConVar flash_speed			( "ffdev_flash_speed", "0.3", FCVAR_CHEAT, "Duration of the flash effect.");
 ConVar flash_ripples		( "ffdev_flash_ripples", "1", FCVAR_CHEAT, "How many ripples the flash effect has.");
 ConVar flash_ripple_period	( "ffdev_flash_ripple_period", "0.5", FCVAR_CHEAT, "Time between ripples.");
@@ -32,6 +33,7 @@ ConVar flash_ripple_period	( "ffdev_flash_ripple_period", "0.5", FCVAR_CHEAT, "T
 //========================================================================
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheFlashEmitter )
 	CLIENTEFFECT_MATERIAL( FLASH_EFFECT_MATERIAL )
+	CLIENTEFFECT_MATERIAL( RING_EFFECT_MATERIAL )
 CLIENTEFFECT_REGISTER_END()
 
 //========================================================================
@@ -159,6 +161,29 @@ void FF_FX_FlashEffect_Callback( const CEffectData &data )
 
 		offset += flash_ripple_period.GetFloat();
 	}
+	
+	// shock wave
+	CBroadcastRecipientFilter filter;
+	filter.AddAllPlayers();
+	te->BeamRingPoint( 
+		filter, 0.0f, data.m_vOrigin,	//origin
+		1.0f,							//start radius
+		flash_scale.GetFloat(),		//end radius
+		modelinfo->GetModelIndex( RING_EFFECT_MATERIAL ),	//texture
+		0,								//halo index
+		0,								//start frame
+		0,								//framerate
+		flash_speed.GetFloat(),//life
+		16,								//width
+		0,								//spread
+		0,								//amplitude
+		255,							//r
+		255,							//g
+		255,							//b
+		255,							//a
+		0,								//speed
+		0x00000008
+		);
 }
 
 DECLARE_CLIENT_EFFECT( "FF_FlashEffect", FF_FX_FlashEffect_Callback );
