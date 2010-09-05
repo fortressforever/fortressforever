@@ -295,7 +295,7 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 		{
 			// This allows players to pass through any team object (another player or entity), includes allies
 			CFFTeam *pTeam = GetGlobalFFTeam(pPassEnt->GetTeamNumber());
-			if( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() || ( pTeam && ( pTeam->GetAllies() & ( 1 << pHandle->GetTeamNumber() ) ) ) )
+			if( pHandle->IsPlayer() && ( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() || ( pTeam && ( pTeam->GetAllies() & ( 1 << pHandle->GetTeamNumber() ) ) ) ) )
 			{
 				// If player lands on top of a team entity make sure they hit
 				Vector vecOrigin = pPassEnt->GetAbsOrigin();
