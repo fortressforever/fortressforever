@@ -26,9 +26,9 @@
 	#include "ff_player.h"
 #endif
 
-ConVar ffdev_goopgun_spread("ffdev_goopgun_spread", "0.1", FCVAR_REPLICATED, "Spread of goops");
+ConVar ffdev_goopgun_spread("ffdev_goopgun_spread", "0.12", FCVAR_REPLICATED, "Spread of goops");
 ConVar ffdev_goopgun_numprojectiles("ffdev_goopgun_numprojectiles", "12", FCVAR_REPLICATED, "Number of goops per shot");
-ConVar ffdev_goopgun_velocity("ffdev_goopgun_velocity", "1000", FCVAR_REPLICATED, "Speed of goops shot");
+ConVar ffdev_goopgun_velocity("ffdev_goopgun_velocity", "1100", FCVAR_REPLICATED, "Speed of goops shot");
 ConVar ffdev_goopgun_damage("ffdev_goopgun_damage", "6", FCVAR_REPLICATED, "Damage per goop");
 
 #define FF_GOOPGUN_SPREAD ffdev_goopgun_spread.GetFloat()

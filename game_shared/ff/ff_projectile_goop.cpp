@@ -47,7 +47,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_goop);
 
 ConVar ffdev_goop_gravity("ffdev_goop_gravity", "1.0", FCVAR_REPLICATED, ""); // used in .h
 
-ConVar ffdev_goopgun_goopsize("ffdev_goopgun_goopsize", "2", FCVAR_REPLICATED, "(int) size of bounding box, 1-5 are good values");
+ConVar ffdev_goopgun_goopsize("ffdev_goopgun_goopsize", "8", FCVAR_REPLICATED, "(int) size of bounding box, 1-5 are good values");
 ConVar ffdev_goopgun_healamount("ffdev_goopgun_healamount", "2", FCVAR_REPLICATED, "(int) health to heal per goop");
 
 #define FF_GOOP_SIZE ffdev_goopgun_goopsize.GetInt()
