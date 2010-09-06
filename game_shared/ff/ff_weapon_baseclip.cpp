@@ -14,6 +14,7 @@
 	#include "c_ff_player.h"
 
 	ConVar auto_reload("cl_autoreload", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Automatic weapon reload");
+	//ConVar reload_on_empty("cl_reload_emptyclip", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Automatically reload on empty clip");
 #else
 	#include "ff_player.h"
 #endif
@@ -334,6 +335,8 @@ void CFFWeaponBaseClip::ItemPostFrame()
 		}
 		else
 		{
+
+			// if ( reload_on_empty.GetBool() ) 
 			// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
 			if (m_iClip1 <= 0 && m_flTimeWeaponIdle < gpGlobals->curtime && m_flNextPrimaryAttack < gpGlobals->curtime)
 			{
@@ -343,28 +346,35 @@ void CFFWeaponBaseClip::ItemPostFrame()
 					return;
 				}
 			}
+			// }
 
 			// Autoreload
 			// This would be better done reading a client off the client
 			// Added: Don't do it if they are holding down fire while there is still ammo in clip
-#ifdef CLIENT_DLL
-			if( auto_reload.GetBool() )
-#else
-			if( (Q_atoi(engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ) ) ) )
-#endif
+			// Dexter: add checks for m_bInReload FIRST, this will hopefully fix StartReload being called twice(server, then client)
+			//			- which was the source of jittery animations, ammo miscounts etc between frames
+			if (!m_bInReload)
 			{
-				if (!m_bInReload && !(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
-					&& m_flNextAutoReload <= gpGlobals->curtime 
-					&& m_iClip1 < GetMaxClip1())
+#ifdef CLIENT_DLL
+				if( auto_reload.GetBool() )
+#else
+				if((Q_atoi(engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ))))
+#endif
 				{
-					if(pOwner->IsAlive())
+					if (!(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
+						&& m_flNextAutoReload <= gpGlobals->curtime 
+						&& m_iClip1 < GetMaxClip1())
 					{
-						StartReload();
+						if(pOwner->IsAlive())
+						{
+							StartReload();
+							// if(StartReload())
+							//     m_bInAutoReload = true;
+						}
 					}
 				}
 			}
-		}
-
+		}		
 		WeaponIdle();
 		return;
 	}
