@@ -126,6 +126,7 @@ typedef enum
 	// Demomen Specific
 	FF_WEAPON_GRENADELAUNCHER, 
 	FF_WEAPON_PIPELAUNCHER, 
+	FF_WEAPON_SHIELD,
 
 	// Sniper specific
 	FF_WEAPON_AUTORIFLE, 
