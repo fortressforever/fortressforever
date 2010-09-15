@@ -636,7 +636,7 @@ void CFFGameMovement::WalkMove( void )
 		if (ffdev_overpressure_slide_wearsoff.GetBool())
 		{
 			float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
-			float percent = dt / ffdev_overpressure_slide_duration.GetFloat();
+			float percent = clamp(dt / ffdev_overpressure_slide_duration.GetFloat(), 0.0f, 1.0f);
 			percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
 			accel = Lerp( percent, min(ffdev_overpressure_slide_accel.GetFloat(),sv_accelerate.GetFloat()), max(ffdev_overpressure_slide_accel.GetFloat(),sv_accelerate.GetFloat()) );
 		}
@@ -757,7 +757,7 @@ void CFFGameMovement::AirMove( void )
 		if (ffdev_overpressure_slide_wearsoff.GetBool())
 		{
 			float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
-			float percent = dt / ffdev_overpressure_slide_duration.GetFloat();
+			float percent = clamp(dt / ffdev_overpressure_slide_duration.GetFloat(), 0.0f, 1.0f);
 			percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
 			accel = Lerp( percent, min(ffdev_overpressure_slide_airaccel.GetFloat(),sv_airaccelerate.GetFloat()), max(ffdev_overpressure_slide_airaccel.GetFloat(),sv_airaccelerate.GetFloat()) );
 		}
@@ -844,7 +844,7 @@ void CFFGameMovement::Friction( void )
 			if (ffdev_overpressure_slide_wearsoff.GetBool())
 			{
 				float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
-				float percent = dt / ffdev_overpressure_slide_duration.GetFloat();
+				float percent = clamp(dt / ffdev_overpressure_slide_duration.GetFloat(), 0.0f, 1.0f);
 				percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
 				friction = Lerp( percent, min(ffdev_overpressure_slide_friction.GetFloat(),sv_friction.GetFloat()), max(ffdev_overpressure_slide_friction.GetFloat(),sv_friction.GetFloat()) );
 			}
