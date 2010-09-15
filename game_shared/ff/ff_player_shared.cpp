@@ -68,8 +68,8 @@ ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_REPL
 #define LEGSHOT_TIME 5.0f //ffdev_sniper_legshot_time.GetFloat()
 //AfterShock: radiotag time is in ff_player.cpp under RADIOTAG_DURATION
 
-ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
@@ -1309,7 +1309,7 @@ void CFFPlayer::Command_SpySmartCloak( void )
 	{
 		// Can only cloak every ffdev_spy_nextcloak seconds
 		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
-		Cloak();
+		//Cloak(); // with the new cloak, there's no reason to want to decloak yourself
 		return;
 	}
 
@@ -1422,7 +1422,7 @@ void CFFPlayer::Cloak( void )
 
 #ifdef GAME_DLL
 		//Adding the speed boost to cloak -GreenMushy
-		AddSpeedEffect( SE_CLOAK, 4, FF_CLOAKSPEED );
+		AddSpeedEffect( SE_CLOAK, 4, FF_CLOAKSPEED, SEM_BOOLEAN );
 
 		CFFLuaSC hOwnerCloak( 1, this );
 		// Find any items that we are in control of and let them know we Cloaked
