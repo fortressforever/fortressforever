@@ -491,6 +491,17 @@ protected:
 	bool m_bConcussed;
 	// ----------------------------------
 // *** ELMO 
+	
+// SQUEEK ***
+	// ----------------------------------
+	// Sliding
+public:
+	bool IsSliding( void ) const { return m_bSliding; }
+	float m_flSlidingTime;
+protected:
+	bool m_bSliding;
+	// ----------------------------------
+// *** SQUEEK
 
 	// ----------------------------------
 	// Cloak stuff

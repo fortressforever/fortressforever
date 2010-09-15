@@ -735,6 +735,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_flNextMapGuideTime ) ),
 
 	RecvPropFloat(RECVINFO(m_flConcTime)),
+	RecvPropFloat(RECVINFO(m_flSlidingTime)),
 
 	RecvPropFloat(RECVINFO(m_flSpeedModifier)),
 
@@ -777,6 +778,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropBool( RECVINFO( m_bEngyMe ) ),
 	RecvPropBool( RECVINFO( m_bAmmoMe ) ),
 	RecvPropBool( RECVINFO( m_bConcussed ) ),
+	RecvPropBool( RECVINFO( m_bSliding ) ),
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
@@ -1193,6 +1195,9 @@ C_FFPlayer::C_FFPlayer() :
 
 	m_flConcTime = 0;
 	m_bConcussed = false;
+	
+	m_flSlidingTime = 0;
+	m_bSliding = false;
 
 	m_flSpeedModifier = 1.0f;
 	
