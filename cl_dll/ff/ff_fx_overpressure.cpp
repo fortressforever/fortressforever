@@ -25,13 +25,11 @@
 #define OVERPRESSURE_EFFECT_MATERIAL "effects/yellowflare"
 #define RING_EFFECT_MATERIAL "sprites/lgtning.vmt"
 
-ConVar overpressure_particles	( "ffdev_particles_per_overpressure", "750", FCVAR_CHEAT, "The number of particles in each overpressure." );
-ConVar overpressure_scale		( "ffdev_overpressure_scale", "20.0", FCVAR_CHEAT, "How big the particles in the immunities are." );
-ConVar overpressure_speed		( "ffdev_overpressure_speed", "1.0", FCVAR_CHEAT, "Duration of the overpressure effect." );
-ConVar overpressure_particlespeed( "ffdev_overpressure_particlespeed", "200", FCVAR_CHEAT, "Velocity of the overpressure particles." );
-ConVar overpressure_particlespeed_variability( "ffdev_overpressure_particlespeed_variability", "40", FCVAR_CHEAT, "Variability in the velocity of the overpressure particles." );
-ConVar overpressure_particle_size( "ffdev_overpressure_particle_size", "2", FCVAR_CHEAT, "Velocity of the overpressure particles." );
-ConVar overpressure_magnitude	( "ffdev_overpressure_magnitude", "1000.0", FCVAR_CHEAT, "Speed the overpressure particles expand." );
+ConVar overpressure_particles	( "cl_overpressure_numparticles", "750", FCVAR_CHEAT, "The number of particles in each overpressure." );
+ConVar overpressure_speed		( "cl_overpressure_particle_lifetime", "1.0", FCVAR_CHEAT, "Duration of the overpressure effect." );
+ConVar overpressure_particlespeed( "cl_overpressure_particlespeed", "250", FCVAR_CHEAT, "Velocity of the overpressure particles." );
+ConVar overpressure_particlespeed_variability( "cl_overpressure_particlespeed_variability", "30", FCVAR_CHEAT, "Variability in the velocity of the overpressure particles." );
+ConVar overpressure_particle_size( "cl_overpressure_particle_size", "2", FCVAR_CHEAT, "Velocity of the overpressure particles." );
 
 //========================================================================
 // Client effect precache table
@@ -193,7 +191,7 @@ void FF_FX_OverpressureEffect_Callback( const CEffectData &data )
 {
 	CSmartPtr< COverpressureEmitter > overpressureEffect = COverpressureEmitter::Create( "OverpressureEffect" );
 
-	float offset = 0.0f;
+	//float offset = 0.0f;
 
 	// Add 5 particles
 	for( int i = 0; i < overpressure_particles.GetInt(); i++ )
