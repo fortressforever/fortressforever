@@ -4592,6 +4592,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_fx_overpressure.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_fx_overpressure.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_fx_railbeam.cpp"
 				>
 			</File>
@@ -5485,6 +5493,10 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_rpg.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_shield.cpp"
 				>
 			</File>
 			<File

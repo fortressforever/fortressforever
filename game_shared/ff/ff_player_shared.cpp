@@ -131,7 +131,7 @@ ConVar ffdev_cloaktime( "ffdev_cloaktime", "3", FCVAR_REPLICATED );
 //ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "5.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_SNIPER_MAXPUSH 5.5f // sniperrifle_pushmax.GetFloat()
 
-#define OVERPRESSURE_EFFECT "FF_FlashEffect"
+#define OVERPRESSURE_EFFECT "FF_OverpressureEffect"
 
 //0001279: Need convar for pipe det delay
 #define PIPE_DET_DELAY 0.55 // this is mirrored in ff_projectile_pipebomb.cpp and ff_player.cpp
