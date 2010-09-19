@@ -4791,6 +4791,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_overpressure.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_radiotag.cpp"
 				>
 			</File>
