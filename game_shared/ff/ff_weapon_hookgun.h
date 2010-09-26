@@ -45,6 +45,7 @@ public:
 	virtual bool		Holster(CBaseCombatWeapon *pSwitchingTo);
 	virtual bool		SendWeaponAnim(int iActivity);
 	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_HOOKGUN; }
+	void				RemoveHook();
 
 	bool	m_fStartedReloading;
 	CFFProjectileHook *m_pHook;

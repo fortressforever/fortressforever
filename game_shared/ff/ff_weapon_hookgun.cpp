@@ -121,12 +121,8 @@ void CFFWeaponHookGun::ItemPostFrame()
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		if ( m_pHook ) // if hook exists just delete it and dont allow firing until they release the attack key
-		{
-			m_pHook->RemoveHook();
-			m_pHook = NULL;
-			//m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f; //enable refiring
-		}
+		RemoveHook();
+
 		/*else*/ if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
 		{
 			if (!pOwner->GetAmmoCount(m_iPrimaryAmmoType))
@@ -287,11 +283,7 @@ bool CFFWeaponHookGun::SendWeaponAnim(int iActivity)
 //-----------------------------------------------------------------------------
 bool CFFWeaponHookGun::Holster(CBaseCombatWeapon *pSwitchingTo) 
 {
-	if ( m_pHook ) // Remove any hooks if you change weapon
-	{
-		m_pHook->RemoveHook();
-		m_pHook = NULL;
-	}
+	RemoveHook();
 
 	return BaseClass::Holster(pSwitchingTo);
 }
@@ -304,4 +296,16 @@ void CFFWeaponHookGun::Precache()
 	PrecacheScriptSound("hookgun.rope_snap");
 	PrecacheScriptSound("hookgun.winch");
 	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFWeaponHookGun::RemoveHook() 
+{
+	if ( m_pHook ) // Remove any hooks
+	{
+		m_pHook->RemoveHook();
+		m_pHook = NULL;
+	}
 }

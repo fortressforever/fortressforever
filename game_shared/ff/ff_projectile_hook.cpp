@@ -61,7 +61,7 @@ ConVar ffdev_hook_swing_break_v( "ffdev_hook_swing_break_v", "0.8", FCVAR_REPLIC
 ConVar ffdev_hook_swing_break_h( "ffdev_hook_swing_break_h", "0.7071", FCVAR_REPLICATED, "horizontal plane release system" );
 ConVar ffdev_hook_swing1_speed( "ffdev_hook_swing1_speed", "650.0", FCVAR_REPLICATED, "pull speed when no force on rope" );
 ConVar ffdev_hook_swing1_falloff( "ffdev_hook_swing1_falloff", "0.1", FCVAR_REPLICATED, "rate pull speed falls off as force on rope increases" );
-ConVar ffdev_hook_swing1_falloff_power( "ffdev_hook_swing1_falloff_power", "1.0", FCVAR_REPLICATED, "pull speed = ffdev_hook_swing1_speed - ffdev_hook_swing1_falloff * ( force_on_rope ^ ffdev_hook_swing1_falloff_power )" );
+ConVar ffdev_hook_swing1_falloff_power( "ffdev_hook_swing1_falloff_power", "1.1", FCVAR_REPLICATED, "pull speed = ffdev_hook_swing1_speed - ffdev_hook_swing1_falloff * ( force_on_rope ^ ffdev_hook_swing1_falloff_power )" );
 ConVar ffdev_hook_swing2_speed( "ffdev_hook_swing2_speed", "750.0", FCVAR_REPLICATED, "max pull speed cap (and horizontal pull speed when on ground)" );
 ConVar ffdev_hook_swing2_speed_v( "ffdev_hook_swing2_speed_v", "100.0", FCVAR_REPLICATED, "vertical pull speed when on ground" );
 ConVar ffdev_hook_swing2_force( "ffdev_hook_swing2_force", "2000.0", FCVAR_REPLICATED, "constant force applied on rope when in air" );
@@ -560,6 +560,10 @@ void CFFProjectileHook::HookThink()
 //----------------------------------------------------------------------------
 void CFFProjectileHook::RemoveHook() 
 {
+	SetThink( NULL );
+	SetNextThink( gpGlobals->curtime );
+	SetTouch( NULL );
+
 #ifdef GAME_DLL
 	if ( m_hRope )
 	{

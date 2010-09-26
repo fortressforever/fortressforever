@@ -15,6 +15,7 @@
 #include "ff_weapon_sniperrifle.h"
 #include "ff_weapon_assaultcannon.h"
 #include "ff_projectile_hook.h"
+#include "ff_weapon_hookgun.h"
 #include "movevars_shared.h"
 
 #ifdef CLIENT_DLL
@@ -1622,6 +1623,22 @@ else
 				if (ffdev_overpressure_slide.GetBool())
 					pPlayer->StartSliding( ffdev_overpressure_slide_duration.GetFloat(), ffdev_overpressure_slide_duration.GetFloat() );
 
+				CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+
+				if (!pWeapon)
+					return;
+
+				FFWeaponID weaponID = pWeapon->GetWeaponID();
+
+				// break active hooks
+				if (weaponID == FF_WEAPON_HOOKGUN)
+				{
+					CFFWeaponHookGun *pHookGun = dynamic_cast< CFFWeaponHookGun * > (pWeapon);
+					if (pHookGun && pHookGun->m_pHook)
+					{
+						pHookGun->RemoveHook();
+					}
+				}
 
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
