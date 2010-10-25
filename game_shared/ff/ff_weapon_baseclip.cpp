@@ -113,6 +113,7 @@ void CFFWeaponBaseClip::FinishReload()
 		return;
 
 	m_bInReload = false;
+	m_bNeedsReloadStarted = false;
 
 	// Finish reload animation
 	SendWeaponAnim(ACT_SHOTGUN_RELOAD_FINISH);
@@ -288,6 +289,13 @@ void CFFWeaponBaseClip::ItemPostFrame()
 			}
 		}
 	}
+	else if(m_bNeedsReloadStarted)
+	{
+		if(StartReload())
+			m_bNeedsReloadStarted = false;
+		else
+			Assert("StartReload() failed after autoreload triggered!");
+	}
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
@@ -360,6 +368,7 @@ void CFFWeaponBaseClip::ItemPostFrame()
 #else
 				if((Q_atoi(engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ))))
 #endif
+
 				{
 					if (!(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
 						&& m_flNextAutoReload <= gpGlobals->curtime 
@@ -367,9 +376,7 @@ void CFFWeaponBaseClip::ItemPostFrame()
 					{
 						if(pOwner->IsAlive())
 						{
-							StartReload();
-							// if(StartReload())
-							//     m_bInAutoReload = true;
+							m_bNeedsReloadStarted = true;
 						}
 					}
 				}
