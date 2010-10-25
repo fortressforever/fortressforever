@@ -121,10 +121,17 @@ bool CHudMenu::ShouldDraw( void )
 	bool draw = CHudElement::ShouldDraw() && m_bMenuDisplayed;
 	if ( !draw )
 		return false;
+	
 
+	if ( m_flExpireTime > 0 && m_flExpireTime <= gpGlobals->realtime )
+	{
+		engine->ClientCmd( "menuselect 0\n" );
+		m_bMenuDisplayed = false;
+		return false;
+	}
 	// check for if menu is set to disappear
 	if ( m_flShutoffTime > 0 && m_flShutoffTime <= gpGlobals->realtime )
-	{  
+	{
 		// times up, shutoff
 		m_bMenuDisplayed = false;
 		return false;
@@ -372,6 +379,7 @@ void CHudMenu::HideMenu( void )
 void CHudMenu::ShowMenu( const char * menuName, int validSlots )
 {
 	m_flShutoffTime = -1;
+	m_flExpireTime = -1;
 	m_bitsValidSlots = validSlots;
 	m_fWaitingForMore = 0;
 
@@ -408,12 +416,11 @@ void CHudMenu::MsgFunc_ShowMenu( bf_read &msg)
 
 	if ( DisplayTime > 0 )
 	{
-		m_flShutoffTime = m_flOpenCloseTime + DisplayTime + gpGlobals->realtime;
-
+		m_flShutoffTime = m_flExpireTime = m_flOpenCloseTime + DisplayTime + gpGlobals->realtime;
 	}
 	else
 	{
-		m_flShutoffTime = -1;
+		m_flShutoffTime = m_flExpireTime = -1;
 	}
 
 	if ( m_bitsValidSlots )

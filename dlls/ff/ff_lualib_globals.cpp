@@ -35,10 +35,14 @@ extern "C"
 #undef min
 #undef max
 
+#define MAX_MENU_LEN 240
+
 #include "luabind/luabind.hpp"
 #include "luabind/iterator_policy.hpp"
 
 #include "ff_scheduleman.h"
+#include "ff_timerman.h"
+#include "ff_menuman.h"
 
 #include "omnibot_interface.h"
 
@@ -1839,6 +1843,54 @@ namespace FFLib
 			}
 		}
 	}
+	
+	void AddTimer( const char *pszIdentifier, int iStartValue, float flSpeed )
+	{
+		if( !pszIdentifier )
+			return;
+
+		_timerman.AddTimer( pszIdentifier, iStartValue, flSpeed );
+	}
+	
+	void RemoveTimer( const char *pszIdentifier )
+	{
+		if( !pszIdentifier )
+			return;
+
+		_timerman.RemoveTimer( pszIdentifier );
+	}
+
+	float GetTimerTime( const char *pszIdentifier )
+	{
+		if( !pszIdentifier )
+			return 0;
+
+		return _timerman.GetTime( pszIdentifier );
+	}
+	
+	void AddHudTimer( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y )
+	{
+		if( !pPlayer || !pszIdentifier )
+			return;
+
+		FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ) );
+	}
+	
+	void AddHudTimer( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y, int iAlign )
+	{
+		if( !pPlayer || !pszIdentifier )
+			return;
+
+		FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ), iAlign );
+	}
+	
+	void AddHudTimer( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pPlayer || !pszIdentifier )
+			return;
+
+		FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ), iAlignX, iAlignY );
+	}
 
 	void AddHudTimer( CFFPlayer *pPlayer, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y )
 	{
@@ -1862,6 +1914,60 @@ namespace FFLib
 			return;
 
 		FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed, iAlignX, iAlignY );
+	}
+	
+	void AddHudTimerToTeam( CFFTeam *pTeam, const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ) );
+			}
+		}
+	}
+	
+	void AddHudTimerToTeam( CFFTeam *pTeam, const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y, int iAlign )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ), iAlign );
+			}
+		}
+	}
+	
+	void AddHudTimerToTeam( CFFTeam *pTeam, const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+					FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ), iAlignX, iAlignY );
+			}
+		}
 	}
 
 	void AddHudTimerToTeam( CFFTeam *pTeam, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y )
@@ -1914,6 +2020,57 @@ namespace FFLib
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
 				if ( pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
 					FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed, iAlignX, iAlignY );
+			}
+		}
+	}
+	
+	void AddHudTimerToAll( const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ) );
+			}
+		}
+	}
+	
+	void AddHudTimerToAll( const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y, int iAlign )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ), iAlign );
+			}
+		}
+	}
+	
+	void AddHudTimerToAll( const char *pszIdentifier, const char *pszTimerIdentifier, int x, int y, int iAlignX, int iAlignY )
+	{
+		if( !pszIdentifier )
+			return;
+
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, _timerman.GetTime( pszTimerIdentifier ), _timerman.GetIncrement( pszTimerIdentifier ), iAlignX, iAlignY );
 			}
 		}
 	}
@@ -2218,6 +2375,108 @@ namespace FFLib
 			g_pGameRules->SetGameDescription( szGameDescription );
 	}
 
+	void ShowMenuToPlayer( CFFPlayer *pPlayer, const char *szMenuName )
+	{
+		if (!pPlayer)
+			return;
+
+		CSingleUserRecipientFilter filter( pPlayer );
+		_menuman.DisplayLuaMenu( filter, szMenuName );
+	}
+
+	void ShowMenuToTeam( int iTeam, const char *szMenuName )
+	{
+		// send the sentence on each client
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+			
+			if(pPlayer->GetTeamNumber() == iTeam)
+				ShowMenuToPlayer( pPlayer, szMenuName );
+		}
+	}
+
+	void ShowMenu( const char *szMenuName )
+	{
+		// send the sentence on each client
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			ShowMenuToPlayer( pPlayer, szMenuName );
+		}
+	}
+	
+	void CreateMenu( const char *szMenuName )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenu( szMenuName );
+	}
+	
+	void CreateMenu( const char *szMenuName, float flDisplayTime )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenu( szMenuName, flDisplayTime );
+	}
+	
+	void CreateMenu( const char *szMenuName, const char *szMenuTitle )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenu( szMenuName, szMenuTitle );
+	}
+	
+	void CreateMenu( const char *szMenuName, const char *szMenuTitle, float flDisplayTime )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenu( szMenuName, szMenuTitle, flDisplayTime );
+	}
+	
+	void DestroyMenu( const char *szMenuName )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.RemoveLuaMenu( szMenuName );
+	}
+	
+	void SetMenuTitle( const char *szMenuName, const char *szMenuTitle )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.SetLuaMenuTitle( szMenuName, szMenuTitle );
+	}
+	
+	void AddMenuOption( const char *szMenuName, int iSlot, const char *szOptionText )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.AddLuaMenuOption( szMenuName, iSlot, szOptionText );
+	}
+
+	void RemoveMenuOption( const char *szMenuName, int iSlot )
+	{
+		if (!szMenuName[0])
+			return;
+
+		_menuman.RemoveLuaMenuOption( szMenuName, iSlot );
+	}
+
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -2271,12 +2530,24 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("AddHudTextToAll",			(void(*)(const char *, const char *, int, int))&FFLib::AddHudTextToAll),
 		def("AddHudTextToAll",			(void(*)(const char *, const char *, int, int, int))&FFLib::AddHudTextToAll),
 		def("AddHudTextToAll",			(void(*)(const char *, const char *, int, int, int, int))&FFLib::AddHudTextToAll),
+		def("AddTimer",					&FFLib::AddTimer),
+		def("RemoveTimer",				&FFLib::RemoveTimer),
+		def("GetTimerTime",				&FFLib::GetTimerTime),
+		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, const char *, int, int))&FFLib::AddHudTimer),
+		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int))&FFLib::AddHudTimer),
+		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int))&FFLib::AddHudTimer),
 		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, int, float, int, int))&FFLib::AddHudTimer),
 		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, int, float, int, int, int))&FFLib::AddHudTimer),
 		def("AddHudTimer",				(void(*)(CFFPlayer *, const char *, int, float, int, int, int, int))&FFLib::AddHudTimer),
+		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, const char *, int, int))&FFLib::AddHudTimerToTeam),
+		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, const char *, int, int, int))&FFLib::AddHudTimerToTeam),
+		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, const char *, int, int, int, int))&FFLib::AddHudTimerToTeam),
 		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, int, float, int, int))&FFLib::AddHudTimerToTeam),
 		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, int, float, int, int, int))&FFLib::AddHudTimerToTeam),
 		def("AddHudTimerToTeam",		(void(*)(CFFTeam *, const char *, int, float, int, int, int, int))&FFLib::AddHudTimerToTeam),
+		def("AddHudTimerToAll",			(void(*)(const char *, const char *, int, int))&FFLib::AddHudTimerToAll),
+		def("AddHudTimerToAll",			(void(*)(const char *, const char *, int, int, int))&FFLib::AddHudTimerToAll),
+		def("AddHudTimerToAll",			(void(*)(const char *, const char *, int, int, int, int))&FFLib::AddHudTimerToAll),
 		def("AddHudTimerToAll",			(void(*)(const char *, int, float, int, int))&FFLib::AddHudTimerToAll),
 		def("AddHudTimerToAll",			(void(*)(const char *, int, float, int, int, int))&FFLib::AddHudTimerToAll),
 		def("AddHudTimerToAll",			(void(*)(const char *, int, float, int, int, int, int))&FFLib::AddHudTimerToAll),
@@ -2400,6 +2671,17 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("UpdateObjectiveIcon",		&FFLib::UpdateObjectiveIcon),
 		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon),
 		def("DisplayMessage",			&FFLib::DisplayMessage),
-		def("SetGameDescription",		&FFLib::SetGameDescription)
+		def("SetGameDescription",		&FFLib::SetGameDescription),
+		def("ShowMenuToPlayer",			&FFLib::ShowMenuToPlayer),
+		def("ShowMenuToTeam",			&FFLib::ShowMenuToTeam),
+		def("ShowMenu",					&FFLib::ShowMenu),
+		def("CreateMenu",				(void(*)(const char *))&FFLib::CreateMenu),
+		def("CreateMenu",				(void(*)(const char *, float))&FFLib::CreateMenu),
+		def("CreateMenu",				(void(*)(const char *, const char *))&FFLib::CreateMenu),
+		def("CreateMenu",				(void(*)(const char *, const char *, float))&FFLib::CreateMenu),
+		def("DestroyMenu",				&FFLib::DestroyMenu),
+		def("SetMenuTitle",				&FFLib::SetMenuTitle),
+		def("AddMenuOption",			&FFLib::AddMenuOption),
+		def("RemoveMenuOption",			&FFLib::RemoveMenuOption)
 	];
 }
