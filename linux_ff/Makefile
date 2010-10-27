@@ -20,6 +20,7 @@ MOD_CONFIG=server_ff_ReleaseFFWin32
 GAME_DIR=/home/dmh/srcds
 
 # compiler options (gcc 3.4.1 or above is required)
+#dexter - edited for 'gcc34' for 3.4.6 bins on CentOS 5
 CC=gcc34
 CPLUS=g++34
 CLINK=gcc34
@@ -36,7 +37,7 @@ USER_CFLAGS=
 
 #LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a tier1_i486.a"
 
-LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -ldl -lm  $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a  tier1_i486.a"
+LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl  tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a  tier1_i486.a"
 
 #LDFLAGS="-lm tier0_i486.so vstdlib_i486.so"
 
