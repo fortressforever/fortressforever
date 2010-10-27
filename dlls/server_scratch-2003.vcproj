@@ -3795,6 +3795,14 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath=".\ff\ff_mapfilter.h">
 			</File>
 			<File
+			RelativePath=".\ff\ff_menuman.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_menuman.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_minecart.cpp">
 			</File>
 			<File
@@ -3838,6 +3846,14 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 			</File>
 			<File
 				RelativePath=".\ff\ff_team.h">
+			</File>
+			<File
+				RelativePath=".\ff\ff_timerman.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_timerman.h"
+				>
 			</File>
 			<File
 				RelativePath=".\ff\ff_vehicle_jeep.cpp">
