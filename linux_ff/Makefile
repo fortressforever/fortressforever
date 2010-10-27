@@ -16,23 +16,28 @@ MOD_PROJ=../dlls/server_scratch-2003.vcproj
 MOD_CONFIG=server_ff_ReleaseFFWin32
 
 # the directory the base binaries (tier0_i486.so, etc) are located
-#GAME_DIR=../../
-GAME_DIR=~/srcds/
+#GAME_DIR=../../srcds
+GAME_DIR=/home/dmh/srcds
 
 # compiler options (gcc 3.4.1 or above is required)
-CC=gcc
-CPLUS=g++
-CLINK=gcc
+CC=gcc34
+CPLUS=g++34
+CLINK=gcc34
 #CPP_LIB="/usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.5/libstdc++.a /usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.5/libgcc_eh.a"
-CPP_LIB="/usr/lib/gcc/i386-redhat-linux/3.4.3/libstdc++.a /usr/lib/gcc/i386-redhat-linux/3.4.3/libgcc_eh.a"
-
+#CPP_LIB="/usr/lib/gcc/i386-redhat-linux/3.4.3/libstdc++.a /usr/lib/gcc/i386-redhat-linux/3.4.3/libgcc_eh.a"
+# dexter - FUUUUUUUU here is path to 3.4.6 on CentOS 5
+CPP_LIB="/usr/lib/gcc/i386-redhat-linux/3.4.6/libstdc++.a /usr/lib/gcc/i386-redhat-linux/3.4.6/libgcc_eh.a"
 # put any compiler flags you want passed here
-USER_CFLAGS=-g
-#USER_CFLAGS=
+# DEBUG - USER_CFLAGS=-g
+USER_CFLAGS=
 
 # link flags for your mod, make sure to include any special libraries here
 #LDFLAGS="-lm -ldl $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so"
-LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a tier1_i486.a"
+
+#LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a tier1_i486.a"
+
+LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -ldl -lm  $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a  tier1_i486.a"
+
 #LDFLAGS="-lm tier0_i486.so vstdlib_i486.so"
 
 # XERCES 2.6.0 or above ( http://xml.apache.org/xerces-c/ ) is used by the vcproj to makefile converter
