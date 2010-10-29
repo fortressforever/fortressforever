@@ -716,14 +716,14 @@ int C_FFManCannon::DrawModel(int flags)
 		{
 			materials->Bind( pMaterial );
 
-			// The color is based on the saboteur's team
+			// The color is based on the owner's team
 			Color clr = Color( 255, 255, 255, 255 );
 
 			if( g_PR )
 			{
 				int teamnumber = GetTeamNumber();
 				float flCombatTime = clamp( gpGlobals->curtime - m_flLastDamage, 0, MANCANNON_COMBATCOOLDOWN );
-				int iAlpha = 64 + (191 * ( 1.0f - (flCombatTime / MANCANNON_COMBATCOOLDOWN) ) );
+				int iAlpha = (255 * ( 1.0f - (flCombatTime / MANCANNON_COMBATCOOLDOWN) ) );
 				clr.SetColor( g_PR->GetTeamColor( teamnumber ).r(), g_PR->GetTeamColor( teamnumber ).g(), g_PR->GetTeamColor( teamnumber ).b(), iAlpha );
 			}
 
