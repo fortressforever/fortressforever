@@ -153,6 +153,8 @@ const char *g_pszFFManCannonSounds[] =
 	NULL
 };
 
+ConVar ffdev_mancannon_combatcooldown( "ffdev_mancannon_combatcooldown", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor - initializes a bunch of stuff and figures out if
 //			we can build here or not!

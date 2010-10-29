@@ -21,13 +21,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1024", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "125", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_mancannon_healticklength( "ffdev_mancannon_healticklength", "1", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_mancannon_combatcooldown( "ffdev_mancannon_combatcooldown", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
-
 //=============================================================================
 //
 //	class CFFManCannon
@@ -37,6 +30,7 @@ LINK_ENTITY_TO_CLASS( FF_ManCannon, CFFManCannon );
 PRECACHE_REGISTER( FF_ManCannon );
 
 IMPLEMENT_SERVERCLASS_ST( CFFManCannon, DT_FFManCannon )
+	SendPropFloat( SENDINFO( m_flLastDamage ) ),
 END_SEND_TABLE()
 
 // Start of our data description for the class
@@ -50,6 +44,19 @@ extern const char *g_pszFFManCannonGibModels[];
 extern const char *g_pszFFManCannonSounds[];
 
 extern const char *g_pszFFGenGibModels[];
+
+ConVar ffdev_mancannon_push_forward( "ffdev_mancannon_push_forward", "1024", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define MANCANNON_PUSH_FORWARD ffdev_mancannon_push_forward.GetInt()
+ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define MANCANNON_PUSH_UP ffdev_mancannon_push_up.GetInt()
+ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "125", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define MANCANNON_HEALTH ffdev_mancannon_health.GetInt()
+ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define MANCANNON_HEALTH_REGEN ffdev_mancannon_health_regen.GetFloat()
+ConVar ffdev_mancannon_healticklength( "ffdev_mancannon_healticklength", "1", FCVAR_REPLICATED | FCVAR_CHEAT );
+#define MANCANNON_HEALTICKLENGTH ffdev_mancannon_healticklength.GetFloat()
+extern ConVar ffdev_mancannon_combatcooldown;
+#define MANCANNON_COMBATCOOLDOWN ffdev_mancannon_combatcooldown.GetFloat()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -70,6 +77,7 @@ void CFFManCannon::Spawn( void )
 	m_flLastClientUpdate = 0;
 	m_iLastState = 0;
 	m_iCombatState = JUMPPAD_IDLE;
+	m_flLastDamage = 0.0f;
 	// caes: changed GetFloat to GetInt
 	m_iHealth = ffdev_mancannon_health.GetInt();
 	// caes
@@ -209,18 +217,18 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	VectorNormalize( vecForward );
 
 	// Shoot forward & up-ish
-	// pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
+	// pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_forward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_foward.GetFloat() ) );
 
 	// add an amount to their horizontal + vertical velocity (dont multiply cos slow classes wouldnt go anywhere!)
-	//pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
+	//pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_forward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
 
-	pPlayer->SetAbsVelocity((vecForward * ffdev_mancannon_push_foward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
+	pPlayer->SetAbsVelocity((vecForward * ffdev_mancannon_push_forward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
 	
 	//Vector vecVelocity = pPlayer->GetAbsVelocity();
 	//Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 
-	//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.y  * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.z + ffdev_mancannon_push_up.GetFloat() ) );
-	//DevMsg("Mancannon boost! X vel: %f, Y vel: %f, Z vel: %f\n", vecVelocity.x * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.y  * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.z + ffdev_mancannon_push_up.GetFloat() );
+	//pPlayer->SetAbsVelocity(Vector(vecVelocity.x * ffdev_mancannon_push_forward.GetFloat(), vecVelocity.y  * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.z + ffdev_mancannon_push_up.GetFloat() ) );
+	//DevMsg("Mancannon boost! X vel: %f, Y vel: %f, Z vel: %f\n", vecVelocity.x * ffdev_mancannon_push_forward.GetFloat(), vecVelocity.y  * ffdev_mancannon_push_foward.GetFloat(), vecVelocity.z + ffdev_mancannon_push_up.GetFloat() );
 	EmitSound("JumpPad.Fire");
 
 	pPlayer->m_flMancannonTime = gpGlobals->curtime;

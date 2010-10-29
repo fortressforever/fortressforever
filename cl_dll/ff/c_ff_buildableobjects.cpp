@@ -103,6 +103,9 @@ ConVar ffdev_buildabledrawonerror("ffdev_buildabledrawonerror", "1", FCVAR_REPLI
 const RenderFx_t g_BuildableRenderFx = kRenderFxPulseSlowWide;
 //////////////////////////////////////////////////////////////////////////
 
+extern ConVar ffdev_mancannon_combatcooldown;
+#define MANCANNON_COMBATCOOLDOWN ffdev_mancannon_combatcooldown.GetFloat()
+
 //=============================================================================
 //
 //	class C_FFBuildableObject
@@ -642,6 +645,7 @@ int C_FFSentryGun::DrawModel(int flags)
 #endif
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFManCannon, DT_FFManCannon, CFFManCannon )
+	RecvPropFloat( RECVINFO( m_flLastDamage ) ),
 END_RECV_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -694,4 +698,39 @@ C_FFManCannon *C_FFManCannon::CreateClientSideManCannon( const Vector& vecOrigin
 	pManCannon->SetNextClientThink( CLIENT_THINK_ALWAYS );
 
 	return pManCannon;
+}
+
+//-------------------------------------------------------------------------
+// Purpose: Sentryguns will sometimes appear as the wrong model when
+//			the local player is hallucinating
+//-------------------------------------------------------------------------
+int C_FFManCannon::DrawModel(int flags)
+{
+	int nRet = BaseClass::DrawModel(flags);
+	
+	if( gpGlobals->curtime < m_flLastDamage + MANCANNON_COMBATCOOLDOWN )
+	{
+		// Thanks mirv!
+		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_combat", TEXTURE_GROUP_CLIENT_EFFECTS );
+		if( pMaterial )
+		{
+			materials->Bind( pMaterial );
+
+			// The color is based on the saboteur's team
+			Color clr = Color( 255, 255, 255, 255 );
+
+			if( g_PR )
+			{
+				int teamnumber = GetTeamNumber();
+				float flCombatTime = clamp( gpGlobals->curtime - m_flLastDamage, 0, MANCANNON_COMBATCOOLDOWN );
+				int iAlpha = 64 + (191 * ( 1.0f - (flCombatTime / MANCANNON_COMBATCOOLDOWN) ) );
+				clr.SetColor( g_PR->GetTeamColor( teamnumber ).r(), g_PR->GetTeamColor( teamnumber ).g(), g_PR->GetTeamColor( teamnumber ).b(), iAlpha );
+			}
+
+			color32 c = { clr.r(), clr.g(), clr.b(), clr.a() };
+			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z + 48.0f ), 32.0f, 32.0f, c );
+		}
+	}
+
+	return nRet;
 }

@@ -861,9 +861,12 @@ public:
 
 #ifdef CLIENT_DLL
 	virtual void OnDataChanged( DataUpdateType_t updateType );
+	virtual int DrawModel(int flags);
 
 	// Creates a client side ONLY man cannon - used for the build slot
 	static C_FFManCannon *CreateClientSideManCannon( const Vector& vecOrigin, const QAngle& vecAngles );	
+
+	float m_flLastDamage;
 #else
 	virtual void Spawn( void );
 	virtual void GoLive( void );
@@ -876,8 +879,8 @@ public:
 	float			m_flLastClientUpdate;
 	int				m_iLastState;
 	JumpPadState_t	m_iCombatState;
-	float			m_flLastDamage;
 	float			m_flLastHeal;
+	CNetworkVar( float, m_flLastDamage );
 
 	virtual bool CanSabotage( void ) const { return false; }
 	virtual bool IsSabotaged( void ) const { return false; }
