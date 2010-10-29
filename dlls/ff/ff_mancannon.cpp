@@ -25,6 +25,8 @@ ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1024", FCVA
 ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "125", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_healticklength( "ffdev_mancannon_healticklength", "1", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_combatcooldown( "ffdev_mancannon_combatcooldown", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 //=============================================================================
 //
@@ -67,6 +69,7 @@ void CFFManCannon::Spawn( void )
 	m_bTakesDamage = true;//Making the jumppad take damage -GreenMushy
 	m_flLastClientUpdate = 0;
 	m_iLastState = 0;
+	m_iCombatState = JUMPPAD_IDLE;
 	// caes: changed GetFloat to GetInt
 	m_iHealth = ffdev_mancannon_health.GetInt();
 	// caes
@@ -97,8 +100,7 @@ void CFFManCannon::GoLive( void )
 	{
 		// start thinking
 		SetThink( &CFFManCannon::OnJumpPadThink );
-		// Stagger our starting times
-		SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
+		SetNextThink( gpGlobals->curtime );
 	}
 	// caes
 }
@@ -111,17 +113,52 @@ void CFFManCannon::GoLive( void )
 //-----------------------------------------------------------------------------
 void CFFManCannon::OnJumpPadThink( void )
 {
-	// caes: regen health once per second
-	if ( m_iHealth < ffdev_mancannon_health.GetInt() )
+	if ( m_iCombatState == JUMPPAD_IDLE )
 	{
-		m_iHealth = min( ( m_iHealth + ffdev_mancannon_health_regen.GetInt() ), ffdev_mancannon_health.GetInt() );
-		DevMsg("[S] Jumppad health regen: %i\n", m_iHealth);
+		// heal
+		if ( gpGlobals->curtime >= m_flLastHeal + ffdev_mancannon_healticklength.GetFloat() && m_iHealth < ffdev_mancannon_health.GetInt() )
+		{
+			m_iHealth = min( ( m_iHealth + ffdev_mancannon_health_regen.GetFloat() ), ffdev_mancannon_health.GetInt() );
+			DevMsg("[S] Jumppad health regen: %i\n", m_iHealth);
 
-		// spark when health regens (slightly above origin so it's on the jumppad not in it)
-		Vector vecUp(0, 0, 1.0f);
-		g_pEffects->Sparks(GetAbsOrigin() + (vecUp*8), 2, 4, &vecUp);
+			// spark when health regens (slightly above origin so it's on the jumppad not in it)
+			Vector vecUp(0, 0, 1.0f);
+			//g_pEffects->Sparks(GetAbsOrigin() + (vecUp*8), 2, 4, &vecUp);
+			g_pEffects->EnergySplash( GetAbsOrigin() + vecUp*8, vecUp, false );
+			m_flLastHeal = gpGlobals->curtime;
+
+		}
 	}
-	SetNextThink( gpGlobals->curtime + 1.0f );
+	else if ( m_iCombatState == JUMPPAD_INCOMBAT )
+	{
+		/*
+		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_combat", TEXTURE_GROUP_CLIENT_EFFECTS );
+		if( pMaterial )
+		{
+			materials->Bind( pMaterial );
+
+			float percent = 1.0f - (gpGlobals->curtime - m_flLastDamage) / ffdev_mancannon_combatcooldown.GetFloat();
+			percent = clamp(percent, 0.0f, 1.0f);
+			
+			// get team color
+			CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+			if( !pOwner ) 
+				return;
+
+			Color teamcolor = pOwner->GetTeamColor();
+
+			color32 c = { teamcolor.r(), teamcolor.g(), teamcolor.b(), 255 * percent };
+			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z + ffdev_mancannon_spriteoffset.GetFloat() ), 15.0f, 15.0f, c );
+		}
+		*/
+
+		if ( gpGlobals->curtime >= m_flLastDamage + ffdev_mancannon_combatcooldown.GetFloat() )
+		{
+			m_iCombatState = JUMPPAD_IDLE;
+			m_flLastHeal = 0;
+		}
+	}
+	SetNextThink( gpGlobals->curtime + 0.1f );
 	// caes
 }
 

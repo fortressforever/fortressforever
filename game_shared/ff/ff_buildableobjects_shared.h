@@ -152,6 +152,13 @@
 //ConVar sg_armor_lvl3("ffdev_sg_armor_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG armor");
 #define SG_ARMOR_LEVEL3 0 // sg_armor_lvl3.GetInt()
 
+//Enum for the jumppad states - GreenMushy
+enum JumpPadState_t
+{ 
+	JUMPPAD_INCOMBAT = 0, 
+	JUMPPAD_IDLE 
+};
+
 enum BuildInfoResult_t
 {
 	BUILD_ALLOWED = 0,
@@ -868,6 +875,9 @@ public:
 	virtual void	PhysicsSimulate();
 	float			m_flLastClientUpdate;
 	int				m_iLastState;
+	JumpPadState_t	m_iCombatState;
+	float			m_flLastDamage;
+	float			m_flLastHeal;
 
 	virtual bool CanSabotage( void ) const { return false; }
 	virtual bool IsSabotaged( void ) const { return false; }
