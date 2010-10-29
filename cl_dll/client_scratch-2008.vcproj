@@ -4612,6 +4612,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_fx_slowfield.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_fx_ring_emitter.h"
 				>
 			</File>

@@ -3754,6 +3754,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_fx_ring_emitter.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_fx_slowfield.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_fx_ring_emitter.h">
 			</File>
 			<File
