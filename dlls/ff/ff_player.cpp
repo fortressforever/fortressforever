@@ -6582,6 +6582,13 @@ void CFFPlayer::LuaRemoveAllWeapons()
 	RemoveAllItems(false);
 }
 
+float CFFPlayer::LuaGetMovementSpeed()
+{
+	Vector vecVelocity = GetAbsVelocity();
+	Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+	return vecLatVelocity.Length();
+}
+
 int CFFPlayer::GetAmmoInClip()
 {
 	if (GetActiveFFWeapon())
