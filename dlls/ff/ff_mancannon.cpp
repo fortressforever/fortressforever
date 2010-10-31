@@ -23,6 +23,9 @@
 ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1024", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
 
+ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "300", FCVAR_REPLICATED );
+ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
+
 // Jiggles: Sorry, but I'm not using the "mancannon" nomenclature; Bungie didn't invent the jump pad!
 //#define JUMPPAD_INITIAL_DEPLOY	0	
 #define JUMPPAD_ACTIVATE		1
@@ -30,8 +33,7 @@ ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICAT
 #define JUMPPAD_REMOVE			3
 
 #define JUMPPAD_WARMUP_TIME		1.0f
-//ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
-#define JUMPPAD_LIFESPAN		60.0f // ffdev_mancannon_lifetime.GetFloat()
+#define JUMPPAD_LIFESPAN		ffdev_mancannon_lifetime.GetFloat()
 #define JUMPPAD_POWERDOWN_TIME	5.0f
 
 //=============================================================================
@@ -85,7 +87,8 @@ void CFFManCannon::Spawn( void )
 	Precache();
 	CFFBuildableObject::Spawn();
 	m_iJumpPadState = JUMPPAD_ACTIVATE;
-	m_bTakesDamage = false;
+	m_bTakesDamage = true;//Making the jumppad take damage -GreenMushy
+	m_iHealth = ffdev_mancannon_health.GetFloat();
 }
 
 //-----------------------------------------------------------------------------
@@ -111,6 +114,7 @@ void CFFManCannon::GoLive( void )
 	// tell the client when it expires
 	CSingleUserRecipientFilter user(pOwner);
 	user.MakeReliable();
+
 
 	UserMessageBegin(user, "ManCannonMsg");
 		WRITE_FLOAT(gpGlobals->curtime + JUMPPAD_LIFESPAN + JUMPPAD_POWERDOWN_TIME);
@@ -143,10 +147,10 @@ void CFFManCannon::OnJumpPadThink( void )
 		// Play activate sound
 		//EmitSound("JumpPad.Activate");
 		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN );
-		m_iJumpPadState++;
+		m_iJumpPadState++; 
 		break;
 	case JUMPPAD_POWERDOWN:
-		EmitSound("JumpPad.PowerDown");
+		//EmitSound("JumpPad.PowerDown");
 		SetNextThink( gpGlobals->curtime + JUMPPAD_POWERDOWN_TIME );
 		m_iJumpPadState++;
 		break;
@@ -154,12 +158,10 @@ void CFFManCannon::OnJumpPadThink( void )
 		CFFPlayer *pOwner = GetOwnerPlayer();
 		if ( pOwner )
 			ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_MANCANNON_TIMEOUT" );
-		Detonate();
+		//Detonate();
 		break;
 	}
-
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Launch guy
@@ -183,6 +185,10 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 		return;
 
 	CFFPlayer *pPlayer = ToFFPlayer( pOther );
+
+	if( g_pGameRules->PlayerRelationship( GetOwnerPlayer(), pPlayer ) == GR_NOTTEAMMATE )//Team orients it -GreenMushy
+		return;
+
 	if( !pPlayer )
 		return;
 	

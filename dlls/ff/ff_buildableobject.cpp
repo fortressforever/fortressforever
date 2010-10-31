@@ -980,7 +980,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	int res = CBaseEntity::OnTakeDamage( adjustedDamage );
 
 	// Send hit indicator to attacker
-	if ( Classify() == CLASS_SENTRYGUN ||  Classify() == CLASS_DISPENSER )
+	if ( Classify() == CLASS_SENTRYGUN ||  Classify() == CLASS_DISPENSER || Classify() == CLASS_MANCANNON )
 	{
 		CFFPlayer *pAttacker = ToFFPlayer( adjustedDamage.GetAttacker() );
 		if( pAttacker )
