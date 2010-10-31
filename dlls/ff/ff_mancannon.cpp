@@ -86,6 +86,12 @@ void CFFManCannon::Spawn( void )
 
 	Precache();
 	CFFBuildableObject::Spawn();
+
+	//Sets the team color -GreenMushy
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	if( pOwner ) 
+		m_nSkin = ( pOwner->GetTeamNumber() - 1 ); 
+		
 	m_iJumpPadState = JUMPPAD_ACTIVATE;
 	m_bTakesDamage = true;//Making the jumppad take damage -GreenMushy
 	m_iHealth = ffdev_mancannon_health.GetFloat();
