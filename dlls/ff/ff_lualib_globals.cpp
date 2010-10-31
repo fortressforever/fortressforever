@@ -1275,6 +1275,21 @@ namespace FFLib
 			gameeventmanager->FireEvent( pEvent, true );
 		}
 	}
+	
+	// For adding an objective-related death notice
+	void ObjectiveNotice( CFFPlayer *player, const char *text )
+	{
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "objective_event" );
+		if( pEvent )
+		{
+			pEvent->SetInt( "userid", player->GetUserID() );
+			//pEvent->SetString( "eventname", name );
+			pEvent->SetString( "eventtext", text );
+
+			gameeventmanager->FireEvent( pEvent );
+		}
+	}
 
 	// Displays a string in the hint box
 	void DisplayMessage( CFFPlayer *pPlayer, const char* message )
@@ -2668,6 +2683,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("LogLuaEvent",				(void(*)(int, int, const char *, const char *, const char *))&FFLib::LogLuaEvent),
 		def("LogLuaEvent",				(void(*)(int, int, const char *, const char *, const char *, const char *, const char *))&FFLib::LogLuaEvent),
 		def("LogLuaEvent",				(void(*)(int, int, const char *, const char *, const char *, const char *, const char *, const char *, const char *))&FFLib::LogLuaEvent),
+		def("ObjectiveNotice",			&FFLib::ObjectiveNotice),
 		def("UpdateObjectiveIcon",		&FFLib::UpdateObjectiveIcon),
 		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon),
 		def("DisplayMessage",			&FFLib::DisplayMessage),
