@@ -182,6 +182,7 @@ extern bool g_Disable_Timelimit;
 
 void CFFScriptManager::LevelInit(const char* szMapName)
 {
+	const char* default_luafile = "maps/default.lua";
 	VPROF_BUDGET("CFFScriptManager::LevelInit", VPROF_BUDGETGROUP_FF_LUA);
 
 	if(!szMapName)
@@ -244,9 +245,17 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 
 			if(!engine->IsGenericPrecached(filename))
 				engine->PrecacheGeneric(filename, true);
+		} 
+		else // - if no map lua is found, send default (for testing mainly)
+		{
+			// no check - this file should *always* be there
+			Util_AddDownload(default_luafile);
+			if(!engine->IsGenericPrecached(default_luafile))
+				engine->PrecacheGeneric(default_luafile, true);
 		}
+		
 
-		// if we have a globalscript, shoot it down the intertubes too
+		// if we have a globalscript, precache it as well
 		if( sv_luaglobalscript.GetString()[0] != '0' && globalscript_filename[0] )
 		{
 			V_FixSlashes(globalscript_filename);
@@ -272,8 +281,14 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 		//////////////////////////////////////////////////////////////////////////
 	}
 	//////////////////////////////////////////////////////////////////////////
+	if(filesystem->FileExists(filename))
+		m_ScriptExists = LoadFile(L, filename);
+	else
+	{
+		Msg("[SCRIPT] File maps\\%s not found! Loaded fallback lua %s\n", filename, default_luafile);
+		m_ScriptExists = LoadFile(L, default_luafile);
+	}
 
-	m_ScriptExists = LoadFile(L, filename);
 	EndScriptLoad();
 
 	// force loading global script in another call :/
