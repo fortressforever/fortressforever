@@ -121,11 +121,11 @@ DECLARE_HUD_MESSAGE(CHudBuildState, DetpackMsg);
 DECLARE_HUD_MESSAGE(CHudBuildState, PipeMsg);
 
 
-CHudBuildState::~CHudBuildState() 
+CHudBuildState::~CHudBuildState()
 {
 }
 
-void CHudBuildState::VidInit() 
+void CHudBuildState::VidInit()
 {
 	g_pBuildState = this;
 
@@ -353,15 +353,17 @@ void CHudBuildState::Paint()
 			surface()->DrawUnicodeChar(*wch);
 	}
 
-	if (m_bDrawManCannon) 
+	/*if (m_bDrawManCannon) 
 	{
 		surface()->DrawSetTextPos(text2_xpos, text2_ypos);
 		
 		_snwprintf(m_szManCannon, 127, L"Time Left: %i seconds", (int)(m_flManCannonTimeoutTime - gpGlobals->curtime + 1) );
+		
 
 		for (wchar_t *wch = m_szManCannon; *wch != 0; wch++) 
 			surface()->DrawUnicodeChar(*wch);
-	}
+	}*/
+	// commenting out ^ to not draw a time remaining -GreenMushy
 	
 	if (m_bDrawDetpack) 
 	{

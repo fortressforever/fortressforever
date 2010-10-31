@@ -1586,7 +1586,7 @@ ConVar mp_prematch( "mp_prematch",
 
 		// pVictim is the buildables owner
 		CFFPlayer *pVictim = NULL, *pOwner = NULL;
-		if( pObject->Classify() == CLASS_SENTRYGUN || pObject->Classify() == CLASS_DISPENSER )
+		if( pObject->Classify() == CLASS_SENTRYGUN || pObject->Classify() == CLASS_DISPENSER || pObject->Classify() == CLASS_MANCANNON )
 		{
 			pOwner = ToFFPlayer( ( pObject )->m_hOwner.Get() );
 			if ( !pObject->IsMaliciouslySabotaged() )
@@ -1754,6 +1754,8 @@ ConVar mp_prematch( "mp_prematch",
 			pEvent = gameeventmanager->CreateEvent( "sentrygun_killed" );
 		else if( pObject->Classify() == CLASS_DISPENSER )
 			pEvent = gameeventmanager->CreateEvent( "dispenser_killed" );
+		else if( pObject->Classify() == CLASS_MANCANNON )
+			pEvent = gameeventmanager->CreateEvent( "mancannon_killed" );
 		if( pEvent )
 		{
 			pEvent->SetInt( "userid", pVictim->GetUserID() );
