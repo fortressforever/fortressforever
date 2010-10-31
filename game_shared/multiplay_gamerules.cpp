@@ -542,7 +542,8 @@ bool CMultiplayRules::IsMultiplayer( void )
 		if ( pVictim == pScorer )  
 		{
 			// Players lose a frag for killing themselves
-			pVictim->IncrementFragCount( -1 );
+			//Commenting this out so players dont actually lose stuff on suicides
+			//pVictim->IncrementFragCount( -1 );
 			//pScorer->AddFortPoints( -100, "#FF_FORTPOINTS_SUICIDE" );
 		}
 		else if ( pScorer )
