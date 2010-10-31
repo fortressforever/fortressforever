@@ -316,7 +316,8 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		AngleVectors(pPlayer->EyeAngles(), &vecForward);
 
 		trace_t tr;
-		UTIL_TraceLine(pPlayer->Weapon_ShootPosition(), pPlayer->Weapon_ShootPosition() + vecForward * MAX_TRACE_LENGTH, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
+		CTraceFilterWorldOnly traceFilter;
+		UTIL_TraceLine(pPlayer->Weapon_ShootPosition(), pPlayer->Weapon_ShootPosition() + vecForward * MAX_TRACE_LENGTH, MASK_SHOT, &traceFilter, &tr);
 
 		pSentry->SetFocusPoint(tr.endpos);
 	}
