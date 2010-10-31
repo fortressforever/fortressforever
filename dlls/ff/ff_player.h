@@ -488,7 +488,7 @@ public:
 	}
 	bool LuaIsPlayerFrozen() 
 	{
-		return (GetFlags() & FL_FROZEN);
+		return ( GetFlags() & FL_FROZEN ) ? true : false;
 	}
 
 	void ReloadClips( void );
