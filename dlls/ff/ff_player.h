@@ -486,6 +486,10 @@ public:
 		else
 			RemoveFlag( FL_FROZEN );
 	}
+	bool LuaIsPlayerFrozen() 
+	{
+		return (GetFlags() & FL_FROZEN);
+	}
 
 	void ReloadClips( void );
  
