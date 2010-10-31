@@ -20,6 +20,7 @@
 #include "con_nprint.h"
 #include "hud_pdump.h"
 #include "debugoverlay_shared.h"
+#include "c_ff_player.h"
 
 #ifdef HL2_CLIENT_DLL
 #include "c_basehlplayer.h"
@@ -614,6 +615,14 @@ void CPrediction::SetupMove( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper *
 	move->m_nOldButtons		= player->m_Local.m_nOldButtons;
 	move->m_flClientMaxSpeed = player->m_flMaxspeed;
 
+	CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (player);
+
+	// Update client max speed if there are speed modifiers active
+	if (pPlayer)
+	{
+		move->m_flClientMaxSpeed *= pPlayer->m_flSpeedModifier;
+	}
+
 	move->m_vecAngles		= ucmd->viewangles;
 	move->m_vecViewAngles	= ucmd->viewangles;
 	move->m_nImpulseCommand = ucmd->impulse;	
@@ -694,8 +703,8 @@ void CPrediction::FinishMove( C_BasePlayer *player, CUserCmd *ucmd, CMoveData *m
 	
 	player->m_Local.m_nOldButtons = move->m_nButtons;
 
-
-	player->m_flMaxspeed = move->m_flClientMaxSpeed;
+	// don't need to set the max speed, it's not changing
+	//player->m_flMaxspeed = move->m_flClientMaxSpeed;
 	
 	m_hLastGround = player->GetGroundEntity();
  
