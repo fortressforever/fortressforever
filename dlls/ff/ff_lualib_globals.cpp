@@ -1279,6 +1279,9 @@ namespace FFLib
 	// For adding an objective-related death notice
 	void ObjectiveNotice( CFFPlayer *player, const char *text )
 	{
+		if (!player)
+			return;
+
 		// Fire an event.
 		IGameEvent *pEvent = gameeventmanager->CreateEvent( "objective_event" );
 		if( pEvent )
