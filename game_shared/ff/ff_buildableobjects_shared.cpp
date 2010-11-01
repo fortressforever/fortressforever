@@ -29,12 +29,129 @@
 
 #ifdef GAME_DLL
 	#include "omnibot_interface.h"	
+#else
+	#include "c_gib.h"
+	#include "ClientEffectPrecacheSystem.h"
+	#include "c_te_effect_dispatch.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 #define FF_BUILD_DEBUG_VISUALIZATIONS
+
+// Array of char *'s to dispenser models
+const char *g_pszFFDispenserModels[ ] =
+{
+	FF_DISPENSER_MODEL,
+	NULL
+};
+
+// Array of char *'s to gib models
+const char *g_pszFFDispenserGibModels[ ] =
+{
+	FF_DISPENSER_GIB01_MODEL,
+	FF_DISPENSER_GIB02_MODEL,
+	FF_DISPENSER_GIB03_MODEL,
+	FF_DISPENSER_GIB04_MODEL,
+	FF_DISPENSER_GIB05_MODEL,
+	FF_DISPENSER_GIB06_MODEL,
+	NULL
+};
+
+// Array of char *'s to sounds
+const char *g_pszFFDispenserSounds[ ] =
+{
+	FF_DISPENSER_BUILD_SOUND,
+	FF_DISPENSER_EXPLODE_SOUND,
+	FF_DISPENSER_UNBUILD_SOUND,
+	FF_DISPENSER_OMNOMNOM_SOUND,
+	NULL
+};
+
+// Array of char *'s to sentrygun models
+const char *g_pszFFSentryGunModels[] =
+{
+	FF_SENTRYGUN_MODEL, 
+	FF_SENTRYGUN_MODEL_LVL2, 
+	FF_SENTRYGUN_MODEL_LVL3, 
+	NULL
+};
+
+// Array of char *'s to gib models
+const char *g_pszFFSentryGunGibModels[] =
+{
+	NULL
+};
+
+// Array of char *'s to sounds
+const char *g_pszFFSentryGunSounds[] =
+{
+	FF_SENTRYGUN_BUILD_SOUND, 
+	FF_SENTRYGUN_EXPLODE_SOUND, 
+	"Sentry.Fire", 
+	"Sentry.Spot", 
+	"Sentry.Scan", 
+	"Sentry.Two", 
+	"Sentry.Three", 
+	"Sentry.Aim",
+	FF_SENTRYGUN_UNBUILD_SOUND,
+	"Spanner.HitSG",
+	"Sentry.RocketFire",
+	"Sentry.SabotageActivate",
+	//"Sentry.SabotageFinish",
+	"Sentry.CloakDetection",
+	"Sentry.CloakSonar",
+	"DoSpark",
+	NULL
+};
+
+// Array of char *'s to dispenser models
+const char *g_pszFFDetpackModels[ ] =
+{
+	FF_DETPACK_MODEL,
+	NULL
+};
+
+// Array of char *'s to gib models
+const char *g_pszFFDetpackGibModels[ ] =
+{
+	NULL
+};
+
+// Array of char *'s to sounds
+const char *g_pszFFDetpackSounds[ ] =
+{
+	FF_DETPACK_BUILD_SOUND,
+	FF_DETPACK_EXPLODE_SOUND,
+	"Detpack.FiveSeconds",
+	"Detpack.Defuse",
+	NULL
+};
+
+// Array of char *'s to dispenser models
+const char *g_pszFFManCannonModels[] =
+{
+	FF_MANCANNON_MODEL,
+	NULL
+};
+
+// Array of char *'s to gib models
+const char *g_pszFFManCannonGibModels[] =
+{
+	NULL
+};
+
+// Array of char *'s to sounds
+const char *g_pszFFManCannonSounds[] =
+{
+	FF_MANCANNON_BUILD_SOUND,
+	FF_MANCANNON_EXPLODE_SOUND,
+	//"JumpPad.WarmUp",
+	//"JumpPad.PowerDown",
+	"JumpPad.Fire",
+	NULL
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor - initializes a bunch of stuff and figures out if
@@ -684,3 +801,28 @@ CFFManCannon::CFFManCannon( void )
 CFFManCannon::~CFFManCannon( void )
 {
 }
+
+#ifdef CLIENT_DLL
+
+void DispenserGib_Callback(const CEffectData &data)
+{
+	Vector vecPosition = data.m_vOrigin;
+	Vector vecOffset;
+
+	// Now spawn a number of gibs
+	int iGib = 0;
+	while (g_pszFFDispenserGibModels[iGib])
+	{
+		C_Gib *pGib = C_Gib::CreateClientsideGib(g_pszFFDispenserGibModels[iGib], vecPosition, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), RandomAngularImpulse( -90, 90 ), 10.0f);
+	
+		if (pGib)
+		{
+			pGib->LeaveBloodDecal(false);
+		}
+		++iGib;
+	}
+}
+
+DECLARE_CLIENT_EFFECT("DispenserGib", DispenserGib_Callback);
+
+#endif

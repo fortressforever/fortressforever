@@ -35,9 +35,9 @@
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
 #include "explode.h"
-//#include "gib.h"
+#include "gib.h"
 #include "ff_player.h"
-//#include "EntityFlame.h"
+#include "EntityFlame.h"
 #include "beam_flags.h"
 #include "ff_gamerules.h"
 #include "world.h"
@@ -187,11 +187,11 @@ const char *g_pszFFSounds[ ] =
 // Generic gib models used for every buildable object, yay
 const char *g_pszFFGenGibModels[ ] =
 {
-	FF_BUILDALBE_GENERIC_GIB_MODEL_01,
-	FF_BUILDALBE_GENERIC_GIB_MODEL_02,
-	FF_BUILDALBE_GENERIC_GIB_MODEL_03,
-	FF_BUILDALBE_GENERIC_GIB_MODEL_04,
-	FF_BUILDALBE_GENERIC_GIB_MODEL_05,
+	FF_BUILDABLE_GENERIC_GIB_MODEL_01,
+	FF_BUILDABLE_GENERIC_GIB_MODEL_02,
+	FF_BUILDABLE_GENERIC_GIB_MODEL_03,
+	FF_BUILDABLE_GENERIC_GIB_MODEL_04,
+	FF_BUILDABLE_GENERIC_GIB_MODEL_05,
 	NULL
 };
 
@@ -801,7 +801,7 @@ void CFFBuildableObject::SpawnGib( const char *szGibModel, bool bFlame, bool bDi
 {
 	VPROF_BUDGET( "CFFBuildableObject::SpawnGib", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	/*
+	
 	// Create some gibs! MMMMM CHUNKY
 	CGib *pChunk = CREATE_ENTITY( CGib, "gib" );
 	pChunk->Spawn( szGibModel );
@@ -831,7 +831,7 @@ void CFFBuildableObject::SpawnGib( const char *szGibModel, bool bFlame, bool bDi
 		angles.z = 0.0f;
 		AngleVectors( angles, &vecVelocity );
 
-		vecVelocity *= random->RandomFloat( 300, 600 );
+		vecVelocity *= random->RandomFloat( 5, 50 );
 		vecVelocity += GetAbsVelocity( );
 
 		AngularImpulse angImpulse;
@@ -856,7 +856,22 @@ void CFFBuildableObject::SpawnGib( const char *szGibModel, bool bFlame, bool bDi
 		pChunk->SetThink( &CGib::SUB_FadeOut );
 	else
 		pChunk->SetThink( &CGib::DieThink );
-		*/
+
+}
+
+/**
+@fn virtual void SpawnGibs()
+@brief Creates gibs
+@return void
+*/
+void CFFBuildableObject::SpawnGibs()
+{
+	int iGib = 0;
+	while (m_ppszGibModels[iGib])
+	{
+		SpawnGib(m_ppszGibModels[iGib], false, false);
+		++iGib;
+	}
 }
 
 /**
@@ -900,6 +915,11 @@ void CFFBuildableObject::DoExplosion( void )
 	}
 	else
 		Warning( "CFFBuildableObject::DoExplosion - ERROR - NO EXPLOSION SOUND (might want to add one)!\n" );
+
+	if ( m_ppszGibModels[0] ) 
+	{
+		SpawnGibs();
+	}
 
 	// Mirv: Moved explosion damage logic into the derived classes
 	DoExplosionDamage();

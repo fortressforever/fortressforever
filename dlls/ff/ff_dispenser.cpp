@@ -49,6 +49,7 @@
 #include "ff_gamerules.h"
 #include "ff_utils.h"
 #include "ff_item_backpack.h"
+#include "te_effect_dispatch.h"
 
 #include "omnibot_interface.h"
 
@@ -78,32 +79,11 @@ BEGIN_DATADESC( CFFDispenser )
 	DEFINE_THINKFUNC( OnObjectThink ),
 END_DATADESC( )
 
-// Array of char *'s to dispenser models
-const char *g_pszFFDispenserModels[ ] =
-{
-	FF_DISPENSER_MODEL,
-	NULL
-};
+extern const char *g_pszFFDispenserModels[];
+extern const char *g_pszFFDispenserGibModels[];
+extern const char *g_pszFFDispenserSounds[];
 
-// Array of char *'s to gib models
-const char *g_pszFFDispenserGibModels[ ] =
-{
-	FF_DISPENSER_GIB01_MODEL,
-	FF_DISPENSER_GIB02_MODEL,
-	FF_DISPENSER_GIB03_MODEL,
-	FF_DISPENSER_GIB04_MODEL,
-	NULL
-};
-
-// Array of char *'s to sounds
-const char *g_pszFFDispenserSounds[ ] =
-{
-	FF_DISPENSER_BUILD_SOUND,
-	FF_DISPENSER_EXPLODE_SOUND,
-	FF_DISPENSER_UNBUILD_SOUND,
-	FF_DISPENSER_OMNOMNOM_SOUND,
-	NULL
-};
+extern const char *g_pszFFGenGibModels[];
 
 inline void DispenseHelper( CFFPlayer *pPlayer, int& iAmmo, int iGiveAmmo, const char *pszAmmoType )
 {
@@ -142,6 +122,11 @@ void CFFDispenser::Spawn( void )
 
 	// Call baseclass spawn stuff
 	CFFBuildableObject::Spawn();
+	
+	// set skin
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	if( pOwner ) 
+		m_nSkin = clamp( pOwner->GetTeamNumber() + 1 - TEAM_BLUE, 0, 4 );	// |-- Mirv: BUG #0000118: SGs are always red	
 
 	UpdateAmmoPercentage();
 }
@@ -625,6 +610,23 @@ void CFFDispenser::DoExplosionDamage()
 		
 		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Spawn dispenser specific gibs
+//-----------------------------------------------------------------------------
+void CFFDispenser::SpawnGibs()
+{
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	
+	if( !pOwner ) 
+		return;
+
+	CEffectData data;
+		data.m_nEntIndex = entindex();
+		data.m_vOrigin = GetAbsOrigin();
+		data.m_nMaterial = clamp( pOwner->GetTeamNumber() + 1 - TEAM_BLUE, 0, 4 ); // using this for skin, not sure what it's meant to be used for
+	DispatchEffect("DispenserGib", data);
 }
 
 //-----------------------------------------------------------------------------
