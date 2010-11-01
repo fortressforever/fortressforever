@@ -88,7 +88,7 @@ void CFFManCannon::Spawn( void )
 	CFFBuildableObject::Spawn();
 
 	//Sets the team color -GreenMushy
-	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	CFFPlayer *pOwner = ToFFPlayer( m_hOwner.Get() ); //static_cast< CFFPlayer * >( m_hOwner.Get() );
 	if( pOwner ) 
 		m_nSkin = ( pOwner->GetTeamNumber() - 1 ); 
 		
