@@ -43,6 +43,9 @@ static ConVar hud_centerid( "hud_centerid", "0", FCVAR_ARCHIVE );
 #define CROSSHAIRTYPE_DETPACK 3
 #define CROSSHAIRTYPE_ENEMY_SENTRYGUN 4
 #define CROSSHAIRTYPE_FRIENDLY_SENTRYGUN 5
+//Adding enemy jumppad health hud -GreenMushy
+#define CROSSHAIRTYPE_ENEMY_MANCANNON 6
+#define CROSSHAIRTYPE_FRIENDLY_MANCANNON 7
 
 //=============================================================================
 //
@@ -346,8 +349,10 @@ void CHudCrosshairInfo::OnTick( void )
 						}
 						else if( pBuildable->Classify() == CLASS_MANCANNON )
 						{
-							// TODO: Maybe man cannon's have armor? or some other property we want to show?
-							iArmor = -1;
+							//You see a friendly Jumppad -GreenMushy
+							CROSSHAIRTYPE = CROSSHAIRTYPE_FRIENDLY_MANCANNON;
+							//Adding health display -GreenMushy
+							iHealth = ( (C_FFManCannon *)pBuildable )->GetHealth();
 						}
 						else
 						{
@@ -380,7 +385,10 @@ void CHudCrosshairInfo::OnTick( void )
 						else if( pBuildable->Classify() == CLASS_MANCANNON )
 						{
 							// TODO: Maybe man cannon's have armor? or some other property we want to show?
-							iArmor = -1;
+							//Change Crosshair type -GreenMushy
+							CROSSHAIRTYPE = CROSSHAIRTYPE_ENEMY_MANCANNON;
+							//Adding health display -GreenMushy
+							iHealth = ( (C_FFManCannon *)pBuildable )->GetHealth();
 						}
 						else
 						{
@@ -608,6 +616,28 @@ void CHudCrosshairInfo::OnTick( void )
 
 					_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
 
+				}
+				//Enemy Jumppad displayed here -GreenMushy
+				else if( CROSSHAIRTYPE == CROSSHAIRTYPE_ENEMY_MANCANNON )
+				{
+					char szHealth[ 5 ];
+					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+					
+					wchar_t wszHealth[ 10 ];
+					vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+
+					_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
+				}
+				//Friendly Jumppad displayed here -GreenMushy
+				else if( CROSSHAIRTYPE == CROSSHAIRTYPE_FRIENDLY_MANCANNON )
+				{
+					char szHealth[ 5 ];
+					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+					
+					wchar_t wszHealth[ 10 ];
+					vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+
+					_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
 				}
 				// else CROSSHAIRTYPE_NORMAL
 				else if( ( iHealth != -1 ) && ( iArmor != -1 ) )
