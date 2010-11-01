@@ -53,29 +53,11 @@ BEGIN_DATADESC( CFFManCannon )
 	DEFINE_THINKFUNC( OnJumpPadThink ),
 END_DATADESC()
 
-// Array of char *'s to dispenser models
-const char *g_pszFFManCannonModels[] =
-{
-	FF_MANCANNON_MODEL,
-	NULL
-};
+extern const char *g_pszFFManCannonModels[];
+extern const char *g_pszFFManCannonGibModels[];
+extern const char *g_pszFFManCannonSounds[];
 
-// Array of char *'s to gib models
-const char *g_pszFFManCannonGibModels[] =
-{
-	NULL
-};
-
-// Array of char *'s to sounds
-const char *g_pszFFManCannonSounds[] =
-{
-	FF_MANCANNON_BUILD_SOUND,
-	FF_MANCANNON_EXPLODE_SOUND,
-	//"JumpPad.WarmUp",
-	"JumpPad.PowerDown",
-	"JumpPad.Fire",
-	NULL
-};
+extern const char *g_pszFFGenGibModels[];
 
 //-----------------------------------------------------------------------------
 // Purpose: 

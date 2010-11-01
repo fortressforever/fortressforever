@@ -51,10 +51,12 @@
 #endif
 
 #define FF_DISPENSER_MODEL					"models/buildable/dispenser/dispenser.mdl"
-#define FF_DISPENSER_GIB01_MODEL			"models/gibs/dispenser/gib1.mdl"
-#define FF_DISPENSER_GIB02_MODEL			"models/gibs/dispenser/gib2.mdl"
-#define FF_DISPENSER_GIB03_MODEL			"models/gibs/dispenser/gib3.mdl"
-#define FF_DISPENSER_GIB04_MODEL			"models/gibs/dispenser/gib4.mdl"
+#define FF_DISPENSER_GIB01_MODEL			"models/buildable/dispenser/gib1.mdl"
+#define FF_DISPENSER_GIB02_MODEL			"models/buildable/dispenser/gib2.mdl"
+#define FF_DISPENSER_GIB03_MODEL			"models/buildable/dispenser/gib3.mdl"
+#define FF_DISPENSER_GIB04_MODEL			"models/buildable/dispenser/gib4.mdl"
+#define FF_DISPENSER_GIB05_MODEL			"models/buildable/dispenser/gib5.mdl"
+#define FF_DISPENSER_GIB06_MODEL			"models/buildable/dispenser/gib6.mdl"
 #define FF_DISPENSER_BUILD_SOUND			"Dispenser.Build"
 #define FF_DISPENSER_UNBUILD_SOUND			"Dispenser.unbuild"
 #define FF_DISPENSER_EXPLODE_SOUND			"Dispenser.Explode"
@@ -77,11 +79,11 @@
 
 //#define FF_SENTRYGUN_AIMSPHERE_MODEL		"models/buildable/sg/sentrygun_aimsphere.mdl"
 
-#define FF_BUILDALBE_GENERIC_GIB_MODEL_01	"models/gibs/random/randGib1.mdl"
-#define FF_BUILDALBE_GENERIC_GIB_MODEL_02	"models/gibs/random/randGib2.mdl"
-#define FF_BUILDALBE_GENERIC_GIB_MODEL_03	"models/gibs/random/randGib3.mdl"
-#define FF_BUILDALBE_GENERIC_GIB_MODEL_04	"models/gibs/random/randGib4.mdl"
-#define FF_BUILDALBE_GENERIC_GIB_MODEL_05	"models/gibs/random/randGib5.mdl"
+#define FF_BUILDABLE_GENERIC_GIB_MODEL_01	"models/gibs/random/randGib1.mdl"
+#define FF_BUILDABLE_GENERIC_GIB_MODEL_02	"models/gibs/random/randGib2.mdl"
+#define FF_BUILDABLE_GENERIC_GIB_MODEL_03	"models/gibs/random/randGib3.mdl"
+#define FF_BUILDABLE_GENERIC_GIB_MODEL_04	"models/gibs/random/randGib4.mdl"
+#define FF_BUILDABLE_GENERIC_GIB_MODEL_05	"models/gibs/random/randGib5.mdl"
 
 #define FF_BUILDABLE_TIMER_BUILD_STRING		"FF_Building"
 #define FF_BUILDABLE_TIMER_DETPACK_STRING	"FF_Detpack_Primed"
@@ -127,28 +129,6 @@
 #define FF_SOUND_EXPLODE	1
 
 #define FF_BUILD_SABOTAGE_TIMEOUT 90.0f
-
-// Currently only the server uses these...
-#ifdef CLIENT_DLL 
-#else
-	extern const char *g_pszFFDispenserModels[];
-	extern const char *g_pszFFDispenserGibModels[];
-	extern const char *g_pszFFDispenserSounds[];
-
-	extern const char *g_pszFFDetpackModels[];
-	extern const char *g_pszFFDetpackGibModels[];
-	extern const char *g_pszFFDetpackSounds[];
-
-	extern const char *g_pszFFSentryGunModels[];
-	extern const char *g_pszFFSentryGunGibModels[];
-	extern const char *g_pszFFSentryGunSounds[];
-
-	extern const char *g_pszFFGenGibModels[];
-
-	extern const char *g_pszFFManCannonModels[];
-	extern const char *g_pszFFManCannonGibModels[];
-	extern const char *g_pszFFManCannonSounds[];
-#endif
 
 enum BuildInfoResult_t
 {
@@ -363,7 +343,8 @@ public:
 
 protected:
 	void Explode( void );
-	void SpawnGib( const char *szGibModel, bool bFlame = true, bool bDieGroundTouch = false );
+	void SpawnGib( const char *szGibModel, bool bFlame = true, bool bDieGroundTouch = false );	
+	virtual void SpawnGibs( void );
 	void DoExplosion( void );
 	virtual void DoExplosionDamage() { AssertMsg(0, "No DoExplosionDamage()"); }
 
@@ -563,6 +544,7 @@ public:
 	void OnObjectThink( void );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
+	virtual void SpawnGibs( void );
 	virtual void DoExplosionDamage();
 
 	virtual void Sabotage(CFFPlayer *pSaboteur);

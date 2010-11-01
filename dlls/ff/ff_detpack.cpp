@@ -50,28 +50,11 @@ END_DATADESC( )
 //static ConVar detpack_falloff( "ffdev_detpack_falloff", "1" );
 #define DETPACK_FALLOFF 1.0f
 
-// Array of char *'s to dispenser models
-const char *g_pszFFDetpackModels[ ] =
-{
-	FF_DETPACK_MODEL,
-	NULL
-};
+extern const char *g_pszFFDetpackModels[];
+extern const char *g_pszFFDetpackGibModels[];
+extern const char *g_pszFFDetpackSounds[];
 
-// Array of char *'s to gib models
-const char *g_pszFFDetpackGibModels[ ] =
-{
-	NULL
-};
-
-// Array of char *'s to sounds
-const char *g_pszFFDetpackSounds[ ] =
-{
-	FF_DETPACK_BUILD_SOUND,
-	FF_DETPACK_EXPLODE_SOUND,
-	"Detpack.FiveSeconds",
-	"Detpack.Defuse",
-	NULL
-};
+extern const char *g_pszFFGenGibModels[];
 
 /**
 @fn CFFDetpack
