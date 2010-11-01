@@ -1440,6 +1440,22 @@ void CFFPlayer::Spawn( void )
 		// We have to do this after base spawn because it handly sets it to 0
 		SetMaxSpeed(sv_maxspeed.GetFloat());
 
+		// Dexter: if player has clientside model being drawn for deployable, destroy it
+		RemoveAllItems( true );
+		/*
+		CFFWeaponBase *pWeapon = this->GetActiveFFWeapon();
+		if(pWeapon)
+		{
+			int id = pWeapon->GetWeaponID();
+			
+			// its a buildable herfaderf
+			if( id >= FF_WEAPON_DEPLOYDISPENSER && id <= FF_WEAPON_DEPLOYMANCANNON )
+			{
+				pWeapon->Cleanup();
+			}
+		}
+		*/
+
 		return;
 	}
 
