@@ -281,6 +281,7 @@ void CFFGrenadeSlowfield::Precache()
 
 				pPlayer->SetLaggedMovementValue(1.0f);
 				pPlayer->SetActiveSlowfield( NULL );
+				pPlayer->m_bInSlowfield = false;
 			}
 
 			return;
@@ -308,14 +309,8 @@ void CFFGrenadeSlowfield::Precache()
 
 			CFFPlayer *pPlayer = ToFFPlayer( pEntity );
 			CFFPlayer *pSlower = ToFFPlayer( GetOwnerEntity() );
-
-			if( !pPlayer || pPlayer->IsObserver() || !pSlower)
-				continue;
-
-			if( SLOWFIELD_FRIENDLYIGNORE && !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
-				continue;
 			
-			if( SLOWFIELD_SELFIGNORE && pPlayer == pSlower )
+			if( !pPlayer || pPlayer->IsObserver() || !pSlower)
 				continue;
 
 			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - vecOrigin;
@@ -323,6 +318,14 @@ void CFFGrenadeSlowfield::Precache()
 
 			if (flDistance < GetGrenadeRadius())
 			{
+				pPlayer->m_bInSlowfield = true;
+
+				if( SLOWFIELD_FRIENDLYIGNORE && !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+					continue;
+				
+				if( SLOWFIELD_SELFIGNORE && pPlayer == pSlower )
+					continue;
+
 				float flFriendlyScale = 1.0f;
 
 				// Check if is a teammate and scale accordingly
@@ -355,6 +358,7 @@ void CFFGrenadeSlowfield::Precache()
 			{
 				pPlayer->SetLaggedMovementValue( 1.0f );
 				pPlayer->SetActiveSlowfield( NULL );
+				pPlayer->m_bInSlowfield = false;
 			}
 		}
 

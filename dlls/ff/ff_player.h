@@ -654,6 +654,8 @@ protected:
 public:
 	CFFGrenadeBase *GetActiveSlowfield( void ) const { return m_pActiveSlowfield; }
 	void SetActiveSlowfield( CFFGrenadeBase *pActiveSlowfield ) { m_pActiveSlowfield = pActiveSlowfield; };
+	bool IsInSlowfield( void ) const { return m_bInSlowfield; }
+	CNetworkVar( bool, m_bInSlowfield );
 
 private:
 	CFFGrenadeBase *m_pActiveSlowfield;

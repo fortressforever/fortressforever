@@ -543,6 +543,13 @@ public:
 	float m_flOverpressureTime;
 	Vector m_vecOverpressurePosition;
 	// ----------------------------------
+	
+	// ----------------------------------
+    // Slowfield stuff
+public:
+	bool IsInSlowfield( void ) const { return m_bInSlowfield; }
+	bool m_bInSlowfield;
+	// ----------------------------------
 
 private:
 	C_FFPlayer( const C_FFPlayer & );
