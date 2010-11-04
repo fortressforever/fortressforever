@@ -43,9 +43,10 @@ static ConVar hud_centerid( "hud_centerid", "0", FCVAR_ARCHIVE );
 #define CROSSHAIRTYPE_DETPACK 3
 #define CROSSHAIRTYPE_ENEMY_SENTRYGUN 4
 #define CROSSHAIRTYPE_FRIENDLY_SENTRYGUN 5
-//Adding enemy jumppad health hud -GreenMushy
-#define CROSSHAIRTYPE_ENEMY_MANCANNON 6
-#define CROSSHAIRTYPE_FRIENDLY_MANCANNON 7
+//Adding jumppad Crosshair info -GreenMushy
+#define CROSSHAIRTYPE_MANCANNON 6
+#define CROSSHAIRTYPE_ENEMY_MANCANNON 7
+#define CROSSHAIRTYPE_FRIENDLY_MANCANNON 8
 
 //=============================================================================
 //
@@ -171,7 +172,8 @@ void CHudCrosshairInfo::OnTick( void )
 		//debugoverlay->AddLineOverlay( vecOrigin + ( vecForward * 64.f ), vecOrigin + ( vecForward * 64.f ) + Vector( 0, 0, -8 ), 255, 0, 0, false, 3.0f );
 
 		trace_t tr;
-		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1024.f ), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER, &tr );
+		//Trace needs COLLISION_GROUP_PUSHAWAY flag added or it wont hit jumppads -GreenMushy
+		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1024.f ), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER | COLLISION_GROUP_PUSHAWAY, &tr );
 
 		// If we hit something...
 		if( tr.DidHit() )
@@ -286,6 +288,8 @@ void CHudCrosshairInfo::OnTick( void )
 				if ( (pPlayer == pHitPlayer) && (bBuildable) ) // looking at our own buildable
 				{
 					C_FFBuildableObject *pBuildable = ( C_FFBuildableObject * )tr.m_pEnt;
+
+					//Get Buildable health percent here no matter what class
 					iHealth = pBuildable->GetHealthPercent();
 
 					if( pBuildable->Classify() == CLASS_DISPENSER )
@@ -317,8 +321,8 @@ void CHudCrosshairInfo::OnTick( void )
 					}
 					else if( pBuildable->Classify() == CLASS_MANCANNON )
 					{
-						// TODO: Do whatever other stuff is doing w/ the crosshair
-						iArmor = -1;
+						//Set the crosshair to this type ( will display info about looking at your own jpad)
+						CROSSHAIRTYPE = CROSSHAIRTYPE_MANCANNON;
 					}
 					else
 					{
@@ -336,6 +340,7 @@ void CHudCrosshairInfo::OnTick( void )
 						// Bug #0000463: Hud Crosshair Info - douched
 						C_FFBuildableObject *pBuildable = (C_FFBuildableObject *)tr.m_pEnt;
 
+						//Get Buildable health percent here no matter what class
 						iHealth = pBuildable->GetHealthPercent();
 							
 						if( pBuildable->Classify() == CLASS_DISPENSER )
@@ -351,8 +356,6 @@ void CHudCrosshairInfo::OnTick( void )
 						{
 							//You see a friendly Jumppad -GreenMushy
 							CROSSHAIRTYPE = CROSSHAIRTYPE_FRIENDLY_MANCANNON;
-							//Adding health display -GreenMushy
-							iHealth = ( (C_FFManCannon *)pBuildable )->GetHealth();
 						}
 						else
 						{
@@ -371,6 +374,7 @@ void CHudCrosshairInfo::OnTick( void )
 					{
 						C_FFBuildableObject *pBuildable = (C_FFBuildableObject *)tr.m_pEnt;
 
+						//Get Buildable health percent here no matter what class
 						iHealth = pBuildable->GetHealthPercent();
 							
 						if( pBuildable->Classify() == CLASS_DISPENSER )
@@ -384,11 +388,8 @@ void CHudCrosshairInfo::OnTick( void )
 						}
 						else if( pBuildable->Classify() == CLASS_MANCANNON )
 						{
-							// TODO: Maybe man cannon's have armor? or some other property we want to show?
 							//Change Crosshair type -GreenMushy
 							CROSSHAIRTYPE = CROSSHAIRTYPE_ENEMY_MANCANNON;
-							//Adding health display -GreenMushy
-							iHealth = ( (C_FFManCannon *)pBuildable )->GetHealth();
 						}
 						else
 						{
@@ -616,6 +617,17 @@ void CHudCrosshairInfo::OnTick( void )
 
 					_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
 
+				}
+				//Own Jumppad info displayed here -GreenMushy
+				else if( CROSSHAIRTYPE == CROSSHAIRTYPE_MANCANNON )
+				{
+					char szHealth[ 5 ];
+					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+
+					wchar_t wszHealth[ 10 ];
+					vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+					
+					_snwprintf( m_pText, 255, L"Your Jump Pad - Health: %s ", wszHealth );
 				}
 				//Enemy Jumppad displayed here -GreenMushy
 				else if( CROSSHAIRTYPE == CROSSHAIRTYPE_ENEMY_MANCANNON )

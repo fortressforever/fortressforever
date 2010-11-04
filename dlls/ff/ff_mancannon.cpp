@@ -78,9 +78,10 @@ void CFFManCannon::Spawn( void )
 	m_iLastState = 0;
 	m_iCombatState = JUMPPAD_IDLE;
 	m_flLastDamage = 0.0f;
-	// caes: changed GetFloat to GetInt
-	m_iHealth = ffdev_mancannon_health.GetInt();
-	// caes
+
+	//Set the current and max health to the same values -Green Mushy
+	m_iHealth = MANCANNON_HEALTH;
+	m_iMaxHealth = MANCANNON_HEALTH;
 }
 
 //-----------------------------------------------------------------------------
