@@ -41,27 +41,38 @@
 ConVar laser_ng_offset("ffdev_lasergren_ng_offset", "8", FCVAR_REPLICATED, "Stream offset" );
 ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICATED );
 ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED );
-ConVar laserbeams( "ffdev_lasergren_beams", "2", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
+ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
 ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
-ConVar lasertime("ffdev_lasergren_time", "3", FCVAR_REPLICATED, "Laser active time");
+ConVar lasertime("ffdev_lasergren_time", "5", FCVAR_REPLICATED, "Laser active time");
+
+#ifdef CLIENT_DLL
+	ConVar ffdev_lasergren_widthcreate("ffdev_lasergren_widthcreate", "0.5", FCVAR_REPLICATED, "Width given in the constructor; not used");
+	ConVar ffdev_lasergren_widthstart("ffdev_lasergren_widthstart", "6", FCVAR_REPLICATED, "Width at the start of the beam");
+	ConVar ffdev_lasergren_widthend("ffdev_lasergren_widthend", "3", FCVAR_REPLICATED, "Width at the end of the beam");
+	#define LASERGREN_WIDTHCREATE ffdev_lasergren_widthcreate.GetFloat()
+	#define LASERGREN_WIDTHSTART ffdev_lasergren_widthstart.GetFloat()
+	#define LASERGREN_WIDTHEND ffdev_lasergren_widthend.GetFloat()
+#endif
 
 #ifdef GAME_DLL
 
-	ConVar laserdamage("ffdev_lasergren_damage", "10", 0, "Damage of laser");
-	ConVar laserangv("ffdev_lasergren_angv", "3.75", 0, "Laser angular increment");
-	ConVar laserjump( "ffdev_lasergren_jump", "80", 0, "Laser grenade jump distance" );
-	ConVar laserbob( "ffdev_lasergren_bob", "20", 0, "Laser grenade bob factor" );
+	ConVar laserdamage("ffdev_lasergren_damage", "10", FCVAR_NOTIFY, "Damage of laser");
+	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "1", FCVAR_NOTIFY, "Damage multiplier of laser against buildables");
+	ConVar laserangv("ffdev_lasergren_angv", "3.75", FCVAR_NOTIFY, "Laser angular increment");
+	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_NOTIFY, "Laser grenade jump distance" );
+	ConVar laserbob( "ffdev_lasergren_bob", "20", FCVAR_NOTIFY, "Laser grenade bob factor" );
 	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_CHEAT, "Laser grenade update time" );
 
-	ConVar usenails( "ffdev_lasergren_usenails", "1", FCVAR_NOTIFY, "Use nails instead of lasers" );
-	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", 0, "Bob Frequency");
+	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_NOTIFY, "Use nails instead of lasers" );
+	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_NOTIFY, "Bob Frequency");
 	
-	ConVar laserexplode("ffdev_lasergren_explode", "1", FCVAR_NOTIFY, "Explosion at end of active time");
+	ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_NOTIFY, "Explosion at end of active time");
 	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "90", FCVAR_NOTIFY, "Explosion damage at end of active period" );
 	ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_NOTIFY, "Explosion radius at end of active period" );
 
 	/******************************************************************/
 	ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_NOTIFY);
+	ConVar laser_ng_naildamage_buildablemult("ffdev_lasergren_ng_naildamage_buildablemult", "1.0", FCVAR_NOTIFY);
 	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.025", FCVAR_NOTIFY );
 	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", 0 );
 
@@ -140,13 +151,19 @@ class PseudoNail
 						{
 							CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
 							if( pDispenser )
-								pDispenser->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, ffdev_lasergren_ng_naildamage.GetInt() + 2, DMG_BULLET ) );
+								pDispenser->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt() * laser_ng_naildamage_buildablemult.GetFloat(), DMG_BULLET ) );
 						}
-						else /*if( FF_IsSentrygun( pTarget ) )*/
+						else if( FF_IsSentrygun( pTarget ) )
 						{
 							CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
 							if( pSentrygun )
-								pSentrygun->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, ffdev_lasergren_ng_naildamage.GetInt() + 2, DMG_BULLET ) );
+								pSentrygun->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt() * laser_ng_naildamage_buildablemult.GetFloat(), DMG_BULLET ) );
+						}
+						else /*if( FF_IsManCannon( pTarget ) )*/
+						{
+							CFFManCannon *pManCannon = FF_ToManCannon( pTarget );
+							if( pManCannon )
+								pManCannon->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt() * laser_ng_naildamage_buildablemult.GetFloat(), DMG_BULLET ) );
 						}
 					}
 				}
@@ -273,6 +290,7 @@ void CFFGrenadeLaser::Precache()
 	PrecacheModel(NAILGRENADE_MODEL);
 	PrecacheModel(GRENADE_BEAM_SPRITE);
 	PrecacheScriptSound( "NailGrenade.shoot" );
+	PrecacheScriptSound( "NailGrenade.LaserLoop" );
 
 	BaseClass::Precache();
 }
@@ -359,7 +377,7 @@ void CFFGrenadeLaser::Precache()
 			VectorNormalizeFast(vecDirection);
 
 			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
-				vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+				vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, NULL, COLLISION_GROUP_PLAYER, &tr );
 			
 			if ( tr.m_pEnt )
 				DoDamage( tr.m_pEnt );
@@ -373,7 +391,7 @@ void CFFGrenadeLaser::Precache()
 	void CFFGrenadeLaser::DoDamage( CBaseEntity *pTarget )
 	{
 		// only interested in players, dispensers & sentry guns
-		if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN )
+		if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN || pTarget->Classify() == CLASS_MANCANNON )
 		{
 			// If pTarget can take damage from nails...
 			if ( g_pGameRules->FCanTakeDamage( pTarget, ToFFPlayer( GetOwnerEntity() ) ) )
@@ -387,13 +405,19 @@ void CFFGrenadeLaser::Precache()
 				{
 					CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
 					if( pDispenser )
-						pDispenser->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat() + 2, DMG_ENERGYBEAM ) );
+						pDispenser->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat() * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
 				}
-				else /*if( FF_IsSentrygun( pTarget ) )*/
+				else if( FF_IsSentrygun( pTarget ) )
 				{
 					CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
 					if( pSentrygun )
-						pSentrygun->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat() + 2, DMG_ENERGYBEAM ) );
+						pSentrygun->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat() * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
+				}
+				else /*if( FF_IsManCannon( pTarget ) )*/
+				{
+					CFFManCannon *pManCannon = FF_ToManCannon( pTarget );
+					if( pManCannon )
+						pManCannon->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), laserdamage.GetFloat() * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
 				}
 			}
 		}
@@ -510,6 +534,8 @@ void CFFGrenadeLaser::Precache()
 #else
 	void CFFGrenadeLaser::UpdateOnRemove( void )
 	{
+		StopSound("NailGrenade.LaserLoop");
+
 		int i;
 		for( i = 0; i < laserbeams.GetInt(); i++ )
 		{
@@ -528,6 +554,8 @@ void CFFGrenadeLaser::Precache()
 	{
 		if ( m_bIsOn )
 		{
+			EmitSound("NailGrenade.LaserLoop");
+
 			Vector vecDirection;
 			Vector vecOrigin = GetAbsOrigin();
 			QAngle angRadial = GetAbsAngles();
@@ -549,9 +577,9 @@ void CFFGrenadeLaser::Precache()
 				
 				if( !pBeam[i] )
 				{
-					pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
-					pBeam[i]->SetWidth( 1 );
-					pBeam[i]->SetEndWidth( 0.05f );
+					pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, LASERGREN_WIDTHCREATE );
+					pBeam[i]->SetWidth( LASERGREN_WIDTHSTART );
+					pBeam[i]->SetEndWidth( LASERGREN_WIDTHEND );
 					pBeam[i]->SetBrightness( 255 );
 					pBeam[i]->SetColor( 255, 255, 255 );
 					pBeam[i]->LiveForTime( lasertime.GetFloat()  );
