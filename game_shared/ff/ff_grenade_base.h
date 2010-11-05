@@ -95,7 +95,7 @@ protected:
 	//Custom collision to allow for constant elasticity on hit surfaces
 	virtual void ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
 
-	float	m_flDetonateTime;
+	CNetworkVarForDerived(float, m_flDetonateTime);
 
 	bool	m_bHitwater;
 	float	m_flHitwaterTimer;
