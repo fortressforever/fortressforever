@@ -4018,7 +4018,8 @@ void CFFPlayer::StatusEffectsThink( void )
 			AssertMsg( pInfector, "[Infect] pInfector == NULL\n" );
 		
 			// Medic changed teams
-			if( pInfector->GetTeamNumber() != m_iInfectedTeam )
+			// dexter - added remove infection if player switched from medic class
+			if( pInfector->GetTeamNumber() != m_iInfectedTeam || !pInfector->GetClassSlot() || pInfector->GetClassSlot() != CLASS_MEDIC )
 				m_bInfected = 0;
 		}
 		else
