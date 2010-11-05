@@ -448,6 +448,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		Q_strncpy( deathMsg.objectiveText, objectivetext, MAX_OBJECTIVE_TEXT_LENGTH );
 		deathMsg.flDisplayTime = gpGlobals->curtime + hud_deathnotice_time.GetFloat();
 		deathMsg.iconObjective = gHUD.GetIcon( "death_objective" );
+		deathMsg.iconDeath = NULL;
 		
 		/*
 		deathMsg.iconObjective = gHUD.GetIcon( fullobjectivename );
