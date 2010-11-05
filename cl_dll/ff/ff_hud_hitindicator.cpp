@@ -25,6 +25,11 @@
 #define	CROSSHAIR_SIZES	5	// This needs to be matched in ff_options.cpp
 
 ConVar hud_hitindicator_time("hud_hitindicator_time", "0.75", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Length of time the hit indicator shows for (set to 0 to disable).");
+extern ConVar cl_concaim_movexhair;
+extern ConVar cl_concaim_fadetime;
+
+#define FFDEV_CONCAIM_MOVEXHAIR cl_concaim_movexhair.GetInt()
+#define FFDEV_CONCAIM_FADETIME cl_concaim_fadetime.GetFloat()
 
 using namespace vgui;
 
@@ -133,6 +138,8 @@ void CHudHitIndicator::Paint( void )
 
 	if ( !IsCurrentViewAccessAllowed() )
 		return;
+	
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 
 	m_curViewAngles = CurrentViewAngles();
 	m_curViewOrigin = CurrentViewOrigin();
@@ -160,6 +167,57 @@ void CHudHitIndicator::Paint( void )
 		x += 0.5f * screen[0] * ScreenWidth() + 0.5f;
 		y += 0.5f * screen[1] * ScreenHeight() + 0.5f;
 	}
+	
+	// AfterShock: Conc aim -> plot crosshair properly
+	if ( ( FFDEV_CONCAIM_MOVEXHAIR == 1) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		QAngle angles;
+		Vector forward;
+		Vector point, screen;
+
+		// this code is wrong
+		// AfterShock: No, the code is now right!
+		angles = pPlayer->EyeAngles();
+		AngleVectors( angles, &forward );
+		forward *= 10000.0f;
+		VectorAdd( m_curViewOrigin, forward, point );
+		ScreenTransform( point, screen );
+
+		x = (screen[0]*0.5 + 0.5f) * ScreenWidth();
+		y = (1 - ( screen[1]*0.5 + 0.5f ) ) * ScreenHeight();
+	}
+	else if ( ( FFDEV_CONCAIM_MOVEXHAIR == 2) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		x = -1;
+		y = -1;
+	}
+	else if ( ( FFDEV_CONCAIM_MOVEXHAIR == 3) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		// if should be flashing
+		if (gpGlobals->curtime < pPlayer->m_flTrueAimTime + FFDEV_CONCAIM_FADETIME)
+		{
+			QAngle angles;
+			Vector forward;
+			Vector point, screen;
+
+			// this code is wrong
+			// AfterShock: No, the code is now right!
+			angles = pPlayer->EyeAngles();
+			AngleVectors( angles, &forward );
+			forward *= 10000.0f;
+			VectorAdd( m_curViewOrigin, forward, point );
+			ScreenTransform( point, screen );
+
+			x = (screen[0]*0.5 + 0.5f) * ScreenWidth();
+			y = (1 - ( screen[1]*0.5 + 0.5f ) ) * ScreenHeight();
+		}
+		// else don't draw xhair at all
+		else
+		{
+			x = -1;
+			y = -1;
+		}
+	}
 
 	// --> Mirv: Crosshair stuff
 	//m_pCrosshair->DrawSelf( 
@@ -183,6 +241,16 @@ void CHudHitIndicator::Paint( void )
 	float dt = ( m_flStartTime - gpGlobals->curtime );
 	float flAlpha = SimpleSplineRemapVal( dt, 0.0f, hud_hitindicator_time.GetFloat(), 255, 0 );
 	flAlpha = clamp( flAlpha, 0.0f, 255.0f );
+	
+	// movexhair 3 = flash xhair when shooting
+	if ( ( FFDEV_CONCAIM_MOVEXHAIR == 3) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		// calculate alphas
+		float flFlashAlpha = clamp(1.0f - (gpGlobals->curtime - pPlayer->m_flTrueAimTime)/FFDEV_CONCAIM_FADETIME, 0.0f, 1.0f);
+		// set alphas
+		outerCol[3] *= flFlashAlpha;
+		innerCol[3] *= flFlashAlpha;
+	}
 
 	currentFont = m_hSecondaryCrosshairs[clamp(outerSize, 1, CROSSHAIR_SIZES) - 1];
 
