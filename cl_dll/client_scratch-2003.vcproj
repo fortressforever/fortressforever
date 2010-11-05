@@ -4066,6 +4066,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath="..\game_shared\ff\ff_grenade_nail.cpp">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_napalm.cpp">
 			</File>
 			<File
