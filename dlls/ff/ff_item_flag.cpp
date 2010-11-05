@@ -949,6 +949,8 @@ void CFFInfoScript::OnThink( void )
 
 				g_pEffects->Sparks( GetAbsOrigin() );
 				UTIL_Bubbles( GetAbsOrigin(), GetAbsOrigin() + Vector( 0.0f, 0.0f, 64.0f ), 50 );
+
+				SetAbsOrigin( GetAbsOrigin() + Vector( 0.0f, 0.0f, 8.0f ) );
 			}
 
 			// make flag float upwards
