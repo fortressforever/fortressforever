@@ -35,15 +35,148 @@
 	#define CFFGrenadeLaser C_FFGrenadeLaser
 #endif
 
-
+#define MAX_BEAMS 16
 
 #ifdef GAME_DLL
 
-	ConVar laserdamage("ffdev_laserdamage", "10", FCVAR_CHEAT, "Damage tick of LG laser");
-	ConVar lasertime("ffdev_lasertime", "3", FCVAR_CHEAT, "Laser activation time");
-	ConVar laserangv("ffdev_laserangv", "7.5", FCVAR_CHEAT, "Laser angular velocity");
-	ConVar laserexplode("ffdev_laserexplode", "1", FCVAR_CHEAT, "Explosion at end of fuse");
-//	ConVar laserstreams( "ffdev_lasergren_streams", "2", FCVAR_CHEAT );
+	ConVar laserdamage("ffdev_lasergren_damage", "10", FCVAR_CHEAT, "Damage of laser");
+	ConVar lasertime("ffdev_lasergren_time", "3", FCVAR_CHEAT, "Laser active time");
+	ConVar laserangv("ffdev_lasergren_angv", "3.75", FCVAR_CHEAT, "Laser angular increment");
+	ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_CHEAT, "Explosion at end of active time");
+	ConVar laserbeams( "ffdev_lasergren_beams", "2", FCVAR_CHEAT, "Number of laser beams", true, 1, true, MAX_BEAMS);
+	ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_CHEAT, "Laser beam max radius",true, 0, true, 4096 );
+	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_CHEAT, "Laser grenade jump distance" );
+	ConVar laserbob( "ffdev_lasergren_bob", "20", FCVAR_CHEAT, "Laser grenade bob factor" );
+
+	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_CHEAT, "Use nails instead of lasers" );
+
+	/******************************************************************/
+	ConVar ffdev_lasergren_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "600", FCVAR_CHEAT);
+	ConVar ffdev_lasergren_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_CHEAT);
+	ConVar ffdev_lasergren_ng_spittime( "ffdev_lasergren_ng_spittime", "0.2", FCVAR_CHEAT );
+	ConVar ffdev_lasergren_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", FCVAR_CHEAT );
+	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
+	ConVar ffdev_lasergren_ng_nailstreams( "ffdev_lasergren_nailgren_streams", "10", FCVAR_CHEAT );
+	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
+
+	ConVar ffdev_lasergren_ng_nail_bounds("ffdev_lasergren_ng_nail_bounds", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT, "NG Nails bbox");
+	ConVar ffdev_lasergren_ng_visualizenails("ffdev_lasergren_ng_visualizenails", "0", FCVAR_CHEAT, "Show NG nails trace");
+	ConVar ffdev_lasergren_ng_nail_length("ffdev_lasergren_ng_nail_length", "5.0", FCVAR_CHEAT, "Length of NG nails");
+
+
+
+
+
+
+
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Simulates a nail as a tracehull moving in a straight line until it hits something
+//-------------------------------------------------------------------------------------------------------
+class PseudoNail
+{
+	public:
+
+	//-------------------------------------------------------------------------------------------------------
+	// Purpose: Constructor -- only the position and angle are unique for each nail
+	//-------------------------------------------------------------------------------------------------------
+		PseudoNail( const Vector &vOrigin, const QAngle &vAngles )
+		{
+			m_vecOrigin = vOrigin;
+			m_vecAngles = vAngles;
+		}
+
+	//-------------------------------------------------------------------------------------------------------
+	// Purpose: Traces the hull of the nail and damages what it "hits"
+	//			Returns true if the nail hits something (whether or not it caused damage), and false otherwise
+	//-------------------------------------------------------------------------------------------------------
+		bool TraceNail( CBaseEntity * pNailOwner, CFFPlayer * pNailGrenOwner )
+		{
+			if ( !pNailOwner || !pNailGrenOwner )
+				return false;
+			
+			Vector vecForward;
+			AngleVectors( m_vecAngles, &vecForward );
+			
+			// Visualise trace
+			if ( ffdev_lasergren_ng_visualizenails.GetBool() )
+			{
+				NDebugOverlay::Line(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_lasergren_ng_nail_length.GetInt() ), 255, 255, 0, false, 5.0f);
+				NDebugOverlay::SweptBox(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_lasergren_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_lasergren_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_lasergren_ng_nail_bounds.GetFloat(), m_vecAngles, 200, 100, 0, 100, 0.1f);
+			}
+
+			trace_t traceHit;
+			UTIL_TraceHull( m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_lasergren_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_lasergren_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_lasergren_ng_nail_bounds.GetFloat(), MASK_SHOT_HULL, NULL, COLLISION_GROUP_NONE, &traceHit );
+
+			if (traceHit.m_pEnt)
+			{
+				CBaseEntity *pTarget = traceHit.m_pEnt;
+				
+				// only interested in players, dispensers & sentry guns
+				if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN )
+				{
+					// If pTarget can take damage from nails...
+					if ( g_pGameRules->FCanTakeDamage( pTarget, pNailGrenOwner ) )
+					{
+						if (traceHit.m_pEnt->IsPlayer() )
+						{
+							CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+							pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, ffdev_lasergren_ng_naildamage.GetInt(), DMG_BULLET ) );
+						}
+						else if( FF_IsDispenser( pTarget ) )
+						{
+							CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
+							if( pDispenser )
+								pDispenser->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, ffdev_lasergren_ng_naildamage.GetInt() + 2, DMG_BULLET ) );
+						}
+						else /*if( FF_IsSentrygun( pTarget ) )*/
+						{
+							CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
+							if( pSentrygun )
+								pSentrygun->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, ffdev_lasergren_ng_naildamage.GetInt() + 2, DMG_BULLET ) );
+						}
+					}
+				}
+				return true;
+			}
+			else
+				return false;
+		}
+	//-----------------------------------------------------------------------------
+	// Purpose: Moves a nail forward a certain distance
+	//-----------------------------------------------------------------------------
+		void UpdateNailPosition( float flForwardDist )
+		{
+			Vector vecForward;
+			AngleVectors( m_vecAngles, &vecForward );
+			vecForward *= flForwardDist;
+
+			m_vecOrigin += vecForward;
+		}
+
+	private:
+
+		Vector m_vecOrigin;		// Nail's position
+		QAngle m_vecAngles;		// Nail's angle of travel
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif
 
@@ -70,13 +203,19 @@ public:
 	DECLARE_DATADESC(); // Since we're adding new thinks etc
 	virtual void Spawn();
 	virtual void BeamEmit();
+	virtual void NailEmit();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual void DoDamage( CBaseEntity *pTarget );
-	virtual void Detonate();
+
+private:
+	void ShootNail( const Vector& vecOrigin, const QAngle& vecAngles );
 
 protected:
+	float	m_flNailSpit;
 	float	m_flAngleOffset;
-	CBeam	*pBeamA, *pBeamB;
+	CBeam	*pBeam[MAX_BEAMS];
+
+	CUtlVector< PseudoNail > m_NailsVector;
 
 	float	m_flLastThinkTime;
 
@@ -85,7 +224,8 @@ protected:
 
 #ifdef GAME_DLL
 	BEGIN_DATADESC(CFFGrenadeLaser) 
-		DEFINE_THINKFUNC(BeamEmit), 
+		DEFINE_THINKFUNC(BeamEmit),
+		DEFINE_THINKFUNC(NailEmit),
 	END_DATADESC() 
 #endif
 
@@ -106,7 +246,7 @@ void CFFGrenadeLaser::Precache()
 {
 	PrecacheModel(NAILGRENADE_MODEL);
 	PrecacheModel(GRENADE_BEAM_SPRITE);
-//	PrecacheScriptSound( "NailGrenade.shoot" );
+	PrecacheScriptSound( "NailGrenade.shoot" );
 
 	BaseClass::Precache();
 }
@@ -142,85 +282,75 @@ void CFFGrenadeLaser::Precache()
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);
 
-		pBeamA = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
-		pBeamA->SetWidth( 1 );
-		pBeamA->SetEndWidth( 0.05f );
-		pBeamA->SetBrightness( 255 );
-		pBeamA->SetColor( 255, 255, 255 );
-//		pBeamA->RelinkBeam();
-		pBeamA->LiveForTime( lasertime.GetFloat() );
-
-		pBeamB = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
-		pBeamB->SetWidth( 1 );
-		pBeamB->SetEndWidth( 0.05f );
-		pBeamB->SetBrightness( 255 );
-		pBeamB->SetColor( 255, 255, 255 );
-//		pBeamB->RelinkBeam();
-		pBeamB->LiveForTime( lasertime.GetFloat() );
-
-		// Go into nail mode
-		SetThink(&CFFGrenadeLaser::BeamEmit);
+		char i;
+		for( i=0; i < laserbeams.GetInt(); i++ )
+		{
+			pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 0.5 );
+			pBeam[i]->SetWidth( 1 );
+			pBeam[i]->SetEndWidth( 0.05f );
+			pBeam[i]->SetBrightness( 255 );
+			pBeam[i]->SetColor( 255, 255, 255 );
+	//		pBeam[i]->RelinkBeam();
+			pBeam[i]->LiveForTime( lasertime.GetFloat() );
+		}
+		if( usenails.GetBool() )
+			SetThink(&CFFGrenadeLaser::NailEmit);
+		else
+			SetThink(&CFFGrenadeLaser::BeamEmit);
 		SetNextThink(gpGlobals->curtime);
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: Spin round emitting nails
+	// Purpose: Spin round emitting lasers
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeLaser::BeamEmit() 
 	{
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
-			Detonate();
+			if( laserexplode.GetBool() )
+				Detonate();
+			else
+				UTIL_Remove( this );
 			return;
 		}
 
 		float flRisingheight = 0;
 
 		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
-		if (m_flDetonateTime - gpGlobals->curtime > 2.6 && !m_fIsHandheld)
-			flRisingheight = 80;
+		if (m_flDetonateTime - gpGlobals->curtime > lasertime.GetFloat() - 0.3 && !m_fIsHandheld)
+			flRisingheight = laserjump.GetFloat();
 
-		SetAbsVelocity(Vector(0, 0, flRisingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
+		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(GetAbsAngles().y))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
 
-		Vector vecOrigin = GetAbsOrigin();
 		Vector vecDirection;
-		AngleVectors(GetAbsAngles(), &vecDirection);
-		VectorNormalizeFast(vecDirection);
+		Vector vecOrigin = GetAbsOrigin();
+		QAngle angRadial = GetAbsAngles();
 
 		float flSize = 20.0f;
+		trace_t tr;
+		char i;
 
-			//DrawBeam(vecOrigin + vecDirection * flSize, angRadial);
-		trace_t trA, trB;
-		UTIL_TraceLine(vecOrigin + vecDirection * flSize, vecOrigin + vecDirection * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trA);
-		UTIL_TraceLine(vecOrigin - vecDirection * flSize, vecOrigin - vecDirection * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trB);
+		float flDeltaAngle = 360.0f / laserbeams.GetInt();
 
-		pBeamA->PointsInit( vecOrigin, trA.endpos );
-		pBeamB->PointsInit( vecOrigin, trB.endpos );
+		for( i = 0; i < laserbeams.GetInt(); i++ )
+		{
+			AngleVectors(angRadial, &vecDirection);
+			VectorNormalizeFast(vecDirection);
 
-		if ( trA.m_pEnt )
-			DoDamage( trA.m_pEnt );
+			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
+				vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+			
+			pBeam[i]->PointsInit( vecOrigin, tr.endpos );
 
-		if ( trB.m_pEnt )
-			DoDamage( trB.m_pEnt );
+			if ( tr.m_pEnt )
+				DoDamage( tr.m_pEnt );
 
-//		EmitSound("NailGrenade.shoot");
+			angRadial.y += flDeltaAngle;
+		}
 		
-/*		CEffectData data;
-		data.m_vOrigin = vecOrigin;
-		data.m_vAngles = QAngle(0, 0, 0);
-
-#ifdef GAME_DLL
-			data.m_nEntIndex = entindex();
-#else
-			data.m_hEntity = this;
-#endif
-*/
-
-
-
-		SetNextThink(gpGlobals->curtime);
+		SetNextThink( gpGlobals->curtime + 0.01f );
 	}
 
 	void CFFGrenadeLaser::DoDamage( CBaseEntity *pTarget )
@@ -252,16 +382,175 @@ void CFFGrenadeLaser::Precache()
 		}
 	}
 
-	void CFFGrenadeLaser::Detonate()
+/*********************************************************/
+
+/***************** NAIL GREN CODE ************************/
+
+/*********************************************************/
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Spin round emitting nails
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeLaser::NailEmit() 
 	{
-		// Remove if not allowed by Lua 
-		if ( !laserexplode.GetBool() )
+		// First we need to trace each nail's bounds to check for a hit, then "move" the nails that didn't hit anything
+		for ( int i=0; i < m_NailsVector.Count(); i++)
 		{
-			UTIL_Remove(this);
+			// Remove a nail that hits something
+			if ( m_NailsVector[i].TraceNail( this, ToFFPlayer( GetOwnerEntity() ) ) )
+			{
+				m_NailsVector.Remove(i);
+				// Remove shifts all the vector elements forward, so we have to adjust the index or we will skip a nail
+				i--;
+				// Don't jump off the begining or end of the vector, though
+				if ( i < 0 || i >= m_NailsVector.Count() )
+					i++;
+			}
+			else // No hit -- move the nail forward
+				m_NailsVector[i].UpdateNailPosition( ffdev_lasergren_ng_nailspeed.GetInt() * ( gpGlobals->curtime - m_flLastThinkTime ) );
+			//if MAX DISTANCE
+			//	Remove
+		}
+		
+
+		// Blow up if we've reached the end of our fuse
+		if (gpGlobals->curtime > m_flDetonateTime) 
+		{
+			Detonate();
 			return;
 		}
 
-		BaseClass::Detonate();
+		float flRisingheight = 0;
+
+		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
+		if (m_flDetonateTime - gpGlobals->curtime > 2.6 && !m_fIsHandheld)
+			flRisingheight = 80;
+
+		SetAbsVelocity(Vector(0, 0, flRisingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
+		SetAbsAngles(GetAbsAngles() + QAngle(0, 15, 0));
+
+		Vector vecOrigin = GetAbsOrigin();
+
+		// Time to spit out nails again?
+		if( m_flNailSpit < gpGlobals->curtime )
+		{
+			int iStreams = ffdev_lasergren_ng_nailstreams.GetInt();
+			//float flSize = ffdev_nailgren_flatten.GetFloat();
+			float flSize = 20.0f;
+
+			float flDeltaAngle = 360.0f / iStreams;
+			QAngle angRadial = QAngle(0.0f, random->RandomFloat(0.0f, flDeltaAngle), 0.0f);
+			
+			Vector vecDirection;
+
+			while (iStreams-- > 0)
+			{
+				AngleVectors(angRadial, &vecDirection);
+				VectorNormalizeFast(vecDirection);
+
+				ShootNail(vecOrigin + vecDirection * flSize, angRadial);
+				angRadial.y += flDeltaAngle;
+			}
+
+			EmitSound("NailGrenade.shoot");
+			
+			CEffectData data;
+			data.m_vOrigin = vecOrigin;
+			data.m_vAngles = QAngle(0, 0, 0);
+
+#ifdef GAME_DLL
+			data.m_nEntIndex = entindex();
+#else
+			data.m_hEntity = this;
+#endif
+
+			DispatchEffect("Projectile_Nail_Radial", data);
+
+			// Default to 45 degrees
+/*			int iNailSpreadInterval = 360 / ((iStreams == 0) ? 45 : iStreams);
+
+			// Start position (0 to (360 - iNailSpreadInterval))
+			int iNailStartPos = (rand() % iStreams) * iNailSpreadInterval;
+
+			int iNailOffset = rand() % ffdev_lasergren_ng_angleoffset.GetInt();
+
+			Vector vecNailDir;
+			QAngle vecAngles( 0.f, iNailStartPos + iNailOffset, 0.f );
+
+			for( int i = 0; i < iStreams; i++ )
+			{
+				AngleVectors( vecAngles, &vecNailDir );
+				VectorNormalizeFast( vecNailDir );
+
+				ShootNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, ( i == 0 ) ? true : false );
+
+				// Update next position
+				vecAngles.y += (iNailSpreadInterval + iNailOffset);
+			}*/
+
+			// Set up next nail spit time
+			m_flNailSpit = gpGlobals->curtime + ffdev_lasergren_ng_spittime.GetFloat();
+		}
+
+		/*
+		// Bug #0000674: Nail grenade doesn't shoot nails out like TFC nail grenade
+		//	Otherwise known as: Make nail grens look rubbish again		
+
+		// Time to spit out nails again?
+		if( m_flNailSpit < gpGlobals->curtime )
+		{
+			// Do the classic TFC pattern.
+			// 9/27/2006 - upping from 12 to 24 and change angle from 30 to 15
+			for( int i = 0; i < 23; i++ )
+			{
+				Vector vecNailDir;
+				QAngle vecAngles = GetAbsAngles() + QAngle( 0, ( 15.0f * i ) + m_flAngleOffset, 0 );				
+				AngleVectors( vecAngles, &vecNailDir );
+				VectorNormalizeFast( vecNailDir );
+
+				CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), ffdev_lasergren_ng_naildamage.GetInt(), ffdev_lasergren_ng_nailspeed.GetInt());
+				if(pNail)
+					pNail->m_bNailGrenadeNail = true;				
+			}
+
+			// Increment the starting spot for nails a bit so we
+			// don't have gaps due to the angular pattern we shoot with
+			m_flAngleOffset += ffdev_lasergren_ng_angleoffset.GetFloat();
+
+			// TODO: Get tang to make this sound sound like 12 nails being shot out
+			// Play this each time we spawn a nail?
+			EmitSound( "NailGrenade.shoot" );
+
+			// Set up next nail spit time
+			m_flNailSpit = gpGlobals->curtime + ffdev_lasergren_ng_spittime.GetFloat();
+		}
+		*/
+
+		SetNextThink(gpGlobals->curtime);
+		m_flLastThinkTime = gpGlobals->curtime;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Shoot a nail out
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeLaser::ShootNail( const Vector& vecOrigin, const QAngle& vecAngles )
+	{
+		/*
+		// Create the nail and tell it it's a nail grenade nail
+		// We don't do a clientside nail with this because that is being done itself
+		CFFProjectileNail *pNail = CFFProjectileNail::CreateNail( this, vecOrigin, vecAngles, GetOwnerEntity(), ffdev_lasergren_ng_naildamage.GetInt(), ffdev_lasergren_ng_nailspeed.GetInt(), true );
+
+		if (!pNail)
+			return;
+
+		pNail->m_bNailGrenadeNail = true;
+
+		float flFlatten = ffdev_nailgren_flatten.GetFloat();
+		Vector vecFlattened = Vector(flFlatten, flFlatten, 1.0f);
+		pNail->SetSize(-vecFlattened, vecFlattened);
+		*/
+		
+		m_NailsVector.AddToTail( PseudoNail( vecOrigin, vecAngles ) );
 	}
 
 #endif
