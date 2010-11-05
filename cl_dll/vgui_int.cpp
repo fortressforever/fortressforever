@@ -24,6 +24,7 @@
 #include "FileSystem.h"
 #include "ff_options.h"
 #include "ff_gamemodes.h"
+#include "ff_training.h"
 
 using namespace vgui;
 
@@ -187,6 +188,7 @@ void VGui_CreateGlobalPanels( void )
 	ffoptions->Create(uiParent);
 	ffgamemodes->Create(uiParent);
 	ffsplash->Create(uiParent);
+	fftraining->Create(uiParent);
 	// <-- Mirv
 }
 
@@ -214,6 +216,8 @@ void VGui_Shutdown()
 	ffoptions->Destroy();
 	ffgamemodes->Destroy();
 	ffsplash->Destroy();
+	ffircconnect->Destroy();
+	fftraining->Destroy();
 	// <-- Mirv
 
 	if ( g_pClientMode )
