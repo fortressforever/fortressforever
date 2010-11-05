@@ -40,11 +40,11 @@ BEGIN_NETWORK_TABLE( CFFProjectileRail, DT_FFProjectileRail )
 	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[0]"),
 	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[1]"),
 	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[2]"),
-	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 0), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
-	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 1), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
-	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 0), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 1), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
 
-	SendPropInt( SENDINFO(m_iNumBounces), 8, SPROP_UNSIGNED ), // | SPROP_CHANGES_OFTEN ),
+	SendPropInt( SENDINFO(m_iNumBounces), 8, SPROP_UNSIGNED ),
 #endif
 END_NETWORK_TABLE()
 
