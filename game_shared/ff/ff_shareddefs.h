@@ -39,7 +39,6 @@ enum FFStatusIconTypes
     FF_STATUSICON_CONCUSSION,
     FF_STATUSICON_INFECTION,
     FF_STATUSICON_LEGINJURY,
-	FF_STATUSICON_CALTROPPED,
 	FF_STATUSICON_TRANQUILIZED,
 	FF_STATUSICON_HALLUCINATIONS,
 	FF_STATUSICON_BURNING,
@@ -78,7 +77,6 @@ enum LuaEffectType
 	LUA_EF_HEADSHOT,		// player is headshotted (currently only by sniperrifle)
 	LUA_EF_LEGSHOT,			// left shot a player
 	LUA_EF_TRANQ,			// tranq a player
-	LUA_EF_CALTROP,			// caltrop a player
 	LUA_EF_ACSPINUP,		// ac spinning up
 	LUA_EF_SNIPERRIFLE,		// player slowed due to sniper rifle charging
 	LUA_EF_SPEED_LUA1,		// custom speed effect (etc.)

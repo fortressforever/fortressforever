@@ -35,7 +35,6 @@ using namespace vgui;
 const char *szIcons[FF_STATUSICON_MAX] = {	"concussion",		// FF_STATUSICON_CONCUSSION
 											"infection",		// FF_STATUSICON_INFECTION
 											"leginjury",		// FF_STATUSICON_LEGINJURY
-											"caltropped",		// FF_STATUSICON_CALTROPPED
 											"tranquilized",		// FF_STATUSICON_TRANQUILIZED
 											"hallucinations",	// FF_STATUSICON_HALLUCINATIONS
 											"burning",			// FF_STATUSICON_BURNING
