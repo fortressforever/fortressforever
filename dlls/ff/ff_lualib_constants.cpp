@@ -124,7 +124,6 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kHeadshot",			LUA_EF_HEADSHOT),
 				value("kLegshot",			LUA_EF_LEGSHOT),
 				value("kTranq",				LUA_EF_TRANQ),
-				value("kCaltrop",			LUA_EF_CALTROP),
 				value("kACSpinup",			LUA_EF_ACSPINUP),
 				value("kSniperrifle",		LUA_EF_SNIPERRIFLE),
 				value("kSpeedlua1",			LUA_EF_SPEED_LUA1),

@@ -539,8 +539,6 @@ namespace Omnibot
 			return "gasgrenade";
 		case TF_CLASSEX_CONC_GRENADE:
 			return "concussiongrenade";
-		case TF_CLASSEX_CALTROP:
-			return "caltrop";
 		case TF_CLASSEX_PIPE:
 			return "pipebomb";
 		case TF_CLASSEX_GLGRENADE:
@@ -1132,8 +1130,6 @@ namespace Omnibot
 					return TF_CLASSEX_GAS_GRENADE;
 				case CLASS_GREN_CONC:
 					return TF_CLASSEX_CONC_GRENADE;
-				case CLASS_GREN_CALTROP:	
-					return TF_CLASSEX_CALTROP;
 				case CLASS_PIPEBOMB:
 					return TF_CLASSEX_PIPE;
 				case CLASS_GLGRENADE:
@@ -1233,7 +1229,6 @@ namespace Omnibot
 				case CLASS_GREN_NAPALM:
 				case CLASS_GREN_GAS:
 				case CLASS_GREN_CONC:
-				case CLASS_GREN_CALTROP:
 				case CLASS_PIPEBOMB:
 				case CLASS_GLGRENADE:
 				case CLASS_ROCKET:
@@ -1349,8 +1344,6 @@ namespace Omnibot
 								_flags.SetFlag(TF_ENT_FLAG_LEGSHOT);
 							if(pffPlayer->IsSpeedEffectSet(SE_TRANQ))
 								_flags.SetFlag(TF_ENT_FLAG_TRANQED);
-							if(pffPlayer->IsSpeedEffectSet(SE_CALTROP))
-								_flags.SetFlag(TF_ENT_FLAG_CALTROP);
 							if(pffPlayer->IsGassed())
 								_flags.SetFlag(TF_ENT_FLAG_GASSED);
 							
@@ -1451,7 +1444,6 @@ namespace Omnibot
 				case CLASS_GREN_NAPALM:
 				case CLASS_GREN_GAS:
 				case CLASS_GREN_CONC:
-				case CLASS_GREN_CALTROP:
 				case CLASS_PIPEBOMB:
 				case CLASS_GLGRENADE:
 				case CLASS_ROCKET:

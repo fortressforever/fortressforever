@@ -38,7 +38,6 @@ void CFFLuaLib::InitWeapons(lua_State* L)
 			.enum_("GrenId")
 			[
 				value("kNormal",		CLASS_GREN),
-				value("kCaltrop",		CLASS_GREN_CALTROP),
 				value("kNail",			CLASS_GREN_NAIL),
 				value("kMirv",			CLASS_GREN_MIRV),
 				value("kMirvlet",		CLASS_GREN_MIRVLET),
