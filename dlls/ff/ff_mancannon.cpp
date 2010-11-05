@@ -16,25 +16,15 @@
 #include "const.h"
 #include "ff_gamerules.h"
 #include "ff_utils.h"
+#include "IEffects.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 ConVar ffdev_mancannon_push_foward( "ffdev_mancannon_push_forward", "1024", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
-
-ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "300", FCVAR_REPLICATED );
-ConVar ffdev_mancannon_lifetime( "ffdev_mancannon_lifetime", "60.0", FCVAR_REPLICATED );
-
-// Jiggles: Sorry, but I'm not using the "mancannon" nomenclature; Bungie didn't invent the jump pad!
-//#define JUMPPAD_INITIAL_DEPLOY	0	
-#define JUMPPAD_ACTIVATE		1
-#define JUMPPAD_POWERDOWN		2
-#define JUMPPAD_REMOVE			3
-
-#define JUMPPAD_WARMUP_TIME		1.0f
-#define JUMPPAD_LIFESPAN		ffdev_mancannon_lifetime.GetFloat()
-#define JUMPPAD_POWERDOWN_TIME	5.0f
+ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "125", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 //=============================================================================
 //
@@ -59,6 +49,17 @@ extern const char *g_pszFFManCannonSounds[];
 
 extern const char *g_pszFFGenGibModels[];
 
+// Array of char *'s to sounds
+const char *g_pszFFManCannonSounds[] =
+{
+	FF_MANCANNON_BUILD_SOUND,
+	FF_MANCANNON_EXPLODE_SOUND,
+	//"JumpPad.WarmUp",
+	//"JumpPad.PowerDown",
+	"JumpPad.Fire",
+	NULL
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -73,10 +74,11 @@ void CFFManCannon::Spawn( void )
 	CFFPlayer *pOwner = ToFFPlayer( m_hOwner.Get() ); //static_cast< CFFPlayer * >( m_hOwner.Get() );
 	if( pOwner ) 
 		m_nSkin = ( pOwner->GetTeamNumber() - 1 ); 
-		
-	m_iJumpPadState = JUMPPAD_ACTIVATE;
+
 	m_bTakesDamage = true;//Making the jumppad take damage -GreenMushy
-	m_iHealth = ffdev_mancannon_health.GetFloat();
+	// caes: changed GetFloat to GetInt
+	m_iHealth = ffdev_mancannon_health.GetInt();
+	// caes
 }
 
 //-----------------------------------------------------------------------------
@@ -99,20 +101,15 @@ void CFFManCannon::GoLive( void )
 	if( pOwner )
 		pOwner->RemoveAmmo( 1, AMMO_MANCANNON );
 
-	// tell the client when it expires
-	CSingleUserRecipientFilter user(pOwner);
-	user.MakeReliable();
-
-
-	UserMessageBegin(user, "ManCannonMsg");
-		WRITE_FLOAT(gpGlobals->curtime + JUMPPAD_LIFESPAN + JUMPPAD_POWERDOWN_TIME);
-	MessageEnd();
-	
-
-	// start thinking
-	SetThink( &CFFManCannon::OnJumpPadThink );
-	// Stagger our starting times
-	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
+	// caes: start health regen
+	if ( ffdev_mancannon_health_regen.GetInt() > 0 )
+	{
+		// start thinking
+		SetThink( &CFFManCannon::OnJumpPadThink );
+		// Stagger our starting times
+		SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
+	}
+	// caes
 }
 
 
@@ -123,35 +120,18 @@ void CFFManCannon::GoLive( void )
 //-----------------------------------------------------------------------------
 void CFFManCannon::OnJumpPadThink( void )
 {
-	switch ( m_iJumpPadState )
+	// caes: regen health once per second
+	if ( m_iHealth < ffdev_mancannon_health.GetInt() )
 	{
-	//case JUMPPAD_INITIAL_DEPLOY:
-	//	// Start warmup sound
-	//	EmitSound( "JumpPad.WarmUp" );
-	//	SetNextThink( gpGlobals->curtime + JUMPPAD_WARMUP_TIME );
-	//	m_iJumpPadState++;
-	//	break;
-	case JUMPPAD_ACTIVATE:
-		// Play activate sound
-		//EmitSound("JumpPad.Activate");
-		SetNextThink( gpGlobals->curtime + JUMPPAD_LIFESPAN );
-		m_iJumpPadState++; 
-		break;
-	case JUMPPAD_POWERDOWN:
-		//EmitSound("JumpPad.PowerDown");
-		SetNextThink( gpGlobals->curtime + JUMPPAD_POWERDOWN_TIME );
-		m_iJumpPadState++;
-		break;
-	case JUMPPAD_REMOVE:
-		//Removing this bit so it doesnt tell you it expired -GreenMushy
-		/*
-		CFFPlayer *pOwner = GetOwnerPlayer();
-		if ( pOwner )
-			ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_MANCANNON_TIMEOUT" );
-		Detonate();
-		*/
-		break;
+		m_iHealth = min( ( m_iHealth + ffdev_mancannon_health_regen.GetInt() ), ffdev_mancannon_health.GetInt() );
+		DevMsg("[S] Jumppad health regen: %i\n", m_iHealth);
+
+		// spark when health regens (slightly above origin so it's on the jumppad not in it)
+		Vector vecUp(0, 0, 1.0f);
+		g_pEffects->Sparks(GetAbsOrigin() + (vecUp*8), 2, 4, &vecUp);
 	}
+	SetNextThink( gpGlobals->curtime + 1.0f );
+	// caes
 }
 
 //-----------------------------------------------------------------------------
@@ -164,9 +144,6 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	CheckForOwner();
 
 	if( !IsBuilt() )
-		return;
-
-	if ( m_iJumpPadState < JUMPPAD_ACTIVATE + 1 )
 		return;
 
 	if( !pOther )
