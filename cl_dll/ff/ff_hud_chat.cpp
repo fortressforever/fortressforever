@@ -522,8 +522,9 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 			}
 			else
 			{
-				Q_strncpy( buf, pMsg + iNameLength, strlen( pMsg ));
-				buf[ strlen( pMsg + iNameLength ) ] = '\0';
+				Q_strncpy( buf, pMsg, strlen( pMsg ) + 1);
+				buf[ strlen( pMsg ) + 1 ] = '\0';
+				line->SetNameLength( 0 );
 				// Name not found, still need to play "chat beep"
 				CLocalPlayerFilter filter;
 				C_BaseEntity::EmitSound( filter, -1, "HudChat.Message" );
@@ -531,8 +532,9 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		}
 		else
 		{
-			Q_strncpy( buf, pMsg + iNameLength, strlen( pMsg ));
-			buf[ strlen( pMsg + iNameLength ) ] = '\0';
+			Q_strncpy( buf, pMsg, strlen( pMsg ) + 1);
+			buf[ strlen( pMsg ) + 1 ] = '\0';
+			line->SetNameLength( 0 );
 			// No name at all, still need to play "chat beep"
 			CLocalPlayerFilter filter;
 			C_BaseEntity::EmitSound( filter, -1, "HudChat.Message" );
@@ -650,6 +652,7 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 
 					// Just a ^ with no number after terminates the color
 					line->InsertColorChange( GetDefaultChatColor() );
+					iAdjust = 1;
 				}
 			}
 			// Handle regular characters
