@@ -368,7 +368,10 @@ public:
 	// --> Mirv: Conc stuff
 	float m_flConcTime;
 	QAngle m_angConced, m_angConcedTest;
+
 	
+	float m_flTrueAimTime;
+
 	virtual const QAngle &EyeAngles();
 	virtual void CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
 	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
