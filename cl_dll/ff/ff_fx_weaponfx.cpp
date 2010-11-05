@@ -56,18 +56,26 @@ void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
 }
 
 //static ConVar ffdev_nailradial_number("ffdev_nailradial_number", "8");
-#define NAILRADIAL_NUMBER 8
+#define NAILRADIAL_NUMBER 2
+extern ConVar laser_ng_nailspeed, laser_ng_arms, laser_ng_offset;//, laser_ng_streams;
 
 void FF_FX_Projectile_Nail_Radial_Callback(const CEffectData &data)
 {
-	int nNails = NAILRADIAL_NUMBER;
-
+	int nNails = laser_ng_arms.GetInt()/*NAILRADIAL_NUMBER*/;
 	float flDeltaAngle = 360.0f / nNails;
 	QAngle angRadial = QAngle(0.0f, random->RandomFloat(0.0f, flDeltaAngle), 0.0f);
+
+	//float flOffset = (m_iOffset % laser_ng_streams.GetInt()) - (laser_ng_streams.GetInt() / 2 );
+	Vector vecDirection, vecOffset;
+	int m_iOffset = data.m_nDamageType;
+	float flOffset = laser_ng_offset.GetFloat();
+	if( m_iOffset % 2 )
+		flOffset *= -1;
 	
 	while (nNails-- > 0)
 	{
-		tempents->FFProjectile(data.m_vOrigin, angRadial, NAIL_SPEED, FF_PROJECTILE_NAIL_NG, 
+		VectorRotate( Vector( 0, flOffset, 0 ), angRadial, vecOffset );
+		tempents->FFProjectile(data.m_vOrigin + vecOffset, angRadial, laser_ng_nailspeed.GetInt() /*NAIL_SPEED*/, FF_PROJECTILE_NAIL_NG, 
 #ifdef GAME_DLL
 			data.m_nEntIndex
 #else
