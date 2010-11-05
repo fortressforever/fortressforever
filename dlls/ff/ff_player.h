@@ -667,6 +667,8 @@ public:
 private:
 	void Cloak( void );	
 	CNetworkVar( unsigned int, m_iCloaked );
+public:
+	void Overpressure( void );
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)
