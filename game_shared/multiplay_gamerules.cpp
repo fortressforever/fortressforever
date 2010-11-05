@@ -726,6 +726,9 @@ bool CMultiplayRules::IsMultiplayer( void )
 			case KILLTYPE_SENTRYGUN_DET:
 				killer_weapon_name = "sg_det";
 				break;
+			case KILLTYPE_HEADCRUSH:
+				killer_weapon_name = "headcrush";
+				break;
 			}
 			
 			//UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);

@@ -3499,6 +3499,22 @@ void CGameMovement::CheckFalling( void )
 			{
 				player->m_Local.m_vecPunchAngle.Set( PITCH, 8 );
 			}
+
+			if (fvol == 1.0f)
+			{
+#ifdef GAME_DLL
+				if (player->GetGroundEntity() && player->GetGroundEntity()->IsPlayer())
+				{
+					CFFPlayer *pCrushedPlayer = ToFFPlayer(player->GetGroundEntity());
+
+					if (pCrushedPlayer && pCrushedPlayer != player)
+					{
+						CTakeDamageInfo info( player, player, ffdev_headcrush_damage.GetFloat(), DMG_DIRECT, KILLTYPE_HEADCRUSH );
+						pCrushedPlayer->TakeDamage(info);
+					}
+				}
+#endif
+			}
 		}
 
 		if (bAlive)
