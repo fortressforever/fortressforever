@@ -19,6 +19,7 @@
 #include "ff_player.h"
 #include "omnibot_interface.h"
 #include "ai_basenpc.h"
+#include "IEffects.h"
 
 // Lua includes
 extern "C"
@@ -39,6 +40,9 @@ extern "C"
 
 #define ITEM_PICKUP_BOX_BLOAT		12
 ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_CHEAT );
+ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "810.0", FCVAR_CHEAT );
+ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "0.1", FCVAR_CHEAT );
+ConVar ffdev_flag_rotation( "ffdev_flag_rotation", "50.0", FCVAR_CHEAT );
 
 int ACT_INFO_RETURNED;
 int ACT_INFO_CARRIED;
@@ -144,6 +148,9 @@ void CFFInfoScript::Precache( void )
 	
 	CFFLuaSC hPrecache;
 	_scriptman.RunPredicates_LUA( this, &hPrecache, "precache" );
+
+	PrecacheScriptSound( "Flag.FloatDeploy" );
+	PrecacheScriptSound( "Flag.FloatBubbles" );
 }
 
 void CFFInfoScript::UpdateOnRemove( void )
@@ -820,7 +827,10 @@ void CFFInfoScript::Drop( float delay, Vector pos, Vector velocity )
 	if( delay >= 0 )
 	{
 		SetThink( &CFFInfoScript::OnThink );	// |-- Mirv: Account for GCC strictness
-		SetNextThink( gpGlobals->curtime + delay );
+		//SetNextThink( gpGlobals->curtime + delay );
+		m_flReturnTime = gpGlobals->curtime + delay;
+		m_bFloatActive = 0;
+		SetNextThink( gpGlobals->curtime );
 	}
 
 	m_pLastOwner = pOwner;
@@ -913,10 +923,52 @@ void CFFInfoScript::Return( void )
 //-----------------------------------------------------------------------------
 void CFFInfoScript::OnThink( void )
 {
-	CFFLuaSC hOnReturn;
-	_scriptman.RunPredicates_LUA( this, &hOnReturn, "onreturn" );
+	// return flag if timer expired
+	if ( gpGlobals->curtime > m_flReturnTime )
+	{
+		CFFLuaSC hOnReturn;
+		_scriptman.RunPredicates_LUA( this, &hOnReturn, "onreturn" );
 
-	Return();
+		Return();
+	}
+	else
+	{
+		// flag in water
+		if ( PhysicsCheckWater() )
+		{
+			// activate float when flag touches bottom
+			if ( ( GetGroundEntity() != NULL ) && !m_bFloatActive )
+			{
+				m_bFloatActive = 1;
+				
+				EmitSound( "Flag.FloatDeploy" );
+				EmitSound( "Flag.FloatBubbles" );
+
+				g_pEffects->Sparks( GetAbsOrigin() );
+				UTIL_Bubbles( GetAbsOrigin(), GetAbsOrigin() + Vector( 0.0f, 0.0f, 64.0f ), 50 );
+			}
+
+			// make flag float upwards
+			if ( m_bFloatActive )
+			{
+				// very simple drag model to stop the flag carrying on accelerating
+				float flFloatForce = ffdev_flag_float_force.GetFloat() - ( ffdev_flag_float_drag.GetFloat() * float( GetAbsVelocity().z ) );
+				float flFloatSpeed = float( GetAbsVelocity().z ) + flFloatForce * gpGlobals->interval_per_tick;
+				SetAbsVelocity( Vector( 0.0f, 0.0f, flFloatSpeed ) );
+			}
+		}
+		// flag not in water but float has been activated
+		else if ( m_bFloatActive )
+		{
+			// set speed to 0 so it slowly falls back down and bobs (might need to do something better here)
+			SetAbsVelocity( Vector( 0.0f, 0.0f, 0.0f ) );
+		}
+
+		// make flag rotate
+		SetAbsAngles(GetAbsAngles() + QAngle(0, ffdev_flag_rotation.GetFloat() * gpGlobals->interval_per_tick, 0));
+		// think next tick
+		SetNextThink( gpGlobals->curtime + 0.01f );
+	}
 }
 
 //-----------------------------------------------------------------------------

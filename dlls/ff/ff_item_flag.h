@@ -206,6 +206,8 @@ protected:
 	CNetworkVar( int, m_iPosState );
 
 	float m_flSpawnTime;
+	float m_flReturnTime;
+	bool m_bFloatActive;
 
 	// indicates some criteria limiting what will
 	// be allowed to "touch" this entity
