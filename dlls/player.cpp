@@ -5844,8 +5844,18 @@ bool CBasePlayer::ClientCommand(const char *cmd)
 			// add 1 to frags to balance out the 1 subtracted for killing yourself
 			IncrementFragCount( 1 );
 		}
-
+		
 		RemoveAllItems( true );
+		// dexter - if a FF Player, be sure to remove buildables
+		// note: could we just remove this console command and force the player to use existing team spec/menu code?
+		CFFPlayer *pPlayer = ToFFPlayer(this);
+		if(pPlayer)
+		{
+			//DevMsg("removing buildables from steamid %s", pPlayer->m_PlayerInfo.GetNetworkIDString());
+			pPlayer->RemoveProjectiles();
+			pPlayer->RemoveBackpacks();
+			pPlayer->RemoveBuildables();
+		}
 
 		ChangeTeam( TEAM_SPECTATOR );
 
