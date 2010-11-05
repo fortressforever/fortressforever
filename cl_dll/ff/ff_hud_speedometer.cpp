@@ -37,52 +37,79 @@
 using namespace vgui;
 
 static ConVar hud_speedometer( "hud_speedometer", "0", FCVAR_ARCHIVE, "Toggle speedometer. Disclaimer: We are not responsible if you get a ticket.");
+static ConVar hud_speedometer_avg( "hud_speedometer_avg", "0", FCVAR_ARCHIVE, "Toggle average speedometer.");
 // ELMO *** 
 static ConVar hud_speedometer_color( "hud_speedometer_color", "2", FCVAR_ARCHIVE, "0=No color, 1=Stepped Color, 2=Fading Color (RED > hardcap :: ORANGE > softcap :: GREEN > run speed :: WHITE < run speed)", true, 0.0f, true, 2.0f);
+static ConVar hud_speedometer_avg_color( "hud_speedometer_avg_color", "0", FCVAR_ARCHIVE, "0=No color, 1=Stepped Color, 2=Fading Color (RED > hardcap :: ORANGE > softcap :: GREEN > run speed :: WHITE < run speed)", true, 0.0f, true, 2.0f);
 
-class CHudSpeedometer : public CHudElement, public CHudNumericDisplay
+Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor );
+
+//-----------------------------------------------------------------------------
+// Purpose: Displays current disguised class
+//-----------------------------------------------------------------------------
+class CHudSpeedometer : public CHudElement, public vgui::FFPanel
 {
-	DECLARE_CLASS_SIMPLE( CHudSpeedometer, CHudNumericDisplay );
-
-
 public:
-	CHudSpeedometer( const char *pElementName );
+	DECLARE_CLASS_SIMPLE( CHudSpeedometer, vgui::FFPanel );
+
+	CHudSpeedometer( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpeedometer" ), CHudElement( pElementName )
+	{
+		// Set our parent window
+		SetParent( g_pClientMode->GetViewport() );
+
+		// Hide when player is dead
+		SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	}
+
+	virtual ~CHudSpeedometer( void )
+	{
+
+	}
+
 	virtual void Init( void );
 	virtual void VidInit( void );
 	virtual void Reset( void );
 	virtual void OnThink();
 	virtual void Paint();
+
 private:
 // ELMO ***
-	Color ColorFade( int currentVal, int maxVal, Color maxColor, int minVal, Color minColor );
-	Color speedColor;
-	int maxVelocity;
-	float full, f1, f2;
-	int avgVelocity;
+	float m_flAvgVelocity;
+	unsigned int m_iNumUpdates;
+	int m_iVelocity;
 // *** ELMO
 	float m_flNextUpdate;
-	Vector vecVelocity;
-	CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont" "TextFont", "HudNumbers" );
-	CPanelAnimationVarAliasType( float, digit_xpos, "digit_xpos", "50", "proportional_float" );
-	CPanelAnimationVarAliasType( float, digit_ypos, "digit_ypos", "2", "proportional_float" );
-};	
+
+private:
+	// Stuff we need to know	
+	CPanelAnimationVar( vgui::HFont, m_hSpeedFont, "SpeedFont", "HudNumbers" );
+	CPanelAnimationVar( vgui::HFont, m_hAvgSpeedFont, "AvgSpeedFont", "Default" );
+	CPanelAnimationVar( Color, m_TextColor, "TextColor", "HUD_Tone_Default" );
+
+	CPanelAnimationVarAliasType( float, SpeedFont_xpos, "SpeedFont_xpos", "0", "proportional_float" );
+	CPanelAnimationVarAliasType( float, SpeedFont_ypos, "SpeedFont_ypos", "0", "proportional_float" );
+	CPanelAnimationVarAliasType( float, AvgSpeedFont_xpos, "AvgSpeedFont_xpos", "0", "proportional_float" );
+	CPanelAnimationVarAliasType( float, AvgSpeedFont_ypos, "AvgSpeedFont_ypos", "0", "proportional_float" );
+};
 
 DECLARE_HUDELEMENT( CHudSpeedometer );
 
 //-----------------------------------------------------------------------------
-// Purpose: Constructor
+// Purpose: Done on loading game?
 //-----------------------------------------------------------------------------
-CHudSpeedometer::CHudSpeedometer( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay(NULL, "HudSpeedometer")
+void CHudSpeedometer::Init( void )
 {
-	SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	Reset();
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Done each map load
 //-----------------------------------------------------------------------------
-void CHudSpeedometer::Init()
+void CHudSpeedometer::VidInit( void )
 {
 	Reset();
+	m_flAvgVelocity = 0.0;
+	m_iNumUpdates = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -94,19 +121,11 @@ void CHudSpeedometer::Reset()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Should we draw? (Are we ingame? have we picked a class, etc)
 //-----------------------------------------------------------------------------
-void CHudSpeedometer::VidInit()
-{
-	Reset();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CHudSpeedometer::OnThink()
-{
-	if(!hud_speedometer.GetBool())
+void CHudSpeedometer::OnThink() 
+{ 
+	if (!hud_speedometer.GetBool() && !hud_speedometer_avg.GetBool())
 		return;
 
 	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
@@ -117,60 +136,111 @@ void CHudSpeedometer::OnThink()
 	//don't update so fast.
 	if(m_flNextUpdate < gpGlobals->curtime)
 	{
-		vecVelocity = local->GetAbsVelocity();
+		Vector vecVelocity = local->GetAbsVelocity();
+		m_iVelocity = (int) FastSqrt(
+			vecVelocity.x * vecVelocity.x 
+			+ vecVelocity.y * vecVelocity.y );
+
+		// average[i+1] = (average[i]*i + value[i+1])/(i+1)
+		m_flAvgVelocity = (m_flAvgVelocity*m_iNumUpdates + (float)m_iVelocity)/(m_iNumUpdates+1);
+		m_iNumUpdates++;
+
 		m_flNextUpdate = gpGlobals->curtime + 0.1;
 	}
-}
-
-void CHudSpeedometer::Paint()
-{
-	if( C_BasePlayer::GetLocalPlayer() && ( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE ) )
-		return;
-
-	if(!hud_speedometer.GetBool())
-		return;
-
-	surface()->DrawSetTextFont(m_hNumberFont);
-	avgVelocity = (int) FastSqrt(
-		vecVelocity.x * vecVelocity.x 
-		+ vecVelocity.y * vecVelocity.y );
-
-// ELMO *** 
-	maxVelocity = C_BasePlayer::GetLocalPlayer()->MaxSpeed();
-
-	if( avgVelocity > BHOP_CAP_HARD * maxVelocity && hud_speedometer_color.GetInt() > 0) // above hard cap
-		speedColor = SPEEDO_COLOR_RED;
-	else if(avgVelocity-1  > BHOP_CAP_SOFT * maxVelocity && hud_speedometer_color.GetInt() > 0) // above soft cap
-		if(hud_speedometer_color.GetInt() == 2)
-			speedColor = ColorFade( avgVelocity, BHOP_CAP_HARD*maxVelocity, SPEEDO_COLOR_RED, BHOP_CAP_SOFT*maxVelocity, SPEEDO_COLOR_ORANGE );
-		else
-			speedColor = SPEEDO_COLOR_ORANGE;	
-	else if( avgVelocity > maxVelocity && hud_speedometer_color.GetInt() > 0) // above max run speed
-		if(hud_speedometer_color.GetInt() == 2)
-			speedColor = ColorFade( avgVelocity, BHOP_CAP_SOFT*maxVelocity, SPEEDO_COLOR_ORANGE, maxVelocity, SPEEDO_COLOR_GREEN );
-		else
-			speedColor = SPEEDO_COLOR_GREEN;
-	else // below max run speed
-		speedColor = SPEEDO_COLOR_DEFAULT;
-
-// *** ELMO
-
-	wchar_t unicode[6];
-	swprintf(unicode, L"%d", avgVelocity);
-
-	// Hey voogru, why not .Length() ? Does the same thing :)
 	
-	surface()->DrawSetTextPos(digit_xpos, digit_ypos);
-	for (wchar_t *ch = unicode; *ch != 0; ch++)
+} 
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw stuff!
+//-----------------------------------------------------------------------------
+void CHudSpeedometer::Paint() 
+{
+	if (!hud_speedometer.GetBool() && !hud_speedometer_avg.GetBool())
+		return;
+
+	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
+
+	if(!local)
+		return;
+
+	float maxVelocity = local->MaxSpeed();
+	Color speedColor;
+
+	// regular speedometer
+	if( hud_speedometer.GetBool() )
 	{
-		surface()->DrawSetTextColor(speedColor);
-		surface()->DrawUnicodeChar(*ch);
+		if( m_iVelocity > BHOP_CAP_HARD * maxVelocity && hud_speedometer_color.GetInt() > 0) // above hard cap
+			speedColor = SPEEDO_COLOR_RED;
+		else if(m_iVelocity-1  > BHOP_CAP_SOFT * maxVelocity && hud_speedometer_color.GetInt() > 0) // above soft cap
+			if(hud_speedometer_color.GetInt() == 2)
+				speedColor = ColorFade( m_iVelocity, BHOP_CAP_SOFT*maxVelocity, BHOP_CAP_HARD*maxVelocity, SPEEDO_COLOR_ORANGE, SPEEDO_COLOR_RED );
+			else
+				speedColor = SPEEDO_COLOR_ORANGE;	
+		else if( m_iVelocity > maxVelocity && hud_speedometer_color.GetInt() > 0) // above max run speed
+			if(hud_speedometer_color.GetInt() == 2)
+				speedColor = ColorFade( m_iVelocity, maxVelocity, BHOP_CAP_SOFT*maxVelocity, SPEEDO_COLOR_GREEN, SPEEDO_COLOR_ORANGE );
+			else
+				speedColor = SPEEDO_COLOR_GREEN;
+		else // below max run speed
+			speedColor = SPEEDO_COLOR_DEFAULT;
+
+		surface()->DrawSetTextFont( m_hSpeedFont );
+		surface()->DrawSetTextColor( speedColor );
+		surface()->DrawSetTextPos( SpeedFont_xpos, SpeedFont_ypos );
+
+		wchar_t unicode[6];
+		swprintf(unicode, L"%d", (int)m_iVelocity);
+
+		for( wchar_t *wch = unicode; *wch != 0; wch++ )
+			surface()->DrawUnicodeChar( *wch );
+	}
+
+	// average speedometer
+	if( hud_speedometer_avg.GetBool() )
+	{
+		if( m_flAvgVelocity > BHOP_CAP_HARD * maxVelocity && hud_speedometer_avg_color.GetInt() > 0) // above hard cap
+			speedColor = SPEEDO_COLOR_RED;
+		else if(m_flAvgVelocity-1  > BHOP_CAP_SOFT * maxVelocity && hud_speedometer_avg_color.GetInt() > 0) // above soft cap
+			if(hud_speedometer_avg_color.GetInt() == 2)
+				speedColor = ColorFade( m_flAvgVelocity, BHOP_CAP_SOFT*maxVelocity, BHOP_CAP_HARD*maxVelocity, SPEEDO_COLOR_ORANGE, SPEEDO_COLOR_RED );
+			else
+				speedColor = SPEEDO_COLOR_ORANGE;	
+		else if( m_flAvgVelocity > maxVelocity && hud_speedometer_avg_color.GetInt() > 0) // above max run speed
+			if(hud_speedometer_avg_color.GetInt() == 2)
+				speedColor = ColorFade( m_flAvgVelocity, maxVelocity, BHOP_CAP_SOFT*maxVelocity, SPEEDO_COLOR_GREEN, SPEEDO_COLOR_ORANGE );
+			else
+				speedColor = SPEEDO_COLOR_GREEN;
+		else // below max run speed
+			speedColor = SPEEDO_COLOR_DEFAULT;
+
+		surface()->DrawSetTextFont( m_hAvgSpeedFont );
+		if (hud_speedometer.GetBool())
+			surface()->DrawSetTextPos( AvgSpeedFont_xpos, AvgSpeedFont_ypos );
+		else
+			surface()->DrawSetTextPos( AvgSpeedFont_xpos, AvgSpeedFont_ypos + SpeedFont_ypos );
+
+		surface()->DrawSetTextColor( m_TextColor );
+
+		wchar_t textunicode[12];
+		swprintf(textunicode, L"Average: ");
+
+		for( wchar_t *wch = textunicode; *wch != 0; wch++ )
+			surface()->DrawUnicodeChar( *wch );
+
+		surface()->DrawSetTextColor( speedColor );
+
+		wchar_t unicode[6];
+		swprintf(unicode, L"%d", (int)m_flAvgVelocity);
+
+		for( wchar_t *wch = unicode; *wch != 0; wch++ )
+			surface()->DrawUnicodeChar( *wch );
 	}
 }
 
 // ELMO *** I don't know if there is a function for this already. I would expect so but where?
-Color CHudSpeedometer::ColorFade( int currentVal, int maxVal, Color maxColor, int minVal, Color minColor )
+Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor )
 {
+	float full, f1, f2;
 	full = maxVal - minVal;
 	f1 = (maxVal - currentVal) / full;
 	f2 = (currentVal - minVal) / full;
