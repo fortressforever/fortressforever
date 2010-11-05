@@ -4061,10 +4061,14 @@ void CFFPlayer::StatusEffectsThink( void )
 			if( this->GetHealth() > FFDEV_INFECT_DAMAGE )// GreenMushy: dont damage if infection will kill you
 			{
 				CTakeDamageInfo info( pInfector, pInfector, FFDEV_INFECT_DAMAGE, DMG_POISON );
-				//info.SetDamageForce( Vector( 0, 0, -1 ) );
-				//info.SetDamagePosition( Vector( 0, 0, 1 ) );
 				info.SetCustomKill(KILLTYPE_INFECTION);
-
+				TakeDamage( info );
+			}
+			else if( this->GetHealth() > 1 )
+			{
+				//Puts u down to 1 hp -GreenMushy
+				CTakeDamageInfo info( pInfector, pInfector, this->GetHealth() - 1, DMG_POISON );
+				info.SetCustomKill(KILLTYPE_INFECTION);
 				TakeDamage( info );
 			}
 
