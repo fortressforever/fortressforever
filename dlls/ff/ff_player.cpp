@@ -1308,6 +1308,8 @@ void CFFPlayer::Spawn( void )
 	m_hRagdoll			= NULL;
 	m_flConcTime		= 0.0f;
 	m_flSpeedModifier	= 1.0f;
+	m_flNextClassSpecificSkill = 0.0f;
+
 	
 	m_flSpeedModifierOld		= 1.0f;
 	m_flSpeedModifierChangeTime	= 0;
