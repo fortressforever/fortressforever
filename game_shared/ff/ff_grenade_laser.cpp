@@ -28,7 +28,7 @@
 	#include "c_te_effect_dispatch.h"
 #endif
 
-#define GRENADE_BEAM_SPRITE			"effects/bluelaser1.vmt"
+#define GRENADE_BEAM_SPRITE			"sprites/plasma.spr"
 #define NAILGRENADE_MODEL			"models/grenades/nailgren/nailgren.mdl"
 
 #ifdef CLIENT_DLL
@@ -43,9 +43,15 @@ ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICAT
 ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED );
 ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
 ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
+ConVar growTime( "ffdev_lasergren_growTime", "1", FCVAR_REPLICATED, "Time taken to grow to full length" );
+ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_REPLICATED, "Time taken to shrink to nothing" );
 ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active time");
 
 #ifdef CLIENT_DLL
+	ConVar hud_lasergren_customColor_enable( "hud_lasergren_customColor_enable", "0", FCVAR_ARCHIVE, "Use custom laser colors (1 = use custom colour)");
+	ConVar hud_lasergren_customColor_r( "hud_lasergren_customColor_r", "255", FCVAR_ARCHIVE, "Custom laser color - Red Component (0-255)");
+	ConVar hud_lasergren_customColor_g( "hud_lasergren_customColor_g", "128", FCVAR_ARCHIVE, "Custom laser color - Green Component(0-255)");
+	ConVar hud_lasergren_customColor_b( "hud_lasergren_customColor_b", "255", FCVAR_ARCHIVE, "Custom laser color - Blue Component(0-255)");
 	ConVar ffdev_lasergren_widthcreate("ffdev_lasergren_widthcreate", "0.5", FCVAR_REPLICATED, "Width given in the constructor; not used");
 	ConVar ffdev_lasergren_widthstart("ffdev_lasergren_widthstart", "6", FCVAR_REPLICATED, "Width at the start of the beam");
 	ConVar ffdev_lasergren_widthend("ffdev_lasergren_widthend", "3", FCVAR_REPLICATED, "Width at the end of the beam");
@@ -192,21 +198,6 @@ class PseudoNail
 		QAngle m_vecAngles;		// Nail's angle of travel
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif
 
 
@@ -226,6 +217,8 @@ public:
 	virtual color32 GetColour() { color32 col = { 128, 225, 255, GREN_ALPHA_DEFAULT }; return col; }
 
 	CNetworkVar( unsigned int, m_bIsOn );
+	float getLengthPercent();
+	bool m_bPlayingDeploySound;
 
 #ifdef CLIENT_DLL
 	CFFGrenadeLaser() {}
@@ -272,6 +265,11 @@ protected:
 IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeLaser, DT_FFGrenadeLaser)
 
 BEGIN_NETWORK_TABLE(CFFGrenadeLaser, DT_FFGrenadeLaser)
+#ifdef CLIENT_DLL
+	RecvPropFloat(RECVINFO(m_flDetonateTime)), 
+#else
+	SendPropFloat(SENDINFO(m_flDetonateTime)),
+#endif
 #ifdef GAME_DLL
 SendPropInt(SENDINFO(m_bIsOn), 1, SPROP_UNSIGNED),
 #else
@@ -293,8 +291,49 @@ void CFFGrenadeLaser::Precache()
 	PrecacheModel(GRENADE_BEAM_SPRITE);
 	PrecacheScriptSound( "NailGrenade.shoot" );
 	PrecacheScriptSound( "NailGrenade.LaserLoop" );
+	PrecacheScriptSound( "NailGrenade.LaserDeploy" );
 
 	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: To calc % length for laser grow/shrink
+//-----------------------------------------------------------------------------
+float CFFGrenadeLaser::getLengthPercent()
+{
+	float spawnTime = m_flDetonateTime - lasertime.GetFloat();
+	float growTillTime = spawnTime + growTime.GetFloat();
+	float startShrinkTime = m_flDetonateTime - shrinkTime.GetFloat();
+
+	if(gpGlobals->curtime > growTillTime && gpGlobals->curtime < startShrinkTime && m_flDetonateTime > 0)
+	{
+		if ( m_bPlayingDeploySound )
+		{
+			StopSound("NailGrenade.LaserDeploy");
+			m_bPlayingDeploySound = 0;
+		}
+		return 1.0f;
+	}
+	else if(gpGlobals->curtime >= startShrinkTime && m_flDetonateTime > 0)
+	{
+		if ( !m_bPlayingDeploySound )
+		{
+			EmitSound("NailGrenade.LaserDeploy");
+			m_bPlayingDeploySound = 1;
+		}
+		return 1 - (gpGlobals->curtime - startShrinkTime) / (m_flDetonateTime - startShrinkTime);
+	}
+	else if(gpGlobals->curtime < growTillTime && m_flDetonateTime > 0)
+	{
+		if ( !m_bPlayingDeploySound )
+		{
+			EmitSound("NailGrenade.LaserDeploy");
+			m_bPlayingDeploySound = 1;
+		}
+		return (gpGlobals->curtime - spawnTime) / (growTillTime - spawnTime);
+	}
+	else
+		return 0.0f;
 }
 
 #ifdef GAME_DLL
@@ -310,6 +349,8 @@ void CFFGrenadeLaser::Precache()
 		m_flAngleOffset = 0.0f;
 		m_iOffset = 0;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
+
+		m_bPlayingDeploySound = 0;
 	}
 
 	//-----------------------------------------------------------------------------
@@ -324,7 +365,7 @@ void CFFGrenadeLaser::Precache()
 			return;
 		}
 
-		SetDetonateTimerLength( lasertime.GetInt() );
+		SetDetonateTimerLength( lasertime.GetFloat() );
 
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);
@@ -379,7 +420,7 @@ void CFFGrenadeLaser::Precache()
 			VectorNormalizeFast(vecDirection);
 
 			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
-				vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, NULL, COLLISION_GROUP_PLAYER, &tr );
+				vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), MASK_PLAYERSOLID, NULL, COLLISION_GROUP_PLAYER, &tr );
 			
 			if ( tr.m_pEnt )
 				DoDamage( tr.m_pEnt );
@@ -454,7 +495,6 @@ void CFFGrenadeLaser::Precache()
 			//if MAX DISTANCE
 			//	Remove
 		}
-		
 
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
@@ -504,6 +544,7 @@ void CFFGrenadeLaser::Precache()
 
 			EmitSound("NailGrenade.shoot");
 			
+<<<<<<< .working
 			CEffectData data;
 			data.m_vOrigin = vecOrigin;
 			data.m_vAngles = QAngle(0, 0, 0);
@@ -515,6 +556,20 @@ void CFFGrenadeLaser::Precache()
 			data.m_hEntity = this;
 #endif
 
+=======
+			CEffectData data;
+			data.m_vOrigin = vecOrigin;
+			data.m_vAngles = GetAbsAngles();
+			data.m_nDamageType = m_iOffset;
+
+
+#ifdef GAME_DLL
+			data.m_nEntIndex = entindex();
+#else
+			data.m_hEntity = this;
+#endif
+
+>>>>>>> .merge-right.r12166
 			DispatchEffect("Projectile_Nail_Radial", data);
 
 			m_iOffset++;
@@ -537,6 +592,7 @@ void CFFGrenadeLaser::Precache()
 	void CFFGrenadeLaser::UpdateOnRemove( void )
 	{
 		StopSound("NailGrenade.LaserLoop");
+		StopSound("NailGrenade.LaserDeploy");
 
 		int i;
 		for( i = 0; i < laserbeams.GetInt(); i++ )
@@ -566,6 +622,8 @@ void CFFGrenadeLaser::Precache()
 			trace_t tr;
 			char i;
 
+			CFFPlayer *pgrenOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
+
 			float flDeltaAngle = 360.0f / laserbeams.GetInt();
 		
 			for( i = 0; i < laserbeams.GetInt(); i++ )
@@ -574,21 +632,34 @@ void CFFGrenadeLaser::Precache()
 				VectorNormalizeFast(vecDirection);
 
 				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
-								vecOrigin + vecDirection * laserdistance.GetFloat(), 
-								MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+								vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), 
+								MASK_PLAYERSOLID, this, COLLISION_GROUP_LASER, &tr );
 				
 				if( !pBeam[i] )
 				{
 					pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, LASERGREN_WIDTHCREATE );
 					pBeam[i]->SetWidth( LASERGREN_WIDTHSTART );
 					pBeam[i]->SetEndWidth( LASERGREN_WIDTHEND );
+					pBeam[i]->LiveForTime( 1  );
 					pBeam[i]->SetBrightness( 255 );
-					pBeam[i]->SetColor( 255, 255, 255 );
-					pBeam[i]->LiveForTime( lasertime.GetFloat()  );
+					if(hud_lasergren_customColor_enable.GetBool() == true)
+						pBeam[i]->SetColor( hud_lasergren_customColor_r.GetInt(), hud_lasergren_customColor_g.GetInt(), hud_lasergren_customColor_b.GetInt() );
+					else if(pgrenOwner->GetTeamNumber() == TEAM_RED)
+						pBeam[i]->SetColor( 255, 64, 64 );
+					else if(pgrenOwner->GetTeamNumber() == TEAM_BLUE)
+						pBeam[i]->SetColor( 64, 128, 255 );
+					else if(pgrenOwner->GetTeamNumber() == TEAM_GREEN)
+						pBeam[i]->SetColor( 153, 255, 153 );
+					else if(pgrenOwner->GetTeamNumber() == TEAM_YELLOW)
+						pBeam[i]->SetColor( 255, 178, 0 );
+					else // just in case
+						pBeam[i]->SetColor( 204, 204, 204 );
 				}
 				pBeam[i]->PointsInit( vecOrigin, tr.endpos );
 
 				angRadial.y += flDeltaAngle;
+
+				UTIL_DecalTrace( &tr, "Scorch" );
 			}
 		}
 	}
