@@ -58,9 +58,9 @@ BEGIN_NETWORK_TABLE(CFFProjectileDart, DT_FFProjectileDart)
 	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[0]"),
 	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[1]"),
 	SendPropExclude("DT_BaseGrenade", "m_vecVelocity[2]"),
-	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 0), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
-	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 1), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
-	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_CHANGES_OFTEN|SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 0), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 1), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
+	SendPropFloat( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_ROUNDDOWN, -4096.0f, 4096.0f ),
 #endif
 END_NETWORK_TABLE()
 
