@@ -98,8 +98,8 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 #define FFDEV_INFECT_FREQ 2.0f
-//ConVar ffdev_infect_damage("ffdev_infect_damage","8",0,"Amount of health a player loses while infected");
-#define FFDEV_INFECT_DAMAGE 8
+ConVar ffdev_infect_damage("ffdev_infect_damage","10",0,"Amount of health a player loses while infected");
+#define FFDEV_INFECT_DAMAGE ffdev_infect_damage.GetFloat()
 //ConVar ffdev_regen_freq("ffdev_regen_freq","3",0,"Frequency (in seconds) a player loses health when a medic");
 #define FFDEV_REGEN_FREQ 3.0f
 //ConVar ffdev_regen_health("ffdev_regen_health","2",0,"Amount of health a player gains while a medic");
@@ -108,6 +108,12 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 #define FFDEV_REGEN_ARMOR 4
 //ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
 #define FFDEV_OVERHEALTH_FREQ 3.0f
+
+#define FFDEV_INFECTION_TIME ffdev_infection_time.GetFloat()
+ConVar ffdev_infection_time( "ffdev_infection_time", "10", 0, "Amount of time for infection to last( in seconds )" );
+
+#define FFDEV_IMMUNE_TIME ffdev_immune_time.GetFloat()
+ConVar ffdev_immune_time( "ffdev_immune_time", "2", 0, "Amount of time for immunity to last( in seconds )" );
 
 ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED ,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW ffdev_dmgforfullslow.GetFloat()
@@ -519,6 +525,7 @@ CFFPlayer::CFFPlayer()
 	m_bImmune = 0;
 	m_iInfectedTeam = TEAM_UNASSIGNED;
 	m_flImmuneTime = 0.0f;
+	m_flInfectTime = 0.0f; //Green Mushy
 	m_flLastOverHealthTick = 0.0f;
 	m_iActiveSabotages = 0;
 	m_iSabotagedSentries = 0;
@@ -4046,18 +4053,26 @@ void CFFPlayer::StatusEffectsThink( void )
 		{
 			CFFPlayer *pInfector = ToFFPlayer( m_hInfector );
 
-
 			// When you change this be sure to change the StopSound above ^^ for bug
 			
 			EmitSound( "Player.DrownContinue" );	// |-- Mirv: [TODO] Change to something more suitable
-
 			m_fLastInfectedTick = gpGlobals->curtime;
-			CTakeDamageInfo info( pInfector, pInfector, FFDEV_INFECT_DAMAGE, DMG_POISON );
-			//info.SetDamageForce( Vector( 0, 0, -1 ) );
-			//info.SetDamagePosition( Vector( 0, 0, 1 ) );
-			info.SetCustomKill(KILLTYPE_INFECTION);
 
-			TakeDamage( info );
+			if( this->GetHealth() > FFDEV_INFECT_DAMAGE )// GreenMushy: dont damage if infection will kill you
+			{
+				CTakeDamageInfo info( pInfector, pInfector, FFDEV_INFECT_DAMAGE, DMG_POISON );
+				//info.SetDamageForce( Vector( 0, 0, -1 ) );
+				//info.SetDamagePosition( Vector( 0, 0, 1 ) );
+				info.SetCustomKill(KILLTYPE_INFECTION);
+
+				TakeDamage( info );
+			}
+
+			if( gpGlobals->curtime > m_flInfectTime )// GreenMushy: check to see if the infection should end
+			{
+				Cure( NULL );
+				AddHealth( ( FFDEV_INFECT_DAMAGE * FFDEV_INFECTION_TIME / FFDEV_INFECT_FREQ )- FFDEV_INFECT_DAMAGE ) ;
+			}
 
 			CSingleUserRecipientFilter user((CBasePlayer *)this);
 			user.MakeReliable();
@@ -4600,6 +4615,7 @@ bool CFFPlayer::Infect( CFFPlayer *pInfector )
 
 		// they aren't infected or immune, so go ahead and infect them
 		m_bInfected = 1;
+		m_flInfectTime = gpGlobals->curtime + FFDEV_INFECTION_TIME;
 		m_fLastInfectedTick = gpGlobals->curtime;
 		m_hInfector = pInfector;
 		m_iInfectedTeam = pInfector->GetTeamNumber();
@@ -4638,7 +4654,8 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 		m_hInfector = NULL;
 		// Bug# 0000503: "Immunity" is not in the mod
 		m_bImmune = 1;
-		m_flImmuneTime = gpGlobals->curtime + 10.0f;
+		m_flImmuneTime = gpGlobals->curtime + FFDEV_IMMUNE_TIME;
+		m_flInfectTime = 0.0f;
 
 		// Send the status icon to the player
 		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
@@ -4663,6 +4680,7 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 		m_bInfected = 0;
 		m_fLastInfectedTick = 0.0f;
 		m_hInfector = NULL;
+		m_flInfectTime = 0.0f;
 	}
 
 	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
