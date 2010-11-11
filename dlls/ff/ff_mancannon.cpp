@@ -127,6 +127,9 @@ void CFFManCannon::OnJumpPadThink( void )
 			m_iHealth = min( ( m_iHealth + ffdev_mancannon_health_regen.GetFloat() ), ffdev_mancannon_health.GetInt() );
 			DevMsg("[S] Jumppad health regen: %i\n", m_iHealth);
 
+			// This will force an update of this variable for the client
+			NetworkStateChanged( ( int * )&m_iHealth );
+
 			// spark when health regens (slightly above origin so it's on the jumppad not in it)
 			Vector vecUp(0, 0, 1.0f);
 			g_pEffects->EnergySplash( GetAbsOrigin() + vecUp*8, vecUp, false );
