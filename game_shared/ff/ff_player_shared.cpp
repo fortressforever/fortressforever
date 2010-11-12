@@ -523,29 +523,7 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 		FF_SendHint( SPY_SPLAT, 3, PRIORITY_NORMAL, "#FF_HINT_SPY_SPLAT" );
 #endif
 
-	CRecipientFilter filter;
-	filter.AddRecipientsByPAS(vecOrigin);
-
-#ifndef CLIENT_DLL
-	// Should we be excluding by PVS or just the local player??
-	// Doing the latter for now
-	if (gpGlobals->maxClients > 1)
-	{
-		//filter.RemoveRecipientsByPVS(vecOrigin);
-		filter.RemoveRecipient(this);
-	}
-#endif
-
-	EmitSound_t ep;
-	ep.m_nChannel = CHAN_BODY;
-	ep.m_pSoundName = "Player.FallDamage"; //params.soundname;
-	ep.m_flVolume = fvol;
-	ep.m_SoundLevel = SNDLVL_70dB; // params.soundlevel;
-	ep.m_nFlags = 0;
-	ep.m_nPitch = PITCH_NORM; // params.pitch;
-	ep.m_pOrigin = &vecOrigin;
-
-	EmitSound(filter, entindex(), ep);
+	EmitSoundShared("Player.FallDamage");
 }
 
 void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force)
@@ -640,134 +618,20 @@ void CFFPlayer::ClassSpecificSkill()
 		}
 		break;
 #endif
-
-#ifdef CLIENT_DLL
-
+		
 		case CLASS_HWGUY:
-			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
+			/*if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_ASSAULTCANNON) )
 			{
 				SwapToWeapon(FF_WEAPON_SUPERSHOTGUN);
 			}
 			else 
 			{
 				SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
-			}
+			}*/
 			Overpressure();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 			m_flNextClassSpecificSkill = gpGlobals->curtime + ffdev_overpressure_delay.GetFloat();
-			*/
-			break;
 
-#endif
+			break;
 
 #ifdef CLIENT_DLL
 
@@ -1608,7 +1472,7 @@ void CFFPlayer::Cloak( void )
 
 		// If regular cloak, scream
 		if( !m_bCloakFadeType )
-			EmitSound( "Player.Death" );
+			EmitSoundShared( "Player.Death" );
 
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );		
 
@@ -1806,4 +1670,92 @@ char const *CFFPlayer::DamageDecal( int bitsDamageType, int gameMaterial )
 		return "";
 
 	return BaseClass::DamageDecal( bitsDamageType, gameMaterial );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared ammome
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_AmmoMe( void )
+{
+	if( m_flSaveMeTime < gpGlobals->curtime )
+	{
+#ifdef GAME_DLL
+		m_iAmmoMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+#endif
+		// Set the time we can do another saveme/engyme/ammome at
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
+
+		// Call for ammo
+		EmitSoundShared("ammo.saveme");
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared saveme
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_SaveMe( void )
+{
+	if( m_flSaveMeTime < gpGlobals->curtime )
+	{
+#ifdef GAME_DLL
+		m_iSaveMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+#endif
+		// Set the time we can do another saveme at
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
+
+		if (IsInfected())
+			EmitSoundShared( "infected.saveme" );
+		else
+			EmitSoundShared( "medical.saveme" );
+
+#ifdef GAME_DLL
+		// Hint Code -- Event: Allied player within 1000 units calls for medic
+		CBaseEntity *ent = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( ent->IsPlayer() )
+			{
+				CFFPlayer *player = ToFFPlayer( ent );
+				// Only alive friendly medics within 1000 units are sent this hint
+				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_MEDIC ) )
+					FF_SendHint( player, MEDIC_GOHEAL, 5, PRIORITY_NORMAL, "#FF_HINT_MEDIC_GOHEAL" );  // Go heal that dude!
+			}
+		}
+		// End Hint Code
+#endif
+	}	
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared ammome
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_EngyMe( void )
+{
+	if( m_flSaveMeTime < gpGlobals->curtime )
+	{
+#ifdef GAME_DLL
+		m_iEngyMe = 1; // AfterShock: this is only used for seeing other peoples icons, so no need for client to predict his own state
+#endif
+		// Set the time we can do another engyme at
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
+
+		EmitSoundShared("maintenance.saveme");
+
+		// Hint Code -- Event: Allied player within 1000 units calls for engy
+#ifdef GAME_DLL
+		CBaseEntity *ent = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( ent->IsPlayer() )
+			{
+				CFFPlayer *player = ToFFPlayer( ent );
+				// Only alive friendly engies within 1000 units are sent this hint
+				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_ENGINEER ) )
+					FF_SendHint( player, ENGY_GOSMACK, 5, PRIORITY_NORMAL, "#FF_HINT_ENGY_GOSMACK" );  // Go wrench that dude!
+			}
+		}
+		// End Hint Code
+#endif
+	}
 }
