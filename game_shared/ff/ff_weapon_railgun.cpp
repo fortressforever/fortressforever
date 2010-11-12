@@ -593,7 +593,7 @@ void CFFWeaponRailgun::RailgunEmitSound( const char *szSoundName )
 	ep.m_flVolume = params.volume;
 	ep.m_SoundLevel = params.soundlevel;
 	ep.m_nPitch = params.pitch;
-	GetOwner()->EmitSound( filter, GetOwner()->entindex(), ep );
+	GetOwner()->EmitSound( filter, GetOwner()->entindex(), ep ); // This needs to be client predicted, can probably just use EmitSoundShared instead of this.. - AfterShock
 }
 #endif
 
