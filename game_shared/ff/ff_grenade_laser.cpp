@@ -153,7 +153,7 @@ class PseudoNail
 						if (traceHit.m_pEnt->IsPlayer() )
 						{
 							CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
-							pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, ffdev_lasergren_ng_naildamage.GetInt(), DMG_BULLET ) );
+							pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt(), DMG_BULLET ) );
 						}
 						else if( FF_IsDispenser( pTarget ) )
 						{
@@ -494,7 +494,7 @@ float CFFGrenadeLaser::getLengthPercent()
 					i++;
 			}
 			else // No hit -- move the nail forward
-				m_NailsVector[i].UpdateNailPosition( ffdev_lasergren_ng_nailspeed.GetInt() * ( gpGlobals->curtime - m_flLastThinkTime ) );
+				m_NailsVector[i].UpdateNailPosition( laser_ng_nailspeed.GetInt() * ( gpGlobals->curtime - m_flLastThinkTime ) );
 			//if MAX DISTANCE
 			//	Remove
 		}
@@ -577,7 +577,7 @@ float CFFGrenadeLaser::getLengthPercent()
 
 			m_iOffset++;
 			// Set up next nail spit time
-			m_flNailSpit = gpGlobals->curtime + ffdev_lasergren_ng_spittime.GetFloat();
+			m_flNailSpit = gpGlobals->curtime + laser_ng_spittime.GetFloat();
 		}
 		SetNextThink(gpGlobals->curtime);
 		m_flLastThinkTime = gpGlobals->curtime;
