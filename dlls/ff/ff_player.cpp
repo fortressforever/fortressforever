@@ -637,6 +637,9 @@ void CFFPlayer::PreThink(void)
 		m_pWhoTaggedMe = NULL;
 	}
 
+	// See if it's time to reset our saveme status
+	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iSaveMe != 0 ) )
+		m_iSaveMe = 0;
 
 	// See if it's time to reset our engyme status
 	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iEngyMe != 0 ) )
