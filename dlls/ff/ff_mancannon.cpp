@@ -49,17 +49,6 @@ extern const char *g_pszFFManCannonSounds[];
 
 extern const char *g_pszFFGenGibModels[];
 
-// Array of char *'s to sounds
-const char *g_pszFFManCannonSounds[] =
-{
-	FF_MANCANNON_BUILD_SOUND,
-	FF_MANCANNON_EXPLODE_SOUND,
-	//"JumpPad.WarmUp",
-	//"JumpPad.PowerDown",
-	"JumpPad.Fire",
-	NULL
-};
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
