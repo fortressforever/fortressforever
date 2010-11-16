@@ -97,9 +97,6 @@ ConVar ffdev_bluepipes_num_bounces("ffdev_bluepipes_num_bounces", "0", FCVAR_REP
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 		SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 
-		// Hits everything but debris
-		SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
-
 		// smaller, cube bounding box so we rest on the ground
 		SetSize(Vector(-FFDEV_BLUEPIPES_SIZE, -FFDEV_BLUEPIPES_SIZE, -FFDEV_BLUEPIPES_SIZE), Vector(FFDEV_BLUEPIPES_SIZE, FFDEV_BLUEPIPES_SIZE, FFDEV_BLUEPIPES_SIZE));
 		

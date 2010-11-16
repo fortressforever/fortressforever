@@ -364,7 +364,11 @@ void CFFBuildableObject::GoLive( void )
 
 	// Object is now built
 	m_bBuilt = true;
-	SetCollisionGroup( COLLISION_GROUP_PLAYER );
+
+
+	//Testing new collision group -Green Mushy
+	//SetCollisionGroup( COLLISION_GROUP_PLAYER );
+	SetCollisionGroup( COLLISION_GROUP_BUILDABLE );
 
 	// Object is built and can take damage if it is supposed to
 	if( m_bTakesDamage )

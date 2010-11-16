@@ -126,6 +126,10 @@ void CFFProjectilePipebomb::Spawn()
 
 	m_flSpawnTime = gpGlobals->curtime;
 
+	//Set the Pipebomb collision so it doesnt hit players -Green Mushy
+	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+
+
 #ifdef CLIENT_DLL
 	// Rebo you are quite mean with this tomfoolery!!!!!!!!!!
 	player_info_t pinfo;
