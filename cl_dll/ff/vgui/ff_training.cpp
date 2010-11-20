@@ -14,6 +14,7 @@
 #include "KeyValues.h"
 #include "ff_training.h"
 #include <vgui_controls/Button.h>
+#include <vgui_controls/Label.h>
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
 
@@ -38,6 +39,8 @@ CFFTrainingPanel::CFFTrainingPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FF
 
 	m_pOKButton = new Button(this, "OKButton", "", this, "OK");
 	m_pCancelButton = new Button(this, "CancelButton", "", this, "Cancel");
+	m_pStatusLabel = new vgui::Label(this, "StatusLabel", "");
+	m_pStatusLabel->SetVisible( false );
 
 	LoadControlSettings("Resource/UI/FFTraining.res");
 	//CenterThisPanelOnScreen();//keep in mind, hl2 supports widescreen 
@@ -64,6 +67,8 @@ void CFFTrainingPanel::OnButtonCommand(KeyValues *data)
 	// Play starts the mode
 	if (Q_strcmp(pszCommand, "OK") == 0)
 	{
+		m_pStatusLabel->SetText("Loading...");
+		m_pStatusLabel->SetVisible( true );
 		engine->ClientCmd("sv_lan 1\n");
 		engine->ClientCmd("mp_timelimit 0\n");
 		engine->ClientCmd("sv_cheats 0\n");
@@ -71,9 +76,24 @@ void CFFTrainingPanel::OnButtonCommand(KeyValues *data)
 	}
 	else if (Q_strcmp(pszCommand, "Cancel") == 0)
 	{
-		
+		// Now make invisible
+		SetVisible(false);
 	}
 
-	// Now make invisible
-	SetVisible(false);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Catch this menu coming on screen and load up the info needed
+//			
+//-----------------------------------------------------------------------------
+void CFFTrainingPanel::SetVisible(bool state)
+{
+	if (state)
+	{
+		RequestFocus();
+		MoveToFront();
+		Msg("Requesting focus...\n");
+	}
+
+	BaseClass::SetVisible(state);
 }
