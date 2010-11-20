@@ -216,7 +216,6 @@ void VGui_Shutdown()
 	ffoptions->Destroy();
 	ffgamemodes->Destroy();
 	ffsplash->Destroy();
-	ffircconnect->Destroy();
 	fftraining->Destroy();
 	// <-- Mirv
 
