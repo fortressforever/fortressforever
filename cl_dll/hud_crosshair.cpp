@@ -325,32 +325,6 @@ void CHudCrosshair::Paint( void )
 		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
 		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
 	}
-	else if ( weaponID == FF_WEAPON_JUMPDOWN )
-	{
-		extern float GetJumpdownCharge();
-		float flCharge = GetJumpdownCharge();
-		
-		if( flCharge <= 0.0f )
-			return;
-
-		int iLeft = x_chargebar - charOffsetX;
-		int iTop = y_chargebar + charOffsetY;
-		int iRight = iLeft + (charOffsetX * 2);
-		int iBottom = iTop + 10;
-
-		if ( flCharge == 1.0f )
-		{
-			surface()->DrawSetColor( 128, 255, 64, 150 );
-		}
-		else
-		{
-			surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
-		}
-		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge)), iBottom );
-
-		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
-		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
-	}
 }
 
 //-----------------------------------------------------------------------------
