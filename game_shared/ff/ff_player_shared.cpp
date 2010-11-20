@@ -10,6 +10,7 @@
 #include "ammodef.h"
 #include "ai_debug_shared.h"
 #include "shot_manipulator.h"
+#include "ff_utils.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_weapon_sniperrifle.h"
 #include "ff_weapon_assaultcannon.h"
@@ -17,7 +18,6 @@
 #ifdef CLIENT_DLL
 	
 	#include "c_ff_player.h"
-	#include "ff_utils.h"
 	#define CRecipientFilter C_RecipientFilter	// |-- For PlayJumpSound
 
 	extern void HudContextShow(bool visible);
