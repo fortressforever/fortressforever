@@ -20,9 +20,13 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE );
-ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE );
-ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE);
+ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+ConVar cl_concaim_movexhair("cl_concaim_movexhair", "3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL, "0 = always show xhair in centre. 1 = show xhair trueaim. 2 = hide xhair when conced. 3 = flash trueaim when shooting");
+ConVar cl_concaim_fadetime("cl_concaim_fadetime", "0.3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL, "When cl_concaim_movexhair = 3, controls the time the xhair stays visible");
+
+#define FFDEV_CONCAIM_MOVEXHAIR cl_concaim_movexhair.GetInt()
 #define FFDEV_CONCAIM_FADETIME cl_concaim_fadetime.GetFloat()
 	
 using namespace vgui;
@@ -123,6 +127,8 @@ void CHudCrosshair::Paint( void )
 	if ( !IsCurrentViewAccessAllowed() )
 		return;
 
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
 	m_curViewAngles = CurrentViewAngles();
 	m_curViewOrigin = CurrentViewOrigin();
 
@@ -156,6 +162,48 @@ void CHudCrosshair::Paint( void )
 		y_chargebar += 0.5f * screen[1] * ScreenHeight() + 0.5f;
 	}
 
+	// AfterShock: Conc aim -> plot crosshair properly
+	if ( ( FFDEV_CONCAIM_MOVEXHAIR == 1) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		QAngle angles;
+		Vector forward;
+		Vector point, screen;
+
+		// this code is wrong
+		// AfterShock: No, the code is now right!
+		angles = pPlayer->EyeAngles();
+		AngleVectors( angles, &forward );
+		forward *= 10000.0f;
+		VectorAdd( m_curViewOrigin, forward, point );
+		ScreenTransform( point, screen );
+
+		x = (screen[0]*0.5 + 0.5f) * ScreenWidth();
+		y = (1 - ( screen[1]*0.5 + 0.5f ) ) * ScreenHeight();
+		x_chargebar = x;
+		y_chargebar = y;
+	}
+	else if ( ( FFDEV_CONCAIM_MOVEXHAIR == 2) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		x = -1;
+		y = -1;
+	}
+	else if ( ( FFDEV_CONCAIM_MOVEXHAIR == 3) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	{
+		// if should be flashing
+		if (gpGlobals->curtime < pPlayer->m_flTrueAimTime + FFDEV_CONCAIM_FADETIME)
+		{
+			QAngle angles;
+			Vector forward;
+			Vector point, screen;
+
+			// this code is wrong
+			// AfterShock: No, the code is now right!
+			angles = pPlayer->EyeAngles();
+			AngleVectors( angles, &forward );
+			forward *= 10000.0f;
+			VectorAdd( m_curViewOrigin, forward, point );
+			ScreenTransform( point, screen );
+
 			x = (screen[0]*0.5 + 0.5f) * ScreenWidth();
 			y = (1 - ( screen[1]*0.5 + 0.5f ) ) * ScreenHeight();
 		}
@@ -173,8 +221,6 @@ void CHudCrosshair::Paint( void )
 	//		x - 0.5f * m_pCrosshair->Width(), 
 	//		y - 0.5f * m_pCrosshair->Height(),
 	//		m_clrCrosshair );
-
-	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 	
 	if (!pPlayer)
 		return;
@@ -275,6 +321,32 @@ void CHudCrosshair::Paint( void )
 
 		surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
 		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge / 100.0f)), iBottom );
+
+		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
+		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+	}
+	else if ( weaponID == FF_WEAPON_JUMPDOWN )
+	{
+		extern float GetJumpdownCharge();
+		float flCharge = GetJumpdownCharge();
+		
+		if( flCharge <= 0.0f )
+			return;
+
+		int iLeft = x_chargebar - charOffsetX;
+		int iTop = y_chargebar + charOffsetY;
+		int iRight = iLeft + (charOffsetX * 2);
+		int iBottom = iTop + 10;
+
+		if ( flCharge == 1.0f )
+		{
+			surface()->DrawSetColor( 128, 255, 64, 150 );
+		}
+		else
+		{
+			surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
+		}
+		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge)), iBottom );
 
 		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
 		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
