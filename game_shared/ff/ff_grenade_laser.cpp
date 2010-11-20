@@ -83,9 +83,7 @@ ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active t
 	ConVar laser_ng_naildamage_buildablemult("ffdev_lasergren_ng_naildamage_buildablemult", "1.0", FCVAR_NOTIFY);
 	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.025", FCVAR_NOTIFY );
 	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", 0 );
-
 	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
-	ConVar ffdev_lasergren_ng_nailstreams( "ffdev_lasergren_nailgren_streams", "10", FCVAR_CHEAT );
 	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
 
 	ConVar laser_ng_nail_bounds("ffdev_lasergren_ng_nail_bounds", "5.0", FCVAR_REPLICATED, "NG Nails bbox");
@@ -131,14 +129,14 @@ class PseudoNail
 			AngleVectors( m_vecAngles, &vecForward );
 			
 			// Visualise trace
-			if ( ffdev_lasergren_ng_visualizenails.GetBool() )
+			if ( laser_ng_visualizenails.GetBool() )
 			{
-				NDebugOverlay::Line(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_lasergren_ng_nail_length.GetInt() ), 255, 255, 0, false, 5.0f);
-				NDebugOverlay::SweptBox(m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_lasergren_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_lasergren_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_lasergren_ng_nail_bounds.GetFloat(), m_vecAngles, 200, 100, 0, 100, 0.1f);
+				NDebugOverlay::Line(m_vecOrigin, m_vecOrigin + ( vecForward * laser_ng_nail_length.GetInt() ), 255, 255, 0, false, 5.0f);
+				NDebugOverlay::SweptBox(m_vecOrigin, m_vecOrigin + ( vecForward * laser_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * laser_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * laser_ng_nail_bounds.GetFloat(), m_vecAngles, 200, 100, 0, 100, 0.1f);
 			}
 
 			trace_t traceHit;
-			UTIL_TraceHull( m_vecOrigin, m_vecOrigin + ( vecForward * ffdev_lasergren_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_lasergren_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_lasergren_ng_nail_bounds.GetFloat(), MASK_SHOT_HULL, NULL, COLLISION_GROUP_NONE, &traceHit );
+			UTIL_TraceHull( m_vecOrigin, m_vecOrigin + ( vecForward * laser_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * laser_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * laser_ng_nail_bounds.GetFloat(), MASK_SHOT_HULL, NULL, COLLISION_GROUP_NONE, &traceHit );
 
 			if (traceHit.m_pEnt)
 			{
@@ -239,11 +237,15 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual void DoDamage( CBaseEntity *pTarget );
 
+	virtual float GetGrenadeDamage()		{ return explosiondamage.GetFloat(); }
+	virtual float GetGrenadeRadius()		{ return explosionradius.GetFloat(); }
+
 
 private:
 	void ShootNail( const Vector& vecOrigin, const QAngle& vecAngles );
 
 protected:
+	float	m_flBeams;
 	float	m_flNailSpit;
 	float	m_flAngleOffset;
 	int		m_iOffset;
@@ -430,8 +432,7 @@ float CFFGrenadeLaser::getLengthPercent()
 
 			angRadial.y += flDeltaAngle;
 		}
-		
-		SetNextThink( gpGlobals->curtime + 0.01f );
+		SetNextThink( gpGlobals->curtime );
 	}
 
 	void CFFGrenadeLaser::DoDamage( CBaseEntity *pTarget )
@@ -502,15 +503,18 @@ float CFFGrenadeLaser::getLengthPercent()
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
-			Detonate();
+			if( laserexplode.GetBool() )
+				Detonate();
+			else
+				UTIL_Remove( this );
 			return;
 		}
 
 		float flRisingheight = 0;
 
 		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
-		if (m_flDetonateTime - gpGlobals->curtime > 2.6 && !m_fIsHandheld)
-			flRisingheight = 80;
+		if (m_flDetonateTime - gpGlobals->curtime > lasertime.GetFloat() - 0.3 && !m_fIsHandheld)
+			flRisingheight = laserjump.GetFloat();
 
 		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(gpGlobals->curtime * 360 * bobfrequency.GetFloat()))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, LASERGREN_ROTATION_PER_TICK, 0));
@@ -525,7 +529,7 @@ float CFFGrenadeLaser::getLengthPercent()
 			float flSize = 20.0f;
 
 			float flDeltaAngle = 360.0f / iArms;
-			QAngle angRadial = QAngle(0.0f, random->RandomFloat(0.0f, flDeltaAngle), 0.0f);
+			QAngle angRadial = GetAbsAngles();
 			
 			//float flOffset = (m_iOffset % laser_ng_streams.GetInt()) - (laser_ng_streams.GetInt() / 2 );
 			//DevMsg("flOffset: %f\n", flOffset);
@@ -547,19 +551,6 @@ float CFFGrenadeLaser::getLengthPercent()
 
 			EmitSound("NailGrenade.shoot");
 			
-<<<<<<< .working
-			CEffectData data;
-			data.m_vOrigin = vecOrigin;
-			data.m_vAngles = QAngle(0, 0, 0);
-			data.m_nDamageType = m_iOffset;
-
-#ifdef GAME_DLL
-			data.m_nEntIndex = entindex();
-#else
-			data.m_hEntity = this;
-#endif
-
-=======
 			CEffectData data;
 			data.m_vOrigin = vecOrigin;
 			data.m_vAngles = GetAbsAngles();
@@ -572,7 +563,6 @@ float CFFGrenadeLaser::getLengthPercent()
 			data.m_hEntity = this;
 #endif
 
->>>>>>> .merge-right.r12166
 			DispatchEffect("Projectile_Nail_Radial", data);
 
 			m_iOffset++;
