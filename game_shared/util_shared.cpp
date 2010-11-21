@@ -282,6 +282,21 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 {
 	CBaseEntity *pHandle = EntityFromEntityHandle( pHandleEntity );
 
+	const CBaseEntity *pPassEnt = NULL;
+	if( m_pPassEnt )
+		pPassEnt = EntityFromEntityHandle( m_pPassEnt );
+
+	// --> hlstriker: No team collisions
+	if( pPassEnt && pHandle )
+	{
+		if( m_collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT )
+		{
+			if( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() )
+				return false;
+		}
+	}
+	// <--
+
 	if( pHandle )
 	{
 		if( pHandle->Classify() == CLASS_TRIGGER_CLIP )
@@ -289,11 +304,6 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 			CFFTriggerClip *pTriggerClip = dynamic_cast< CFFTriggerClip * >( pHandle );
 			if( pTriggerClip && pTriggerClip->GetClipMask() )
 			{
-				const CBaseEntity *pPassEnt = NULL;
-
-				if( m_pPassEnt )
-					pPassEnt = EntityFromEntityHandle( m_pPassEnt );
-
 				if( pPassEnt )
 				{
 					bool bShouldHit = true;
