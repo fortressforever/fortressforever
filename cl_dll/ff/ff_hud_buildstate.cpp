@@ -255,7 +255,10 @@ void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 
 void CHudBuildState::MsgFunc_ManCannonMsg(bf_read &msg)
 {
-    m_flManCannonTimeoutTime = msg.ReadFloat();
+    int iHealth = (int) msg.ReadByte();
+    //m_flManCannonTimeoutTime = msg.ReadFloat();
+	
+	_snwprintf(m_szManCannon, 127, L"%s: %i%%", m_szHealth, iHealth);
 }
 
 void CHudBuildState::MsgFunc_DetpackMsg(bf_read &msg)
@@ -353,17 +356,16 @@ void CHudBuildState::Paint()
 			surface()->DrawUnicodeChar(*wch);
 	}
 
-	/*if (m_bDrawManCannon) 
+	if (m_bDrawManCannon) 
 	{
 		surface()->DrawSetTextPos(text2_xpos, text2_ypos);
 		
-		_snwprintf(m_szManCannon, 127, L"Time Left: %i seconds", (int)(m_flManCannonTimeoutTime - gpGlobals->curtime + 1) );
-		
+		// commenting out to not draw a time remaining -GreenMushy
+		//_snwprintf(m_szManCannon, 127, L"Time Left: %i seconds", (int)(m_flManCannonTimeoutTime - gpGlobals->curtime + 1) );
 
 		for (wchar_t *wch = m_szManCannon; *wch != 0; wch++) 
 			surface()->DrawUnicodeChar(*wch);
-	}*/
-	// commenting out ^ to not draw a time remaining -GreenMushy
+	}
 	
 	if (m_bDrawDetpack) 
 	{
