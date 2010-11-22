@@ -997,6 +997,13 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// This will force an update of this variable for the client	
 	NetworkStateChanged( ( int * )&m_iHealth );
 
+	if ( Classify() == CLASS_MANCANNON )
+	{
+		CFFManCannon *pManCannon = FF_ToManCannon( this );
+		pManCannon->m_iCombatState = JUMPPAD_INCOMBAT;
+		pManCannon->m_flLastDamage = gpGlobals->curtime;
+	}
+
 	int res = CBaseEntity::OnTakeDamage( adjustedDamage );
 
 	// Send hit indicator to attacker
