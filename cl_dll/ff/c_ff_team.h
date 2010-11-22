@@ -31,6 +31,8 @@ public:
 					C_FFTeam();
 	virtual			~C_FFTeam();
 
+	int GetAlliedTeams( int (&iAlliedTeams)[TEAM_COUNT] );
+
 	// --> Mirv: Menus need to know limits
 	virtual int		Get_Classes( int );
 	virtual int		Get_Teams( void );

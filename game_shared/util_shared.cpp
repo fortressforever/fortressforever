@@ -16,9 +16,11 @@
 #include "ff_triggerclip.h"
 
 #ifdef CLIENT_DLL
+	#include "c_ff_team.h"
 	#include "c_ff_player.h"
 	#include "c_te_effect_dispatch.h"
 #else
+	#include "ff_team.h"
 	#include "ff_player.h"
 	#include "te_effect_dispatch.h"
 
@@ -291,8 +293,9 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 	{
 		if( m_collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT )
 		{
-			// This allows players to pass through any team object (another player or entity)
-			if( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() )
+			// This allows players to pass through any team object (another player or entity), includes allies
+			CFFTeam *pTeam = GetGlobalFFTeam(pPassEnt->GetTeamNumber());
+			if( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() || ( pTeam && ( pTeam->GetAllies() & ( 1 << pHandle->GetTeamNumber() ) ) ) )
 				return false;
 		}
 	}

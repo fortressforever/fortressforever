@@ -176,6 +176,12 @@ public:
 	virtual void Simulate();
 	//---------------------
 
+	// --> hlstriker: Pushes players out of team entities
+	void AvoidPlayers( CUserCmd *pCmd );
+	bool IsEntIntersectingBox( C_BaseEntity *pEnt, const Vector& boxMin, const Vector& boxMax );
+	C_BaseEntity* FindTeamIntersect( C_Team *pTeam, const Vector& boxMin, const Vector& boxMax );
+	// <-- hlstriker
+
 protected:
 	// For render origin
 	Vector	m_vecFeetOrigin;
