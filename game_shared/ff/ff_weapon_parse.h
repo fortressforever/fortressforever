@@ -30,6 +30,7 @@ public:
 	// Variables for weapons
 	float	m_flCycleTime;
 	float	m_iCycleDecrement;
+	bool	m_bReloadClip;
 
 	int		m_iDamage;
 	int		m_iDamageRadius;

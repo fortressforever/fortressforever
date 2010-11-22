@@ -26,6 +26,7 @@ void CFFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 
 	m_flCycleTime		= pKeyValuesData->GetFloat( "CycleTime", 0.15f );
 	m_iCycleDecrement	= pKeyValuesData->GetInt( "CycleDecrement", 0.15f );
+	m_bReloadClip		= pKeyValuesData->GetInt( "ReloadClip", 0.0f );
 
 	m_iDamage			= pKeyValuesData->GetInt( "Damage", 42 ); // Douglas Adams 1952 - 2001
 	m_iDamageRadius		= pKeyValuesData->GetInt( "DamageRadius", m_iDamage );
