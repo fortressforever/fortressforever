@@ -47,7 +47,7 @@ enum FF_ClipFlags
 	LUA_CLIP_FLAG_TEAMYELLOW	= 1 << 3,
 	LUA_CLIP_FLAG_TEAMGREEN		= 1 << 4,
 	LUA_CLIP_FLAG_GRENADES		= 1 << 5,
-	LUA_CLIP_FLAG_PROJECTILES	= 1 << 6,
+	LUA_CLIP_FLAG_TEAM_ENTITIES	= 1 << 6
 };
 
 //-----------------------------------------------------------------------------
