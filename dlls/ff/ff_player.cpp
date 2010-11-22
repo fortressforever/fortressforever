@@ -369,6 +369,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropFloat( SENDINFO( m_flNextMapGuideTime ) ),
 
 	SendPropFloat(SENDINFO(m_flConcTime)),
+	SendPropFloat(SENDINFO(m_flSlidingTime)),
 
 	SendPropFloat(SENDINFO(m_flSpeedModifier)),
 
@@ -418,6 +419,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iSaveMe ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iEngyMe ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iAmmoMe ), 1, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bSliding ) ),
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
@@ -540,6 +542,9 @@ CFFPlayer::CFFPlayer()
 
 	m_flConcTime = 0;		// Not concussed on creation
 	m_iClassStatus = 0;		// No class sorted yet
+
+	m_flSlidingTime = 0;		// Not sliding on creation
+	m_bSliding = false;
 
 	m_bGassed = false;
 	m_hGasser = NULL;
@@ -1310,6 +1315,7 @@ void CFFPlayer::Spawn( void )
 	m_iInfectedTeam		= TEAM_UNASSIGNED;
 	m_hRagdoll			= NULL;
 	m_flConcTime		= 0.0f;
+	m_flSlidingTime		= 0.0f;
 	m_flSpeedModifier	= 1.0f;
 	m_flNextClassSpecificSkill = 0.0f;
 
@@ -1843,6 +1849,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	
 	if( m_iAmmoMe )
 		m_iAmmoMe = 0;
+
+	if( m_bSliding )
+		m_bSliding = false;
 
 	m_flSaveMeTime = 0.0f;
 
@@ -3809,6 +3818,14 @@ void CFFPlayer::StatusEffectsThink( void )
 		else
 		{
 			UnGas();
+		}
+	}
+
+	if (m_bSliding)
+	{
+		if (m_flSlidingTime <= gpGlobals->curtime)
+		{
+			StopSliding();
 		}
 	}
 
@@ -5893,6 +5910,52 @@ void CFFPlayer::UnGas( void )
 
 	UserMessageBegin( user, "StatusIconUpdate" );
 		WRITE_BYTE( FF_STATUSICON_HALLUCINATIONS );
+		WRITE_FLOAT( 0.0f );
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Slide a player (overpressure effect, gives low friction/acceleration)
+//-----------------------------------------------------------------------------
+void CFFPlayer::StartSliding( float flDuration, float flIconDuration )
+{
+	m_bSliding = true;
+	SetFriction( 0.0f );
+
+	if(flDuration != -1)
+		m_flSlidingTime = gpGlobals->curtime + flDuration;
+	else
+		m_flSlidingTime = gpGlobals->curtime + 99999.0f;//this should last a while.
+
+	// Send status icon
+	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+	user.MakeReliable();
+
+	UserMessageBegin( user, "StatusIconUpdate" );
+		WRITE_BYTE( FF_STATUSICON_SLIDING );
+		WRITE_FLOAT( flIconDuration );
+	MessageEnd();
+
+	// Send hallucination effect
+	// This should probably be done as a HUD message!
+	//CEffectData data;
+	//te->DispatchEffect(user, 0.0, data.m_vOrigin, "Hallucination", data);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Stop sliding a player (overpressure effect, gives low friction/acceleration)
+//-----------------------------------------------------------------------------
+void CFFPlayer::StopSliding( void )
+{
+	m_bSliding = false;
+	m_flSlidingTime = 0;
+	SetFriction( 1.0f );
+
+	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+	user.MakeReliable();
+
+	UserMessageBegin( user, "StatusIconUpdate" );
+		WRITE_BYTE( FF_STATUSICON_SLIDING );
 		WRITE_FLOAT( 0.0f );
 	MessageEnd();
 }

@@ -515,6 +515,14 @@ protected:
 	void UnGas( void );
 	bool m_bGassed;
 
+public:
+	bool IsSliding( void ) const { return m_bSliding; }
+	void StartSliding( float flDuration, float flIconDuration );  // start the overpressure friction/acceleration effect
+	CNetworkVar( float, m_flSlidingTime );
+protected:
+	void StopSliding( void ); // stop the overpressure friction/acceleration effect
+	CNetworkVar( bool, m_bSliding );
+
 public:	
 	bool IsInfected( void ) const		{ return m_bInfected != 0; }
 	bool IsImmune( void ) const			{ return m_bImmune != 0; }
