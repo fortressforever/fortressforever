@@ -705,8 +705,10 @@ ConVar mp_prematch( "mp_prematch",
 				if( pPlayer && pPlayer->IsPlayer() )
 				{
 					// Skip spectators
+					/* // dont skip spectators!
 					if( FF_IsPlayerSpec( pPlayer ) )
 						continue;
+					*/
 
 					// If bUseTeam, meaning we were sent in a valid team...
 					if( bUseTeam )
