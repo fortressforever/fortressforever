@@ -29,7 +29,7 @@ class CFFTrainingPanel : public Frame
 
 public:
 	CFFTrainingPanel( vgui::VPANEL parent );
-
+	void SetVisible(bool state);
 
 private:
 
@@ -37,6 +37,7 @@ private:
 
 	vgui::Button			*m_pOKButton;
 	vgui::Button			*m_pCancelButton;
+	vgui::Label				*m_pStatusLabel;
 
 };
 
