@@ -63,17 +63,11 @@ ConVar cl_ffdlight_generic( "cl_ffdlight_generic", "1.0", FCVAR_ARCHIVE, "Radius
 // Wrapper CVAR for an archiveable r_maxdlights -- thanks, mirv
 void FF_MaxDLights_Callback(ConVar *var, char const *pOldString)
 {
-	// have to manually do limits because of the callback
-	if (var->GetInt() < 0)
-		var->SetValue(0);
-	if (var->GetInt() > FF_MAXDLIGHTS)
-		var->SetValue(FF_MAXDLIGHTS);
-
 	ConVar *c = cvar->FindVar("r_maxdlights");
 	if (c)
 		c->SetValue(var->GetString());
 }
-ConVar r_maxdlights_ff( "r_maxdlights_ff", "32", FCVAR_ARCHIVE, "Sets the maximum number of dynamic lights allowed.", FF_MaxDLights_Callback );
+ConVar r_maxdlights_ff( "r_maxdlights_ff", "32", FCVAR_ARCHIVE, "Sets the maximum number of dynamic lights allowed.", TRUE, 0.0f, TRUE, FF_MAXDLIGHTS, FF_MaxDLights_Callback );
 
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
