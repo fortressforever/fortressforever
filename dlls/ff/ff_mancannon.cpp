@@ -159,7 +159,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	}
 
 	// Only trigger when the player hits his jump key
-	if ( !(pPlayer->m_nButtons & IN_JUMP) || pPlayer->m_nButtons & IN_DUCK )//So u dont activate when u duck -GreenMushy
+	if ( !(pPlayer->m_nButtons & IN_JUMP) /*|| pPlayer->m_nButtons & IN_DUCK*/ )//So u dont activate when u duck -GreenMushy
 		return;
 
 	// Launch the guy
