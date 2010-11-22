@@ -2769,6 +2769,7 @@ C_BaseEntity* C_FFPlayer::FindTeamIntersect( C_Team *pTeam, const Vector& boxMin
 			continue;
 
 		// Check to see if should avoid engineers buildables
+		/*
 		if( pAvoidPlayer->GetClassSlot() == CLASS_ENGINEER )
 		{
 			//pAvoidEnt = static_cast< C_BaseEntity * >( pAvoidPlayer->GetDispenser() );
@@ -2781,6 +2782,7 @@ C_BaseEntity* C_FFPlayer::FindTeamIntersect( C_Team *pTeam, const Vector& boxMin
 			if( IsEntIntersectingBox( pAvoidEnt, boxMin, boxMax ) )
 				return pAvoidEnt;
 		}
+		*/
 
 		// Is the avoid player me?
 		if ( pAvoidPlayer == this )
