@@ -291,6 +291,7 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 	{
 		if( m_collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT )
 		{
+			// This allows players to pass through any team object (another player or entity)
 			if( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() )
 				return false;
 		}
@@ -306,62 +307,66 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 			{
 				if( pPassEnt )
 				{
-					bool bShouldHit = true;
+					// If players should clip
+					if( pPassEnt->IsPlayer() && pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_PLAYERS ) )
+						return true;
 
-					// If clip requires a player...
-					if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_PLAYERS ) && !pPassEnt->IsPlayer() )
-						bShouldHit = false;
+					// If grenades should clip
+					if( ( pPassEnt->GetFlags() & FL_GRENADE ) && pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_GRENADES ) )
+						return true;
 
-					// Player specific stuff
-					if( pPassEnt->IsPlayer() )
+					// If team entities should clip
+					if( !pPassEnt->IsPlayer() && pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAM_ENTITIES ) )
 					{
-						const CFFPlayer *pPlayer = static_cast< const CFFPlayer * >( pPassEnt );
+						CBaseEntity *pOwner = pPassEnt->GetOwnerEntity();
+						if( !pOwner )
+							return false;
 
-						// If clip requires blue team...
-						if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE ) && ( pPlayer->GetTeamNumber() != TEAM_BLUE ) )
-							bShouldHit = false;
-						// If clip requires red team...
-						else if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMRED ) && ( pPlayer->GetTeamNumber() != TEAM_RED ) )
-							bShouldHit = false;
-						// If clip requires yellow team...
-						else if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMYELLOW ) && ( pPlayer->GetTeamNumber() != TEAM_YELLOW ) )
-							bShouldHit = false;
-						// If clip requires green team...
-						else if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMGREEN ) && ( pPlayer->GetTeamNumber() != TEAM_GREEN ) )
-							bShouldHit = false;
+						switch( pOwner->GetTeamNumber() )
+						{
+							case TEAM_BLUE:
+								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE ) ) return true;
+								else break;
+							case TEAM_RED:
+								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMRED ) ) return true;
+								else break;
+							case TEAM_YELLOW:
+								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMYELLOW ) ) return true;
+								else break;
+							case TEAM_GREEN:
+								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMGREEN ) ) return true;
+								else break;
+							default:
+								break;
+						}
 					}
 
-					return bShouldHit;
+					// If specific player teams should clip
+					if( pPassEnt->IsPlayer() )
+					{
+						switch( pPassEnt->GetTeamNumber() )
+						{
+							case TEAM_BLUE:
+								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE ) ) return true;
+								else break;
+							case TEAM_RED:
+								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMRED ) ) return true;
+								else break;
+							case TEAM_YELLOW:
+								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMYELLOW ) ) return true;
+								else break;
+							case TEAM_GREEN:
+								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMGREEN ) ) return true;
+								else break;
+							default:
+								break;
+						}
+					}
+
+					return false;
 				}
 			}
-//#ifdef GAME_DLL
-//			static float flSpamTime = 0.0f;
-//			if( flSpamTime < gpGlobals->curtime )
-//			{
-//				DevMsg( "[%f] [SERVER] Hit trigger clip\n", gpGlobals->curtime );
-//				flSpamTime = gpGlobals->curtime + 1.0f;
-//			}
-//#else
-//			static float flSpamTime = 0.0f;
-//			if( flSpamTime < gpGlobals->curtime )
-//			{
-//				DevMsg( "[%f] [CLIENT] Hit trigger clip\n", gpGlobals->curtime );
-//				flSpamTime = gpGlobals->curtime + 1.0f;
-//			}
-//#endif
-//			return false;
 		}
-//		else if( !pHandle->IsPlayer() )
-//		{
-//#ifdef GAME_DLL
-//			static float flSpamTime = 0.0f;
-//			if( flSpamTime < gpGlobals->curtime )
-//			{
-//				DevMsg( "[%f] Hit %s\n", gpGlobals->curtime, pHandle->GetClassname() );
-//				flSpamTime = gpGlobals->curtime + 1.0f;
-//			}
-//#endif
-//		}
 	}
 
 	if ( !StandardFilterRules( pHandleEntity, contentsMask ) )
@@ -370,16 +375,13 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 	if ( m_pPassEnt )
 	{
 		if ( !PassServerEntityFilter( pHandleEntity, m_pPassEnt ) )
-		{
 			return false;
-		}
 	}
 
 	// Don't test if the game code tells us we should ignore this collision...
-	CBaseEntity *pEntity = EntityFromEntityHandle( pHandleEntity );
-	if ( !pEntity->ShouldCollide( m_collisionGroup, contentsMask ) )
+	if ( !pHandle->ShouldCollide( m_collisionGroup, contentsMask ) )
 		return false;
-	if ( pEntity && !g_pGameRules->ShouldCollide( m_collisionGroup, pEntity->GetCollisionGroup() ) )
+	if ( pHandle && !g_pGameRules->ShouldCollide( m_collisionGroup, pHandle->GetCollisionGroup() ) )
 		return false;
 
 	return true;
