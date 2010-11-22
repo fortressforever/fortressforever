@@ -230,7 +230,7 @@ void CFFLuaLib::InitConstants(lua_State* L)
 			[
 				value("kClipPlayers",		LUA_CLIP_FLAG_PLAYERS),
 				value("kClipTeamBlue",		LUA_CLIP_FLAG_TEAMBLUE),
-				value("kClipTeamRed",		LUA_CLIP_FLAG_TEAMRED),				
+				value("kClipTeamRed",		LUA_CLIP_FLAG_TEAMRED),
 				value("kClipTeamYellow",	LUA_CLIP_FLAG_TEAMYELLOW),
 				value("kClipTeamGreen",		LUA_CLIP_FLAG_TEAMGREEN),
 				value("kClipGrenades",		LUA_CLIP_FLAG_GRENADES),

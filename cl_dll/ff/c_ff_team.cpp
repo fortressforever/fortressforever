@@ -57,6 +57,26 @@ int C_FFTeam::GetAllies( void )
 }
 // <-- Mirv: Menues need to know limits
 
+// --> hlstriker: Sets array of allies by ref, and returns the number of allies
+int C_FFTeam::GetAlliedTeams( int (&iAlliedTeams)[TEAM_COUNT] )
+{
+	int iCount = 0;
+	for (int i = TEAM_BLUE; i < TEAM_COUNT; i++ )
+	{
+		if ( m_iTeamNum == i )
+			continue;
+
+		if ( GetAllies() & ( 1 << i ) )
+		{
+			iAlliedTeams[iCount++] = i;
+			if ( iCount >= TEAM_COUNT )
+				break;
+		}
+	}
+	return iCount;
+}
+// <--
+
 //-----------------------------------------------------------------------------
 // Purpose: Get a pointer to the specified TF team manager
 //-----------------------------------------------------------------------------
