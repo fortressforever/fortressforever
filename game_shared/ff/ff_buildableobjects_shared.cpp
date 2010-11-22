@@ -150,6 +150,7 @@ const char *g_pszFFManCannonSounds[] =
 	//"JumpPad.WarmUp",
 	//"JumpPad.PowerDown",
 	"JumpPad.Fire",
+	"JumpPad.Heal",//For the healing sound on jumppads -GreenMushy
 	NULL
 };
 

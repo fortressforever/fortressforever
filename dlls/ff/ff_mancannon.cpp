@@ -113,9 +113,6 @@ void CFFManCannon::GoLive( void )
 	// caes
 }
 
-
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Generic think function
 //-----------------------------------------------------------------------------
@@ -131,35 +128,17 @@ void CFFManCannon::OnJumpPadThink( void )
 
 			// spark when health regens (slightly above origin so it's on the jumppad not in it)
 			Vector vecUp(0, 0, 1.0f);
-			//g_pEffects->Sparks(GetAbsOrigin() + (vecUp*8), 2, 4, &vecUp);
 			g_pEffects->EnergySplash( GetAbsOrigin() + vecUp*8, vecUp, false );
+
+			// also play sound when health regens
+			EmitSound( "JumpPad.Heal" );
+
 			m_flLastHeal = gpGlobals->curtime;
 
 		}
 	}
 	else if ( m_iCombatState == JUMPPAD_INCOMBAT )
 	{
-		/*
-		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_combat", TEXTURE_GROUP_CLIENT_EFFECTS );
-		if( pMaterial )
-		{
-			materials->Bind( pMaterial );
-
-			float percent = 1.0f - (gpGlobals->curtime - m_flLastDamage) / ffdev_mancannon_combatcooldown.GetFloat();
-			percent = clamp(percent, 0.0f, 1.0f);
-			
-			// get team color
-			CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
-			if( !pOwner ) 
-				return;
-
-			Color teamcolor = pOwner->GetTeamColor();
-
-			color32 c = { teamcolor.r(), teamcolor.g(), teamcolor.b(), 255 * percent };
-			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z + ffdev_mancannon_spriteoffset.GetFloat() ), 15.0f, 15.0f, c );
-		}
-		*/
-
 		if ( gpGlobals->curtime >= m_flLastDamage + ffdev_mancannon_combatcooldown.GetFloat() )
 		{
 			m_iCombatState = JUMPPAD_IDLE;
