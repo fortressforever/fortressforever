@@ -4771,7 +4771,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_radar.cpp"
+				RelativePath=".\ff\ff_hud_overpressure.cpp"
 				>
 			</File>
 			<File
