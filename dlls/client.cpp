@@ -33,6 +33,8 @@ client/server game specific stuff
 #include "nav_mesh.h"
 #include "team.h"
 #include "ff_player.h"
+#include "ff_scriptman.h"
+#include "ff_luacontext.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -561,94 +563,103 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 	Q_strncat( text, p, sizeof( text ), COPY_ALL_CHARACTERS );
 	Q_strncat( text, "\n", sizeof( text ), COPY_ALL_CHARACTERS );
 
-	// loop through all players
-	// Start with the first player.
-	// This may return the world in single player if the client types something between levels or during spawn
-	// so check it, or it will infinite loop
-
-	client = NULL;
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	// send to lua
+	CFFLuaSC hContext( 0 );
+	hContext.Push( pPlayer );
+	hContext.Push( text );
+	
+	// let lua decide if the message should go through
+	if ( _scriptman.RunPredicates_LUA( NULL, &hContext, "player_onchat" ) )
 	{
-		client = UTIL_PlayerByIndex( i );
-		if ( !client || !client->edict() )
-			continue;
 
-		if ( client->edict() == pEdict )
-			continue;
-
-		if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
-			continue;
-
-		if ( teamonly && g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
-			continue;
-
-		if ( !client->CanHearChatFrom( pPlayer ) )
-			continue;
-
-		CSingleUserRecipientFilter user( client );
-		user.MakeReliable();
-
-		if ( pszFormat )
+		// loop through all players
+		// Start with the first player.
+		// This may return the world in single player if the client types something between levels or during spawn
+		// so check it, or it will infinite loop
+		client = NULL;
+		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
-			UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
+			client = UTIL_PlayerByIndex( i );
+			if ( !client || !client->edict() )
+				continue;
+
+			if ( client->edict() == pEdict )
+				continue;
+
+			if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
+				continue;
+
+			if ( teamonly && g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
+				continue;
+
+			if ( !client->CanHearChatFrom( pPlayer ) )
+				continue;
+
+			CSingleUserRecipientFilter user( client );
+			user.MakeReliable();
+
+			if ( pszFormat )
+			{
+				UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
+			}
+			else
+			{
+				UTIL_SayTextFilter( user, text, pPlayer, true );
+			}
 		}
+
+		if ( pPlayer )
+		{
+			// print to the sending client
+			CSingleUserRecipientFilter user( pPlayer );
+			user.MakeReliable();
+
+			if ( pszFormat )
+			{
+				UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
+			}
+			else
+			{
+				UTIL_SayTextFilter( user, text, pPlayer, true );
+			}
+		}
+
+		// echo to server console
+		// Adrian: Only do this if we're running a dedicated server since we already print to console on the client.
+		if ( engine->IsDedicatedServer() )
+			Msg( "%s", text );
+
+		Assert( p );
+
+		int userid = 0;
+		const char *networkID = "Console";
+		const char *playerName = "Console";
+		const char *playerTeam = "Console";
+		if ( pPlayer )
+		{
+			userid = pPlayer->GetUserID();
+			networkID = pPlayer->GetNetworkIDString();
+			playerName = pPlayer->GetPlayerName();
+			CTeam *team = pPlayer->GetTeam();
+			if ( team )
+			{
+				playerTeam = team->GetName();
+			}
+		}
+
+		if ( teamonly )
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say_team \"%s\"\n", playerName, userid, networkID, playerTeam, p );
 		else
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say \"%s\"\n", playerName, userid, networkID, playerTeam, p );
+
+		IGameEvent *event = gameeventmanager->CreateEvent( teamonly ? "player_sayteam" : "player_say" );
+		if ( event )	// will be null if there are no listeners!
 		{
-			UTIL_SayTextFilter( user, text, pPlayer, true );
+			event->SetInt("userid", userid );
+			event->SetString("text", p );
+			event->SetInt("priority", 1 );	// HLTV event priority, not transmitted
+			gameeventmanager->FireEvent( event );
 		}
-	}
-
-	if ( pPlayer )
-	{
-		// print to the sending client
-		CSingleUserRecipientFilter user( pPlayer );
-		user.MakeReliable();
-
-		if ( pszFormat )
-		{
-			UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
-		}
-		else
-		{
-			UTIL_SayTextFilter( user, text, pPlayer, true );
-		}
-	}
-
-	// echo to server console
-	// Adrian: Only do this if we're running a dedicated server since we already print to console on the client.
-	if ( engine->IsDedicatedServer() )
-		Msg( "%s", text );
-
-	Assert( p );
-
-	int userid = 0;
-	const char *networkID = "Console";
-	const char *playerName = "Console";
-	const char *playerTeam = "Console";
-	if ( pPlayer )
-	{
-		userid = pPlayer->GetUserID();
-		networkID = pPlayer->GetNetworkIDString();
-		playerName = pPlayer->GetPlayerName();
-		CTeam *team = pPlayer->GetTeam();
-		if ( team )
-		{
-			playerTeam = team->GetName();
-		}
-	}
-
-	if ( teamonly )
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say_team \"%s\"\n", playerName, userid, networkID, playerTeam, p );
-	else
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say \"%s\"\n", playerName, userid, networkID, playerTeam, p );
-
-	IGameEvent *event = gameeventmanager->CreateEvent( teamonly ? "player_sayteam" : "player_say" );
-	if ( event )	// will be null if there are no listeners!
-	{
-		event->SetInt("userid", userid );
-		event->SetString("text", p );
-		event->SetInt("priority", 1 );	// HLTV event priority, not transmitted
-		gameeventmanager->FireEvent( event );
 	}
 }
 

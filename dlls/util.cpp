@@ -1067,12 +1067,6 @@ void ClientPrint( CBasePlayer *player, int msg_dest, const char *msg_name, const
 
 void UTIL_SayTextFilter( IRecipientFilter& filter, const char *pText, CBasePlayer *pPlayer, bool bChat )
 {
-	CFFLuaSC hContext( 0 );
-	hContext.Push( pPlayer );
-	hContext.Push( pText );
-	
-	_scriptman.RunPredicates_LUA( NULL, &hContext, "player_onchat" );
-
 	UserMessageBegin( filter, "SayText" );
 		if ( pPlayer ) 
 		{
