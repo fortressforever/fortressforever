@@ -1471,7 +1471,8 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	Vector vecEnd;
 	Vector vecFinalDir;	// bullet's final direction can be changed by passing through a portal
 	
-	CTraceFilterSkipTwoEntities traceFilter( this, info.m_pAdditionalIgnoreEnt, /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE );	// |-- Mirv: Count bullets as projectiles so they don't hit weapon bags
+	//Testing if this is what makes sentryguns not damage players with projectile clipping -Green Mushy
+	CTraceFilterSkipTwoEntities traceFilter( this, info.m_pAdditionalIgnoreEnt, COLLISION_GROUP_NONE /*COLLISION_GROUP_PROJECTILE*/ );	// |-- Mirv: Count bullets as projectiles so they don't hit weapon bags
 
 	bool bUnderwaterBullets = ShouldDrawUnderwaterBulletBubbles();
 	bool bStartedInWater = false;

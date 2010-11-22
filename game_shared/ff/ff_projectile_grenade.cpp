@@ -86,9 +86,6 @@ ConVar projectile_gren_normaldmg("ffdev_projectile_gren_normaldmg", "80.0", FCVA
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 		SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 
-		// Hits everything but debris
-		SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
-
 		// smaller, cube bounding box so we rest on the ground
 		SetSize(Vector(-5, -5, -5), Vector(5, 5, 5));
 
