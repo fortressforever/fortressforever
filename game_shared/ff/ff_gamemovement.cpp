@@ -44,6 +44,14 @@
 //static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
+extern ConVar ffdev_overpressure_slide_duration;
+extern ConVar ffdev_overpressure_slide_friction;
+extern ConVar ffdev_overpressure_slide_airaccel;
+extern ConVar ffdev_overpressure_slide_accel;
+extern ConVar ffdev_overpressure_slide_wearsoff;
+extern ConVar ffdev_overpressure_slide_wearsoff_bias;
+extern bool g_bMovementOptimizations;
+
 #ifdef CLIENT_DLL
 ConVar cl_bunnyhop_disablepogojump( "cl_jumpqueue", "0.0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Enables jump queue (have to let go and press jump in between concurrent jumps) if set to 1" );
 #endif
@@ -66,6 +74,9 @@ public:
 
 	// CFFGameMovement
 	virtual void FullBuildMove( void );	
+	virtual void WalkMove();
+	virtual void AirMove();
+	virtual void Friction();
 
 	CFFGameMovement() {};
 };
@@ -525,6 +536,341 @@ void CFFGameMovement::FullBuildMove( void )
 
 	// Does nothing, but makes me feel happy.
 	BaseClass::FullBuildMove();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFGameMovement::WalkMove( void )
+{
+	int i;
+
+	Vector wishvel;
+	float spd;
+	float fmove, smove;
+	Vector wishdir;
+	float wishspeed;
+
+	Vector dest;
+	trace_t pm;
+	Vector forward, right, up;
+	
+	CFFPlayer *pFFPlayer = ToFFPlayer( player );
+	if( !pFFPlayer )
+		return;
+
+	AngleVectors (mv->m_vecViewAngles, &forward, &right, &up);  // Determine movement angles
+
+	CHandle< CBaseEntity > oldground;
+	oldground = player->GetGroundEntity();
+	
+	// Copy movement amounts
+	fmove = mv->m_flForwardMove;
+	smove = mv->m_flSideMove;
+	
+	// Zero out z components of movement vectors
+	if ( g_bMovementOptimizations )
+	{
+		if ( forward[2] != 0 )
+		{
+			forward[2] = 0;
+			VectorNormalize( forward );
+		}
+
+		if ( right[2] != 0 )
+		{
+			right[2] = 0;
+			VectorNormalize( right );
+		}
+	}
+	else
+	{
+		forward[2] = 0;
+		right[2]   = 0;
+		
+		VectorNormalize (forward);  // Normalize remainder of vectors.
+		VectorNormalize (right);    // 
+	}
+
+	for (i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
+		wishvel[i] = forward[i]*fmove + right[i]*smove;
+	
+	wishvel[2] = 0;             // Zero out z part of velocity
+
+	VectorCopy (wishvel, wishdir);   // Determine maginitude of speed of move
+	wishspeed = VectorNormalize(wishdir);
+
+	//
+	// Clamp to server defined max speed
+	//
+	if ((wishspeed != 0.0f) && (wishspeed > mv->m_flMaxSpeed))
+	{
+		VectorScale (wishvel, mv->m_flMaxSpeed/wishspeed, wishvel);
+		wishspeed = mv->m_flMaxSpeed;
+	}
+
+	// Set pmove velocity
+	mv->m_vecVelocity[2] = 0;
+	if (pFFPlayer->IsSliding())
+	{
+		float accel = ffdev_overpressure_slide_accel.GetFloat();
+		if (ffdev_overpressure_slide_wearsoff.GetBool())
+		{
+			float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
+			float percent = dt / ffdev_overpressure_slide_duration.GetFloat();
+			percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
+			accel = Lerp( percent, min(ffdev_overpressure_slide_accel.GetFloat(),sv_accelerate.GetFloat()), max(ffdev_overpressure_slide_accel.GetFloat(),sv_accelerate.GetFloat()) );
+		}
+
+		Accelerate ( wishdir, wishspeed, accel );
+	}
+	else
+	{
+		Accelerate( wishdir, wishspeed, sv_accelerate.GetFloat() );
+	}
+	mv->m_vecVelocity[2] = 0;
+
+	// Add in any base velocity to the current velocity.
+	VectorAdd (mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+
+	spd = VectorLength( mv->m_vecVelocity );
+
+	if ( spd < 1.0f )
+	{
+		mv->m_vecVelocity.Init();
+		// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+		VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+		return;
+	}
+
+	// first try just moving to the destination	
+	dest[0] = mv->m_vecAbsOrigin[0] + mv->m_vecVelocity[0]*gpGlobals->frametime;
+	dest[1] = mv->m_vecAbsOrigin[1] + mv->m_vecVelocity[1]*gpGlobals->frametime;	
+	dest[2] = mv->m_vecAbsOrigin[2];
+
+	// first try moving directly to the next spot
+	TracePlayerBBox( mv->m_vecAbsOrigin, dest, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+
+	// If we made it all the way, then copy trace end as new player position.
+	mv->m_outWishVel += wishdir * wishspeed;
+
+	if ( pm.fraction == 1 )
+	{
+		VectorCopy( pm.endpos, mv->m_vecAbsOrigin );
+		// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+		VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+
+		StayOnGround();
+		return;
+	}
+
+	// Don't walk up stairs if not on ground.
+	if ( oldground == NULL && player->GetWaterLevel()  == 0 )
+	{
+		// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+		VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+		return;
+	}
+
+	// If we are jumping out of water, don't do anything more.
+	if ( player->m_flWaterJumpTime )         
+	{
+		// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+		VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+		return;
+	}
+
+	StepMove( dest, pm );
+
+	// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+	VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+
+	StayOnGround();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFGameMovement::AirMove( void )
+{
+	int			i;
+	Vector		wishvel;
+	float		fmove, smove;
+	Vector		wishdir;
+	float		wishspeed;
+	Vector forward, right, up;
+
+	CFFPlayer *pFFPlayer = ToFFPlayer( player );
+	if( !pFFPlayer )
+		return;
+
+	AngleVectors (mv->m_vecViewAngles, &forward, &right, &up);  // Determine movement angles
+	
+	// Copy movement amounts
+	fmove = mv->m_flForwardMove;
+	smove = mv->m_flSideMove;
+	
+	// Zero out z components of movement vectors
+	forward[2] = 0;
+	right[2]   = 0;
+	VectorNormalize(forward);  // Normalize remainder of vectors
+	VectorNormalize(right);    // 
+
+	for (i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
+		wishvel[i] = forward[i]*fmove + right[i]*smove;
+	wishvel[2] = 0;             // Zero out z part of velocity
+
+	VectorCopy (wishvel, wishdir);   // Determine maginitude of speed of move
+	wishspeed = VectorNormalize(wishdir);
+
+	//
+	// clamp to server defined max speed
+	//
+	if ( wishspeed != 0 && (wishspeed > mv->m_flMaxSpeed))
+	{
+		VectorScale (wishvel, mv->m_flMaxSpeed/wishspeed, wishvel);
+		wishspeed = mv->m_flMaxSpeed;
+	}
+	
+	if (pFFPlayer->IsSliding())
+	{
+		float accel = ffdev_overpressure_slide_airaccel.GetFloat();
+		if (ffdev_overpressure_slide_wearsoff.GetBool())
+		{
+			float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
+			float percent = dt / ffdev_overpressure_slide_duration.GetFloat();
+			percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
+			accel = Lerp( percent, min(ffdev_overpressure_slide_airaccel.GetFloat(),sv_airaccelerate.GetFloat()), max(ffdev_overpressure_slide_airaccel.GetFloat(),sv_airaccelerate.GetFloat()) );
+		}
+
+		AirAccelerate ( wishdir, wishspeed, accel );
+	}
+	else
+	{
+		AirAccelerate( wishdir, wishspeed, sv_airaccelerate.GetFloat() );
+	}
+
+	// Add in any base velocity to the current velocity.
+	VectorAdd(mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+
+	TryPlayerMove();
+
+	// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+	VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFGameMovement::Friction( void )
+{
+	float	speed, newspeed, control;
+	float	friction;
+	float	drop;
+	Vector newvel;
+
+	CFFPlayer *pFFPlayer = ToFFPlayer( player );
+	if( !pFFPlayer )
+		return;
+	
+	// If we are in water jump cycle, don't apply friction
+	if (player->m_flWaterJumpTime)
+		return;
+
+	// Calculate speed
+	speed = VectorLength( mv->m_vecVelocity );
+	
+	// If too slow, return
+	if (speed < 0.1f)
+	{
+		return;
+	}
+
+	drop = 0;
+
+	// apply ground friction
+	if (player->GetGroundEntity() != NULL)  // On an entity that is the ground
+	{
+		Vector start, stop;
+		trace_t pm;
+
+		//
+		// NOTE: added a "1.0f" to the player minimum (bbox) value so that the 
+		//       trace starts just inside of the bounding box, this make sure
+		//       that we don't get any collision epsilon (on surface) errors.
+		//		 The significance of the 16 below is this is how many units out front we are checking
+		//		 to see if the player box would fall.  The 49 is the number of units down that is required
+		//		 to be considered a fall.  49 is derived from 1 (added 1 from above) + 48 the max fall 
+		//		 distance a player can fall and still jump back up.
+		//
+		//		 UNDONE: In some cases there are still problems here.  Specifically, no collision check is
+		//		 done so 16 units in front of the player could be inside a volume or past a collision point.
+		start[0] = stop[0] = mv->m_vecAbsOrigin[0] + (mv->m_vecVelocity[0]/speed)*16;
+		start[1] = stop[1] = mv->m_vecAbsOrigin[1] + (mv->m_vecVelocity[1]/speed)*16;
+		start[2] = mv->m_vecAbsOrigin[2] + ( GetPlayerMins()[2] + 1.0f );
+		stop[2] = start[2] - 49;
+
+		if ( g_bMovementOptimizations )
+		{
+			// We don't actually need this trace.
+		}
+		else
+		{
+			TracePlayerBBox( start, stop, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm ); 
+		}
+
+		if (pFFPlayer->IsSliding())
+		{
+			friction = ffdev_overpressure_slide_friction.GetFloat();
+			if (ffdev_overpressure_slide_wearsoff.GetBool())
+			{
+				float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
+				float percent = dt / ffdev_overpressure_slide_duration.GetFloat();
+				percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
+				friction = Lerp( percent, min(ffdev_overpressure_slide_friction.GetFloat(),sv_friction.GetFloat()), max(ffdev_overpressure_slide_friction.GetFloat(),sv_friction.GetFloat()) );
+			}
+		}
+		else
+			friction = sv_friction.GetFloat();
+
+		// Grab friction value.
+		friction *= /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
+
+		// Bleed off some speed, but if we have less than the bleed
+		//  threshhold, bleed the theshold amount.
+#ifdef _XBOX 
+		if( player->m_Local.m_bDucked )
+		{
+			control = (speed < sv_stopspeed.GetFloat()) ? sv_stopspeed.GetFloat() : speed;
+		}
+		else
+		{
+			control = (speed < sv_stopspeed.GetFloat()) ? (sv_stopspeed.GetFloat() * 2.0f) : speed;
+		}
+#else
+		control = (speed < sv_stopspeed.GetFloat()) ?
+			sv_stopspeed.GetFloat() : speed;
+#endif //_XBOX
+
+		// Add the amount to the drop amount.
+		drop += control*friction*gpGlobals->frametime;
+	}
+
+	// scale the velocity
+	newspeed = speed - drop;
+	if (newspeed < 0)
+		newspeed = 0;
+
+	// Determine proportion of old speed we are using.
+	newspeed /= speed;
+
+	// Adjust velocity according to proportion.
+	newvel[0] = mv->m_vecVelocity[0] * newspeed;
+	newvel[1] = mv->m_vecVelocity[1] * newspeed;
+	newvel[2] = mv->m_vecVelocity[2] * newspeed;
+
+	VectorCopy( newvel, mv->m_vecVelocity );
+ 	mv->m_outWishVel -= (1.f-newspeed) * mv->m_vecVelocity;
 }
 
 //-----------------------------------------------------------------------------

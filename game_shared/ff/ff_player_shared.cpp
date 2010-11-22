@@ -66,16 +66,25 @@ ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_REPL
 #define LEGSHOT_TIME 5.0f //ffdev_sniper_legshot_time.GetFloat()
 //AfterShock: radiotag time is in ff_player.cpp under RADIOTAG_DURATION
 
-ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "256", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "4", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+
+ConVar ffdev_overpressure_slide( "ffdev_overpressure_slide", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_slide_affectsself( "ffdev_overpressure_slide_affectsself", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_slide_duration( "ffdev_overpressure_slide_duration", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_slide_friction( "ffdev_overpressure_slide_friction", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_slide_airaccel( "ffdev_overpressure_slide_airaccel", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_slide_accel( "ffdev_overpressure_slide_accel", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_slide_wearsoff( "ffdev_overpressure_slide_wearsoff", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_slide_wearsoff_bias( "ffdev_overpressure_slide_wearsoff_bias", "0.2", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 
 ConVar ffdev_overpressure_friendlyscale( "ffdev_overpressure_friendlyscale", "1.0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 #define OVERPRESSURE_FRIENDLYSCALE ffdev_overpressure_friendlyscale.GetFloat()
@@ -1583,6 +1592,9 @@ void CFFPlayer::Overpressure( void )
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 				float flHorizontalSpeed = vecLatVelocity.Length();
 
+				if (ffdev_overpressure_slide_affectsself.GetBool())
+					pPlayer->StartSliding( ffdev_overpressure_slide_duration.GetFloat(), ffdev_overpressure_slide_duration.GetFloat() );
+
 				// apply push force
 				if (pPlayer->GetFlags() & FL_ONGROUND)
 				{
@@ -1607,6 +1619,10 @@ void CFFPlayer::Overpressure( void )
 				VectorAngles(vecDir, angDirection);
 
 				pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
+
+				if (ffdev_overpressure_slide.GetBool())
+					pPlayer->StartSliding( ffdev_overpressure_slide_duration.GetFloat(), ffdev_overpressure_slide_duration.GetFloat() );
+
 
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);

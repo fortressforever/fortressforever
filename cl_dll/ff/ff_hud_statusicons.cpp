@@ -47,6 +47,7 @@ const char *szIcons[FF_STATUSICON_MAX] = {	"concussion",		// FF_STATUSICON_CONCU
 											"burning2",			// FF_STATUSICON_BURNING2
 											"burning3",			// FF_STATUSICON_BURNING3
 											"lockedon",			// FF_STATUSICON_LOCKEDON
+											"sliding",			// FF_STATUSICON_SLIDING
 										};
 
 struct statusicon_t

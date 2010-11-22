@@ -79,7 +79,7 @@ protected:
 	void			WaterJump( void );
 
 	// Handles both ground friction and water friction
-	void			Friction( void );
+	virtual void	Friction( void );
 
 	void			AirAccelerate( Vector& wishdir, float wishspeed, float accel );
 
