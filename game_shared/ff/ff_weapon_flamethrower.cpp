@@ -235,7 +235,8 @@ void CFFWeaponFlamethrower::Fire()
 		*/
 		
 		// only interested in players, dispensers & sentry guns
-		if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN )
+		// adding so flamethrower hits the jumppad too -GreenMushy
+		if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN || pTarget->Classify() == CLASS_MANCANNON )
 		{
 			// If pTarget can take damage from the flame thrower shooter...
 			if ( g_pGameRules->FCanTakeDamage( pTarget, pPlayer ))
@@ -260,6 +261,13 @@ void CFFWeaponFlamethrower::Fire()
 					CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
 					if( pSentrygun && ( pSentrygun->GetWaterLevel() <= WL_Waist ) )
 						pSentrygun->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
+				}
+				//Do flame damage to jumppad here - GreenMushy
+				else if( FF_IsManCannon( pTarget ) )
+				{
+					CFFManCannon *pManCannon = FF_ToManCannon( pTarget );
+					if( pManCannon && ( pManCannon->GetWaterLevel() <= WL_Waist ) )
+						pManCannon->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
 				}
 			}
 		}		

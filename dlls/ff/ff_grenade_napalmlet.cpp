@@ -278,6 +278,7 @@ void CFFGrenadeNapalmlet::FlameThink()
 					}
 					break;
 					case CLASS_SENTRYGUN:
+					case CLASS_MANCANNON://Adding napalm damage to jumppad -GreenMushy
 					case CLASS_DISPENSER:
 					{
 						// don't have to bother casting this here anymore, just pass the buildable and the FCanTakeDamage function will sort it
