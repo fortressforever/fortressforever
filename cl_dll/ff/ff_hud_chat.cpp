@@ -140,9 +140,9 @@ void CHudChatLine::PerformFadeout( void )
 	// Flash + Extra bright when new
 	float curtime = gpGlobals->curtime;
 
-	int lr = m_clrText[0];
-	int lg = m_clrText[1];
-	int lb = m_clrText[2];
+	//int lr = m_clrText[0];
+	//int lg = m_clrText[1];
+	//int lb = m_clrText[2];
 	
 	//CSPort chat only fades out, no blinking.
 	if ( curtime <= m_flExpireTime && curtime > m_flExpireTime - CHATLINE_FADE_TIME )
@@ -152,12 +152,16 @@ void CHudChatLine::PerformFadeout( void )
 		int alpha = frac * 255;
 		alpha = clamp( alpha, 0, 255 );
 
-		wchar_t wbuf[4096];
+		SetAlpha(alpha);
+
+		// squeek: None of this is necessary just to change the alpha...
+		// plus, this method removes custom colors while fading
+		/*wchar_t wbuf[4096];
 		
 		GetText(0, wbuf, sizeof(wbuf));
 
 		SetText( "" );
-			
+		
 		if ( m_iNameLength > 0 )
 		{
 			wchar_t wText[4096];
@@ -183,6 +187,11 @@ void CHudChatLine::PerformFadeout( void )
 			InsertColorChange( Color( lr, lg, lb, alpha ) );
 			InsertString( wbuf );
 		}
+		*/
+	}
+	else
+	{
+		SetAlpha(255);
 	}
 	
 	OnThink();
