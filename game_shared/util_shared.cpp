@@ -34,6 +34,9 @@ bool NPC_CheckBrushExclude( CBaseEntity *pEntity, CBaseEntity *pBrush );
 ConVar r_visualizetraces( "r_visualizetraces", "0", FCVAR_CHEAT );
 ConVar developer("developer", "0", 0, "Set developer message level" ); // developer mode
 
+//Adding ConVars to toggle grenades/pipes colliding with the enemy
+ConVar ffdev_grenade_collidewithenemy("ffdev_grenade_collidewithenemy", "0", FCVAR_REPLICATED, "Default 0 passes through enemies" );
+
 float UTIL_VecToYaw( const Vector &vec )
 {
 	if (vec.y == 0 && vec.x == 0)
@@ -291,49 +294,101 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 	// --> hlstriker: No team collisions
 	if( pPassEnt && pHandle )
 	{
-		if( m_collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT )
+		if( pHandle->IsPlayer() )
 		{
-			// This allows players to pass through any team object (another player or entity), includes allies
-			CFFTeam *pTeam = GetGlobalFFTeam(pPassEnt->GetTeamNumber());
-			if( pHandle->IsPlayer() && ( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() || ( pTeam && ( pTeam->GetAllies() & ( 1 << pHandle->GetTeamNumber() ) ) ) ) )
+			////Team orient this collision group.  Includes things like rockets, and blue pipes -Green Mushy
+			////Confusing: these projectiles use the interactive collision group, not the projectile collision group
+			////they are things like rockets/blue pipes, or other entities that will collide with most anything
+			//if( m_collisionGroup == COLLISION_GROUP_INTERACTIVE )
+			//{
+			//	//Make sure u dont collide the object with the owner
+			//	if( ToFFPlayer(pHandle) == ToFFPlayer(pPassEnt->GetOwnerEntity()) )
+			//	{
+			//		return false;
+			//	}
+			//	//Now dont collide if the team numbers are the same
+			//	else if( ToFFPlayer(pHandle)->GetTeamNumber() == ToFFPlayer(pPassEnt->GetOwnerEntity())->GetTeamNumber())
+			//	{
+			//		return false;
+			//	}
+			//	//Now collide normally after the owner and teammate checks are over
+			//	else
+			//	{
+			//		//Do checks here for other exceptions and return true for collision
+			//		return true;
+			//	}
+			//}
+
+			//This collision group is for grenades and yellow pipes even though its called "projectile" 
+			//They pass through the player collision group normally
+			//adding an exception to collide with enemies here -Green Mushy
+			if( m_collisionGroup == COLLISION_GROUP_PROJECTILE )
 			{
-				// If player lands on top of a team entity make sure they hit
-				Vector vecOrigin = pPassEnt->GetAbsOrigin();
-				Vector vecTeamOrigin = pHandle->GetAbsOrigin();
-
-				Vector vecMin;
-				if( pPassEnt->IsPlayer() )
+				//Make sure u dont collide with the owner
+				if( ToFFPlayer(pHandle) == ToFFPlayer(pPassEnt->GetOwnerEntity()) )
 				{
-					CFFPlayer *pPlayer = static_cast< CFFPlayer * >( const_cast< CBaseEntity * >( pPassEnt ) );
-					vecMin = pPlayer->GetPlayerMins();
+					return false;
 				}
+				//Now check teams and dont collide if the team numbers are the same
+				else if( ToFFPlayer(pHandle)->GetTeamNumber() == ToFFPlayer(pPassEnt->GetOwnerEntity())->GetTeamNumber())
+				{
+					return false;
+				}
+				//Now collide normally after the owner and teammate checks are over
 				else
-					vecMin = pPassEnt->WorldAlignMins();
-
-				Vector vecTeamMax;
-				if( pHandle->IsPlayer() )
 				{
-					CFFPlayer *pPlayer = static_cast< CFFPlayer * >( pHandle );
-					vecTeamMax = pPlayer->GetPlayerMaxs();
+					//Utilize the convar to toggle enemy collisions
+					if( ffdev_grenade_collidewithenemy.GetBool() )
+						return true;
+					else
+						return false;
 				}
-				else
-					vecTeamMax = pHandle->WorldAlignMaxs();
+			}
 
-				float fMinZ = vecMin[2];
-				VectorAdd( vecMin, vecOrigin, vecMin );
-				VectorAdd( vecTeamMax, vecTeamOrigin, vecTeamMax );
-
-				// If players mins are greater than teams maxs - 2
-				if( vecMin[2] >= vecTeamMax[2] )
-					return true;
-				if( vecMin[2] > vecTeamMax[2] - 5.0f )
+			if( m_collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT )
+			{
+				// This allows players to pass through any team object (another player or entity), includes allies
+				CFFTeam *pTeam = GetGlobalFFTeam(pPassEnt->GetTeamNumber());
+				if( pHandle->IsPlayer() && ( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() || ( pTeam && ( pTeam->GetAllies() & ( 1 << pHandle->GetTeamNumber() ) ) ) ) )
 				{
-					// If a player is jumping through an entity to the top make sure they don't get stuck
-					CBaseEntity *pEnt = const_cast< CBaseEntity * >( pPassEnt );
-					pEnt->SetAbsOrigin( Vector( vecOrigin[0], vecOrigin[1], vecTeamMax[2] - fMinZ ) );
-				}
+					// If player lands on top of a team entity make sure they hit
+					Vector vecOrigin = pPassEnt->GetAbsOrigin();
+					Vector vecTeamOrigin = pHandle->GetAbsOrigin();
 
-				return false;
+					Vector vecMin;
+					if( pPassEnt->IsPlayer() )
+					{
+						CFFPlayer *pPlayer = static_cast< CFFPlayer * >( const_cast< CBaseEntity * >( pPassEnt ) );
+						vecMin = pPlayer->GetPlayerMins();
+					}
+					else
+						vecMin = pPassEnt->WorldAlignMins();
+
+					Vector vecTeamMax;
+					if( pHandle->IsPlayer() )
+					{
+						CFFPlayer *pPlayer = static_cast< CFFPlayer * >( pHandle );
+						vecTeamMax = pPlayer->GetPlayerMaxs();
+					}
+					else
+						vecTeamMax = pHandle->WorldAlignMaxs();
+
+					float fMinZ = vecMin[2];
+					VectorAdd( vecMin, vecOrigin, vecMin );
+					VectorAdd( vecTeamMax, vecTeamOrigin, vecTeamMax );
+
+					// If players mins are greater than teams maxs - 2
+					if( vecMin[2] >= vecTeamMax[2] )
+						return true;
+					if( vecMin[2] > vecTeamMax[2] - 5.0f )
+					{
+						// If a player is jumping through an entity to the top make sure they don't get stuck
+						CBaseEntity *pEnt = const_cast< CBaseEntity * >( pPassEnt );
+						pEnt->SetAbsOrigin( Vector( vecOrigin[0], vecOrigin[1], vecTeamMax[2] - fMinZ ) );
+					}
+
+					return false;
+				}
 			}
 		}
 	}
