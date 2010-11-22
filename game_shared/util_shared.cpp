@@ -35,7 +35,7 @@ ConVar r_visualizetraces( "r_visualizetraces", "0", FCVAR_CHEAT );
 ConVar developer("developer", "0", 0, "Set developer message level" ); // developer mode
 
 //Adding ConVars to toggle grenades/pipes colliding with the enemy
-ConVar ffdev_grenade_collidewithenemy("ffdev_grenade_collidewithenemy", "0", FCVAR_REPLICATED, "Default 0 passes through enemies" );
+ConVar ffdev_grenade_collidewithenemy("ffdev_grenade_collidewithenemy", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "If set to 0, grenades pass through enemies" );
 
 float UTIL_VecToYaw( const Vector &vec )
 {
