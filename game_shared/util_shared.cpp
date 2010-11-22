@@ -282,9 +282,6 @@ CTraceFilterSimple::CTraceFilterSimple( const IHandleEntity *passedict, int coll
 //-----------------------------------------------------------------------------
 bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
 {
-	if( contentsMask == MASK_SHOT )
-		return false;
-
 	CBaseEntity *pHandle = EntityFromEntityHandle( pHandleEntity );
 
 	const CBaseEntity *pPassEnt = NULL;
