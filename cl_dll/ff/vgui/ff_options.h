@@ -1,13 +1,13 @@
 /********************************************************************
 	created:	2006/08/29
 	created:	29:8:2006   18:35
-	filename: 	f:\ff-svn\code\trunk\cl_dll\ff\vgui\ff_options.h
-	file path:	f:\ff-svn\code\trunk\cl_dll\ff\vgui
+	filename: 	cl_dll\ff\vgui\ff_options\ff_options.h
+	file path:	cl_dll\ff\vgui\ff_options
 	file base:	ff_options
 	file ext:	h
 	author:		Gavin "Mirvin_Monkey" Bramhill
 	
-	purpose:	
+	purpose:	Main "Fortress Options" panel with tabs contining option pages
 *********************************************************************/
 
 #ifndef FF_OPTIONS_H
@@ -20,40 +20,34 @@
 #include "vgui_helpers.h"
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/PropertySheet.h>
-#include <vgui_controls/PropertyPage.h>
+#include <vgui_controls/Button.h>
 #include <vgui_controls/HTML.h>
+
+#include "ff_timeroptions.h"
+#include "ff_miscOptions.h"
+#include "ff_crosshairoptions.h"
+#include "ff_dlightoptions.h"
+
 #include "ff_gameui.h"
 
-//using namespace vgui;
-
-class CFFOptionsPage : public vgui::PropertyPage
-{
-	DECLARE_CLASS_SIMPLE(CFFOptionsPage, vgui::PropertyPage);
-
-public:
-	virtual void	Apply() = 0;
-	virtual void	Load() = 0;
-	virtual void	Reset() = 0;
-
-	CFFOptionsPage(Panel *parent, char const *panelName) : BaseClass(parent, panelName) {}
-};
+using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: Fortress Forever options
 //-----------------------------------------------------------------------------
-class CFFOptionsPanel : public vgui::Frame
+class CFFOptionsPanel : public Frame
 {
-	DECLARE_CLASS_SIMPLE(CFFOptionsPanel, vgui::Frame);
+	DECLARE_CLASS_SIMPLE(CFFOptionsPanel, Frame);
 
 public:
-	CFFOptionsPanel(vgui::VPANEL parent);
+	CFFOptionsPanel(VPANEL parent);
 	void SetVisible(bool state);
 
 private:
-
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	
-	vgui::PropertySheet		*m_pPropertyPages;
+	PropertySheet			*m_pPropertyPages;
+
 	CFFOptionsPage			*m_pCrosshairOptions;
 	CFFOptionsPage			*m_pTimerOptions;
 	CFFOptionsPage			*m_pMiscOptions1;
@@ -62,10 +56,9 @@ private:
 	CFFOptionsPage			*m_pMiscOptions4;
 	CFFOptionsPage			*m_pDLightOptions;
 
-
-	vgui::Button			*m_pOKButton;
-	vgui::Button			*m_pCancelButton;
-	vgui::Button			*m_pApplyButton;
+	Button					*m_pOKButton;
+	Button					*m_pCancelButton;
+	Button					*m_pApplyButton;
 };
 
 DECLARE_GAMEUI(CFFOptions, CFFOptionsPanel, ffoptions);
@@ -73,14 +66,14 @@ DECLARE_GAMEUI(CFFOptions, CFFOptionsPanel, ffoptions);
 class SplashHTML;
 
 //-----------------------------------------------------------------------------
-// Purpose: Fortress Forever options
+// Purpose: Used to inform about new versions of FF (I think) - Elmo
 //-----------------------------------------------------------------------------
-class CFFSplashPanel : public vgui::Frame
+class CFFSplashPanel : public Frame
 {
-	DECLARE_CLASS_SIMPLE(CFFSplashPanel, vgui::Frame);
+	DECLARE_CLASS_SIMPLE(CFFSplashPanel, Frame);
 
 public:
-	CFFSplashPanel(vgui::VPANEL parent);
+	CFFSplashPanel(VPANEL parent);
 	void CheckUpdate(const char *pszServerVersion = NULL);
 
 private:
@@ -89,5 +82,4 @@ private:
 
 DECLARE_GAMEUI(CFFSplash, CFFSplashPanel, ffsplash);
 
-
-#endif // TESTPANEL_H 
+#endif

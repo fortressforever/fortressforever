@@ -45,7 +45,7 @@
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
 #ifdef CLIENT_DLL
-	extern ConVar cl_bunnyhop_disablepogojump;
+ConVar cl_bunnyhop_disablepogojump( "cl_jumpqueue", "0.0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Enables jump queue (have to let go and press jump in between concurrent jumps) if set to 1" );
 #endif
 
 class CBasePlayer;
