@@ -5983,22 +5983,8 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth, bool healToFull)
 		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth * 1.5f ) );
 	}
 	else
-		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth ) );
+		m_iHealth = max( min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth ) ) , ( float )( m_iHealth ) );
 
-
-	// show addhealth
-	CSingleUserRecipientFilter filter( this );
-	filter.MakeReliable();
-
-	// show added/subtracted health
-	UserMessageBegin( filter, "PlayerAddHealth" );
-		WRITE_SHORT( m_iHealth - iOriginalHP );
-	MessageEnd();
-
-	// AfterShock - scoring system: Heal x amount of health +.5*health_given (only if last damage from enemy) 
-	// Leaving the 'last damage from enemy' part out until discussion has finished about it.
-	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), "#FF_FORTPOINTS_GIVEHEALTH");
-	
 	if (IsInfected())
 	{
 		//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatInfectCures, 1);
@@ -6019,6 +6005,22 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth, bool healToFull)
 
 	// And removes any adverse speed effects
 	ClearSpeedEffects(SEM_HEALABLE);
+
+	if (healToFull != true && m_iHealth - iOriginalHP == 0)
+		return 0;
+
+	// show addhealth
+	CSingleUserRecipientFilter filter( this );
+	filter.MakeReliable();
+
+	// show added/subtracted health
+	UserMessageBegin( filter, "PlayerAddHealth" );
+		WRITE_SHORT( m_iHealth - iOriginalHP );
+	MessageEnd();
+
+	// AfterShock - scoring system: Heal x amount of health +.5*health_given (only if last damage from enemy) 
+	// Leaving the 'last damage from enemy' part out until discussion has finished about it.
+	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), "#FF_FORTPOINTS_GIVEHEALTH");
 
 	return 1;
 }
