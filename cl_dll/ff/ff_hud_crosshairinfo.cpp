@@ -41,6 +41,7 @@ static ConVar hud_centerid( "hud_centerid", "0", FCVAR_ARCHIVE );
 #define CROSSHAIRTYPE_DISPENSER 1
 #define CROSSHAIRTYPE_SENTRYGUN 2
 #define CROSSHAIRTYPE_DETPACK 3
+#define CROSSHAIRTYPE_MANCANNON 4
 
 //=============================================================================
 //
@@ -166,7 +167,8 @@ void CHudCrosshairInfo::OnTick( void )
 		//debugoverlay->AddLineOverlay( vecOrigin + ( vecForward * 64.f ), vecOrigin + ( vecForward * 64.f ) + Vector( 0, 0, -8 ), 255, 0, 0, false, 3.0f );
 
 		trace_t tr;
-		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1024.f ), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER, &tr );
+		//Trace needs COLLISION_GROUP_PUSHAWAY flag added or it wont hit jumppads -GreenMushy
+		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1024.f ), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER | COLLISION_GROUP_PUSHAWAY, &tr );
 
 		// If we hit something...
 		if( tr.DidHit() )
@@ -273,97 +275,65 @@ void CHudCrosshairInfo::OnTick( void )
 
 				// Default
 				int iHealth = -1, iArmor = -1, iCells = -1, iRockets = -1, iNails = -1, iShells = -1, iLevel = -1, iFuseTime = -1;
+				bool bOwnBuildable = false;
 				int CROSSHAIRTYPE = CROSSHAIRTYPE_NORMAL;
 				// Default
 				m_iTeam = pHitPlayer->GetTeamNumber();
 				m_iClass = pHitPlayer->GetTeamNumber();
 				
 				if ( (pPlayer == pHitPlayer) && (bBuildable) ) // looking at our own buildable
+					bOwnBuildable = true;
+
+				if( bBuildable )
 				{
-					C_FFBuildableObject *pBuildable = ( C_FFBuildableObject * )tr.m_pEnt;
-					iHealth = pBuildable->GetHealthPercent();
+					// Now on teammates/allies can see teammate/allies
+					// buildable info according to:
+					// Bug #0000463: Hud Crosshair Info - douched
+					//if( bWeEngy )
+					//{
+						C_FFBuildableObject *pBuildable = (C_FFBuildableObject *)tr.m_pEnt;
 
-					if( pBuildable->Classify() == CLASS_DISPENSER )
-					{
-						CROSSHAIRTYPE = CROSSHAIRTYPE_DISPENSER;
-						iRockets = ( ( C_FFDispenser * )pBuildable )->GetRockets();
-						iShells = ( ( C_FFDispenser * )pBuildable )->GetShells();
-						iCells = ( ( C_FFDispenser * )pBuildable )->GetCells();
-						iNails = ( ( C_FFDispenser* )pBuildable )->GetNails();
-						iArmor = ( ( C_FFDispenser * )pBuildable )->GetArmor();
-					}
-					else if( pBuildable->Classify() == CLASS_SENTRYGUN )
-					{
-						CROSSHAIRTYPE = CROSSHAIRTYPE_SENTRYGUN;
-						iLevel = ( ( C_FFSentryGun * )pBuildable )->GetLevel();
-						iRockets = ( ( C_FFSentryGun * )pBuildable )->GetRocketsPercent();
-						iShells = ( ( C_FFSentryGun * )pBuildable )->GetShellsPercent();
-						iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
+						//Get Buildable health percent here no matter what class
+						iHealth = pBuildable->GetHealthPercent();
+							
+						if( pBuildable->Classify() == CLASS_DISPENSER )
+						{
+							CROSSHAIRTYPE = CROSSHAIRTYPE_DISPENSER;
+							iRockets = ( ( C_FFDispenser * )pBuildable )->GetRockets();
+							iShells = ( ( C_FFDispenser * )pBuildable )->GetShells();
+							iCells = ( ( C_FFDispenser * )pBuildable )->GetCells();
+							iNails = ( ( C_FFDispenser* )pBuildable )->GetNails();
+							iArmor = ( ( C_FFDispenser * )pBuildable )->GetArmor();
+						}
+						else if( pBuildable->Classify() == CLASS_SENTRYGUN )
+						{
+							CROSSHAIRTYPE = CROSSHAIRTYPE_SENTRYGUN;
+							iLevel = ( ( C_FFSentryGun * )pBuildable )->GetLevel();
+							iRockets = ( ( C_FFSentryGun * )pBuildable )->GetRocketsPercent();
+							iShells = ( ( C_FFSentryGun * )pBuildable )->GetShellsPercent();
+							iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
 
-						if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
-							iArmor -= 128;
-					}
-					else if( pBuildable->Classify() == CLASS_DETPACK )
-					{
-						// Doesnt work atm - aftershock
-						//CROSSHAIRTYPE = CROSSHAIRTYPE_DETPACK;
-						//iFuseTime = ( ( C_FFDetpack * )pBuildable )->GetFuseTime();
-						iArmor = -1;
-					}
-					else if( pBuildable->Classify() == CLASS_MANCANNON )
-					{
-						// TODO: Do whatever other stuff is doing w/ the crosshair
-						iArmor = -1;
-					}
-					else
-					{
-						iArmor = -1;
-					}
-				}
-				else if( FFGameRules()->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )
-				{
-					// We're looking at a teammate/ally
-
-					if( bBuildable )
-					{
-						// Now on teammates/allies can see teammate/allies
-						// buildable info according to:
-						// Bug #0000463: Hud Crosshair Info - douched
-						//if( bWeEngy )
-						//{
-							C_FFBuildableObject *pBuildable = (C_FFBuildableObject *)tr.m_pEnt;
-
-							iHealth = pBuildable->GetHealthPercent();
-								
-							if( pBuildable->Classify() == CLASS_DISPENSER )
-							{
-								iArmor = ((C_FFDispenser *)pBuildable)->GetAmmoPercent();
-							}
-							else if( pBuildable->Classify() == CLASS_SENTRYGUN )
-							{
-								iArmor = ((C_FFSentryGun *)pBuildable)->GetAmmoPercent();
-
-								if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
-									iArmor -= 128;
-							}
-							else if( pBuildable->Classify() == CLASS_MANCANNON )
-							{
-								// TODO: Maybe man cannon's have armor? or some other property we want to show?
-								iArmor = -1;
-							}
-							else
-							{
-								iArmor = -1;
-							}
-						//}
-					}
-					else
-					{						
-						iHealth = pHitPlayer->GetHealthPercentage();
-						iArmor = pHitPlayer->GetArmorPercentage();
-					}
+							if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
+								iArmor -= 128;
+						}
+						else if( pBuildable->Classify() == CLASS_MANCANNON )
+						{
+							CROSSHAIRTYPE = CROSSHAIRTYPE_MANCANNON;
+							iArmor = -1;
+						}
+						else
+						{
+							iArmor = -1;
+						}
+					//}
 				}
 				else
+				{						
+					iHealth = pHitPlayer->GetHealthPercentage();
+					iArmor = pHitPlayer->GetArmorPercentage();
+				}
+
+				if( FFGameRules()->PlayerRelationship( pPlayer, pHitPlayer ) != GR_TEAMMATE )
 				{
 					// We're looking at a non teammate/ally
 					// Only thing we care about is if we are a medic or we're looking
@@ -372,13 +342,6 @@ void CHudCrosshairInfo::OnTick( void )
 					if( !bBuildable )
 					{
 						// We're looking at a player
-
-						//if( bWeMedic ) //AfterShock: Testing every class having this ability
-						//{
-							// Grab the real health/armor of this player
-							iHealth = pHitPlayer->GetHealthPercentage();
-							iArmor = pHitPlayer->GetArmorPercentage();
-						//}
 							
 						if( bTheySpy )
 						{
@@ -535,7 +498,10 @@ void CHudCrosshairInfo::OnTick( void )
 					vgui::localize()->ConvertANSIToUnicode( szShells, wszShells, sizeof( wszShells ) );
 					vgui::localize()->ConvertANSIToUnicode( szNails, wszNails, sizeof( wszNails ) );
 					
-					_snwprintf( m_pText, 255, L"Your Dispenser - Cells(%s) Rkts(%s) Nls(%s) Shls(%s) Armr(%s)", wszCells, wszRockets, wszNails, wszShells, wszArmor );
+					if (bOwnBuildable)
+						_snwprintf( m_pText, 255, L"Your Dispenser - Cells(%s) Rkts(%s) Nls(%s) Shls(%s) Armr(%s)", wszCells, wszRockets, wszNails, wszShells, wszArmor );
+					else
+						_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
 				}
 				else if (CROSSHAIRTYPE == CROSSHAIRTYPE_SENTRYGUN)
 				{
@@ -555,8 +521,10 @@ void CHudCrosshairInfo::OnTick( void )
 					vgui::localize()->ConvertANSIToUnicode( szShells, wszShells, sizeof( wszShells ) );
 					vgui::localize()->ConvertANSIToUnicode( szArmor, wszArmor, sizeof( wszArmor ) );
 					
-					_snwprintf( m_pText, 255, L"Your Sentry Gun: Level %s - Health: %s Ammo: %s", wszLevel, wszHealth , wszArmor );
-				
+					if (bOwnBuildable)
+						_snwprintf( m_pText, 255, L"Your Sentry Gun: Level %s - Health: %s Ammo: %s", wszLevel, wszHealth , wszArmor );
+					else
+						_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
 				}
 				else if (CROSSHAIRTYPE == CROSSHAIRTYPE_DETPACK)
 				{
@@ -568,7 +536,24 @@ void CHudCrosshairInfo::OnTick( void )
 
                     vgui::localize()->ConvertANSIToUnicode( szFuseTime, wszFuseTime, sizeof( wszFuseTime ) );
 					
-					_snwprintf( m_pText, 255, L"Your %s Second Detpack", wszFuseTime );
+					if (bOwnBuildable)
+						_snwprintf( m_pText, 255, L"Your %s Second Detpack", wszFuseTime );
+					else
+						_snwprintf( m_pText, 255, L"(%s) %s", wszClass, wszName );
+				}
+				//Jumppad displayed here -GreenMushy
+				else if( CROSSHAIRTYPE == CROSSHAIRTYPE_MANCANNON )
+				{
+					char szHealth[ 5 ];
+					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+					
+					wchar_t wszHealth[ 10 ];
+					vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+
+					if (bOwnBuildable)
+						_snwprintf( m_pText, 255, L"Your Jump Pad - Health: %s", wszHealth );
+					else
+						_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
 				}
 				// else CROSSHAIRTYPE_NORMAL
 				else if( ( iHealth != -1 ) && ( iArmor != -1 ) )
@@ -583,6 +568,17 @@ void CHudCrosshairInfo::OnTick( void )
 					vgui::localize()->ConvertANSIToUnicode( szArmor, wszArmor, sizeof( wszArmor ) );
 
 					_snwprintf( m_pText, 255, L"(%s) %s - H: %s, A: %s", wszClass, wszName, wszHealth, wszArmor );
+				}
+				else if ( iHealth != -1 )
+				{
+					char szHealth[ 5 ];
+					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+					
+					wchar_t wszHealth[ 10 ];
+
+					vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+
+					_snwprintf( m_pText, 255, L"(%s) %s - H: %s", wszClass, wszName, wszHealth );
 				}
 				else
 					_snwprintf( m_pText, 255, L"(%s) %s", wszClass, wszName );
