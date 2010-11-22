@@ -23,8 +23,10 @@
 ConVar crosshair( "crosshair", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
-ConVar cl_concaim_movexhair("cl_concaim_movexhair", "3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL, "0 = always show xhair in centre. 1 = show xhair trueaim. 2 = hide xhair when conced. 3 = flash trueaim when shooting");
-ConVar cl_concaim_fadetime("cl_concaim_fadetime", "0.3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL, "When cl_concaim_movexhair = 3, controls the time the xhair stays visible");
+
+//Tie crosshair values to cheats -GreenMushy
+ConVar cl_concaim_movexhair("cl_concaim_movexhair", "3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL | FCVAR_CHEAT, "0 = always show xhair in centre. 1 = show xhair trueaim. 2 = hide xhair when conced. 3 = flash trueaim when shooting");
+ConVar cl_concaim_fadetime("cl_concaim_fadetime", "0.3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL | FCVAR_CHEAT, "When cl_concaim_movexhair = 3, controls the time the xhair stays visible");
 
 #define FFDEV_CONCAIM_MOVEXHAIR cl_concaim_movexhair.GetInt()
 #define FFDEV_CONCAIM_FADETIME cl_concaim_fadetime.GetFloat()
