@@ -78,9 +78,10 @@ void CFFManCannon::Spawn( void )
 	m_iLastState = 0;
 	m_iCombatState = JUMPPAD_IDLE;
 	m_flLastDamage = 0.0f;
-	// caes: changed GetFloat to GetInt
-	m_iHealth = ffdev_mancannon_health.GetInt();
-	// caes
+
+	//Set the current and max health to the same values -Green Mushy
+	m_iHealth = MANCANNON_HEALTH;
+	m_iMaxHealth = MANCANNON_HEALTH;
 }
 
 //-----------------------------------------------------------------------------
@@ -125,6 +126,9 @@ void CFFManCannon::OnJumpPadThink( void )
 		{
 			m_iHealth = min( ( m_iHealth + ffdev_mancannon_health_regen.GetFloat() ), ffdev_mancannon_health.GetInt() );
 			DevMsg("[S] Jumppad health regen: %i\n", m_iHealth);
+
+			// This will force an update of this variable for the client
+			NetworkStateChanged( ( int * )&m_iHealth );
 
 			// spark when health regens (slightly above origin so it's on the jumppad not in it)
 			Vector vecUp(0, 0, 1.0f);
