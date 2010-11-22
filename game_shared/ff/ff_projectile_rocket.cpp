@@ -272,6 +272,9 @@ void CFFProjectileRocket::Spawn()
 	SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 	SetSolidFlags(FSOLID_NOT_STANDABLE);
 
+	// Hits everything but debris and interactive debris -GreenMushy
+	SetCollisionGroup(COLLISION_GROUP_INTERACTIVE);
+
 	// Set the correct think & touch for the nail
 	SetTouch(&CFFProjectileRocket::ExplodeTouch); // No we're going to explode when we touch something
 	SetThink(NULL);		// no thinking!

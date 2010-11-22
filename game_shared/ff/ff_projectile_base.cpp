@@ -207,7 +207,10 @@ void CFFProjectileBase::Spawn()
 
 	BaseClass::Spawn();
 
-	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+	//SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+
+	// Hits everything but debris and interactive debris -GreenMushy
+	SetCollisionGroup(COLLISION_GROUP_INTERACTIVE);
 }
 
 //----------------------------------------------------------------------------

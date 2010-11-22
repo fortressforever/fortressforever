@@ -769,11 +769,24 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 
 	// Projectiles hit everything but debris, weapons, + other projectiles
+	// Adding so projectiles dont collide with players -GreenMushy
 	if ( collisionGroup1 == COLLISION_GROUP_PROJECTILE )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_DEBRIS || 
 			collisionGroup0 == COLLISION_GROUP_WEAPON ||
-			collisionGroup0 == COLLISION_GROUP_PROJECTILE )
+			collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
+			collisionGroup0 == COLLISION_GROUP_PLAYER)
+		{
+			return false;
+		}
+	}
+
+	//Let buildables collide with mostly everything atm
+	//Adding this buildable collision group so we can better customize exceptions later on -Green Mushy
+	if( collisionGroup1 == COLLISION_GROUP_BUILDABLE )
+	{
+		if( collisionGroup0 == COLLISION_GROUP_DEBRIS || 
+			collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS)
 		{
 			return false;
 		}
