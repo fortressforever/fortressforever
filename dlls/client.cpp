@@ -563,15 +563,23 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 	Q_strncat( text, p, sizeof( text ), COPY_ALL_CHARACTERS );
 	Q_strncat( text, "\n", sizeof( text ), COPY_ALL_CHARACTERS );
 
+	// if lua doesn't have a player_onchat function, always allow the message
+	bool bMessageAllowed = true;
+
 	// send to lua
 	CFFLuaSC hContext( 0 );
 	hContext.Push( pPlayer );
 	hContext.Push( text );
 	
-	// let lua decide if the message should go through
+	// let lua decide if the message should go through, if a player_onchat function exists
 	if ( _scriptman.RunPredicates_LUA( NULL, &hContext, "player_onchat" ) )
 	{
+		bMessageAllowed = hContext.GetBool();
+	}
 
+	// if the message is allowed
+	if (bMessageAllowed)
+	{
 		// loop through all players
 		// Start with the first player.
 		// This may return the world in single player if the client types something between levels or during spawn
