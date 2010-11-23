@@ -100,32 +100,31 @@ bool CFFWeaponKnife::Deploy()
 void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity) 
 {
 	//DevMsg("[CFFWeaponKnife] Hit\n");
+
 #ifdef GAME_DLL
+
+	//Get the knife owner 
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
+	//Get the entity it hits
 	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
 
+	//Valid target and the spy is cloaked
 	if ( pHitEntity != NULL && pPlayer->IsCloaked() ) 
 	{
-		// disable buildables that can be disabled
-		if( FF_IsSentrygun( pHitEntity ) )
-		{
-			CFFBuildableObject *pBuildable = FF_ToBuildableObject( pHitEntity );
-			if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), pBuildable->GetPlayerOwner()->GetTeamNumber() ) == GR_NOTTEAMMATE )
-				pBuildable->Disable( clamp( (gpGlobals->curtime - pPlayer->GetCloakTime()) * FF_CLOAKSTAB_DISABLE_MOD, FF_CLOAKSTAB_DISABLE_MIN, 999.0f));
-			return;
-		}
-		else if( pHitEntity->IsPlayer() )
+		//Now check the type of pHitEntity
+		if( pHitEntity->IsPlayer() )
 		{
 			CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
+
+			//If the player can be dealt damage via cloakstab -GreenMushy
 			if (g_pGameRules->FCanTakeDamage(pPlayer, pTarget)) 
 			{
-				//Adding "cloakstab" -GreenMushy
-
 				Vector hitDirection;
 				pPlayer->EyeVectors(&hitDirection, NULL, NULL);
 				VectorNormalize(hitDirection);
 
+				//Adding cloakstab damage modifiers -GreenMushy
 				CTakeDamageInfo info(this, pPlayer,(ffdev_cloakstab_damage.GetFloat() * ( gpGlobals->curtime - pPlayer->GetCloakTime() )), DMG_GENERIC);
 				info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 				info.SetCustomKill(KILLTYPE_BACKSTAB);
@@ -133,56 +132,82 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 				ApplyMultiDamage();
 			}
+
+			//Play the sounds here regardless of friendlyfire, friend or foe -GreenMushy
+			EmitSoundShared( "Player.knife_stab" );
+			EmitSoundShared( "Player.knife_discharge" );
+
+			//Dont need basehit
+			return;
+		}
+			
+		//Check if it is a buildable object
+		if( FF_IsBuildableObject( pHitEntity ) )
+		{
+			CFFBuildableObject *pBuildable = FF_ToBuildableObject( pHitEntity );
+
+			//Sentrygun
+			if( FF_IsSentrygun(pBuildable) )
+			{
+				//Only Disable if it is an ENEMY sentry gun or you could grief
+				if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), pBuildable->GetPlayerOwner()->GetTeamNumber() ) == GR_NOTTEAMMATE )
+				{
+					pBuildable->Disable( clamp( (gpGlobals->curtime - pPlayer->GetCloakTime()) * FF_CLOAKSTAB_DISABLE_MOD, FF_CLOAKSTAB_DISABLE_MIN, 999.0f));
+				}
+			}
+
+			//Play the sounds here regardless of friendlyfire, friend or foe -GreenMushy
+			EmitSoundShared( "Player.knife_stab" );
+			EmitSoundShared( "Player.knife_discharge" );
+
+			//Dont need basehit
 			return;
 		}
 	}
-	// if havent returned by now, then check if you're hitting a sentrygun
-	if ( pHitEntity != NULL && FF_IsSentrygun( pHitEntity ) ) 
+
+	//Special situation where there is a valid target and the spy is NOT cloaked
+	if ( pHitEntity != NULL && pPlayer->IsCloaked() == false ) 
 	{
-		CFFBuildableObject *pBuildable = FF_ToBuildableObject( pHitEntity );
-		if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), pBuildable->GetPlayerOwner()->GetTeamNumber() ) == GR_NOTTEAMMATE )
-			pBuildable->Disable( FF_KNIFE_DISABLE_DURATION );
-		return;
+		//Check if it is a buildable
+		if( FF_IsBuildableObject( pHitEntity ) )
+		{
+			CFFBuildableObject *pBuildable = FF_ToBuildableObject( pHitEntity );
+			
+			//Right now we only have sentrygun mini disables
+			//Sentrygun
+			if( FF_IsSentrygun( pBuildable ))
+			{
+				//Only disable if it is an enemy or you could grief
+				if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), pBuildable->GetPlayerOwner()->GetTeamNumber() ) == GR_NOTTEAMMATE )
+					pBuildable->Disable( FF_KNIFE_DISABLE_DURATION );
+
+				//Dont need basehit
+				return;
+			}
+		}
 	}
 #endif
 
 #ifdef CLIENT_DLL
+
+	//Get the knife owner
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
+	//Get the entity it hits
 	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
 
-	if (pHitEntity != NULL && pPlayer->IsCloaked() ) 
+	//Valid target and the spy is NOT cloaked
+	if (pHitEntity != NULL && pPlayer->IsCloaked() == false ) 
 	{
-		//If ur cloakstab hits a sentrygun -GreenMushy
-		if( FF_IsSentrygun( pHitEntity ) )
+		//Non-cloak stabs make slash noises on enemy players
+		//Use the basehit to make noises for other things like sentryguns -GreenMushy
+		if( pHitEntity->IsPlayer() )
 		{
-			CFFBuildableObject *pBuildable = FF_ToBuildableObject( pHitEntity );
-			if( g_pGameRules->FCanTakeDamage(pPlayer, pBuildable))
-				EmitSoundShared( "Player.knife_discharge" );
-			else
-				WeaponSound(SPECIAL2);
-			return;
-		}
-		//If ur cloakstab hits a person -GreenMushy
-		else if( pHitEntity->IsPlayer() ) 
-		{
-			CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
-			if (g_pGameRules->FCanTakeDamage(pPlayer, pTarget)) 
-			{
-				EmitSoundShared( "Player.knife_stab" );
-				EmitSoundShared( "Player.knife_discharge" );
-			}
-			else
-				WeaponSound(SPECIAL2);
+			WeaponSound(SPECIAL2);
 			return;
 		}
 	}
-	// if havent returned by now, then check if you're hitting a sentrygun
-	if ( pHitEntity != NULL && FF_IsSentrygun( pHitEntity ) ) 
-	{
-		WeaponSound(SPECIAL2);
-		return;
-	}
+
 #endif
 
 	BaseClass::Hit(traceHit, nHitActivity);
