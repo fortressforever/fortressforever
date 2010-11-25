@@ -21,21 +21,29 @@
 
 #include "ff_fx_overpressure.h"
 
-//#define OVERPRESSURE_EFFECT_MATERIAL "particle/particle_smokegrenade"
-#define OVERPRESSURE_EFFECT_MATERIAL "effects/yellowflare"
+#define OVERPRESSURE_EFFECT_MATERIAL "particle/particle_smokegrenade"
+#define OVERPRESSURE_EFFECT_MATERIAL2 "effects/yellowflare"
 #define RING_EFFECT_MATERIAL "sprites/lgtning.vmt"
 
-ConVar overpressure_particles	( "cl_overpressure_numparticles", "750", FCVAR_CHEAT, "The number of particles in each overpressure." );
+ConVar overpressure_particles	( "cl_overpressure_numparticles", "32", FCVAR_CHEAT, "The number of particles in each overpressure." );
 ConVar overpressure_speed		( "cl_overpressure_particle_lifetime", "1.0", FCVAR_CHEAT, "Duration of the overpressure effect." );
 ConVar overpressure_particlespeed( "cl_overpressure_particlespeed", "250", FCVAR_CHEAT, "Velocity of the overpressure particles." );
 ConVar overpressure_particlespeed_variability( "cl_overpressure_particlespeed_variability", "30", FCVAR_CHEAT, "Variability in the velocity of the overpressure particles." );
-ConVar overpressure_particle_size( "cl_overpressure_particle_size", "2", FCVAR_CHEAT, "Velocity of the overpressure particles." );
+ConVar overpressure_particle_size( "cl_overpressure_particle_size", "32", FCVAR_CHEAT, "Velocity of the overpressure particles." );
+
+
+ConVar overpressure_particles2	( "cl_overpressure_particle2_numparticles", "64", FCVAR_CHEAT, "The number of particles in each overpressure." );
+ConVar overpressure_speed2		( "cl_overpressure_particle2_lifetime", "0.5", FCVAR_CHEAT, "Duration of the overpressure effect." );
+ConVar overpressure_particle2speed( "cl_overpressure_particle2_speed", "400", FCVAR_CHEAT, "Velocity of the overpressure particles." );
+ConVar overpressure_particle2speed_variability( "cl_overpressure_particle2_speed_variability", "30", FCVAR_CHEAT, "Variability in the velocity of the overpressure particles." );
+ConVar overpressure_particle2_size( "cl_overpressure_particle2_size", "2", FCVAR_CHEAT, "Velocity of the overpressure particles." );
 
 //========================================================================
 // Client effect precache table
 //========================================================================
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheOverpressureEmitter )
 	CLIENTEFFECT_MATERIAL( OVERPRESSURE_EFFECT_MATERIAL )
+	CLIENTEFFECT_MATERIAL( OVERPRESSURE_EFFECT_MATERIAL2 )
 	CLIENTEFFECT_MATERIAL( RING_EFFECT_MATERIAL )
 CLIENTEFFECT_REGISTER_END()
 
@@ -43,6 +51,7 @@ CLIENTEFFECT_REGISTER_END()
 // Static material handles
 //========================================================================
 PMaterialHandle COverpressureEmitter::m_hMaterial = INVALID_MATERIAL_HANDLE;
+PMaterialHandle COverpressureEmitter::m_hMaterial2 = INVALID_MATERIAL_HANDLE;
 
 //========================================================================
 // COverpressureEmitter constructor
@@ -76,6 +85,9 @@ CSmartPtr< COverpressureEmitter > COverpressureEmitter::Create( const char *pDeb
 
 	if( m_hMaterial == INVALID_MATERIAL_HANDLE )
 		m_hMaterial = pRet->GetPMaterial( OVERPRESSURE_EFFECT_MATERIAL );
+	
+	if( m_hMaterial2 == INVALID_MATERIAL_HANDLE )
+		m_hMaterial2 = pRet->GetPMaterial( OVERPRESSURE_EFFECT_MATERIAL2 );
 
 	return pRet;
 }
@@ -175,6 +187,34 @@ OverpressureParticle *COverpressureEmitter::AddOverpressureParticle( const Vecto
 	return pRet;
 }
 
+//========================================================================
+// CRingEmitter::AddOverpressureParticle
+// ----------
+// Purpose: Add a new particle to the system
+//========================================================================
+OverpressureParticle *COverpressureEmitter::AddOverpressureParticle2( const Vector& vecOrigin )
+{
+	OverpressureParticle *pRet = ( OverpressureParticle * )AddParticle( sizeof( OverpressureParticle ), m_hMaterial2, vecOrigin );
+
+	if( pRet )
+	{
+		pRet->m_vOrigin = vecOrigin;
+		pRet->m_vFinalPos.Init();
+		pRet->m_vVelocity.Init();
+		pRet->m_flDieTime = 1.0f;
+		pRet->m_flLifetime = 0.0f;
+		pRet->m_uchColor[ 0 ] = 255;
+		pRet->m_uchColor[ 1 ] = 255;
+		pRet->m_uchColor[ 2 ] = 255;
+		pRet->m_flAlpha = 0.8f;
+		pRet->m_flSize = 1.0f;
+		pRet->m_flRoll = 0.0f;
+		pRet->m_flRollDelta = 0.0f;
+	}
+
+	return pRet;
+}
+
 void COverpressureEmitter::ApplyDrag( Vector *F, Vector vecVelocity, float flScale, float flTargetVel )
 {
 	if( vecVelocity.IsLengthLessThan( flTargetVel ) )
@@ -193,7 +233,7 @@ void FF_FX_OverpressureEffect_Callback( const CEffectData &data )
 
 	//float offset = 0.0f;
 
-	// Add 5 particles
+	// Add smoke
 	for( int i = 0; i < overpressure_particles.GetInt(); i++ )
 	{
 		OverpressureParticle *pParticle = overpressureEffect->AddOverpressureParticle( data.m_vOrigin );
@@ -213,6 +253,30 @@ void FF_FX_OverpressureEffect_Callback( const CEffectData &data )
 			pParticle->m_flRoll = random->RandomFloat( 0, 2 * M_PI );
 			pParticle->m_flDieTime = overpressure_speed.GetFloat();
 			pParticle->m_flSize = overpressure_particle_size.GetFloat();
+			pParticle->m_flRollDelta = random->RandomFloat( -DEG2RAD( 180 ), DEG2RAD( 180 ) );
+		}
+	}
+	
+	// Add smoke
+	for( int i = 0; i < overpressure_particles2.GetInt(); i++ )
+	{
+		OverpressureParticle *pParticle = overpressureEffect->AddOverpressureParticle2( data.m_vOrigin );
+		if( pParticle )
+		{
+			pParticle->m_vOrigin = data.m_vOrigin;
+
+			// get a random point on a unit sphere
+			float ptZ = 2.0 * random->RandomFloat() - 1.0;
+			float ptT = 2.0 * M_PI * random->RandomFloat();
+			float ptW = sqrt( 1 - ptZ*ptZ );
+			float ptX = ptW * cos( ptT );
+			float ptY = ptW * sin( ptT );
+
+			pParticle->m_vVelocity = Vector(ptX, ptY, ptZ) * (overpressure_particle2speed.GetFloat() + random->RandomInt(-overpressure_particle2speed_variability.GetInt(), overpressure_particle2speed_variability.GetInt()));
+			pParticle->m_Pos = pParticle->m_vOrigin + RandomVector( -4.0f, 4.0f );
+			pParticle->m_flRoll = random->RandomFloat( 0, 2 * M_PI );
+			pParticle->m_flDieTime = overpressure_speed2.GetFloat();
+			pParticle->m_flSize = overpressure_particle2_size.GetFloat();
 			pParticle->m_flRollDelta = random->RandomFloat( -DEG2RAD( 180 ), DEG2RAD( 180 ) );
 		}
 	}
