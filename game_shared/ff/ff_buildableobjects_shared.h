@@ -323,7 +323,7 @@ public:
 	virtual bool IsSabotaged() const;
 	virtual bool IsMaliciouslySabotaged() const;
 	virtual void Sabotage( CFFPlayer *pSaboteur ) {};
-	virtual void MaliciouslySabotage( CFFPlayer *pSaboteur ) { m_bMaliciouslySabotaged = true; m_flSabotageTime = gpGlobals->curtime + 8.0f; }
+	virtual void MaliciouslySabotage( CFFPlayer *pSaboteur ) { m_bMaliciouslySabotaged = true; m_flSabotageTime = gpGlobals->curtime + 6.0f; }
 	
 	virtual void Cancel( void ) 
 	{
