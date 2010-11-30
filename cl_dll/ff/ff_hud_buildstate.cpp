@@ -158,7 +158,8 @@ void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 		iAmmo -= 128;
 	}
 */
-	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% (of %i HP)", iLevel , m_szHealth, iHealth, iMaxHP);
+	//_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% (of %i HP)", iLevel , m_szHealth, iHealth, iMaxHP); //AfterShock: This was part of the reducing-max-HP system
+	_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%%", iLevel , m_szHealth, iHealth);
 }
 
 void CHudBuildState::MsgFunc_ManCannonMsg(bf_read &msg)

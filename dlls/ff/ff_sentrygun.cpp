@@ -240,7 +240,7 @@ CFFSentryGun::CFFSentryGun()
 	//m_iMaxRockets = 0;
 	//m_iRockets = 0;
 	m_iShellDamage = 15;
-	m_flDamageTaken = 0.0f;
+	//m_flDamageTaken = 0.0f;
 	m_bLeftBarrel = true;
 	m_bRocketLeftBarrel = true;
 
@@ -1615,7 +1615,7 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			bUpgraded = true;
 			bRetval = true;
 			m_iLevel++;
-			m_flDamageTaken = 0.0f;
+			//m_flDamageTaken = 0.0f;
 		}
 
 		float flAimPitch = GetPoseParameter( SG_BC_PITCH );
@@ -2029,16 +2029,16 @@ void CFFSentryGun::PhysicsSimulate()
 	}
 }
 
-int CFFSentryGun::GetInitialHealth() 
-{
-	if ( m_iLevel == 1)
-		return SG_HEALTH_LEVEL1;
-	else if ( m_iLevel == 2)
-		return SG_HEALTH_LEVEL2;
-	else if ( m_iLevel == 3)
-		return SG_HEALTH_LEVEL3;
-
-	Warning("SG isnt level 1 2 or 3.. where are you calling this from... returnin 1 maxHP\n");
-	return 1;
-
-}
+//int CFFSentryGun::GetInitialHealth() 
+//{
+//	if ( m_iLevel == 1)
+//		return SG_HEALTH_LEVEL1;
+//	else if ( m_iLevel == 2)
+//		return SG_HEALTH_LEVEL2;
+//	else if ( m_iLevel == 3)
+//		return SG_HEALTH_LEVEL3;
+//
+//	Warning("SG isnt level 1 2 or 3.. where are you calling this from... returnin 1 maxHP\n");
+//	return 1;
+//
+//}

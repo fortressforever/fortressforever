@@ -139,11 +139,11 @@
 #define SG_ARMOR_MULTIPLIER 0.97f //sg_armor_mult.GetFloat() //0.95f
 
 //ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
-#define SG_HEALTH_LEVEL1 150 //132 // sg_health_lvl1.GetInt()
+#define SG_HEALTH_LEVEL1 145 //132 // sg_health_lvl1.GetInt()
 //ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG health");
-#define SG_HEALTH_LEVEL2 200 //164 // sg_health_lvl2.GetInt()
+#define SG_HEALTH_LEVEL2 180 //164 // sg_health_lvl2.GetInt()
 //ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
-#define SG_HEALTH_LEVEL3 250 //182 // sg_health_lvl3.GetInt()
+#define SG_HEALTH_LEVEL3 200 //182 // sg_health_lvl3.GetInt()
 
 //ConVar sg_armor_lvl1("ffdev_sg_armor_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG armor");
 #define SG_ARMOR_LEVEL1 0 // sg_armor_lvl1.GetInt()
@@ -720,7 +720,7 @@ public:
 	float MaxYawSpeed( void ) const;
 	float MaxPitchSpeed( void ) const;
 
-	int GetInitialHealth( void );
+	//int GetInitialHealth( void );
 
 	virtual void DoExplosionDamage();
 
@@ -790,7 +790,7 @@ public:
 	float	m_flPitchSpeed;
 	float	m_flLockTime;
 
-	float	m_flDamageTaken;
+	//float	m_flDamageTaken;
 
 
 	// Ammo definition for shells

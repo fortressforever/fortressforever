@@ -4145,7 +4145,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 
 	// Without boolean we default to accumulative, but warn anyway in case we just forgot
 	// boolean = effect is either on or off. Accumulative = the more effect you get, the stronger the effect is (e.g. more caltrops = slower)
-	Assert((mod & SEM_BOOLEAN)|(mod & SEM_ACCUMULATIVE));
+	//Assert((mod & SEM_BOOLEAN)|(mod & SEM_ACCUMULATIVE));
 
 	if (mod & SEM_BOOLEAN)
 	{
