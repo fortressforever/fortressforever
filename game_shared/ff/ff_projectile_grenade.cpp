@@ -13,6 +13,7 @@
 
 #include "cbase.h"
 #include "ff_projectile_grenade.h"
+#include "IEffects.h"
 #include "ff_buildableobjects_shared.h"
 
 #define GRENADE_MODEL "models/projectiles/pipe/w_pipe.mdl"
@@ -52,9 +53,13 @@ ConVar ffdev_bluepipes_bonusdirectdmg("ffdev_bluepipes_bonusdirectdmg", "18.0", 
 ConVar ffdev_bluepipes_normaldmg("ffdev_bluepipes_normaldmg", "70.0", FCVAR_REPLICATED, "");
 #define FF_PROJECTILE_GREN_NORMALDMG ffdev_bluepipes_normaldmg.GetFloat()
 ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(int) size of bounding box, 1-5 are good values");
-ConVar ffdev_bluepipes_usefusetime("ffdev_bluepipes_usefusetime", "0", FCVAR_REPLICATED,"Use the blue pipe fuse time?" );
+ConVar ffdev_bluepipes_usefusetime("ffdev_bluepipes_usefusetime", "1", FCVAR_REPLICATED,"Use the blue pipe fuse time?" );
 ConVar ffdev_bluepipes_num_bounces("ffdev_bluepipes_num_bounces", "0", FCVAR_REPLICATED );
+ConVar ffdev_bluepipes_sticky("ffdev_bluepipes_sticky", "1", FCVAR_REPLICATED );
+ConVar ffdev_pipe_sticky("ffdev_pipe_sticky", "1", FCVAR_REPLICATED );
 
+#define FFDEV_PIPE_STICKY ffdev_pipe_sticky.GetBool()
+#define FFDEV_BLUEPIPES_STICKY ffdev_bluepipes_sticky.GetBool()
 #define FFDEV_BLUEPIPES_NUM_BOUNCES ffdev_bluepipes_num_bounces.GetInt()
 #define FFDEV_BLUEPIPES_SIZE ffdev_bluepipes_size.GetInt()
 #define FFDEV_BLUEPIPES_USEFUSETIME ffdev_bluepipes_usefusetime.GetBool()
@@ -154,6 +159,24 @@ ConVar ffdev_bluepipes_num_bounces("ffdev_bluepipes_num_bounces", "0", FCVAR_REP
 				Detonate();// TODO: (AFTERSHOCK): Extra damage applied to buildable here
 				return;
 			}
+		}
+
+		//Check if it's sticky - AfterShock
+		// WARNING: You must turn on fusetime variable :)
+		if( trace.m_pEnt && ( Classify() == CLASS_GLGRENADE && FFDEV_BLUEPIPES_STICKY ) || ( Classify() == CLASS_PIPEBOMB && FFDEV_PIPE_STICKY ))
+		{
+			SetLocalAngularVelocity(QAngle(0, 0, 0));	// stop spinning
+			SetAbsVelocity(Vector(0,0,0));				// stop moving
+			//SetGravity(0);					// Stop falling
+			if (trace.m_pEnt && trace.m_pEnt->IsStandable()) 
+			{
+				SetGroundEntity(trace.m_pEnt);
+			}
+			if ( UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER)
+			{
+				g_pEffects->Sparks( GetAbsOrigin() );
+			}
+			return;
 		}
 
 		//Check if it should blow up or continue bouncing -GreenMushy
