@@ -33,7 +33,7 @@
 #endif
 
 //ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum charge for railgun" );
-#define RAILGUN_MAXCHARGETIME 2.0f // ffdev_railgun_maxchargetime.GetFloat()
+#define RAILGUN_MAXCHARGETIME 0.5f // ffdev_railgun_maxchargetime.GetFloat()
 
 //=============================================================================
 // CFFProjectileRail
@@ -80,6 +80,7 @@ public:
 
 	Vector m_vecSameOriginCheck;
 	float m_flSameOriginCheckTimer;
+	float flSpawnTime;
 
 	CNetworkVar( int, m_iNumBounces );
 
