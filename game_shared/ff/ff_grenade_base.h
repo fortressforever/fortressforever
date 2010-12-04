@@ -108,10 +108,11 @@ protected:
 
 #else
 
-private:
+protected:
 
 	float	m_flModelSize;
-	
+
+private:	
 	// This is only needed client-side so far
 	virtual const unsigned char	*GetEncryptionKey() { return NULL; }
 	GRENADE_FILE_INFO_HANDLE	m_hGrenadeFileInfo;
