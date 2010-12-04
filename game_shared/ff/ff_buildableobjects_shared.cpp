@@ -129,6 +129,13 @@ const char *g_pszFFDetpackSounds[ ] =
 	NULL
 };
 
+// Array of char *'s to shield models
+const char *g_pszFFShieldModels[ ] =
+{
+	FF_SHIELD_MODEL,
+	NULL
+};
+
 // Array of char *'s to dispenser models
 const char *g_pszFFManCannonModels[] =
 {

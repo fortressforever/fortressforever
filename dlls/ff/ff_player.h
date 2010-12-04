@@ -32,6 +32,7 @@ class CFFDetpack;
 class CFFDispenser;
 class CFFSentryGun;
 class CFFManCannon;
+class CFFShield;
 
 class CFFGrenadeBase;
 
@@ -58,6 +59,7 @@ enum SpeedEffectType
 	SE_LEGSHOT,
 	SE_TRANQ,
 	SE_CLOAK,
+	SE_SHIELD,
 	SE_LUA1,	// a speed effect that lua can set
 	SE_LUA2,	// a speed effect that lua can set
 	SE_LUA3,	// a speed effect that lua can set
@@ -357,6 +359,7 @@ protected:
 	CNetworkHandle( CFFSentryGun, m_hSentryGun );
 	CNetworkHandle( CFFDetpack, m_hDetpack );
 	CNetworkHandle( CFFManCannon, m_hManCannon );
+	CNetworkHandle( CFFShield, m_hShield );
 	
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
@@ -388,6 +391,9 @@ public:
 	CFFDispenser *GetDispenser( void ) const;
 	CFFSentryGun *GetSentryGun( void ) const;
 	CFFManCannon *GetManCannon( void ) const;
+	//I keep shield accessors and mutators together -GreenMushy
+	CFFShield *GetShield( void ) const;
+	void SetShield( CFFShield* pShield ){ m_hShield = pShield; }
 	CFFBuildableObject *GetBuildable( int iBuildable ) const;
 
 	void PreBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***

@@ -275,6 +275,7 @@ enum
 #define HITGROUP_RIGHTARM	5
 #define HITGROUP_LEFTLEG	6
 #define HITGROUP_RIGHTLEG	7
+#define HITGROUP_RIGHTHAND_ATTATCH 8	// the object that is attatched to the right hand of the player -GreenMushy
 #define HITGROUP_GEAR		10			// alerts NPC, but doesn't do damage or bleed (1/100th damage)
 
 //

@@ -44,6 +44,7 @@
 	#define CFFSentryGun C_FFSentryGun
 	#define CFFDetpack C_FFDetpack
 	#define CFFManCannon C_FFManCannon
+	#define CFFShield C_FFShield
 #else
 	#include "ff_player.h"
 	#include "ff_team.h"
@@ -76,6 +77,8 @@
 #define FF_MANCANNON_MODEL					"models/items/jumppad/jumppad.mdl"
 #define FF_MANCANNON_BUILD_SOUND			"Detpack.Build"
 #define FF_MANCANNON_EXPLODE_SOUND			"Detpack.Explode"
+
+#define FF_SHIELD_MODEL						"models/weapons/shield/w_shield.mdl"
 
 //#define FF_SENTRYGUN_AIMSPHERE_MODEL		"models/buildable/sg/sentrygun_aimsphere.mdl"
 
@@ -502,6 +505,52 @@ public:
 	int		m_iFuseTime;
 	float	m_flDetonateTime;
 	bool	m_bFiveSeconds;
+#endif
+
+};
+
+//=============================================================================
+//
+//	class CFFShield / C_FFShield
+//
+//=============================================================================
+class CFFShield : public CFFBuildableObject
+{
+public:
+	DECLARE_CLASS( CFFShield, CFFBuildableObject )
+
+#ifdef CLIENT_DLL 
+	
+	DECLARE_CLIENTCLASS()
+#else
+	DECLARE_SERVERCLASS()
+	DECLARE_DATADESC()
+#endif
+
+	// --> shared
+	CFFShield( void );
+	virtual ~CFFShield( void );
+
+	virtual bool	BlocksLOS( void ) const { return false; }
+	virtual Class_T Classify( void ) { return CLASS_SHIELD; }
+	// <-- shared
+
+#ifdef CLIENT_DLL
+	virtual void OnDataChanged( DataUpdateType_t updateType );
+
+	// Creates a client side ONLY Shield - used for the build slot
+	static C_FFShield *CreateClientSideShield( const Vector& vecOrigin, const QAngle& vecAngles );	
+#else
+	virtual void Spawn( void );
+	void GoLive( void );
+
+	virtual Vector EyePosition( void ) { return GetAbsOrigin() + Vector( 0, 0, 4.0f ); }
+
+	void OnObjectTouch( CBaseEntity *pOther );
+	void OnObjectThink( void );
+
+	static CFFShield *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
+
 #endif
 
 };

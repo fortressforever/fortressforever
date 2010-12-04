@@ -351,6 +351,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hSentryGun ) ),
 	SendPropEHandle( SENDINFO( m_hDetpack ) ),
 	SendPropEHandle( SENDINFO( m_hManCannon ) ),
+	SendPropEHandle( SENDINFO( m_hShield ) ),
 	SendPropBool( SENDINFO( m_bStaticBuilding ) ),
 	SendPropBool( SENDINFO( m_bBuilding ) ),
 	SendPropInt( SENDINFO( m_iCurBuild ), 3, SPROP_UNSIGNED ),
@@ -489,6 +490,7 @@ CFFPlayer::CFFPlayer()
 	m_hSentryGun = NULL;
 	m_hDetpack = NULL;
 	m_hManCannon = NULL;
+	m_hShield = NULL;
 	m_flBuildTime = 0.0f;
 
 	m_bRadioTagged = false;

@@ -858,6 +858,14 @@ CFFManCannon *CFFPlayer::GetManCannon( void ) const
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Get shield
+//-----------------------------------------------------------------------------
+CFFShield *CFFPlayer::GetShield( void ) const
+{
+	return dynamic_cast<CFFShield *>( m_hShield.Get() );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 CFFBuildableObject *CFFPlayer::GetBuildable( int iBuildable ) const
@@ -1021,6 +1029,27 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 			// But half aren't
 			AI_TraceLine(info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &tr);
 		}
+
+		//First Attempt at dealing with a shield blocking bullets.  It works! -GreenMushy
+		/*
+#ifdef GAME_DLL
+		//If the shield is hit -GreenMushy
+		if (tr.hitgroup == HITGROUP_RIGHTHAND_ATTATCH)
+		{
+			//For testing if this even works
+			DevMsg("\nRighthand attachment has been hit.\n");
+
+			//Emit some metal hit noises
+			EmitSoundShared( "shield.hit" );
+
+			//Error caused if i dont clear this first -GreenMushy
+			ClearMultiDamage();
+
+			//Gtfo this function
+			return;
+		}
+#endif
+		*/
 
 #ifdef GAME_DLL
 		// Handy debug stuff, I guess
