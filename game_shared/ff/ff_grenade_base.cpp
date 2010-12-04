@@ -555,10 +555,12 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 			col.a *= 1.0f - flScale;
 		}
 
-		float flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
-
-		if (flRemaining < -0.1f)
-			return ret;
+		float flRemaining = m_flDetonateTime - gpGlobals->curtime; // DetonateTime is only sent for grenades with non-standard timers e.g. mirvlets
+//DevMsg("flRemaining is %4.2f\n", flRemaining);
+		if (flRemaining < -5.f) // for grenades that have standard timers, flRemaining will be large and negative
+			flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
+		if (flRemaining < 0.f) // for grenades that have just gone off, but remain in game and need a persistent halo, e.g. hover turret / slow field
+			flRemaining = 0.01f;
 
 		float flSize = m_flModelSize * target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
 		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());
@@ -569,7 +571,8 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 		IMaterial *pMaterialBlur = materials->FindMaterial("sprites/ff_target_blur", TEXTURE_GROUP_CLIENT_EFFECTS);
 
 //		float flRotation = gpGlobals->curtime * target_rotation.GetFloat() - anglemod(m_flSpawnTime);
-		float flRotation = anglemod(gpGlobals->curtime  - m_flSpawnTime) * target_rotation.GetFloat();
+		//float flRotation = anglemod(gpGlobals->curtime  - m_flSpawnTime) * target_rotation.GetFloat();
+		float flRotation = anglemod(flRemaining) * target_rotation.GetFloat();
 
 		/*if (pMaterialBlur)
 		{

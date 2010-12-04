@@ -146,7 +146,7 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 		pMirvlet->m_DmgRadius = CFFGrenadeBase::GetGrenadeRadius();
 		pMirvlet->SetAbsVelocity( vecVelocity );
 		pMirvlet->SetupInitialTransmittedVelocity( vecVelocity );
-		pMirvlet->SetDetonateTimerLength( RandomFloat(2.0f,3.0f) );
+		pMirvlet->SetDetonateTimerLength( 2.0f + 0.7*i );
 		pMirvlet->SetElasticity( GetGrenadeElasticity() );
 
 		pMirvlet->SetThrower( (CBaseCombatCharacter*)pOwner ); 

@@ -45,6 +45,11 @@ public:
 IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeMirvlet, DT_FFGrenadeMirvlet)
 
 BEGIN_NETWORK_TABLE(CFFGrenadeMirvlet, DT_FFGrenadeMirvlet)
+#ifdef CLIENT_DLL
+	RecvPropFloat(RECVINFO(m_flDetonateTime)), 
+#else
+	SendPropFloat(SENDINFO(m_flDetonateTime)),
+#endif
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_grenade_mirvlet, CFFGrenadeMirvlet);
