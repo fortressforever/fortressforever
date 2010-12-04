@@ -100,7 +100,7 @@ BEGIN_NETWORK_TABLE( CBaseGrenade, DT_BaseGrenade )
 	RecvPropFloat( RECVINFO( m_flDamage ) ),
 	RecvPropFloat( RECVINFO( m_DmgRadius ) ),
 	RecvPropInt( RECVINFO( m_bIsLive ) ),
-//	RecvPropTime( RECVINFO( m_flDetonateTime ) ),
+//	RecvPropTime( RECVINFO( m_flDetonateTime ) ), //This is only sent for grenades with non-standard fuse timers, such as mirvlets
 	RecvPropEHandle( RECVINFO( m_hThrower ) ),
 
 	// Need velocity from grenades to make animation system work correctly when running

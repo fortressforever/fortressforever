@@ -95,8 +95,6 @@ bool CFFWeaponBaseClip::Reload()
 	pOwner->m_flNextAttack = gpGlobals->curtime;
 	m_flTimeWeaponIdle = gpGlobals->curtime + GetFFWpnData().m_flReloadTime;
 
-	// Using secondary attack for now in order to defer actual addition of ammo voogru: NOOOOOO!!!!!!!!!!!!!!11111111111oneone
-	//m_flNextSecondaryAttack = gpGlobals->curtime + GetFFWpnData().m_flReloadTime;
 	m_flReloadTime = gpGlobals->curtime + GetFFWpnData().m_flReloadTime;
 
 	return true;
