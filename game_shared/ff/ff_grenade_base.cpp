@@ -560,8 +560,11 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 		if (flRemaining < -5.f) // for grenades that have standard timers, flRemaining will be large and negative
 			flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
 		if (flRemaining < 0.f) // for grenades that have just gone off, but remain in game and need a persistent halo, e.g. hover turret / slow field
-			flRemaining = 0.01f;
+			return ret; //flRemaining = 0.01f;
 
+		if (( Classify() == CLASS_GREN_LASER ) && ( m_flDetonateTime - m_flSpawnTime > 5.f))
+			return ret;
+			
 		float flSize = m_flModelSize * target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
 		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());
 

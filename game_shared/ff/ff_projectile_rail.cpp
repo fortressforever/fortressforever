@@ -344,7 +344,10 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 			if ( FFDEV_RAILGUN_SIMPLESYSTEM )  
 			{
 				// Do damage directly, not through the explosion
-				pOther->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), m_flDamage , DMG_BULLET | DMG_NEVERGIB ) ); // deal dmg directly
+				if ( pOther == GetOwnerEntity() )
+					pOther->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), m_flDamage * 0.4 , DMG_BULLET | DMG_NEVERGIB ) ); // deal dmg directly. Railjumping takes less dmg
+				else
+					pOther->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), m_flDamage , DMG_BULLET | DMG_NEVERGIB ) ); // deal dmg directly
 				m_flDamage = 0; // Set this to prevent the explosion doing any further damage or pushing the player
 
 				// Fake explosion (just the visuals)
