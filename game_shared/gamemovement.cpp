@@ -67,7 +67,7 @@ bool g_bMovementOptimizations = true;	// |-- Mirv: Changed to false, but not sur
 static ConVar sv_sharkingfriction("sv_sharkingfriction", "1", FCVAR_REPLICATED);
 #define SV_SHARKINGFRICTION sv_sharkingfriction.GetFloat()
 
-static ConVar ffdev_rampslide_minspeed("ffdev_rampslide_minspeed", "800", FCVAR_REPLICATED);
+static ConVar ffdev_rampslide_minspeed("ffdev_rampslide_minspeed", "10000", FCVAR_REPLICATED);
 static ConVar ffdev_rampslide_zchange_threshold("ffdev_rampslide_zchange_threshold", "1.5", FCVAR_REPLICATED);
 static ConVar ffdev_rampslide_speedmaintained("ffdev_rampslide_speedmaintained", ".98", FCVAR_REPLICATED);
 
