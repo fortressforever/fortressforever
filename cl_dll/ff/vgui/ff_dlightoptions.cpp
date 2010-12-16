@@ -95,9 +95,6 @@ CFFDLightOptions::CFFDLightOptions(Panel *parent, char const *panelName) : BaseC
 	m_pFFDLightGeneric->SetValue(1);
 
 	LoadControlSettings("resource/ui/FFOptionsSubDLights.res");
-
-	// Now load settings
-	Load();
 }
 
 //-----------------------------------------------------------------------------

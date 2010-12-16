@@ -27,87 +27,78 @@ namespace vgui
 	{
 	DECLARE_CLASS_SIMPLE( FFQuantityPanel, Panel );
 	public:
-		FFQuantityPanel(Panel *parent, const char *panelName);
+		FFQuantityPanel( Panel *parent, const char *panelName );
+
+		enum ColorMode {
+			COLOR_MODE_CUSTOM=0,
+			COLOR_MODE_STEPPED,
+			COLOR_MODE_FADED,
+			COLOR_MODE_TEAMCOLORED
+		};
+
+		enum AlignmentHorizontal {
+			ALIGN_LEFT=0,
+			ALIGN_CENTER,
+			ALIGN_RIGHT
+		};
+
+		enum AlignmentVertical {
+			ALIGN_TOP=0,
+			ALIGN_MIDDLE,
+			ALIGN_BOTTOM
+		};
+
+		enum OrientationMode {
+			ORIENTATION_HORIZONTAL=0,
+			ORIENTATION_VERTICAL,
+			ORIENTATION_HORIZONTAL_INVERTED,
+			ORIENTATION_VERTICAL_INVERTED
+		};
 
 		virtual void Paint( void );
 		virtual void OnTick( void );
 		virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
-		void SetHeaderText(wchar_t *newHeaderText);
-		void SetHeaderIconChar(char *newHeaderIconChar);
-	
-		void UpdateQBPositions();
-		void SetHeaderTextShadow(bool bHasShadow);
-		void SetHeaderIconShadow(bool bHasShadow);
+		void SetHeaderText( wchar_t *newHeaderText, bool bUpdateQBPositions = true );
+		void SetHeaderIconChar( char *newHeaderIconChar, bool bUpdateQBPositions = true );
 
-		void SetHeaderTextSize(int iSize);
-		void SetHeaderIconSize(int iSize);
+		void SetHeaderTextShadow( bool bHasShadow);
+		void SetHeaderIconShadow( bool bHasShadow);
 
-		void SetHeaderTextVisible(bool bIsVisible);
-		void SetHeaderIconVisible(bool bIsVisible);
+		void SetHeaderTextSize( int iSize, bool bUpdateQBPositions = true );
+		void SetHeaderIconSize( int iSize, bool bUpdateQBPositions = true );
 
-		void SetHeaderTextPosition( int iPositionX, int iPositionY );
-		void SetHeaderIconPosition( int iPositionX, int iPositionY );
+		void SetHeaderTextVisible( bool bIsVisible, bool bUpdateQBPositions = true );
+		void SetHeaderIconVisible( bool bIsVisible, bool bUpdateQBPositions = true );
+
+		void SetHeaderTextPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions = true );
+		void SetHeaderIconPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions = true );
 
 		void SetHeaderTextColor( Color newHeaderTextColor );
 		void SetHeaderIconColor( Color newHeaderIconColor );
 		
-		void SetBarsVisible( bool bIsVisible );
+		void SetBarsVisible( bool bIsVisible, bool bUpdateQBPositions = true );
 
-		void OnBarSizeChanged();
-		void OnIntensityValuesChanged();
-
-		void OnShowBarChanged();
-		void OnShowBarBackgroundChanged();
-		void OnShowBarBorderChanged();
-		void OnBarBorderWidthChanged();
-
-		void OnShowIconChanged();
-		void OnShowLabelChanged();
-		void OnShowAmountChanged();
-
-		void OnSizeIconChanged();
-		void OnSizeLabelChanged();
-		void OnSizeAmountChanged();
-		
-		void OnColorBarChanged();
-		void OnColorBarBackgroundChanged();
-		void OnColorBarBorderChanged();
-		
-		void OnColorIconChanged();
-		void OnColorLabelChanged();
-		void OnColorAmountChanged();
-
-		void OnColorModeBarChanged();
-		void OnColorModeBarBackgroundChanged();
-		void OnColorModeBarBorderChanged();
-		void OnColorModeIconChanged();
-		void OnColorModeLabelChanged();
-		void OnColorModeAmountChanged();
-
-		void OnIconShadowChanged();
-		void OnLabelShadowChanged();
-		void OnAmountShadowChanged();
-		
-		void OnIconOffsetChanged();
-		void OnLabelOffsetChanged();
-		void OnAmountOffsetChanged();
+		virtual KeyValues* GetDefaultStyleData() = 0;
+	
+		void UpdateQBPositions();
 
 	private:
 		MESSAGE_FUNC_PARAMS( OnChildDimentionsChanged, "ChildDimentionsChanged", data );
+		MESSAGE_FUNC_PARAMS( OnStyleDataRecieved, "StyleData", data);
 
 	protected:
-		void AddPanelToHudOptions(const char* szSelf, const char* szParent);
-		FFQuantityBar* AddChild(const char *pElementName);
+		void AddPanelToHudOptions( const char* szSelfName, const char* szSelfText, const char* szParentName, const char* szParentText );
+		FFQuantityBar* AddChild( const char *pElementName );
 
 		bool m_bDraw;
 
-		char m_szSelf[128];
-		char m_szParent[128];
+		char m_szSelfName[128];
+		char m_szSelfText[128];
+		char m_szParentName[128];
+		char m_szParentText[128];
 		bool m_bAddToHud;
 		bool m_bAddToHudSent;
-
-		int m_iBorderWidth;
 
 		float m_flScale;
 		float m_flScaleX;
@@ -127,18 +118,19 @@ namespace vgui
 		int m_iHeaderIconSize;
 		
 		int m_iTeamColourAlpha;
+		bool m_bCustomBackroundColor;
 		Color m_ColorTeamBackground;
 		Color m_ColorBackground;
+		Color m_ColorBackgroundCustom;
 
 		//maybe try to make variable rather than 6 max
 		//if so, update fixed variables in OnPositions function too
 		FFQuantityBar* m_QBars[6];
-		int m_iQBars;
+		int m_iItems;
 
 		bool m_bCheckUpdates;
+		float m_flCheckUpdateFlagTime;
 		bool m_bUpdateRecieved[6];
-
-		bool m_bChildOverride;
 
 		int m_iX;
 		int m_iY;
@@ -164,79 +156,13 @@ namespace vgui
 		int m_iHeaderIconWidth;
 		int m_iHeaderIconHeight;
 
-		int m_qb_iBarMarginHorizontal;
-		int m_qb_iBarMarginVertical;
-		int m_qb_iPositionX;
-		int m_qb_iPositionY;
-		int m_qb_iColumns;
+		int m_iItemMarginHorizontal;
+		int m_iItemMarginVertical;
+		int m_iItemPositionX;
+		int m_iItemPositionY;
+		int m_iItemColumns;
 
-		int m_qb_iIntensity_red;
-		int m_qb_iIntensity_orange;
-		int m_qb_iIntensity_yellow;
-		int m_qb_iIntensity_green;
-
-		bool m_qb_bShowBar;
-		bool m_qb_bShowBarBackground;
-		bool m_qb_bShowBarBorder;
-		bool m_qb_bShowIcon;
-		bool m_qb_bShowLabel;
-		bool m_qb_bShowAmount;
-
-		int m_qb_iBarWidth;
-		int m_qb_iBarHeight;
-		int m_qb_iBarBorderWidth;
-
-		int m_qb_iColorBar_r;
-		int m_qb_iColorBar_g;
-		int m_qb_iColorBar_b;
-		int m_qb_iColorBar_a;
-		int m_qb_iColorBarBackground_r;
-		int m_qb_iColorBarBackground_g;
-		int m_qb_iColorBarBackground_b;
-		int m_qb_iColorBarBackground_a;
-		int m_qb_iColorBarBorder_r;
-		int m_qb_iColorBarBorder_g;
-		int m_qb_iColorBarBorder_b;
-		int m_qb_iColorBarBorder_a;
-		int m_qb_iColorIcon_r;
-		int m_qb_iColorIcon_g;
-		int m_qb_iColorIcon_b;
-		int m_qb_iColorIcon_a;
-		int m_qb_iColorLabel_r; 
-		int m_qb_iColorLabel_g;
-		int m_qb_iColorLabel_b;
-		int m_qb_iColorLabel_a;
-		int m_qb_iColorAmount_r; 
-		int m_qb_iColorAmount_g; 
-		int m_qb_iColorAmount_b;
-		int m_qb_iColorAmount_a;
-
-		bool m_qb_bShadowIcon;
-		bool m_qb_bShadowLabel;
-		bool m_qb_bShadowAmount; 
-
-		int m_qb_iSizeIcon;
-		int m_qb_iSizeLabel;
-		int m_qb_iSizeAmount; 
-
-		int m_qb_iColorModeBar;
-		int m_qb_iColorModeBarBackground;
-		int m_qb_iColorModeBarBorder;
-		int m_qb_iColorModeIcon;
-		int m_qb_iColorModeLabel;
-		int m_qb_iColorModeAmount; 
-		int m_qb_iColorModeIdent;
-
-		int m_qb_iOffsetBarX;
-		int m_qb_iOffsetBarY;
-		int m_qb_iOffsetIconX;
-		int m_qb_iOffsetIconY;
-		int m_qb_iOffsetLabelX; 
-		int m_qb_iOffsetLabelY;
-		int m_qb_iOffsetAmountX;
-		int m_qb_iOffsetAmountY;
-		int m_qb_iOffsetIdentX;
-		int m_qb_iOffsetIdentY;
+		bool m_bShowPanel;
 	};
 }
 

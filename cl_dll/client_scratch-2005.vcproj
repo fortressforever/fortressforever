@@ -3351,11 +3351,11 @@
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
@@ -3679,11 +3679,11 @@
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
@@ -4611,11 +4611,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_fx_slowfield.cpp"
+				RelativePath=".\ff\ff_fx_ring_emitter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_fx_ring_emitter.h"
+				RelativePath=".\ff\ff_fx_slowfield.cpp"
 				>
 			</File>
 			<File
@@ -4675,11 +4675,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_buildstate_base.cpp"
+				RelativePath=".\ff\ff_hud_buildstate_dispenser.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_buildstate_base.h"
+				RelativePath=".\ff\ff_hud_buildstate_dispenser.h"
 				>
 			</File>
 			<File
@@ -5021,6 +5021,38 @@
 						>
 					</File>
 					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_arrangementpresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_arrangementpresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_stylepresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_stylepresets.h"
+						>
+					</File>
+					<File
 						RelativePath=".\ff\vgui\ff_dlightoptions.cpp"
 						>
 					</File>
@@ -5046,6 +5078,14 @@
 					</File>
 					<File
 						RelativePath=".\ff\vgui\ff_optionspage.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_optionspresetpage.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_optionspresetpage.h"
 						>
 					</File>
 					<File

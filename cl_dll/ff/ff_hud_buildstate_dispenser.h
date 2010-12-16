@@ -15,18 +15,18 @@
 
 using namespace vgui;
 
-class CHudBuildStateSentry : public CHudElement, public FFQuantityPanel
+class CHudBuildStateDispenser : public CHudElement, public FFQuantityPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CHudBuildStateSentry, FFQuantityPanel );
+	DECLARE_CLASS_SIMPLE( CHudBuildStateDispenser, FFQuantityPanel );
 
-	FFQuantityBar *m_qbSentryHealth;
-	FFQuantityBar *m_qbSentryLevel;
+	FFQuantityBar *m_qbDispenserHealth;
+	FFQuantityBar *m_qbDispenserAmmo;
 
 	bool	m_bBuilt;
 public:
-	CHudBuildStateSentry(const char *pElementName);
-	~CHudBuildStateSentry();
+	CHudBuildStateDispenser(const char *pElementName);
+	~CHudBuildStateDispenser();
 
 	KeyValues* GetDefaultStyleData();
 
@@ -35,7 +35,8 @@ public:
 	void OnTick( void );
 	void Paint( void );
 	
-	void	MsgFunc_SentryMsg(bf_read &msg);
+	void	MsgFunc_DispenserMsg(bf_read &msg);
+	
 };
 
 #endif

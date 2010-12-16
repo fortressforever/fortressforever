@@ -1,10 +1,10 @@
 #include "cbase.h"
-#include "ff_hud_buildstate_sentry.h"
+#include "ff_hud_buildstate_dispenser.h"
 
-DECLARE_HUDELEMENT(CHudBuildStateSentry);
-DECLARE_HUD_MESSAGE(CHudBuildStateSentry, SentryMsg);
+DECLARE_HUDELEMENT(CHudBuildStateDispenser);
+DECLARE_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
 
-CHudBuildStateSentry::CHudBuildStateSentry(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateSentry")
+CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateSentry")
 {
 	SetParent(g_pClientMode->GetViewport());
 
@@ -14,16 +14,16 @@ CHudBuildStateSentry::CHudBuildStateSentry(const char *pElementName) : CHudEleme
 	m_bBuilt = false;
 }
 
-CHudBuildStateSentry::~CHudBuildStateSentry() 
+CHudBuildStateDispenser::~CHudBuildStateDispenser() 
 {
 }
 
-KeyValues* CHudBuildStateSentry::GetDefaultStyleData()
+KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 {
 	KeyValues *kvPreset = new KeyValues("StyleData");
 
 	kvPreset->SetInt("x", 640);
-	kvPreset->SetInt("y", 200);
+	kvPreset->SetInt("y", 300);
 	kvPreset->SetInt("alignH", 2);
 	kvPreset->SetInt("alignV", 0);
 	kvPreset->SetInt("columns", 1);
@@ -134,38 +134,37 @@ KeyValues* CHudBuildStateSentry::GetDefaultStyleData()
 	return kvPreset;
 }
 
-void CHudBuildStateSentry::VidInit()
+void CHudBuildStateDispenser::VidInit()
 {
-	wchar_t *tempString = vgui::localize()->Find("#FF_PLAYER_SENTRYGUN");
+	wchar_t *tempString = vgui::localize()->Find("#FF_PLAYER_DISPENSER");
 
 	if (!tempString) 
-		tempString = L"SENTRY";
+		tempString = L"DISPENSER";
 
 	SetHeaderText(tempString);
-	SetHeaderIconChar("R");
+	SetHeaderIconChar("S");
 
-	m_qbSentryHealth->SetLabelText("#FF_ITEM_HEALTH");
-	m_qbSentryHealth->SetIconChar(":");
-	m_qbSentryHealth->SetIntensityAmountScaled(true);//max changes (is not 100) so we need to scale to a percentage amount for calculation
+	m_qbDispenserHealth->SetLabelText("#FF_ITEM_HEALTH");
+	m_qbDispenserHealth->SetIconChar(":");
+	m_qbDispenserHealth->ShowAmountMax(false);
 
-	m_qbSentryLevel->SetLabelText("#FF_ITEM_LEVEL");
-	m_qbSentryLevel->SetAmountMax(3);
-	m_qbSentryLevel->SetIntensityControl(1,2,2,3);
-	m_qbSentryLevel->SetIntensityValuesFixed(true);
+	m_qbDispenserAmmo->SetLabelText("#FF_ITEM_AMMO");
+	m_qbDispenserAmmo->SetIconChar("4");
+	m_qbDispenserAmmo->ShowAmountMax(false);
 }
 
-void CHudBuildStateSentry::Init() 
+void CHudBuildStateDispenser::Init() 
 {
 	ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
-	HOOK_HUD_MESSAGE(CHudBuildStateSentry, SentryMsg);
+	HOOK_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
 
-	m_qbSentryHealth = AddChild("BuildStateSentryHealth"); 
-	m_qbSentryLevel = AddChild("BuildStateSentryLevel"); 
+	m_qbDispenserHealth = AddChild("BuildStateDispenserHealth"); 
+	m_qbDispenserAmmo = AddChild("BuildStateDispenserAmmo"); 
 
-	AddPanelToHudOptions("SentryGun", "#HudPanel_SentryGun", "BuildState", "#HudPanel_BuildableState");
+	AddPanelToHudOptions("Dispenser", "#HudPanel_Dispenser", "BuildState", "#HudPanel_BuildableState");
 }
 
-void CHudBuildStateSentry::OnTick() 
+void CHudBuildStateDispenser::OnTick() 
 {
 	BaseClass::OnTick();
 
@@ -181,8 +180,8 @@ void CHudBuildStateSentry::OnTick()
 	{
 		m_bDraw = false;
 		SetVisible(false);
-		m_qbSentryHealth->SetVisible(false);
-		m_qbSentryLevel->SetVisible(false);
+		m_qbDispenserHealth->SetVisible(false);
+		m_qbDispenserAmmo->SetVisible(false);
 		return; //return and don't continue
 	}
 	else
@@ -191,7 +190,7 @@ void CHudBuildStateSentry::OnTick()
 		m_bDraw = true;
 	}
 	
-	bool bBuilt = pPlayer->GetSentryGun();
+	bool bBuilt = pPlayer->GetDispenser();
 	
 	//small optimisation by comparing build with what it was previously
 	//if not built
@@ -200,24 +199,23 @@ void CHudBuildStateSentry::OnTick()
 	{
 		m_bBuilt = false;
 		//give us some new amounts to that when it's building we have normal values rather than what was left!
-		m_qbSentryHealth->SetAmount(0);
-		m_qbSentryHealth->SetAmountMax(150);
-		m_qbSentryLevel->SetAmount(0);
+		m_qbDispenserHealth->SetAmount(0);
+		m_qbDispenserAmmo->SetAmount(0);
 		SetVisible(false);
-		m_qbSentryHealth->SetVisible(false);
-		m_qbSentryLevel->SetVisible(false);
+		m_qbDispenserHealth->SetVisible(false);
+		m_qbDispenserAmmo->SetVisible(false);
 	}
 	else if(bBuilt && !m_bBuilt)
 	//show quantity bars
 	{
 		m_bBuilt = true;
 		SetVisible(true);
-		m_qbSentryHealth->SetVisible(true);
-		m_qbSentryLevel->SetVisible(true);
+		m_qbDispenserHealth->SetVisible(true);
+		m_qbDispenserAmmo->SetVisible(true);
 	}
 }
 
-void CHudBuildStateSentry::Paint() 
+void CHudBuildStateDispenser::Paint() 
 {
 	if(m_bDraw)
 	{
@@ -240,14 +238,11 @@ void CHudBuildStateSentry::Paint()
 	}
 }
 
-
-void CHudBuildStateSentry::MsgFunc_SentryMsg(bf_read &msg)
+void CHudBuildStateDispenser::MsgFunc_DispenserMsg(bf_read &msg)
 {
     int iHealth = (int) msg.ReadByte();
-    int iMaxHealth = (int) msg.ReadByte();
-	int iLevel = (int) msg.ReadByte();
+    int iAmmo = (int) msg.ReadByte();
 
-	m_qbSentryLevel->SetAmount(iLevel);
-	m_qbSentryHealth->SetAmount((int)((float)iHealth/100 * iMaxHealth));
-	m_qbSentryHealth->SetAmountMax(iMaxHealth);
+	m_qbDispenserHealth->SetAmount(iHealth);
+	m_qbDispenserAmmo->SetAmount(iAmmo);
 }

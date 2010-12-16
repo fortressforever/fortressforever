@@ -22,10 +22,12 @@
 #include "c_playerresource.h"
 extern C_PlayerResource *g_PR;
 
-//#include "ff_customhudoptions_assignpresets.h"
-//extern CFFCustomHudAssignPresets *g_AP;
+#include "ff_customhudoptions_assignpresets.h"
+extern CFFCustomHudAssignPresets *g_AP;
 
 extern ConVar cl_teamcolourhud;
+
+#define BARUPDATE_WAITTIME 2 //2 seconds
 
 namespace vgui
 {
@@ -34,15 +36,13 @@ namespace vgui
 		m_flScale = 1.0f;
 		m_flScaleX = 1.0f;
 		m_flScaleY = 1.0f;
-		m_iQBars = 0;
-		SetHeaderTextPosition(30,10);
-		SetHeaderIconPosition(10,5);
 
-		//these values are irrelevant and get overridden by cvars
-		
-		//if the child class should take precidence over general
-		//buildstate_sg_x over buildstate_x
-		m_bChildOverride = false;
+		m_iItems = 0;
+	
+		m_iHeaderTextX = 20; 
+		m_iHeaderTextY = 7;
+		m_iHeaderIconX = 3; 
+		m_iHeaderIconY = 3;
 
 		m_iX = 640;
 		m_iY = 300;
@@ -50,95 +50,23 @@ namespace vgui
 		m_iHeight = 0;
 		m_iHorizontalAlign = 2;
 		m_iVerticalAlign = 0;
-
-		m_iHeaderTextSize = 9;
-		m_iHeaderIconSize = 9;
+		m_iHeaderTextSize = 4;
+		m_iHeaderIconSize = 4;
 		m_bShowHeaderText = true;
 		m_bShowHeaderIcon = true;
+		m_bHeaderIconShadow = false;
+		m_bHeaderTextShadow = false;
 
-		m_qb_iBarMarginHorizontal = 5;
-		m_qb_iBarMarginVertical = 5;
+		m_bShowPanel = true;
+
+		m_iItemMarginHorizontal = 5;
+		m_iItemMarginVertical = 5;
 		
-		m_qb_iPositionX = 10;
-		m_qb_iPositionY = 20;
-		m_qb_iColumns = 1;
+		m_iItemPositionX = 5;
+		m_iItemPositionY = 25;
+		m_iItemColumns = 1;
 
-		/*
-			rest is -1 so that it updates using cvar values
-			had a weird case where quantity bar colormode default was 1
-			this was 2 and cvar was 2 - It didn't detect a change and so 
-			didn't update the colormode thus maintaining a colourmode of 1 
-
-			obviously true false can't be helped... just making sure they're the same as quanitty bar defaults!
-		*/
-		
-		m_qb_iSizeIcon = -1;
-		m_qb_iSizeLabel = -1;
-		m_qb_iSizeAmount = -1;
-
-		m_qb_iIntensity_red = -1;
-		m_qb_iIntensity_orange = -1;
-		m_qb_iIntensity_yellow = -1;
-		m_qb_iIntensity_green = -1;
-
-		m_qb_bShowBar = true;
-		m_qb_bShowBarBackground = true;
-		m_qb_bShowBarBorder = true;
-		m_qb_bShowIcon = true;
-		m_qb_bShowLabel = true;
-		m_qb_bShowAmount = true;
-
-		m_qb_iBarWidth = -1;
-		m_qb_iBarHeight = -1;
-		m_qb_iBarBorderWidth = -1;
-
-		m_qb_iColorBar_r = -1;
-		m_qb_iColorBar_g = -1;
-		m_qb_iColorBar_b = -1;
-		m_qb_iColorBar_a = -1;
-		m_qb_iColorBarBackground_r = -1;
-		m_qb_iColorBarBackground_g = -1;
-		m_qb_iColorBarBackground_b = -1;
-		m_qb_iColorBarBackground_a = -1;
-		m_qb_iColorBarBorder_r = -1;
-		m_qb_iColorBarBorder_g = -1;
-		m_qb_iColorBarBorder_b = -1;
-		m_qb_iColorBarBorder_a = -1;
-		m_qb_iColorIcon_r = -1;
-		m_qb_iColorIcon_g = -1;
-		m_qb_iColorIcon_b = -1;
-		m_qb_iColorIcon_a = -1;
-		m_qb_iColorLabel_r = -1; 
-		m_qb_iColorLabel_g = -1;
-		m_qb_iColorLabel_b = -1;
-		m_qb_iColorLabel_a = -1;
-		m_qb_iColorAmount_r = -1; 
-		m_qb_iColorAmount_g = -1; 
-		m_qb_iColorAmount_b = -1;
-		m_qb_iColorAmount_a = -1;
-
-		m_qb_bShadowIcon = false;
-		m_qb_bShadowLabel = false;
-		m_qb_bShadowAmount = false; 
-
-		m_qb_iColorModeBar = -1;
-		m_qb_iColorModeBarBackground = -1;
-		m_qb_iColorModeBarBorder = -1;
-		m_qb_iColorModeIcon = -1;
-		m_qb_iColorModeLabel = -1;
-		m_qb_iColorModeAmount = -1; 
-		m_qb_iColorModeIdent = -1;
-
-		m_qb_iOffsetBarX = -1;
-		m_qb_iOffsetBarY = -1;
-		m_qb_iOffsetIconX = -1;
-		m_qb_iOffsetIconY = -1;
-		m_qb_iOffsetLabelX = -1;
-		m_qb_iOffsetLabelY = -1;
-		m_qb_iOffsetAmountX = -1;
-		m_qb_iOffsetAmountY = -1;
-		m_qb_iOffsetIdentX = -1;
-		m_qb_iOffsetIdentY = -1;
+		m_flCheckUpdateFlagTime = -1;
 	}
 
 	void FFQuantityPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
@@ -160,7 +88,6 @@ namespace vgui
 		SetPaintBorderEnabled(false);
 		SetPaintEnabled(true);
 
-
 		for(int i = 0; i < QUANTITYPANELFONTSIZES; ++i)
 		{
 			m_hfHeaderText[i*3] = qbScheme->GetFont( VarArgs("QuantityPanelHeader%d",i), true );
@@ -172,8 +99,8 @@ namespace vgui
 		}
 
 		m_hfText = qbScheme->GetFont( "QuantityPanel", IsProportional() );
-	
-		UpdateQBPositions();
+		
+		
 		BaseClass::ApplySchemeSettings( pScheme );
 	}
 	void FFQuantityPanel::Paint() 
@@ -181,7 +108,7 @@ namespace vgui
 		if(m_bShowHeaderText)
 		{
 			//Paint Header Text
-			vgui::surface()->DrawSetTextFont( m_hfHeaderText[m_iHeaderIconSize * 3 + (m_bHeaderTextShadow ? 1 : 0)] );
+			vgui::surface()->DrawSetTextFont( m_hfHeaderText[m_iHeaderTextSize * 3 + (m_bHeaderTextShadow ? 1 : 0)] );
 			vgui::surface()->DrawSetTextColor( m_ColorHeaderText.r(), m_ColorHeaderText.g(), m_ColorHeaderText.b(), m_ColorHeaderText.a() );
 			vgui::surface()->DrawSetTextPos( m_iHeaderTextX * m_flScale, m_iHeaderTextY * m_flScale );
 			vgui::surface()->DrawUnicodeString( m_wszHeaderText );
@@ -196,37 +123,49 @@ namespace vgui
 			vgui::surface()->DrawUnicodeString( m_wszHeaderIcon );
 		}
 
-		SetPaintBackgroundEnabled(true);
-		SetPaintBackgroundType(2);
-		SetPaintBorderEnabled(false);
-		SetPaintEnabled(true);
+		//SetPaintBackgroundEnabled(true);
+		//SetPaintBackgroundType(2);
+		//SetPaintBorderEnabled(false);
+		//SetPaintEnabled(true);
 
 		BaseClass::Paint();
 	}
-	/*
-	void FFQuantityPanel::AddPanelToHudOptions(const char* szSelf, const char* szParent)
+
+	void FFQuantityPanel::AddPanelToHudOptions(const char* szSelfName, const char* szSelfText, const char* szParentName, const char* szParentText)
 	{
-		Q_strncpy(m_szSelf, szSelf, 127);
-		Q_strncpy(m_szParent, szParent, 127);
+		Q_strncpy(m_szSelfName, szSelfName, 127);
+		Q_strncpy(m_szParentName, szParentName, 127);
+		Q_strncpy(m_szSelfText, szSelfText, 127);
+		Q_strncpy(m_szParentText, szParentText, 127);
 		m_bAddToHud = true;
-	}*/
+	}
 
 	void FFQuantityPanel::OnTick()
 	{
-		/*
 		if(m_bAddToHud && !m_bAddToHudSent)
 		{
-			//put the global check separately just incase it uses more resources
+			//put the global check separately from the above case 
+			//just in case it uses more resources
 			if(g_AP != NULL)
 			{
-				KeyValues *kv = new KeyValues("AddQuantityPanel");
-				kv->SetString("self", m_szSelf);
-				kv->SetString("parent", m_szParent);
-				PostMessage(g_AP, kv);
-				m_bAddToHudSent = true;
+				if(g_AP->IsReady())
+				{
+					KeyValues *kv = new KeyValues("AddQuantityPanel");
+					kv->SetString("selfName", m_szSelfName);
+					kv->SetString("selfText", m_szSelfText);
+					kv->SetString("parentName", m_szParentName);
+					kv->SetString("parentText", m_szParentText);
+					kv->SetPtr("panel", this);
+					PostMessage(g_AP, kv);
+					m_bAddToHudSent = true;
+				}
 			}
-		}*/
-		
+		}
+
+		if (!engine->IsInGame()) 
+			return;
+
+		//TODO: this is a work around for the SetVisible not working properly - need to figure out why it does what it does
 		if(!m_bDraw)
 		{
 			SetPaintEnabled(false);
@@ -235,22 +174,27 @@ namespace vgui
 		else
 		{
 			SetPaintEnabled(true);
-			SetPaintBackgroundEnabled(true);
+			SetPaintBackgroundEnabled(m_bShowPanel);
 		}
-
-		if(cl_teamcolourhud.GetBool())
+		
+		if(m_bShowPanel)
 		{
-			C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
-
-			if( !(FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer )) )
+			if(m_bCustomBackroundColor)
+				SetBgColor(m_ColorBackgroundCustom);
+			else if(cl_teamcolourhud.GetBool())
 			{
-				Color teamColor = g_PR->GetTeamColor( pPlayer->GetTeamNumber() );
-				m_ColorTeamBackground = Color(teamColor.r(), teamColor.g(), teamColor.b(), m_iTeamColourAlpha);
-				SetBgColor(m_ColorTeamBackground);
+				C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
+				if( !(FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer )) )
+				{
+					Color teamColor = g_PR->GetTeamColor( pPlayer->GetTeamNumber() );
+					m_ColorTeamBackground = Color(teamColor.r(), teamColor.g(), teamColor.b(), m_iTeamColourAlpha);
+					SetBgColor(m_ColorTeamBackground);
+				}
 			}
+			else
+				SetBgColor(m_ColorBackground);
 		}
-		else
-			SetBgColor(m_ColorBackground);
 
 		int alignOffsetX, alignOffsetY;
 
@@ -280,9 +224,6 @@ namespace vgui
 			alignOffsetY = 0;
 		}
 
-		if (!engine->IsInGame()) 
-			return;
-
 		// Get the screen width/height
 		int iScreenWide, iScreenTall;
 		vgui::surface()->GetScreenSize( iScreenWide, iScreenTall );
@@ -300,21 +241,28 @@ namespace vgui
 			//recalculate text sizes
 			vgui::surface()->GetTextSize(m_hfHeaderText[m_iHeaderTextSize*3 + 2], m_wszHeaderText, m_iHeaderTextWidth, m_iHeaderTextHeight);
 			vgui::surface()->GetTextSize(m_hfHeaderIcon[m_iHeaderIconSize*3 + 2], m_wszHeaderIcon, m_iHeaderIconWidth, m_iHeaderIconHeight);
+			UpdateQBPositions();
 		}
 
 		SetPos(m_flScaleX * m_iX + alignOffsetX,  m_flScaleY * m_iY + alignOffsetY);
-		SetSize( m_iWidth, m_iHeight );
 
 		if(m_bCheckUpdates)
 		{
-			for(int i = 0; i < m_iQBars; ++i)
+			if(m_flCheckUpdateFlagTime == -1) 
+				m_flCheckUpdateFlagTime = gpGlobals->curtime;
+
+			if(m_flCheckUpdateFlagTime + BARUPDATE_WAITTIME > gpGlobals->curtime)
 			{
-				if(!m_bUpdateRecieved[i])
-					break;
+				for(int i = 0; i < m_iItems; ++i)
+				{
+					if(!m_bUpdateRecieved[i])
+						return;
+				}
 			}
+			m_flCheckUpdateFlagTime = -1;
 
 			//if we got here then they have all been updated
-			for(int i = 0; i < m_iQBars; ++i)
+			for(int i = 0; i < m_iItems; ++i)
 			//clear all updateReceived flags
 				m_bUpdateRecieved[i] = false;
 			//clear check update flag
@@ -334,23 +282,23 @@ namespace vgui
 		int m_iColumnOffset[] = {0,0,0,0,0,0};
 		int m_iRowOffset[] = {0,0,0,0,0,0};	
 
-		for(int i = 0; i < m_iQBars; ++i)
+		for(int i = 0; i < m_iItems; ++i)
 		{
-			int iWidth, iHeight,iBarOffsetX, iBarOffsetY;
-			m_QBars[i]->GetPanelPositioningData(iWidth, iHeight,iBarOffsetX, iBarOffsetY);
+			int iWidth, iHeight, iOffsetX, iOffsetY;
+			m_QBars[i]->GetPanelPositioningData(iWidth, iHeight, iOffsetX, iOffsetY);
 
-			if(iBarOffsetX > m_iColumnOffset[iColumn])
-				m_iColumnOffset[iColumn] = iBarOffsetX;
+			if(iOffsetX > m_iColumnOffset[iColumn])
+				m_iColumnOffset[iColumn] = iOffsetX;
 			if(iWidth > m_iColumnWidth[iColumn])
 				m_iColumnWidth[iColumn] = iWidth;
 
-			if(iBarOffsetY > m_iRowOffset[iRow])
-				m_iRowOffset[iRow] = iBarOffsetY;
+			if(iOffsetY > m_iRowOffset[iRow])
+				m_iRowOffset[iRow] = iOffsetY;
 			if(iHeight > m_iRowHeight[iRow])
 				m_iRowHeight[iRow] = iHeight;
 
 			++iColumn;
-			if(iColumn >= m_qb_iColumns)	
+			if(iColumn >= m_iItemColumns)	
 			{
 				iColumn = 0;
 				++iRow;
@@ -363,20 +311,22 @@ namespace vgui
 		int iColumnWidths = 0;
 		int iRowHeights = 0;
 
-		for(int i = 0; i < m_iQBars; ++i)
+		for(int i = 0; i < m_iItems; ++i)
 		{
 			int iPosX, iPosY;
 	
-			iPosX = m_qb_iPositionX + iColumnWidths + m_iColumnOffset[iColumn] + (iColumn+1) * m_qb_iBarMarginHorizontal * m_flScale;
-			iPosY = m_qb_iPositionY + iRowHeights + m_iRowOffset[iRow] + (iRow+1) * m_qb_iBarMarginVertical * m_flScale;
+			iPosX = (m_iItemPositionX + iColumnWidths + iColumn * m_iItemMarginHorizontal) * m_flScale;
+			iPosY = (m_iItemPositionY + iRowHeights + iRow * m_iItemMarginVertical) * m_flScale;
 
 			m_QBars[i]->SetPos( iPosX, iPosY );
+			m_QBars[i]->SetPosOffset( m_iColumnOffset[iColumn], m_iRowOffset[iRow] );
+			m_QBars[i]->SetSize( m_iColumnWidth[iColumn] * m_flScale, m_iRowHeight[iRow] * m_flScale);
 					
-			if(i != m_iQBars -1)
+			if(i != m_iItems -1)
 				//if not the last one
 			{
 				iColumnWidths += m_iColumnWidth[iColumn++];
-				if(iColumn >= m_qb_iColumns)	
+				if(iColumn >= m_iItemColumns)	
 				{
 					iColumnWidths = 0;
 					iColumn = 0;
@@ -386,36 +336,43 @@ namespace vgui
 		}
 
 		//now we can calculate the overall size of the quantity panel for automatic resizing!
-		for(;iColumn < ( m_iQBars < m_qb_iColumns ? m_iQBars : m_qb_iColumns );)
+		for(;iColumn < ( m_iItems < m_iItemColumns ? m_iItems : m_iItemColumns );)
 		//make sure its calculated from the last (used) column incase we started a new row
 			iColumnWidths += m_iColumnWidth[iColumn++];
 		//include the height of the row
 		iRowHeights += m_iRowHeight[iRow++];
 
-		int iX1 = m_qb_iPositionX + iColumnWidths + (iColumn+1) * m_qb_iBarMarginHorizontal * m_flScale;
-		int iY1 = m_qb_iPositionY + iRowHeights + (iRow+1) * m_qb_iBarMarginVertical * m_flScale;
+		int iX1 = 0;
+		int iY1 = 0;
+
+		if(iColumnWidths > 0)
+			iX1 = m_iItemPositionX + iColumnWidths + iColumn * m_iItemMarginHorizontal;
+			
+		if(iRowHeights > 0)
+			iY1 = m_iItemPositionY + iRowHeights + iRow * m_iItemMarginVertical;
 
 		//these are used to get equal padding on either side
 		bool HeaderTextLeft = false;
 		bool HeaderTextTop = false;
 		bool HeaderIconLeft = false;
 		bool HeaderIconTop = false;
-		
-		if( m_iHeaderTextX < m_qb_iPositionX || m_iHeaderIconX < m_qb_iPositionX )
-			if(m_iHeaderTextX < m_iHeaderIconX)
+
+		if( m_iHeaderTextX < m_iItemPositionX || m_iHeaderIconX < m_iItemPositionX )
+			if(m_iHeaderTextX < m_iHeaderIconX && m_bShowHeaderText)
 				HeaderTextLeft = true;
-			else
+			else if(m_bShowHeaderIcon)
 				HeaderIconLeft = true;
-		if( m_iHeaderTextY < m_qb_iPositionY || m_iHeaderIconY < m_qb_iPositionY )
-			if(m_iHeaderTextY < m_iHeaderIconY)
+		if( m_iHeaderTextY < m_iItemPositionY || m_iHeaderIconY < m_iItemPositionY )
+			if(m_iHeaderTextY < m_iHeaderIconY && m_bShowHeaderText)
 				HeaderTextTop = true;
-			else
+			else if(m_bShowHeaderIcon)
 				HeaderIconTop = true;
-		
-		if( (m_iHeaderTextX + m_iHeaderTextWidth) > iX1 || (m_iHeaderIconX + m_iHeaderIconWidth) > iX1 )
+	
+
+		if( (m_iHeaderTextX + m_iHeaderTextWidth) > iX1 && m_bShowHeaderText || (m_iHeaderIconX + m_iHeaderIconWidth) > iX1 && m_bShowHeaderIcon )
 		//if header text or header icon is furthest right
 		{
-			if((m_iHeaderTextX + m_iHeaderTextWidth) > (m_iHeaderIconX + m_iHeaderIconWidth))
+			if( (m_iHeaderTextX + m_iHeaderTextWidth) > (m_iHeaderIconX + m_iHeaderIconWidth) && m_bShowHeaderText )
 			// if header text is furthest right
 			{
 				if(HeaderTextLeft)
@@ -426,9 +383,9 @@ namespace vgui
 					iX1 = m_iHeaderTextX + m_iHeaderTextWidth + m_iHeaderIconX; //then use the xpadding of the header icon on the right
 				else
 				//if header text is furthest right and bars left
-					iX1 = m_iHeaderTextX + m_iHeaderTextWidth + (m_qb_iPositionX + m_qb_iBarMarginHorizontal); //then use the xpadding of the bars
+					iX1 = m_iHeaderTextX + m_iHeaderTextWidth + m_iItemPositionX; //then use the xpadding of the bars
 			}
-			else
+			else if(m_bShowHeaderIcon)
 			//if header icon is furthest right
 			{
 				if(HeaderTextLeft)
@@ -439,20 +396,20 @@ namespace vgui
 					iX1 = m_iHeaderIconX + m_iHeaderIconWidth + m_iHeaderIconX; //then use the xpadding of the header icon on the right
 				else
 				//if header icon is furthest right and bars left
-					iX1 = m_iHeaderIconX + m_iHeaderIconWidth + (m_qb_iPositionX + m_qb_iBarMarginHorizontal); //then use the xpadding of the bars on the right
+					iX1 = m_iHeaderIconX + m_iHeaderIconWidth + m_iItemPositionX; //then use the xpadding of the bars on the right
 			}
 		}
 		else
 		{
 			if(HeaderTextLeft)
 			//if bars are furthest right and text furthest left
-				iX1 = iX1 - m_qb_iBarMarginHorizontal + m_iHeaderTextX; //then use the xpadding of the header text on the right
+				iX1 = iX1 - m_iItemMarginHorizontal + m_iHeaderTextX; //then use the xpadding of the header text on the right
 			else if(HeaderIconLeft)
 			//if bars are furthest right and icon furthest left
-				iX1 = iX1 - m_qb_iBarMarginHorizontal + m_iHeaderIconX; //then use the xpadding of the header icon on the right
+				iX1 = iX1 - m_iItemMarginHorizontal + m_iHeaderIconX; //then use the xpadding of the header icon on the right
 			else
 			//if bars are furthest right and left
-				iX1 = iX1 + m_qb_iPositionX; //then use the xpadding of the bars
+				iX1 = iX1 + m_iItemPositionX; //then use the xpadding of the bars
 		}
 
 			/***************************/
@@ -460,11 +417,10 @@ namespace vgui
 			/***************************/
 			/***************************/
 
-
-		if( (m_iHeaderTextY + m_iHeaderTextHeight) > iY1 || (m_iHeaderIconY + m_iHeaderIconHeight) > iY1 )
+		if( (m_iHeaderTextY + m_iHeaderTextHeight) > iY1 && m_bShowHeaderText || (m_iHeaderIconY + m_iHeaderIconHeight) > iY1 && m_bShowHeaderIcon )
 		//if header text or header icon is furthest bottom
 		{
-			if((m_iHeaderTextY + m_iHeaderTextHeight) > (m_iHeaderIconY + m_iHeaderIconHeight))
+			if((m_iHeaderTextY + m_iHeaderTextHeight) > (m_iHeaderIconY + m_iHeaderIconHeight) && m_bShowHeaderText)
 			// if header text is furthest bottom
 			{
 				if(HeaderTextTop)
@@ -475,9 +431,9 @@ namespace vgui
 					iY1 = m_iHeaderTextY + m_iHeaderTextHeight + m_iHeaderIconY; //then use the xpadding of the header icon on the right
 				else
 				//if header text is furthest bottom and bars top
-					iY1 = m_iHeaderTextY + m_iHeaderTextHeight + (m_qb_iPositionY + m_qb_iBarMarginVertical); //then use the xpadding of the bars
+					iY1 = m_iHeaderTextY + m_iHeaderTextHeight + m_iItemPositionY; //then use the xpadding of the bars
 			}
-			else
+			else if(m_bShowHeaderIcon)
 			//if header icon is furthest bottom
 			{
 				if(HeaderTextTop)
@@ -488,33 +444,39 @@ namespace vgui
 					iY1 = m_iHeaderIconY + m_iHeaderIconHeight + m_iHeaderIconY; //then use the xpadding of the header icon on the right
 				else
 				//if header icon is furthest bottom and bars top
-					iY1 = m_iHeaderIconY + m_iHeaderIconHeight + (m_qb_iPositionY + m_qb_iBarMarginVertical); //then use the xpadding of the bars on the right
+					iY1 = m_iHeaderIconY + m_iHeaderIconHeight + m_iItemPositionY; //then use the xpadding of the bars on the right
 			}
 		}
 		else
 		{
 			if(HeaderTextTop)
 			//if bars are furthest bottom and text furthest top
-				iY1 = iY1 - m_qb_iBarMarginVertical + m_iHeaderTextY; //then use the xpadding of the header text on the right
+				iY1 = iY1 - m_iItemMarginVertical + m_iHeaderTextY; //then use the xpadding of the header text on the right
 			else if(HeaderIconTop)
 			//if bars are furthest bottom and icon furthest top
-				iY1 = iY1 - m_qb_iBarMarginVertical + m_iHeaderIconY; //then use the xpadding of the header icon on the right
+				iY1 = iY1 - m_iItemMarginVertical + m_iHeaderIconY; //then use the xpadding of the header icon on the right
 			else
 			//if bars are furthest bottom and top
-				iY1 = iY1 + m_qb_iPositionY; //then use the xpadding of the bars
+				iY1 = iY1 + m_iItemPositionY; //then use the xpadding of the bars
 		}		
 
-		m_iWidth = iX1 * m_flScale; 
-		m_iHeight = iY1 * m_flScale;
-		
+		if(m_iHeight != iY1 * m_flScale || m_iWidth != iX1 * m_flScale)
+		{
+			m_iWidth = iX1 * m_flScale; 
+			m_iHeight = iY1 * m_flScale;
+			SetSize(m_iWidth, m_iHeight);
+		}
 	}
-
-	void FFQuantityPanel::SetHeaderText(wchar_t *newHeaderText) { 
+	
+	void FFQuantityPanel::SetHeaderText( wchar_t *newHeaderText, bool bUpdateQBPositions ) { 
 		wcscpy( m_wszHeaderText, newHeaderText ); 
 		//RecalculateHeaderTextDimentions
 		vgui::surface()->GetTextSize(m_hfHeaderText[m_iHeaderTextSize*3 + 2], m_wszHeaderText, m_iHeaderTextWidth, m_iHeaderTextHeight);
+		if(bUpdateQBPositions)
+			UpdateQBPositions();
+		
 	}
-	void FFQuantityPanel::SetHeaderIconChar(char *newHeaderIconChar)
+	void FFQuantityPanel::SetHeaderIconChar( char *newHeaderIconChar, bool bUpdateQBPositions )
 	{
 		char szIconChar[5];
 		Q_snprintf( szIconChar, 2, "%s%", newHeaderIconChar );
@@ -522,46 +484,222 @@ namespace vgui
 
 		//RecalculateHeaderIconDimentions
 		vgui::surface()->GetTextSize(m_hfHeaderIcon[m_iHeaderIconSize*3 + 2], m_wszHeaderIcon, m_iHeaderIconWidth, m_iHeaderIconHeight);
+		if(bUpdateQBPositions)
+			UpdateQBPositions();
 	}
 
-	void FFQuantityPanel::SetHeaderTextSize(int iSize)
+	void FFQuantityPanel::SetHeaderTextSize( int iSize, bool bUpdateQBPositions )
 	{
-		m_iHeaderTextSize = iSize;
+		if(m_iHeaderTextSize != iSize)
+		{
+			m_iHeaderTextSize = iSize;
+			if(bUpdateQBPositions)
+				UpdateQBPositions();
+		}
 	}
-	void FFQuantityPanel::SetHeaderIconSize(int iSize)
+	void FFQuantityPanel::SetHeaderIconSize( int iSize, bool bUpdateQBPositions )
 	{
-		m_iHeaderIconSize = iSize;
+		if(m_iHeaderIconSize != iSize)
+		{
+			m_iHeaderIconSize = iSize;
+			if(bUpdateQBPositions)
+				UpdateQBPositions();
+		}
 	}
 
-	void FFQuantityPanel::SetHeaderTextVisible(bool bIsVisible) { 
-		m_bShowHeaderText = bIsVisible;
+	void FFQuantityPanel::SetHeaderTextVisible( bool bIsVisible, bool bUpdateQBPositions ) 
+	{ 
+		if(m_bShowHeaderText != bIsVisible)
+		{
+			m_bShowHeaderText = bIsVisible;
+			if(bUpdateQBPositions)
+				UpdateQBPositions();
+		}
 	}
-	void FFQuantityPanel::SetHeaderIconVisible(bool bIsVisible) { 
-		m_bShowHeaderIcon = bIsVisible;
+	void FFQuantityPanel::SetHeaderIconVisible( bool bIsVisible, bool bUpdateQBPositions ) 
+	{ 
+		if(m_bShowHeaderIcon != bIsVisible)
+		{
+			m_bShowHeaderIcon = bIsVisible;
+			if(bUpdateQBPositions)
+				UpdateQBPositions();
+		}
 	}
 
 	void FFQuantityPanel::SetHeaderTextColor( Color newHeaderTextColor ) { m_ColorHeaderText = newHeaderTextColor; }
 	void FFQuantityPanel::SetHeaderIconColor( Color newHeaderIconColor ) { m_ColorHeaderIcon = newHeaderIconColor; }
-	void FFQuantityPanel::SetHeaderTextPosition( int iPositionX, int iPositionY ) { m_iHeaderTextX = iPositionX; m_iHeaderTextY = iPositionY; }
-	void FFQuantityPanel::SetHeaderIconPosition( int iPositionX, int iPositionY ) { m_iHeaderIconX = iPositionX; m_iHeaderIconY = iPositionY; }
-	void FFQuantityPanel::SetHeaderTextShadow(bool bHasShadow) { m_bHeaderTextShadow = bHasShadow; }
-	void FFQuantityPanel::SetHeaderIconShadow(bool bHasShadow) { m_bHeaderIconShadow = bHasShadow; }
+
+	void FFQuantityPanel::SetHeaderTextPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions ) 
+	{ 
+		m_iHeaderTextX = iPositionX; 
+		m_iHeaderTextY = iPositionY; 
+		if(bUpdateQBPositions)
+			UpdateQBPositions();
+	}
+	void FFQuantityPanel::SetHeaderIconPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions )
+	{ 
+		m_iHeaderIconX = iPositionX; 
+		m_iHeaderIconY = iPositionY;
+		if(bUpdateQBPositions)
+			UpdateQBPositions(); 
+	}
+
+	void FFQuantityPanel::SetHeaderTextShadow( bool bHasShadow) { m_bHeaderTextShadow = bHasShadow; }
+	void FFQuantityPanel::SetHeaderIconShadow( bool bHasShadow) { m_bHeaderIconShadow = bHasShadow; }
 	
-	void FFQuantityPanel::SetBarsVisible(bool bIsVisible)
+	void FFQuantityPanel::SetBarsVisible( bool bIsVisible, bool bUpdateQBPositions )
 	{
-		for(int i = 0; i < m_iQBars; ++i)
-		{
+		for(int i = 0; i < m_iItems; ++i)
 			m_QBars[i]->SetVisible(bIsVisible);
-		}
+
+		if(bUpdateQBPositions)
+			UpdateQBPositions();
 	}
 	
-	void FFQuantityPanel::OnChildDimentionsChanged (KeyValues* data)
+	void FFQuantityPanel::OnStyleDataRecieved( KeyValues *kvStyleData )
+	{
+		KeyValues* kvDefaultStyleData = GetDefaultStyleData();	
+		bool bUpdateQBPositions = false;
+		//TODO: THIS PROPERLY
+
+		int iX = kvStyleData->GetInt("x", kvDefaultStyleData->GetInt("x", -1));
+		if(m_iX != iX && iX != -1)
+			m_iX = iX;
+
+		int iY = kvStyleData->GetInt("y", kvDefaultStyleData->GetInt("y", -1));
+		if(m_iY != iY && iY != -1)
+			m_iY = iY;
+
+
+		int iHorizontalAlign = kvStyleData->GetInt("alignH", kvDefaultStyleData->GetInt("alignH", -1));
+		if(m_iHorizontalAlign != iHorizontalAlign && iHorizontalAlign != -1)
+		{
+			m_iHorizontalAlign = iHorizontalAlign;
+			bUpdateQBPositions = true;
+		}
+
+		int iVerticalAlign = kvStyleData->GetInt("alignV", kvDefaultStyleData->GetInt("alignV", -1));
+		if(m_iVerticalAlign != iVerticalAlign && iVerticalAlign != -1)
+		{
+			m_iVerticalAlign = iVerticalAlign;
+			bUpdateQBPositions = true;
+		}
+
+		int iColumns = kvStyleData->GetInt("columns", kvDefaultStyleData->GetInt("columns", -1));
+		if(m_iItemColumns != iColumns && iColumns != -1)
+		{
+			m_iItemColumns = iColumns;
+			bUpdateQBPositions = true;
+		}
+
+		int iItemsX = kvStyleData->GetInt("itemsX", kvDefaultStyleData->GetInt("itemsX", -1));
+		if(m_iItemPositionX != iItemsX && iItemsX != -1)
+		{
+			m_iItemPositionX = iItemsX;
+			bUpdateQBPositions = true;
+		}
+
+		int iItemsY = kvStyleData->GetInt("itemsY", kvDefaultStyleData->GetInt("itemsY", -1));
+		if(m_iItemPositionY != iItemsY && iItemsY != -1)
+		{
+			m_iItemPositionY = iItemsY;
+			bUpdateQBPositions = true;
+		}
+
+		int iPanelColorCustom = kvStyleData->GetInt("panelColorCustom", kvDefaultStyleData->GetInt("panelColorCustom", -1));
+		if((iPanelColorCustom == 1 ? true : false) != m_bCustomBackroundColor && iPanelColorCustom != -1)
+			m_bCustomBackroundColor = !m_bCustomBackroundColor;
+
+		int iPanelRed = kvStyleData->GetInt("panelRed", kvDefaultStyleData->GetInt("panelRed", -1));
+		int iPanelGreen = kvStyleData->GetInt("panelGreen", kvDefaultStyleData->GetInt("panelGreen", -1));
+		int iPanelBlue = kvStyleData->GetInt("panelBlue", kvDefaultStyleData->GetInt("panelBlue", -1));
+		int iPanelAlpha = kvStyleData->GetInt("panelAlpha", kvDefaultStyleData->GetInt("panelAlpha", -1));
+
+		bool bValidColor = false;
+
+		Color color = Color(iPanelRed, iPanelGreen, iPanelBlue, iPanelAlpha);
+		if(iPanelRed != -1 && iPanelGreen != -1 && iPanelBlue != -1 && iPanelAlpha != -1)
+			bValidColor = true;
+
+		if(m_ColorBackgroundCustom != color && bValidColor)
+				m_ColorBackgroundCustom = color;
+
+		int iShowHeaderText = kvStyleData->GetInt("showHeaderText", kvDefaultStyleData->GetInt("showHeaderText", -1));
+		if((iShowHeaderText == 1 ? true : false) != m_bShowHeaderText && iShowHeaderText != -1)
+		{
+			SetHeaderTextVisible(!m_bShowHeaderText, false);
+			bUpdateQBPositions = true;
+		}
+
+		int iHeaderTextShadow = kvStyleData->GetInt("headerTextShadow", kvDefaultStyleData->GetInt("headerTextShadow", -1));
+		if((iHeaderTextShadow == 1 ? true : false) != m_bHeaderTextShadow && iHeaderTextShadow != -1)
+			SetHeaderTextShadow(!m_bHeaderTextShadow);
+
+		int iHeaderTextSize = kvStyleData->GetInt("headerTextSize", kvDefaultStyleData->GetInt("headerTextSize", -1));
+		if(m_iHeaderTextSize != iHeaderTextSize && iHeaderTextSize != -1)
+		{
+			SetHeaderTextSize(iHeaderTextSize, false);
+			bUpdateQBPositions = true;
+		}
+
+		int iHeaderTextX = kvStyleData->GetInt("headerTextX", kvDefaultStyleData->GetInt("headerTextX", -1));
+		int iHeaderTextY = kvStyleData->GetInt("headerTextY", kvDefaultStyleData->GetInt("headerTextY", -1));
+		if((m_iHeaderTextX != iHeaderTextX && iHeaderTextX != -1) || (m_iHeaderTextY != iHeaderTextY && iHeaderTextY != -1))
+		{
+			SetHeaderTextPosition(iHeaderTextX, iHeaderTextY, false);
+			bUpdateQBPositions = true;
+		}
+
+		int iShowHeaderIcon = kvStyleData->GetInt("showHeaderIcon", kvDefaultStyleData->GetInt("showHeaderIcon", -1));
+		if((iShowHeaderIcon == 1 ? true : false) != m_bShowHeaderIcon && iShowHeaderIcon != -1)
+		{
+			SetHeaderIconVisible(!m_bShowHeaderIcon, false);
+			bUpdateQBPositions = true;
+		}
+
+		int iHeaderIconShadow = kvStyleData->GetInt("headerIconShadow", kvDefaultStyleData->GetInt("headerIconShadow", -1));
+		if((iHeaderIconShadow == 1 ? true : false) != m_bHeaderIconShadow && iHeaderIconShadow != -1)
+			SetHeaderIconShadow(!m_bHeaderIconShadow);
+
+		int iHeaderIconSize = kvStyleData->GetInt("headerIconSize", kvDefaultStyleData->GetInt("headerIconSize", -1));
+		if(m_iHeaderIconSize != iHeaderIconSize && iHeaderIconSize != -1)
+		{
+			SetHeaderIconSize(iHeaderIconSize, false);
+			bUpdateQBPositions = true;
+		}
+
+		int iHeaderIconX = kvStyleData->GetInt("headerIconX", kvDefaultStyleData->GetInt("headerIconX", -1));
+		int iHeaderIconY = kvStyleData->GetInt("headerIconY", kvDefaultStyleData->GetInt("headerIconY", -1));
+		if((m_iHeaderIconX != iHeaderIconX && iHeaderIconX != -1) || (m_iHeaderIconY != iHeaderIconY && iHeaderIconY != -1))
+			SetHeaderIconPosition(iHeaderIconX, iHeaderIconY);
+
+		int iShowPanel = kvStyleData->GetInt("showPanel", kvDefaultStyleData->GetInt("showPanel", -1));
+		if((iShowPanel == 1 ? true : false) != m_bShowPanel && iShowPanel != -1)
+			m_bShowPanel = !m_bShowPanel;
+		
+		int iItemMarginHorizontal = kvStyleData->GetInt("barMarginHorizontal", kvDefaultStyleData->GetInt("barMarginHorizontal", -1));
+		int iItemMarginVertical = kvStyleData->GetInt("barMarginVertical", kvDefaultStyleData->GetInt("barMarginVertical", -1));
+		if((m_iItemMarginHorizontal != iItemMarginHorizontal && iItemMarginHorizontal != -1) || (m_iItemMarginVertical != iItemMarginVertical && iItemMarginVertical != -1))
+		{
+			m_iItemMarginHorizontal = iItemMarginHorizontal;
+			m_iItemMarginVertical = iItemMarginVertical;
+			bUpdateQBPositions = true;
+		}		
+
+		for(int i = 0; i < m_iItems; ++i)
+			m_QBars[i]->SetStyle(kvStyleData, kvDefaultStyleData);
+
+		if(bUpdateQBPositions)
+			UpdateQBPositions();
+	}
+
+	void FFQuantityPanel::OnChildDimentionsChanged( KeyValues *data )
 	{
 		int id = data->GetInt("id",-1);
 
 		//loop and see if it matches the pointer
 		//data->GetPtr("panel") 
-		if(id != -1 && id < m_iQBars)
+		if(id != -1 && id < m_iItems)
 		{
 			m_bUpdateRecieved[id] = true;
 
@@ -571,173 +709,11 @@ namespace vgui
 		}
 	}
 
-	FFQuantityBar* FFQuantityPanel::AddChild(const char *pElementName)
+	FFQuantityBar* FFQuantityPanel::AddChild( const char *pElementName )
 	{
-		FFQuantityBar* newQBar = new FFQuantityBar(this, pElementName, m_iQBars); 
-		m_QBars[m_iQBars++] = newQBar;
+		FFQuantityBar* newQBar = new FFQuantityBar(this, pElementName, m_iItems); 
+		m_QBars[m_iItems++] = newQBar;
+
 		return newQBar;
-	}
-	
-	void FFQuantityPanel::OnShowBarChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->ShowBar(m_qb_bShowBar);
-	}
-	void FFQuantityPanel::OnShowBarBackgroundChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->ShowBarBackground(m_qb_bShowBarBackground);
-	}
-	void FFQuantityPanel::OnShowBarBorderChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->ShowBarBorder(m_qb_bShowBarBorder);
-	}
-	void FFQuantityPanel::OnShowIconChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->ShowIcon(m_qb_bShowIcon);
-	}
-	void FFQuantityPanel::OnShowLabelChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->ShowLabel(m_qb_bShowLabel);
-	}
-	void FFQuantityPanel::OnShowAmountChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->ShowAmount(m_qb_bShowAmount);
-	}
-	
-	void FFQuantityPanel::OnBarSizeChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetBarSize(m_qb_iBarWidth,m_qb_iBarHeight);
-	}
-
-	void FFQuantityPanel::OnBarBorderWidthChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetBarBorderWidth(m_qb_iBarBorderWidth);
-	}
-	void FFQuantityPanel::OnIntensityValuesChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			if(!m_QBars[i]->IsIntensityValuesFixed()) //so that we dont alter ones set in code! SG levels - Pipes (whatever/etc)
-				m_QBars[i]->SetIntensityControl(m_qb_iIntensity_red,m_qb_iIntensity_orange,m_qb_iIntensity_yellow,m_qb_iIntensity_green);
-	}
-	
-	void FFQuantityPanel::OnColorBarChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetBarColor(Color(m_qb_iColorBar_r,m_qb_iColorBar_g,m_qb_iColorBar_b,m_qb_iColorBar_a));
-	}
-	void FFQuantityPanel::OnColorBarBackgroundChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetBarBackgroundColor(Color(m_qb_iColorBarBackground_r,m_qb_iColorBar_g,m_qb_iColorBarBackground_b,m_qb_iColorBarBackground_a));
-	}
-	void FFQuantityPanel::OnColorBarBorderChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetBarBorderColor(Color(m_qb_iColorBarBorder_r,m_qb_iColorBarBorder_g,m_qb_iColorBarBorder_b,m_qb_iColorBarBorder_a));
-	}
-	
-	void FFQuantityPanel::OnColorIconChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetIconColor(Color(m_qb_iColorIcon_r,m_qb_iColorIcon_g,m_qb_iColorIcon_b,m_qb_iColorIcon_a));
-	}
-	void FFQuantityPanel::OnColorLabelChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetLabelColor(Color(m_qb_iColorLabel_r,m_qb_iColorLabel_g,m_qb_iColorLabel_b,m_qb_iColorLabel_a));
-	}
-	void FFQuantityPanel::OnColorAmountChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetAmountColor(Color(m_qb_iColorAmount_r,m_qb_iColorAmount_g,m_qb_iColorAmount_b,m_qb_iColorAmount_a));
-	}
-	
-	void FFQuantityPanel::OnColorModeBarChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetBarColorMode(m_qb_iColorModeBar);
-	}
-	void FFQuantityPanel::OnColorModeBarBackgroundChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetBarBackgroundColorMode(m_qb_iColorModeBarBackground);
-	}
-	void FFQuantityPanel::OnColorModeBarBorderChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetBarBorderColorMode(m_qb_iColorModeBarBorder);
-	}
-	void FFQuantityPanel::OnColorModeIconChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetIconColorMode(m_qb_iColorModeIcon);
-	}
-	void FFQuantityPanel::OnColorModeLabelChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetLabelColorMode(m_qb_iColorModeLabel);
-	}
-	void FFQuantityPanel::OnColorModeAmountChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetAmountColorMode(m_qb_iColorModeAmount);
-	}
-
-	void FFQuantityPanel::OnSizeLabelChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetLabelSize(m_qb_iSizeLabel);
-	}
-
-	void FFQuantityPanel::OnSizeIconChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetIconSize(m_qb_iSizeIcon);
-	}
-	void FFQuantityPanel::OnSizeAmountChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetAmountSize(m_qb_iSizeAmount);
-	}
-
-	void FFQuantityPanel::OnIconShadowChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetIconFontShadow(m_qb_bShadowIcon);
-	}
-
-	void FFQuantityPanel::OnLabelShadowChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetLabelFontShadow(m_qb_bShadowLabel);
-	}
-	
-	void FFQuantityPanel::OnAmountShadowChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetAmountFontShadow(m_qb_bShadowAmount);
-	}
-
-	void FFQuantityPanel::OnIconOffsetChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetIconOffset(m_qb_iOffsetIconX, m_qb_iOffsetIconY);
-	}
-	void FFQuantityPanel::OnLabelOffsetChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetLabelOffset(m_qb_iOffsetLabelX, m_qb_iOffsetLabelY);
-	}
-	void FFQuantityPanel::OnAmountOffsetChanged(  )
-	{
-		for(int i = 0; i < m_iQBars; i++)
-			m_QBars[i]->SetAmountOffset(m_qb_iOffsetAmountX, m_qb_iOffsetAmountY);
 	}
 }

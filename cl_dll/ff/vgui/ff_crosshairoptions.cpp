@@ -141,9 +141,6 @@ CFFCrosshairOptions::CFFCrosshairOptions(Panel *parent, char const *panelName) :
 	kv2->deleteThis();
 
 	LoadControlSettings("resource/ui/FFOptionsSubCrosshairs.res");
-
-	// Now load settings
-	Load();
 }
 //-----------------------------------------------------------------------------
 // Purpose: Allow all inner options to be enabled or disabled quickly
