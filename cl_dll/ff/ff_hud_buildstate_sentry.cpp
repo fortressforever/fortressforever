@@ -142,7 +142,7 @@ void CHudBuildStateSentry::VidInit()
 		tempString = L"SENTRY";
 
 	SetHeaderText(tempString);
-	SetHeaderIconChar("R");
+	SetHeaderIconChar("Z");
 
 	m_qbSentryHealth->SetLabelText("#FF_ITEM_HEALTH");
 	m_qbSentryHealth->SetIconChar(":");
@@ -206,6 +206,8 @@ void CHudBuildStateSentry::OnTick()
 		SetVisible(false);
 		m_qbSentryHealth->SetVisible(false);
 		m_qbSentryLevel->SetVisible(false);
+		// reset to level 1 icon
+		SetHeaderIconChar("A");
 	}
 	else if(bBuilt && !m_bBuilt)
 	//show quantity bars
@@ -246,6 +248,20 @@ void CHudBuildStateSentry::MsgFunc_SentryMsg(bf_read &msg)
     int iHealth = (int) msg.ReadByte();
     int iMaxHealth = (int) msg.ReadByte();
 	int iLevel = (int) msg.ReadByte();
+
+	// set icon according to SG level
+	switch(iLevel)
+	{
+	case 2: // level 2
+		SetHeaderIconChar("B");
+		break;
+	case 3: // level 3
+		SetHeaderIconChar("C");
+		break;
+	default: // level 1 or unknown level
+		SetHeaderIconChar("A");
+		break;
+	}
 
 	m_qbSentryLevel->SetAmount(iLevel);
 	m_qbSentryHealth->SetAmount((int)((float)iHealth/100 * iMaxHealth));

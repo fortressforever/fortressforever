@@ -142,7 +142,7 @@ void CHudBuildStateDispenser::VidInit()
 		tempString = L"DISPENSER";
 
 	SetHeaderText(tempString);
-	SetHeaderIconChar("S");
+	SetHeaderIconChar("Y");
 
 	m_qbDispenserHealth->SetLabelText("#FF_ITEM_HEALTH");
 	m_qbDispenserHealth->SetIconChar(":");
