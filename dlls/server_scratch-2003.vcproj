@@ -3828,6 +3828,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath=".\ff\ff_sevtest.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_shield.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_team.cpp">
 			</File>
 			<File
