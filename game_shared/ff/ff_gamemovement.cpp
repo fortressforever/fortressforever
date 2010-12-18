@@ -42,7 +42,7 @@
 //static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
 #define SV_TRIMPMAX 5000.0f
 //static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define SV_TRIMPTRIGGERSPEED 750.0f
+#define SV_TRIMPTRIGGERSPEED 550.0f
 //static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
