@@ -23,12 +23,26 @@
 	#include "ff_utils.h"
 #else
 	#include "ff_buildableobjects_shared.h"
+	#include "ff_item_backpack.h"
 	#include "omnibot_interface.h"
 #endif
 
 //=============================================================================
 // CFFWeaponSpanner
 //=============================================================================
+
+
+ConVar ffdev_spanner_bagcells("ffdev_spanner_bagcells", "10", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Spanner: How many base cells in created bags (excluding armor steal)");
+#define FFDEV_SPANNER_BAGCELLS ffdev_spanner_bagcells.GetFloat()
+
+ConVar ffdev_spanner_bagthrowforceup("ffdev_spanner_bagthrowforceup", "1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Spanner: vertical throw force on bags ");
+#define FFDEV_SPANNER_BAGTHROWFORCEUP ffdev_spanner_bagthrowforceup.GetFloat()
+
+ConVar ffdev_spanner_bagthrowforce("ffdev_spanner_bagthrowforce", "200", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Spanner: horizontal throw force on bags ");
+#define FFDEV_SPANNER_BAGTHROWFORCE ffdev_spanner_bagthrowforce.GetFloat()
+
+ConVar ffdev_spanner_bagsonlyonsteal("ffdev_spanner_bagsonlyonsteal", "1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Spanner: only spawn bags when you steal armor with spanner");
+#define FFDEV_SPANNER_BAGSONLYONSTEAL ffdev_spanner_bagsonlyonsteal.GetBool()
 
 class CFFWeaponSpanner : public CFFWeaponMeleeBase
 {
@@ -40,6 +54,7 @@ public:
 	CFFWeaponSpanner();
 
 	virtual bool CanBeSelected();
+	virtual void Precache();
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SPANNER; }
 
 private:
@@ -75,6 +90,16 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_spanner);
 //----------------------------------------------------------------------------
 CFFWeaponSpanner::CFFWeaponSpanner() 
 {
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Precache
+//----------------------------------------------------------------------------
+void CFFWeaponSpanner::Precache( void )
+{
+	PrecacheScriptSound( "Spanner.armorbreak" );
+
+	BaseClass::Precache();
 }
 
 //-----------------------------------------------------------------------------
@@ -153,6 +178,33 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			// we'll apply damage - and we shouldn't apply damage -
 			// we're just helping peeps get armor over here
 			return;
+		}
+		else
+		{
+			// AfterShock: Create bag when hitting enemies with spanner!
+#ifdef GAME_DLL
+
+			int iArmorStolen = (pHitPlayer->GetArmor() / 2);
+			if ( iArmorStolen > 0)
+			{
+				pHitPlayer->m_iArmor.GetForModify() = clamp( pHitPlayer->GetArmor() - iArmorStolen, 0, pHitPlayer->GetMaxArmor() );
+				EmitSound("Spanner.armorbreak");
+			}
+
+			if ( !FFDEV_SPANNER_BAGSONLYONSTEAL || (iArmorStolen > 0))
+			{
+				Vector vecForward;
+				AngleVectors( pPlayer->GetAbsAngles(), &vecForward );
+
+				CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", ( (pHitPlayer->GetAbsOrigin() + vecForward *0.1) + Vector(0.0f, 0.0f, -1) ), QAngle(0, random->RandomFloat(0.0f, 359.0f), 0) );
+				if( pBackpack )
+				{
+					pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_SPANNER_BAGCELLS + (iArmorStolen/2) );
+					//pBackpack->SetAbsVelocity( Vector( random->RandomFloat(-100.0f, 0.0f), random->RandomFloat(-100.0f, 100.0f), random->RandomFloat(20.0f, 100.0f) ) );
+					pBackpack->SetAbsVelocity( Vector(vecForward.x, vecForward.y, FFDEV_SPANNER_BAGTHROWFORCEUP) * FFDEV_SPANNER_BAGTHROWFORCE );
+				}
+			}
+#endif
 		}
 	}
 	else
