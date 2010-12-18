@@ -55,7 +55,7 @@ ConVar ffdev_bluepipes_normaldmg("ffdev_bluepipes_normaldmg", "70.0", FCVAR_REPL
 ConVar ffdev_bluepipes_size("ffdev_bluepipes_size", "2.0", FCVAR_REPLICATED, "(int) size of bounding box, 1-5 are good values");
 ConVar ffdev_bluepipes_usefusetime("ffdev_bluepipes_usefusetime", "1", FCVAR_REPLICATED,"Use the blue pipe fuse time?" );
 ConVar ffdev_bluepipes_num_bounces("ffdev_bluepipes_num_bounces", "0", FCVAR_REPLICATED );
-ConVar ffdev_bluepipes_sticky("ffdev_bluepipes_sticky", "1", FCVAR_REPLICATED );
+ConVar ffdev_bluepipes_sticky("ffdev_bluepipes_sticky", "0", FCVAR_REPLICATED );
 ConVar ffdev_pipe_sticky("ffdev_pipe_sticky", "1", FCVAR_REPLICATED );
 
 #define FFDEV_PIPE_STICKY ffdev_pipe_sticky.GetBool()
