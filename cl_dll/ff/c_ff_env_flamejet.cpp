@@ -44,16 +44,16 @@
 // -> Defrag
 //static ConVar ffdev_flame_eye_angle_bias( "ffdev_flame_eye_angle_bias", "0.5", 0, "Lerp factor for blending between eye & muzzle angles. 0.0 = Use muzzle angles as velocity. 1.0 = Use eye angles.", true, 0.0f, true, 1.0f );
 
-//ConVar ffdev_flame_dlight_color_r( "ffdev_flame_dlight_color_r", "255" );
-//ConVar ffdev_flame_dlight_color_g( "ffdev_flame_dlight_color_g", "144" );
-//ConVar ffdev_flame_dlight_color_b( "ffdev_flame_dlight_color_b", "64" );
-//ConVar ffdev_flame_dlight_color_e( "ffdev_flame_dlight_color_e", "5" );
-//ConVar ffdev_flame_dlight_startradius_min( "ffdev_flame_dlight_startradius_min", "80" );
-//ConVar ffdev_flame_dlight_startradius_max( "ffdev_flame_dlight_startradius_max", "100" );
-//ConVar ffdev_flame_dlight_endradius_min( "ffdev_flame_dlight_endradius_min", "130" );
-//ConVar ffdev_flame_dlight_endradius_max( "ffdev_flame_dlight_endradius_max", "150" );
-//ConVar ffdev_flame_dlight_rate( "ffdev_flame_dlight_rate", "0.2", 0, "Attach a light to one of the flame particles every X seconds." );
-//ConVar ffdev_flame_dlight_style( "ffdev_flame_dlight_style", "6", 0, "0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker)");
+ConVar ffdev_flame_dlight_color_r( "ffdev_flame_dlight_color_r", "255" );
+ConVar ffdev_flame_dlight_color_g( "ffdev_flame_dlight_color_g", "144" );
+ConVar ffdev_flame_dlight_color_b( "ffdev_flame_dlight_color_b", "64" );
+ConVar ffdev_flame_dlight_color_e( "ffdev_flame_dlight_color_e", "5" );
+ConVar ffdev_flame_dlight_startradius_min( "ffdev_flame_dlight_startradius_min", "80" );
+ConVar ffdev_flame_dlight_startradius_max( "ffdev_flame_dlight_startradius_max", "100" );
+ConVar ffdev_flame_dlight_endradius_min( "ffdev_flame_dlight_endradius_min", "130" );
+ConVar ffdev_flame_dlight_endradius_max( "ffdev_flame_dlight_endradius_max", "150" );
+ConVar ffdev_flame_dlight_rate( "ffdev_flame_dlight_rate", "0.2", 0, "Attach a light to one of the flame particles every X seconds." );
+ConVar ffdev_flame_dlight_style( "ffdev_flame_dlight_style", "6", 0, "0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker)");
 
 //=============================================================================
 // Globals
@@ -330,13 +330,13 @@ void C_FFFlameJet::Update(float fTimeDelta)
 			if ( m_pDLight )
 			{
 				m_pDLight->origin = vecStart;
-				m_pDLight->radius = random->RandomFloat(80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/, 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/) * flDLightScale;
+				m_pDLight->radius = random->RandomFloat(/*80.0f*/ffdev_flame_dlight_startradius_min.GetFloat(), /*100.0f*/ffdev_flame_dlight_startradius_max.GetFloat()) * flDLightScale;
 				m_pDLight->die = gpGlobals->curtime + (0.18/*ffdev_flame_dietime_min.GetFloat()*/ * 0.5);
-				m_pDLight->color.r = 255;//ffdev_flame_dlight_color_r.GetInt();
-				m_pDLight->color.g = 144;//ffdev_flame_dlight_color_g.GetInt();
-				m_pDLight->color.b = 64;//ffdev_flame_dlight_color_b.GetInt();
-				m_pDLight->color.exponent = 5;//ffdev_flame_dlight_color_e.GetInt();
-				m_pDLight->style = 6;//ffdev_flame_dlight_style.GetInt();
+				m_pDLight->color.r = ffdev_flame_dlight_color_r.GetInt();//255;
+				m_pDLight->color.g = ffdev_flame_dlight_color_g.GetInt();//144;
+				m_pDLight->color.b = ffdev_flame_dlight_color_b.GetInt();//64;
+				m_pDLight->color.exponent = ffdev_flame_dlight_color_e.GetInt();//5;
+				m_pDLight->style = ffdev_flame_dlight_style.GetInt();//6;
 			}
 		}
 
@@ -380,11 +380,11 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				pParticle->m_Collisiontime = tr.fraction * pParticle->m_Dietime;
 				pParticle->m_HitSurfaceNormal = tr.plane.normal;
 
-				if (gpGlobals->curtime - 0.2f/*ffdev_flame_dlight_rate.GetFloat()*/ > m_fLastParticleDLightTime )
+				if (gpGlobals->curtime - /*0.2f*/ffdev_flame_dlight_rate.GetFloat() > m_fLastParticleDLightTime )
 				{
 					pParticle->m_fDLightDieTime = gpGlobals->curtime + pParticle->m_Dietime;
-					pParticle->m_fDLightStartRadius = random->RandomFloat(80.0f/*ffdev_flame_dlight_startradius_min.GetFloat()*/, 100.0f/*ffdev_flame_dlight_startradius_max.GetFloat()*/) * flDLightScale;
-					pParticle->m_fDLightEndRadius = random->RandomFloat(130.0f/*ffdev_flame_dlight_endradius_min.GetFloat()*/, 150.0f/*ffdev_flame_dlight_endradius_max.GetFloat()*/) * flDLightScale;
+					pParticle->m_fDLightStartRadius = random->RandomFloat(ffdev_flame_dlight_startradius_min.GetFloat()/*80.0f*/, ffdev_flame_dlight_startradius_max.GetFloat()/*100.0f*/) * flDLightScale;
+					pParticle->m_fDLightEndRadius = random->RandomFloat(ffdev_flame_dlight_endradius_min.GetFloat()/*130.0f*/, ffdev_flame_dlight_endradius_max.GetFloat()/*150.0f*/) * flDLightScale;
 
 					// -------------------------------------
 					// Dynamic light stuff
@@ -400,11 +400,11 @@ void C_FFFlameJet::Update(float fTimeDelta)
 						pParticle->m_pDLight->origin = pParticle->m_Origin;
 						pParticle->m_pDLight->radius = pParticle->m_fDLightStartRadius;
 						pParticle->m_pDLight->die = pParticle->m_fDLightDieTime;
-						pParticle->m_pDLight->color.r = 255;//ffdev_flame_dlight_color_r.GetInt();
-						pParticle->m_pDLight->color.g = 144;//ffdev_flame_dlight_color_g.GetInt();
-						pParticle->m_pDLight->color.b = 64;//ffdev_flame_dlight_color_b.GetInt();
-						pParticle->m_pDLight->color.exponent = 5;//ffdev_flame_dlight_color_e.GetInt();
-						pParticle->m_pDLight->style = 6;//ffdev_flame_dlight_style.GetInt();
+						pParticle->m_pDLight->color.r = ffdev_flame_dlight_color_r.GetInt();//255;
+						pParticle->m_pDLight->color.g = ffdev_flame_dlight_color_g.GetInt();//144;
+						pParticle->m_pDLight->color.b = ffdev_flame_dlight_color_b.GetInt();//64;
+						pParticle->m_pDLight->color.exponent = ffdev_flame_dlight_color_e.GetInt();//5;
+						pParticle->m_pDLight->style = ffdev_flame_dlight_style.GetInt();//6;
 
 						m_fLastParticleDLightTime = gpGlobals->curtime;
 					}
@@ -505,7 +505,7 @@ void C_FFFlameJet::RenderParticles(CParticleRenderIterator *pIterator)
 
 			// also fade the dynamic light
 			if ( pParticle->m_pDLight && gpGlobals->curtime < pParticle->m_fDLightDieTime )
-				pParticle->m_pDLight->color.exponent = 5.0f/*ffdev_flame_dlight_color_e.GetFloat()*/ * ((pParticle->m_Dietime - pParticle->m_Lifetime) / 0.2f/*ffdev_flame_fadeout_time.GetFloat()*/);
+				pParticle->m_pDLight->color.exponent = /*5.0f*/ffdev_flame_dlight_color_e.GetFloat() * ((pParticle->m_Dietime - pParticle->m_Lifetime) / 0.2f/*ffdev_flame_fadeout_time.GetFloat()*/);
 		}
 
 		// Fade in smoke after a delay
