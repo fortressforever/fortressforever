@@ -79,6 +79,9 @@ namespace vgui
 		
 		void SetBarsVisible( bool bIsVisible, bool bUpdateQBPositions = true );
 
+		void SetTeamColor( Color teamColor );
+		Color GetTeamColor();
+
 		virtual KeyValues* GetDefaultStyleData() = 0;
 	
 		void UpdateQBPositions();
@@ -119,7 +122,7 @@ namespace vgui
 		
 		int m_iTeamColourAlpha;
 		bool m_bCustomBackroundColor;
-		Color m_ColorTeamBackground;
+		Color m_ColorTeam;
 		Color m_ColorBackground;
 		Color m_ColorBackgroundCustom;
 

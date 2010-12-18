@@ -73,23 +73,24 @@ namespace vgui
 
 		m_pShadow = new CheckButton(this, "Shadow", "#GameUI_DropShadow");
 		m_pShow = new CheckButton(this, "Show", "#GameUI_Show");
-		
+		m_pFontTahoma = new CheckButton(this, "FontTahoma", "#GameUI_UseTahomaFont");
+
 		m_pColorMode = new ComboBox(this, "ColorModeCombo", 4, false);
-		KeyValues *kv = new KeyValues("CM");
+		KeyValues *kv = new KeyValues("Custom");
 		kv->SetInt("Custom", 0);
 		m_pColorMode->AddItem("#GameUI_Custom", kv);
 		kv->deleteThis();
-		kv = new KeyValues("CM");
+		kv = new KeyValues("Stepped");
 		kv->SetInt("Stepped", 1);
 		m_pColorMode->AddItem("#GameUI_Stepped", kv);
 		kv->deleteThis();
-		kv = new KeyValues("CM");
+		kv = new KeyValues("Faded");
 		kv->SetInt("Faded", 2);
 		m_pColorMode->AddItem("#GameUI_Faded", kv);
 		kv->deleteThis();
-		kv = new KeyValues("CM");
-		kv->SetInt("TeamColoured", 3);
-		m_pColorMode->AddItem("#GameUI_TeamColoured", kv);
+		kv = new KeyValues("TeamColored");
+		kv->SetInt("TeamColored", 3);
+		m_pColorMode->AddItem("#GameUI_TeamColored", kv);
 		kv->deleteThis();
 		m_pColorMode->ActivateItemByRow(0);
 
@@ -179,6 +180,8 @@ namespace vgui
 			kvComponent->SetInt("offsetX", m_pOffsetX->GetValue());
 		if(m_pOffsetY->IsEnabled())
 			kvComponent->SetInt("offsetY", m_pOffsetY->GetValue());
+		if(m_pFontTahoma->IsEnabled())
+			kvPreset->SetInt("fontTahoma", m_pFontTahoma->IsSelected());
 
 		//update the main preset, damn thing copies rather than keeping the same pointer
 		//
@@ -210,9 +213,6 @@ namespace vgui
 		m_bPresetLoading = true;
 		//this disables the preset options from registering these changes as a preset update!
 
-		bool bBarMatched = false, bBarBackgroundMatched = false, bBarBorderMatched = false;
-		bool bLabelMatched = false, bIconMatched = false, bAmountMatched = false;
-
 		m_pBarWidth->SetValue(kvPreset->GetInt("barWidth", 60));
 		m_pBarHeight->SetValue(kvPreset->GetInt("barHeight", 10));
 		m_pBarBorderWidth->SetValue(kvPreset->GetInt("barBorderWidth", 1));
@@ -226,157 +226,165 @@ namespace vgui
 			iMenuItemToShow = m_pComponentSelection->GetActiveItem();
 		//remove and readd the items so we can detect if there's something wrong with the loading preset
 	
-		//lets remove the current items
+		//lets remove the current component items
 		m_pComponentSelection->RemoveAll();
 		
-		//lets rebuild the menuItems
-		//TODO: change to find key?
-		for (KeyValues *kvComponent = kvPreset->GetFirstTrueSubKey(); kvComponent != NULL; kvComponent = kvComponent->GetNextTrueSubKey())
+		// now lets rebuild the dropdown with current data
+
+		//see if component data exists
+		KeyValues *kvComponent = kvPreset->FindKey("Bar");
+		if(kvComponent)	
+		//if it does
+			//add it to the drop down
+			m_pComponentSelection->AddItem("#GameUI_Bar", kvComponent);
+		else
 		{
-			//they are added in the order they were in for the vdf
-			const char* m_szName = kvComponent->GetName();
-			if(Q_stricmp(m_szName, "bar") == 0)
-			{	
-				bBarMatched = true;
-				m_pComponentSelection->AddItem("#GameUI_Bar", kvComponent);
-			}
-			else if(Q_stricmp(m_szName, "barBorder") == 0)
-			{
-				bBarBorderMatched = true;
-				m_pComponentSelection->AddItem("#GameUI_BarBorder", kvComponent);
-			}
-			else if(Q_stricmp(m_szName, "barBackground") == 0)
-			{
-				bBarBackgroundMatched = true;
-				m_pComponentSelection->AddItem("#GameUI_BarBackground", kvComponent);
-			}
-			else if(Q_stricmp(m_szName, "label") == 0)
-			{
-				bLabelMatched = true;
-				m_pComponentSelection->AddItem("#GameUI_Label", kvComponent);
-			}
-			else if(Q_stricmp(m_szName, "icon") == 0)
-			{
-				bIconMatched = true;
-				m_pComponentSelection->AddItem("#GameUI_Icon", kvComponent);
-			}
-			else if(Q_stricmp(m_szName, "amount") == 0)
-			{
-				bAmountMatched = true;
-				m_pComponentSelection->AddItem("#GameUI_Amount", kvComponent);
-			}
-			else if(Q_stricmp(m_szName, "barWidth") == 0 || Q_stricmp(m_szName, "barHeight") == 0 || 
-				Q_stricmp(m_szName, "barMarginHorizontal") == 0 || Q_stricmp(m_szName, "barMarginVertical") == 0 || 
-				Q_stricmp(m_szName, "barBorderWidth") == 0)
-			{
-				//do nothing
-				DevMsg("I got here, ff_customhudoptions_stylepresets.h - remove if elmo forgot");
-			}
-			else
-			{
-				DevMsg("Couldn't match item preset key %s reverting to globals for any missing items\n", m_szName);
-			}
+			//create the component using these defaults
+			kvComponent = new KeyValues("Bar");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 2);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 255);
+			//add it to the drop down
+			m_pComponentSelection->AddItem("#GameUI_Bar", kvComponent);
+			
+			//also add component data to the preset
+			kvPreset->AddSubKey(kvComponent);
 		}
-		if(m_pComponentSelection->GetItemCount() != 6)
-		//if there are items missing
+		
+		kvComponent = kvPreset->FindKey("BarBorder");
+		if(kvComponent)	
+		//if it does
+			//add it to the drop down
+			m_pComponentSelection->AddItem("#GameUI_BarBorder", kvComponent);
+		else
 		{
-			//make any items that were missing, worry about what to do with regards to values later
-			if(!bBarMatched)
-			{
-				KeyValues *kvComponent = new KeyValues("bar");
-				kvComponent->SetInt("show", 1);
-				kvComponent->SetInt("colorMode", 2);
-				kvComponent->SetInt("red", 255);
-				kvComponent->SetInt("green", 255);
-				kvComponent->SetInt("blue", 255);
-				kvComponent->SetInt("alpha", 255);
-				m_pComponentSelection->AddItem("#GameUI_Bar", kvComponent);
-			}
-			if(!bBarBorderMatched)
-			{
-				KeyValues *kvComponent = new KeyValues("barBorder");
-				kvComponent->SetInt("show", 1);
-				kvComponent->SetInt("colorMode", 0);
-				kvComponent->SetInt("red", 255);
-				kvComponent->SetInt("green", 255);
-				kvComponent->SetInt("blue", 255);
-				kvComponent->SetInt("alpha", 255);
-				m_pComponentSelection->AddItem("#GameUI_BarBorder", kvComponent);
-			}
-			if(!bBarBackgroundMatched)
-			{
-				KeyValues *kvComponent = new KeyValues("barBackground");
-				kvComponent->SetInt("show", 1);
-				kvComponent->SetInt("colorMode", 2);
-				kvComponent->SetInt("red", 255);
-				kvComponent->SetInt("green", 255);
-				kvComponent->SetInt("blue", 255);
-				kvComponent->SetInt("alpha", 96);
-				m_pComponentSelection->AddItem("#GameUI_BarBackground", kvComponent);
-			}
-			if(!bLabelMatched)
-			{
-				KeyValues *kvComponent = new KeyValues("label");
-				kvComponent->SetInt("show", 1);
-				kvComponent->SetInt("colorMode", 0);
-				kvComponent->SetInt("red", 255);
-				kvComponent->SetInt("green", 255);
-				kvComponent->SetInt("blue", 255);
-				kvComponent->SetInt("alpha", 255);
-				kvComponent->SetInt("shadow", 0);
-				kvComponent->SetInt("size", 4);
-				kvComponent->SetInt("alignH", 0);
-				kvComponent->SetInt("alignV", 1);
-				kvComponent->SetInt("offsetX", -2);
-				kvComponent->SetInt("offsetY", 0);
-				m_pComponentSelection->AddItem("#GameUI_Label", kvComponent);
-			}
-			if(!bIconMatched)
-			{
-				KeyValues *kvComponent = new KeyValues("icon");
-				kvComponent->SetInt("show", 1);
-				kvComponent->SetInt("colorMode", 0);
-				kvComponent->SetInt("red", 255);
-				kvComponent->SetInt("green", 255);
-				kvComponent->SetInt("blue", 255);
-				kvComponent->SetInt("alpha", 255);
-				kvComponent->SetInt("shadow", 0);
-				kvComponent->SetInt("size", 4);
-				kvComponent->SetInt("alignH", 2);
-				kvComponent->SetInt("alignV", 1);
-				kvComponent->SetInt("offsetX", 2);
-				kvComponent->SetInt("offsetY", 0);
-				m_pComponentSelection->AddItem("#GameUI_Icon", kvComponent);
-			}
-			if(!bAmountMatched)
-			{
-				KeyValues *kvComponent = new KeyValues("amount");
-				kvComponent->SetInt("show", 1);
-				kvComponent->SetInt("colorMode", 0);
-				kvComponent->SetInt("red", 0);
-				kvComponent->SetInt("green", 0);
-				kvComponent->SetInt("blue", 0);
-				kvComponent->SetInt("alpha", 255);
-				kvComponent->SetInt("shadow", 0);
-				kvComponent->SetInt("size", 4);
-				kvComponent->SetInt("alignH", 1);
-				kvComponent->SetInt("alignV", 1);
-				kvComponent->SetInt("offsetX", 0);
-				kvComponent->SetInt("offsetY", 1);
-				m_pComponentSelection->AddItem("#GameUI_Amount", kvComponent);
-			}	
+			//create the component using these defaults
+			kvComponent = new KeyValues("BarBorder");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 255);
+			//add it to the drop down
+			m_pComponentSelection->AddItem("#GameUI_BarBorder", kvComponent);
+			
+			//also add component data to the preset
+			kvPreset->AddSubKey(kvComponent);
+		}
+		
+		kvComponent = kvPreset->FindKey("BarBackground");
+		if(kvComponent)	
+			m_pComponentSelection->AddItem("#GameUI_BarBackground", kvComponent);
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("BarBackground");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 2);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 96);
+			//add it to the drop down
+			m_pComponentSelection->AddItem("#GameUI_BarBackground", kvComponent);
+			
+			//also add component data to the preset
+			kvPreset->AddSubKey(kvComponent);
+		}
+		kvComponent = kvPreset->FindKey("Icon");
+		if(kvComponent)	
+			m_pComponentSelection->AddItem("#GameUI_Icon", kvComponent);
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("Icon");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 255);
+			kvComponent->SetInt("shadow", 0);
+			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("alignH", 2);
+			kvComponent->SetInt("alignV", 1);
+			kvComponent->SetInt("offsetX", 2);
+			kvComponent->SetInt("offsetY", 0);
+			//add it to the drop down
+			m_pComponentSelection->AddItem("#GameUI_Icon", kvComponent);
+			
+			//also add component data to the preset
+			kvPreset->AddSubKey(kvComponent);
+		}
+		
+		kvComponent = kvPreset->FindKey("Label");
+		if(kvComponent)
+			m_pComponentSelection->AddItem("#GameUI_Label", kvComponent);
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("Label");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 255);
+			kvComponent->SetInt("shadow", 0);
+			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("alignH", 0);
+			kvComponent->SetInt("alignV", 1);
+			kvComponent->SetInt("offsetX", -2);
+			kvComponent->SetInt("offsetY", 0);
+			kvComponent->SetInt("fontTahoma", 0);
+			//add it to the drop down
+			m_pComponentSelection->AddItem("#GameUI_Label", kvComponent);
+			
+			//also add component data to the preset
+			kvPreset->AddSubKey(kvComponent);
+		}
+		
+		kvComponent = kvPreset->FindKey("Amount");
+		if(kvComponent)	
+			m_pComponentSelection->AddItem("#GameUI_Amount", kvComponent);
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("Amount");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("red", 0);
+			kvComponent->SetInt("green", 0);
+			kvComponent->SetInt("blue", 0);
+			kvComponent->SetInt("alpha", 255);
+			kvComponent->SetInt("shadow", 0);
+			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("alignH", 1);
+			kvComponent->SetInt("alignV", 1);
+			kvComponent->SetInt("offsetX", 0);
+			kvComponent->SetInt("offsetY", 1);
+			kvComponent->SetInt("fontTahoma", 0);
+			//add it to the drop down
+			m_pComponentSelection->AddItem("#GameUI_Amount", kvComponent);
+			
+			//also add component data to the preset
+			kvPreset->AddSubKey(kvComponent);	
 		}
 
 		//select the item which was previously selected (might be default 0)
 		m_pComponentSelection->ActivateItemByRow(iMenuItemToShow);
 
-		UpdateControlsFromComponent(m_pComponentSelection->GetActiveItemUserData());
+		UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
 
 		m_bPresetLoading = false;
 		//this enables the preset options to register follwoing changes as a preset update!
 	}
 
-	void CFFCustomHudStylePresets::UpdateControlsFromComponent(KeyValues *kvComponent)
+	void CFFCustomHudStylePresets::UpdateComponentControls(KeyValues *kvComponent)
 	{
 		m_pShow->SetSelected(kvComponent->GetInt("show", 1));
 		m_pColorMode->ActivateItemByRow(kvComponent->GetInt("colorMode", 0));
@@ -414,6 +422,11 @@ namespace vgui
 			m_pOffsetY->SetValue(kvComponent->GetInt("offsetY", 0));
 		else
 			m_pOffsetY->SetValue(0);
+
+		if(m_pFontTahoma->IsEnabled())
+			m_pFontTahoma->SetSelected(kvComponent->GetInt("fontTahoma", 0));
+		else
+			m_pFontTahoma->SetSelected(false);
 	}
 
 	//-----------------------------------------------------------------------------
@@ -431,14 +444,21 @@ namespace vgui
 	void CFFCustomHudStylePresets::OnUpdateCombos(KeyValues *data)
 	{
 		if(m_bLoaded && !m_bPresetLoading && data->GetPtr("panel") == m_pComponentSelection)
+		//if we're changing component selection box (bar, barBorder, barBackground, icon, label, amount)
 		{
 			const char* m_szName = m_pComponentSelection->GetActiveItemUserData()->GetName();
 			if(!(Q_stricmp(m_szName, "Bar") == 0 || Q_stricmp(m_szName, "BarBorder") == 0 || Q_stricmp(m_szName, "BarBackground") == 0))
 			{
 				if(Q_stricmp(m_szName, "Icon") == 0)
+				{
+					m_pFontTahoma->SetEnabled(false);
 					m_pSize->SetRange(1, QUANTITYBARICONSIZES);
+				}
 				else
+				{
+					m_pFontTahoma->SetEnabled(true);
 					m_pSize->SetRange(1, QUANTITYBARFONTSIZES);
+				}
 
 				m_pShadow->SetEnabled(true);
 				m_pSize->SetEnabled(true);
@@ -457,6 +477,7 @@ namespace vgui
 			}
 			else
 			{
+				m_pFontTahoma->SetEnabled(false);
 				m_pShadow->SetEnabled(false);
 				m_pSize->SetEnabled(false);
 				m_pSizeLabel->SetEnabled(false);
@@ -472,10 +493,25 @@ namespace vgui
 				m_pAlignVLabel->SetEnabled(false);
 				m_pAlignLabel->SetEnabled(false);
 			}
-			UpdateControlsFromComponent(m_pComponentSelection->GetActiveItemUserData());
+			UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
 		}
 		else if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pColorMode))
+		{
+			const char* m_szName = m_pColorMode->GetActiveItemUserData()->GetName();
+			if(Q_stricmp(m_szName, "Custom") == 0)
+			{
+				m_pRed->SetEnabled(true);
+				m_pGreen->SetEnabled(true);
+				m_pBlue->SetEnabled(true);
+			}
+			else
+			{
+				m_pRed->SetEnabled(false);
+				m_pGreen->SetEnabled(false);
+				m_pBlue->SetEnabled(false);
+			}
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
+		}
 		else if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pAlignV))
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 		else if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pAlignH))

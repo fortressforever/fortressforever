@@ -16,11 +16,11 @@ CFFCustomHudAssignPresets::CFFCustomHudAssignPresets(Panel *parent, char const *
 	m_pArrangementPresetsClass = arrangementPresetsClass;
 
 	m_kvRequestedAssignments = new KeyValues("Assignments");
-	m_pPrimary = new ComboBox(this, "ParentCombo", 4, false);
-	m_pSecondary = new ComboBox(this, "ChildCombo", 4, false);
+	m_pPrimary = new ComboBox(this, "ParentCombo", 7, false);
+	m_pSecondary = new ComboBox(this, "ChildCombo", 7, false);
 
-	m_pStylePresets = new ComboBox(this, "StyleCombo", 4, false);
-	m_pArrangementPresets = new ComboBox(this, "ArrangementCombo", 4, false);
+	m_pStylePresets = new ComboBox(this, "StyleCombo", 7, false);
+	m_pArrangementPresets = new ComboBox(this, "ArrangementCombo", 7, false);
 
 	m_pUseDefault = new CheckButton(this, "UseDefault", "#GameUI_UseDefault");
 	m_pUseDefaultStyle = new CheckButton(this, "UseDefaultStyle", "##GameUI_UseDefault");
@@ -575,7 +575,9 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 				RegisterAssignmentChange(kvPrimary);
 		}
 
-		m_pStylePresets->SetEnabled(!m_pUseDefaultStyle->IsSelected());
+		//we don't want to enable the preset dropdown if usedefault is true
+		if(!(m_pUseDefault->IsSelected() && !m_pUseDefaultStyle->IsSelected()))
+			m_pStylePresets->SetEnabled(!m_pUseDefaultStyle->IsSelected());
 	}
 	else if(m_bLoaded && data->GetPtr("panel") == m_pUseDefaultArrangement)
 	{
@@ -631,7 +633,9 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 				RegisterAssignmentChange(kvPrimary);
 		}
 
-		m_pArrangementPresets->SetEnabled(!m_pUseDefaultArrangement->IsSelected());
+		//we don't want to enable the preset dropdown if usedefault is true
+		if(!(m_pUseDefault->IsSelected() && !m_pUseDefaultArrangement->IsSelected()))
+			m_pArrangementPresets->SetEnabled(!m_pUseDefaultArrangement->IsSelected());
 	}
 }
 
@@ -943,7 +947,8 @@ void CFFCustomHudAssignPresets::StylePresetDeleted(const char* pszDeletedPresetN
 }
 void CFFCustomHudAssignPresets::StylePresetAdded(const char* pszPresetName, KeyValues *kvPreset)
 {
-	m_pStylePresets->AddItem(pszPresetName, kvPreset);	
+	m_pStylePresets->AddItem(pszPresetName, kvPreset);
+	kvPreset->deleteThis();
 }
 	
 void CFFCustomHudAssignPresets::ArrangementPresetUpdated(const char* pszPresetName)

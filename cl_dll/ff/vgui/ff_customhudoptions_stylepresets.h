@@ -24,7 +24,7 @@ namespace vgui
 		virtual void SendDeletedPresetNameToPresetAssignment(const char *pszDeletedPresetName);
 		virtual void SendNewPresetNameToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset);
 
-		void UpdateControlsFromComponent(KeyValues *kvComponent);
+		void UpdateComponentControls(KeyValues *kvComponent);
 
 	private:
 		//-----------------------------------------------------------------------------
@@ -66,6 +66,7 @@ namespace vgui
 		
 		CheckButton		*m_pShadow;
 		CheckButton		*m_pShow;
+		CheckButton		*m_pFontTahoma;
 	};
 };
 

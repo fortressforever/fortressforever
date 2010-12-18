@@ -68,6 +68,9 @@ namespace vgui
 		m_iSizeLabel = 2;
 		m_iSizeAmount = 2;
 
+		m_bLabelFontTahoma = false;
+		m_bAmountFontTahoma = false;
+
 		m_bIconFontShadow = false;
 		m_bLabelFontShadow = false;
 		m_bAmountFontShadow = false;
@@ -103,6 +106,9 @@ namespace vgui
 		m_bShowAmount = true;
 		m_bShowAmountMax = true;
 
+		//do this just in case.
+		RecalculateAmountMaxPosition();
+
 		ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
 	}
 
@@ -120,6 +126,9 @@ namespace vgui
 			m_hfQuantityBarText[i*3] = qbScheme->GetFont( VarArgs("QuantityBar%d",i), true );
 			m_hfQuantityBarText[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityBarShadow%d",i), true );
 			m_hfQuantityBarText[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityBar%d",i), false );
+			m_hfQuantityBarTahomaText[i*3] = qbScheme->GetFont( VarArgs("QuantityBarTahoma%d",i), true );
+			m_hfQuantityBarTahomaText[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityBarTahomaShadow%d",i), true );
+			m_hfQuantityBarTahomaText[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityBarTahoma%d",i), false );
 		}	
 		for(int i = 0; i < QUANTITYBARICONSIZES; ++i)
 		{
@@ -140,81 +149,99 @@ namespace vgui
 		//now we've got settings lets update everything
 		RecalculateIconPosition();
 		RecalculateLabelPosition();
+		RecalculateAmountMaxPosition();
 		RecalculateQuantity();
 		//RecalculateAmountPosition(); <--gets called in Recalculate Quantity
 
  		BaseClass::ApplySchemeSettings( pScheme );
 	}
 
-	void FFQuantityBar::SetAmountFontShadow(bool bHasShadow) 
+	void FFQuantityBar::SetAmountFontShadow( bool bHasShadow ) 
 	{
 		m_bAmountFontShadow = bHasShadow;
 	}
-	void FFQuantityBar::SetIconFontShadow(bool bHasShadow) 
+	void FFQuantityBar::SetIconFontShadow( bool bHasShadow ) 
 	{
 		m_bIconFontShadow = bHasShadow;
 	}
-	void FFQuantityBar::SetLabelFontShadow(bool bHasShadow) 
+	void FFQuantityBar::SetLabelFontShadow( bool bHasShadow ) 
 	{
 		m_bLabelFontShadow = bHasShadow;
 	}
-	void FFQuantityBar::SetIconFontGlyph(bool bIconIsGlyph)
+	void FFQuantityBar::SetIconFontGlyph( bool bIconIsGlyph, bool bRecalculateBarPositioningOffset  )
 	{
 		m_bIconFontGlyph = bIconIsGlyph;
+		RecalculateIconPosition(bRecalculateBarPositioningOffset );
+	}	
+	void FFQuantityBar::SetLabelFontTahoma( bool bLabelFontTahoma, bool bRecalculateBarPositioningOffset  )
+	{
+		if(m_bLabelFontTahoma != bLabelFontTahoma)
+		{
+			m_bLabelFontTahoma = bLabelFontTahoma;
+			RecalculateLabelPosition(bRecalculateBarPositioningOffset );
+		}
+	}
+	void FFQuantityBar::SetAmountFontTahoma( bool bAmountFontTahoma, bool bRecalculateBarPositioningOffset  )
+	{
+		m_bAmountFontTahoma = bAmountFontTahoma;
+		RecalculateAmountPosition();
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset);
 	}
 
-
-	void FFQuantityBar::SetIconSize( int newIconSize )
+	
+	void FFQuantityBar::SetIconSize( int newIconSize, bool bRecalculateBarPositioningOffset  )
 	{
 		m_iSizeIcon = newIconSize;
-		RecalculateIconPosition();
+		RecalculateIconPosition(bRecalculateBarPositioningOffset );
 	}
-	void FFQuantityBar::SetLabelSize( int newLabelSize )
+	void FFQuantityBar::SetLabelSize( int newLabelSize, bool bRecalculateBarPositioningOffset  )
 	{
 		m_iSizeLabel = newLabelSize;
-		RecalculateLabelPosition();
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset );
 	}
-	void FFQuantityBar::SetAmountSize( int newAmountSize )
+	void FFQuantityBar::SetAmountSize( int newAmountSize, bool bRecalculateBarPositioningOffset  )
 	{
 		m_iSizeAmount = newAmountSize;
 		RecalculateAmountPosition();
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset);
 	}
 
-	void FFQuantityBar::SetAmount(int iAmount)
+	void FFQuantityBar::SetAmount( int iAmount )
 	{ 
-		m_iAmount = iAmount; 
+		if(m_iAmount != iAmount)
+		{
+			m_iAmount = iAmount; 
 
-		char szAmount[10];
-		Q_snprintf( szAmount, 5, "%i%", iAmount );
-		localize()->ConvertANSIToUnicode( szAmount, m_wszAmount, sizeof( m_wszAmount ) );
-		
-		RecalculateQuantity();
+			char szAmount[10];
+			Q_snprintf( szAmount, 5, "%i%", iAmount );
+			localize()->ConvertANSIToUnicode( szAmount, m_wszAmount, sizeof( m_wszAmount ) );
+			
+			RecalculateQuantity();
+		}
 	}
-	void FFQuantityBar::SetAmountMax(int iAmountMax)
+	void FFQuantityBar::SetAmountMax( int iAmountMax, bool bRecalculateBarPositioningOffset  )
 	{
-		if(iAmountMax != 0) // don't allow 0 cause that doesn't make sense - plus it'll crash with divide by 0 when calculating the colour!
+		if(m_iMaxAmount != iAmountMax && iAmountMax != 0) // don't allow 0 cause that doesn't make sense - plus it'll crash with divide by 0 when calculating the colour!
 		{
 			m_iMaxAmount = iAmountMax; 
 		
 			char szAmountMax[10];
 			Q_snprintf( szAmountMax, 5, "%i%", iAmountMax );
 			localize()->ConvertANSIToUnicode( szAmountMax, m_wszAmountMax, sizeof( m_wszAmountMax ) );
+			RecalculateQuantity();
+			RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset);
 		}
-
-		RecalculateQuantity();
-		RecalculateAmountMaxStringSize();
-		RecalculateComponentOffset(); 
 	}
 
-	void FFQuantityBar::SetIconChar(char *newIconChar)
+	void FFQuantityBar::SetIconChar( char *newIconChar, bool bRecalculateBarPositioningOffset  )
 	{ 					
 		char szIcon[5];
 		Q_snprintf( szIcon, 2, "%s%", newIconChar );
 		localize()->ConvertANSIToUnicode( szIcon, m_wszIcon, sizeof( m_wszIcon ) );
 		
-		RecalculateIconPosition();
+		RecalculateIconPosition(bRecalculateBarPositioningOffset );
 	}
-	void FFQuantityBar::SetLabelText(char *newLabelText)
+	void FFQuantityBar::SetLabelText( char *newLabelText, bool bRecalculateBarPositioningOffset  )
 	{
 		wchar_t *pszTemp = localize()->Find( newLabelText );
 
@@ -226,77 +253,96 @@ namespace vgui
 			Q_snprintf( szLabel, 32, "%s%", newLabelText );
 			localize()->ConvertANSIToUnicode( szLabel, m_wszLabel, sizeof( m_wszLabel ) );
 		}
-		RecalculateLabelPosition();
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset );
 	}
-	void FFQuantityBar::SetLabelText(wchar_t *newLabelText)
+	void FFQuantityBar::SetLabelText( wchar_t *newLabelText, bool bRecalculateBarPositioningOffset  )
 	{
 		wcscpy( m_wszLabel, newLabelText );
-		RecalculateLabelPosition();
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset );
 	}
 
-	void FFQuantityBar::SetBarWidth(int iBarWidth) 
+	void FFQuantityBar::SetBarWidth( int iBarWidth, bool bRecalculateBarPositioningOffset  ) 
 	{ 
-		if(m_iBarWidth != iBarWidth)
-		{
-			m_iBarWidth = iBarWidth; 
+		m_iBarWidth = iBarWidth; 
 
-			RecalculateIconPosition();
-			RecalculateLabelPosition();
-			RecalculateAmountPosition();
-		}
+		RecalculateIconPosition(bRecalculateBarPositioningOffset );
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset );
+		RecalculateAmountPosition();
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset);
 	}
-	void FFQuantityBar::SetBarHeight(int iBarHeight) 
+	void FFQuantityBar::SetBarHeight( int iBarHeight, bool bRecalculateBarPositioningOffset  ) 
 	{ 
-		if(m_iBarHeight != iBarHeight)
-		{
-			m_iBarHeight = iBarHeight; 
+		m_iBarHeight = iBarHeight; 
 
-			RecalculateIconPosition();
-			RecalculateLabelPosition();
-			RecalculateAmountPosition();
-		}
+		RecalculateIconPosition(bRecalculateBarPositioningOffset );
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset );
+		RecalculateAmountPosition();
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset);
+
 	}
-	void FFQuantityBar::SetBarSize(int iBarWidth, int iBarHeight) 
+	void FFQuantityBar::SetBarSize( int iBarWidth, int iBarHeight, bool bRecalculateBarPositioningOffset  ) 
 	{ 
-		if(m_iBarWidth != iBarWidth || m_iBarHeight != iBarHeight)
-		{
-			m_iBarWidth = iBarWidth; 
-			m_iBarHeight = iBarHeight;
+		m_iBarWidth = iBarWidth; 
+		m_iBarHeight = iBarHeight;
 
-			RecalculateIconPosition();
-			RecalculateLabelPosition();
-			RecalculateAmountPosition();
-		}
+		RecalculateIconPosition(bRecalculateBarPositioningOffset );
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset );
+		RecalculateAmountPosition();
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset);
 	}
 
-	void FFQuantityBar::SetBarBorderWidth(int iBarBorderWidth) { 
-		if(m_iBarBorderWidth != iBarBorderWidth)
-		{
-			m_iBarBorderWidth = iBarBorderWidth; 
-			RecalculateComponentOffset(); 
-		}
+	void FFQuantityBar::SetBarBorderWidth( int iBarBorderWidth, bool bRecalculateBarPositioningOffset  ) { 
+		m_iBarBorderWidth = iBarBorderWidth; 
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
 	}
-
-	void FFQuantityBar::SetBarOrientation(int iOrientation) { 
-		if(m_iBarOrientation != iOrientation)
-		{
-			m_iBarOrientation = iOrientation; 
-			RecalculateQuantity(); 
-		}
+	
+	void FFQuantityBar::SetBarOrientation( int iOrientation ) { 
+		m_iBarOrientation = iOrientation; 
+		RecalculateQuantity(); 
+		//TODO: recalculate others?
 	}
 
 	//TO-DO
 	//see if these change the dimentions and if an update is required - but first check if the value has really changed...
-	void FFQuantityBar::ShowBar(bool bShowBar) { m_bShowBar = bShowBar; RecalculateComponentOffset(); }
-	void FFQuantityBar::ShowBarBackground(bool bShowBarBackground) { m_bShowBarBackground = bShowBarBackground; RecalculateComponentOffset(); }
-	void FFQuantityBar::ShowBarBorder(bool bShowBarBorder) { m_bShowBarBorder = bShowBarBorder; RecalculateComponentOffset(); }
-	void FFQuantityBar::ShowIcon(bool bShowIcon) { m_bShowIcon = bShowIcon; RecalculateComponentOffset(); }
-	void FFQuantityBar::ShowLabel(bool bShowLabel) { m_bShowLabel = bShowLabel; RecalculateComponentOffset(); }
-	void FFQuantityBar::ShowAmount(bool bShowAmount) { m_bShowAmount = bShowAmount; RecalculateComponentOffset(); }
-	void FFQuantityBar::ShowAmountMax(bool bShowMax) { 
+	void FFQuantityBar::ShowBar( bool bShowBar, bool bRecalculateBarPositioningOffset  ) 
+	{ 
+		m_bShowBar = bShowBar;
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
+	}
+	void FFQuantityBar::ShowBarBackground( bool bShowBarBackground, bool bRecalculateBarPositioningOffset  ) 
+	{ 
+		m_bShowBarBackground = bShowBarBackground; 
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
+	}
+	void FFQuantityBar::ShowBarBorder( bool bShowBarBorder, bool bRecalculateBarPositioningOffset  ) 
+	{ 
+		m_bShowBarBorder = bShowBarBorder; 
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
+	}
+	void FFQuantityBar::ShowIcon( bool bShowIcon, bool bRecalculateBarPositioningOffset  ) 
+	{ 
+		m_bShowIcon = bShowIcon; 
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
+	}
+	void FFQuantityBar::ShowLabel( bool bShowLabel, bool bRecalculateBarPositioningOffset  ) 
+	{ 
+		m_bShowLabel = bShowLabel; 
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
+	}
+	void FFQuantityBar::ShowAmount( bool bShowAmount, bool bRecalculateBarPositioningOffset  ) { 
+		m_bShowAmount = bShowAmount; 
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
+	}
+	void FFQuantityBar::ShowAmountMax( bool bShowMax, bool bRecalculateBarPositioningOffset  ) { 
 		m_bShowAmountMax = bShowMax; 
-		RecalculateAmountMaxStringSize();
-		RecalculateComponentOffset(); 
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset);
 	}
 
 	void FFQuantityBar::SetBarColor( Color newBarColor ) { 
@@ -325,8 +371,22 @@ namespace vgui
 		RecalculateColor(m_ColorModeLabel, m_ColorLabel, m_ColorLabelCustom);
 	}
 	void FFQuantityBar::SetTeamColor( Color newTeamColor ) { 
-		m_ColorTeam = newTeamColor; 
-		//see which use team colour and update??
+		if(m_ColorTeam != newTeamColor)
+		{
+			m_ColorTeam = newTeamColor; 
+			if(m_ColorModeBar == COLOR_MODE_TEAMCOLORED)
+				RecalculateColor(m_ColorModeBar, m_ColorBar, m_ColorBarCustom);
+			if(m_ColorModeBarBorder == COLOR_MODE_TEAMCOLORED)
+				RecalculateColor(m_ColorModeBarBorder, m_ColorBarBorder, m_ColorBarBorderCustom);
+			if(m_ColorModeBarBackground == COLOR_MODE_TEAMCOLORED)
+				RecalculateColor(m_ColorModeBarBackground, m_ColorBarBackground, m_ColorBarBackgroundCustom);
+			if(m_ColorModeIcon == COLOR_MODE_TEAMCOLORED)
+				RecalculateColor(m_ColorModeIcon, m_ColorIcon, m_ColorIconCustom);
+			if(m_ColorModeLabel == COLOR_MODE_TEAMCOLORED)
+				RecalculateColor(m_ColorModeLabel, m_ColorLabel, m_ColorLabelCustom);
+			if(m_ColorModeAmount == COLOR_MODE_TEAMCOLORED)
+				RecalculateColor(m_ColorModeAmount, m_ColorAmount, m_ColorAmountCustom);
+		}
 	}
 
 	void FFQuantityBar::SetBarColorMode( int iColorModeBar ) { 
@@ -355,44 +415,95 @@ namespace vgui
 		RecalculateColor(m_ColorModeLabel, m_ColorLabel, m_ColorLabelCustom);
 	}
 
-	void FFQuantityBar::SetIconOffsetX(int iconOffsetX) { m_iOffsetXIcon = iconOffsetX; RecalculateIconPosition(); }
-	void FFQuantityBar::SetIconOffsetY(int iconOffsetY) { m_iOffsetYIcon = iconOffsetY; RecalculateIconPosition(); }
-	void FFQuantityBar::SetIconOffset(int iconOffsetX, int iconOffsetY) 
+	void FFQuantityBar::SetIconOffsetX( int iconOffsetX, bool bRecalculateBarPositioningOffset ) 
+	{ 
+		m_iOffsetXIcon = iconOffsetX; 
+		RecalculateIconPosition(bRecalculateBarPositioningOffset ); 
+	}
+	void FFQuantityBar::SetIconOffsetY( int iconOffsetY, bool bRecalculateBarPositioningOffset ) 
+	{ 
+		m_iOffsetYIcon = iconOffsetY; 
+		RecalculateIconPosition(bRecalculateBarPositioningOffset ); 
+	}
+	void FFQuantityBar::SetIconOffset( int iconOffsetX, int iconOffsetY, bool bRecalculateBarPositioningOffset ) 
 	{ 
 		m_iOffsetXIcon = iconOffsetX; 
 		m_iOffsetYIcon = iconOffsetY;
-		RecalculateIconPosition();
+		RecalculateIconPosition(bRecalculateBarPositioningOffset );
 	}
 
-	void FFQuantityBar::SetLabelOffsetX(int labelOffsetX) { m_iOffsetXLabel = labelOffsetX; RecalculateLabelPosition(); }
-	void FFQuantityBar::SetLabelOffsetY(int labelOffsetY) { m_iOffsetYLabel = labelOffsetY; RecalculateLabelPosition();}
-	void FFQuantityBar::SetLabelOffset(int labelOffsetX, int labelOffsetY) 
+	void FFQuantityBar::SetLabelOffsetX( int labelOffsetX, bool bRecalculateBarPositioningOffset ) 
+	{ 
+		m_iOffsetXLabel = labelOffsetX; 
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset ); 
+	}
+	void FFQuantityBar::SetLabelOffsetY( int labelOffsetY, bool bRecalculateBarPositioningOffset ) 
+	{ 
+		m_iOffsetYLabel = labelOffsetY; 
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset );
+	}
+	void FFQuantityBar::SetLabelOffset( int labelOffsetX, int labelOffsetY, bool bRecalculateBarPositioningOffset ) 
 	{ 
 		m_iOffsetXLabel = labelOffsetX; 
 		m_iOffsetYLabel = labelOffsetY; 
-		RecalculateLabelPosition(); 
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset ); 
 	}
 
-	void FFQuantityBar::SetAmountOffsetX(int amountOffsetX) { m_iOffsetXAmount = amountOffsetX; RecalculateAmountPosition(); }
-	void FFQuantityBar::SetAmountOffsetY(int amountOffsetY) { m_iOffsetYAmount = amountOffsetY; RecalculateAmountPosition(); }
-	void FFQuantityBar::SetAmountOffset(int amountOffsetX, int amountOffsetY) 
+	void FFQuantityBar::SetAmountOffsetX( int amountOffsetX, bool bRecalculateBarPositioningOffset ) 
+	{ 
+		m_iOffsetXAmount = amountOffsetX; 
+		RecalculateAmountPosition(); 
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset); 
+	}
+	void FFQuantityBar::SetAmountOffsetY( int amountOffsetY, bool bRecalculateBarPositioningOffset ) 
+	{ 
+		m_iOffsetYAmount = amountOffsetY; 
+		RecalculateAmountPosition(); 
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset); 
+	}
+	void FFQuantityBar::SetAmountOffset( int amountOffsetX, int amountOffsetY, bool bRecalculateBarPositioningOffset ) 
 	{ 
 		m_iOffsetXAmount = amountOffsetX; 
 		m_iOffsetYAmount = amountOffsetY; 
 		RecalculateAmountPosition(); 
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset); 
 	}
 
-	int FFQuantityBar::GetAmount() {return m_iAmount; }
+	int FFQuantityBar::GetAmount( ) {return m_iAmount; }
 		
-	void FFQuantityBar::SetLabelAlignmentHorizontal(int iAlignHLabel) { m_iAlignHLabel = iAlignHLabel; RecalculateLabelPosition(); }
-	void FFQuantityBar::SetAmountAlignmentHorizontal(int iAlignHAmount) { m_iAlignHAmount = iAlignHAmount; RecalculateAmountPosition(); }
-	void FFQuantityBar::SetIconAlignmentHorizontal(int iAlignHIcon) { m_iAlignHIcon = iAlignHIcon; RecalculateIconPosition(); }
+	void FFQuantityBar::SetLabelAlignmentHorizontal( int iAlignHLabel, bool bRecalculateBarPositioningOffset ) { 
+		m_iAlignHLabel = iAlignHLabel; 
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset ); 
+	}
+	void FFQuantityBar::SetAmountAlignmentHorizontal( int iAlignHAmount, bool bRecalculateBarPositioningOffset )
+	{
+		m_iAlignHAmount = iAlignHAmount; 
+		RecalculateAmountPosition(); RecalculateAmountMaxPosition(); 
+	}
+	void FFQuantityBar::SetIconAlignmentHorizontal( int iAlignHIcon, bool bRecalculateBarPositioningOffset ) 
+	{ 
+		m_iAlignHIcon = iAlignHIcon; 
+		RecalculateIconPosition(bRecalculateBarPositioningOffset ); 
+	}
 		
-	void FFQuantityBar::SetLabelAlignmentVertical(int iAlignVLabel) { m_iAlignVLabel = iAlignVLabel; RecalculateLabelPosition(); }
-	void FFQuantityBar::SetAmountAlignmentVertical(int iAlignVAmount) { m_iAlignVAmount = iAlignVAmount; RecalculateAmountPosition(); }
-	void FFQuantityBar::SetIconAlignmentVertical(int iAlignVIcon) { m_iAlignVIcon = iAlignVIcon; RecalculateIconPosition(); }
+	void FFQuantityBar::SetLabelAlignmentVertical( int iAlignVLabel, bool bRecalculateBarPositioningOffset ) 
+	{
+		m_iAlignVLabel = iAlignVLabel; 
+		RecalculateLabelPosition(bRecalculateBarPositioningOffset ); 
+	}
+	void FFQuantityBar::SetAmountAlignmentVertical( int iAlignVAmount, bool bRecalculateBarPositioningOffset ) 
+	{
+		m_iAlignVAmount = iAlignVAmount; 
+		RecalculateAmountPosition(); 
+		RecalculateAmountMaxPosition(bRecalculateBarPositioningOffset); 
+	}
+	void FFQuantityBar::SetIconAlignmentVertical( int iAlignVIcon, bool bRecalculateBarPositioningOffset ) 
+	{ 
+		m_iAlignVIcon = iAlignVIcon; 
+		RecalculateIconPosition(bRecalculateBarPositioningOffset ); 
+	}
 		
-	void FFQuantityBar::SetIntensityControl(int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale)
+	void FFQuantityBar::SetIntensityControl( int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale )
 	{
 		m_iIntensityRed = iRed;
 		m_iIntensityOrange = iOrange;
@@ -401,20 +512,20 @@ namespace vgui
 		m_bIntensityInvertScale = bInvertScale;
 	}
 
-	void FFQuantityBar::SetIntensityAmountScaled(bool bAmountScaled)
+	void FFQuantityBar::SetIntensityAmountScaled( bool bAmountScaled )
 	{
 		m_bIntensityAmountScaled = bAmountScaled;
 	}
-	void FFQuantityBar::SetIntensityValuesFixed(bool bvaluesFixed)
+	void FFQuantityBar::SetIntensityValuesFixed( bool bvaluesFixed )
 	{
 		m_bIntensityValuesFixed = bvaluesFixed;
 	}
-	bool FFQuantityBar::IsIntensityValuesFixed()
+	bool FFQuantityBar::IsIntensityValuesFixed( )
 	{
 		return m_bIntensityValuesFixed;
 	}
 
-	void FFQuantityBar::OnTick()
+	void FFQuantityBar::OnTick( )
 	{
 		if (!engine->IsInGame()) 
 			return;
@@ -436,8 +547,9 @@ namespace vgui
 
 			RecalculateIconPosition(false);
 			RecalculateLabelPosition(false);
-			RecalculateAmountPosition(false);
-			RecalculateComponentOffset();
+			RecalculateAmountPosition();
+			RecalculateAmountMaxPosition(false);
+			RecalculateBarPositioningOffset();
 			
 			//send update to parent for positioning	
 			if ( GetVParent() )
@@ -461,7 +573,7 @@ namespace vgui
 		}
 	}
 
-	void FFQuantityBar::GetPanelPositioningData(int& iWidth, int& iHeight, int& iOffsetX, int&  iOffsetY)
+	void FFQuantityBar::GetPanelPositioningData( int& iWidth, int& iHeight, int& iOffsetX, int&  iOffsetY )
 	{
 		iWidth = m_iWidth;
 		iHeight = m_iHeight;
@@ -469,13 +581,13 @@ namespace vgui
 		iOffsetY = m_iOffsetY;
 	}
 	
-	void FFQuantityBar::SetPosOffset(int iLeft, int iTop)
+	void FFQuantityBar::SetPosOffset( int iLeft, int iTop )
 	{
 		m_iOffsetOverrideX = iLeft;
 		m_iOffsetOverrideY = iTop;
 	}
 
-	void FFQuantityBar::RecalculateComponentOffset()
+	void FFQuantityBar::RecalculateBarPositioningOffset( )
 	{
 		int iX0 = 0;
 		int iY0 = 0;
@@ -500,31 +612,31 @@ namespace vgui
 			iX0 = m_iIconPosX;
 		if( m_bShowLabel && m_iLabelPosX < iX0 )
 			iX0 = m_iLabelPosX;
-		if( m_bShowAmount && m_iAmountPosX < iX0 )
-			iX0 = m_iAmountPosX;
+		if( m_bShowAmount && m_iAmountMaxPosX < iX0 )
+			iX0 = m_iAmountMaxPosX;
 
 		if( m_bShowIcon && m_iIconPosY < iY0 )
 			iY0 = m_iIconPosY;
 		if( m_bShowLabel && m_iLabelPosY < iY0 )
 			iY0 = m_iLabelPosY;
-		if( m_bShowAmount && m_iAmountPosY < iY0 )
-			iY0 = m_iAmountPosY;
+		if( m_bShowAmount && m_iAmountMaxPosY < iY0 )
+			iY0 = m_iAmountMaxPosY;
 
 		if( m_bShowIcon && (m_iIconPosX + m_iIconWidth) > iX1 )
 			iX1 = m_iIconPosX + m_iIconWidth;
 		if( m_bShowLabel && (m_iLabelPosX + m_iLabelWidth) > iX1 )
 			iX1 = m_iLabelPosX + m_iLabelWidth;
 		//we use max amount instea of amount width/height to make sure it doesnt keep moving
-		if( m_bShowAmount && (m_iAmountPosX + m_iAmountMaxWidth) > iX1 )
-			iX1 = m_iAmountPosX + m_iAmountMaxWidth;
+		if( m_bShowAmount && (m_iAmountMaxPosX + m_iAmountMaxWidth) > iX1 )
+			iX1 = m_iAmountMaxPosX + m_iAmountMaxWidth;
 
 		if( m_bShowIcon && (m_iIconPosY + m_iIconHeight) > iY1 )
 			iY1 = m_iIconPosY + m_iIconHeight;
 		if( m_bShowLabel && (m_iLabelPosY + m_iLabelHeight) > iY1 )
 			iY1 = m_iLabelPosY + m_iLabelHeight;
 		//we use max amount instea of amount width/height to make sure it doesnt keep moving
-		if( m_bShowAmount && (m_iAmountPosY + m_iAmountMaxHeight) > iY1 )
-			iY1 = m_iAmountPosY + m_iAmountMaxHeight;
+		if( m_bShowAmount && (m_iAmountMaxPosY + m_iAmountMaxHeight) > iY1 )
+			iY1 = m_iAmountMaxPosY + m_iAmountMaxHeight;
 		
 		if(m_iWidth != (iX1 - iX0) || m_iHeight != (iY1 - iY0))
 			m_bTriggerParentPositionUpdate = true;
@@ -538,21 +650,11 @@ namespace vgui
 		if( m_iOffsetOverrideX == -1 || m_iOffsetOverrideY == -1 )
 			SetSize(m_iWidth * m_flScale, m_iHeight * m_flScale);
 	}
-
-	void FFQuantityBar::RecalculateIconPosition(bool bRecalculateComponentOffset)
-	{
-		if(m_bIconFontGlyph)
-			CalculateTextAlignmentOffset(m_iIconAlignmentOffsetX, m_iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarGlyph[m_iSizeIcon*3 + 2], m_wszIcon);
-		else
-			CalculateTextAlignmentOffset(m_iIconAlignmentOffsetX, m_iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarIcon[m_iSizeIcon*3 + 2], m_wszIcon);
-		m_iIconPosX = m_iOffsetXIcon + m_iIconAlignmentOffsetX;
-		m_iIconPosY = m_iOffsetYIcon + m_iIconAlignmentOffsetY;
-		if(bRecalculateComponentOffset)
-			RecalculateComponentOffset();
-	}
 	
-	void FFQuantityBar::SetStyle(KeyValues *kvStyleData, KeyValues *kvDefaultStyleData)
+	void FFQuantityBar::SetStyle(KeyValues *kvStyleData, KeyValues *kvDefaultStyleData )
 	{
+		bool bRecalculateBarPositioningOffset = false;
+
 		//-1 default so that we don't change the values if it doesn't exist for any reason
 		int iBarWidth = kvStyleData->GetInt("barWidth", kvDefaultStyleData->GetInt("barWidth", -1));
 		int iBarHeight = kvStyleData->GetInt("barHeight", kvDefaultStyleData->GetInt("barHeight", -1));
@@ -561,13 +663,22 @@ namespace vgui
 
 		// I feel better checkeing things have changed before setting them else we might call lots of unneccesary methods
 		if(iBarWidth != -1)
-			SetBarWidth(iBarWidth);
+		{
+			SetBarWidth(iBarWidth, false);
+			bRecalculateBarPositioningOffset = true;
+		}
 
 		if(iBarHeight != -1)
-			SetBarHeight(iBarHeight);
+		{
+			SetBarHeight(iBarHeight, false);
+			bRecalculateBarPositioningOffset = true;
+		}
 
 		if(iBarBorderWidth != -1)
-			SetBarBorderWidth(iBarBorderWidth);
+		{
+			SetBarBorderWidth(iBarBorderWidth, false);
+			bRecalculateBarPositioningOffset = true;
+		}
 
 		if(iBarOrientation != -1)
 			SetBarOrientation(iBarOrientation);
@@ -592,7 +703,10 @@ namespace vgui
 				bValidColor = true;
 
 			if((iShow == 1 ? true : false) != m_bShowBar && iShow != -1)
-				ShowBar(!m_bShowBar);
+			{
+				ShowBar(!m_bShowBar, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_ColorModeBar != iColorMode && iColorMode != -1)
 				SetBarColorMode(iColorMode);
 			if(m_ColorBarCustom != color && bValidColor)
@@ -619,7 +733,10 @@ namespace vgui
 				bValidColor = true;
 
 			if((iShow == 1 ? true : false) != m_bShowBarBorder && iShow != -1)
-				ShowBarBorder(!m_bShowBarBorder);
+			{
+				ShowBarBorder(!m_bShowBarBorder, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_ColorModeBarBorder != iColorMode && iColorMode != -1)
 				SetBarBorderColorMode(iColorMode);
 			if(m_ColorBarBorderCustom != color && bValidColor)
@@ -646,7 +763,10 @@ namespace vgui
 				bValidColor = true;
 
 			if((iShow == 1 ? true : false) != m_bShowBarBackground && iShow != -1)
-				ShowBarBackground(!m_bShowBarBackground);
+			{
+				ShowBarBackground(!m_bShowBarBackground, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_ColorModeBarBackground != iColorMode && iColorMode != -1)
 				SetBarBackgroundColorMode(iColorMode);
 			if(m_ColorBarBackgroundCustom != color && bValidColor)
@@ -681,21 +801,39 @@ namespace vgui
 				bValidColor = true;
 
 			if((iShow == 1 ? true : false) != m_bShowIcon && iShow != -1)
-				ShowIcon(!m_bShowIcon);
+			{
+				ShowIcon(!m_bShowIcon, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_ColorModeIcon != iColorMode && iColorMode != -1)
 				SetIconColorMode(iColorMode);
 			if(m_ColorIconCustom != color && bValidColor)
 				SetIconColor(color);
 			if(m_iOffsetXIcon != iOffsetX && iOffsetX != -1)
-				SetIconOffsetX(iOffsetX);
+			{
+				SetIconOffsetX(iOffsetX, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iOffsetYIcon != iOffsetY && iOffsetY != -1)
-				SetIconOffsetY(iOffsetY);
+			{
+				SetIconOffsetY(iOffsetY, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iAlignHIcon != iAlignH && iAlignH != -1)
-				SetIconAlignmentHorizontal(iAlignH);
+			{
+				SetIconAlignmentHorizontal(iAlignH, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iAlignVIcon != iAlignV && iAlignV != -1)
-				SetIconAlignmentVertical(iAlignV);
+			{
+				SetIconAlignmentVertical(iAlignV, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iSizeIcon != iSize && iSize != -1)
-				SetIconSize(iSize);
+			{
+				SetIconSize(iSize, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_bIconFontShadow != (iShadow == 1 ? true : false) && iShadow != -1)
 				SetIconFontShadow(!m_bIconFontShadow);
 		}
@@ -721,6 +859,8 @@ namespace vgui
 			int iOffsetX = kvComponentStyleData->GetInt("offsetX", -1);
 			int iOffsetY = kvComponentStyleData->GetInt("offsetY", -1);
 
+			int iFontTahoma = kvStyleData->GetInt("fontTahoma", -1);
+
 			bool bValidColor = false;
 
 			Color color = Color(iRed, iGreen, iBlue, iAlpha);
@@ -728,23 +868,43 @@ namespace vgui
 				bValidColor = true;
 
 			if((iShow == 1 ? true : false) != m_bShowLabel && iShow != -1)
-				ShowLabel(!m_bShowLabel);
+			{
+				ShowLabel(!m_bShowLabel, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_ColorModeLabel != iColorMode && iColorMode != -1)
 				SetLabelColorMode(iColorMode);
 			if(m_ColorLabelCustom != color && bValidColor)
 				SetLabelColor(color);
 			if(m_iOffsetXLabel != iOffsetX && iOffsetX != -1)
-				SetLabelOffsetX(iOffsetX);
+			{
+				SetLabelOffsetX(iOffsetX, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iOffsetYLabel != iOffsetY && iOffsetY != -1)
-				SetLabelOffsetY(iOffsetY);
+			{
+				SetLabelOffsetY(iOffsetY, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iAlignHLabel != iAlignH && iAlignH != -1)
-				SetLabelAlignmentHorizontal(iAlignH);
+			{
+				SetLabelAlignmentHorizontal(iAlignH, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iAlignVLabel != iAlignV && iAlignV != -1)
-				SetLabelAlignmentVertical(iAlignV);
+			{
+				SetLabelAlignmentVertical(iAlignV, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iSizeLabel != iSize && iSize != -1)
-				SetLabelSize(iSize);
+				SetLabelSize(iSize, false);
 			if(m_bLabelFontShadow != (iShadow == 1 ? true : false) && iShadow != -1)
 				SetLabelFontShadow(!m_bLabelFontShadow);
+			if((iFontTahoma == 1 ? true : false) != m_bLabelFontTahoma && iFontTahoma != -1)
+			{
+				SetLabelFontTahoma(!m_bLabelFontTahoma, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 		}
 
 		kvComponentStyleData = kvStyleData->FindKey("Amount");
@@ -768,6 +928,8 @@ namespace vgui
 			int iOffsetX = kvComponentStyleData->GetInt("offsetX", -1);
 			int iOffsetY = kvComponentStyleData->GetInt("offsetY", -1);
 
+			int iFontTahoma = kvStyleData->GetInt("fontTahoma", -1);
+
 			bool bValidColor = false;
 
 			Color color = Color(iRed, iGreen, iBlue, iAlpha);
@@ -775,45 +937,124 @@ namespace vgui
 				bValidColor = true;
 
 			if((iShow == 1 ? true : false) != m_bShowAmount && iShow != -1)
-				ShowAmount(!m_bShowAmount);
+			{
+				ShowAmount(!m_bShowAmount, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_ColorModeAmount != iColorMode && iColorMode != -1)
 				SetAmountColorMode(iColorMode);
 			if(m_ColorAmountCustom != color && bValidColor)
 				SetAmountColor(color);
 			if(m_iOffsetXAmount != iOffsetX && iOffsetX != -1)
-				SetAmountOffsetX(iOffsetX);
+			{
+				SetAmountOffsetX(iOffsetX, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iOffsetYAmount != iOffsetY && iOffsetY != -1)
-				SetAmountOffsetY(iOffsetY);
+			{
+				SetAmountOffsetY(iOffsetY, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iAlignHAmount != iAlignH && iAlignH != -1)
-				SetAmountAlignmentHorizontal(iAlignH);
+			{
+				SetAmountAlignmentHorizontal(iAlignH, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iAlignVAmount != iAlignV && iAlignV != -1)
-				SetAmountAlignmentVertical(iAlignV);
+			{
+				SetAmountAlignmentVertical(iAlignV, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_iSizeAmount != iSize && iSize != -1)
-				SetAmountSize(iSize);
+			{
+				SetAmountSize(iSize, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 			if(m_bAmountFontShadow != (iShadow == 1 ? true : false) && iShadow != -1)
 				SetAmountFontShadow(!m_bAmountFontShadow);
+			if((iFontTahoma == 1 ? true : false) != m_bAmountFontTahoma && iFontTahoma != -1)
+			{
+				SetAmountFontTahoma(!m_bAmountFontTahoma, false);
+				bRecalculateBarPositioningOffset = true;
+			}
 		}
+
+		if(bRecalculateBarPositioningOffset)
+			RecalculateBarPositioningOffset();
 	}
 	
-	void FFQuantityBar::RecalculateLabelPosition(bool bRecalculateComponentOffset)
+	void FFQuantityBar::RecalculateIconPosition( bool bRecalculateBarPositioningOffset  )
 	{
-		CalculateTextAlignmentOffset(m_iLabelAlignmentOffsetX, m_iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iAlignHLabel, m_iAlignVLabel, m_hfQuantityBarText[m_iSizeLabel*3 + 2], m_wszLabel);
-		m_iLabelPosX = m_iOffsetXLabel + m_iLabelAlignmentOffsetX;
-		m_iLabelPosY = m_iOffsetYLabel + m_iLabelAlignmentOffsetY;
-		if(bRecalculateComponentOffset)
-			RecalculateComponentOffset();
+		int iIconAlignmentOffsetX, iIconAlignmentOffsetY;
+
+		if(m_bIconFontGlyph)
+			CalculateTextAlignmentOffset(iIconAlignmentOffsetX, iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarGlyph[m_iSizeIcon*3 + 2], m_wszIcon);
+		else
+			CalculateTextAlignmentOffset(iIconAlignmentOffsetX, iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarIcon[m_iSizeIcon*3 + 2], m_wszIcon);
+		
+		m_iIconPosX = m_iOffsetXIcon + iIconAlignmentOffsetX;
+		m_iIconPosY = m_iOffsetYIcon + iIconAlignmentOffsetY;
+		
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
 	}
 
-	void FFQuantityBar::RecalculateAmountPosition(bool bRecalculateComponentOffset)
+	void FFQuantityBar::RecalculateLabelPosition( bool bRecalculateBarPositioningOffset  )
 	{
-		CalculateTextAlignmentOffset(m_iAmountAlignmentOffsetX, m_iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarText[m_iSizeAmount*3 + 2], m_wszAmountString);
-		m_iAmountPosX = m_iOffsetXAmount + m_iAmountAlignmentOffsetX;
-		m_iAmountPosY = m_iOffsetYAmount + m_iAmountAlignmentOffsetY;
-		if(bRecalculateComponentOffset)
-			RecalculateComponentOffset();
+		int iLabelAlignmentOffsetX, iLabelAlignmentOffsetY;
+
+		if(m_bLabelFontTahoma)
+			CalculateTextAlignmentOffset(iLabelAlignmentOffsetX, iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iAlignHLabel, m_iAlignVLabel, m_hfQuantityBarTahomaText[m_iSizeLabel*3 + 2], m_wszLabel);
+		else
+			CalculateTextAlignmentOffset(iLabelAlignmentOffsetX, iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iAlignHLabel, m_iAlignVLabel, m_hfQuantityBarText[m_iSizeLabel*3 + 2], m_wszLabel);
+		
+		m_iLabelPosX = m_iOffsetXLabel + iLabelAlignmentOffsetX;
+		m_iLabelPosY = m_iOffsetYLabel + iLabelAlignmentOffsetY;
+		
+		if(bRecalculateBarPositioningOffset )
+			RecalculateBarPositioningOffset();
 	}
 
-	void FFQuantityBar::Paint()
+	void FFQuantityBar::RecalculateAmountPosition( )
+	{
+		int iAmountAlignmentOffsetX, iAmountAlignmentOffsetY;
+
+		if(m_bAmountFontTahoma)
+			CalculateTextAlignmentOffset(iAmountAlignmentOffsetX, iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarTahomaText[m_iSizeAmount*3 + 2], m_wszAmountString);
+		else
+			CalculateTextAlignmentOffset(iAmountAlignmentOffsetX, iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarText[m_iSizeAmount*3 + 2], m_wszAmountString);
+		m_iAmountPosX = m_iOffsetXAmount + iAmountAlignmentOffsetX;
+		m_iAmountPosY = m_iOffsetYAmount + iAmountAlignmentOffsetY;
+	}
+
+	void FFQuantityBar::RecalculateAmountMaxPosition( bool bRecalculateBarPositioningOffset  )
+	{
+		wchar_t wszMaxAmountString[ 10 ];
+
+		if(!m_bShowAmountMax)
+		{
+			_snwprintf( wszMaxAmountString, 9, L"100%%");			
+		}
+		else
+		{
+			_snwprintf( wszMaxAmountString, 9, L"%s/%s", m_wszAmountMax, m_wszAmountMax );
+		}
+		
+		int iAmountMaxAlignmentOffsetX;
+		int iAmountMaxAlignmentOffsetY;
+		
+		if(m_bAmountFontTahoma)
+			CalculateTextAlignmentOffset(iAmountMaxAlignmentOffsetX, iAmountMaxAlignmentOffsetY, m_iAmountMaxWidth, m_iAmountMaxHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarTahomaText[m_iSizeAmount*3 + 2], wszMaxAmountString);
+		else
+			CalculateTextAlignmentOffset(iAmountMaxAlignmentOffsetX, iAmountMaxAlignmentOffsetY, m_iAmountMaxWidth, m_iAmountMaxHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarText[m_iSizeAmount*3 + 2], wszMaxAmountString);
+		m_iAmountMaxPosX = m_iOffsetXAmount + iAmountMaxAlignmentOffsetX;
+		m_iAmountMaxPosY = m_iOffsetYAmount + iAmountMaxAlignmentOffsetY;
+
+		if(bRecalculateBarPositioningOffset)
+			RecalculateBarPositioningOffset();
+	}
+
+	void FFQuantityBar::Paint( )
 	{
 		int iOffsetX;
 		int iOffsetY;
@@ -879,7 +1120,12 @@ namespace vgui
 
 		if(m_bShowLabel && m_wszLabel)
 		{	
-			surface()->DrawSetTextFont(m_hfQuantityBarText[m_iSizeLabel * 3 + (m_bLabelFontShadow ? 1 : 0)]);
+			if(m_bLabelFontTahoma)
+				surface()->DrawSetTextFont(m_hfQuantityBarTahomaText[m_iSizeLabel * 3 + (m_bLabelFontShadow ? 1 : 0)]);
+			else
+				surface()->DrawSetTextFont(m_hfQuantityBarText[m_iSizeLabel * 3 + (m_bLabelFontShadow ? 1 : 0)]);
+
+			
 			surface()->DrawSetTextColor( m_ColorLabel );
 			surface()->DrawSetTextPos((iOffsetX + m_iLabelPosX) * m_flScale, (iOffsetY + m_iLabelPosY) * m_flScale);
 			surface()->DrawUnicodeString( m_wszLabel );
@@ -887,7 +1133,10 @@ namespace vgui
 
 		if(m_bShowAmount && m_wszAmount)
 		{
-			surface()->DrawSetTextFont(m_hfQuantityBarText[m_iSizeAmount * 3 + (m_bAmountFontShadow ? 1 : 0)]);
+			if(m_bAmountFontTahoma)
+				surface()->DrawSetTextFont(m_hfQuantityBarTahomaText[m_iSizeAmount * 3 + (m_bAmountFontShadow ? 1 : 0)]);
+			else
+				surface()->DrawSetTextFont(m_hfQuantityBarText[m_iSizeAmount * 3 + (m_bAmountFontShadow ? 1 : 0)]);
 			surface()->DrawSetTextColor( m_ColorAmount );
 			surface()->DrawSetTextPos((iOffsetX + m_iAmountPosX) * m_flScale, (iOffsetY + m_iAmountPosY) * m_flScale);
 			surface()->DrawUnicodeString( m_wszAmountString );
@@ -896,7 +1145,7 @@ namespace vgui
 		BaseClass::Paint();
 	}
 
-	void FFQuantityBar::RecalculateQuantity()
+	void FFQuantityBar::RecalculateQuantity( )
 	//all this regardless of whether each item is actually being shown
 	//(incase the user changes options during the game)
 	{
@@ -1006,23 +1255,7 @@ namespace vgui
 		}
 	}
 
-	void FFQuantityBar::RecalculateAmountMaxStringSize()
-	{
-		wchar_t wszMaxAmountString[ 10 ];
-
-		if(!m_bShowAmountMax)
-		{
-			_snwprintf( wszMaxAmountString, 9, L"100%%");			
-		}
-		else
-		{
-			_snwprintf( wszMaxAmountString, 9, L"%s/%s", m_wszAmountMax, m_wszAmountMax );
-		}
-		
-		surface()->GetTextSize(m_hfQuantityBarText[m_iSizeAmount*3 + 2], wszMaxAmountString, m_iAmountMaxWidth, m_iAmountMaxHeight);
-	}
-
-	void FFQuantityBar::RecalculateColor(int colorMode, Color &color, Color &colorCustom)
+	void FFQuantityBar::RecalculateColor( int colorMode, Color &color, Color &colorCustom )
 	{
 		if(colorMode == COLOR_MODE_STEPPED )
 			color.SetColor(m_ColorIntensityStepped.r(),m_ColorIntensityStepped.g(),m_ColorIntensityStepped.b(),colorCustom.a());
@@ -1034,7 +1267,7 @@ namespace vgui
 			color = colorCustom;
 	}
 
-	void FFQuantityBar::CalculateTextAlignmentOffset(int &outX, int &outY, int &iWide, int &iTall, int iAlignH, int iAlignV, HFont hfFont, wchar_t* wszString)
+	void FFQuantityBar::CalculateTextAlignmentOffset( int &outX, int &outY, int &iWide, int &iTall, int iAlignH, int iAlignV, HFont hfFont, wchar_t* wszString )
 	{
 		surface()->GetTextSize(hfFont, wszString, iWide, iTall);
 

@@ -15,9 +15,9 @@ CFFCustomHudOptions::CFFCustomHudOptions(Panel *parent, char const *panelName) :
 
 	m_pPropertyPages = new PropertySheet(this, "CustomHudPages", true);
 
+	m_pPropertyPages->AddPage(m_pAssignPresets, "#GameUI_AssignPresets");
 	m_pPropertyPages->AddPage(m_pArrangementPresets, "#GameUI_ArrangementPresets");
 	m_pPropertyPages->AddPage(m_pStylePresets, "#GameUI_StylePresets");
-	m_pPropertyPages->AddPage(m_pAssignPresets, "#GameUI_AssignPresets");
 	m_pPropertyPages->SetActivePage(m_pAssignPresets);
 	m_pPropertyPages->SetDragEnabled(false);
 	

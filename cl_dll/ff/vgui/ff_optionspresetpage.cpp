@@ -43,6 +43,7 @@ namespace vgui {
 	CFFOptionsPresetPage::~CFFOptionsPresetPage()
 	{
 		m_kvChanges->deleteThis();
+		m_kvUpdates->deleteThis();
 	}
 	void CFFOptionsPresetPage::Load()
 	{
@@ -72,15 +73,14 @@ namespace vgui {
 		
 		// Default to the global preset
 		m_pPresets->ActivateItemByRow(0);
-
-		m_bLoaded = true;
 	
 		ApplyPresetToControls(m_pPresets->GetActiveItemUserData());
 
-		RegisterSelfForPresetAssignment();
+		kvPresets->deleteThis();
 
-		//don't delete the kvPresets as we're passing it as a subkey to be used in the assign presets shizzle
-		//kvPresets->deleteThis();
+		m_bLoaded = true;
+
+		RegisterSelfForPresetAssignment();
 	}
 
 	void CFFOptionsPresetPage::Reset()
@@ -104,7 +104,7 @@ namespace vgui {
 			}
 			else if( Q_stricmp(kvCommand->GetString("New"), "") != 0 )
 			{
-				SendNewPresetNameToPresetAssignment(kvCommand->GetString("New"), GetPresetDataByName(kvCommand->GetString("New")));
+				SendNewPresetNameToPresetAssignment( kvCommand->GetString("New"), GetPresetDataByName( kvCommand->GetString("New") ) );
 			}
 			else if( Q_stricmp(kvCommand->GetString("Delete"), "") != 0 )
 			{
@@ -232,7 +232,7 @@ namespace vgui {
 			m_pPresets->UpdateItem(m_pPresets->GetActiveItem(), data->GetString("text"), kvPreset);
 			//makes the name update in the combobox
 			m_pPresets->ActivateItem(m_pPresets->GetActiveItem());
-
+			kvPreset->deleteThis();
 			
 			int iCount = m_kvChanges->GetInt("Count",0);
 			const char* szCount = m_kvChanges->GetString("Count","0");
@@ -263,6 +263,7 @@ namespace vgui {
 			//add the new item to the presets dropdown
 			m_pPresets->AddItem(kvPreset->GetName(), kvPreset);
 			m_pPresets->ActivateItemByRow(m_pPresets->GetItemCount() - 1);
+			kvPreset->deleteThis();
 
 			int iCount = m_kvChanges->GetInt("Count",0);
 			const char* szCount = m_kvChanges->GetString("Count","0");

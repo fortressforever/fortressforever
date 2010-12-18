@@ -140,6 +140,26 @@ namespace vgui
 		m_bAddToHud = true;
 	}
 
+	Color FFQuantityPanel::GetTeamColor()
+	{
+		C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
+		return g_PR->GetTeamColor( pPlayer->GetTeamNumber() );
+
+	}
+
+	void FFQuantityPanel::SetTeamColor(Color teamColor)
+	{
+		if(m_ColorTeam != teamColor)
+		{
+			m_ColorTeam = teamColor;
+			for(int i = 0; i < m_iItems; ++i)
+			{		
+				m_QBars[i]->SetTeamColor(teamColor);
+			}	
+		}
+	}
+
 	void FFQuantityPanel::OnTick()
 	{
 		if(m_bAddToHud && !m_bAddToHudSent)
@@ -176,22 +196,15 @@ namespace vgui
 			SetPaintEnabled(true);
 			SetPaintBackgroundEnabled(m_bShowPanel);
 		}
-		
+
+		SetTeamColor(GetTeamColor());
+
 		if(m_bShowPanel)
 		{
 			if(m_bCustomBackroundColor)
 				SetBgColor(m_ColorBackgroundCustom);
 			else if(cl_teamcolourhud.GetBool())
-			{
-				C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
-
-				if( !(FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer )) )
-				{
-					Color teamColor = g_PR->GetTeamColor( pPlayer->GetTeamNumber() );
-					m_ColorTeamBackground = Color(teamColor.r(), teamColor.g(), teamColor.b(), m_iTeamColourAlpha);
-					SetBgColor(m_ColorTeamBackground);
-				}
-			}
+				SetBgColor(Color(m_ColorTeam.r(), m_ColorTeam.g(), m_ColorTeam.b(), m_iTeamColourAlpha));
 			else
 				SetBgColor(m_ColorBackground);
 		}
@@ -555,12 +568,13 @@ namespace vgui
 		if(bUpdateQBPositions)
 			UpdateQBPositions();
 	}
+
+
 	
 	void FFQuantityPanel::OnStyleDataRecieved( KeyValues *kvStyleData )
 	{
 		KeyValues* kvDefaultStyleData = GetDefaultStyleData();	
 		bool bUpdateQBPositions = false;
-		//TODO: THIS PROPERLY
 
 		int iX = kvStyleData->GetInt("x", kvDefaultStyleData->GetInt("x", -1));
 		if(m_iX != iX && iX != -1)
@@ -569,7 +583,6 @@ namespace vgui
 		int iY = kvStyleData->GetInt("y", kvDefaultStyleData->GetInt("y", -1));
 		if(m_iY != iY && iY != -1)
 			m_iY = iY;
-
 
 		int iHorizontalAlign = kvStyleData->GetInt("alignH", kvDefaultStyleData->GetInt("alignH", -1));
 		if(m_iHorizontalAlign != iHorizontalAlign && iHorizontalAlign != -1)

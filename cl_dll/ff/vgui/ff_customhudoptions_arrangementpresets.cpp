@@ -222,10 +222,21 @@ namespace vgui
 			}
 			else if(data->GetPtr("panel") == m_pShowPanel)
 			{
-				m_pPanelRed->SetEnabled(m_pShowPanel->IsSelected());
-				m_pPanelGreen->SetEnabled(m_pShowPanel->IsSelected());
-				m_pPanelBlue->SetEnabled(m_pShowPanel->IsSelected());
-				m_pPanelAlpha->SetEnabled(m_pShowPanel->IsSelected());
+				m_pPanelColorCustom->SetEnabled(m_pShowPanel->IsSelected());
+				if(m_pPanelColorCustom->IsSelected())
+				{
+					m_pPanelRed->SetEnabled(m_pShowPanel->IsSelected());
+					m_pPanelGreen->SetEnabled(m_pShowPanel->IsSelected());
+					m_pPanelBlue->SetEnabled(m_pShowPanel->IsSelected());
+					m_pPanelAlpha->SetEnabled(m_pShowPanel->IsSelected());
+				}
+			}
+			else if(data->GetPtr("panel") == m_pPanelColorCustom)
+			{	
+				m_pPanelRed->SetEnabled(m_pPanelColorCustom->IsSelected());
+				m_pPanelGreen->SetEnabled(m_pPanelColorCustom->IsSelected());
+				m_pPanelBlue->SetEnabled(m_pPanelColorCustom->IsSelected());
+				m_pPanelAlpha->SetEnabled(m_pPanelColorCustom->IsSelected());	
 			}
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 		}
