@@ -93,6 +93,9 @@ namespace vgui
 			m_hfHeaderText[i*3] = qbScheme->GetFont( VarArgs("QuantityPanelHeader%d",i), true );
 			m_hfHeaderText[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityPanelHeaderShadow%d",i), true );
 			m_hfHeaderText[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityPanelHeader%d",i), false );
+		}
+		for(int i = 0; i < QUANTITYBARICONSIZES; ++i)
+		{
 			m_hfHeaderIcon[i*3] = qbScheme->GetFont( VarArgs("QuantityPanelHeaderIcon%d",i), true );
 			m_hfHeaderIcon[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityPanelHeaderIconShadow%d",i), true );
 			m_hfHeaderIcon[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityPanelHeaderIcon%d",i), false );

@@ -18,8 +18,9 @@
 
 #include "ff_quantitybar.h"
 
-//this is defined in the custom hud options page too, keep it in sync
+//this is defined in the custom hud options pages too, keep it in sync
 #define QUANTITYPANELFONTSIZES 10
+#define QUANTITYPANELICONSIZES 15
 
 namespace vgui
 {
@@ -109,7 +110,7 @@ namespace vgui
 
 		vgui::HFont m_hfText;
 		vgui::HFont m_hfHeaderText[QUANTITYPANELFONTSIZES * 3];
-		vgui::HFont m_hfHeaderIcon[QUANTITYPANELFONTSIZES * 3];
+		vgui::HFont m_hfHeaderIcon[QUANTITYPANELICONSIZES * 3];
 		
 		bool m_bHeaderIconShadow;
 		bool m_bHeaderTextShadow;

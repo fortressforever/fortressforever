@@ -15,11 +15,11 @@ namespace vgui
 	CFFCustomHudStylePresets::CFFCustomHudStylePresets(Panel *parent, char const *panelName, char const *pszComboBoxName) : BaseClass(parent, panelName, pszComboBoxName, STYLEPRESET_FILE)
 	{
 		m_pBarWidth = new CFFInputSlider(this, "BarWidth", "BarWidthInput");
-		m_pBarWidth->SetRange(0, 640);
+		m_pBarWidth->SetRange(0, 120);
 		m_pBarWidth->SetValue(0);
 		
 		m_pBarHeight = new CFFInputSlider(this, "BarHeight", "BarHeightInput");
-		m_pBarHeight->SetRange(0, 480);
+		m_pBarHeight->SetRange(0, 120);
 		m_pBarHeight->SetValue(0);
 		
 		m_pBarBorderWidth = new CFFInputSlider(this, "BarBorderWidth", "BarBorderWidthInput");
@@ -27,11 +27,11 @@ namespace vgui
 		m_pBarBorderWidth->SetValue(1);
 		
 		m_pBarMarginHorizontal = new CFFInputSlider(this, "BarMarginHorizontal", "BarMarginHorizontalInput");
-		m_pBarMarginHorizontal->SetRange(0, 50);
+		m_pBarMarginHorizontal->SetRange(0, 20);
 		m_pBarMarginHorizontal->SetValue(5);
 		
 		m_pBarMarginVertical = new CFFInputSlider(this, "BarMarginVertical", "BarMarginVerticalInput");
-		m_pBarMarginVertical->SetRange(0, 50);
+		m_pBarMarginVertical->SetRange(0, 20);
 		m_pBarMarginVertical->SetValue(5);
 
 		m_pSizeLabel = new Label(this, "SizeLabel", "#GameUI_Size");
@@ -44,11 +44,11 @@ namespace vgui
 		m_pAlignLabel = new Label(this, "AlignmentLabel", "#GameUI_Alignment");
 
 		m_pOffsetX = new CFFInputSlider(this, "OffsetX", "OffsetXInput");
-		m_pOffsetX->SetRange(-200, 200);
+		m_pOffsetX->SetRange(-120, 120);
 		m_pOffsetX->SetValue(0);
 		
 		m_pOffsetY = new CFFInputSlider(this, "OffsetY", "OffsetYInput");
-		m_pOffsetY->SetRange(-200, 200);
+		m_pOffsetY->SetRange(-120, 120);
 		m_pOffsetY->SetValue(0);
 		
 		m_pSize = new CFFInputSlider(this, "Size", "SizeInput");
@@ -181,7 +181,7 @@ namespace vgui
 		if(m_pOffsetY->IsEnabled())
 			kvComponent->SetInt("offsetY", m_pOffsetY->GetValue());
 		if(m_pFontTahoma->IsEnabled())
-			kvPreset->SetInt("fontTahoma", m_pFontTahoma->IsSelected());
+			kvComponent->SetInt("fontTahoma", m_pFontTahoma->IsSelected());
 
 		//update the main preset, damn thing copies rather than keeping the same pointer
 		//

@@ -22,23 +22,23 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 {
 	KeyValues *kvPreset = new KeyValues("StyleData");
 
-	kvPreset->SetInt("x", 640);
-	kvPreset->SetInt("y", 300);
-	kvPreset->SetInt("alignH", 2);
+	kvPreset->SetInt("x", 480);
+	kvPreset->SetInt("y", 330);
+	kvPreset->SetInt("alignH", 0);
 	kvPreset->SetInt("alignV", 0);
 	kvPreset->SetInt("columns", 1);
+	kvPreset->SetInt("headerTextX", 5);
+	kvPreset->SetInt("headerTextY", 5);
+	kvPreset->SetInt("headerIconX", 6);
+	kvPreset->SetInt("headerIconY", 16);
 	kvPreset->SetInt("itemsX", 5);
-	kvPreset->SetInt("itemsY", 25);
+	kvPreset->SetInt("itemsY", 15);
 	kvPreset->SetInt("showHeaderText", 1);
-	kvPreset->SetInt("headerTextShadow", 0);
-	kvPreset->SetInt("headerTextSize", 4);
-	kvPreset->SetInt("headerTextX", 20);
-	kvPreset->SetInt("headerTextY", 7);
 	kvPreset->SetInt("showHeaderIcon", 1);
+	kvPreset->SetInt("headerTextShadow", 0);
 	kvPreset->SetInt("headerIconShadow", 0);
-	kvPreset->SetInt("headerIconSize", 4);
-	kvPreset->SetInt("headerIconX", 3);
-	kvPreset->SetInt("headerIconY", 3);
+	kvPreset->SetInt("headerTextSize", 1);
+	kvPreset->SetInt("headerIconSize", 11);
 	kvPreset->SetInt("showPanel", 1);
 	kvPreset->SetInt("panelColorCustom", 0);
 	kvPreset->SetInt("panelRed", 255);
@@ -46,11 +46,11 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvPreset->SetInt("panelBlue", 255);
 	kvPreset->SetInt("panelAlpha", 255);
 
-	kvPreset->SetInt("barWidth", 50);
-	kvPreset->SetInt("barHeight", 8);
+	kvPreset->SetInt("barWidth", 60);
+	kvPreset->SetInt("barHeight", 10);
 	kvPreset->SetInt("barBorderWidth", 1);
-	kvPreset->SetInt("barMarginHorizontal", 2);
-	kvPreset->SetInt("barMarginVertical", 2);
+	kvPreset->SetInt("barMarginHorizontal", 0);
+	kvPreset->SetInt("barMarginVertical", 0);
 	kvPreset->SetInt("barOrientation", ORIENTATION_HORIZONTAL);
 
 	KeyValues *kvComponent = new KeyValues("Bar");
@@ -59,7 +59,7 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvComponent->SetInt("red", 255);
 	kvComponent->SetInt("green", 255);
 	kvComponent->SetInt("blue", 255);
-	kvComponent->SetInt("alpha", 255);
+	kvComponent->SetInt("alpha", 93);
 
 	kvPreset->AddSubKey(kvComponent);
 
@@ -69,7 +69,7 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvComponent->SetInt("red", 255);
 	kvComponent->SetInt("green", 255);
 	kvComponent->SetInt("blue", 255);
-	kvComponent->SetInt("alpha", 255);
+	kvComponent->SetInt("alpha", 155);
 
 	kvPreset->AddSubKey(kvComponent);
 
@@ -79,20 +79,20 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvComponent->SetInt("red", 255);
 	kvComponent->SetInt("green", 255);
 	kvComponent->SetInt("blue", 255);
-	kvComponent->SetInt("alpha", 160);
+	kvComponent->SetInt("alpha", 65);
 
 	kvPreset->AddSubKey(kvComponent);
 
 	kvComponent = new KeyValues("Icon");
-	kvComponent->SetInt("show", 1);
+	kvComponent->SetInt("show", 0);
 	kvComponent->SetInt("colorMode", COLOR_MODE_CUSTOM);
 	kvComponent->SetInt("red", 255);
 	kvComponent->SetInt("green", 255);
 	kvComponent->SetInt("blue", 255);
 	kvComponent->SetInt("alpha", 255);
 	kvComponent->SetInt("shadow", 0);
-	kvComponent->SetInt("size", 3);
-	kvComponent->SetInt("alignH", ALIGN_RIGHT);
+	kvComponent->SetInt("size", 2);
+	kvComponent->SetInt("alignH", ALIGN_CENTER);
 	kvComponent->SetInt("alignV", ALIGN_MIDDLE);
 	kvComponent->SetInt("offsetX", 5);
 	kvComponent->SetInt("offsetY", 0);
@@ -106,28 +106,30 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvComponent->SetInt("green", 255);
 	kvComponent->SetInt("blue", 255);
 	kvComponent->SetInt("alpha", 255);
-	kvComponent->SetInt("shadow", 0);
-	kvComponent->SetInt("size", 3);
-	kvComponent->SetInt("alignH", ALIGN_RIGHT);
-	kvComponent->SetInt("alignV", ALIGN_TOP);
-	kvComponent->SetInt("offsetX", -50);
+	kvComponent->SetInt("shadow", 1);
+	kvComponent->SetInt("size", 1);
+	kvComponent->SetInt("alignH", ALIGN_LEFT);
+	kvComponent->SetInt("alignV", ALIGN_MIDDLE);
+	kvComponent->SetInt("offsetX", 56);
 	kvComponent->SetInt("offsetY", 0);
+	kvComponent->SetInt("fontTahoma", 1);
 
 	kvPreset->AddSubKey(kvComponent);
 
 	kvComponent = new KeyValues("Amount");
 	kvComponent->SetInt("show", 1);
-	kvComponent->SetInt("colorMode", COLOR_MODE_CUSTOM);
+	kvComponent->SetInt("colorMode", COLOR_MODE_FADED);
 	kvComponent->SetInt("red", 255);
 	kvComponent->SetInt("green", 255);
 	kvComponent->SetInt("blue", 255);
 	kvComponent->SetInt("alpha", 255);
 	kvComponent->SetInt("shadow", 0);
-	kvComponent->SetInt("size", 3);
+	kvComponent->SetInt("size", 0);
 	kvComponent->SetInt("alignH", ALIGN_RIGHT);
-	kvComponent->SetInt("alignV", ALIGN_BOTTOM);
-	kvComponent->SetInt("offsetX", -50);
-	kvComponent->SetInt("offsetY", 2);
+	kvComponent->SetInt("alignV", ALIGN_CENTER);
+	kvComponent->SetInt("offsetX", 2);
+	kvComponent->SetInt("offsetY", 1);
+	kvComponent->SetInt("fontTahoma", 0);
 
 	kvPreset->AddSubKey(kvComponent);
 

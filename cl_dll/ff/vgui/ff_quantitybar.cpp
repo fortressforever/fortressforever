@@ -859,7 +859,7 @@ namespace vgui
 			int iOffsetX = kvComponentStyleData->GetInt("offsetX", -1);
 			int iOffsetY = kvComponentStyleData->GetInt("offsetY", -1);
 
-			int iFontTahoma = kvStyleData->GetInt("fontTahoma", -1);
+			int iFontTahoma = kvComponentStyleData->GetInt("fontTahoma", -1);
 
 			bool bValidColor = false;
 
@@ -928,7 +928,7 @@ namespace vgui
 			int iOffsetX = kvComponentStyleData->GetInt("offsetX", -1);
 			int iOffsetY = kvComponentStyleData->GetInt("offsetY", -1);
 
-			int iFontTahoma = kvStyleData->GetInt("fontTahoma", -1);
+			int iFontTahoma = kvComponentStyleData->GetInt("fontTahoma", -1);
 
 			bool bValidColor = false;
 

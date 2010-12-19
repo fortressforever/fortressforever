@@ -5,6 +5,7 @@
 
 //this is defined in the quantitypanel page too, keep it in sync
 #define QUANTITYPANELFONTSIZES 10
+#define QUANTITYBARICONSIZES 15
 
 #include "ff_customhudoptions_assignpresets.h"
 extern CFFCustomHudAssignPresets *g_AP;
@@ -68,11 +69,11 @@ namespace vgui
 		m_pY->SetValue(0);
 		
 		m_pItemsX = new CFFInputSlider(this, "ItemsX", "ItemsXInput");
-		m_pItemsX->SetRange(0, 640);
+		m_pItemsX->SetRange(0, 50);
 		m_pItemsX->SetValue(0);
 		
 		m_pItemsY = new CFFInputSlider(this, "ItemsY", "ItemsYInput");
-		m_pItemsY->SetRange(0, 480);
+		m_pItemsY->SetRange(0, 50);
 		m_pItemsY->SetValue(0);
 		
 		m_pHeaderTextSize = new CFFInputSlider(this, "HeaderTextSize", "HeaderTextSizeInput");
@@ -80,23 +81,23 @@ namespace vgui
 		m_pHeaderTextSize->SetValue(2);
 
 		m_pHeaderTextX = new CFFInputSlider(this, "HeaderTextX", "HeaderTextXInput");
-		m_pHeaderTextX->SetRange(0, 640);
+		m_pHeaderTextX->SetRange(0, 160);
 		m_pHeaderTextX->SetValue(0);
 		
 		m_pHeaderTextY = new CFFInputSlider(this, "HeaderTextY", "HeaderTextYInput");
-		m_pHeaderTextY->SetRange(0, 480);
+		m_pHeaderTextY->SetRange(0, 120);
 		m_pHeaderTextY->SetValue(0);
 		
 		m_pHeaderIconSize = new CFFInputSlider(this, "HeaderIconSize", "HeaderIconSizeInput");
-		m_pHeaderIconSize->SetRange(1, QUANTITYPANELFONTSIZES);
+		m_pHeaderIconSize->SetRange(1, QUANTITYBARICONSIZES);
 		m_pHeaderIconSize->SetValue(2);
 
 		m_pHeaderIconX = new CFFInputSlider(this, "HeaderIconX", "HeaderIconXInput");
-		m_pHeaderIconX->SetRange(0, 640);
+		m_pHeaderIconX->SetRange(0, 160);
 		m_pHeaderIconX->SetValue(0);
 		
 		m_pHeaderIconY = new CFFInputSlider(this, "HeaderIconY", "HeaderIconYInput");
-		m_pHeaderIconY->SetRange(0, 480);
+		m_pHeaderIconY->SetRange(0, 120);
 		m_pHeaderIconY->SetValue(0);
 
 		m_pShowHeaderIcon = new CheckButton(this, "ShowHeaderIcon", "#GameUI_Show");
