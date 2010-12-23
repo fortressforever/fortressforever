@@ -45,11 +45,44 @@ extern ConVar ffdev_pipe_friction;
 
 class CFFProjectilePipebomb : public CFFProjectileGrenade
 {
+private:
+	//Control the time before the magnetism
+	bool m_bMagnetArmed;
+
+	//Bool to know whether this is magnetically active
+	bool m_bMagnetActive;
+
+	//Pipe's target when magnetized ( declaring as a base entity, but this will only be a player )
+	CBaseEntity* m_pMagnetTarget;
+
+	//Bool to tell this pipe it is detonated and waiting to blow up
+	bool m_bShouldDetonate;
+
+	//Pipe's detonate time in the future
+	float m_flDetonateTime;
+
 public:
 	DECLARE_CLASS(CFFProjectilePipebomb, CFFProjectileGrenade);
 	DECLARE_NETWORKCLASS(); 
 
 	void PipebombThink();
+
+	//Function that moves the pipe towards the target
+	void Magnetize(CBaseEntity* _pTarget);
+
+	//Function to start glowing a sprite on the pipe
+	void StartGlowEffect();
+
+	//Accessors and Mutators
+	CBaseEntity* GetMagnetTarget(){ return m_pMagnetTarget; }
+	void SetMagnetTarget( CBaseEntity* _pTarget){ m_pMagnetTarget = _pTarget; }
+	
+	bool GetShouldDetonate(){ return m_bShouldDetonate; }
+	void SetShouldDetonate( bool _bShouldDet ){ m_bShouldDetonate = _bShouldDet; }
+	
+	float GetDetonateTime(){ return m_flDetonateTime; }
+	void SetDetonateTime( float _flDetTime ){ m_flDetonateTime = _flDetTime; }
+
 	// Override precache because we want a different model
 	virtual void Spawn();
 	// Needs its own explode func for custom scorch mark
@@ -78,6 +111,9 @@ public:
 	static CFFProjectilePipebomb *CreatePipebomb(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iDamageRadius, const int iSpeed);
 	static void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force = false);
 
+	//Custom collision to allow for constant elasticity on hit surfaces
+	virtual void ResolveFlyCollisionCustom(trace_t &trace, Vector &vecVelocity);
+
 #ifdef GAME_DLL	
 	void DetonatePipe(bool force = false, CBaseEntity *pOther = NULL);
 
@@ -85,6 +121,8 @@ public:
 	int TakeEmp( void ) { return m_flDamage; } 
 
 	void CreateProjectileEffects();
+
+
 
 	DECLARE_DATADESC(); // Added anyway
 
