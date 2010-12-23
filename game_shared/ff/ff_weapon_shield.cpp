@@ -68,8 +68,12 @@ public:
 	void ShieldIdle( void );	//Holster shield and remove block
 	virtual void ItemPostFrame( void );	//acts as the update function
 	virtual bool Deploy();	//need this to override the base deploy() and put in an extra animation call
+	virtual bool Holster(); // need this to override the base holster() and delete the shield in the world
 
 	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_SHIELD; }
+
+	//Get the shield bool
+	bool GetShieldActive(){ return m_bShieldActive; }
 
 private:
 
@@ -142,14 +146,28 @@ void CFFWeaponShield::ItemPostFrame()
 		ShieldIdle();
 	}
 }
-
-//Override the deploy call and immediatly start holstering it so its not "active"to the player's viewmodel
+//----------------------------------------------------------------------------
+// Purpose: Override the deploy call and immediatly start holstering it so its not "active"to the player's viewmodel
+//----------------------------------------------------------------------------
 bool CFFWeaponShield::Deploy()
 {
 	BaseClass::Deploy();
 	//just return true i guess
 	return SendWeaponAnim( ACT_VM_HOLSTER );
 }
+
+//----------------------------------------------------------------------------
+// Purpose: Override the holster call to delete the shield if there is one in the world
+//----------------------------------------------------------------------------
+bool CFFWeaponShield::Holster()
+{
+	//Set the shield to idle to do cleanup and reseting stuff
+	ShieldIdle();
+
+	//Now do normal holster
+	return BaseClass::Holster();
+}
+
 //----------------------------------------------------------------------------
 // Purpose: Handles whatever should be done when they fire(build, aim, etc) 
 //----------------------------------------------------------------------------
@@ -215,6 +233,8 @@ void CFFWeaponShield::ShieldActive( void )
 
 		//Set the shield pointer in player to this newly created object, use GetShield() to find it again
 		pPlayer->SetShield( pShield );
+
+		DevMsg("Shield Created\n");
 	}
 #endif
 }
@@ -260,12 +280,14 @@ void CFFWeaponShield::ShieldIdle( void )
 	}
 
 	//If the player has a valid shield pointer
-	if( pPlayer->GetShield() )
+	if( pPlayer->GetShield() != NULL)
 	{
 		// Remove entity from game 
 		UTIL_Remove( pPlayer->GetShield() );
 		//Reset the shield to null for the future
 		pPlayer->SetShield(NULL);
+
+		DevMsg("Shield Deleted\n");
 	}
 #endif
 }

@@ -813,6 +813,23 @@ void CFFPlayer::PostThink()
 
 		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 	}
+
+	//Demoman stuff
+	if( GetClassSlot() == CLASS_DEMOMAN )
+	{
+		//If the shield is valid
+		if( m_hShield != NULL )
+		{
+			//If the demoman is not equipped with a shield and the pointer is valid, delete it
+			if( GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_SHIELD )
+			{
+				DevMsg("Deleting Shield from ff_Player\n");
+				UTIL_Remove(m_hShield);
+				m_hShield = NULL;
+			}
+		}
+	}
+
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1999,6 +2016,14 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	// Detonate player's pipes
 	CFFProjectilePipebomb::DestroyAllPipes(this, true);
+
+	//Clean up the shield
+	if( m_hShield != NULL )
+	{
+		DevMsg("Removing shield on death\n");
+		UTIL_Remove(m_hShield);
+		m_hShield = NULL;
+	}
 
 	// Release control of sabotaged structures
 	SpySabotageRelease();

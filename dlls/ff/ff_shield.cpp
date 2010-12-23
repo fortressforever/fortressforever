@@ -149,7 +149,7 @@ void CFFShield::OnObjectThink( void )
 
 	CheckForOwner();
 
-	SetNextThink( gpGlobals->curtime + 1.0f );
+	SetNextThink( gpGlobals->curtime + 0.1f );
 }
 
 /**
@@ -172,6 +172,8 @@ CFFShield *CFFShield::Create( const Vector &vecOrigin, const QAngle &vecAngles, 
 
 	// Spawn the object
 	pObject->Spawn( );
+
+	DevMsg("Shield Created\n");
 
 	return pObject;
 }
