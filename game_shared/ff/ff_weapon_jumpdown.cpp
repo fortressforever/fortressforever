@@ -247,15 +247,59 @@ bool CFFWeaponJumpdown::Deploy( void )
 {
 #ifdef GAME_DLL
 
-	m_flStartTime = m_flLastUpdate = -1.0f;
-	m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
+	//Get this player's last weapon
+	CFFWeaponBase* pLastWeapon = ToFFPlayer(GetOwnerEntity())->GetLastFFWeapon();
 
-	m_flNextPrimaryAttack = (JUMPDOWN_ALLOWUNCHARGEDSHOT) ? (gpGlobals->curtime + 0.2f) : (gpGlobals->curtime + JUMPDOWN_CHARGEUPTIME);
+	//If the weapon is valid
+	if( pLastWeapon != NULL )
+	{
+		//If the last weapon was a jumppad, dont reset the jumpgun values
+		if( pLastWeapon->GetWeaponID() == FF_WEAPON_DEPLOYMANCANNON )
+		{
+			//The last weapon was a jumpad
+			DevMsg("Last weapon was a jumpad.  Do nothing\n");
+			//Dont reset anything?
+		}
+		//If this was the players last weapon
+		else if( pLastWeapon == this )
+		{
+			//Means this was the weapon deployed when the player built a jumppad with right click
+			DevMsg("Jumpgun was the last weapon.  Do nothing\n");
+			//Dont reset anything?
+		}
+		//The last weapon was not a jumppad, so reset normally
+		else
+		{
+			DevMsg("Last weapon was valid but not a jumppad.  Deploy jumpgun normally\n");
 
-#else
+			m_flStartTime = -1.0f;
+			m_flLastUpdate = -1.0f;
+			m_flTotalChargeTime = 0.0f;
+			m_flClampedChargeTime = 0.0f;
 
-	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
-	m_flChargeTimeBufferedNextUpdate = 0.0f;
+			m_flNextPrimaryAttack = (JUMPDOWN_ALLOWUNCHARGEDSHOT) ? (gpGlobals->curtime + 0.2f) : (gpGlobals->curtime + JUMPDOWN_CHARGEUPTIME);
+		}
+	}
+	//This is the first time the player pulls out a weapon
+	else
+	{
+		DevMsg("Last weapon was NULL.  Deploy charged jumpgun\n");
+
+		m_flStartTime = gpGlobals->curtime - JUMPDOWN_CHARGEUPTIME;
+		m_flLastUpdate = gpGlobals->curtime - JUMPDOWN_CHARGEUPTIME;
+		m_flTotalChargeTime = JUMPDOWN_CHARGEUPTIME;
+		m_flClampedChargeTime = JUMPDOWN_CHARGEUPTIME;
+
+		m_flNextPrimaryAttack = gpGlobals->curtime;
+	}
+
+	//Reset the last weapon to this jumpgun
+	ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon(this);
+
+//#else
+
+	//m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
+	//m_flChargeTimeBufferedNextUpdate = 0.0f;
 
 #endif
 
@@ -268,17 +312,33 @@ bool CFFWeaponJumpdown::Deploy( void )
 bool CFFWeaponJumpdown::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 #ifdef GAME_DLL
+	//Only set this weapon to the last if something is calling Holster(NULL) on the jumpgun
+	if( pSwitchingTo == NULL )
+	{
+		DevMsg("Holstering jumpgun - Setting last weapon to this jumpgun\n");
 
-	m_flStartTime = m_flLastUpdate = -1.0f;
-	m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
+		//Reset the last weapon to this jumpgun
+		ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon(this);
+	}
+	//this means the player is switching to a valid weapon other then this
+	else
+	{
+		DevMsg("Holstering jumpgun - Setting new last weapon\n");
 
-	m_flNextPrimaryAttack = (JUMPDOWN_ALLOWUNCHARGEDSHOT) ? (gpGlobals->curtime + 0.2f) : (gpGlobals->curtime + JUMPDOWN_CHARGEUPTIME);
+		//Reset the last weapon to this jumpgun
+		ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon((CFFWeaponBase*)pSwitchingTo);
 
-#else
+		//Only reset the values if the weapon being switched to is NOT a mancannon
+		if( ((CFFWeaponBase*)pSwitchingTo)->GetWeaponID() != FF_WEAPON_DEPLOYMANCANNON )
+		{
+			m_flStartTime = -1.0f;
+			m_flLastUpdate = -1.0f;
+			m_flTotalChargeTime = 0.0f;
+			m_flClampedChargeTime = 0.0f;
 
-	m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
-	m_flChargeTimeBufferedNextUpdate = 0.0f;
-
+			m_flNextPrimaryAttack = (JUMPDOWN_ALLOWUNCHARGEDSHOT) ? (gpGlobals->curtime + 0.2f) : (gpGlobals->curtime + JUMPDOWN_CHARGEUPTIME);
+		}
+	}
 #endif
 
 	return BaseClass::Holster( pSwitchingTo );

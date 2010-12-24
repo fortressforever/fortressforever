@@ -587,7 +587,7 @@ CFFPlayer::CFFPlayer()
 
 	SetObjectiveEntity(NULL);
 
-	m_pBuildLastWeapon = NULL;
+	m_pLastWeapon = NULL;
 
 	m_flJumpTime = m_flFallTime = 0;
 
@@ -1292,6 +1292,7 @@ void CFFPlayer::PreForceSpawn( void )
 			GetActiveFFWeapon()->Holster();
 
 		SetActiveWeapon( NULL );
+		m_pLastWeapon = NULL;
 
 		// Remove all weapons
 		for( int i = 0; i < MAX_WEAPONS; i++ )
@@ -1589,6 +1590,10 @@ void CFFPlayer::Spawn( void )
 
 		break;
 	}
+
+	//Set the last weapon to null on spawn -GreenMushy
+	m_pLastWeapon = NULL;
+
 	//////////////////////////////////////////////////////////////////////////
 	
 	// Make sure we don't go running around during the intermission
@@ -1611,8 +1616,9 @@ void CFFPlayer::Spawn( void )
 void CFFPlayer::SetupClassVariables()
 {
 #ifndef FF_BETA_TEST_COMPILE
-	// Reset Engineer stuff
-	m_pBuildLastWeapon = NULL;
+
+	//Last weapon used
+	m_pLastWeapon = NULL;
 
 	//m_hSaveMe = NULL;
 	m_flSaveMeTime = 0.0f;
@@ -3736,12 +3742,6 @@ void CFFPlayer::PostBuildGenericThink( void )
 		// Give a message for now
 		Warning( "CFFPlayer::PostBuildGenericThink - ERROR!!!\n" );
 	}
-
-	// Deploy weapon
-	//if( GetActiveWeapon()->GetLastWeapon() )
-	//	GetActiveWeapon()->GetLastWeapon()->Deploy();
-	//if( m_pBuildLastWeapon )
-	//	m_pBuildLastWeapon->Deploy();
 }
 
 /**
