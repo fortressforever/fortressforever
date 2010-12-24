@@ -10,6 +10,9 @@
 /// ---------
 /// Dec 24, 2004 Mirv: First created
 
+//KNOWN BUG
+
+//TODO: Slightly randomize the vector location inside the player so pipes dont clump up
 
 #include "cbase.h"
 #include "ff_projectile_pipebomb.h"
@@ -48,7 +51,7 @@ ConVar ffdev_pipe_friction("ffdev_pipe_friction", "256", FCVAR_REPLICATED | FCVA
 //ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define PIPE_DET_DELAY 0.55	// this is mirrored in ff_player_shared.cpp(97) and ff_player.cpp
 
-ConVar ffdev_pipebomb_follow_speed_factor( "ffdev_pipebomb_follow_speed_factor", "0.75", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_follow_speed_factor( "ffdev_pipebomb_follow_speed_factor", "0.9", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_FOLLOW_SPEED_FACTOR ffdev_pipebomb_follow_speed_factor.GetFloat()
 
 ConVar ffdev_pipebomb_magnet_radius( "ffdev_pipebomb_magnet_radius", "64", FCVAR_REPLICATED | FCVAR_NOTIFY );
@@ -63,7 +66,7 @@ ConVar ffdev_pipebomb_maxfollowdist( "ffdev_pipebomb_maxfollowdist", "128", FCVA
 #define PIPE_MAX_FOLLOW_DIST ffdev_pipebomb_maxfollowdist.GetInt()
 
 //Pipes min pecentage base speed of player to activate the magnet
-ConVar ffdev_pipebomb_min_activation_speed_factor( "ffdev_pipebomb_min_activation_speed_factor", "0.95", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_min_activation_speed_factor( "ffdev_pipebomb_min_activation_speed_factor", "0.9", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MIN_ACTIVATION_SPEED_FACTOR ffdev_pipebomb_min_activation_speed_factor.GetFloat()
 
 //=============================================================================
@@ -429,13 +432,6 @@ void CFFProjectilePipebomb::PipebombThink()
 		//If the pipe has not yet magnetized to a target
 		if( m_bMagnetActive == false )
 		{
-			//If the type was somehow FLY and the magnet is not active, apply gravity
-			if( GetMoveType() == MOVETYPE_FLY )
-			{
-				//Reset the move type here just in case?
-				SetMoveType( MOVETYPE_FLYGRAVITY );
-			}
-
 			//Attempting to check for players in a radius by way of a sphere query
 			CBaseEntity *pEntity = NULL;
 			for( CEntitySphereQuery sphere( GetAbsOrigin(), PIPE_MAGNET_RADIUS ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
@@ -455,12 +451,12 @@ void CFFProjectilePipebomb::PipebombThink()
 					continue;
 
 				//dont magnetize if the player is moving slower then base movespeed
-				CFFPlayer* pPlayer = ToFFPlayer(pEntity);
-				if( pPlayer->GetAbsVelocity().Length() < ( pPlayer->MaxSpeed() * PIPE_MIN_ACTIVATION_SPEED_FACTOR ))
+				CFFPlayer* pTarget = ToFFPlayer(pEntity);
+				if( pTarget->GetAbsVelocity().Length() < ( pTarget->MaxSpeed() * PIPE_MIN_ACTIVATION_SPEED_FACTOR ))
 					continue;
 
-				//dont magnetize to teammates of this player
-				if( pPlayer->GetTeam() == GetOwnerEntity()->GetTeam() )
+				//dont magnetize to teammates of this pipe's owner
+				if( pTarget->GetTeam() == GetOwnerEntity()->GetTeam() )
 					continue;
 
 				//Checks complete, target acquired->
@@ -471,6 +467,7 @@ void CFFProjectilePipebomb::PipebombThink()
 				//Set the magnet bool to true so it doesnt sphere query anymore
 				m_bMagnetActive = true;
 
+				DevMsg("Magnet acquired target\n");
 				//break out of the loop
 				break;
 			}
@@ -508,19 +505,7 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 {
 	//If there is no valid target, gtfo
 	if( _pTarget == NULL )
-	{
-		//Set the magnet active to false so it stops moving
-		m_bMagnetActive = false;
-
-		//null out the target
-		m_pMagnetTarget = NULL;
-
-		//Reset the move type to the default grenade type so gravity effects it again 
-		// keep the speed so it does more realistic falling
-		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
-
 		return;
-	}
 
 	//Declare the direction the pipe will magnetize to
 	Vector vMoveDir;
@@ -537,10 +522,16 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 		//null out the target
 		m_pMagnetTarget = NULL;
 
+		//null out the ground so gravity will start applying
+		SetGroundEntity( (CBaseEntity *)NULL );
+
 		//Reset the move type to the default grenade type so gravity effects it again 
 		// keep the speed so it does more realistic falling
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
-
+		
+		//Send msg for debugging
+		DevMsg("Pipebomb reached chase limit.. Detatching\n");
+		
 		//gtfo this function
 		return;
 	}
@@ -556,9 +547,15 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 		//null out the target
 		m_pMagnetTarget = NULL;
 
+		//null out the ground so gravity will start applying
+		SetGroundEntity( (CBaseEntity *)NULL );
+
 		//Reset the move type to the default grenade type so gravity effects it again 
 		// keep the speed so it does more realistic falling
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
+
+		//Send msg for debugging
+		DevMsg("Pipebomb target moving too slow.. Detatching\n");
 
 		//gtfo this function
 		return;
@@ -579,6 +576,9 @@ void CFFProjectilePipebomb::ResolveFlyCollisionCustom(trace_t &trace, Vector &ve
 {
 	//Arm the magnet upon impact
 	m_bMagnetArmed = true;
+
+	//Send dev msg for debugging
+	DevMsg("Magnet Armed\n");
 
 	//Now do the normal base class collision stuff
 	BaseClass::ResolveFlyCollisionCustom( trace, vecVelocity );
