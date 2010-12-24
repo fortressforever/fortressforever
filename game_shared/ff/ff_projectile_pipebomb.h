@@ -114,6 +114,9 @@ public:
 	//Custom collision to allow for constant elasticity on hit surfaces
 	virtual void ResolveFlyCollisionCustom(trace_t &trace, Vector &vecVelocity);
 
+	//Randomize the pipe velocities to not clump into a ball
+	void RandomizePipeVelocity();
+
 #ifdef GAME_DLL	
 	void DetonatePipe(bool force = false, CBaseEntity *pOther = NULL);
 

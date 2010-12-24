@@ -69,6 +69,18 @@ ConVar ffdev_pipebomb_maxfollowdist( "ffdev_pipebomb_maxfollowdist", "128", FCVA
 ConVar ffdev_pipebomb_min_activation_speed_factor( "ffdev_pipebomb_min_activation_speed_factor", "0.9", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MIN_ACTIVATION_SPEED_FACTOR ffdev_pipebomb_min_activation_speed_factor.GetFloat()
 
+//Radius that pipes randomize when they stop
+ConVar ffdev_pipebomb_randomize_radius( "ffdev_pipebomb_randomize_radius", "16", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define PIPE_RANDOMIZE_RADIUS ffdev_pipebomb_randomize_radius.GetInt()
+
+//Speed that pipes move when they randomize
+ConVar ffdev_pipebomb_randomize_speed( "ffdev_pipebomb_randomize_speed", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define PIPE_RANDOMIZE_SPEED ffdev_pipebomb_randomize_speed.GetInt()
+
+//Allow the player to attach to himself for easier testing/debugging
+ConVar ffdev_pipebomb_friendly_attach( "ffdev_pipebomb_friendly_attach", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define PIPE_FRIENDLY_ATTACH ffdev_pipebomb_friendly_attach.GetBool()
+
 //=============================================================================
 // CFFProjectilePipebomb implementation
 //=============================================================================
@@ -446,18 +458,26 @@ void CFFProjectilePipebomb::PipebombThink()
 
 				//Should be a player now ->
 
-				//just dont bother magnetizing to the owner, move on
-				if( pEntity == GetOwnerEntity() )
-					continue;
+				//If the #define says attach to teammates self or teammates
+				if( PIPE_FRIENDLY_ATTACH == false )
+				{
+					//just dont bother magnetizing to the owner, move on
+					if( pEntity == GetOwnerEntity() )
+						continue;
+				}
 
 				//dont magnetize if the player is moving slower then base movespeed
 				CFFPlayer* pTarget = ToFFPlayer(pEntity);
 				if( pTarget->GetAbsVelocity().Length() < ( pTarget->MaxSpeed() * PIPE_MIN_ACTIVATION_SPEED_FACTOR ))
 					continue;
 
-				//dont magnetize to teammates of this pipe's owner
-				if( pTarget->GetTeam() == GetOwnerEntity()->GetTeam() )
-					continue;
+				//If the #define says attach to teammates self or teammates
+				if( PIPE_FRIENDLY_ATTACH == false )
+				{
+					//dont magnetize to teammates of this pipe's owner
+					if( pTarget->GetTeam() == GetOwnerEntity()->GetTeam() )
+						continue;
+				}
 
 				//Checks complete, target acquired->
 
@@ -557,6 +577,9 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 		//Send msg for debugging
 		DevMsg("Pipebomb target moving too slow.. Detatching\n");
 
+		//Send the pipes to randomize their velocity to spread out
+		RandomizePipeVelocity();
+
 		//gtfo this function
 		return;
 	}
@@ -582,4 +605,33 @@ void CFFProjectilePipebomb::ResolveFlyCollisionCustom(trace_t &trace, Vector &ve
 
 	//Now do the normal base class collision stuff
 	BaseClass::ResolveFlyCollisionCustom( trace, vecVelocity );
+}
+
+//Function to randomize the location of a pipe that has stopped moving after being magnetic
+void CFFProjectilePipebomb::RandomizePipeVelocity()
+{
+	//Declare the static that will behave as the seed for all pipe randomizing
+	static int pipe_seed = 0;
+
+	//Declare the direction vector
+	Vector vRandomDir;
+
+	// init random system with this seed
+	RandomSeed( pipe_seed );
+
+	// increment the seed for later use
+	pipe_seed++;
+
+	// Get circular gaussian spread.
+	int x = RandomInt( -PIPE_RANDOMIZE_RADIUS, PIPE_RANDOMIZE_RADIUS );
+	int y = RandomInt( -PIPE_RANDOMIZE_RADIUS, PIPE_RANDOMIZE_RADIUS );
+
+	//Plug the x and y values in.  I dont want a z direction
+	vRandomDir = Vector(x,y,0);
+
+	//Normalize the vector 
+	VectorNormalize(vRandomDir);
+
+	//Set the velocity
+	SetAbsVelocity( vRandomDir * PIPE_RANDOMIZE_SPEED );
 }
