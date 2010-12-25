@@ -37,12 +37,8 @@
 #include "ff_buildableobjects_shared.h"
 
 //The value that the player's speed% is reduced to when actively using the shield
-ConVar ffdev_shield_speed( "ffdev_shield_speed", "0.2", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar ffdev_shield_speed( "ffdev_shield_speed", "0.3", FCVAR_REPLICATED | FCVAR_NOTIFY);
 #define FF_SHIELD_SPEEDEFFECT ffdev_shield_speed.GetFloat()
-
-//How high off the ground the shield should be
-ConVar ffdev_shield_height( "ffdev_shield_height", "16", FCVAR_REPLICATED | FCVAR_NOTIFY);
-#define SHIELD_HEIGHT ffdev_shield_height.GetInt()
 
 //Show the "buildable" object that is the physical shield in front of the player
 ConVar ffdev_shield_showmodel( "ffdev_shield_showmodel", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
@@ -122,14 +118,6 @@ void CFFWeaponShield::ItemPostFrame()
 	if( !pPlayer )
 		return;
 
-	//If the player is currently owning a shield*, then update its position with this player
-	if( pPlayer->GetShield() )
-	{
-		//Set the location and angle
-		pPlayer->GetShield()->SetAbsOrigin( pPlayer->GetAbsOrigin() + Vector(0, 0, SHIELD_HEIGHT));
-		pPlayer->GetShield()->SetAbsAngles( pPlayer->GetAbsAngles() );
-	}
-
 	//-------------------------
 	//Pressing Attack
 	//-------------------------
@@ -206,14 +194,17 @@ void CFFWeaponShield::ShieldActive( void )
 	//If the effect is NOT on, then add it!
 	if( pPlayer->IsSpeedEffectSet(SE_SHIELD) == false )
 	{
-		pPlayer->AddSpeedEffect(SE_SHIELD, 0.1f, FF_SHIELD_SPEEDEFFECT, SEM_BOOLEAN);
+		pPlayer->AddSpeedEffect(SE_SHIELD, 999, FF_SHIELD_SPEEDEFFECT, SEM_BOOLEAN);
 	}
 
 	//If the player currently has no shield
 	if( pPlayer->GetShield() == NULL )
 	{
+		//create the build info using shield
+		CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_SHIELD );
+
 		//Create the shield in the world
-		CFFShield *pShield = (CFFShield *)CBaseEntity::Create( "FF_Shield", pPlayer->GetAbsOrigin() + Vector(0, 0, SHIELD_HEIGHT ), pPlayer->GetAbsAngles(), pPlayer);
+		CFFShield *pShield = (CFFShield *)CBaseEntity::Create( "FF_Shield", hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), pPlayer);
 
 		//Check if the world model should show or not-GreenMushy
 		if( SHIELD_SHOWMODEL == 0 )
@@ -235,6 +226,19 @@ void CFFWeaponShield::ShieldActive( void )
 		pPlayer->SetShield( pShield );
 
 		DevMsg("Shield Created\n");
+	}
+	//the shield is in the world, so set up its position and angles
+	else
+	{
+		//Just create this shield to shorten the text
+		CFFShield *pShield = pPlayer->GetShield();
+
+		//create the build info using shield
+		CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_SHIELD );
+
+		//If the player is currently owning a shield*, then update its position with this player
+		pShield->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+		pShield->SetAbsAngles( hBuildInfo.GetBuildAngles() );
 	}
 #endif
 }

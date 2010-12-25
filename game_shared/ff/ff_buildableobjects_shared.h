@@ -96,6 +96,7 @@
 #define FF_BUILD_SENTRYGUN	2
 #define FF_BUILD_DETPACK	3
 #define FF_BUILD_MANCANNON	4
+#define FF_BUILD_SHIELD		5
 
 // The *_BUILD_DIST means how far in front of the player
 // the object is built

@@ -4384,15 +4384,21 @@ void CFFPlayer::RecalculateSpeed( void )
 	// need this so we can slow down the player more if using the assault cannon
 	bool bAssaultCannonIncluded = false;
 
+	// need this so i can go below this 40% clamp 
+	bool bShieldIncluded = false;
+
 	// go apply all speed effects
 	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 	{
 		if (m_vSpeedEffects[i].active)
 		{
-			flSpeed -= (1 - m_vSpeedEffects[i].speed);
+			flSpeed -= (1.0f - m_vSpeedEffects[i].speed);
 
 			if( m_vSpeedEffects[i].type == SE_ASSAULTCANNON )
 				bAssaultCannonIncluded = true;
+
+			if( m_vSpeedEffects[i].type == SE_SHIELD )
+				bShieldIncluded = true;
 		}		
 	}
 	
@@ -4400,6 +4406,13 @@ void CFFPlayer::RecalculateSpeed( void )
 	if( bAssaultCannonIncluded ) 
 	{
 		// May as well clamp this at 0 for safety; dunno if it'll ever happen
+		if( flSpeed < 0.0f )
+			flSpeed = 0.0f;
+	}
+	else if( bShieldIncluded )
+	{
+		//Dont know why its doing these other things, but shield shouldnt clamp to 40% speed -GreenMushy
+		// just do this safety clamp and skip that weird 40% speed clamp
 		if( flSpeed < 0.0f )
 			flSpeed = 0.0f;
 	}
