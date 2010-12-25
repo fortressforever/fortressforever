@@ -10,9 +10,12 @@
 /// ---------
 /// Dec 24, 2004 Mirv: First created
 
-//KNOWN BUG
+//KNOWN BUG:  Pipes dont stop playing sound after their det goes off
 
-//TODO: Slightly randomize the vector location inside the player so pipes dont clump up
+//TODO: Think about slightly randomizing the vector location inside the player so pipes dont clump up
+//		Play a sound sound somewhere, either player or pipe to denote magnetism
+//		Display somewhere on the hud how many pipes are attached
+//		Indicate if the pipes are close to the target by sound or visual effect( hud or otherwise )
 
 #include "cbase.h"
 #include "ff_projectile_pipebomb.h"
@@ -527,6 +530,29 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 	if( _pTarget == NULL )
 		return;
 
+	//Target is dead, reset the magnet and physics then gtfo
+	if( !(_pTarget->IsAlive()) )
+	{
+		//Set the magnet active to false so it stops moving
+		m_bMagnetActive = false;
+
+		//null out the target
+		m_pMagnetTarget = NULL;
+
+		//null out the ground so gravity will start applying
+		SetGroundEntity( (CBaseEntity *)NULL );
+
+		//Reset the move type to the default grenade type so gravity effects it again 
+		// keep the speed so it does more realistic falling
+		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
+		
+		//Send msg for debugging
+		DevMsg("Pipebomb target died.  Detaching\n");
+		
+		//gtfo this function
+		return;
+	}
+
 	//Declare the direction the pipe will magnetize to
 	Vector vMoveDir;
 
@@ -550,7 +576,7 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 		
 		//Send msg for debugging
-		DevMsg("Pipebomb reached chase limit.. Detatching\n");
+		DevMsg("Pipebomb reached chase limit.. Detaching\n");
 		
 		//gtfo this function
 		return;
@@ -575,7 +601,7 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 
 		//Send msg for debugging
-		DevMsg("Pipebomb target moving too slow.. Detatching\n");
+		DevMsg("Pipebomb target moving too slow.. Detaching\n");
 
 		//Send the pipes to randomize their velocity to spread out
 		RandomizePipeVelocity();
@@ -594,7 +620,9 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 	SetAbsVelocity( (vMoveDir * _pTarget->GetAbsVelocity().Length()) * PIPE_FOLLOW_SPEED_FACTOR );
 }
 
-//Just need to override this function to set the arm time to when it impacts something
+//----------------------------------------------------------------------------
+// Purpose: Override this virtual function to arm the magnet on impact
+//----------------------------------------------------------------------------
 void CFFProjectilePipebomb::ResolveFlyCollisionCustom(trace_t &trace, Vector &vecVelocity)
 {
 	//Arm the magnet upon impact
@@ -607,7 +635,9 @@ void CFFProjectilePipebomb::ResolveFlyCollisionCustom(trace_t &trace, Vector &ve
 	BaseClass::ResolveFlyCollisionCustom( trace, vecVelocity );
 }
 
-//Function to randomize the location of a pipe that has stopped moving after being magnetic
+//----------------------------------------------------------------------------
+//Purpose: Randomize the location of a pipe 
+//----------------------------------------------------------------------------
 void CFFProjectilePipebomb::RandomizePipeVelocity()
 {
 	//Declare the static that will behave as the seed for all pipe randomizing
