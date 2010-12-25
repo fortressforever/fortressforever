@@ -26,6 +26,14 @@
 
 #define DART_MODEL "models/projectiles/dart/w_dart.mdl"
 
+//Time the tranq effect lasts for on enemy targets
+ConVar ffdev_tranq_duration_enemy("ffdev_tranq_duration_enemy", "4.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define TRANQ_DURATION_ENEMY	ffdev_tranq_duration_enemy.GetFloat()
+
+//Time the tranq effect last on friendly targets
+ConVar ffdev_tranq_duration_friendly("ffdev_tranq_duration_friendly", "2.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define TRANQ_DURATION_FRIENDLY	ffdev_tranq_duration_friendly.GetFloat()
+
 class CRecvProxyData;
 extern void RecvProxy_LocalVelocityX(const CRecvProxyData *pData, void *pStruct, void *pOut);
 extern void RecvProxy_LocalVelocityY(const CRecvProxyData *pData, void *pStruct, void *pOut);
@@ -154,23 +162,49 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 			// #0000695: you can tranq your teammates w/ mp_friendlyfire 0
 			if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 			{
-				// make the player walk slow, but run it through lau first!
-				float flDuration = 6.0f;
-				float flIconDuration = flDuration;
-				float flSpeed = 0.3f;
-				if( pPlayer->LuaRunEffect( LUA_EF_TRANQ, GetOwnerEntity(), &flDuration, &flIconDuration, &flSpeed ) )
+				//Check the team relationship to allot the correct tranq durations
+				//ENEMY is hit->
+				if( ToFFPlayer(GetOwnerEntity())->GetTeamNumber() != pPlayer->GetTeamNumber() )
 				{
-					pPlayer->AddSpeedEffect( SE_TRANQ, flDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration );
+					// make the player walk slow, but run it through lau first!
+					float flDuration = TRANQ_DURATION_ENEMY;
+					float flIconDuration = flDuration;
+					float flSpeed = 0.3f;
+					if( pPlayer->LuaRunEffect( LUA_EF_TRANQ, GetOwnerEntity(), &flDuration, &flIconDuration, &flSpeed ) )
+					{
+						pPlayer->AddSpeedEffect( SE_TRANQ, flDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration );
+					}
+
+					// And now.. an effect
+					CSingleUserRecipientFilter user(pPlayer);
+					user.MakeReliable();
+
+					UserMessageBegin(user, "FFViewEffect");
+					WRITE_BYTE(FF_VIEWEFFECT_TRANQUILIZED);
+					WRITE_FLOAT(TRANQ_DURATION_ENEMY);
+					MessageEnd();
 				}
+				//FRIENDLY is hit ->
+				else
+				{
+					// make the player walk slow, but run it through lau first!
+					float flDuration = TRANQ_DURATION_FRIENDLY;
+					float flIconDuration = flDuration;
+					float flSpeed = 0.3f;
+					if( pPlayer->LuaRunEffect( LUA_EF_TRANQ, GetOwnerEntity(), &flDuration, &flIconDuration, &flSpeed ) )
+					{
+						pPlayer->AddSpeedEffect( SE_TRANQ, flDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration );
+					}
 
-				// And now.. an effect
-				CSingleUserRecipientFilter user(pPlayer);
-				user.MakeReliable();
+					// And now.. an effect
+					CSingleUserRecipientFilter user(pPlayer);
+					user.MakeReliable();
 
-				UserMessageBegin(user, "FFViewEffect");
-				WRITE_BYTE(FF_VIEWEFFECT_TRANQUILIZED);
-				WRITE_FLOAT(flDuration);
-				MessageEnd();
+					UserMessageBegin(user, "FFViewEffect");
+					WRITE_BYTE(FF_VIEWEFFECT_TRANQUILIZED);
+					WRITE_FLOAT(TRANQ_DURATION_FRIENDLY);
+					MessageEnd();
+				}
 			}
 		}
 #endif
