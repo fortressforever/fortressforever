@@ -46,6 +46,9 @@ extern ConVar ffdev_pipe_friction;
 class CFFProjectilePipebomb : public CFFProjectileGrenade
 {
 private:
+	//Control the time before the explosion is armed
+	bool m_bArmed;
+
 	//Control the time before the magnetism
 	bool m_bMagnetArmed;
 
@@ -82,6 +85,8 @@ public:
 	
 	float GetDetonateTime(){ return m_flDetonateTime; }
 	void SetDetonateTime( float _flDetTime ){ m_flDetonateTime = _flDetTime; }
+
+	bool GetArmed(){return m_bArmed; }
 
 	// Override precache because we want a different model
 	virtual void Spawn();

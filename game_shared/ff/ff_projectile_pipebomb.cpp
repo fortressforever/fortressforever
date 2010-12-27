@@ -54,6 +54,9 @@ ConVar ffdev_pipe_friction("ffdev_pipe_friction", "256", FCVAR_REPLICATED | FCVA
 //ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define PIPE_DET_DELAY 0.55	// this is mirrored in ff_player_shared.cpp(97) and ff_player.cpp
 
+ConVar ffdev_pipebomb_arm_delay("ffdev_pipebomb_arm_delay", "0.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define PIPE_ARM_DELAY ffdev_pipebomb_arm_delay.GetFloat()
+
 ConVar ffdev_pipebomb_follow_speed_factor( "ffdev_pipebomb_follow_speed_factor", "0.9", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_FOLLOW_SPEED_FACTOR ffdev_pipebomb_follow_speed_factor.GetFloat()
 
@@ -173,6 +176,7 @@ void CFFProjectilePipebomb::Spawn()
 	m_flSpawnTime = gpGlobals->curtime;
 
 	//Initialize pipe specific data members
+	m_bArmed = false;
 	m_bMagnetArmed = false;
 	m_pMagnetTarget = NULL;
 	m_bShouldDetonate = false;
@@ -311,8 +315,8 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 	{
 		if (pPipe->GetOwnerEntity() == pOwner)
 		{
-			//Check if the pipe hasnt already been detted
-			if( pPipe->GetShouldDetonate() == false )
+			//Check if the pipe hasnt already been detted, and it is detable
+			if( pPipe->GetShouldDetonate() == false && pPipe->GetArmed() == true )
 			{
 				//Emit the sound from each pipe
 				pPipe->EmitSoundShared( "Pipe.Pre_Detonate" );
@@ -515,6 +519,17 @@ void CFFProjectilePipebomb::PipebombThink()
 
 			//Blow this pipe up
 			Detonate();
+		}
+	}
+
+	//Check if the pipe's explosive is active yet
+	if( m_bArmed == false )
+	{
+		//if its been in the world long enough
+		if( gpGlobals->curtime > m_flSpawnTime + PIPE_ARM_DELAY )
+		{
+			//set this bool to true so it can not be detonated
+			m_bArmed = true;
 		}
 	}
 
