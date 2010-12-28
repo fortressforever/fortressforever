@@ -254,6 +254,17 @@ void CHudCrosshair::Paint( void )
 	// movexhair 3 = flash xhair when shooting
 	if ( ( FFDEV_CONCAIM_MOVEXHAIR == 3) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
 	{
+		//Get the weapon and see if you should draw the crosshair while conced
+		if( weaponID == FF_WEAPON_ASSAULTCANNON || 
+			weaponID == FF_WEAPON_SUPERNAILGUN || 
+			weaponID == FF_WEAPON_FLAMETHROWER || 
+			weaponID == FF_WEAPON_NAILGUN ||
+			weaponID == FF_WEAPON_AUTORIFLE)
+		{
+			//If it was one of these weapons, just return before it tries to draw anything
+			return;
+		}
+
 		// calculate alphas
 		float flFlashAlpha = clamp(1.0f - (gpGlobals->curtime - pPlayer->m_flTrueAimTime)/FFDEV_CONCAIM_FADETIME, 0.0f, 1.0f);
 		// set alphas
