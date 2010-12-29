@@ -182,7 +182,10 @@ void CFFWeaponShield::ShieldActive( void )
 		Q_strncpy( (char*)(GetFFWpnData().m_szAnimExtension), szAnimExt, sizeof( GetFFWpnData().m_szAnimExtension ) );
 
 		// Send animation
-		SendWeaponAnim( ACT_VM_DRAW );
+		//SendWeaponAnim( ACT_VM_DRAW );
+
+		//Try this deploy instead, maybe it will communicate the new AnimExt to the server? 
+		BaseClass::Deploy();
 
 #ifdef CLIENT_DLL
 		DevMsg("Shield Active\n");
@@ -260,7 +263,10 @@ void CFFWeaponShield::ShieldIdle( void )
 		char * szAnimExt = "crowbar";
 		Q_strncpy( (char*)(GetFFWpnData().m_szAnimExtension), szAnimExt, sizeof( GetFFWpnData().m_szAnimExtension ) );
 
-		// Send animation
+		//Try using this deploy to communicate the new AnimExt over the server, then immediatly call a holster anim
+		BaseClass::Deploy();
+
+		//Send animation
 		SendWeaponAnim( ACT_VM_HOLSTER );
 
 #ifdef CLIENT_DLL
