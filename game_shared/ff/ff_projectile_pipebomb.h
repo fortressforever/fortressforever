@@ -87,6 +87,10 @@ public:
 	void SetDetonateTime( float _flDetTime ){ m_flDetonateTime = _flDetTime; }
 
 	bool GetArmed(){return m_bArmed; }
+	void SetArmed(bool _bArmed){ m_bArmed = _bArmed; }
+
+	bool GetMagnetArmed(){ return m_bMagnetArmed; }
+	void SetMagnetArmed(bool _bMagnetArmed){ m_bMagnetArmed = _bMagnetArmed; }
 
 	// Override precache because we want a different model
 	virtual void Spawn();

@@ -57,22 +57,26 @@ ConVar ffdev_pipe_friction("ffdev_pipe_friction", "256", FCVAR_REPLICATED | FCVA
 ConVar ffdev_pipebomb_arm_delay("ffdev_pipebomb_arm_delay", "0.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_ARM_DELAY ffdev_pipebomb_arm_delay.GetFloat()
 
-ConVar ffdev_pipebomb_follow_speed_factor( "ffdev_pipebomb_follow_speed_factor", "0.9", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_follow_speed_factor( "ffdev_pipebomb_follow_speed_factor", "0.8", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_FOLLOW_SPEED_FACTOR ffdev_pipebomb_follow_speed_factor.GetFloat()
 
-ConVar ffdev_pipebomb_magnet_radius( "ffdev_pipebomb_magnet_radius", "64", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_magnet_radius( "ffdev_pipebomb_magnet_radius", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MAGNET_RADIUS ffdev_pipebomb_magnet_radius.GetInt()
 
-//Making my own det delay so i can revert easily, and i think mine is a little different
-ConVar ffdev_pipebomb_detdelay( "ffdev_pipebomb_detdelay", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY );
+//My own det delay so i can revert easily, and i think mine is a little different
+ConVar ffdev_pipebomb_detdelay( "ffdev_pipebomb_detdelay", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_DETONATE_DELAY ffdev_pipebomb_detdelay.GetFloat()
+
+//Convar for the det time on magnetic pipes
+ConVar ffdev_pipebomb_magnetic_detdelay( "ffdev_pipebomb_magnetic_detdelay", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define PIPE_MAGNETIC_DETONATE_DELAY ffdev_pipebomb_magnetic_detdelay.GetFloat()
 
 //Pipes max follow distance
 ConVar ffdev_pipebomb_maxfollowdist( "ffdev_pipebomb_maxfollowdist", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MAX_FOLLOW_DIST ffdev_pipebomb_maxfollowdist.GetInt()
 
 //Pipes min pecentage base speed of player to activate the magnet
-ConVar ffdev_pipebomb_min_activation_speed_factor( "ffdev_pipebomb_min_activation_speed_factor", "0.9", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_min_activation_speed_factor( "ffdev_pipebomb_min_activation_speed_factor", "0.6", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MIN_ACTIVATION_SPEED_FACTOR ffdev_pipebomb_min_activation_speed_factor.GetFloat()
 
 //Radius that pipes randomize when they stop
@@ -315,8 +319,19 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 	{
 		if (pPipe->GetOwnerEntity() == pOwner)
 		{
+			//If the player is dead, just detonate each pipe
+			if( ToFFPlayer(pPipe->GetOwnerEntity())->GetHealth() <= 0 )
+			{
+				//Detonate the pipe
+				pPipe->Detonate();
+
+				//Move on to the next pipe
+				continue;
+			}
+
 			//Check if the pipe hasnt already been detted, and it is detable
-			if( pPipe->GetShouldDetonate() == false && pPipe->GetArmed() == true )
+			//Also check if the magnet is armed, meaning it has impacted a solid surface since its creation
+			if( pPipe->GetShouldDetonate() == false && pPipe->GetArmed() == true && pPipe->GetMagnetArmed() == true)
 			{
 				//Emit the sound from each pipe
 				pPipe->EmitSoundShared( "Pipe.Pre_Detonate" );
@@ -324,8 +339,19 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 				//Set to true so you cant detonate it again before it explodes
 				pPipe->SetShouldDetonate(true);
 
-				//Set the pipes detonation time in the future
-				pPipe->SetDetonateTime(gpGlobals->curtime + PIPE_DETONATE_DELAY);
+				//Depending on if the pipe is currently magnetic or not, set the detonation times
+				//If the target is VALID, meaning it is currently a magnetic pipe
+				if( pPipe->GetMagnetTarget() != NULL )
+				{
+					//Set the pipes detonation time in the future: MAGNETIC PIPES
+					pPipe->SetDetonateTime(gpGlobals->curtime + PIPE_MAGNETIC_DETONATE_DELAY);
+				}
+				//else the target is NULL, so explode normally
+				else
+				{
+					//Set the pipes detonation time in the future: NORMAL PIPES
+					pPipe->SetDetonateTime(gpGlobals->curtime + PIPE_DETONATE_DELAY);
+				}
 
 				//Start glowing this pipe
 				pPipe->StartGlowEffect();
