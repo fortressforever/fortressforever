@@ -41,7 +41,7 @@ ConVar ffdev_shield_speed( "ffdev_shield_speed", "0.3", FCVAR_REPLICATED | FCVAR
 #define FF_SHIELD_SPEEDEFFECT ffdev_shield_speed.GetFloat()
 
 //Show the "buildable" object that is the physical shield in front of the player
-ConVar ffdev_shield_showmodel( "ffdev_shield_showmodel", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_shield_showmodel( "ffdev_shield_showmodel", "1", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define SHIELD_SHOWMODEL ffdev_shield_showmodel.GetBool()
 
 //=============================================================================
@@ -178,14 +178,15 @@ void CFFWeaponShield::ShieldActive( void )
 		//To change it i have to change the animation extension in the weapon data and im doing it manually
 		//then calling the weapon animation
 		//Im not sure if there is an actual function to do this??
-		char * szAnimExt = "railgun";
-		Q_strncpy( (char*)(GetFFWpnData().m_szAnimExtension), szAnimExt, sizeof( GetFFWpnData().m_szAnimExtension ) );
+		//char * szAnimExt = "railgun";
+
+		//Q_strncpy( (char*)(GetFFWpnData().m_szAnimExtension), szAnimExt, sizeof( GetFFWpnData().m_szAnimExtension ) );
 
 		// Send animation
 		//SendWeaponAnim( ACT_VM_DRAW );
 
-		//Try this deploy instead, maybe it will communicate the new AnimExt to the server? 
-		BaseClass::Deploy();
+		//FUCK IT, JUST DONT SHOW THE VIEW MODEL ANYMORE AND USE THE WORLD MODEL -GreenMushy
+		BaseClass::Holster(NULL);
 
 #ifdef CLIENT_DLL
 		DevMsg("Shield Active\n");
@@ -250,6 +251,13 @@ void CFFWeaponShield::ShieldActive( void )
 //----------------------------------------------------------------------------
 void CFFWeaponShield::ShieldIdle( void ) 
 {
+	//Get the owner of this shield
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	//If there is no player, gtfo
+	if( pPlayer == NULL )
+		return;
+
 	//So this only fires once per click
 	if( m_bShieldActive == true )
 	{
@@ -260,10 +268,10 @@ void CFFWeaponShield::ShieldIdle( void )
 		//To change it i have to change the animation extension in the weapon data and im doing it manually
 		//then calling the weapon animation
 		//Im not sure if there is an actual function to do this??
-		char * szAnimExt = "crowbar";
-		Q_strncpy( (char*)(GetFFWpnData().m_szAnimExtension), szAnimExt, sizeof( GetFFWpnData().m_szAnimExtension ) );
+		//char * szAnimExt = "crowbar";
+		//Q_strncpy( (char*)(GetFFWpnData().m_szAnimExtension), szAnimExt, sizeof( GetFFWpnData().m_szAnimExtension ) );
 
-		//Try using this deploy to communicate the new AnimExt over the server, then immediatly call a holster anim
+		//This is broken too.  It starts the weapon out in front of the player.
 		BaseClass::Deploy();
 
 		//Send animation
@@ -275,12 +283,6 @@ void CFFWeaponShield::ShieldIdle( void )
 	}
 
 #ifdef GAME_DLL
-	//Get the owner of this shield
-	CFFPlayer *pPlayer = GetPlayerOwner();
-
-	//If there is no player, gtfo
-	if( pPlayer == NULL )
-		return;
 
 	//If the player is effected by the shield slow, remove it
 	if( pPlayer->IsSpeedEffectSet(SE_SHIELD) == true )
