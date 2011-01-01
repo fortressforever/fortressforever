@@ -408,11 +408,11 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 				if( pPassEnt )
 				{
 					// If players should clip
-					if( pPassEnt->IsPlayer() && !pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_PLAYERS ) )
+					if( pPassEnt->IsPlayer() && pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_PLAYERS ) )
 						return true;
 
 					// If grenades should clip
-					if( ( pPassEnt->GetFlags() & FL_GRENADE ) && !pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_GRENADES ) )
+					if( ( pPassEnt->GetFlags() & FL_GRENADE ) && pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_GRENADES ) )
 						return true;
 
 					// If team entities should clip
