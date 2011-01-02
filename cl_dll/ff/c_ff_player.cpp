@@ -82,18 +82,18 @@ static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT )
 // ELMO *** Concussion icon (above player head) 1 of 2
 static ConVar tranq_on("ffdev_tranq_on", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Show tranq icon when conced. Default: 0 (boolean 0 or 1)"); 
 
-static ConVar concuss_alwaysOn("ffdev_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? Default: 0 (boolean 0 or 1)"); 
-static ConVar concuss_spriteSize("ffdev_concuss_spriteSize", "8.0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Size of sprite. Default: 8"); 
-static ConVar concuss_spriteNum("ffdev_concuss_spriteNum", "5", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Number of sprites. Default: 5"); 
-static ConVar concuss_color_r("ffdev_concuss_color_r", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Red Component. Default: 255"); 
-static ConVar concuss_color_g("ffdev_concuss_color_g", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Green Component. Default: 255"); 
-static ConVar concuss_color_b("ffdev_concuss_color_b", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Blue Component. Default: 0"); 
-static ConVar concuss_color_a("ffdev_concuss_color_a", "128", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Alpha Component. Default: 128"); 
-static ConVar concuss_verticalDistance("ffdev_concuss_verticalDistance", "4", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
-static ConVar concuss_verticalSpeed("ffdev_concuss_verticalSpeed", "200", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Time taken for the sprite to loop up and down. Default: 200 (milliseconds)" );
-static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "30", FCVAR_CLIENTDLL | FCVAR_CHEAT, "The speed at which the sprites spin. Default: 30 (multiplier)"  );
-static ConVar concuss_radius("ffdev_concuss_radius", "10", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite should be drawn from the origin. Default: 10 (hammer units)" );
-static ConVar concuss_height("ffdev_concuss_height", "10", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Height at which the sprite is drawn from the origin. Default: 10 (hammer units)");
+static ConVar concuss_alwaysOn("ffdev_concuss_alwaysOn", "0", FCVAR_CLIENTDLL, "Status always on? Default: 0 (boolean 0 or 1)"); 
+static ConVar concuss_spriteSize("ffdev_concuss_spriteSize", "8.0", FCVAR_CLIENTDLL, "Size of sprite. Default: 8"); 
+static ConVar concuss_spriteNum("ffdev_concuss_spriteNum", "5", FCVAR_CLIENTDLL, "Number of sprites. Default: 5"); 
+static ConVar concuss_color_r("ffdev_concuss_color_r", "255", FCVAR_CLIENTDLL, "Red Component. Default: 255"); 
+static ConVar concuss_color_g("ffdev_concuss_color_g", "255", FCVAR_CLIENTDLL, "Green Component. Default: 255"); 
+static ConVar concuss_color_b("ffdev_concuss_color_b", "0", FCVAR_CLIENTDLL, "Blue Component. Default: 0"); 
+static ConVar concuss_color_a("ffdev_concuss_color_a", "128", FCVAR_CLIENTDLL, "Alpha Component. Default: 128"); 
+static ConVar concuss_verticalDistance("ffdev_concuss_verticalDistance", "4", FCVAR_CLIENTDLL, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
+static ConVar concuss_verticalSpeed("ffdev_concuss_verticalSpeed", "200", FCVAR_CLIENTDLL, "Time taken for the sprite to loop up and down. Default: 200 (milliseconds)" );
+static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "30", FCVAR_CLIENTDLL, "The speed at which the sprites spin. Default: 30 (multiplier)"  );
+static ConVar concuss_radius("ffdev_concuss_radius", "10", FCVAR_CLIENTDLL, "Distance the sprite should be drawn from the origin. Default: 10 (hammer units)" );
+static ConVar concuss_height("ffdev_concuss_height", "10", FCVAR_CLIENTDLL, "Height at which the sprite is drawn from the origin. Default: 10 (hammer units)");
 // *** ELMO
 
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);

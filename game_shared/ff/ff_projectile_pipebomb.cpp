@@ -64,7 +64,7 @@ ConVar ffdev_pipebomb_magnet_radius( "ffdev_pipebomb_magnet_radius", "128", FCVA
 #define PIPE_MAGNET_RADIUS ffdev_pipebomb_magnet_radius.GetInt()
 
 //My own det delay so i can revert easily, and i think mine is a little different
-ConVar ffdev_pipebomb_detdelay( "ffdev_pipebomb_detdelay", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_detdelay( "ffdev_pipebomb_detdelay", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_DETONATE_DELAY ffdev_pipebomb_detdelay.GetFloat()
 
 //Convar for the det time on magnetic pipes
@@ -319,19 +319,9 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 	{
 		if (pPipe->GetOwnerEntity() == pOwner)
 		{
-			//If the player is dead, just detonate each pipe
-			if( ToFFPlayer(pPipe->GetOwnerEntity())->GetHealth() <= 0 )
-			{
-				//Detonate the pipe
-				pPipe->Detonate();
-
-				//Move on to the next pipe
-				continue;
-			}
-
 			//Check if the pipe hasnt already been detted, and it is detable
 			//Also check if the magnet is armed, meaning it has impacted a solid surface since its creation
-			if( pPipe->GetShouldDetonate() == false && pPipe->GetArmed() == true && pPipe->GetMagnetArmed() == true)
+			if( pPipe->GetShouldDetonate() == false && pPipe->GetArmed() == true )
 			{
 				//Emit the sound from each pipe
 				pPipe->EmitSoundShared( "Pipe.Pre_Detonate" );

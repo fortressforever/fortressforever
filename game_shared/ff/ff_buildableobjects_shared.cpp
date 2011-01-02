@@ -164,7 +164,7 @@ const char *g_pszFFManCannonSounds[] =
 ConVar ffdev_mancannon_combatcooldown( "ffdev_mancannon_combatcooldown", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 //Distance in front of the player
-ConVar ffdev_shield_build_distance("ffdev_shield_build_distance", "-16", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_shield_build_distance("ffdev_shield_build_distance", "-20", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define FF_BUILD_SHIELD_DIST	ffdev_shield_build_distance.GetFloat()
 
 //How high off the ground the shield should be

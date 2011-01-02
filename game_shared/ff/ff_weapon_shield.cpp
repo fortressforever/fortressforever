@@ -224,7 +224,7 @@ void CFFWeaponShield::ShieldActive( void )
 		pShield->Spawn();
 
 		//Set this shield to the buildable collision group so it blocks nearly everything
-		pShield->SetCollisionGroup( COLLISION_GROUP_BUILDABLE );
+		pShield->SetCollisionGroup( COLLISION_GROUP_PLAYER );
 
 		//Set the shield pointer in player to this newly created object, use GetShield() to find it again
 		pPlayer->SetShield( pShield );

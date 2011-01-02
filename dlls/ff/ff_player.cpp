@@ -826,6 +826,13 @@ void CFFPlayer::PostThink()
 				DevMsg("Deleting Shield from ff_Player\n");
 				UTIL_Remove(m_hShield);
 				m_hShield = NULL;
+
+				//If the player is effected by the shield slow, remove it
+				if( IsSpeedEffectSet(SE_SHIELD) == true )
+				{
+					//Remove the effect that was put on earlier
+					RemoveSpeedEffect(SE_SHIELD);
+				}
 			}
 		}
 	}
