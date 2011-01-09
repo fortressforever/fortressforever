@@ -4,6 +4,7 @@
 #include "ff_optionspage.h"
 #include "ff_customhudoptions_arrangementpresets.h"
 #include "ff_customhudoptions_stylepresets.h"
+#include "ff_customhudoptions_positionpresets.h"
 
 #include "keyvalues.h"
 #include "filesystem.h"
@@ -23,7 +24,7 @@ class CFFCustomHudAssignPresets : public CFFOptionsPage
 	DECLARE_CLASS_SIMPLE(CFFCustomHudAssignPresets, CFFOptionsPage);
 	
 public:
-	CFFCustomHudAssignPresets(Panel *parent, char const *panelName, CFFCustomHudStylePresets* stylePresetsClass, CFFCustomHudArrangementPresets* arrangementPresetsClass);
+	CFFCustomHudAssignPresets(Panel *parent, char const *panelName, CFFCustomHudStylePresets* stylePresetsClass, CFFCustomHudArrangementPresets* arrangementPresetsClass, CFFCustomHudPositionPresets* positionPresetsClass);
 	~CFFCustomHudAssignPresets();
 	virtual void Load();
 	virtual void Reset();
@@ -43,8 +44,15 @@ public:
 	void ArrangementPresetDeleted(const char *pszDeletedPresetName);
 	void ArrangementPresetAdded(const char *pszPresetName, KeyValues *kvPreset);
 
+	void PositionPresetUpdated(const char *pszPresetName);
+	void PositionPresetRenamed(const char *pszOldPresetName, const char *pszNewPresetName);
+	void PositionPresetDeleted(const char *pszDeletedPresetName);
+	void PositionPresetAdded(const char *pszPresetName, KeyValues *kvPreset);
+
 	void OnStylePresetsClassLoaded();
 	void OnArrangementPresetsClassLoaded();
+	void OnPositionPresetsClassLoaded();
+
 	void RegisterAssignmentChange(KeyValues *kvSelf, KeyValues* kvParent = NULL);
 	
 	void SendStyleDataToAssignment(KeyValues *kvAssignment);
@@ -65,18 +73,25 @@ private:
 	MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data);
 
 	ComboBox		*m_pPrimary, *m_pSecondary;
-	ComboBox		*m_pStylePresets, *m_pArrangementPresets;
-	CheckButton		*m_pUseDefault, *m_pUseDefaultStyle, *m_pUseDefaultArrangement;
+	ComboBox		*m_pStylePresets, *m_pArrangementPresets, *m_pPositionPresets;
+
+	CheckButton		*m_pUseDefault, *m_pUseDefaultStyle, *m_pUseDefaultArrangement, *m_pUseDefaultPosition;
+
 	KeyValues		*m_kvRequestedAssignments, *m_kvLoadedAssignments;
+
 	CFFCustomHudArrangementPresets *m_pArrangementPresetsClass;
 	CFFCustomHudStylePresets *m_pStylePresetsClass;
+	CFFCustomHudPositionPresets *m_pPositionPresetsClass;
 
 	KeyValues *m_kvRequiredUpdates;
+
 	bool m_bAssignmentUseDefaultChanging;
 	bool m_bAssignmentStyleChanging;
 	bool m_bAssignmentStyleUseDefaultChanging;
 	bool m_bAssignmentArrangementChanging;
 	bool m_bAssignmentArrangementUseDefaultChanging;
+	bool m_bAssignmentPositionChanging;
+	bool m_bAssignmentPositionUseDefaultChanging;
 
 	bool m_bLoaded;
 	bool m_bIsLoading;

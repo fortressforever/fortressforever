@@ -156,6 +156,253 @@ namespace vgui
 			g_AP->OnStylePresetsClassLoaded();
 	}
 
+
+	KeyValues* CFFCustomHudStylePresets::RemoveNonEssentialValues(KeyValues *kvPreset)
+	{
+		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
+
+		kvTemp->SetInt("barWidth", kvPreset->GetInt("barWidth", 60));
+		kvTemp->SetInt("barHeight", kvPreset->GetInt("barHeight", 10));
+		kvTemp->SetInt("barBorderWidth", kvPreset->GetInt("barBorderWidth", 1));
+		kvTemp->SetInt("barMarginHorizontal", kvPreset->GetInt("barMarginHorizontal", 10));
+		kvTemp->SetInt("barMarginVertical", kvPreset->GetInt("barMarginVertical", 10));
+		kvTemp->SetInt("barOrientation", kvPreset->GetInt("barOrientation", 0));
+
+		//see if component data exists
+		KeyValues *kvComponent = kvPreset->FindKey("Bar");
+		if(kvComponent)	
+		//if it does
+		{
+			//create the component and strip
+			KeyValues *kvTempComponent = new KeyValues("Bar");
+
+			//strip as normal	
+			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 2));
+			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
+			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
+			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
+
+			kvTemp->AddSubKey(kvTempComponent);
+		}
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("Bar");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 2);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 255);
+			
+			//also add component data to the preset
+			kvTemp->AddSubKey(kvComponent);
+		}
+		
+		kvComponent = kvPreset->FindKey("BarBorder");
+		if(kvComponent)	
+		//if it does
+		{
+			//create the component and strip
+			KeyValues *kvTempComponent = new KeyValues("BarBorder");
+
+			//strip as normal	
+			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 0));
+			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
+			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
+			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
+
+			kvTemp->AddSubKey(kvTempComponent);
+		}
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("BarBorder");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 255);
+
+			//also add component data to the preset
+			kvTemp->AddSubKey(kvComponent);
+		}
+		
+		kvComponent = kvPreset->FindKey("BarBackground");
+		if(kvComponent)	
+		//if it does
+		{
+			//create the component and strip
+			KeyValues *kvTempComponent = new KeyValues("BarBackground");
+
+			//strip as normal	
+			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 2));
+			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
+			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
+			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 96));
+
+			kvTemp->AddSubKey(kvTempComponent);
+		}
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("BarBackground");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 2);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 96);
+			
+			//also add component data to the preset
+			kvTemp->AddSubKey(kvComponent);
+		}
+		kvComponent = kvPreset->FindKey("Icon");
+		if(kvComponent)	
+		//if it does
+		{
+			//create the component and strip
+			KeyValues *kvTempComponent = new KeyValues("Icon");
+
+			//strip as normal	
+			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 0));
+			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
+			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
+			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
+			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
+			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
+			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", 2));
+			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", 1));
+			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", 2));
+			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 0));
+
+			kvTemp->AddSubKey(kvTempComponent);
+		}
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("Icon");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 255);
+			kvComponent->SetInt("shadow", 0);
+			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("alignH", 2);
+			kvComponent->SetInt("alignV", 1);
+			kvComponent->SetInt("offsetX", 2);
+			kvComponent->SetInt("offsetY", 0);
+			
+			//also add component data to the preset
+			kvTemp->AddSubKey(kvComponent);
+		}
+		
+		kvComponent = kvPreset->FindKey("Label");
+		if(kvComponent)
+		//if it does
+		{
+			//create the component and strip
+			KeyValues *kvTempComponent = new KeyValues("Label");
+
+			//strip as normal	
+			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 0));
+			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
+			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
+			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
+			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
+			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
+			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", 0));
+			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", 1));
+			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", -2));
+			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 0));
+			kvTempComponent->SetInt("fontTahoma", kvComponent->GetInt("fontTahoma", 0));
+
+			kvTemp->AddSubKey(kvTempComponent);
+		}
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("Label");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
+			kvComponent->SetInt("alpha", 255);
+			kvComponent->SetInt("shadow", 0);
+			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("alignH", 0);
+			kvComponent->SetInt("alignV", 1);
+			kvComponent->SetInt("offsetX", -2);
+			kvComponent->SetInt("offsetY", 0);
+			kvComponent->SetInt("fontTahoma", 0);
+			
+			//also add component data to the preset
+			kvTemp->AddSubKey(kvComponent);
+		}
+		
+		kvComponent = kvPreset->FindKey("Amount");
+		if(kvComponent)	
+		//if it does
+		{
+			//create the component and strip
+			KeyValues *kvTempComponent = new KeyValues("Amount");
+
+			//strip as normal	
+			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 0));
+			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
+			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
+			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
+			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
+			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
+			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", 1));
+			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", 1));
+			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", 0));
+			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 1));
+			kvTempComponent->SetInt("fontTahoma", kvComponent->GetInt("fontTahoma", 0));
+
+			kvTemp->AddSubKey(kvTempComponent);
+		}
+		else
+		{
+			//create the component using these defaults
+			kvComponent = new KeyValues("Amount");
+			kvComponent->SetInt("show", 1);
+			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("red", 0);
+			kvComponent->SetInt("green", 0);
+			kvComponent->SetInt("blue", 0);
+			kvComponent->SetInt("alpha", 255);
+			kvComponent->SetInt("shadow", 0);
+			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("alignH", 1);
+			kvComponent->SetInt("alignV", 1);
+			kvComponent->SetInt("offsetX", 0);
+			kvComponent->SetInt("offsetY", 1);
+			kvComponent->SetInt("fontTahoma", 0);
+			
+			//also add component data to the preset
+			kvTemp->AddSubKey(kvComponent);	
+		}
+
+		return kvTemp;
+	}
+
 	void CFFCustomHudStylePresets::UpdatePresetFromControls(KeyValues *kvPreset)
 	{
 		BaseClass::UpdatePresetFromControls(kvPreset);
@@ -430,15 +677,6 @@ namespace vgui
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: Catch the sliders moving
-	//-----------------------------------------------------------------------------
-	void CFFCustomHudStylePresets::OnUpdateSliders(KeyValues *data)
-	{
-		if(m_bLoaded && !m_bPresetLoading)
-			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
-	}
-
-	//-----------------------------------------------------------------------------
 	// Purpose: Catch the comboboxs changing their selection
 	//-----------------------------------------------------------------------------
 	void CFFCustomHudStylePresets::OnUpdateCombos(KeyValues *data)
@@ -522,7 +760,19 @@ namespace vgui
 			BaseClass::OnUpdateCombos(data);
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Catch the checkboxes changing their state
+	//-----------------------------------------------------------------------------
 	void CFFCustomHudStylePresets::OnUpdateCheckbox(KeyValues *data)
+	{
+		if(m_bLoaded && !m_bPresetLoading)
+			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Catch the sliders moving
+	//-----------------------------------------------------------------------------
+	void CFFCustomHudStylePresets::OnUpdateSliders(KeyValues *data)
 	{
 		if(m_bLoaded && !m_bPresetLoading)
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());

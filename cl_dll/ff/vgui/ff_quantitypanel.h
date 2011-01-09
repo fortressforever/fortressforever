@@ -62,22 +62,31 @@ namespace vgui
 
 		void SetHeaderText( wchar_t *newHeaderText, bool bUpdateQBPositions = true );
 		void SetHeaderIconChar( char *newHeaderIconChar, bool bUpdateQBPositions = true );
+		void SetText( wchar_t *newText, bool bUpdateQBPositions = true );
 
 		void SetHeaderTextShadow( bool bHasShadow);
 		void SetHeaderIconShadow( bool bHasShadow);
+		void SetTextShadow( bool bHasShadow);
 
 		void SetHeaderTextSize( int iSize, bool bUpdateQBPositions = true );
 		void SetHeaderIconSize( int iSize, bool bUpdateQBPositions = true );
+		void SetTextSize( int iSize, bool bUpdateQBPositions = true );
 
 		void SetHeaderTextVisible( bool bIsVisible, bool bUpdateQBPositions = true );
 		void SetHeaderIconVisible( bool bIsVisible, bool bUpdateQBPositions = true );
+		void SetTextVisible( bool bIsVisible );
+
+		void SetUseToggleText( bool bUseToggletext );
+		void SetToggleTextVisible( bool bIsVisible );
 
 		void SetHeaderTextPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions = true );
 		void SetHeaderIconPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions = true );
+		void SetTextPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions = true );
 
 		void SetHeaderTextColor( Color newHeaderTextColor );
 		void SetHeaderIconColor( Color newHeaderIconColor );
-		
+		void SetTextColor( Color newTextColor );
+
 		void SetBarsVisible( bool bIsVisible, bool bUpdateQBPositions = true );
 
 		void SetTeamColor( Color teamColor );
@@ -108,18 +117,24 @@ namespace vgui
 		float m_flScaleX;
 		float m_flScaleY;
 
-		vgui::HFont m_hfText;
+		vgui::HFont m_hfText[QUANTITYPANELFONTSIZES * 3];
 		vgui::HFont m_hfHeaderText[QUANTITYPANELFONTSIZES * 3];
 		vgui::HFont m_hfHeaderIcon[QUANTITYPANELICONSIZES * 3];
 		
-		bool m_bHeaderIconShadow;
 		bool m_bHeaderTextShadow;
+		bool m_bHeaderIconShadow;
+		bool m_bTextShadow;
 
 		bool m_bShowHeaderText;
 		bool m_bShowHeaderIcon;
+		bool m_bShowText;
+
+		bool m_bUseToggleText;
+		bool m_bToggleTextVisible;
 
 		int m_iHeaderTextSize;
 		int m_iHeaderIconSize;
+		int m_iTextSize;
 		
 		int m_iTeamColourAlpha;
 		bool m_bCustomBackroundColor;
@@ -147,9 +162,12 @@ namespace vgui
 		int m_iHeaderTextY;
 		int m_iHeaderIconX;
 		int m_iHeaderIconY;
+		int m_iTextX;
+		int m_iTextY;
 
 		wchar_t m_wszHeaderText[50];
 		wchar_t m_wszHeaderIcon[2];
+		wchar_t m_wszText[50];
 		
 		Color m_ColorHeaderText;
 		Color m_ColorHeaderIcon;
@@ -159,6 +177,8 @@ namespace vgui
 		int m_iHeaderTextHeight;
 		int m_iHeaderIconWidth;
 		int m_iHeaderIconHeight;
+		int m_iTextWidth;
+		int m_iTextHeight;
 
 		int m_iItemMarginHorizontal;
 		int m_iItemMarginVertical;

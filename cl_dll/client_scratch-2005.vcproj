@@ -5045,6 +5045,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.h"
+						>
+					</File>
+					<File
 						RelativePath=".\ff\vgui\ff_customhudoptions_stylepresets.cpp"
 						>
 					</File>

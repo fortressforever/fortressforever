@@ -7,6 +7,7 @@
 #include <vgui_controls/PropertySheet.h>
 
 #include "ff_customhudoptions_assignpresets.h"
+#include "ff_customhudoptions_positionpresets.h"
 #include "ff_customhudoptions_arrangementpresets.h"
 #include "ff_customhudoptions_stylepresets.h"
 
@@ -34,6 +35,7 @@ private:
 
 	PropertySheet					*m_pPropertyPages;
 	CFFCustomHudAssignPresets		*m_pAssignPresets;
+	CFFCustomHudPositionPresets	*m_pPositionPresets;
 	CFFCustomHudArrangementPresets	*m_pArrangementPresets;
 	CFFCustomHudStylePresets		*m_pStylePresets;
 };

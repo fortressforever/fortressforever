@@ -11,6 +11,8 @@ CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHu
 	// Hide when player is dead
 	SetHiddenBits( HIDEHUD_PLAYERDEAD );
 
+	SetUseToggleText(true);
+
 	m_bBuilt = false;
 }
 
@@ -26,19 +28,25 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvPreset->SetInt("y", 330);
 	kvPreset->SetInt("alignH", 0);
 	kvPreset->SetInt("alignV", 0);
+
 	kvPreset->SetInt("columns", 1);
 	kvPreset->SetInt("headerTextX", 5);
 	kvPreset->SetInt("headerTextY", 5);
 	kvPreset->SetInt("headerIconX", 6);
 	kvPreset->SetInt("headerIconY", 16);
+	kvPreset->SetInt("textX", 27);
+	kvPreset->SetInt("textY", 22);
 	kvPreset->SetInt("itemsX", 5);
 	kvPreset->SetInt("itemsY", 15);
 	kvPreset->SetInt("showHeaderText", 1);
 	kvPreset->SetInt("showHeaderIcon", 1);
+	kvPreset->SetInt("showText", 1);
 	kvPreset->SetInt("headerTextShadow", 0);
 	kvPreset->SetInt("headerIconShadow", 0);
+	kvPreset->SetInt("textShadow", 0);
 	kvPreset->SetInt("headerTextSize", 1);
 	kvPreset->SetInt("headerIconSize", 11);
+	kvPreset->SetInt("textSize", 2);
 	kvPreset->SetInt("showPanel", 1);
 	kvPreset->SetInt("panelColorCustom", 0);
 	kvPreset->SetInt("panelRed", 255);
@@ -144,6 +152,13 @@ void CHudBuildStateDispenser::VidInit()
 		tempString = L"DISPENSER";
 
 	SetHeaderText(tempString);
+
+	tempString = vgui::localize()->Find("#HudPanel_NotBuilt");
+
+	if (!tempString) 
+		tempString = L"Not Built";
+	SetText(tempString);
+
 	SetHeaderIconChar("Y");
 
 	m_qbDispenserHealth->SetLabelText("#FF_ITEM_HEALTH");
@@ -153,6 +168,8 @@ void CHudBuildStateDispenser::VidInit()
 	m_qbDispenserAmmo->SetLabelText("#FF_ITEM_AMMO");
 	m_qbDispenserAmmo->SetIconChar("4");
 	m_qbDispenserAmmo->ShowAmountMax(false);
+	
+	SetToggleTextVisible(true);
 }
 
 void CHudBuildStateDispenser::Init() 
@@ -206,6 +223,7 @@ void CHudBuildStateDispenser::OnTick()
 		SetVisible(false);
 		m_qbDispenserHealth->SetVisible(false);
 		m_qbDispenserAmmo->SetVisible(false);
+		SetToggleTextVisible(true);
 	}
 	else if(bBuilt && !m_bBuilt)
 	//show quantity bars
@@ -214,27 +232,14 @@ void CHudBuildStateDispenser::OnTick()
 		SetVisible(true);
 		m_qbDispenserHealth->SetVisible(true);
 		m_qbDispenserAmmo->SetVisible(true);
+		SetToggleTextVisible(false);
 	}
 }
 
 void CHudBuildStateDispenser::Paint() 
 {
 	if(m_bDraw)
-	{
-		wchar_t* pText;
-
-		if(!m_bBuilt)
-		//if not built
-		{
-			//paint "Not Built" message
-			//LOCALISE THIS
-			pText = L"Not Built";	// wide char text
-			surface()->DrawSetTextFont( m_hfText ); // set the font	
-			surface()->DrawSetTextColor( m_ColorText );
-			surface()->DrawSetTextPos( (m_iItemPositionX + m_iItemMarginHorizontal) * m_flScale, (m_iItemPositionY + m_iItemMarginVertical) * m_flScale ); // x,y position
-			surface()->DrawPrintText( pText, wcslen(pText) ); // print text
-		}
-		
+	{	
 		//paint header
 		BaseClass::Paint();
 	}

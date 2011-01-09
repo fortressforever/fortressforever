@@ -18,7 +18,8 @@ namespace vgui
 
 		virtual void UpdatePresetFromControls(KeyValues *kvPreset);
 		virtual void ApplyPresetToControls(KeyValues *kvPreset);
-		virtual void RegisterSelfForPresetAssignment();
+		virtual void RegisterSelfForPresetAssignment();		
+		virtual KeyValues* RemoveNonEssentialValues(KeyValues *kvPreset);
 		virtual void SendUpdatedPresetNameToPresetAssignment(const char *pszPresetName);
 		virtual void SendRenamedPresetNameToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName);
 		virtual void SendDeletedPresetNameToPresetAssignment(const char *pszDeletedPresetName);

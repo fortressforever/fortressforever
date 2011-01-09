@@ -29,6 +29,7 @@ namespace vgui {
 		m_kvUpdates = new KeyValues("Updates");
 
 		m_bLoaded = false;
+		m_bIsLoading = false;
 		m_bPresetLoading = false;
 		
 		char comboBoxName[128];
@@ -47,19 +48,30 @@ namespace vgui {
 	}
 	void CFFOptionsPresetPage::Load()
 	{
+		if(m_bIsLoading)
+			return;
+
+		m_bIsLoading = true;
+
 		m_pPresets->RemoveAll();
 		KeyValues *kvPresets = new KeyValues("Presets");
 		kvPresets->LoadFromFile(*pFilesystem, m_szSourceFile);
 
 		if(kvPresets->GetFirstSubKey() == NULL)
+		//if no presets were in the file (or file not found)
 		{
 			KeyValues *kvPreset = new KeyValues("global");
+			//use this to remove/add keys using defaults
+			kvPreset = RemoveNonEssentialValues(kvPreset);
 			m_pPresets->AddItem("#GameUI_Global", kvPreset);
 		}
 		else
+		//if presets exist
 		{
 			for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
-			{
+				{
+			//use this to remove/add keys using defaults
+				kvPreset = RemoveNonEssentialValues(kvPreset);
 				if(Q_strncmp(kvPreset->GetName(), "global", 7) == 0)
 				{
 					m_pPresets->AddItem("#GameUI_Global", kvPreset); 
@@ -78,9 +90,10 @@ namespace vgui {
 
 		kvPresets->deleteThis();
 
-		m_bLoaded = true;
-
 		RegisterSelfForPresetAssignment();
+
+		m_bIsLoading = false;
+		m_bLoaded = true;
 	}
 
 	void CFFOptionsPresetPage::Reset()

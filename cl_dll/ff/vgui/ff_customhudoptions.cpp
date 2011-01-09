@@ -9,13 +9,15 @@
 //-----------------------------------------------------------------------------
 CFFCustomHudOptions::CFFCustomHudOptions(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
 {
+	m_pPositionPresets = new CFFCustomHudPositionPresets(this, "CustomHudPositionPresets", "Position");
 	m_pArrangementPresets = new CFFCustomHudArrangementPresets(this, "CustomHudArrangementPresets", "Arrangement");
 	m_pStylePresets = new CFFCustomHudStylePresets(this, "CustomHudStylePresets", "Style");
-	m_pAssignPresets = new CFFCustomHudAssignPresets(this, "CustomHudAssignPresets", m_pStylePresets, m_pArrangementPresets);
+	m_pAssignPresets = new CFFCustomHudAssignPresets(this, "CustomHudAssignPresets", m_pStylePresets, m_pArrangementPresets, m_pPositionPresets);
 
 	m_pPropertyPages = new PropertySheet(this, "CustomHudPages", true);
 
 	m_pPropertyPages->AddPage(m_pAssignPresets, "#GameUI_AssignPresets");
+	m_pPropertyPages->AddPage(m_pPositionPresets, "#GameUI_PositionPresets");
 	m_pPropertyPages->AddPage(m_pArrangementPresets, "#GameUI_ArrangementPresets");
 	m_pPropertyPages->AddPage(m_pStylePresets, "#GameUI_StylePresets");
 	m_pPropertyPages->SetActivePage(m_pAssignPresets);
@@ -38,6 +40,7 @@ void CFFCustomHudOptions::AllowChanges(bool state)
 void CFFCustomHudOptions::Apply()
 {
 	m_pAssignPresets->Apply();
+	m_pPositionPresets->Apply();
 	m_pArrangementPresets->Apply();
 	m_pStylePresets->Apply();
 }
@@ -48,6 +51,7 @@ void CFFCustomHudOptions::Apply()
 void CFFCustomHudOptions::Load()
 {
 	m_pAssignPresets->Load();
+	m_pPositionPresets->Load();
 	m_pArrangementPresets->Load();
 	m_pStylePresets->Load();
 }
@@ -58,6 +62,7 @@ void CFFCustomHudOptions::Load()
 void CFFCustomHudOptions::Reset()
 {
 	m_pAssignPresets->Reset();
+	m_pPositionPresets->Reset();
 	m_pArrangementPresets->Reset();
 	m_pStylePresets->Reset();
 }

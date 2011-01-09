@@ -100,9 +100,12 @@ namespace vgui
 			m_hfHeaderIcon[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityPanelHeaderIconShadow%d",i), true );
 			m_hfHeaderIcon[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityPanelHeaderIcon%d",i), false );
 		}
-
-		m_hfText = qbScheme->GetFont( "QuantityPanel", IsProportional() );
-		
+		for(int i = 0; i < QUANTITYPANELFONTSIZES; ++i)
+		{
+			m_hfText[i*3] = qbScheme->GetFont( VarArgs("QuantityPanel%d",i), true );
+			m_hfText[i*3 + 1] = qbScheme->GetFont( VarArgs("QuantityPanelShadow%d",i), true );
+			m_hfText[i*3 + 2] = qbScheme->GetFont( VarArgs("QuantityPanel%d",i), false );
+		}		
 		
 		BaseClass::ApplySchemeSettings( pScheme );
 	}
@@ -126,6 +129,28 @@ namespace vgui
 			vgui::surface()->DrawUnicodeString( m_wszHeaderIcon );
 		}
 
+		if(m_bUseToggleText)
+		{
+			if(m_bShowText && m_bToggleTextVisible)
+			{
+				//Paint Text
+				vgui::surface()->DrawSetTextFont( m_hfText[m_iTextSize * 3 + (m_bTextShadow ? 1 : 0)] );
+				vgui::surface()->DrawSetTextColor( m_ColorText.r(), m_ColorText.g(), m_ColorText.b(), m_ColorText.a() );
+				vgui::surface()->DrawSetTextPos( m_iTextX * m_flScale, m_iTextY * m_flScale );
+				vgui::surface()->DrawUnicodeString( m_wszText );
+			}
+		}
+		else
+		{
+			if(m_bShowText)
+			{
+				//Paint Text
+				vgui::surface()->DrawSetTextFont( m_hfText[m_iTextSize * 3 + (m_bTextShadow ? 1 : 0)] );
+				vgui::surface()->DrawSetTextColor( m_ColorText.r(), m_ColorText.g(), m_ColorText.b(), m_ColorText.a() );
+				vgui::surface()->DrawSetTextPos( m_iTextX * m_flScale, m_iTextY * m_flScale );
+				vgui::surface()->DrawUnicodeString( m_wszText );
+			}
+		}
 		//SetPaintBackgroundEnabled(true);
 		//SetPaintBackgroundType(2);
 		//SetPaintBorderEnabled(false);
@@ -189,6 +214,7 @@ namespace vgui
 			return;
 
 		//TODO: this is a work around for the SetVisible not working properly - need to figure out why it does what it does
+		//have really tried but just couldn't see what was wrong.
 		if(!m_bDraw)
 		{
 			SetPaintEnabled(false);
@@ -257,6 +283,7 @@ namespace vgui
 			//recalculate text sizes
 			vgui::surface()->GetTextSize(m_hfHeaderText[m_iHeaderTextSize*3 + 2], m_wszHeaderText, m_iHeaderTextWidth, m_iHeaderTextHeight);
 			vgui::surface()->GetTextSize(m_hfHeaderIcon[m_iHeaderIconSize*3 + 2], m_wszHeaderIcon, m_iHeaderIconWidth, m_iHeaderIconHeight);
+			vgui::surface()->GetTextSize(m_hfText[m_iTextSize*3 + 2], m_wszText, m_iTextWidth, m_iTextHeight);
 			UpdateQBPositions();
 		}
 
@@ -339,7 +366,7 @@ namespace vgui
 			m_QBars[i]->SetSize( m_iColumnWidth[iColumn] * m_flScale, m_iRowHeight[iRow] * m_flScale);
 					
 			if(i != m_iItems -1)
-				//if not the last one
+			//if not the last one
 			{
 				iColumnWidths += m_iColumnWidth[iColumn++];
 				if(iColumn >= m_iItemColumns)	
@@ -504,6 +531,14 @@ namespace vgui
 			UpdateQBPositions();
 	}
 
+	void FFQuantityPanel::SetText( wchar_t *newText, bool bUpdateQBPositions ) { 
+		wcscpy( m_wszText, newText ); 
+		//RecalculateTextDimentions
+		vgui::surface()->GetTextSize(m_hfText[m_iTextSize*3 + 2], m_wszText, m_iTextWidth, m_iTextHeight);
+		if(bUpdateQBPositions)
+			UpdateQBPositions();
+	}
+	
 	void FFQuantityPanel::SetHeaderTextSize( int iSize, bool bUpdateQBPositions )
 	{
 		if(m_iHeaderTextSize != iSize)
@@ -522,7 +557,16 @@ namespace vgui
 				UpdateQBPositions();
 		}
 	}
-
+	void FFQuantityPanel::SetTextSize( int iSize, bool bUpdateQBPositions )
+	{
+		if(m_iTextSize != iSize)
+		{
+			m_iTextSize = iSize;
+			if(bUpdateQBPositions)
+				UpdateQBPositions();
+		}
+	}
+	
 	void FFQuantityPanel::SetHeaderTextVisible( bool bIsVisible, bool bUpdateQBPositions ) 
 	{ 
 		if(m_bShowHeaderText != bIsVisible)
@@ -541,10 +585,27 @@ namespace vgui
 				UpdateQBPositions();
 		}
 	}
+	void FFQuantityPanel::SetTextVisible( bool bIsVisible )
+	{ 
+		if(m_bShowText != bIsVisible)
+		{
+			m_bShowText = bIsVisible;
+		}
+	}
 
+	void FFQuantityPanel::SetUseToggleText( bool bUseToggleText )
+	{
+		m_bUseToggleText = bUseToggleText;
+	}
+	void FFQuantityPanel::SetToggleTextVisible( bool bIsVisible )
+	{
+		m_bToggleTextVisible = bIsVisible;
+	}
+	
 	void FFQuantityPanel::SetHeaderTextColor( Color newHeaderTextColor ) { m_ColorHeaderText = newHeaderTextColor; }
 	void FFQuantityPanel::SetHeaderIconColor( Color newHeaderIconColor ) { m_ColorHeaderIcon = newHeaderIconColor; }
-
+	void FFQuantityPanel::SetTextColor( Color newTextColor ) { m_ColorText = newTextColor; }
+	
 	void FFQuantityPanel::SetHeaderTextPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions ) 
 	{ 
 		m_iHeaderTextX = iPositionX; 
@@ -559,9 +620,17 @@ namespace vgui
 		if(bUpdateQBPositions)
 			UpdateQBPositions(); 
 	}
-
+	void FFQuantityPanel::SetTextPosition( int iPositionX, int iPositionY, bool bUpdateQBPositions )
+	{ 
+		m_iTextX = iPositionX; 
+		m_iTextY = iPositionY;
+		if(bUpdateQBPositions)
+			UpdateQBPositions(); 
+	}
+	
 	void FFQuantityPanel::SetHeaderTextShadow( bool bHasShadow) { m_bHeaderTextShadow = bHasShadow; }
 	void FFQuantityPanel::SetHeaderIconShadow( bool bHasShadow) { m_bHeaderIconShadow = bHasShadow; }
+	void FFQuantityPanel::SetTextShadow( bool bHasShadow) { m_bTextShadow = bHasShadow; }
 	
 	void FFQuantityPanel::SetBarsVisible( bool bIsVisible, bool bUpdateQBPositions )
 	{
@@ -688,6 +757,32 @@ namespace vgui
 		int iHeaderIconY = kvStyleData->GetInt("headerIconY", kvDefaultStyleData->GetInt("headerIconY", -1));
 		if((m_iHeaderIconX != iHeaderIconX && iHeaderIconX != -1) || (m_iHeaderIconY != iHeaderIconY && iHeaderIconY != -1))
 			SetHeaderIconPosition(iHeaderIconX, iHeaderIconY);
+
+		int iShowText = kvStyleData->GetInt("showText", kvDefaultStyleData->GetInt("showText", -1));
+		if((iShowText == 1 ? true : false) != m_bShowText && iShowText != -1)
+		{
+			SetTextVisible(!m_bShowText);
+			bUpdateQBPositions = true;
+		}
+
+		int iTextShadow = kvStyleData->GetInt("textShadow", kvDefaultStyleData->GetInt("textShadow", -1));
+		if((iTextShadow == 1 ? true : false) != m_bTextShadow && iTextShadow != -1)
+			SetTextShadow(!m_bTextShadow);
+
+		int iTextSize = kvStyleData->GetInt("textSize", kvDefaultStyleData->GetInt("textSize", -1));
+		if(m_iTextSize != iTextSize && iTextSize != -1)
+		{
+			SetTextSize(iTextSize, false);
+			bUpdateQBPositions = true;
+		}
+
+		int iTextX = kvStyleData->GetInt("textX", kvDefaultStyleData->GetInt("textX", -1));
+		int iTextY = kvStyleData->GetInt("textY", kvDefaultStyleData->GetInt("textY", -1));
+		if((m_iTextX != iTextX && iTextX != -1) || (m_iTextY != iTextY && iTextY != -1))
+		{
+			SetTextPosition(iTextX, iTextY, false);
+			bUpdateQBPositions = true;
+		}
 
 		int iShowPanel = kvStyleData->GetInt("showPanel", kvDefaultStyleData->GetInt("showPanel", -1));
 		if((iShowPanel == 1 ? true : false) != m_bShowPanel && iShowPanel != -1)

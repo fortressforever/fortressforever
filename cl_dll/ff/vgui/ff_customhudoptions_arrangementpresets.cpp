@@ -29,44 +29,6 @@ namespace vgui
 		m_pPanelAlpha = new CFFInputSlider(this, "PanelAlpha", "PanelAlphaInput");
 		m_pPanelAlpha->SetRange(0, 255);
 		m_pPanelAlpha->SetValue(255);
-
-		m_pAlignH = new ComboBox(this, "AlignHorizontallyCombo", 3, false);
-		KeyValues *kv = new KeyValues("AH");
-		kv->SetInt("Left", 0);
-		m_pAlignH->AddItem("#GameUI_Left", kv);
-		kv->deleteThis();
-		kv = new KeyValues("AH");
-		kv->SetInt("Center", 1);
-		m_pAlignH->AddItem("#GameUI_Center", kv);
-		kv->deleteThis();
-		kv = new KeyValues("AH");
-		kv->SetInt("Right", 2);
-		m_pAlignH->AddItem("#GameUI_Right", kv);
-		kv->deleteThis();
-		m_pAlignH->ActivateItemByRow(0);
-		
-		m_pAlignV = new ComboBox(this, "AlignVerticallyCombo", 3, false);
-		kv = new KeyValues("AV");
-		kv->SetInt("Top", 0);
-		m_pAlignV->AddItem("#GameUI_Top", kv);
-		kv->deleteThis();
-		kv = new KeyValues("AV");
-		kv->SetInt("Middle", 1);
-		m_pAlignV->AddItem("#GameUI_Middle", kv);
-		kv->deleteThis();
-		kv = new KeyValues("AV");
-		kv->SetInt("Bottom", 2);
-		m_pAlignV->AddItem("#GameUI_Bottom", kv);
-		kv->deleteThis();
-		m_pAlignV->ActivateItemByRow(0);
-
-		m_pX = new CFFInputSlider(this, "X", "XInput");
-		m_pX->SetRange(0, 640);
-		m_pX->SetValue(0);
-		
-		m_pY = new CFFInputSlider(this, "Y", "YInput");
-		m_pY->SetRange(0, 480);
-		m_pY->SetValue(0);
 		
 		m_pItemsX = new CFFInputSlider(this, "ItemsX", "ItemsXInput");
 		m_pItemsX->SetRange(0, 50);
@@ -100,10 +62,24 @@ namespace vgui
 		m_pHeaderIconY->SetRange(0, 120);
 		m_pHeaderIconY->SetValue(0);
 
+		m_pTextSize = new CFFInputSlider(this, "TextSize", "TextSizeInput");
+		m_pTextSize->SetRange(1, QUANTITYPANELFONTSIZES);
+		m_pTextSize->SetValue(2);
+
+		m_pTextX = new CFFInputSlider(this, "TextX", "TextXInput");
+		m_pTextX->SetRange(0, 160);
+		m_pTextX->SetValue(0);
+		
+		m_pTextY = new CFFInputSlider(this, "TextY", "TextYInput");
+		m_pTextY->SetRange(0, 120);
+		m_pTextY->SetValue(0);
+		
 		m_pShowHeaderIcon = new CheckButton(this, "ShowHeaderIcon", "#GameUI_Show");
 		m_pShowHeaderText = new CheckButton(this, "ShowHeaderText", "#GameUI_Show");
+		m_pShowText = new CheckButton(this, "ShowText", "#GameUI_Show");
 		m_pHeaderIconShadow = new CheckButton(this, "HeaderIconShadow", "#GameUI_DropShadow");
 		m_pHeaderTextShadow = new CheckButton(this, "HeaderTextShadow", "#GameUI_DropShadow");
+		m_pTextShadow = new CheckButton(this, "TextShadow", "#GameUI_DropShadow");
 		m_pShowPanel = new CheckButton(this, "ShowPanel", "#GameUI_Show");
 		m_pPanelColorCustom = new CheckButton(this, "PanelColorCustom", "#GameUI_CustomColor");
 
@@ -120,14 +96,42 @@ namespace vgui
 			g_AP->OnArrangementPresetsClassLoaded();
 	}
 	
+	KeyValues* CFFCustomHudArrangementPresets::RemoveNonEssentialValues(KeyValues *kvPreset)
+	{
+		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
+
+		kvTemp->SetInt("columns", kvPreset->GetInt("columns", 2));
+		kvTemp->SetInt("itemsX", kvPreset->GetInt("itemsX", 5));
+		kvTemp->SetInt("itemsY", kvPreset->GetInt("itemsY", 20));
+		kvTemp->SetInt("showHeaderText", kvPreset->GetInt("showHeaderText", 1));
+		kvTemp->SetInt("headerTextShadow", kvPreset->GetInt("headerTextShadow", 0));
+		kvTemp->SetInt("headerTextSize", kvPreset->GetInt("headerTextSize", 3) + 1);
+		kvTemp->SetInt("headerTextX", kvPreset->GetInt("headerTextX", 20));
+		kvTemp->SetInt("headerTextY", kvPreset->GetInt("headerTextY", 7));
+		kvTemp->SetInt("showHeaderIcon", kvPreset->GetInt("showHeaderIcon", 1));
+		kvTemp->SetInt("headerIconShadow", kvPreset->GetInt("headerIconShadow", 0));
+		kvTemp->SetInt("headerIconSize", kvPreset->GetInt("headerIconSize", 3) + 1);
+		kvTemp->SetInt("headerIconX", kvPreset->GetInt("headerIconX", 3));
+		kvTemp->SetInt("headerIconY", kvPreset->GetInt("headerIconY", 3));
+		kvTemp->SetInt("showText", kvPreset->GetInt("showText", 1));
+		kvTemp->SetInt("textShadow", kvPreset->GetInt("textShadow", 0));
+		kvTemp->SetInt("textSize", kvPreset->GetInt("textSize", 3) + 1);
+		kvTemp->SetInt("textX", kvPreset->GetInt("textX", 25));
+		kvTemp->SetInt("textY", kvPreset->GetInt("textY", 25));
+		kvTemp->SetInt("showPanel", kvPreset->GetInt("showPanel", 1));
+		kvTemp->SetInt("panelColorCustom", kvPreset->GetInt("panelColorCustom", 0));
+		kvTemp->SetInt("panelRed", kvPreset->GetInt("panelRed", 255));
+		kvTemp->SetInt("panelGreen", kvPreset->GetInt("panelGreen", 255));
+		kvTemp->SetInt("panelBlue", kvPreset->GetInt("panelBlue", 255));
+		kvTemp->SetInt("panelAlpha", kvPreset->GetInt("panelAlpha", 255));
+
+		return kvTemp;
+	}
+
 	void CFFCustomHudArrangementPresets::UpdatePresetFromControls(KeyValues *kvPreset)
 	{
 		BaseClass::UpdatePresetFromControls(kvPreset);
 
-		kvPreset->SetInt("x", m_pX->GetValue());
-		kvPreset->SetInt("y", m_pY->GetValue());
-		kvPreset->SetInt("alignH", m_pAlignH->GetActiveItem());
-		kvPreset->SetInt("alignV", m_pAlignV->GetActiveItem());
 		kvPreset->SetInt("columns", m_pColumns->GetValue());
 		kvPreset->SetInt("itemsX", m_pItemsX->GetValue());
 		kvPreset->SetInt("itemsY", m_pItemsY->GetValue());
@@ -141,6 +145,11 @@ namespace vgui
 		kvPreset->SetInt("headerIconSize", m_pHeaderIconSize->GetValue() - 1);
 		kvPreset->SetInt("headerIconX", m_pHeaderIconX->GetValue());
 		kvPreset->SetInt("headerIconY", m_pHeaderIconY->GetValue());
+		kvPreset->SetInt("showText", m_pShowText->IsSelected());
+		kvPreset->SetInt("textShadow", m_pTextShadow->IsSelected());
+		kvPreset->SetInt("textSize", m_pTextSize->GetValue() - 1);
+		kvPreset->SetInt("textX", m_pTextX->GetValue());
+		kvPreset->SetInt("textY", m_pTextY->GetValue());
 		kvPreset->SetInt("showPanel", m_pShowPanel->IsSelected());
 		kvPreset->SetInt("panelColorCustom", m_pPanelColorCustom->IsSelected());
 		kvPreset->SetInt("panelRed", m_pPanelRed->GetValue());
@@ -154,10 +163,6 @@ namespace vgui
 		m_bPresetLoading = true;
 		//this disables the preset options from registering these changes as a preset update!
 
-		m_pX->SetValue(kvPreset->GetInt("x", 320));
-		m_pY->SetValue(kvPreset->GetInt("y", 300));
-		m_pAlignH->ActivateItemByRow(kvPreset->GetInt("alignH", 1));
-		m_pAlignV->ActivateItemByRow(kvPreset->GetInt("alignV", 1));
 		m_pColumns->SetValue(kvPreset->GetInt("columns", 2));
 		m_pItemsX->SetValue(kvPreset->GetInt("itemsX", 5));
 		m_pItemsY->SetValue(kvPreset->GetInt("itemsY", 20));
@@ -171,6 +176,11 @@ namespace vgui
 		m_pHeaderIconSize->SetValue(kvPreset->GetInt("headerIconSize", 3) + 1);
 		m_pHeaderIconX->SetValue(kvPreset->GetInt("headerIconX", 3));
 		m_pHeaderIconY->SetValue(kvPreset->GetInt("headerIconY", 3));
+		m_pShowText->SetSelected(kvPreset->GetInt("showText", 1));
+		m_pTextShadow->SetSelected(kvPreset->GetInt("textShadow", 0));
+		m_pTextSize->SetValue(kvPreset->GetInt("textSize", 3) + 1);
+		m_pTextX->SetValue(kvPreset->GetInt("textX", 25));
+		m_pTextY->SetValue(kvPreset->GetInt("textY", 25));
 		m_pShowPanel->SetSelected(kvPreset->GetInt("showPanel", 1));
 		m_pPanelColorCustom->SetSelected(kvPreset->GetInt("panelColorCustom", 0));
 		m_pPanelRed->SetValue(kvPreset->GetInt("panelRed", 255));
@@ -187,10 +197,7 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	void CFFCustomHudArrangementPresets::OnUpdateCombos(KeyValues *data)
 	{
-		if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pAlignH || data->GetPtr("panel") == m_pAlignV))
-			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
-		else
-			BaseClass::OnUpdateCombos(data);
+		BaseClass::OnUpdateCombos(data);
 	}
 
 	//-----------------------------------------------------------------------------
@@ -220,6 +227,12 @@ namespace vgui
 				m_pHeaderTextX->SetEnabled(m_pShowHeaderText->IsSelected());
 				m_pHeaderTextY->SetEnabled(m_pShowHeaderText->IsSelected());
 				m_pHeaderTextSize->SetEnabled(m_pShowHeaderText->IsSelected());
+			}
+			else if(data->GetPtr("panel") == m_pShowText)
+			{
+				m_pTextX->SetEnabled(m_pShowText->IsSelected());
+				m_pTextY->SetEnabled(m_pShowText->IsSelected());
+				m_pTextSize->SetEnabled(m_pShowText->IsSelected());
 			}
 			else if(data->GetPtr("panel") == m_pShowPanel)
 			{
