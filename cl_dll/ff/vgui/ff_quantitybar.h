@@ -34,7 +34,7 @@ namespace vgui
 	private:
 		DECLARE_CLASS_SIMPLE( FFQuantityBar, Panel );
 	public:
-		FFQuantityBar( Panel *parent, const char *pElementName, int childId = -1 );
+		FFQuantityBar( Panel *parent, const char *pElementName );
 
 		enum ColorMode {
 			COLOR_MODE_CUSTOM=0,
@@ -172,8 +172,6 @@ namespace vgui
 		float m_flScale;
 		float m_flScaleX;
 		float m_flScaleY;
-
-		int m_iChildId;
 
 		int m_iWidth;
 		int m_iHeight;

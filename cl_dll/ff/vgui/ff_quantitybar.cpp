@@ -22,10 +22,8 @@
 
 namespace vgui
 {
-	FFQuantityBar::FFQuantityBar(Panel *parent, const char *pElementName, int childId) : BaseClass(parent, pElementName) 
+	FFQuantityBar::FFQuantityBar(Panel *parent, const char *pElementName) : BaseClass(parent, pElementName) 
 	{
-		m_iChildId = childId;
-
 		m_flScale = 1.0f;
 		m_flScaleX = 1.0f;
 		m_flScaleY = 1.0f;
@@ -555,7 +553,7 @@ namespace vgui
 			if ( GetVParent() )
 			{
 				KeyValues *msg = new KeyValues("ChildDimentionsChanged");
-				msg->SetInt("id",m_iChildId);
+				msg->SetPtr("panel", this);
 				PostMessage(GetVParent(), msg);
 			}
 		}
@@ -565,7 +563,7 @@ namespace vgui
 			if ( GetVParent() )
 			{
 				KeyValues *msg = new KeyValues("ChildDimentionsChanged");
-				msg->SetInt("id",m_iChildId);
+				msg->SetPtr("panel", this);
 				PostMessage(GetVParent(), msg);
 			}
 			

@@ -142,10 +142,7 @@ namespace vgui
 		Color m_ColorBackground;
 		Color m_ColorBackgroundCustom;
 
-		//maybe try to make variable rather than 6 max
-		//if so, update fixed variables in OnPositions function too
-		FFQuantityBar* m_QBars[6];
-		int m_iItems;
+		Dar<FFQuantityBar*> m_QBars;
 
 		bool m_bCheckUpdates;
 		float m_flCheckUpdateFlagTime;
