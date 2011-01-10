@@ -173,20 +173,11 @@ void CFFWeaponShield::ShieldActive( void )
 	{
 		m_bShieldActive = true;
 
-		//The weapon anim uses an anim extension that it gets from the weapon script.
-		//In the case of the shield, it is defaulted as "crowbar" and the player holds it as such
-		//To change it i have to change the animation extension in the weapon data and im doing it manually
-		//then calling the weapon animation
-		//Im not sure if there is an actual function to do this??
-		//char * szAnimExt = "railgun";
-
-		//Q_strncpy( (char*)(GetFFWpnData().m_szAnimExtension), szAnimExt, sizeof( GetFFWpnData().m_szAnimExtension ) );
+		// Don't fire again until fire animation has completed
+		pPlayer->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_PRIMARY);
 
 		// Send animation
-		//SendWeaponAnim( ACT_VM_DRAW );
-
-		//FUCK IT, JUST DONT SHOW THE VIEW MODEL ANYMORE AND USE THE WORLD MODEL -GreenMushy
-		BaseClass::Holster(NULL);
+		SendWeaponAnim( ACT_VM_DRAW );
 
 #ifdef CLIENT_DLL
 		DevMsg("Shield Active\n");
@@ -263,13 +254,8 @@ void CFFWeaponShield::ShieldIdle( void )
 	{
 		m_bShieldActive = false;
 		
-		//The weapon anim uses an anim extension that it gets from the weapon script.
-		//In the case of the shield, it is defaulted as "crowbar" and the player holds it as such
-		//To change it i have to change the animation extension in the weapon data and im doing it manually
-		//then calling the weapon animation
-		//Im not sure if there is an actual function to do this??
-		//char * szAnimExt = "crowbar";
-		//Q_strncpy( (char*)(GetFFWpnData().m_szAnimExtension), szAnimExt, sizeof( GetFFWpnData().m_szAnimExtension ) );
+		//Send the attack animation for the shield
+		GetPlayerOwner()->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_SECONDARY);
 
 		//This is broken too.  It starts the weapon out in front of the player.
 		BaseClass::Deploy();
