@@ -142,11 +142,10 @@ namespace vgui
 		Color m_ColorBackground;
 		Color m_ColorBackgroundCustom;
 
-		Dar<FFQuantityBar*> m_QBars;
+		Dar<FFQuantityBar*> m_DarQuantityBars;
 
 		bool m_bCheckUpdates;
 		float m_flCheckUpdateFlagTime;
-		bool m_bUpdateRecieved[6];
 
 		int m_iX;
 		int m_iY;

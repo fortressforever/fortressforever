@@ -179,9 +179,9 @@ namespace vgui
 		if(m_ColorTeam != teamColor)
 		{
 			m_ColorTeam = teamColor;
-			for(int i = 0; i < m_QBars.GetCount(); ++i)
+			for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
 			{		
-				m_QBars[i]->SetTeamColor(teamColor);
+				m_DarQuantityBars[i]->SetTeamColor(teamColor);
 			}	
 		}
 	}
@@ -292,24 +292,28 @@ namespace vgui
 			if(m_flCheckUpdateFlagTime == -1) 
 				m_flCheckUpdateFlagTime = gpGlobals->curtime;
 
-			if(m_flCheckUpdateFlagTime + BARUPDATE_WAITTIME > gpGlobals->curtime)
+			//if the wait time hasn't been exceeded
+			if( gpGlobals->curtime < ( m_flCheckUpdateFlagTime + BARUPDATE_WAITTIME ) )
 			{
-				for(int i = 0; i < m_QBars.GetCount(); ++i)
+				for( int i = 0; i < m_DarQuantityBars.GetCount(); ++i )
 				{
-					if(!m_bUpdateRecieved[i])
+					if(!m_DarQuantityBars[i]->GetChildDimentionsChanged())
 						return;
 				}
 			}
-			m_flCheckUpdateFlagTime = -1;
 
 			//if we got here then they have all been updated
-			for(int i = 0; i < m_QBars.GetCount(); ++i)
-			//clear all updateReceived flags
-				m_bUpdateRecieved[i] = false;
+			for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
+			{
+				//clear all updateReceived flags
+				m_DarQuantityBars[i]->SetChildDimentionsChanged(false);
+			}
 			//clear check update flag
 			m_bCheckUpdates = false;
 			//update positions
 			UpdateQBPositions();
+			
+			m_flCheckUpdateFlagTime = -1;
 		}
 	}
 
@@ -323,10 +327,10 @@ namespace vgui
 		int m_iColumnOffset[] = {0,0,0,0,0,0};
 		int m_iRowOffset[] = {0,0,0,0,0,0};	
 
-		for(int i = 0; i < m_QBars.GetCount(); ++i)
+		for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
 		{
 			int iWidth, iHeight, iOffsetX, iOffsetY;
-			m_QBars[i]->GetPanelPositioningData(iWidth, iHeight, iOffsetX, iOffsetY);
+			m_DarQuantityBars[i]->GetPanelPositioningData(iWidth, iHeight, iOffsetX, iOffsetY);
 
 			if(iOffsetX > m_iColumnOffset[iColumn])
 				m_iColumnOffset[iColumn] = iOffsetX;
@@ -352,18 +356,18 @@ namespace vgui
 		int iColumnWidths = 0;
 		int iRowHeights = 0;
 
-		for(int i = 0; i < m_QBars.GetCount(); ++i)
+		for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
 		{
 			int iPosX, iPosY;
 	
 			iPosX = (m_iItemPositionX + iColumnWidths + iColumn * m_iItemMarginHorizontal) * m_flScale;
 			iPosY = (m_iItemPositionY + iRowHeights + iRow * m_iItemMarginVertical) * m_flScale;
 
-			m_QBars[i]->SetPos( iPosX, iPosY );
-			m_QBars[i]->SetPosOffset( m_iColumnOffset[iColumn], m_iRowOffset[iRow] );
-			m_QBars[i]->SetSize( m_iColumnWidth[iColumn] * m_flScale, m_iRowHeight[iRow] * m_flScale);
+			m_DarQuantityBars[i]->SetPos( iPosX, iPosY );
+			m_DarQuantityBars[i]->SetPosOffset( m_iColumnOffset[iColumn], m_iRowOffset[iRow] );
+			m_DarQuantityBars[i]->SetSize( m_iColumnWidth[iColumn] * m_flScale, m_iRowHeight[iRow] * m_flScale);
 					
-			if(i != m_QBars.GetCount() -1)
+			if(i != m_DarQuantityBars.GetCount() -1)
 			//if not the last one
 			{
 				iColumnWidths += m_iColumnWidth[iColumn++];
@@ -377,7 +381,7 @@ namespace vgui
 		}
 
 		//now we can calculate the overall size of the quantity panel for automatic resizing!
-		for(;iColumn < ( m_QBars.GetCount() < m_iItemColumns ? m_QBars.GetCount() : m_iItemColumns );)
+		for(;iColumn < ( m_DarQuantityBars.GetCount() < m_iItemColumns ? m_DarQuantityBars.GetCount() : m_iItemColumns );)
 		//make sure its calculated from the last (used) column incase we started a new row
 			iColumnWidths += m_iColumnWidth[iColumn++];
 		//include the height of the row
@@ -632,8 +636,8 @@ namespace vgui
 	
 	void FFQuantityPanel::SetBarsVisible( bool bIsVisible, bool bUpdateQBPositions )
 	{
-		for(int i = 0; i < m_QBars.GetCount(); ++i)
-			m_QBars[i]->SetVisible(bIsVisible);
+		for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
+			m_DarQuantityBars[i]->SetVisible(bIsVisible);
 
 		if(bUpdateQBPositions)
 			UpdateQBPositions();
@@ -795,8 +799,8 @@ namespace vgui
 			bUpdateQBPositions = true;
 		}		
 
-		for(int i = 0; i < m_QBars.GetCount(); ++i)
-			m_QBars[i]->SetStyle(kvStyleData, kvDefaultStyleData);
+		for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
+			m_DarQuantityBars[i]->SetStyle(kvStyleData, kvDefaultStyleData);
 
 		if(bUpdateQBPositions)
 			UpdateQBPositions();
@@ -804,23 +808,14 @@ namespace vgui
 
 	void FFQuantityPanel::OnChildDimentionsChanged( KeyValues *data )
 	{
-		//loop and look for child match
-		for(int i = 0; i < m_QBars.GetCount(); ++i)
-		{
-			if(data->GetPtr("panel") == m_QBars[i])
-			{
-				m_bUpdateRecieved[i] = true;
-				//set the wait for update flag
-				if(!m_bCheckUpdates)
-					m_bCheckUpdates = true;
-			}
-		}
+		if(!m_bCheckUpdates)
+			m_bCheckUpdates = true;
 	}
 
 	FFQuantityBar* FFQuantityPanel::AddChild( const char *pElementName )
 	{
 		FFQuantityBar* newQBar = new FFQuantityBar(this, pElementName); 
-		m_QBars.AddElement(newQBar);
+		m_DarQuantityBars.AddElement(newQBar);
 
 		return newQBar;
 	}

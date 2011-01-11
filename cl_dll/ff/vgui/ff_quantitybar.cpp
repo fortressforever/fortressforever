@@ -27,6 +27,8 @@ namespace vgui
 		m_flScale = 1.0f;
 		m_flScaleX = 1.0f;
 		m_flScaleY = 1.0f;
+		
+		m_bChildDimentionsChanged = false;
 
 		m_iBarWidth = 60; 
 		m_iBarHeight = 12;
@@ -548,27 +550,34 @@ namespace vgui
 			RecalculateAmountPosition();
 			RecalculateAmountMaxPosition(false);
 			RecalculateBarPositioningOffset();
-			
-			//send update to parent for positioning	
-			if ( GetVParent() )
-			{
-				KeyValues *msg = new KeyValues("ChildDimentionsChanged");
-				msg->SetPtr("panel", this);
-				PostMessage(GetVParent(), msg);
-			}
+
+			SetChildDimentionsChanged(true);
+
 		}
 		else if(m_bTriggerParentPositionUpdate)
+		{	
+			m_bTriggerParentPositionUpdate = false;
+			SetChildDimentionsChanged(true);
+		}
+	}
+
+	bool FFQuantityBar::GetChildDimentionsChanged()
+	{
+		return m_bChildDimentionsChanged;
+	}
+	void FFQuantityBar::SetChildDimentionsChanged( bool bChildDimentionsChanged )
+	{
+		//if ChildDimentionsChanged boolean is changing
+		if(m_bChildDimentionsChanged != bChildDimentionsChanged) 
 		{
 			//send update to parent for positioning	
-			if ( GetVParent() )
+			if(bChildDimentionsChanged && GetVParent())
 			{
 				KeyValues *msg = new KeyValues("ChildDimentionsChanged");
-				msg->SetPtr("panel", this);
 				PostMessage(GetVParent(), msg);
 			}
-			
-			m_bTriggerParentPositionUpdate = false;
-		}
+			m_bChildDimentionsChanged = bChildDimentionsChanged;
+		}		
 	}
 
 	void FFQuantityBar::GetPanelPositioningData( int& iWidth, int& iHeight, int& iOffsetX, int&  iOffsetY )

@@ -62,6 +62,9 @@ namespace vgui
 			ORIENTATION_VERTICAL_INVERTED
 		};
 
+		bool GetChildDimentionsChanged();
+		void SetChildDimentionsChanged( bool bChildDimentionsChanged );
+
 		void GetPanelPositioningData( int& iWidth, int& iHeight, int& iBarOffsetX, int&  iBarOffsetY );
 		void SetPosOffset( int iLeft, int iTop );
 		void SetStyle(KeyValues *kvStyleData, KeyValues *kvDefaultStyleData );
@@ -151,6 +154,8 @@ namespace vgui
 
 		void RecalculateColor( int colorMode, Color &color, Color &colorCustom );
 
+
+		bool m_bChildDimentionsChanged;
 		bool m_bTriggerParentPositionUpdate;
 
 		virtual void ApplySchemeSettings( IScheme *pScheme  );
