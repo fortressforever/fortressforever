@@ -117,7 +117,7 @@ namespace vgui
 		kvTemp->SetInt("textShadow", kvPreset->GetInt("textShadow", 0));
 		kvTemp->SetInt("textSize", kvPreset->GetInt("textSize", 3) + 1);
 		kvTemp->SetInt("textX", kvPreset->GetInt("textX", 25));
-		kvTemp->SetInt("textY", kvPreset->GetInt("textY", 25));
+		kvTemp->SetInt("textY", kvPreset->GetInt("textY", 20));
 		kvTemp->SetInt("showPanel", kvPreset->GetInt("showPanel", 1));
 		kvTemp->SetInt("panelColorCustom", kvPreset->GetInt("panelColorCustom", 0));
 		kvTemp->SetInt("panelRed", kvPreset->GetInt("panelRed", 255));
@@ -180,7 +180,7 @@ namespace vgui
 		m_pTextShadow->SetSelected(kvPreset->GetInt("textShadow", 0));
 		m_pTextSize->SetValue(kvPreset->GetInt("textSize", 3) + 1);
 		m_pTextX->SetValue(kvPreset->GetInt("textX", 25));
-		m_pTextY->SetValue(kvPreset->GetInt("textY", 25));
+		m_pTextY->SetValue(kvPreset->GetInt("textY", 20));
 		m_pShowPanel->SetSelected(kvPreset->GetInt("showPanel", 1));
 		m_pPanelColorCustom->SetSelected(kvPreset->GetInt("panelColorCustom", 0));
 		m_pPanelRed->SetValue(kvPreset->GetInt("panelRed", 255));
