@@ -61,24 +61,22 @@ namespace vgui {
 		//if no presets were in the file (or file not found)
 		{
 			KeyValues *kvPreset = new KeyValues("global");
-			//use this to remove/add keys using defaults
-			kvPreset = RemoveNonEssentialValues(kvPreset);
-			m_pPresets->AddItem("#GameUI_Global", kvPreset);
+			//use RemoveNonEssentialValues to remove/add keys using defaults
+			m_pPresets->AddItem("#GameUI_Global", RemoveNonEssentialValues(new KeyValues("global")));
 		}
 		else
 		//if presets exist
 		{
 			for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
+			{
+				//use RemoveNonEssentialValues to remove/add keys using defaults
+				if(Q_stricmp(kvPreset->GetName(), "global") == 0)
 				{
-			//use this to remove/add keys using defaults
-				kvPreset = RemoveNonEssentialValues(kvPreset);
-				if(Q_strncmp(kvPreset->GetName(), "global", 7) == 0)
-				{
-					m_pPresets->AddItem("#GameUI_Global", kvPreset); 
+					m_pPresets->AddItem("#GameUI_Global", RemoveNonEssentialValues(kvPreset)); 
 				}
 				else
 				{
-					m_pPresets->AddItem(kvPreset->GetName(), kvPreset);
+					m_pPresets->AddItem(kvPreset->GetName(), RemoveNonEssentialValues(kvPreset));
 				}
 			}
 		}
