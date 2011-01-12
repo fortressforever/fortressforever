@@ -57,6 +57,7 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("GetId",				&CBaseEntity::entindex)
 			.def("GetVelocity",			&CBaseEntity::GetAbsVelocity)
 			.def("SetVelocity",			&CBaseEntity::SetAbsVelocity)
+			.def("GetOwner",			&CBaseEntity::GetOwnerEntity)
 			// Use the global stuff for these
 			//.def("IsDispenser",			&FFLib::IsDispenser)
 			//.def("IsGrenade",			&FFLib::IsGrenade)
