@@ -352,8 +352,8 @@ bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 {
 	// We either use the default deploy time or the next time this gun is ready,
 	// whichever is larger
-	float flNextAttack = max(gpGlobals->curtime + MAX_DEPLOY_TIME, m_flNextPrimaryAttack);
-
+	float flNextAttack = max(gpGlobals->curtime + GetFFWpnData().m_flDeployDelay, m_flNextPrimaryAttack);
+	
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (pOwner)
 	{
