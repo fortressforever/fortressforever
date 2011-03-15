@@ -183,10 +183,11 @@ const char *Class_IntToPrintString( int iClassIndex )
 //I put it here from speedometer to use in crosshair info and anything else we wish to colour/color fade!
 Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor )
 {
+	int clampedCurrent = clamp(currentVal, minVal, maxVal);
 	float full, f1, f2;
 	full = maxVal - minVal;
-	f1 = (maxVal - currentVal) / full;
-	f2 = (currentVal - minVal) / full;
+	f1 = (maxVal - clampedCurrent) / full;
+	f2 = (clampedCurrent - minVal) / full;
 	return Color(
 		(int) (maxColor.r() * f2 + minColor.r() * f1),
 		(int) (maxColor.g() * f2 + minColor.g() * f1),
