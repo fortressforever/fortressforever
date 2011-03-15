@@ -51,6 +51,8 @@ namespace vgui
 		LoadControlSettings("resource/ui/FFOptionsSubCustomHudPositionPresets.res");
 	}
 
+
+
 	void CFFCustomHudPositionPresets::RegisterSelfForPresetAssignment()
 	{
 		if(g_AP != NULL)

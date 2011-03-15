@@ -90,12 +90,18 @@ namespace vgui
 		LoadControlSettings("resource/ui/FFOptionsSubCustomHudArrangementPresets.res");
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Tells the assignment class that this preset class is loaded
+	//-----------------------------------------------------------------------------	
 	void CFFCustomHudArrangementPresets::RegisterSelfForPresetAssignment()
 	{
 		if(g_AP != NULL)
 			g_AP->OnArrangementPresetsClassLoaded();
 	}
 	
+	//-----------------------------------------------------------------------------
+	// Purpose: Cleans up preset.. we might add remove alter values in the future
+	//-----------------------------------------------------------------------------	
 	KeyValues* CFFCustomHudArrangementPresets::RemoveNonEssentialValues(KeyValues *kvPreset)
 	{
 		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
@@ -128,6 +134,9 @@ namespace vgui
 		return kvTemp;
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Update the currently selected preset from the controls
+	//-----------------------------------------------------------------------------	
 	void CFFCustomHudArrangementPresets::UpdatePresetFromControls(KeyValues *kvPreset)
 	{
 		BaseClass::UpdatePresetFromControls(kvPreset);
@@ -156,8 +165,13 @@ namespace vgui
 		kvPreset->SetInt("panelGreen", m_pPanelGreen->GetValue());
 		kvPreset->SetInt("panelBlue", m_pPanelBlue->GetValue());
 		kvPreset->SetInt("panelAlpha", m_pPanelAlpha->GetValue());
+
+		//TODO: send preset to preview
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Apply the selected preset to the contols
+	//-----------------------------------------------------------------------------	
 	void CFFCustomHudArrangementPresets::ApplyPresetToControls(KeyValues *kvPreset)
 	{
 		m_bPresetLoading = true;
@@ -193,8 +207,8 @@ namespace vgui
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: Catch the comboboxs changing their selection
-	//-----------------------------------------------------------------------------
+	// Purpose: Update the component controls from the selected Component
+	//-----------------------------------------------------------------------------	
 	void CFFCustomHudArrangementPresets::OnUpdateCombos(KeyValues *data)
 	{
 		BaseClass::OnUpdateCombos(data);

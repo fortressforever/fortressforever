@@ -150,13 +150,18 @@ namespace vgui
 	}
 
 	
+	//-----------------------------------------------------------------------------
+	// Purpose: Tells the assignment class that this preset class is loaded
+	//-----------------------------------------------------------------------------	
 	void CFFCustomHudStylePresets::RegisterSelfForPresetAssignment()
 	{
 		if(g_AP != NULL)
 			g_AP->OnStylePresetsClassLoaded();
 	}
-
-
+	
+	//-----------------------------------------------------------------------------
+	// Purpose: Cleans up preset.. we might add remove alter values in the future
+	//-----------------------------------------------------------------------------	
 	KeyValues* CFFCustomHudStylePresets::RemoveNonEssentialValues(KeyValues *kvPreset)
 	{
 		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
@@ -402,7 +407,10 @@ namespace vgui
 
 		return kvTemp;
 	}
-
+	
+	//-----------------------------------------------------------------------------
+	// Purpose: Update the currently selected preset from the controls
+	//-----------------------------------------------------------------------------	
 	void CFFCustomHudStylePresets::UpdatePresetFromControls(KeyValues *kvPreset)
 	{
 		BaseClass::UpdatePresetFromControls(kvPreset);
@@ -453,8 +461,13 @@ namespace vgui
 			kvPreset->SetInt("barMarginVertical", m_pBarMarginVertical->GetValue());
 			kvPreset->SetInt("barOrientation", m_pBarOrientation->GetActiveItem());
 		}
-	}
 
+		//TODO: send preset to preview
+	}
+	
+	//-----------------------------------------------------------------------------
+	// Purpose: Apply the selected preset to the contols
+	//-----------------------------------------------------------------------------	
 	void CFFCustomHudStylePresets::ApplyPresetToControls(KeyValues *kvPreset)
 	{
 		m_bPresetLoading = true;
@@ -630,7 +643,10 @@ namespace vgui
 		m_bPresetLoading = false;
 		//this enables the preset options to register follwoing changes as a preset update!
 	}
-
+	
+	//-----------------------------------------------------------------------------
+	// Purpose: Update the component controls from the selected Component
+	//-----------------------------------------------------------------------------	
 	void CFFCustomHudStylePresets::UpdateComponentControls(KeyValues *kvComponent)
 	{
 		m_pShow->SetSelected(kvComponent->GetInt("show", 1));
@@ -675,7 +691,7 @@ namespace vgui
 		else
 			m_pFontTahoma->SetSelected(false);
 	}
-
+	
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the comboboxs changing their selection
 	//-----------------------------------------------------------------------------
