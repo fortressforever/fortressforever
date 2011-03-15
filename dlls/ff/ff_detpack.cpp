@@ -406,62 +406,24 @@ void CFFDetpack::DoExplosionDamage( void )
 #endif
 		}
 
-		bool bDoDamage = true, bBail = false;
+		bool bDoDamage = true;
 
 		// Need to trace until we hit the entity or a door/wall as someone/something
 		// can block the trace from getting to us but there is still a door/wall in the
 		// way that should have stopped the blast in the first place.
 
 		Vector vecBeg = vecOrigin;
-		CBaseEntity *pIgnore = this;
-		int iCount = 0;
 
-		while( bDoDamage && ( iCount < 256 ) && !bBail )
+		// Now, Trace! 
+		trace_t tr;
+		UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+
+		// If we hit something...
+		if( tr.DidHit() )
 		{
-			// Now, Trace! 
-			trace_t tr;
-			UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, pIgnore, COLLISION_GROUP_NONE, &tr );
-
-			// If we hit something...
-			if( tr.DidHit() )
-			{
-#ifdef _DEBUG
-				if( pEntity->IsPlayer() )
-					Warning( "[%s Explosion] Iterating on: %s (%s)", GetClassname(), pEntity->GetClassname(), ToFFPlayer( pEntity )->GetPlayerName() );
-				else
-					Warning( "[%s Explosion] Iterating on: %s", GetClassname(), pEntity->GetClassname() );
-
-				if( tr.m_pEnt->IsPlayer() )
-					Warning( ", TraceLine hit something: %s (%s)\n", tr.m_pEnt->GetClassname(), ToFFPlayer( tr.m_pEnt )->GetPlayerName() );
-				else
-					Warning( ", TraceLine hit something: %s\n", tr.m_pEnt->GetClassname() );
-#endif
-
-				// Don't do damage if the trace hit:
-				/*
-				if( tr.DidHitWorld() ||
-					FClassnameIs( tr.m_pEnt, "func_door" ) ||
-					FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
-					FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
-					FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
-					*/
-				if( FF_TraceHitWorld( &tr ) )
-					bDoDamage = false;	// Get out of loop
-
-				// Traced until we hit ourselves
-				if( tr.m_pEnt == pEntity )
-					bBail = true;
-			}
-
-			// Haven't hit a wall or pEntity so keep tracing
-			// Update start & ignore entity
-			vecBeg = tr.endpos;
-			pIgnore = tr.m_pEnt;
-
-			iCount++; // In case we get stuck tracing this will bail us out after so many traces
-
-			if( vecBeg == vecTarget )
-				bBail = true;
+			// We hit something other than the target (something is blocking it)
+			if( tr.m_pEnt != pEntity )
+				bDoDamage = false;
 		}
 
 #ifdef _DEBUG
@@ -541,45 +503,19 @@ void CFFDetpack::DoExplosionDamage( void )
 				continue;
 
 			// See if the world is not blocking this object from us
-			bool bDoDamage = true, bBail = false;
+			bool bDoDamage = true;
 			Vector vecBeg = vecOrigin, vecTarget = pEntity->GetAbsOrigin();
-			CBaseEntity *pIgnore = this;
-			int iCount = 0;			
 
-			while( bDoDamage && ( iCount < 256 ) && !bBail )
+			// Now, Trace! 
+			trace_t tr;
+			UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+
+			// If we hit something...
+			if( tr.DidHit() )
 			{
-				// Now, Trace! 
-				trace_t tr;
-				UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, pIgnore, COLLISION_GROUP_NONE, &tr );
-
-				// If we hit something...
-				if( tr.DidHit() )
-				{
-					// Skip object if we hit one of these while tracing to it
-					/*
-					if( tr.DidHitWorld() ||
-						FClassnameIs( tr.m_pEnt, "func_door" ) ||
-						FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
-						FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
-						FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
-						*/
-					if( FF_TraceHitWorld( &tr ) )
-						bDoDamage = false;	// Get out of loop
-
-					// Traced until we hit ourselves
-					if( tr.m_pEnt == pEntity )
-						bBail = true;
-				}
-
-				// Haven't hit a wall or pEntity so keep tracing
-				// Update start & ignore entity
-				vecBeg = tr.endpos;
-				pIgnore = tr.m_pEnt;
-
-				iCount++; // In case we get stuck tracing this will bail us out after so many traces
-
-				if( vecBeg == vecTarget )
-					bBail = true;
+				// We hit something other than the target (something is blocking it)
+				if( tr.m_pEnt != pEntity )
+					bDoDamage = false;
 			}
 
 			// If we traced to the object w/o hitting world or something else
