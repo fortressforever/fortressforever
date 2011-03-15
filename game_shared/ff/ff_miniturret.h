@@ -306,6 +306,7 @@ protected:
 	// Enemy handling
 	void			SetEnemy( CBaseEntity *pEntity );
 	CBaseEntity		*GetEnemy( void );
+	bool			IsTargetVisible( CBaseEntity *pTarget );
 
 protected:
 	int		m_iAmmoType;
