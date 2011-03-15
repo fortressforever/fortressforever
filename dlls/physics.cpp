@@ -37,6 +37,9 @@
 #include "physics_npc_solver.h"
 #include "physics_collisionevent.h"
 
+#include "ff_buildableobjects_shared.h"
+#include "ff_triggerclip.h"
+
 
 void PrecachePhysicsSounds( void );
 
@@ -323,6 +326,26 @@ int CCollisionEvent::ShouldCollide( IPhysicsObject *pObj0, IPhysicsObject *pObj1
 
 	if ( !pEntity0 || !pEntity1 )
 		return 1;
+
+	if ((FF_IsBuildableObject(pEntity0) || FF_IsBuildableObject(pEntity1)) && (pEntity0->Classify() == CLASS_TRIGGER_CLIP || pEntity1->Classify() == CLASS_TRIGGER_CLIP))
+	{
+		CFFBuildableObject *pBuildable = NULL;
+		CFFTriggerClip *pTriggerClip = NULL;
+		if (FF_IsBuildableObject(pEntity0))
+		{
+			pBuildable = (CFFBuildableObject*)pEntity0;
+			pTriggerClip = (CFFTriggerClip*)pEntity1;
+		}
+		else
+		{
+			pBuildable = (CFFBuildableObject*)pEntity1;
+			pTriggerClip = (CFFTriggerClip*)pEntity0;
+		}
+
+		return (int)ShouldFFTriggerClipBlock( pTriggerClip, pBuildable->GetTeamNumber(), 
+				LUA_CLIP_FLAG_BUILDABLES, LUA_CLIP_FLAG_NONPLAYERS,
+				LUA_CLIP_FLAG_BUILDABLESBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+	}
 
 	unsigned short gameFlags0 = pObj0->GetGameFlags();
 	unsigned short gameFlags1 = pObj1->GetGameFlags();
