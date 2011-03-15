@@ -1044,7 +1044,9 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 
 	// Can we trace to the target?
 	trace_t tr;
-	UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+	// Using MASK_SHOT instead of MASK_PLAYERSOLID so SGs track through anything they can actually shoot through
+	UTIL_TraceLine( vecOrigin, vecTarget, MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
+	//UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
 
 	/*if ( SG_DEBUG )
 	{
@@ -1098,7 +1100,7 @@ bool CFFSentryGun::IsTargetInAimingEllipse( const Vector& vecTarget ) const
 //-----------------------------------------------------------------------------
 bool CFFSentryGun::IsTargetClassTValid( Class_T cT ) const
 {
-	return ( ( cT == CLASS_PLAYER ) || ( cT == CLASS_SENTRYGUN ) || ( cT == CLASS_DISPENSER ) );
+	return ( ( cT == CLASS_PLAYER ) || ( cT == CLASS_SENTRYGUN ) || ( cT == CLASS_DISPENSER ) || ( cT == CLASS_MANCANNON ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -1198,7 +1200,9 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	int iAttachment = GetLevel() > 2 ? (m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment) : m_iMuzzleAttachment;
 
 	trace_t tr;
-	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
+	// Using MASK_SHOT instead of MASK_PLAYERSOLID so SGs track through anything they can actually shoot through
+	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 4096.0f, MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr);
+	//UTIL_TraceLine(vecSrc, vecSrc + vecDir * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
 
 	CEffectData data;
 	data.m_vStart = vecSrc;
@@ -1543,6 +1547,7 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
 		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
+		pBackpack->SetOwnerEntity( m_hOwner.Get() );
 	}
 */
 	BaseClass::Event_Killed( info );
@@ -1941,6 +1946,7 @@ void CFFSentryGun::Detonate()
 
 			pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
 			pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
+			pBackpack->SetOwnerEntity( m_hOwner.Get() );
 		}
 
 		CFFBuildableObject::Detonate();

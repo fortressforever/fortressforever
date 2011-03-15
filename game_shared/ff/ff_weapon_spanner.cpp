@@ -202,6 +202,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_SPANNER_BAGCELLS + (iArmorStolen/2) );
 					//pBackpack->SetAbsVelocity( Vector( random->RandomFloat(-100.0f, 0.0f), random->RandomFloat(-100.0f, 100.0f), random->RandomFloat(20.0f, 100.0f) ) );
 					pBackpack->SetAbsVelocity( Vector(vecForward.x, vecForward.y, FFDEV_SPANNER_BAGTHROWFORCEUP) * FFDEV_SPANNER_BAGTHROWFORCE );
+					pBackpack->SetOwnerEntity( GetOwner() );
 				}
 			}
 #endif

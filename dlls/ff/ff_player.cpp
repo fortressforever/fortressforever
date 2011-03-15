@@ -3728,6 +3728,7 @@ void CFFPlayer::Command_Discard( void )
 	if (pBackpack)
 	{
 		pBackpack->SetSpawnFlags(SF_NORESPAWN);
+		pBackpack->SetOwnerEntity( this );
 
 		// UNDONE: This is causing the sniper trace to ignore the backpack
 		//pBackpack->SetOwnerEntity(this);

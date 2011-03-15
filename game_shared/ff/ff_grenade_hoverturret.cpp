@@ -180,6 +180,7 @@ void CFFGrenadeHoverTurret::Precache()
 			{
 				pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_HOVERGREN_BAGCELLS );
 				pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
+				pBackpack->SetOwnerEntity( GetOwnerEntity() );
 			}
 
 			BaseClass::Explode(pTrace, bitsDamageType);
@@ -327,6 +328,7 @@ void CFFGrenadeHoverTurret::Precache()
 						pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_HOVERGREN_BAGCELLS );
 						//pBackpack->SetAbsVelocity( Vector( random->RandomFloat(-100.0f, 0.0f), random->RandomFloat(-100.0f, 100.0f), random->RandomFloat(20.0f, 100.0f) ) );
 						pBackpack->SetAbsVelocity( Vector(-vecDir.x, -vecDir.y, FFDEV_HOVERGREN_BAGTHROWFORCEUP) * FFDEV_HOVERGREN_BAGTHROWFORCE );
+						pBackpack->SetOwnerEntity( GetOwnerEntity() );
 					}
 					m_iDamageDone -= FFDEV_HOVERGREN_DAMAGETODROPBAG;
 				}

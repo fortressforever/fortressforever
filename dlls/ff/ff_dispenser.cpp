@@ -435,6 +435,7 @@ void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
 
 		pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
 		pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
+		pBackpack->SetOwnerEntity( m_hOwner.Get() );
 	}
 */
 	BaseClass::Event_Killed( info );
@@ -651,6 +652,7 @@ void CFFDispenser::Detonate()
 
 			pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), cells );
 			pBackpack->SetAbsVelocity( Vector(0.0f, 0.0f, 350.0f) );
+			pBackpack->SetOwnerEntity( m_hOwner.Get() );
 		}
 		CFFBuildableObject::Detonate();
 	}
