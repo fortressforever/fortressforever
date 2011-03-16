@@ -5053,6 +5053,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_preview.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_preview.h"
+						>
+					</File>
+					<File
 						RelativePath=".\ff\vgui\ff_customhudoptions_stylepresets.cpp"
 						>
 					</File>
