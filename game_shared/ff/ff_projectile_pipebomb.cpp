@@ -317,8 +317,32 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 	// Detonate any pipes belonging to us
 	while ((pPipe = (CFFProjectilePipebomb *) gEntList.FindEntityByClassT(pPipe, CLASS_PIPEBOMB)) != NULL) 
 	{
+		//Check if the pipe is valid and assert if it isnt
+		if( pPipe == NULL )
+		{
+			Assert( "A pipe on detonation was null." );
+			return;
+		}
+
+		if( pOwner == NULL )
+		{
+			Assert( "The owner of a pipe was null on detonation." );
+			return;
+		}
+
 		if (pPipe->GetOwnerEntity() == pOwner)
 		{
+			//Use this "force" boolean to mean: "Force all pipes to detonate immediately"
+			if( force == true )
+			{
+				// Detonate!				
+				pPipe->SetShouldDetonate(true);
+				pPipe->SetDetonateTime(gpGlobals->curtime);
+			
+				//Continue the while loop to the next pipe
+				continue;
+			}
+
 			//Check if the pipe hasnt already been detted, and it is detable
 			//Also check if the magnet is armed, meaning it has impacted a solid surface since its creation
 			if( pPipe->GetShouldDetonate() == false && pPipe->GetArmed() == true )

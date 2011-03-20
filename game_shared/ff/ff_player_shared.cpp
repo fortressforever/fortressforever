@@ -607,7 +607,7 @@ void CFFPlayer::ClassSpecificSkill()
 	case CLASS_DEMOMAN:
 		//Commenting out the delay stuff for a new system - GreenMushy
 		//if( ( GetPipebombShotTime() + PIPE_DET_DELAY ) < gpGlobals->curtime )
-		CFFProjectilePipebomb::DestroyAllPipes(this);
+		CFFProjectilePipebomb::DestroyAllPipes(this, false);
 		break;
 
 	case CLASS_MEDIC:
