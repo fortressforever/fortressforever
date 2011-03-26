@@ -2154,7 +2154,34 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 
 void CFFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 {
-	m_PlayerAnimState->DoAnimationEvent( event );
+	//Check for jimmyleg cases on the jump event(and speed) -GreenMushy
+	if( event == PLAYERANIMEVENT_JUMP )
+	{
+		//check convars or speed!
+		Vector vecVelocity = this->GetAbsVelocity();
+		int nSpeed = (int) FastSqrt( vecVelocity.x * vecVelocity.x + vecVelocity.y * vecVelocity.y );
+		float jcap = (Q_atof( engine->GetClientConVarValue( this->entindex(), "cl_jimmyleg_cap" ) ) );
+
+		switch( (Q_atoi( engine->GetClientConVarValue( this->entindex(), "cl_jimmyleg_mode" ) ) ) )
+		{
+		case 1:
+			//If the player is below their (specified) bunnyhop cap, do a jump animation.
+			if( (float)nSpeed < ( this->MaxSpeed() * jcap ) )
+			{
+				m_PlayerAnimState->DoAnimationEvent( event );
+			}
+			break;
+		case 0:
+		default:
+			//Always do the animation event if previous stuff wasnt hit
+			m_PlayerAnimState->DoAnimationEvent( event );
+			break;
+		}
+	}
+	else
+	{
+		m_PlayerAnimState->DoAnimationEvent( event );
+	}
 	TE_PlayerAnimEvent( this, event );	// Send to any clients who can see this guy.
 }
 
@@ -5217,6 +5244,25 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 			}			
 		}
 	}
+
+	// check to see if the shield should block this incoming damage
+
+		//Example code for how to use dot product to find angle between things -GreenMushy
+		//// get the displacement between the players
+		//Vector vDisplacement = pTarget->GetAbsOrigin() - pPlayer->GetAbsOrigin();
+		//vDisplacement.z = 0;
+		//vDisplacement.NormalizeInPlace();
+
+		//// get the direction the target is facing
+		//Vector vFacing;
+		//AngleVectors(pTarget->GetLocalAngles(), &vFacing);
+		//vFacing.z = 0;
+		//vFacing.NormalizeInPlace();
+
+		//// see if they are facing the same direction
+		//float angle = vFacing.Dot(vDisplacement);
+		//if (angle > ffdev_knife_backstab_angle.GetFloat() )
+		//{
 	
 	//// tag the player if hit by radio tag ammo 
 	//if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
