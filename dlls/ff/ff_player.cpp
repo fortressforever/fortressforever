@@ -2165,6 +2165,7 @@ void CFFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 		switch( (Q_atoi( engine->GetClientConVarValue( this->entindex(), "cl_jimmyleg_mode" ) ) ) )
 		{
 		case 1:
+		case 2:
 			//If the player is below their (specified) bunnyhop cap, do a jump animation.
 			if( (float)nSpeed < ( this->MaxSpeed() * jcap ) )
 			{
