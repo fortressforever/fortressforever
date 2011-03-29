@@ -79,6 +79,10 @@ extern ConVar cl_ffdlight_flashlight;
 //static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
 static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
 
+//Jimmyleg convars
+static ConVar cl_jimmyleg_cap( "cl_jimmyleg_cap", "1.4", FCVAR_ARCHIVE | FCVAR_USERINFO, "Percentage speed needed to NOT jump." );
+static ConVar cl_jimmyleg_mode( "cl_jimmyleg_mode", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Mode to display jimmylegs. 0 is default.  1 is speed conditional jimmyleg.  2 is full blown jimmyleg." );
+
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
@@ -573,7 +577,33 @@ public:
 		C_FFPlayer *pPlayer = dynamic_cast< C_FFPlayer* >( m_hPlayer.Get() );
 		if ( pPlayer && !pPlayer->IsDormant() )
 		{
-			pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get() );
+			//Check when the event is jump, depending on the jimmyleg mode or cap, whether to animate a jump or not -GreenMushy
+			if( (PlayerAnimEvent_t)m_iEvent.Get() == PLAYERANIMEVENT_JUMP )
+			{
+				//check convars and speed
+				Vector vecVelocity = pPlayer->GetAbsVelocity();
+				int nSpeed = (int) FastSqrt( vecVelocity.x * vecVelocity.x + vecVelocity.y * vecVelocity.y );
+
+				switch( cl_jimmyleg_mode.GetInt() )
+				{
+				case 1:
+					//If the player is below their (specified) bunnyhop cap, do a jump animation.
+					if( (float)nSpeed < ( pPlayer->MaxSpeed() * cl_jimmyleg_cap.GetFloat() ) )
+					{
+						pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get() );
+					}
+					break;
+				case 0:
+				default:
+					//Always do the animation event if previous stuff wasnt hit
+					pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get() );
+					break;
+				}
+			}	
+			else
+			{
+				pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get() );
+			}
 		}	
 	}
 
@@ -2231,7 +2261,38 @@ void C_FFPlayer::Simulate()
 //-----------------------------------------------------------------------------
 void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 {
-	m_PlayerAnimState->DoAnimationEvent( event );
+	//Check on the jump event whether to play the animation or not -GreenMushy
+	if( event == PLAYERANIMEVENT_JUMP )
+	{
+		//Check the player speed
+		Vector vecVelocity = this->GetAbsVelocity();
+		int nSpeed = (int) FastSqrt( vecVelocity.x * vecVelocity.x + vecVelocity.y * vecVelocity.y );
+
+		//Also get the client specified jimmyleg cap
+		float jcap = cl_jimmyleg_cap.GetFloat();
+
+		//Use the client specified mode to determine whether to jump or not
+		switch( cl_jimmyleg_mode.GetInt() )
+		{
+		case 1:
+			//If the player is below their (specified) jimmyleg cap, do a jump animation.  Otherwise, do nothing ( and continue running )
+			if( (float)nSpeed < ( this->MaxSpeed() * jcap ) )
+			{
+				m_PlayerAnimState->DoAnimationEvent( event );
+			}
+			break;
+		case 0:
+		default:
+			//Always do the animation event if previous stuff wasnt hit
+			m_PlayerAnimState->DoAnimationEvent( event );
+			break;
+		}
+	}
+	else
+	{
+		//Always call this if the event is not a jump
+		m_PlayerAnimState->DoAnimationEvent( event );
+	}
 }
 
 //-----------------------------------------------------------------------------
