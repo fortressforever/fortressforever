@@ -382,7 +382,8 @@ void CFFDetpack::DoExplosionDamage( void )
 		// players, dispenser, and sentryguns
 		if( !bSpecial )
 		{
-			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+			// if the entity is not alive or the player/owner is a spectator, skip
+			if( !pEntity->IsAlive() || pPlayer->IsObserver() )
 				continue;
 
 			//			Bug: #0000666: detpack doesn't push teammates
