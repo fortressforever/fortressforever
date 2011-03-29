@@ -31,6 +31,7 @@ public:
 	float	m_flCycleTime;
 	float	m_iCycleDecrement;
 	bool	m_bReloadClip;
+	float	m_flDeployDelay;
 
 	int		m_iDamage;
 	int		m_iDamageRadius;
