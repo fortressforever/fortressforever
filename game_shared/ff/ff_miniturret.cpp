@@ -28,6 +28,7 @@
 	#include "te_effect_dispatch.h"
 	#include "ff_scriptman.h"
 	#include "ff_luacontext.h"
+	#include "ff_utils.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -40,6 +41,9 @@ static int g_iMiniTurretBeam, g_iMiniTurretHalo, g_iMiniTurretDot;
 // Class CFFMiniTurretLaser
 //
 //=============================================================================
+
+//ConVar	turret_usepvs( "ffdev_spawnturret_usepvs", "0", FCVAR_REPLICATED );
+#define TURRET_USEPVS false // turret_usepvs.GetBool()
 
 //-----------------------------------------------------------------------------
 // Purpose: Create the laser dot
@@ -581,6 +585,49 @@ CBaseEntity *CFFMiniTurret::HackFindEnemy( void )
 
 		if( !pPlayer || !pPlayer->IsPlayer() || pPlayer->IsObserver() )
 			continue;
+		
+		// Check if lua will let us target this sentrygun
+		if( pPlayer->GetSentryGun() )
+		{
+			CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
+			//CFFLuaObjectWrapper hValidTarget;
+			CFFLuaSC hContext( 1, pSentryGun );
+			if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
+			{
+				if( hContext.GetBool() )
+					if( IsTargetVisible(pSentryGun) )
+						pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			}
+		}
+
+		// Check if lua will let us target this dispenser
+		if( pPlayer->GetDispenser() )
+		{
+			CFFDispenser *pDispenser = pPlayer->GetDispenser();
+			
+			CFFLuaSC hContext( 1, pDispenser );
+			if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
+			{
+				if( hContext.GetBool() )
+					if( IsTargetVisible(pDispenser) )
+						pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			}
+		}
+		
+
+		// Check if lua will let us target this jumppad
+		if( pPlayer->GetManCannon() )
+		{
+			CFFManCannon *pManCannon = pPlayer->GetManCannon();
+			
+			CFFLuaSC hContext( 1, pManCannon );
+			if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
+			{
+				if( hContext.GetBool() )
+					if( IsTargetVisible(pManCannon) )
+						pTarget = MiniTurret_IsBetterTarget( pTarget, pManCannon, ( pManCannon->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			}
+		}
 
 		if( !pPlayer->IsAlive() )
 			continue;
@@ -592,49 +639,12 @@ CBaseEntity *CFFMiniTurret::HackFindEnemy( void )
 				*/
 		
 		// Check if lua will let us target this player
-		if( FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) )
+		CFFLuaSC hContext( 1, pPlayer );
+		if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
 		{
-			//DevMsg( "[MiniTurret] %s About to run predicates for player: %s ", GetEntityName(), pPlayer->GetPlayerName() );
-			//CFFLuaObjectWrapper hValidTarget;
-			CFFLuaSC hContext( 1, pPlayer );
-			if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
-			{
-				if( hContext.GetBool() )
+			if( hContext.GetBool() )
+				if( IsTargetVisible( pPlayer ) )
 					pTarget = MiniTurret_IsBetterTarget( pTarget, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
-			}
-			else
-			{
-				//DevMsg( "Failure!\n" );
-			}
-			//DevMsg( "\n" );
-		}
-
-		// Check if lua will let us target this sentrygun
-		if( pPlayer->GetSentryGun() )
-		{
-			CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
-			if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) )
-			{
-				//CFFLuaObjectWrapper hValidTarget;
-				CFFLuaSC hContext( 1, pSentryGun );
-				if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
-					if( hContext.GetBool() )
-						pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
-			}
-		}
-
-		// Check if lua will let us target this dispenser
-		if( pPlayer->GetDispenser() )
-		{
-			CFFDispenser *pDispenser = pPlayer->GetDispenser();
-			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) )
-			{
-				//CFFLuaObjectWrapper hValidTarget;
-				CFFLuaSC hContext( 1, pDispenser );
-				if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
-					if( hContext.GetBool() )
-						pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
-			}
 		}
 	}
 
@@ -828,6 +838,8 @@ void CFFMiniTurret::OnActiveThink( void )
 	
 	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMuzzle, false );
 	
+	bEnemyVisible = IsTargetVisible( GetEnemy() );
+	/*
 	if( GetEnemy()->IsPlayer() )
 	{
 		// Enemy is a player
@@ -839,6 +851,7 @@ void CFFMiniTurret::OnActiveThink( void )
 		// Enemy is something else
 		bEnemyVisible = FVisible( GetEnemy()->GetAbsOrigin() ) || FVisible( GetEnemy()->EyePosition() );
 	}
+	*/
 
 	// Current enemy is not visible
 	if( !bEnemyVisible /*|| ( flDistToEnemy > FF_MINITURRET_RANGE )*/ )
@@ -933,6 +946,72 @@ void CFFMiniTurret::OnRetire( void )
 		DisableLaserDot();
 		DisableLaserBeam();
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if a target is visible
+//-----------------------------------------------------------------------------
+bool CFFMiniTurret::IsTargetVisible( CBaseEntity *pTarget )
+{
+	if( !pTarget )
+		return false;
+
+	CFFPlayer *pFFPlayer = ToFFPlayer( pTarget );
+
+	// early out if player's not even alive
+	if ( pFFPlayer && !pFFPlayer->IsAlive() )
+		return false;
+
+	// Get our aiming position
+	Vector vecMuzzle, vecMuzzleDir;
+	QAngle vecMuzzleAng;
+
+	MuzzlePosition( vecMuzzle, vecMuzzleAng );
+	AngleVectors( vecMuzzleAng, &vecMuzzleDir );
+
+	// Get a position on the target
+	Vector vecTarget = pTarget->BodyTarget( vecMuzzle, false );
+
+	/*float flDistToTarget = vecMuzzle.DistTo( vecTarget );
+
+	// Check for out of range
+	if( flDistToTarget > SG_RANGE )
+		return false;*/
+
+	// Check PVS for early out
+	if(TURRET_USEPVS)
+	{
+		byte pvs[ MAX_MAP_CLUSTERS/8 ];
+		int iPVSCluster = engine->GetClusterForOrigin(vecMuzzle);
+		int iPVSLength = engine->GetPVSForCluster(iPVSCluster, sizeof(pvs), pvs);
+		if(!engine->CheckOriginInPVS(vecTarget, pvs, iPVSLength))
+			return false;
+	}
+
+	// Can we trace to the target?
+	trace_t tr;
+	// Using MASK_SHOT instead of MASK_PLAYERSOLID so turrets track through anything they can actually shoot through
+	UTIL_TraceLine( vecMuzzle, vecTarget, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+	//UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+
+	/*if ( TURRET_DEBUG )
+	{
+		int r = 0, g = 0, b = 0;
+		if(tr.fraction < 1.f)
+			r = 255;
+		else
+			g = 255;
+		debugoverlay->AddLineOverlay(vecOrigin, vecTarget, r, g, b, false, 0.1f);
+	}*/
+
+	// What did our trace hit?
+	if( tr.startsolid || /*( tr.fraction != 1.0f ) ||*/ !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
+		return false;
+
+	if(tr.m_pEnt != pTarget)
+		return false;
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
