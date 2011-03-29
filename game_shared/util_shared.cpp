@@ -23,6 +23,7 @@
 	#include "ff_team.h"
 	#include "ff_player.h"
 	#include "te_effect_dispatch.h"
+	#include "ff_item_flag.h"
 
 bool NPC_CheckBrushExclude( CBaseEntity *pEntity, CBaseEntity *pBrush );
 #endif
@@ -273,7 +274,6 @@ bool StandardFilterRules( IHandleEntity *pHandleEntity, int fContentsMask )
 }
 
 
-
 //-----------------------------------------------------------------------------
 // Simple trace filter
 //-----------------------------------------------------------------------------
@@ -407,59 +407,121 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 			{
 				if( pPassEnt )
 				{
-					// If players should clip
-					if( pPassEnt->IsPlayer() && pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_PLAYERS ) )
-						return true;
-
-					// If grenades should clip
-					if( ( pPassEnt->GetFlags() & FL_GRENADE ) && pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_GRENADES ) )
-						return true;
-
-					// If team entities should clip
-					if( !pPassEnt->IsPlayer() && pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAM_ENTITIES ) )
+					// Players
+					if ( pPassEnt->IsPlayer() )
 					{
+						// Bullets from players
+						if ( contentsMask == MASK_SHOT )
+						{
+							return ShouldFFTriggerClipBlock( pTriggerClip, pPassEnt->GetTeamNumber(), 
+								LUA_CLIP_FLAG_BULLETS, LUA_CLIP_FLAG_NONPLAYERS,
+								LUA_CLIP_FLAG_BULLETSBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+						}
+						// Buildables trying to be built
+						else if ( m_collisionGroup == COLLISION_GROUP_BUILDABLE_BUILDING )
+						{
+							return ShouldFFTriggerClipBlock( pTriggerClip, pPassEnt->GetTeamNumber(), 
+								LUA_CLIP_FLAG_BUILDABLES, LUA_CLIP_FLAG_NONPLAYERS,
+								LUA_CLIP_FLAG_BUILDABLESBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+						}
+
+						// Players themselves
+						return ShouldFFTriggerClipBlock( pTriggerClip, pPassEnt->GetTeamNumber(), 
+							LUA_CLIP_FLAG_PLAYERS, 
+							LUA_CLIP_FLAG_PLAYERSBYTEAM );
+					}
+					// Buildables
+					else if ( FF_IsBuildableObject(const_cast< CBaseEntity * >( pPassEnt )) )
+					{
+						CFFBuildableObject *pBuildable = FF_ToBuildableObject( const_cast< CBaseEntity * >( pPassEnt ) );
+						if (!pBuildable)
+							return false;
+						
+						// Bullets from buildables
+						if ( contentsMask == MASK_SHOT )
+						{
+							return ShouldFFTriggerClipBlock( pTriggerClip, pBuildable->GetTeamNumber(), 
+								LUA_CLIP_FLAG_BUILDABLEWEAPONS, LUA_CLIP_FLAG_NONPLAYERS,
+								LUA_CLIP_FLAG_BUILDABLEWEAPONSBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+						}
+
+						// Buildables getting built don't send a buildable pointer (they send a player), so
+						// any buildable getting sent is assumed to be doing damage of some sort
+						// For sure, though, detpacks trace with MASK_SOLID for their explosion damage
+						return ShouldFFTriggerClipBlock( pTriggerClip, pBuildable->GetTeamNumber(), 
+							LUA_CLIP_FLAG_BUILDABLEWEAPONS, LUA_CLIP_FLAG_NONPLAYERS,
+							LUA_CLIP_FLAG_BUILDABLEWEAPONSBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+					}
+					// Grenades
+					else if ( pPassEnt->GetFlags() & FL_GRENADE )
+					{
+						// Get owner so we can get its team number
 						CBaseEntity *pOwner = pPassEnt->GetOwnerEntity();
 						if( !pOwner )
 							return false;
 
-						switch( pOwner->GetTeamNumber() )
-						{
-							case TEAM_BLUE:
-								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE ) ) return true;
-								else break;
-							case TEAM_RED:
-								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMRED ) ) return true;
-								else break;
-							case TEAM_YELLOW:
-								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMYELLOW ) ) return true;
-								else break;
-							case TEAM_GREEN:
-								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMGREEN ) ) return true;
-								else break;
-							default:
-								break;
-						}
+						return ShouldFFTriggerClipBlock( pTriggerClip, pOwner->GetTeamNumber(), 
+							LUA_CLIP_FLAG_GRENADES, LUA_CLIP_FLAG_NONPLAYERS,
+							LUA_CLIP_FLAG_GRENADESBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
 					}
-
-					// If specific player teams should clip
-					if( pPassEnt->IsPlayer() )
+					// Backpacks
+					else if ( const_cast< CBaseEntity * >( pPassEnt )->Classify() == CLASS_BACKPACK )
 					{
-						switch( pPassEnt->GetTeamNumber() )
+						// Get owner so we can get its team number
+						CBaseEntity *pOwner = pPassEnt->GetOwnerEntity();
+						if( !pOwner )
+							return false;
+						
+						// exploding backpack from an EMP
+						if ( contentsMask == MASK_SHOT )
 						{
-							case TEAM_BLUE:
-								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE ) ) return true;
-								else break;
-							case TEAM_RED:
-								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMRED ) ) return true;
-								else break;
-							case TEAM_YELLOW:
-								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMYELLOW ) ) return true;
-								else break;
-							case TEAM_GREEN:
-								if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMGREEN ) ) return true;
-								else break;
-							default:
-								break;
+							return ShouldFFTriggerClipBlock( pTriggerClip, pOwner->GetTeamNumber(), 
+								LUA_CLIP_FLAG_GRENADES, LUA_CLIP_FLAG_NONPLAYERS,
+								LUA_CLIP_FLAG_GRENADESBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+						}
+
+						return ShouldFFTriggerClipBlock( pTriggerClip, pOwner->GetTeamNumber(), 
+							LUA_CLIP_FLAG_BACKPACKS, LUA_CLIP_FLAG_NONPLAYERS,
+							LUA_CLIP_FLAG_BACKPACKSBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+					}
+					// Info_ff_scripts
+					else if ( const_cast< CBaseEntity * >( pPassEnt )->Classify() == CLASS_INFOSCRIPT )
+					{
+						// Info scripts by team is a complicated mess that I can't be bothered to
+						// deal with right now, so it's all-or-nothing for now - squeek
+						// TODO: Block info_ff_scripts by team
+						return ShouldFFTriggerClipBlock( pTriggerClip, 0, 
+							LUA_CLIP_FLAG_INFOSCRIPTS, LUA_CLIP_FLAG_NONPLAYERS,
+							0 /*LUA_CLIP_FLAG_INFOSCRIPTSBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM*/ );
+					}
+					// Respawn turrets
+					else if ( const_cast< CBaseEntity * >( pPassEnt )->Classify() == CLASS_TURRET )
+					{
+						return ShouldFFTriggerClipBlock( pTriggerClip, pPassEnt->GetTeamNumber(), 
+							LUA_CLIP_FLAG_SPAWNTURRETS, LUA_CLIP_FLAG_NONPLAYERS,
+							LUA_CLIP_FLAG_SPAWNTURRETSBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+					}
+					// Projectiles or any other player-owned entities
+					else
+					{
+						// Get owner so we can get its team number
+						CBaseEntity *pOwner = pPassEnt->GetOwnerEntity();
+						if( !pOwner )
+							return false;
+
+						// Projectiles from players
+						if( pOwner->IsPlayer() )
+						{
+							return ShouldFFTriggerClipBlock( pTriggerClip, pOwner->GetTeamNumber(), 
+								LUA_CLIP_FLAG_PROJECTILES, LUA_CLIP_FLAG_NONPLAYERS,
+								LUA_CLIP_FLAG_PROJECTILESBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
+						}
+						// Projectiles from buildables
+						else if ( FF_IsBuildableObject(pOwner) )
+						{
+							return ShouldFFTriggerClipBlock( pTriggerClip, pOwner->GetTeamNumber(), 
+								LUA_CLIP_FLAG_BUILDABLEWEAPONS, LUA_CLIP_FLAG_NONPLAYERS,
+								LUA_CLIP_FLAG_BUILDABLEWEAPONSBYTEAM | LUA_CLIP_FLAG_NONPLAYERSBYTEAM );
 						}
 					}
 

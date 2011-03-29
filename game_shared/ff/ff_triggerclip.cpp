@@ -56,6 +56,90 @@ LINK_ENTITY_TO_CLASS( trigger_ff_clip, CFFTriggerClip );
 PRECACHE_REGISTER( trigger_ff_clip );
 #endif
 
+
+//-----------------------------------------------------------------------------
+// Standard collision test for trigger_ff_clip collisions
+//-----------------------------------------------------------------------------
+bool ShouldFFTriggerClipBlock( CFFTriggerClip *pTriggerClip, int iTeam, int iClipMask, int iTeamClipMask )
+{
+	// If all things of this type should clip
+	if ( pTriggerClip->IsClipMaskSet( iClipMask ) )
+		return true;
+
+	// If only things of a certain team should clip
+	if ( pTriggerClip->IsClipMaskSet( iTeamClipMask ) )
+	{
+		// If no teams are set at all, block for all teams
+		if (!pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE | LUA_CLIP_FLAG_TEAMRED | LUA_CLIP_FLAG_TEAMYELLOW | LUA_CLIP_FLAG_TEAMGREEN ))
+			return true;
+
+		// If team flags are set, then only clip things of clipped teams
+		switch( iTeam )
+		{
+			case TEAM_BLUE:
+				if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE ) ) return true;
+				else break;
+			case TEAM_RED:
+				if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMRED ) ) return true;
+				else break;
+			case TEAM_YELLOW:
+				if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMYELLOW ) ) return true;
+				else break;
+			case TEAM_GREEN:
+				if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMGREEN ) ) return true;
+				else break;
+			default:
+				break;
+		}
+	}
+
+	// If it hasn't been clipped yet, it shouldn't clip
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Standard collision test for trigger_ff_clip collisions
+//-----------------------------------------------------------------------------
+bool ShouldFFTriggerClipBlock( CFFTriggerClip *pTriggerClip, int iTeam, int iClipMask, int iAllClipMask, int iTeamClipMask )
+{
+	// If all things of this type should clip
+	if ( pTriggerClip->IsClipMaskSet( iClipMask ) )
+		return true;
+
+	// If only things of a certain team should clip
+	if ( pTriggerClip->IsClipMaskSet( iTeamClipMask ) )
+	{
+		// If no teams are set at all, block for all teams
+		if (!pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE | LUA_CLIP_FLAG_TEAMRED | LUA_CLIP_FLAG_TEAMYELLOW | LUA_CLIP_FLAG_TEAMGREEN ))
+			return true;
+
+		// If team flags are set, then only clip things of clipped teams
+		switch( iTeam )
+		{
+			case TEAM_BLUE:
+				if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE ) ) return true;
+				else break;
+			case TEAM_RED:
+				if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMRED ) ) return true;
+				else break;
+			case TEAM_YELLOW:
+				if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMYELLOW ) ) return true;
+				else break;
+			case TEAM_GREEN:
+				if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMGREEN ) ) return true;
+				else break;
+			default:
+				break;
+		}
+	}
+
+	// If it hasn't been clipped yet, it should only clip if everything should clip
+	if ( pTriggerClip->IsClipMaskSet( iAllClipMask ) )
+		return true;
+
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
