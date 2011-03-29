@@ -192,8 +192,9 @@ enum SolidFlags_t
 	FSOLID_FORCE_WORLD_ALIGNED	= 0x0040,	// Forces the collision rep to be world-aligned even if it's SOLID_BSP or SOLID_VPHYSICS
 	FSOLID_USE_TRIGGER_BOUNDS	= 0x0080,	// Uses a special trigger bounds separate from the normal OBB
 	FSOLID_ROOT_PARENT_ALIGNED	= 0x0100,	// Collisions are defined in root parent's local coordinate space
+	FSOLID_COLLIDE_WITH_OWNER   = 0X0400,	// Can hit our m_hOwner
 
-	FSOLID_MAX_BITS	= 9
+	FSOLID_MAX_BITS	= 10
 };
 
 //-----------------------------------------------------------------------------
