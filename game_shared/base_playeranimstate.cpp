@@ -51,6 +51,10 @@ ConVar mp_facefronttime(
 
 ConVar mp_ik( "mp_ik", "1", FCVAR_REPLICATED, "Use IK on in-place turns." );
 
+#ifdef CLIENT_DLL
+	extern ConVar cl_jimmyleg_mode;
+#endif
+
 // Pose parameters stored for debugging.
 float g_flLastBodyPitch, g_flLastBodyYaw, m_flLastMoveYaw;
 
@@ -539,6 +543,19 @@ bool CBasePlayerAnimState::CanThePlayerMove()
 void CBasePlayerAnimState::ComputePlaybackRate()
 {
 	VPROF( "CBasePlayerAnimState::ComputePlaybackRate" );
+#ifdef CLIENT_DLL
+	if (cl_jimmyleg_mode.GetInt() == 2 && m_AnimConfig.m_LegAnimType != LEGANIM_8WAY)
+	{
+		// When using a 9-way blend, playback rate is always 1 and we just scale the pose params
+		// to speed up or slow down the animation.
+		bool bIsMoving;
+		float flRate = CalcMovementPlaybackRate( &bIsMoving );
+		if ( bIsMoving )
+			GetOuter()->SetPlaybackRate( flRate );
+		else
+			GetOuter()->SetPlaybackRate( 1 );
+	}
+#else
 	if ( m_AnimConfig.m_LegAnimType != LEGANIM_9WAY && m_AnimConfig.m_LegAnimType != LEGANIM_8WAY )
 	{
 		// When using a 9-way blend, playback rate is always 1 and we just scale the pose params
@@ -550,6 +567,7 @@ void CBasePlayerAnimState::ComputePlaybackRate()
 		else
 			GetOuter()->SetPlaybackRate( 1 );
 	}
+#endif
 }
 
 

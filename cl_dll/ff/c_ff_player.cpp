@@ -80,8 +80,8 @@ extern ConVar cl_ffdlight_flashlight;
 static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
 
 //Jimmyleg convars
-static ConVar cl_jimmyleg_cap( "cl_jimmyleg_cap", "1.4", FCVAR_ARCHIVE | FCVAR_USERINFO, "Percentage speed needed to NOT jump." );
-static ConVar cl_jimmyleg_mode( "cl_jimmyleg_mode", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Mode to display jimmylegs. 0 is default.  1 is speed conditional jimmyleg.  2 is full blown jimmyleg." );
+ConVar cl_jimmyleg_cap( "cl_jimmyleg_cap", "1.4", FCVAR_ARCHIVE | FCVAR_USERINFO, "Percentage speed needed to NOT jump." );
+ConVar cl_jimmyleg_mode( "cl_jimmyleg_mode", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Mode to display jimmylegs. 0 is default.  1 is speed conditional jimmyleg.  2 is full blown jimmyleg." );
 
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
 
@@ -587,6 +587,7 @@ public:
 				switch( cl_jimmyleg_mode.GetInt() )
 				{
 				case 1:
+				case 2:
 					//If the player is below their (specified) bunnyhop cap, do a jump animation.
 					if( (float)nSpeed < ( pPlayer->MaxSpeed() * cl_jimmyleg_cap.GetFloat() ) )
 					{
