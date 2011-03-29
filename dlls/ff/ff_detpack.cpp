@@ -426,7 +426,7 @@ void CFFDetpack::DoExplosionDamage( void )
 		}
 
 #ifdef _DEBUG
-		Warning( "[Buildable Object] bDoDamage: %s, iCount: %i, bBail: %s\n", bDoDamage ? "true" : "false", iCount, bBail ? "true" : "false" );
+		Warning( "[Buildable Object] bDoDamage: %s\n", bDoDamage ? "true" : "false" );
 #endif
 
 		// Basically, if we don't hit a couple of objects deal out [absolute] damage		
