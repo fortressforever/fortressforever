@@ -35,7 +35,7 @@ public:
 	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }
 
 #ifdef CLIENT_DLL
-	CFFGrenadeMirvlet() {}
+	CFFGrenadeMirvlet();
 	CFFGrenadeMirvlet( const CFFGrenadeMirvlet& ) {}
 #else
 	virtual void Spawn();
@@ -49,6 +49,16 @@ END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_grenade_mirvlet, CFFGrenadeMirvlet);
 PRECACHE_WEAPON_REGISTER( ff_grenade_mirvlet );
+
+	//----------------------------------------------------------------------------
+	// Purpose: Client constructor
+	//----------------------------------------------------------------------------
+#ifdef CLIENT_DLL
+	CFFGrenadeMirvlet::CFFGrenadeMirvlet()
+	{
+		m_flModelSize = 20.0f;
+	}
+#endif
 
 #ifdef GAME_DLL
 	//-----------------------------------------------------------------------------
