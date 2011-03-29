@@ -45,8 +45,10 @@ public:
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
 
 	OverpressureParticle *AddOverpressureParticle( const Vector& vecOrigin );
+	OverpressureParticle *AddOverpressureParticle2( const Vector& vecOrigin );
 
 	static PMaterialHandle GetMaterial( void ) { return m_hMaterial; }
+	static PMaterialHandle GetMaterial2( void ) { return m_hMaterial2; }
 
 	void ApplyDrag( Vector *F, Vector vecVelocity, float flScale, float flTargetVel );
 	void SetDieTime( float flDieTime ) { m_flDieTime = flDieTime; }
@@ -64,6 +66,7 @@ private:
 	COverpressureEmitter( const COverpressureEmitter & );
 
 	static PMaterialHandle m_hMaterial;
+	static PMaterialHandle m_hMaterial2;
 
 	Vector	m_vecOrigin;
 	Vector	m_vecVelocity;
