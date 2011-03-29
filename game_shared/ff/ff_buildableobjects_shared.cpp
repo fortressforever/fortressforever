@@ -345,7 +345,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay( void )
 		// Now, using the mins/maxs, do a trace
 		// If the trace does not complete them we hit something and the area is not clear
 		trace_t trHull;
-		UTIL_TraceHull( m_vecPlayerOrigin, m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &trHull );
+		UTIL_TraceHull( m_vecPlayerOrigin, m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_BUILDABLE_BUILDING, &trHull );
 
 		// See if we started in a solid
 		if( trHull.startsolid )
@@ -364,7 +364,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay( void )
 
 		// Jiggles: Added to prevent people from building through certain displacements
 		trace_t	evilDisp;
-		UTIL_TraceLine( m_pPlayer->GetAbsOrigin(), m_vecBuildAirOrigin, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &evilDisp );
+		UTIL_TraceLine( m_pPlayer->GetAbsOrigin(), m_vecBuildAirOrigin, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_BUILDABLE_BUILDING, &evilDisp );
 		if ( evilDisp.fraction != 1.0 )
 			continue;
 
@@ -556,7 +556,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 			// HACK Changed to COLLISION_GROUP_PROJECTILE so it doesn't clip healthpacks (Bug #0000242: SG/Disp when building clips on health pack.)
 			for( int i = 0; i < 4; i++ ) 
 			{
-				UTIL_TraceLine(vecCorners[i], vecCorners[i] - Vector(0, 0, flTestDist), CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE, m_pPlayer, COLLISION_GROUP_PROJECTILE, &tr[i]);				
+				UTIL_TraceLine(vecCorners[i], vecCorners[i] - Vector(0, 0, flTestDist), CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE, m_pPlayer, COLLISION_GROUP_BUILDABLE_BUILDING, &tr[i]);				
 
 				// Bug #0000246: Dispenser and sg overlap if built on each other
 				if( !tr[i].DidHit() )
@@ -625,7 +625,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 			// HACK Changed to COLLISION_GROUP_PROJECTILE so it doesn't clip healthpacks (Bug #0000242: SG/Disp when building clips on health pack.)
 			for (int i = 0; i < 3; i++) 
 			{
-				UTIL_TraceLine(vecFeet[i], vecFeet[i] - Vector(0, 0, flTestDist), CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE, m_pPlayer, COLLISION_GROUP_PROJECTILE, &tr[i]);
+				UTIL_TraceLine(vecFeet[i], vecFeet[i] - Vector(0, 0, flTestDist), CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE, m_pPlayer, COLLISION_GROUP_BUILDABLE_BUILDING, &tr[i]);
 
 				// Bug #0000246: Dispenser and sg overlap if built on each other
 				if( !tr[i].DidHit() )
