@@ -855,6 +855,12 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 			if ( !( pDispenser->IsMaliciouslySabotaged() && g_pGameRules->PlayerRelationship( pDispenser->m_hSaboteur, m_hSaboteur ) == GR_TEAMMATE ) )
 				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
+		
+		CFFManCannon *pManCannon = pPlayer->GetManCannon();
+		if( IsTargetVisible( pManCannon ) && !bIsSentryMaliciouslySabotaged )
+		{
+			target = SG_IsBetterTarget( target, pManCannon, ( pManCannon->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+		}
 
 		/*
 		// Check a couple more locations to check as technically they could be visible whereas others wouldn't be
@@ -1018,7 +1024,7 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 	// Can we trace to the target?
 	trace_t tr;
 	// Using MASK_SHOT instead of MASK_PLAYERSOLID so SGs track through anything they can actually shoot through
-	UTIL_TraceLine( vecOrigin, vecTarget, MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
+	UTIL_TraceLine( vecOrigin, vecTarget, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 	//UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
 
 	/*if ( SG_DEBUG )
@@ -1160,7 +1166,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 
 	trace_t tr;
 	// Using MASK_SHOT instead of MASK_PLAYERSOLID so SGs track through anything they can actually shoot through
-	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 4096.0f, MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr);
+	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 4096.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
 	//UTIL_TraceLine(vecSrc, vecSrc + vecDir * 4096.0f, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
 
 	CEffectData data;
