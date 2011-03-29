@@ -416,7 +416,7 @@ void CFFDetpack::DoExplosionDamage( void )
 
 		// Now, Trace! 
 		trace_t tr;
-		UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, this, COLLISION_GROUP_DEBRIS, &tr );
 
 		// If we hit something...
 		if( tr.DidHit() )
@@ -508,7 +508,7 @@ void CFFDetpack::DoExplosionDamage( void )
 
 			// Now, Trace! 
 			trace_t tr;
-			UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+			UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, this, COLLISION_GROUP_DEBRIS, &tr );
 
 			// If we hit something...
 			if( tr.DidHit() )
