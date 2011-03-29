@@ -228,13 +228,40 @@ void CFFLuaLib::InitConstants(lua_State* L)
 		class_<CFFEntity_ClipFlags>("ClipFlags")
 			.enum_("ClipFlags")
 			[
-				value("kClipPlayers",		LUA_CLIP_FLAG_PLAYERS),
-				value("kClipTeamBlue",		LUA_CLIP_FLAG_TEAMBLUE),
-				value("kClipTeamRed",		LUA_CLIP_FLAG_TEAMRED),
-				value("kClipTeamYellow",	LUA_CLIP_FLAG_TEAMYELLOW),
-				value("kClipTeamGreen",		LUA_CLIP_FLAG_TEAMGREEN),
-				value("kClipGrenades",		LUA_CLIP_FLAG_GRENADES),
-				value("kClipTeamEntities",	LUA_CLIP_FLAG_TEAM_ENTITIES)
+				value("kClipTeamBlue",					LUA_CLIP_FLAG_TEAMBLUE),
+				value("kClipTeamRed",					LUA_CLIP_FLAG_TEAMRED),
+				value("kClipTeamYellow",				LUA_CLIP_FLAG_TEAMYELLOW),
+				value("kClipTeamGreen",					LUA_CLIP_FLAG_TEAMGREEN),
+				value("kClipAllPlayers",				LUA_CLIP_FLAG_PLAYERS),
+				value("kClipAllGrenades",				LUA_CLIP_FLAG_GRENADES),
+				value("kClipAllProjectiles",			LUA_CLIP_FLAG_PROJECTILES),
+				value("kClipAllBullets",				LUA_CLIP_FLAG_BULLETS),
+				value("kClipAllBuildables",				LUA_CLIP_FLAG_BUILDABLES),
+				value("kClipAllBuildableWeapons",		LUA_CLIP_FLAG_BUILDABLEWEAPONS),
+				value("kClipAllBackpacks",				LUA_CLIP_FLAG_BACKPACKS),
+				value("kClipAllInfoScripts",			LUA_CLIP_FLAG_INFOSCRIPTS),
+				value("kClipAllSpawnTurrets",			LUA_CLIP_FLAG_SPAWNTURRETS),
+				value("kClipAllNonPlayers",				LUA_CLIP_FLAG_NONPLAYERS),
+				value("kClipPlayers",					LUA_CLIP_FLAG_PLAYERSBYTEAM),
+				value("kClipGrenades",					LUA_CLIP_FLAG_GRENADESBYTEAM),
+				value("kClipProjectiles",				LUA_CLIP_FLAG_PROJECTILESBYTEAM),
+				value("kClipBullets",					LUA_CLIP_FLAG_BULLETSBYTEAM),
+				value("kClipBuildables",				LUA_CLIP_FLAG_BUILDABLESBYTEAM),
+				value("kClipBuildableWeapons",			LUA_CLIP_FLAG_BUILDABLEWEAPONSBYTEAM),
+				value("kClipBackpacks",					LUA_CLIP_FLAG_BACKPACKSBYTEAM),
+				value("kClipInfoScripts",				LUA_CLIP_FLAG_INFOSCRIPTS),	// TODO: Make this ByTeam once it works
+				value("kClipSpawnTurrets",				LUA_CLIP_FLAG_SPAWNTURRETSBYTEAM),
+				value("kClipNonPlayers",				LUA_CLIP_FLAG_NONPLAYERSBYTEAM),
+				value("kClipPlayersByTeam",				LUA_CLIP_FLAG_PLAYERSBYTEAM),
+				value("kClipGrenadesByTeam",			LUA_CLIP_FLAG_GRENADESBYTEAM),
+				value("kClipProjectilesByTeam",			LUA_CLIP_FLAG_PROJECTILESBYTEAM),
+				value("kClipBulletsByTeam",				LUA_CLIP_FLAG_BULLETSBYTEAM),
+				value("kClipBuildablesByTeam",			LUA_CLIP_FLAG_BUILDABLESBYTEAM),
+				value("kClipBuildableWeaponsByTeam",	LUA_CLIP_FLAG_BUILDABLEWEAPONSBYTEAM),
+				value("kClipBackpacksByTeam",			LUA_CLIP_FLAG_BACKPACKSBYTEAM),
+				//value("kClipInfoScriptsByTeam",			LUA_CLIP_FLAG_INFOSCRIPTSBYTEAM),
+				value("kClipSpawnTurretsByTeam",		LUA_CLIP_FLAG_SPAWNTURRETSBYTEAM),
+				value("kClipNonPlayersByTeam",			LUA_CLIP_FLAG_NONPLAYERSBYTEAM)
 			],
 		class_<CFFEntity_SpecMode>("SpecMode")
 			.enum_("SpecMode")
