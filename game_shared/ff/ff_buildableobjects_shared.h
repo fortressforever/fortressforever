@@ -878,7 +878,7 @@ inline bool FF_IsBuildableObject( CBaseEntity *pEntity )
 
 	return( ( pEntity->Classify() == CLASS_DISPENSER ) ||
 		( pEntity->Classify() == CLASS_SENTRYGUN ) ||
-		( pEntity->Classify() == CLASS_DISPENSER ) ||
+		( pEntity->Classify() == CLASS_DETPACK ) ||
 		( pEntity->Classify() == CLASS_MANCANNON ) );
 }
 
