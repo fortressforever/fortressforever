@@ -43,7 +43,7 @@ ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICAT
 ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED );
 ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
 ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
-ConVar growTime( "ffdev_lasergren_growTime", "1", FCVAR_REPLICATED, "Time taken to grow to full length" );
+ConVar growTime( "ffdev_lasergren_growTime", "0.7", FCVAR_REPLICATED, "Time taken to grow to full length" );
 ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_REPLICATED, "Time taken to shrink to nothing" );
 ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active time");
 
@@ -62,10 +62,10 @@ ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active t
 
 #ifdef GAME_DLL
 
-	ConVar laserdamage("ffdev_lasergren_damage", "660", FCVAR_NOTIFY, "Damage of laser");
+	ConVar laserdamage("ffdev_lasergren_damage", "250", FCVAR_NOTIFY, "Damage of laser");
 	#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
 	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", ".15", FCVAR_NOTIFY, "Damage multiplier of laser against buildables");
-	ConVar laserangv("ffdev_lasergren_angv", "66", FCVAR_NOTIFY, "Laser angular increment");
+	ConVar laserangv("ffdev_lasergren_angv", "160", FCVAR_NOTIFY, "Laser angular increment");
 	#define LASERGREN_ROTATION_PER_TICK laserangv.GetFloat()*gpGlobals->interval_per_tick
 	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_NOTIFY, "Laser grenade jump distance" );
 	ConVar laserbob( "ffdev_lasergren_bob", "10", FCVAR_NOTIFY, "Laser grenade bob factor" );
