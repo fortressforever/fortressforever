@@ -556,9 +556,9 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_REPLICATED | 
 
 		float flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
 
-		if (flRemaining < -0.1f)
+		if (( Classify() == CLASS_GREN_LASER ) && ( m_flDetonateTime - m_flSpawnTime > 5.f))
 			return ret;
-
+			
 		float flSize = m_flModelSize * target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
 		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());
 
