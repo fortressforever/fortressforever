@@ -3796,6 +3796,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_hud_buildtimer.h">
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_cellcount.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_chat.cpp">
 			</File>
 			<File

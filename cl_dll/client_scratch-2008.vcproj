@@ -4678,6 +4678,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_cellcount.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_chat.cpp"
 				>
 			</File>
