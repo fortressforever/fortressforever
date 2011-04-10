@@ -201,7 +201,7 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				LinkLibraryDependencies="true"
-				AdditionalDependencies="winmm.lib lua80D.lib luabind80D.lib"
+				AdditionalDependencies="winmm.lib user32.lib lua80D.lib luabind80D.lib"
 				OutputFile="$(IntDir)/server.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -4820,6 +4820,10 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_parse.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_slowfield.cpp"
 				>
 			</File>
 			<File

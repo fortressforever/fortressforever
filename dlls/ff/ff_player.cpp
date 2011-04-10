@@ -828,6 +828,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("maintenance.saveme");
 	PrecacheScriptSound("infected.saveme");
 	PrecacheScriptSound("ammo.saveme");
+	PrecacheScriptSound("overpressure.explode");
 	
 	// Precache gib sound -> Defrag
 	PrecacheScriptSound("Player.Gib");
