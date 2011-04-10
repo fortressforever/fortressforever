@@ -66,6 +66,19 @@ ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "6", FCVAR_REPLICATE
 ConVar ffdev_slowfield_min_slow("ffdev_slowfield_min_slow", ".20", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum slow motion percentage of slowfield grenade");
 #define SLOWFIELD_MIN_SLOW ffdev_slowfield_min_slow.GetFloat()
 
+ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
+#define SLOWFIELD_FRIENDLYIGNORE ffdev_slowfield_friendlyignore.GetBool()
+
+ConVar ffdev_slowfield_selfignore("ffdev_slowfield_selfignore", "0", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When set to 1, the grenade does not affect the thrower");
+#define SLOWFIELD_SELFIGNORE ffdev_slowfield_selfignore.GetBool()
+
+ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When friendly fire is on, modifies the slow amount for teammates");
+#define SLOWFIELD_FRIENDLYSCALE ffdev_slowfield_friendlyscale.GetFloat()
+
+ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", "1.0", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When selfignore is 0, modifies the slow amount for the thrower");
+#define SLOWFIELD_SELFSCALE ffdev_slowfield_selfscale.GetFloat()
+
+
 #ifdef CLIENT_DLL
 	#define CFFGrenadeSlowfield C_FFGrenadeSlowfield
 	#define CFFGrenadeSlowfieldGlow C_FFGrenadeSlowfieldGlow
@@ -241,7 +254,7 @@ void CFFGrenadeSlowfield::Precache()
 
 			
 			CBaseEntity *pEntity = NULL;
-			for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() + 32.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+			for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() + 64.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 			{
 				if( !pEntity )
 					continue;
@@ -259,6 +272,7 @@ void CFFGrenadeSlowfield::Precache()
 				//	continue;
 
 				pPlayer->SetLaggedMovementValue(1.0f);
+				pPlayer->SetActiveSlowfield( NULL );
 			}
 
 			return;
@@ -276,7 +290,7 @@ void CFFGrenadeSlowfield::Precache()
 		Vector vecOrigin = GetAbsOrigin();
 
 		CBaseEntity *pEntity = NULL;
-		for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() + 32.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() + 64.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
 			if( !pEntity )
 				continue;
@@ -290,21 +304,44 @@ void CFFGrenadeSlowfield::Precache()
 			if( !pPlayer || pPlayer->IsObserver() || !pSlower)
 				continue;
 
-			//if( !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
-			//	continue;
+			if( SLOWFIELD_FRIENDLYIGNORE && !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+				continue;
+			
+			if( SLOWFIELD_SELFIGNORE && pPlayer == pSlower )
+				continue;
 
 			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - vecOrigin;
 			float flDistance = vecDisplacement.Length();
 
 			if (flDistance < GetGrenadeRadius())
 			{
-				// only change players motion if they will be going slower
-				float flLaggedMovement = SimpleSplineRemapVal(flDistance, 0.0f, SLOWFIELD_RADIUS, SLOWFIELD_MIN_SLOW, 1.0f);
-				if (pPlayer->GetLaggedMovementValue() > flLaggedMovement)
+				float flFriendlyScale = 1.0f;
+
+				// Check if is a teammate and scale accordingly
+				if (pPlayer != pSlower && g_pGameRules->PlayerRelationship(pPlayer, pSlower) == GR_TEAMMATE)
+					flFriendlyScale = SLOWFIELD_FRIENDLYSCALE;
+				else if (pPlayer == pSlower)
+					flFriendlyScale = SLOWFIELD_SELFSCALE;
+
+				float flLaggedMovement = SimpleSplineRemapVal(flDistance, 0.0f, SLOWFIELD_RADIUS, min( 1.0f, (flFriendlyScale > 0) ? (SLOWFIELD_MIN_SLOW / flFriendlyScale) : (1.0f) ), 1.0f);
+
+				// only change players active slowfield if they will be going slower
+				if (pPlayer->GetActiveSlowfield() != this && pPlayer->GetLaggedMovementValue() > flLaggedMovement)
+				{
 					pPlayer->SetLaggedMovementValue(flLaggedMovement);
+					pPlayer->SetActiveSlowfield( this );
+				}
+				// else just give them an updated laggedmovement value
+				else if (pPlayer->GetActiveSlowfield() == this)
+				{
+					pPlayer->SetLaggedMovementValue(flLaggedMovement);
+				}
 			}
-			else
+			else if (pPlayer->GetActiveSlowfield() == this)
+			{
 				pPlayer->SetLaggedMovementValue( 1.0f );
+				pPlayer->SetActiveSlowfield( NULL );
+			}
 		}
 
 		SetNextThink(gpGlobals->curtime);
