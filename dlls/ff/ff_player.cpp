@@ -551,6 +551,8 @@ CFFPlayer::CFFPlayer()
 	m_flNextGas = 0;
 	m_flGasTime = 0;
 
+	m_pActiveSlowfield = NULL;
+
 	m_Locations.Purge();
 	m_iClientLocation = 0;
 
@@ -1319,7 +1321,7 @@ void CFFPlayer::Spawn( void )
 	m_flSlidingTime		= 0.0f;
 	m_flSpeedModifier	= 1.0f;
 	m_flNextClassSpecificSkill = 0.0f;
-
+	m_pActiveSlowfield	= NULL;
 	
 	m_flSpeedModifierOld		= 1.0f;
 	m_flSpeedModifierChangeTime	= 0;
