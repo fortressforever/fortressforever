@@ -75,7 +75,7 @@ ConVar ffdev_slowfield_selfignore("ffdev_slowfield_selfignore", "0", FCVAR_REPLI
 ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When friendly fire is on, modifies the slow amount for teammates");
 #define SLOWFIELD_FRIENDLYSCALE ffdev_slowfield_friendlyscale.GetFloat()
 
-ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", "1.0", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When selfignore is 0, modifies the slow amount for the thrower");
+ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", ".35", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When selfignore is 0, modifies the slow amount for the thrower");
 #define SLOWFIELD_SELFSCALE ffdev_slowfield_selfscale.GetFloat()
 
 ConVar ffdev_slowfield_fastspeedmod_start("ffdev_slowfield_fastspeedmod_start", "800", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When the slowed person is above this speed, they get slowed more depending on how fast they are moving");
