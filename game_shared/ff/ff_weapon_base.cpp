@@ -47,6 +47,7 @@ const char *s_WeaponAliasInfo[] =
 	"grenadelauncher", 	// FF_WEAPON_GRENADELAUNCHER
 	"pipelauncher", 	// FF_WEAPON_PIPELAUNCHER
 	"shield",			// FF_WEAPON_SHIELD
+	"deployshield",		// FF_WEAPON_DEPLOYSHIELD
 
 	"autorifle", 		// FF_WEAPON_AUTORIFLE
 	"sniperrifle", 		// FF_WEAPON_SNIPERRIFLE

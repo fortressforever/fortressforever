@@ -4,19 +4,8 @@
 //	@file ff_weapon_shield.cpp
 //	@author Greg "GreenMushy" Stefanakis
 //	@date Nov 28, 2010
-//	@brief Prototype demoman shield weapon
+//	@brief Prototype demoman shield weapon ( inactive weapon state )
 //	===============================================
-
-//Known bugs:
-//Switching weapons while your shield is active leaves the shield in the world detatched from the player!
-//(its kindof fun though)
-
-//Future TODOs:
-//Disallow players from using the shield in the air
-//im allowing it for now because i dont know how to fully get it working
-
-//Add in CVars so the shield can be alligned differently.  Right now you can only alter the height off the ground
-//i secretly think the shield is not perfectly centered and is too far from the player
 
 #include "cbase.h"
 #include "ff_weapon_base.h"
@@ -34,15 +23,15 @@
 	#include "ff_player.h"
 #endif
 
-#include "ff_buildableobjects_shared.h"
+//#include "ff_buildableobjects_shared.h"
 
 //The value that the player's speed% is reduced to when actively using the shield
 ConVar ffdev_shield_speed( "ffdev_shield_speed", "0.3", FCVAR_REPLICATED | FCVAR_NOTIFY);
 #define FF_SHIELD_SPEEDEFFECT ffdev_shield_speed.GetFloat()
 
-//Show the "buildable" object that is the physical shield in front of the player
-ConVar ffdev_shield_showmodel( "ffdev_shield_showmodel", "1", FCVAR_REPLICATED | FCVAR_NOTIFY );
-#define SHIELD_SHOWMODEL ffdev_shield_showmodel.GetBool()
+////Show the "buildable" object that is the physical shield in front of the player
+//ConVar ffdev_shield_showmodel( "ffdev_shield_showmodel", "1", FCVAR_REPLICATED | FCVAR_NOTIFY );
+//#define SHIELD_SHOWMODEL ffdev_shield_showmodel.GetBool()
 
 //=============================================================================
 // CFFWeaponShield
@@ -121,7 +110,7 @@ void CFFWeaponShield::ItemPostFrame()
 	//-------------------------
 	//Pressing Attack
 	//-------------------------
-	if ((pPlayer->m_nButtons & IN_ATTACK || pPlayer->m_afButtonPressed & IN_ATTACK) )
+	if ((pPlayer->m_nButtons & IN_ATTACK || pPlayer->m_afButtonPressed & IN_ATTACK) /*&& (pPlayer->GetFlags() & FL_ONGROUND)*/ )
 	{
 		ShieldActive();
 	}
@@ -129,19 +118,26 @@ void CFFWeaponShield::ItemPostFrame()
 	// -----------------------
 	//  No buttons down
 	// -----------------------
-	if (! ((pPlayer->m_nButtons & IN_ATTACK)))
-	{
-		ShieldIdle();
-	}
+	//if (! ((pPlayer->m_nButtons & IN_ATTACK)))
+	//{
+		//ShieldIdle();
+	//}
 }
 //----------------------------------------------------------------------------
 // Purpose: Override the deploy call and immediatly start holstering it so its not "active"to the player's viewmodel
 //----------------------------------------------------------------------------
 bool CFFWeaponShield::Deploy()
 {
-	BaseClass::Deploy();
+	//BaseClass::Deploy();
+
+	//Start the shield out inactive
+	m_bShieldActive = false;
+#ifdef CLIENT_DLL
+	DevMsg("Idle shield deploy called.\n");
+#endif
+	return BaseClass::Deploy();
 	//just return true i guess
-	return SendWeaponAnim( ACT_VM_HOLSTER );
+	//return SendWeaponAnim( ACT_VM_HOLSTER );
 }
 
 //----------------------------------------------------------------------------
@@ -150,7 +146,7 @@ bool CFFWeaponShield::Deploy()
 bool CFFWeaponShield::Holster()
 {
 	//Set the shield to idle to do cleanup and reseting stuff
-	ShieldIdle();
+	//ShieldIdle();
 
 	//Now do normal holster
 	return BaseClass::Holster();
@@ -161,6 +157,35 @@ bool CFFWeaponShield::Holster()
 //----------------------------------------------------------------------------
 void CFFWeaponShield::ShieldActive( void ) 
 {
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	//If no player gtfo
+	if( pPlayer == NULL )
+		return;
+
+	//Check so this only gets called once
+	if( m_bShieldActive == false )
+	{
+		m_bShieldActive = true;
+
+#ifdef GAME_DLL
+		pPlayer->SetRiotShieldActive(true);
+
+		//If the effect is NOT on, then add it!
+		if( pPlayer->IsSpeedEffectSet(SE_SHIELD) == false )
+		{
+			pPlayer->AddSpeedEffect(SE_SHIELD, 999, FF_SHIELD_SPEEDEFFECT, SEM_BOOLEAN);
+		}
+#endif
+
+#ifdef CLIENT_DLL
+		//Quickswap
+		pPlayer->SwapToWeapon(FF_WEAPON_DEPLOYSHIELD);
+
+		DevMsg("Swapping to active shield.\n");
+#endif
+	}
+/* Old Block -->
 	//Get the owner of this weapon
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
@@ -236,12 +261,14 @@ void CFFWeaponShield::ShieldActive( void )
 		pShield->SetAbsAngles( hBuildInfo.GetBuildAngles() );
 	}
 #endif
+*/
 }
 //----------------------------------------------------------------------------
 // Purpose: Checks validity of ground at this point or whatever
 //----------------------------------------------------------------------------
 void CFFWeaponShield::ShieldIdle( void ) 
 {
+/* Old Block -->
 	//Get the owner of this shield
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
@@ -288,4 +315,5 @@ void CFFWeaponShield::ShieldIdle( void )
 		DevMsg("Shield Deleted\n");
 	}
 #endif
+*/
 }

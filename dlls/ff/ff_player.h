@@ -822,8 +822,12 @@ public:
 	// For pipebomb delay
 	void SetPipebombShotTime( float flShotTime ) { m_flPipebombShotTime = flShotTime; }
 	float GetPipebombShotTime( void ) const { return m_flPipebombShotTime; }
+	// For shield blocking
+	void SetRiotShieldActive( bool _bActive ){ m_bRiotShieldActive = _bActive; }
+	bool IsRiotShieldActive(){ return m_bRiotShieldActive; }
 protected:
 	float m_flPipebombShotTime;
+	CNetworkVar( bool, m_bRiotShieldActive );
 
 public:
 	void SetDisguisable( bool bDisguisable ) 

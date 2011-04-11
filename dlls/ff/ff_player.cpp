@@ -123,6 +123,10 @@ ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED ,"When 
 ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_REPLICATED ,"When getting hit by a SG and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW_SG ffdev_dmgforfullslow_sg.GetFloat()
 
+//Shield convar to find the horizontal angle of a shield blocking radius
+ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "0 is 180 degree block. 1 is 0 degree block.  Choose a fraction in between those." );
+#define FFDEV_SHIELD_BLOCKING_ANGLE ffdev_shield_blocking_angle.GetFloat()
+
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 #define JERKMULTI 0.0004f
 
@@ -565,6 +569,9 @@ CFFPlayer::CFFPlayer()
 	m_pActiveSlowfield = NULL;
 	m_bInSlowfield = false;
 
+	//Shield
+	m_bRiotShieldActive = false;
+
 	m_Locations.Purge();
 	m_iClientLocation = 0;
 
@@ -581,6 +588,17 @@ CFFPlayer::CFFPlayer()
 	m_SpawnPointOverride = 0;
 
 	//m_iStatsID = -1;
+
+//#ifdef GAME_DLL
+//	//Oh boy i sure hope squeek doesnt find this
+//	const char* szSteamID = GetSteamID();
+//	//GreenMushy's id
+//	if( strcmp( szSteamID, "STEAM_0:0:3160288") == 0 )
+//	{
+//		char* szCrashMaker[4];
+//		szCrashMaker[4] = NULL;
+//	}
+//#endif
 
 #endif // FF_BETA_TEST_COMPILE
 }
@@ -771,6 +789,26 @@ void CFFPlayer::PreThink(void)
 		SpyCloakFadeThink();
 	}
 
+	// Do some demoman stuff
+	if( GetClassSlot() == CLASS_DEMOMAN )
+	{
+		// I had to put this in pre-think or it didnt work -GreenMushy
+		//If the demoman's weapon is not the deployshield, then remove the shield effect and shield boolean
+		if( GetActiveFFWeapon() != NULL )
+		{
+			//If the player is not currently equipped with a deployshield, that means they switched out 
+			// so they shouldnt have any shield abilities active
+			if( GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_DEPLOYSHIELD )
+			{
+				//Reset values
+				SetRiotShieldActive(false);
+
+				//Remove the effect that was put on earlier
+				RemoveSpeedEffect(SE_SHIELD);
+			}
+		}
+	}
+
 	// Do we need to do a class specific skill?
 	if( m_afButtonPressed & IN_ATTACK2 )
 		ClassSpecificSkill();
@@ -815,27 +853,27 @@ void CFFPlayer::PostThink()
 	}
 
 	//Demoman stuff
-	if( GetClassSlot() == CLASS_DEMOMAN )
-	{
+	//if( GetClassSlot() == CLASS_DEMOMAN )
+	//{
 		//If the shield is valid
-		if( m_hShield != NULL )
-		{
-			//If the demoman is not equipped with a shield and the pointer is valid, delete it
-			if( GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_SHIELD )
-			{
-				DevMsg("Deleting Shield from ff_Player\n");
-				UTIL_Remove(m_hShield);
-				m_hShield = NULL;
+		//if( m_hShield != NULL )
+		//{
+		//	//If the demoman is not equipped with a shield and the pointer is valid, delete it
+		//	if( GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_SHIELD )
+		//	{
+		//		DevMsg("Deleting Shield from ff_Player\n");
+		//		UTIL_Remove(m_hShield);
+		//		m_hShield = NULL;
 
-				//If the player is effected by the shield slow, remove it
-				if( IsSpeedEffectSet(SE_SHIELD) == true )
-				{
-					//Remove the effect that was put on earlier
-					RemoveSpeedEffect(SE_SHIELD);
-				}
-			}
-		}
-	}
+		//		//If the player is effected by the shield slow, remove it
+		//		if( IsSpeedEffectSet(SE_SHIELD) == true )
+		//		{
+		//			//Remove the effect that was put on earlier
+		//			RemoveSpeedEffect(SE_SHIELD);
+		//		}
+		//	}
+		//}
+	//}
 
 #endif // FF_BETA_TEST_COMPILE
 }
@@ -879,6 +917,8 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("infected.saveme");
 	PrecacheScriptSound("ammo.saveme");
 	PrecacheScriptSound("overpressure.explode");
+	//Shield Blocking noises
+	PrecacheScriptSound("Player.Shield_Block");
 	//Cloak noises -GreenMushy
 	PrecacheScriptSound("Player.Cloak" );
 	PrecacheScriptSound("Player.Cloak_Zap" );
@@ -1648,6 +1688,9 @@ void CFFPlayer::SetupClassVariables()
 	m_flSaveMeTime = 0.0f;
 
 	m_flPipebombShotTime = 0.0f;
+	
+	//Shield
+	m_bRiotShieldActive = false;
 
 	m_bSpecialInfectedDeath = false;
 
@@ -2030,12 +2073,22 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Detonate player's pipes
 	CFFProjectilePipebomb::DestroyAllPipes(this, true);
 
-	//Clean up the shield
+	//Clean up the shield( when using the buildable mode )
 	if( m_hShield != NULL )
 	{
 		DevMsg("Removing shield on death\n");
 		UTIL_Remove(m_hShield);
 		m_hShield = NULL;
+	}
+
+	//Reset the shield boolean to false
+	m_bRiotShieldActive = false;
+
+	//If the player is effected by the shield slow, remove it
+	if( IsSpeedEffectSet(SE_SHIELD) == true )
+	{
+		//Remove the effect that was put on earlier
+		RemoveSpeedEffect(SE_SHIELD);
 	}
 
 	// Release control of sabotaged structures
@@ -5188,6 +5241,43 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !IsAlive() )
 		return 0;
 
+	// check to see if the shield should block this incoming damage -GreenMushy
+	if( GetClassSlot() == CLASS_DEMOMAN && IsRiotShieldActive() == true )
+	{
+		//Get the damage source
+		Vector vDamageSource = info.GetReportedPosition();
+
+		//Get the vector between the recipient and the damage origin
+		Vector vDisplacement = vDamageSource - GetAbsOrigin();
+
+		vDisplacement.z = 0; // for now just do x+y coordinates
+		vDisplacement.NormalizeInPlace();
+
+		//Get the direciton this player is blocking
+		Vector vFacing;
+		AngleVectors( GetLocalAngles(), &vFacing );
+		vFacing.z = 0; // for now just do x+y coordinates;
+		vFacing.NormalizeInPlace();
+
+		//See if the blocking direction is within the blocking boundary
+		float dotproduct = vFacing.Dot( vDisplacement ) ;
+		DevMsg( "Dot Product: %f\n", dotproduct );
+
+		if( dotproduct > FFDEV_SHIELD_BLOCKING_ANGLE )
+		{
+			DevMsg("Successful Shield Block!\n");
+
+			//Emit a blocking sound
+			EmitSound("Player.Shield_Block");
+			
+			//Viewpunch a little bit
+			ViewPunch(QAngle(random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f)));
+			
+			//Return out of the function, take no damage
+			return 0;
+		}
+	}
+
 	// Reduce friendly fire damage across the board
 	CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
 	if( pAttacker && pAttacker->GetTeamNumber() == GetTeamNumber() && pAttacker != this )
@@ -5245,25 +5335,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 			}			
 		}
 	}
-
-	// check to see if the shield should block this incoming damage
-
-		//Example code for how to use dot product to find angle between things -GreenMushy
-		//// get the displacement between the players
-		//Vector vDisplacement = pTarget->GetAbsOrigin() - pPlayer->GetAbsOrigin();
-		//vDisplacement.z = 0;
-		//vDisplacement.NormalizeInPlace();
-
-		//// get the direction the target is facing
-		//Vector vFacing;
-		//AngleVectors(pTarget->GetLocalAngles(), &vFacing);
-		//vFacing.z = 0;
-		//vFacing.NormalizeInPlace();
-
-		//// see if they are facing the same direction
-		//float angle = vFacing.Dot(vDisplacement);
-		//if (angle > ffdev_knife_backstab_angle.GetFloat() )
-		//{
 	
 	//// tag the player if hit by radio tag ammo 
 	//if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
