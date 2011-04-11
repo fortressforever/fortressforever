@@ -61,7 +61,7 @@ ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_CHEAT, "Slo
 
 #endif
 
-ConVar ffdev_slowfield_radius("ffdev_slowfield_radius", "256", FCVAR_REPLICATED | FCVAR_CHEAT, "Radius of slowfield grenade");
+ConVar ffdev_slowfield_radius("ffdev_slowfield_radius", "176", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Radius of slowfield grenade");
 #define SLOWFIELD_RADIUS ffdev_slowfield_radius.GetFloat()
 
 ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "6", FCVAR_REPLICATED | FCVAR_CHEAT, "Duration of slowfield grenade");
@@ -214,7 +214,6 @@ void CFFGrenadeSlowfield::Precache()
 	void CFFGrenadeSlowfield::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		EmitSound(SLOWFIELDGRENADE_SOUND);
-
 		
 		CEffectData data;
 		data.m_vOrigin = GetAbsOrigin();
@@ -260,28 +259,29 @@ void CFFGrenadeSlowfield::Precache()
 		{
 			UTIL_Remove(this);
 
-			
-			CBaseEntity *pEntity = NULL;
-			for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() + 64.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+			// loop through all players
+			for(int i = 1 ; i <= gpGlobals->maxClients; i++)
 			{
-				if( !pEntity )
-					continue;
-
-				if( !pEntity->IsPlayer() )
-					continue;
-
-				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-				//CFFPlayer *pSlower = ToFFPlayer( GetOwnerEntity() );
+				CFFPlayer* pPlayer = ToFFPlayer(UTIL_EntityByIndex(i));
 
 				if( !pPlayer || pPlayer->IsObserver() )
 					continue;
 
-				//if( !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
-				//	continue;
+				if (pPlayer->GetActiveSlowfield() == this)
+				{
+					pPlayer->SetLaggedMovementValue(1.0f);
+					pPlayer->SetActiveSlowfield( NULL );
+					pPlayer->m_bInSlowfield = false;
+					
+					// remove status icon
+					CSingleUserRecipientFilter user( ( CBasePlayer * )pPlayer );
+					user.MakeReliable();
 
-				pPlayer->SetLaggedMovementValue(1.0f);
-				pPlayer->SetActiveSlowfield( NULL );
-				pPlayer->m_bInSlowfield = false;
+					UserMessageBegin( user, "StatusIconUpdate" );
+						WRITE_BYTE( FF_STATUSICON_SLOWMOTION );
+						WRITE_FLOAT( 0.0f );
+					MessageEnd();
+				}
 			}
 
 			return;
@@ -316,6 +316,7 @@ void CFFGrenadeSlowfield::Precache()
 			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - vecOrigin;
 			float flDistance = vecDisplacement.Length();
 
+			// inside the radius of the gren
 			if (flDistance < GetGrenadeRadius())
 			{
 				pPlayer->m_bInSlowfield = true;
@@ -347,6 +348,15 @@ void CFFGrenadeSlowfield::Precache()
 				{
 					pPlayer->SetLaggedMovementValue(flLaggedMovement);
 					pPlayer->SetActiveSlowfield( this );
+
+					// add status icon
+					CSingleUserRecipientFilter user( ( CBasePlayer * )pPlayer );
+					user.MakeReliable();
+
+					UserMessageBegin( user, "StatusIconUpdate" );
+						WRITE_BYTE( FF_STATUSICON_SLOWMOTION );
+						WRITE_FLOAT( -1.0f );
+					MessageEnd();
 				}
 				// else just give them an updated laggedmovement value
 				else if (pPlayer->GetActiveSlowfield() == this)
@@ -354,11 +364,21 @@ void CFFGrenadeSlowfield::Precache()
 					pPlayer->SetLaggedMovementValue(flLaggedMovement);
 				}
 			}
+			// outside the radius of the gren
 			else if (pPlayer->GetActiveSlowfield() == this)
 			{
 				pPlayer->SetLaggedMovementValue( 1.0f );
 				pPlayer->SetActiveSlowfield( NULL );
 				pPlayer->m_bInSlowfield = false;
+				
+				// remove status icon
+				CSingleUserRecipientFilter user( ( CBasePlayer * )pPlayer );
+				user.MakeReliable();
+
+				UserMessageBegin( user, "StatusIconUpdate" );
+					WRITE_BYTE( FF_STATUSICON_SLOWMOTION );
+					WRITE_FLOAT( 0.0f );
+				MessageEnd();
 			}
 		}
 
