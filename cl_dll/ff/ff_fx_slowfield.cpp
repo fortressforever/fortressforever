@@ -96,12 +96,24 @@ int C_SlowfieldEffect::DrawModel( int flags )
 //-----------------------------------------------------------------------------
 void C_SlowfieldEffect::ClientThink( void )
 {
-	// Bit of time to settle before releasing
-	if (gpGlobals->curtime - m_flStart >= ffdev_slowfield_duration.GetFloat() + 0.2f)
+	if (gpGlobals->curtime - m_flStart >= ffdev_slowfield_duration.GetFloat())
 	{
 		Release();
 		return;
 	}
+	
+	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+
+	// We need to keep the correct part of the shader oriented towards the player
+	// The bit we want is on the top, so rotate around x axis by 90
+	Vector vecDir = GetAbsOrigin() - pPlayer->EyePosition();
+
+	QAngle angFace;
+	VectorAngles(vecDir, angFace);
+	angFace.x += 90;
+
+	SetAbsAngles(angFace);
+
 	BaseClass::ClientThink();
 }
 
