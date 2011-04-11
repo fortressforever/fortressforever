@@ -67,7 +67,8 @@ bool g_bMovementOptimizations = true;	// |-- Mirv: Changed to false, but not sur
 static ConVar sv_sharkingfriction("sv_sharkingfriction", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_SHARKINGFRICTION sv_sharkingfriction.GetFloat()
 
-static ConVar ffdev_headcrush_damage("ffdev_headcrush_damage", "108", FCVAR_REPLICATED);
+static ConVar ffdev_headcrush_damage("ffdev_headcrush_damage", "108", FCVAR_REPLICATED, "Straight headcrush damage; not used if usefalldamage is on");
+static ConVar ffdev_headcrush_usefalldamage("ffdev_headcrush_usefalldamage", "1.0", FCVAR_REPLICATED, "0 = off, > 0 means take FALLDAMAGE * val damage");
 
 #ifndef _XBOX
 void COM_Log( char *pszFile, char *fmt, ...)
@@ -3511,7 +3512,17 @@ void CGameMovement::CheckFalling( void )
 
 					if (pCrushedPlayer && pCrushedPlayer != player)
 					{
-						CTakeDamageInfo info( player, player, ffdev_headcrush_damage.GetFloat(), DMG_DIRECT, KILLTYPE_HEADCRUSH );
+						float flCrushDamage = 0.0f;
+						if (ffdev_headcrush_usefalldamage.GetFloat() > 0)
+						{
+							float flFallDamage = g_pGameRules->FlPlayerFallDamage( player );	
+							flCrushDamage = flFallDamage * ffdev_headcrush_usefalldamage.GetFloat();
+						}
+						else
+						{
+							flCrushDamage = ffdev_headcrush_damage.GetFloat();
+						}
+						CTakeDamageInfo info( player, player, flCrushDamage, DMG_DIRECT, KILLTYPE_HEADCRUSH );
 						pCrushedPlayer->TakeDamage(info);
 					}
 				}
