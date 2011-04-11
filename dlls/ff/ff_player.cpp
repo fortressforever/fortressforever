@@ -420,6 +420,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iEngyMe ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iAmmoMe ), 1, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bSliding ) ),
+	SendPropBool( SENDINFO( m_bInSlowfield ) ),
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
@@ -552,6 +553,7 @@ CFFPlayer::CFFPlayer()
 	m_flGasTime = 0;
 
 	m_pActiveSlowfield = NULL;
+	m_bInSlowfield = false;
 
 	m_Locations.Purge();
 	m_iClientLocation = 0;
@@ -1322,6 +1324,7 @@ void CFFPlayer::Spawn( void )
 	m_flSpeedModifier	= 1.0f;
 	m_flNextClassSpecificSkill = 0.0f;
 	m_pActiveSlowfield	= NULL;
+	m_bInSlowfield = false;
 	
 	m_flSpeedModifierOld		= 1.0f;
 	m_flSpeedModifierChangeTime	= 0;
@@ -1871,6 +1874,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if( m_bSliding )
 		m_bSliding = false;
+	
+	if( m_bInSlowfield )
+		m_bInSlowfield = false;
 
 	m_flSaveMeTime = 0.0f;
 
