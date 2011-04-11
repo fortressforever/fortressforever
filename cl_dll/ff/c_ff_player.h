@@ -520,6 +520,13 @@ private:
 public:
 	void Overpressure( void );
 	// ----------------------------------
+	
+	// ----------------------------------
+    // Slowfield stuff
+public:
+	bool IsInSlowfield( void ) const { return m_bInSlowfield; }
+	bool m_bInSlowfield;
+	// ----------------------------------
 
 private:
 	C_FFPlayer( const C_FFPlayer & );

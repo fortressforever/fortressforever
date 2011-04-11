@@ -499,3 +499,43 @@ bool CCloakedEffect::IsEnabled( void )
 	// don't bother with screen effect if in thirdperson
 	return (pPlayer->IsCloaked() && !pPlayer->ShouldDraw());
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: A slowfielded effect
+//-----------------------------------------------------------------------------
+class CSlowedEffect : public CBaseEffect
+{
+	virtual void Render( int x, int y, int w, int h );
+	virtual bool IsEnabled( void );
+	virtual const char *pszEffect() { return "effects/slowfield_view"; }
+};
+
+ADD_SCREENSPACE_EFFECT( CSlowedEffect, slowedeffect );
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CSlowedEffect::Render( int x, int y, int w, int h )
+{
+	if( !IsEnabled() )
+		return;
+
+	m_flDuration = gpGlobals->curtime + 5.0f;
+
+	CBaseEffect::Render( x, y, w, h );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: This effect only enabled when player is cloaked
+//-----------------------------------------------------------------------------
+bool CSlowedEffect::IsEnabled( void )
+{
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( !pPlayer )
+		return false;
+
+	// don't bother with screen effect if in thirdperson
+	return (pPlayer->IsInSlowfield() && !pPlayer->ShouldDraw());
+}
