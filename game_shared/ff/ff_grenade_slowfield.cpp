@@ -30,9 +30,13 @@
 #endif
 
 #define SLOWFIELDGRENADE_MODEL			"models/grenades/conc/conc.mdl"
-#define SLOWFIELDGRENADE_GLOW_SPRITE	"sprites/glow04_ring.vmt"
+
+ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.vmt", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Sprite texture");
+#define SLOWFIELDGRENADE_GLOW_SPRITE ffdev_slowfield_vmt.GetString()
+
+//#define SLOWFIELDGRENADE_GLOW_SPRITE	"sprites/ff_slowfieldoutline1.vmt"
 #define SLOWFIELDGRENADE_SOUND			"ConcussionGrenade.Explode"
-#define SLOWFIELD_EFFECT				"FF_ConcussionEffect" // "ConcussionExplosion"
+#define SLOWFIELD_EFFECT				"FF_SlowFieldEffect" // "ConcussionExplosion"
 #define CONCBITS_EFFECT					"FF_ConcBitsEffect"
 #define FLASH_EFFECT					"FF_FlashEffect"
 #define RING_EFFECT						"FF_RingEffect"
@@ -45,7 +49,7 @@ ConVar slowfield_glow_b("ffdev_slowfield_glow_b", "200", FCVAR_CHEAT, "Slowfield
 ConVar slowfield_glow_a("ffdev_slowfield_glow_a", "0.8", FCVAR_CHEAT, "Slowfield glow alpha(0-1) ");
 ConVar slowfield_glow_a_min("ffdev_slowfield_glow_a_min", "180", FCVAR_CHEAT, "Slowfield glow alpha min(0-255) ");
 ConVar slowfield_glow_a_max("ffdev_slowfield_glow_a_max", "200", FCVAR_CHEAT, "Slowfield glow alpha max(0-255) ");
-ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "1.0", FCVAR_CHEAT, "Slowfield glow size(0.0-10.0");
+ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_CHEAT, "Slowfield glow size(0.0-10.0");
 
 #define SLOWFIELD_GLOW_R slowfield_glow_r.GetFloat()
 #define SLOWFIELD_GLOW_G slowfield_glow_g.GetFloat()
@@ -80,7 +84,6 @@ ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", ".35", FCVAR_REPLI
 
 ConVar ffdev_slowfield_fastspeedmod_start("ffdev_slowfield_fastspeedmod_start", "800", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When the slowed person is above this speed, they get slowed more depending on how fast they are moving");
 #define SLOWFIELD_FASTSPEEDMOD_START ffdev_slowfield_fastspeedmod_start.GetFloat()
-
 
 
 #ifdef CLIENT_DLL
@@ -212,15 +215,15 @@ void CFFGrenadeSlowfield::Precache()
 	{
 		EmitSound(SLOWFIELDGRENADE_SOUND);
 
-		/*
+		
 		CEffectData data;
 		data.m_vOrigin = GetAbsOrigin();
 		data.m_flScale = 1.0f;
 		data.m_flRadius = GetGrenadeRadius();
 		
 		DispatchEffect(SLOWFIELD_EFFECT, data);
-		*/
 		
+		/*
 		// add the sprite
 		//m_hGlowSprite = CSprite::SpriteCreate(CONCUSSIONGRENADE_GLOW_SPRITE, GetAbsOrigin(), false);
 		m_hGlowSprite = CFFGrenadeSlowfieldGlow::Create(GetAbsOrigin(), this);
@@ -228,6 +231,7 @@ void CFFGrenadeSlowfield::Precache()
 		m_hGlowSprite->SetTransparency(kRenderTransAdd, 255, 255, 255, 128, kRenderFxNone);
 		m_hGlowSprite->SetBrightness(255, 0.2f);
 		m_hGlowSprite->SetScale(1.0f, 0.2f);
+		*/
 
 		// Clumsy, will do for now
 		if (GetMoveType() == MOVETYPE_FLY)
@@ -459,7 +463,7 @@ int CFFGrenadeSlowfieldGlow::DrawModel(int flags)
 		/*m_clrRender->r */ SLOWFIELD_GLOW_R, 
 		/*m_clrRender->g */ SLOWFIELD_GLOW_G, 
 		/*m_clrRender->b */ SLOWFIELD_GLOW_B, 
-		SLOWFIELD_RADIUS / 64 * SLOWFIELD_GLOW_SIZE + random->RandomFloat(-0.04f, 0.04f));			// sprite scale
+		SLOWFIELD_RADIUS / 64 * SLOWFIELD_GLOW_SIZE);			// sprite scale
 
 	return drawn;
 }
