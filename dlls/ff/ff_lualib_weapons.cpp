@@ -44,7 +44,9 @@ void CFFLuaLib::InitWeapons(lua_State* L)
 				value("kConc",			CLASS_GREN_CONC),
 				value("kNapalm",		CLASS_GREN_NAPALM),
 				value("kGas",			CLASS_GREN_GAS),
-				value("kEmp",			CLASS_GREN_EMP)
+				value("kEmp",			CLASS_GREN_EMP),
+				value("kSlowfield",		CLASS_GREN_SLOWFIELD),
+				value("kLaser",			CLASS_GREN_LASER)
 			],
 
 		// CTakeDamageInfo
@@ -93,7 +95,7 @@ void CFFLuaLib::InitWeapons(lua_State* L)
 				value("kBlastSurface",	DMG_BLAST_SURFACE),
 				value("kDirect",		DMG_DIRECT),
 				value("kBuckshot",		DMG_BUCKSHOT),
-				value("kGibCorpose",	DMG_GIB_CORPSE),
+				value("kGibCorpse",		DMG_GIB_CORPSE),
 				value("kShownHud",		DMG_SHOWNHUD),
 				value("kNoPhysForce",	DMG_NO_PHYSICS_FORCE)
 			]
