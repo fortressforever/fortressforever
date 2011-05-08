@@ -26,18 +26,18 @@
 #endif
 
 #ifdef GAME_DLL
-	//static ConVar mirv_vel_min( "ffdev_mirv_vel_min","250",FCVAR_CHEAT);
+	//static ConVar mirv_vel_min( "ffdev_mirv_vel_min","250",FCVAR_FF_FFDEV);
 	#define MIRV_VEL_MIN 250.0f
-	//static ConVar mirv_vel_max( "ffdev_mirv_vel_max","350",FCVAR_CHEAT);
+	//static ConVar mirv_vel_max( "ffdev_mirv_vel_max","350",FCVAR_FF_FFDEV);
 	#define MIRV_VEL_MAX 350.0f
-	//static ConVar mirv_ang_x_min("ffdev_mirv_ang_x_min","45.0",FCVAR_CHEAT,"Minimum x spawn angle for mirvlets");
-	//static ConVar mirv_ang_x_max("ffdev_mirv_ang_x_max","90.0",FCVAR_CHEAT,"Maximum x spawn angle for mirvlets");
-	//static ConVar mirv_ang_y_seed("ffdev_mirv_ang_y_seed","0",FCVAR_CHEAT,"");
-	//static ConVar mirv_ang_y_min("ffdev_mirv_ang_y_min","0",FCVAR_CHEAT,"Minimum y spawn angle for mirvlets");
-	//static ConVar mirv_ang_y_max("ffdev_mirv_ang_y_max","360",FCVAR_CHEAT,"Maximum y spawn angle for mirvlets");
-	//static ConVar mirv_ang_z_min("ffdev_mirv_ang_z_min","0",FCVAR_CHEAT,"Minimum x spawn angle for mirvlets");
-	//static ConVar mirv_ang_z_max("ffdev_mirv_ang_z_max","0",FCVAR_CHEAT,"Maximum x spawn angle for mirvlets");
-	//static ConVar mirvlet_dmg("ffdev_mirvlet_dmg","180.0",FCVAR_CHEAT,"Damage a single mirvlet does");
+	//static ConVar mirv_ang_x_min("ffdev_mirv_ang_x_min","45.0",FCVAR_FF_FFDEV,"Minimum x spawn angle for mirvlets");
+	//static ConVar mirv_ang_x_max("ffdev_mirv_ang_x_max","90.0",FCVAR_FF_FFDEV,"Maximum x spawn angle for mirvlets");
+	//static ConVar mirv_ang_y_seed("ffdev_mirv_ang_y_seed","0",FCVAR_FF_FFDEV,"");
+	//static ConVar mirv_ang_y_min("ffdev_mirv_ang_y_min","0",FCVAR_FF_FFDEV,"Minimum y spawn angle for mirvlets");
+	//static ConVar mirv_ang_y_max("ffdev_mirv_ang_y_max","360",FCVAR_FF_FFDEV,"Maximum y spawn angle for mirvlets");
+	//static ConVar mirv_ang_z_min("ffdev_mirv_ang_z_min","0",FCVAR_FF_FFDEV,"Minimum x spawn angle for mirvlets");
+	//static ConVar mirv_ang_z_max("ffdev_mirv_ang_z_max","0",FCVAR_FF_FFDEV,"Maximum x spawn angle for mirvlets");
+	//static ConVar mirvlet_dmg("ffdev_mirvlet_dmg","180.0",FCVAR_FF_FFDEV,"Damage a single mirvlet does");
 	#define MIRVLET_DMG 145.0f
 #endif
 

@@ -25,7 +25,7 @@
 	#include "ff_player.h"
 #endif
 
-ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "0", FCVAR_FF_FFDEV_REPLICATED);
 
 //=============================================================================
 // CFFWeaponIC

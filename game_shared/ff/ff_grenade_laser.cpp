@@ -38,23 +38,23 @@
 #define MAX_BEAMS 16
 
 //ConVar laser_ng_streams("ffdev_lasergren_ng_streams", "2", FCVAR_REPLICATED, "Number of streams per arm" );
-ConVar laser_ng_offset("ffdev_lasergren_ng_offset", "8", FCVAR_REPLICATED, "Stream offset" );
-ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_REPLICATED );
-ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_REPLICATED );
-ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
-ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
-ConVar growTime( "ffdev_lasergren_growTime", "0.7", FCVAR_REPLICATED, "Time taken to grow to full length" );
-ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_REPLICATED, "Time taken to shrink to nothing" );
-ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active time");
+ConVar laser_ng_offset("ffdev_lasergren_ng_offset", "8", FCVAR_FF_FFDEV_REPLICATED, "Stream offset" );
+ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_FF_FFDEV_REPLICATED );
+ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_FF_FFDEV_REPLICATED );
+ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_FF_FFDEV_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
+ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_FF_FFDEV_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
+ConVar growTime( "ffdev_lasergren_growTime", "0.7", FCVAR_FF_FFDEV_REPLICATED, "Time taken to grow to full length" );
+ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_FF_FFDEV_REPLICATED, "Time taken to shrink to nothing" );
+ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_FF_FFDEV_REPLICATED, "Laser active time");
 
 #ifdef CLIENT_DLL
 	ConVar hud_lasergren_customColor_enable( "hud_lasergren_customColor_enable", "0", FCVAR_ARCHIVE, "Use custom laser colors (1 = use custom colour)");
 	ConVar hud_lasergren_customColor_r( "hud_lasergren_customColor_r", "255", FCVAR_ARCHIVE, "Custom laser color - Red Component (0-255)");
 	ConVar hud_lasergren_customColor_g( "hud_lasergren_customColor_g", "128", FCVAR_ARCHIVE, "Custom laser color - Green Component(0-255)");
 	ConVar hud_lasergren_customColor_b( "hud_lasergren_customColor_b", "255", FCVAR_ARCHIVE, "Custom laser color - Blue Component(0-255)");
-	ConVar ffdev_lasergren_widthcreate("ffdev_lasergren_widthcreate", "0.5", FCVAR_REPLICATED, "Width given in the constructor; not used");
-	ConVar ffdev_lasergren_widthstart("ffdev_lasergren_widthstart", "6", FCVAR_REPLICATED, "Width at the start of the beam");
-	ConVar ffdev_lasergren_widthend("ffdev_lasergren_widthend", "3", FCVAR_REPLICATED, "Width at the end of the beam");
+	ConVar ffdev_lasergren_widthcreate("ffdev_lasergren_widthcreate", "0.5", FCVAR_FF_FFDEV_REPLICATED, "Width given in the constructor; not used");
+	ConVar ffdev_lasergren_widthstart("ffdev_lasergren_widthstart", "6", FCVAR_FF_FFDEV_REPLICATED, "Width at the start of the beam");
+	ConVar ffdev_lasergren_widthend("ffdev_lasergren_widthend", "3", FCVAR_FF_FFDEV_REPLICATED, "Width at the end of the beam");
 	#define LASERGREN_WIDTHCREATE ffdev_lasergren_widthcreate.GetFloat()
 	#define LASERGREN_WIDTHSTART ffdev_lasergren_widthstart.GetFloat()
 	#define LASERGREN_WIDTHEND ffdev_lasergren_widthend.GetFloat()
@@ -62,33 +62,33 @@ ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active t
 
 #ifdef GAME_DLL
 
-	ConVar laserdamage("ffdev_lasergren_damage", "350", FCVAR_NOTIFY, "Damage of laser");
+	ConVar laserdamage("ffdev_lasergren_damage", "350", FCVAR_FF_FFDEV, "Damage of laser");
 	#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
-	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", ".15", FCVAR_NOTIFY, "Damage multiplier of laser against buildables");
-	ConVar laserangv("ffdev_lasergren_angv", "120", FCVAR_NOTIFY, "Laser angular increment");
+	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", ".15", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
+	ConVar laserangv("ffdev_lasergren_angv", "120", FCVAR_FF_FFDEV, "Laser angular increment");
 	#define LASERGREN_ROTATION_PER_TICK laserangv.GetFloat()*gpGlobals->interval_per_tick
-	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_NOTIFY, "Laser grenade jump distance" );
-	ConVar laserbob( "ffdev_lasergren_bob", "10", FCVAR_NOTIFY, "Laser grenade bob factor" );
-	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_CHEAT, "Laser grenade update time" );
+	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_FF_FFDEV, "Laser grenade jump distance" );
+	ConVar laserbob( "ffdev_lasergren_bob", "10", FCVAR_FF_FFDEV, "Laser grenade bob factor" );
+	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_FF_FFDEV, "Laser grenade update time" );
 
-	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_NOTIFY, "Use nails instead of lasers" );
-	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_NOTIFY, "Bob Frequency");
+	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_FF_FFDEV, "Use nails instead of lasers" );
+	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_FF_FFDEV, "Bob Frequency");
 	
-	ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_NOTIFY, "Explosion at end of active time");
-	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "90", FCVAR_NOTIFY, "Explosion damage at end of active period" );
-	ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_NOTIFY, "Explosion radius at end of active period" );
+	ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_FF_FFDEV, "Explosion at end of active time");
+	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "90", FCVAR_FF_FFDEV, "Explosion damage at end of active period" );
+	ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_FF_FFDEV, "Explosion radius at end of active period" );
 
 	/******************************************************************/
-	ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_NOTIFY);
-	ConVar laser_ng_naildamage_buildablemult("ffdev_lasergren_ng_naildamage_buildablemult", "1.0", FCVAR_NOTIFY);
-	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.025", FCVAR_NOTIFY );
-	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", 0 );
-	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
-	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
+	ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_FF_FFDEV);
+	ConVar laser_ng_naildamage_buildablemult("ffdev_lasergren_ng_naildamage_buildablemult", "1.0", FCVAR_FF_FFDEV);
+	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.025", FCVAR_FF_FFDEV );
+	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", FCVAR_FF_FFDEV );
+	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_FF_FFDEV );
+	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_FF_FFDEV);
 
-	ConVar laser_ng_nail_bounds("ffdev_lasergren_ng_nail_bounds", "5.0", FCVAR_REPLICATED, "NG Nails bbox");
-	ConVar laser_ng_visualizenails("ffdev_lasergren_ng_visualizenails", "0", FCVAR_CHEAT, "Show NG nails trace");
-	ConVar laser_ng_nail_length("ffdev_lasergren_ng_nail_length", "5.0", 0, "Length of NG nails");
+	ConVar laser_ng_nail_bounds("ffdev_lasergren_ng_nail_bounds", "5.0", FCVAR_FF_FFDEV_REPLICATED, "NG Nails bbox");
+	ConVar laser_ng_visualizenails("ffdev_lasergren_ng_visualizenails", "0", FCVAR_FF_FFDEV, "Show NG nails trace");
+	ConVar laser_ng_nail_length("ffdev_lasergren_ng_nail_length", "5.0", FCVAR_FF_FFDEV, "Length of NG nails");
 
 
 

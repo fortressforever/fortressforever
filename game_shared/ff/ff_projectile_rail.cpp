@@ -54,19 +54,19 @@ PRECACHE_WEAPON_REGISTER( ff_projectile_rail );
 // default, bounce1, bounce2
 unsigned char g_uchRailColors[3][3] = { {64, 128, 192}, {32, 192, 160}, {0, 255, 128} };
 
-//ConVar ffdev_rail_maxbounceangle( "ffdev_rail_maxbounceangle", "45.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum angle for a rail to bounce" );
+//ConVar ffdev_rail_maxbounceangle( "ffdev_rail_maxbounceangle", "45.0", FCVAR_FF_FFDEV_REPLICATED, "Maximum angle for a rail to bounce" );
 #define RAIL_MAXBOUNCEANGLE 45.0f // ffdev_rail_maxbounceangle.GetFloat()
-//ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Damage multiplier per bounce" );
+//ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_FF_FFDEV_REPLICATED, "Damage multiplier per bounce" );
 #define RAIL_BOUNCEDAMAGEFACTOR 1.4f // ffdev_rail_bouncedamagefactor.GetFloat()
 
-//ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a half-charge shot." );
+//ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20.0", FCVAR_FF_FFDEV_REPLICATED, "Explosion damage caused from a half-charge shot." );
 #define RAIL_EXPLODEDAMAGE_MIN 20.0f // ffdev_rail_explodedamage_min.GetFloat()
-//ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a full-charge shot." );
+//ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40.0", FCVAR_FF_FFDEV_REPLICATED, "Explosion damage caused from a full-charge shot." );
 #define RAIL_EXPLODEDAMAGE_MAX 40.0f // ffdev_rail_explodedamage_max.GetFloat()
 
 #ifdef CLIENT_DLL
 
-//ConVar ffdev_rail_prate( "ffdev_rail_prate", "128", FCVAR_CHEAT, "Amount of rail particles per second.", true, 0, true, 65536 );
+//ConVar ffdev_rail_prate( "ffdev_rail_prate", "128", FCVAR_FF_FFDEV_CLIENT, "Amount of rail particles per second.", true, 0, true, 65536 );
 #define RAIL_PRATE 128 // ffdev_rail_prate.GetFloat()
 
 // dlight scale

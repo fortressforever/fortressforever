@@ -144,17 +144,17 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 
 // 0000936: Horizontal push from explosions too low
 #ifdef GAME_DLL
-	//ConVar push_multiplier("ffdev_pushmultiplier", "8.0", FCVAR_REPLICATED | FCVAR_CHEAT);
+	//ConVar push_multiplier("ffdev_pushmultiplier", "8.0", FCVAR_FF_FFDEV_REPLICATED);
 	#define PUSH_MULTIPLIER 8.0f
-	//ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED | FCVAR_CHEAT);
+	//ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_FF_FFDEV_REPLICATED);
 	#define FATTYPUSH_MULTIPLIER 0.15f
-	//ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_REPLICATED | FCVAR_CHEAT);
+	//ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_FF_FFDEV_REPLICATED);
 	#define NODAMAGEPUSH_MULTIPLIER 0.80f
-	//ConVar push_clamp("ffdev_pushclamp", "450", FCVAR_REPLICATED | FCVAR_CHEAT);
+	//ConVar push_clamp("ffdev_pushclamp", "450", FCVAR_FF_FFDEV_REPLICATED);
 	#define PUSH_CLAMP 450
 
 	// AfterShock - increase IC self damage to reduce number of jumps you can do
-	//ConVar ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier", "1.8", FCVAR_REPLICATED | FCVAR_CHEAT);
+	//ConVar ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier", "1.8", FCVAR_FF_FFDEV_REPLICATED);
 	#define IC_SELFDAMAGEMULTIPLIER 1.8f
 	
 #endif

@@ -42,7 +42,7 @@ static int g_iMiniTurretBeam, g_iMiniTurretHalo, g_iMiniTurretDot;
 //
 //=============================================================================
 
-//ConVar	turret_usepvs( "ffdev_spawnturret_usepvs", "0", FCVAR_REPLICATED );
+//ConVar	turret_usepvs( "ffdev_spawnturret_usepvs", "0", FCVAR_FF_FFDEV_REPLICATED );
 #define TURRET_USEPVS false // turret_usepvs.GetBool()
 
 //-----------------------------------------------------------------------------
@@ -312,9 +312,9 @@ PRECACHE_REGISTER( ff_miniturret );
 #ifdef GAME_DLL
 
 // Debug visualization
-ConVar	miniturret_debug( "ffdev_miniturret_debug", "0", FCVAR_CHEAT );
-ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "17.0", FCVAR_CHEAT );
-ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0", FCVAR_CHEAT );
+ConVar	miniturret_debug( "ffdev_miniturret_debug", "0", FCVAR_FF_FFDEV );
+ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "17.0", FCVAR_FF_FFDEV );
+ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0", FCVAR_FF_FFDEV );
 
 // Datatable
 BEGIN_DATADESC( CFFMiniTurret )

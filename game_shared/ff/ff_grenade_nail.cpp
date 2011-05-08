@@ -40,17 +40,17 @@
 
 #ifdef GAME_DLL
 
-	ConVar nailspeed("ffdev_nailspeed", "600", FCVAR_CHEAT);
-	ConVar naildamage("ffdev_naildamage", "10", FCVAR_CHEAT);
-	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.2", FCVAR_CHEAT );
-	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_CHEAT );
-	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
-	ConVar nailstreams( "ffdev_nailgren_streams", "10", FCVAR_CHEAT );
-	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
+	ConVar nailspeed("ffdev_nailspeed", "600", FCVAR_FF_FFDEV);
+	ConVar naildamage("ffdev_naildamage", "10", FCVAR_FF_FFDEV);
+	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.2", FCVAR_FF_FFDEV );
+	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_FF_FFDEV );
+	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_FF_FFDEV );
+	ConVar nailstreams( "ffdev_nailgren_streams", "10", FCVAR_FF_FFDEV );
+	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_FF_FFDEV);
 
-	ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT, "NG Nails bbox");
-	ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "0", FCVAR_CHEAT, "Show NG nails trace");
-	ConVar ffdev_ng_nail_length("ffdev_ng_nail_length", "5.0", FCVAR_CHEAT, "Length of NG nails");
+	ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "5.0", FCVAR_FF_FFDEV_REPLICATED, "NG Nails bbox");
+	ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "0", FCVAR_FF_FFDEV, "Show NG nails trace");
+	ConVar ffdev_ng_nail_length("ffdev_ng_nail_length", "5.0", FCVAR_FF_FFDEV, "Length of NG nails");
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -201,17 +201,17 @@ LINK_ENTITY_TO_CLASS(ff_grenade_nail, CFFGrenadeNail);
 PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 
 #ifndef CLIENT_DLL
-	//ConVar nailspeed("ffdev_nailspeed", "800", FCVAR_CHEAT);
-	//ConVar naildamage("ffdev_naildamage", "8", FCVAR_CHEAT);
-	//ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.3", FCVAR_CHEAT );
-	//ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_CHEAT );
-	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_CHEAT );
-	//ConVar nailstreams( "ffdev_nailgren_streams", "4", FCVAR_CHEAT );
-	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_CHEAT);
+	//ConVar nailspeed("ffdev_nailspeed", "800", FCVAR_FF_FFDEV_CLIENT);
+	//ConVar naildamage("ffdev_naildamage", "8", FCVAR_FF_FFDEV_CLIENT);
+	//ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.3", FCVAR_FF_FFDEV_CLIENT );
+	//ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "360.0", FCVAR_FF_FFDEV_CLIENT );
+	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_FF_FFDEV_CLIENT );
+	//ConVar nailstreams( "ffdev_nailgren_streams", "4", FCVAR_FF_FFDEV_CLIENT );
+	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_FF_FFDEV_CLIENT);
 
-	//ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "NG Nails bbox");
-	//ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "1", FCVAR_CHEAT, "Show NG nails trace");
-	//ConVar ffdev_ng_nail_length("ffdev_ng_nail_length", "5.0", FCVAR_CHEAT, "Length of NG nails");
+	//ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "2.0", FCVAR_FF_FFDEV_REPLICATED, "NG Nails bbox");
+	//ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "1", FCVAR_FF_FFDEV_CLIENT, "Show NG nails trace");
+	//ConVar ffdev_ng_nail_length("ffdev_ng_nail_length", "5.0", FCVAR_FF_FFDEV_CLIENT, "Length of NG nails");
 #endif
 
 	//extern ConVar ffdev_nail_bbox;

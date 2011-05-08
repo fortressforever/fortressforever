@@ -31,7 +31,7 @@
 
 #define SLOWFIELDGRENADE_MODEL			"models/grenades/conc/conc.mdl"
 
-ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.vmt", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Sprite texture");
+ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.vmt", FCVAR_FF_FFDEV_REPLICATED, "Sprite texture");
 #define SLOWFIELDGRENADE_GLOW_SPRITE ffdev_slowfield_vmt.GetString()
 
 //#define SLOWFIELDGRENADE_GLOW_SPRITE	"sprites/ff_slowfieldoutline1.vmt"
@@ -43,13 +43,13 @@ ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.
 
 #ifdef CLIENT_DLL
 
-ConVar slowfield_glow_r("ffdev_slowfield_glow_r", "255", FCVAR_CHEAT, "Slowfield glow red(0-255) ");
-ConVar slowfield_glow_g("ffdev_slowfield_glow_g", "255", FCVAR_CHEAT, "Slowfield glow green(0-255) ");
-ConVar slowfield_glow_b("ffdev_slowfield_glow_b", "200", FCVAR_CHEAT, "Slowfield glow blue(0-255) ");
-ConVar slowfield_glow_a("ffdev_slowfield_glow_a", "0.8", FCVAR_CHEAT, "Slowfield glow alpha(0-1) ");
-ConVar slowfield_glow_a_min("ffdev_slowfield_glow_a_min", "180", FCVAR_CHEAT, "Slowfield glow alpha min(0-255) ");
-ConVar slowfield_glow_a_max("ffdev_slowfield_glow_a_max", "200", FCVAR_CHEAT, "Slowfield glow alpha max(0-255) ");
-ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_CHEAT, "Slowfield glow size(0.0-10.0");
+ConVar slowfield_glow_r("ffdev_slowfield_glow_r", "255", FCVAR_FF_FFDEV_CLIENT, "Slowfield glow red(0-255) ");
+ConVar slowfield_glow_g("ffdev_slowfield_glow_g", "255", FCVAR_FF_FFDEV_CLIENT, "Slowfield glow green(0-255) ");
+ConVar slowfield_glow_b("ffdev_slowfield_glow_b", "200", FCVAR_FF_FFDEV_CLIENT, "Slowfield glow blue(0-255) ");
+ConVar slowfield_glow_a("ffdev_slowfield_glow_a", "0.8", FCVAR_FF_FFDEV_CLIENT, "Slowfield glow alpha(0-1) ");
+ConVar slowfield_glow_a_min("ffdev_slowfield_glow_a_min", "180", FCVAR_FF_FFDEV_CLIENT, "Slowfield glow alpha min(0-255) ");
+ConVar slowfield_glow_a_max("ffdev_slowfield_glow_a_max", "200", FCVAR_FF_FFDEV_CLIENT, "Slowfield glow alpha max(0-255) ");
+ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_FF_FFDEV_CLIENT, "Slowfield glow size(0.0-10.0");
 
 #define SLOWFIELD_GLOW_R slowfield_glow_r.GetFloat()
 #define SLOWFIELD_GLOW_G slowfield_glow_g.GetFloat()
@@ -61,28 +61,28 @@ ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_CHEAT, "Slo
 
 #endif
 
-ConVar ffdev_slowfield_radius("ffdev_slowfield_radius", "176", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Radius of slowfield grenade");
+ConVar ffdev_slowfield_radius("ffdev_slowfield_radius", "176", FCVAR_FF_FFDEV_REPLICATED, "Radius of slowfield grenade");
 #define SLOWFIELD_RADIUS ffdev_slowfield_radius.GetFloat()
 
-ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "6", FCVAR_REPLICATED | FCVAR_CHEAT, "Duration of slowfield grenade");
+ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "6", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
 #define SLOWFIELD_DURATION ffdev_slowfield_duration.GetFloat()
 
-ConVar ffdev_slowfield_min_slow("ffdev_slowfield_min_slow", ".20", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum slow motion percentage of slowfield grenade");
+ConVar ffdev_slowfield_min_slow("ffdev_slowfield_min_slow", ".20", FCVAR_FF_FFDEV_REPLICATED, "Minimum slow motion percentage of slowfield grenade");
 #define SLOWFIELD_MIN_SLOW ffdev_slowfield_min_slow.GetFloat()
 
-ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
+ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_FF_FFDEV_REPLICATED, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
 #define SLOWFIELD_FRIENDLYIGNORE ffdev_slowfield_friendlyignore.GetBool()
 
-ConVar ffdev_slowfield_selfignore("ffdev_slowfield_selfignore", "0", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When set to 1, the grenade does not affect the thrower");
+ConVar ffdev_slowfield_selfignore("ffdev_slowfield_selfignore", "0", FCVAR_FF_FFDEV_REPLICATED, "When set to 1, the grenade does not affect the thrower");
 #define SLOWFIELD_SELFIGNORE ffdev_slowfield_selfignore.GetBool()
 
-ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When friendly fire is on, modifies the slow amount for teammates");
+ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCVAR_FF_FFDEV_REPLICATED, "When friendly fire is on, modifies the slow amount for teammates");
 #define SLOWFIELD_FRIENDLYSCALE ffdev_slowfield_friendlyscale.GetFloat()
 
-ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", ".35", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When selfignore is 0, modifies the slow amount for the thrower");
+ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", ".35", FCVAR_FF_FFDEV_REPLICATED, "When selfignore is 0, modifies the slow amount for the thrower");
 #define SLOWFIELD_SELFSCALE ffdev_slowfield_selfscale.GetFloat()
 
-ConVar ffdev_slowfield_fastspeedmod_start("ffdev_slowfield_fastspeedmod_start", "800", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When the slowed person is above this speed, they get slowed more depending on how fast they are moving");
+ConVar ffdev_slowfield_fastspeedmod_start("ffdev_slowfield_fastspeedmod_start", "800", FCVAR_FF_FFDEV_REPLICATED, "When the slowed person is above this speed, they get slowed more depending on how fast they are moving");
 #define SLOWFIELD_FASTSPEEDMOD_START ffdev_slowfield_fastspeedmod_start.GetFloat()
 
 

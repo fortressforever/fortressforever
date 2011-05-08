@@ -32,14 +32,14 @@
 	#include "ilagcompensationmanager.h"
 #endif
 
-ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Flame bbox");
-ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "17.5", FCVAR_REPLICATED | FCVAR_CHEAT, "Force of backwards push when shooting while off ground");
-ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "110.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Force of upwards push when shooting while off ground");
-ConVar ffdev_flame_boostcap("ffdev_flame_boostcap", "850.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Speed at which the flamethrower will stop boosting you");
+ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_FF_FFDEV_REPLICATED, "Flame bbox");
+ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "17.5", FCVAR_FF_FFDEV_REPLICATED, "Force of backwards push when shooting while off ground");
+ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "110.0", FCVAR_FF_FFDEV_REPLICATED, "Force of upwards push when shooting while off ground");
+ConVar ffdev_flame_boostcap("ffdev_flame_boostcap", "850.0", FCVAR_FF_FFDEV_REPLICATED, "Speed at which the flamethrower will stop boosting you");
 
 #ifdef GAME_DLL
-	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_CHEAT, "Show flame trace");
-	//ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "18", FCVAR_ARCHIVE );
+	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_FF_FFDEV, "Show flame trace");
+	//ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "18", FCVAR_FF_FFDEV );
 #endif
 
 //=============================================================================
