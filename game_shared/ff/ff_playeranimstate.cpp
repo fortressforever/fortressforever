@@ -415,7 +415,7 @@ float CFFPlayerAnimState::GetCurrentMaxGroundSpeed()
 		return 0;
 }
 
-//ConVar ff_jimmy_legs_time( "ffdev_jimmy_legs_time", "0.333", FCVAR_REPLICATED, "Amount of time after jump when jimmy legs kick in." );
+//ConVar ff_jimmy_legs_time( "ffdev_jimmy_legs_time", "0.333", FCVAR_FF_FFDEV_REPLICATED, "Amount of time after jump when jimmy legs kick in." );
 #define FF_JIMMY_LEGS_TIME 0.333f // ff_jimmy_legs_time.GetFloat() // jimmy legs
 
 bool CFFPlayerAnimState::HandleJumping()

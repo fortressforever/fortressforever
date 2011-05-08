@@ -33,9 +33,9 @@
 	#include "clienteffectprecachesystem.h"
 	#include "particles_simple.h"
 #else
-	ConVar nap_flame_time("ffdev_nap_flame_time","5.0",FCVAR_CHEAT,"How long the napalm grenade's fires burn");
-	ConVar nap_burn_damage("ffdev_nap_burn_damage","15.0",FCVAR_CHEAT,"How much damage being in the radius of a napalm grenade deals.");
-	ConVar nap_burn_radius("ffdev_nap_burn_radius","98.0",FCVAR_CHEAT,"Burn radius of a napalmlet.");
+	ConVar nap_flame_time("ffdev_nap_flame_time","5.0",FCVAR_FF_FFDEV,"How long the napalm grenade's fires burn");
+	ConVar nap_burn_damage("ffdev_nap_burn_damage","15.0",FCVAR_FF_FFDEV,"How much damage being in the radius of a napalm grenade deals.");
+	ConVar nap_burn_radius("ffdev_nap_burn_radius","98.0",FCVAR_FF_FFDEV,"Burn radius of a napalmlet.");
 	#include "EntityFlame.h"
 	#include "smoke_trail.h"
 	#include "ff_grenade_napalmlet.h"

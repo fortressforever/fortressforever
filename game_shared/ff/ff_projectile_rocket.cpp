@@ -29,7 +29,7 @@
 #endif
 
 
-//ConVar ffdev_rocketsize("ffdev_rocketsize", "2.0", FCVAR_REPLICATED );
+//ConVar ffdev_rocketsize("ffdev_rocketsize", "2.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FFDEV_ROCKETSIZE 2.0f //ffdev_rocketsize.GetFloat() //2.0f
 //#define PREDICTED_ROCKETS
 

@@ -26,11 +26,11 @@
 
 
 // 1325: Dev variables for tweaking the autorifle
-//ConVar ffdev_ar_recoil("ffdev_ar_recoil", "0.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Recoil Amount");
-//ConVar ffdev_ar_push("ffdev_ar_push", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Push Amount");
-//ConVar ffdev_ar_damage("ffdev_ar_damage", "7", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Damage");
-//ConVar ffdev_ar_rof("ffdev_ar_rof", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Rate of Fire");
-//ConVar ffdev_ar_bulletspread("ffdev_ar_bulletspread", "0.06", FCVAR_REPLICATED | FCVAR_CHEAT, "Assault Rifle Bullet Spread");
+//ConVar ffdev_ar_recoil("ffdev_ar_recoil", "0.4", FCVAR_FF_FFDEV_REPLICATED, "Assault Rifle Recoil Amount");
+//ConVar ffdev_ar_push("ffdev_ar_push", "1", FCVAR_FF_FFDEV_REPLICATED, "Assault Rifle Push Amount");
+//ConVar ffdev_ar_damage("ffdev_ar_damage", "7", FCVAR_FF_FFDEV_REPLICATED, "Assault Rifle Damage");
+//ConVar ffdev_ar_rof("ffdev_ar_rof", "0.1", FCVAR_FF_FFDEV_REPLICATED, "Assault Rifle Rate of Fire");
+//ConVar ffdev_ar_bulletspread("ffdev_ar_bulletspread", "0.06", FCVAR_FF_FFDEV_REPLICATED, "Assault Rifle Bullet Spread");
 
 
 //=============================================================================

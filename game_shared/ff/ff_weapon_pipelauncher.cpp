@@ -26,7 +26,7 @@
 	#include "ff_player.h"
 #endif
 
-ConVar pipe_damage_radius( "ffdev_pipe_damage_radius", "130", FCVAR_REPLICATED, "Pipe explosion radius" );
+ConVar pipe_damage_radius( "ffdev_pipe_damage_radius", "130", FCVAR_FF_FFDEV_REPLICATED, "Pipe explosion radius" );
 #define PIPE_DAMAGERADIUS pipe_damage_radius.GetInt()
 
 //----------------------------------------------------------------------------

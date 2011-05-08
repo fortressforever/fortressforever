@@ -37,63 +37,63 @@
 
 extern unsigned char g_uchRailColors[3][3];
 
-//ConVar ffdev_railgun_revsound_volume_high("ffdev_railgun_revsound_volume_high", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound High Volume");
+//ConVar ffdev_railgun_revsound_volume_high("ffdev_railgun_revsound_volume_high", "1.0", FCVAR_FF_FFDEV_REPLICATED, "Railgun Rev Sound High Volume");
 #define RAILGUN_REVSOUND_VOLUME_HIGH 1.0f // ffdev_railgun_revsound_volume_high.GetFloat()
-//ConVar ffdev_railgun_revsound_volume_low("ffdev_railgun_revsound_volume_low", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound Low Volume");
+//ConVar ffdev_railgun_revsound_volume_low("ffdev_railgun_revsound_volume_low", "0.0", FCVAR_FF_FFDEV_REPLICATED, "Railgun Rev Sound Low Volume");
 #define RAILGUN_REVSOUND_VOLUME_LOW 0.0f // ffdev_railgun_revsound_volume_low.GetFloat()
-//ConVar ffdev_railgun_revsound_pitch_high("ffdev_railgun_revsound_pitch_high", "208", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound High Pitch");
+//ConVar ffdev_railgun_revsound_pitch_high("ffdev_railgun_revsound_pitch_high", "208", FCVAR_FF_FFDEV_REPLICATED, "Railgun Rev Sound High Pitch");
 #define RAILGUN_REVSOUND_PITCH_HIGH 208 // ffdev_railgun_revsound_pitch_high.GetInt()
-//ConVar ffdev_railgun_revsound_pitch_low("ffdev_railgun_revsound_pitch_low", "64", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun Rev Sound Low Pitch");
+//ConVar ffdev_railgun_revsound_pitch_low("ffdev_railgun_revsound_pitch_low", "64", FCVAR_FF_FFDEV_REPLICATED, "Railgun Rev Sound Low Pitch");
 #define RAILGUN_REVSOUND_PITCH_LOW 64 // ffdev_railgun_revsound_pitch_low.GetInt()
 
 #ifdef GAME_DLL
 
-//ConVar ffdev_railgun_revsound_updateinterval("ffdev_railgun_revsound_updateinterval", "0.01", FCVAR_REPLICATED | FCVAR_CHEAT, "How much time to wait before updating");
+//ConVar ffdev_railgun_revsound_updateinterval("ffdev_railgun_revsound_updateinterval", "0.01", FCVAR_FF_FFDEV_REPLICATED, "How much time to wait before updating");
 #define RAILGUN_REVSOUND_UPDATEINTERVAL 0.01f // ffdev_railgun_revsound_updateinterval.GetFloat()
 
-//ConVar ffdev_railgun_ammoamount_halfcharge( "ffdev_railgun_ammoamount_halfcharge", "2", FCVAR_REPLICATED | FCVAR_CHEAT, "How much total ammo is lost for a half charge." );
+//ConVar ffdev_railgun_ammoamount_halfcharge( "ffdev_railgun_ammoamount_halfcharge", "2", FCVAR_FF_FFDEV_REPLICATED, "How much total ammo is lost for a half charge." );
 #define RAILGUN_AMMOAMOUNT_HALFCHARGE 2 // ffdev_railgun_ammoamount_halfcharge.GetInt()
-//ConVar ffdev_railgun_ammoamount_fullcharge( "ffdev_railgun_ammoamount_fullcharge", "3", FCVAR_REPLICATED | FCVAR_CHEAT, "How much total ammo is lost for a full charge." );
+//ConVar ffdev_railgun_ammoamount_fullcharge( "ffdev_railgun_ammoamount_fullcharge", "3", FCVAR_FF_FFDEV_REPLICATED, "How much total ammo is lost for a full charge." );
 #define RAILGUN_AMMOAMOUNT_FULLCHARGE 3 // ffdev_railgun_ammoamount_fullcharge.GetInt()
 
-//ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "6.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Railgun overcharges at this time, stops charging, and damages player." );
+//ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "6.0", FCVAR_FF_FFDEV_REPLICATED, "Railgun overcharges at this time, stops charging, and damages player." );
 #define RAILGUN_OVERCHARGETIME 6.0f // ffdev_railgun_overchargetime.GetFloat()
-//ConVar ffdev_railgun_overchargedamage( "ffdev_railgun_overchargedamage", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Amount of damage an overcharge gives to the player (doubled on full charge)." );
+//ConVar ffdev_railgun_overchargedamage( "ffdev_railgun_overchargedamage", "0.0", FCVAR_FF_FFDEV_REPLICATED, "Amount of damage an overcharge gives to the player (doubled on full charge)." );
 #define RAILGUN_OVERCHARGEDAMAGE 0.0f // ffdev_railgun_overchargedamage.GetFloat()
 
-//ConVar ffdev_railgun_cooldowntime_zerocharge( "ffdev_railgun_cooldowntime_zerocharge", "0.333", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a non-charged shot." );
+//ConVar ffdev_railgun_cooldowntime_zerocharge( "ffdev_railgun_cooldowntime_zerocharge", "0.333", FCVAR_FF_FFDEV_REPLICATED, "Cooldown time after firing a non-charged shot." );
 #define RAILGUN_COOLDOWNTIME_ZEROCHARGE 0.333f // ffdev_railgun_cooldowntime_zerocharge.GetFloat()
-//ConVar ffdev_railgun_cooldowntime_halfcharge( "ffdev_railgun_cooldowntime_halfcharge", "0.333", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a half-charged shot." );
+//ConVar ffdev_railgun_cooldowntime_halfcharge( "ffdev_railgun_cooldowntime_halfcharge", "0.333", FCVAR_FF_FFDEV_REPLICATED, "Cooldown time after firing a half-charged shot." );
 #define RAILGUN_COOLDOWNTIME_HALFCHARGE 0.333f // ffdev_railgun_cooldowntime_halfcharge.GetFloat()
-//ConVar ffdev_railgun_cooldowntime_fullcharge( "ffdev_railgun_cooldowntime_fullcharge", "0.333", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after firing a full-charged shot." );
+//ConVar ffdev_railgun_cooldowntime_fullcharge( "ffdev_railgun_cooldowntime_fullcharge", "0.333", FCVAR_FF_FFDEV_REPLICATED, "Cooldown time after firing a full-charged shot." );
 #define RAILGUN_COOLDOWNTIME_FULLCHARGE 0.333f // ffdev_railgun_cooldowntime_fullcharge.GetFloat()
-//ConVar ffdev_railgun_cooldowntime_overcharge( "ffdev_railgun_cooldowntime_overcharge", "2.333", FCVAR_REPLICATED | FCVAR_CHEAT, "Cooldown time after overcharging." );
+//ConVar ffdev_railgun_cooldowntime_overcharge( "ffdev_railgun_cooldowntime_overcharge", "2.333", FCVAR_FF_FFDEV_REPLICATED, "Cooldown time after overcharging." );
 #define RAILGUN_COOLDOWNTIME_OVERCHARGE 2.333f // ffdev_railgun_cooldowntime_overcharge.GetFloat()
 
-//ConVar ffdev_rail_speed_min( "ffdev_rail_speed_min", "1800.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum speed of rail" );
+//ConVar ffdev_rail_speed_min( "ffdev_rail_speed_min", "1800.0", FCVAR_FF_FFDEV_REPLICATED, "Minimum speed of rail" );
 #define RAIL_SPEED_MIN 1800.0f // ffdev_rail_speed_min.GetFloat()
-//ConVar ffdev_rail_speed_max( "ffdev_rail_speed_max", "3000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum speed of rail" );
+//ConVar ffdev_rail_speed_max( "ffdev_rail_speed_max", "3000.0", FCVAR_FF_FFDEV_REPLICATED, "Maximum speed of rail" );
 #define RAIL_SPEED_MAX 3000.0f // ffdev_rail_speed_max.GetFloat()
-//ConVar ffdev_rail_damage_min( "ffdev_rail_damage_min", "35.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum damage dealt by rail" );
+//ConVar ffdev_rail_damage_min( "ffdev_rail_damage_min", "35.0", FCVAR_FF_FFDEV_REPLICATED, "Minimum damage dealt by rail" );
 #define RAIL_DAMAGE_MIN 35.0f // ffdev_rail_damage_min.GetFloat()
-//ConVar ffdev_rail_damage_max( "ffdev_rail_damage_max", "60.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum damage dealt by rail" );
+//ConVar ffdev_rail_damage_max( "ffdev_rail_damage_max", "60.0", FCVAR_FF_FFDEV_REPLICATED, "Maximum damage dealt by rail" );
 #define RAIL_DAMAGE_MAX 60.0f // ffdev_rail_damage_max.GetFloat()
 
-//ConVar ffdev_railgun_pushforce_min("ffdev_railgun_pushforce_min", "32.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
+//ConVar ffdev_railgun_pushforce_min("ffdev_railgun_pushforce_min", "32.0", FCVAR_FF_FFDEV_REPLICATED, "Minimum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
 #define RAILGUN_PUSHFORCE_MIN 32.0f // ffdev_railgun_pushforce_min.GetFloat()
-//ConVar ffdev_railgun_pushforce_max("ffdev_railgun_pushforce_max", "64.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
+//ConVar ffdev_railgun_pushforce_max("ffdev_railgun_pushforce_max", "64.0", FCVAR_FF_FFDEV_REPLICATED, "Maximum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
 #define RAILGUN_PUSHFORCE_MAX 64.0f // ffdev_railgun_pushforce_max.GetFloat()
 
-//ConVar ffdev_railgun_recoil_min("ffdev_railgun_recoil_min", "2", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
+//ConVar ffdev_railgun_recoil_min("ffdev_railgun_recoil_min", "2", FCVAR_FF_FFDEV_REPLICATED, "Minimum recoil");
 #define RAILGUN_RECOIL_MIN 2 // ffdev_railgun_recoil_min.GetInt()
-//ConVar ffdev_railgun_recoil_max("ffdev_railgun_recoil_max", "10", FCVAR_REPLICATED | FCVAR_CHEAT, "Minimum recoil");
+//ConVar ffdev_railgun_recoil_max("ffdev_railgun_recoil_max", "10", FCVAR_FF_FFDEV_REPLICATED, "Minimum recoil");
 #define RAILGUN_RECOIL_MAX 10 // ffdev_railgun_recoil_max.GetInt()
 
-//ConVar ffdev_railgun_resupply_interval("ffdev_railgun_resupply_interval", "4.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply every X seconds.");
+//ConVar ffdev_railgun_resupply_interval("ffdev_railgun_resupply_interval", "4.0", FCVAR_FF_FFDEV_REPLICATED, "Resupply every X seconds.");
 #define RAILGUN_RESUPPLY_INTERVAL 4.0f // ffdev_railgun_resupply_interval.GetFloat()
-//ConVar ffdev_railgun_resupply_rails("ffdev_railgun_resupply_rails", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply X rails");
+//ConVar ffdev_railgun_resupply_rails("ffdev_railgun_resupply_rails", "1", FCVAR_FF_FFDEV_REPLICATED, "Resupply X rails");
 #define RAILGUN_RESUPPLY_RAILS 1 // ffdev_railgun_resupply_rails.GetInt()
-//ConVar ffdev_railgun_resupply_cells("ffdev_railgun_resupply_cells", "40", FCVAR_REPLICATED | FCVAR_CHEAT, "Resupply X cells on overcharge");
+//ConVar ffdev_railgun_resupply_cells("ffdev_railgun_resupply_cells", "40", FCVAR_FF_FFDEV_REPLICATED, "Resupply X cells on overcharge");
 #define RAILGUN_RESUPPLY_CELLS 40 // ffdev_railgun_resupply_cells.GetInt()
 
 #else

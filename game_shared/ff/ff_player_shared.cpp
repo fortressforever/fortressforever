@@ -56,65 +56,65 @@ ConVar sv_voice_inputfromfile("sv_voice_inputfromfile", "1", FCVAR_REPLICATED | 
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Shows client(red) and server(blue) bullet impact point");
 ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allows spectators to talk to players");
-//ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_REPLICATED);
-//ConVar ffdev_mancannon_commandtime( "ffdev_mancannon_commandtime", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+//ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_FF_FFDEV_REPLICATED);
+//ConVar ffdev_mancannon_commandtime( "ffdev_mancannon_commandtime", "0.3", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_FF_FFDEV_REPLICATED );
 #define HEADSHOT_MOD 2.0f //ffdev_sniper_headshotmod.GetFloat()
-ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define LEGSHOT_MOD 1.0f //ffdev_sniper_legshotmod.GetFloat()
-ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_FF_FFDEV_REPLICATED );
 #define LEGSHOT_TIME 5.0f //ffdev_sniper_legshot_time.GetFloat()
 //AfterShock: radiotag time is in ff_player.cpp under RADIOTAG_DURATION
 
-ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "6", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_FF_FFDEV_REPLICATED );
 
-ConVar ffdev_overpressure_slide( "ffdev_overpressure_slide", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_slide_affectsself( "ffdev_overpressure_slide_affectsself", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_slide_duration( "ffdev_overpressure_slide_duration", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_slide_friction( "ffdev_overpressure_slide_friction", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_slide_airaccel( "ffdev_overpressure_slide_airaccel", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_slide_accel( "ffdev_overpressure_slide_accel", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_slide_wearsoff( "ffdev_overpressure_slide_wearsoff", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-ConVar ffdev_overpressure_slide_wearsoff_bias( "ffdev_overpressure_slide_wearsoff_bias", "0.2", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_slide( "ffdev_overpressure_slide", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_slide_affectsself( "ffdev_overpressure_slide_affectsself", "0", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_slide_duration( "ffdev_overpressure_slide_duration", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_slide_friction( "ffdev_overpressure_slide_friction", "0", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_slide_airaccel( "ffdev_overpressure_slide_airaccel", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_slide_accel( "ffdev_overpressure_slide_accel", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_slide_wearsoff( "ffdev_overpressure_slide_wearsoff", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_slide_wearsoff_bias( "ffdev_overpressure_slide_wearsoff_bias", "0.2", FCVAR_FF_FFDEV_REPLICATED );
 
-ConVar ffdev_overpressure_friendlyscale( "ffdev_overpressure_friendlyscale", "1.0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_friendlyscale( "ffdev_overpressure_friendlyscale", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_FRIENDLYSCALE ffdev_overpressure_friendlyscale.GetFloat()
-ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_IGNOREFRIENDLY ffdev_overpressure_friendlyignore.GetBool()
 
 
-ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_REPLICATED );
+ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_BULLETSIZE ffdev_ac_bulletsize.GetFloat()
 
-ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_REPLICATED );
+ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_NEWSYSTEM ffdev_ac_newsystem.GetBool()
 
 #define OVERPRESSURE_JERKMULTI 0.0004f
 
-//ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT );
+//ConVar ffdev_ac_impactfreq( "ffdev_ac_impactfreq", "2.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_IMPACTFREQ 2 //ffdev_ac_impactfreq.GetInt()
 
-//ConVar ffdev_sniperrifle_legshot_minslowdownspeed( "ffdev_sniperrifle_legshot_minslowdownspeed", "0.7", FCVAR_REPLICATED, "Player speed when hit with a minimum charge sniper rifle shot (0.7 would mean player speed at 70% after being legshot)" );
-//ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
+//ConVar ffdev_sniperrifle_legshot_minslowdownspeed( "ffdev_sniperrifle_legshot_minslowdownspeed", "0.7", FCVAR_FF_FFDEV_REPLICATED, "Player speed when hit with a minimum charge sniper rifle shot (0.7 would mean player speed at 70% after being legshot)" );
+//ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_FF_FFDEV_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
 			
 // Time in seconds you have to wait until you can cloak again
-ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "5", FCVAR_REPLICATED | FCVAR_CHEAT, "Time in seconds you have to wait until you can cloak again" );
+ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "5", FCVAR_FF_FFDEV_REPLICATED, "Time in seconds you have to wait until you can cloak again" );
 
-ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED | FCVAR_CHEAT, "Spy must be moving at least this slow to scloak." );
+ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_FF_FFDEV_REPLICATED, "Spy must be moving at least this slow to scloak." );
 
-//ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_REPLICATED | FCVAR_CHEAT );
+//ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_SNIPER_MINPUSH 2.5f // sniperrifle_pushmin.GetFloat()
 
-//ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "5.5", FCVAR_REPLICATED | FCVAR_CHEAT );
+//ConVar sniperrifle_pushmax( "ffdev_sniperrifle_pushmax", "5.5", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_SNIPER_MAXPUSH 5.5f // sniperrifle_pushmax.GetFloat()
 
 #define OVERPRESSURE_EFFECT "FF_OverpressureEffect"
@@ -161,10 +161,10 @@ bool CFFPlayer::FFAnim_CanMove()
 	return true;
 }
 
-//ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "45", FCVAR_REPLICATED | FCVAR_CHEAT, "Base Damage for Sniper Rifle" );
+//ConVar sniperrifle_basedamage( "ffdev_sniperrifle_basedamage", "45", FCVAR_FF_FFDEV_REPLICATED, "Base Damage for Sniper Rifle" );
 #define	SR_BASE_DAMAGE 45.0f // sniperrifle_basedamage.GetFloat()
 
-//ConVar sniperrifle_basedamagemax( "ffdev_sniperrifle_basedamagemax", "275", FCVAR_REPLICATED | FCVAR_CHEAT, "Base Max Damage for Sniper Rifle" );
+//ConVar sniperrifle_basedamagemax( "ffdev_sniperrifle_basedamagemax", "275", FCVAR_FF_FFDEV_REPLICATED, "Base Max Damage for Sniper Rifle" );
 #define	SR_BASE_DAMAGE_MAX 275.0f // sniperrifle_basedamagemax.GetFloat()
 
 void CFFPlayer::FireBullet(

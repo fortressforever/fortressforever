@@ -31,7 +31,7 @@
 // When changing jump height, recalculate the FF_MUL_CONSTANT!!!
 #define FF_JUMP_HEIGHT 27.5f // Modified by Mulch 10/20/2005 so we could jump on 63 but not 64 unit high stuff
 #define FF_MUL_CONSTANT 209.76177f //sqrt(2.0f * 800.0f * FF_JUMP_HEIGHT);
-//static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5", FCVAR_CHEAT );
+//static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5", FCVAR_FF_FFDEV );
 
 //static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPMULTIPLIER 1.4f
@@ -81,13 +81,13 @@ public:
 	CFFGameMovement() {};
 };
 
-//static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT); // bhop_cap_soft.GetFloat()
+//static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.4", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_soft.GetFloat()
 #define BHOP_CAP_SOFT 1.4f // also defined in ff_hud_speedometer - change it there too! 
-//static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT); // bhop_cap_hard.GetFloat()
+//static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "2.0", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_hard.GetFloat()
 #define BHOP_CAP_HARD 2.0f // also defined in ff_hud_speedometer - change it there too!
-//static ConVar bhop_cap_hard_degen("ffdev_bhop_cap_hard_degen", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT); // bhop_cap_hard_degen.GetFloat()
+//static ConVar bhop_cap_hard_degen("ffdev_bhop_cap_hard_degen", "0.9", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_hard_degen.GetFloat()
 #define	BHOP_CAP_HARD_DEGEN 0.9
-//static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED | FCVAR_CHEAT); // bhop_pcfactor.GetFloat()
+//static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_FF_FFDEV_REPLICATED); // bhop_pcfactor.GetFloat()
 #define BHOP_PCFACTOR 0.65 
 
 //-----------------------------------------------------------------------------

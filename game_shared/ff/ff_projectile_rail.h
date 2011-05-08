@@ -32,7 +32,7 @@
 	#include "te_effect_dispatch.h"
 #endif
 
-//ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum charge for railgun" );
+//ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_FF_FFDEV_REPLICATED, "Maximum charge for railgun" );
 #define RAILGUN_MAXCHARGETIME 2.0f // ffdev_railgun_maxchargetime.GetFloat()
 
 //=============================================================================

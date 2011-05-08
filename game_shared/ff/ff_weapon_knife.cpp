@@ -59,7 +59,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_knife);
 // CFFWeaponKnife implementation
 //=============================================================================
 
-ConVar ffdev_knife_backstab_angle("ffdev_knife_backstab_angle", "0.643", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_knife_backstab_angle("ffdev_knife_backstab_angle", "0.643", FCVAR_FF_FFDEV_REPLICATED);
 
 //----------------------------------------------------------------------------
 // Purpose: Constructor

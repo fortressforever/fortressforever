@@ -98,8 +98,8 @@ CLIENTEFFECT_REGISTER_END()
 
 //////////////////////////////////////////////////////////////////////////
 // For ghost buildables.
-ConVar ffdev_pulsebuildable("ffdev_pulsebuildable", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Buildable ghost slow pulse");
-ConVar ffdev_buildabledrawonerror("ffdev_buildabledrawonerror", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Draw the buildable when it can't be built");
+ConVar ffdev_pulsebuildable("ffdev_pulsebuildable", "0", FCVAR_FF_FFDEV_REPLICATED, "Buildable ghost slow pulse");
+ConVar ffdev_buildabledrawonerror("ffdev_buildabledrawonerror", "1", FCVAR_FF_FFDEV_REPLICATED, "Draw the buildable when it can't be built");
 const RenderFx_t g_BuildableRenderFx = kRenderFxPulseSlowWide;
 //////////////////////////////////////////////////////////////////////////
 

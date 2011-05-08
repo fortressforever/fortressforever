@@ -44,7 +44,7 @@ LINK_ENTITY_TO_CLASS(ff_weapon_basemelee, CFFWeaponMeleeBase);
 // CFFWeaponMeleeBase implementation
 //=============================================================================
 
-ConVar melee_reach("ffdev_meleereach", "32.0", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar melee_reach("ffdev_meleereach", "32.0", FCVAR_FF_FFDEV_REPLICATED);
 
 //----------------------------------------------------------------------------
 // Purpose: Constructor
