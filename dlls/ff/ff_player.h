@@ -643,13 +643,12 @@ protected:
 	int m_iDetpackTime;
 
 public:
-	CFFGrenadeBase *GetActiveSlowfield( void ) const { return m_pActiveSlowfield; }
-	void SetActiveSlowfield( CFFGrenadeBase *pActiveSlowfield ) { m_pActiveSlowfield = pActiveSlowfield; };
-	bool IsInSlowfield( void ) const { return m_bInSlowfield; }
-	CNetworkVar( bool, m_bInSlowfield );
+	CFFGrenadeBase *GetActiveSlowfield( void ) const { return m_hActiveSlowfield.Get(); }
+	void SetActiveSlowfield( CFFGrenadeBase *pActiveSlowfield ) { m_hActiveSlowfield = pActiveSlowfield; };
+	bool IsInSlowfield( void ) const { return (m_hActiveSlowfield != NULL); }
 
 private:
-	CFFGrenadeBase *m_pActiveSlowfield;
+	CNetworkHandle( CFFGrenadeBase, m_hActiveSlowfield );
 
 public:
 	// --> Mirv: Various things

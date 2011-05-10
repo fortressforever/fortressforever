@@ -522,6 +522,40 @@ void CSlowedEffect::Render( int x, int y, int w, int h )
 		return;
 
 	m_flDuration = gpGlobals->curtime + 5.0f;
+	
+	IMaterialVar *pVar = NULL;
+	bool bFound = false;
+
+	pVar = m_Material->FindVar("$refracttint", &bFound, false);
+
+	if (pVar)
+	{
+		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+		C_FFGrenadeBase *pSlowfield = pPlayer->GetActiveSlowfield();
+		
+		Vector vColor;
+		switch (pSlowfield->GetTeamNumber())
+		{
+		case FF_TEAM_BLUE:
+			vColor = Vector(.56, .72, .9);
+			break;
+		case FF_TEAM_RED:
+			vColor = Vector(.9, .56, .56);
+			break;
+		case FF_TEAM_YELLOW:
+			vColor = Vector(.9, .83, .56);
+			break;
+		case FF_TEAM_GREEN:
+			vColor = Vector(.6, .9, .56);
+			break;
+		default:
+			vColor = Vector(.6, .55, .37);
+			break;
+		}
+
+		//Msg("VarType: %i\n", pVar->GetType());
+		pVar->SetVecValue(vColor.x, vColor.y, vColor.z);
+	}
 
 	CBaseEffect::Render( x, y, w, h );
 }
