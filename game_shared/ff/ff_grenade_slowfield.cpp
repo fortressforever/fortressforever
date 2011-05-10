@@ -36,7 +36,8 @@ ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.
 #define SLOWFIELDGRENADE_GLOW_SPRITE ffdev_slowfield_vmt.GetString()
 
 //#define SLOWFIELDGRENADE_GLOW_SPRITE	"sprites/ff_slowfieldoutline1.vmt"
-#define SLOWFIELDGRENADE_SOUND			"ConcussionGrenade.Explode"
+#define SLOWFIELDGRENADE_SOUND			"Slowfield.Explode"
+#define SLOWFIELDGRENADE_LOOP			"Slowfield.SlowLoop"
 #define SLOWFIELD_EFFECT				"FF_SlowFieldEffect" // "ConcussionExplosion"
 #define CONCBITS_EFFECT					"FF_ConcBitsEffect"
 #define FLASH_EFFECT					"FF_FlashEffect"
@@ -197,6 +198,7 @@ void CFFGrenadeSlowfield::Precache()
 	PrecacheModel("models/grenades/conc/conceffect.mdl");
 	PrecacheModel(SLOWFIELDGRENADE_GLOW_SPRITE);
 	PrecacheScriptSound(SLOWFIELDGRENADE_SOUND);
+	PrecacheScriptSound(SLOWFIELDGRENADE_LOOP);
 
 	BaseClass::Precache();
 }
@@ -298,6 +300,7 @@ void CFFGrenadeSlowfield::Precache()
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
 			UTIL_Remove(this);
+			StopSound(SLOWFIELDGRENADE_LOOP);
 
 			// loop through all players
 			for(int i = 1 ; i <= gpGlobals->maxClients; i++)
@@ -325,6 +328,9 @@ void CFFGrenadeSlowfield::Precache()
 
 			return;
 		}
+
+		// emit looping sound
+		EmitSound(SLOWFIELDGRENADE_LOOP);
 
 		float flRisingheight = 0;
 
