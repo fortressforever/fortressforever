@@ -25,11 +25,12 @@
 #ifdef GAME_DLL
 	#include "ff_entity_system.h"
 	#include "te_effect_dispatch.h"
+	#include "ai_basenpc.h"
 #else
 	#include "c_te_effect_dispatch.h"
 #endif
 
-#define SLOWFIELDGRENADE_MODEL			"models/grenades/conc/conc.mdl"
+#define SLOWFIELDGRENADE_MODEL			"models/grenades/gas/gas.mdl"
 
 ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.vmt", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Sprite texture");
 #define SLOWFIELDGRENADE_GLOW_SPRITE ffdev_slowfield_vmt.GetString()
@@ -167,6 +168,9 @@ protected:
 
 	float	m_flLastThinkTime;
 
+	int m_iSequence;
+	Activity m_Activity;
+
 #endif
 };
 
@@ -199,6 +203,10 @@ void CFFGrenadeSlowfield::Precache()
 
 #ifdef GAME_DLL
 
+	extern Activity ACT_GAS_IDLE;
+	extern Activity ACT_GAS_DEPLOY;
+	extern Activity ACT_GAS_DEPLOY_IDLE;
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Various spawny flag things
 	//-----------------------------------------------------------------------------
@@ -206,6 +214,14 @@ void CFFGrenadeSlowfield::Precache()
 	{
 		SetModel(SLOWFIELDGRENADE_MODEL);
 		BaseClass::Spawn();
+		
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeSlowfield, ACT_GAS_IDLE );
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeSlowfield, ACT_GAS_DEPLOY );
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeSlowfield, ACT_GAS_DEPLOY_IDLE );
+
+		m_Activity = ( Activity )ACT_GAS_IDLE;
+		m_iSequence = SelectWeightedSequence( m_Activity );
+		SetSequence( m_iSequence );		
 	}
 
 	//-----------------------------------------------------------------------------
@@ -213,12 +229,20 @@ void CFFGrenadeSlowfield::Precache()
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeSlowfield::Explode(trace_t *pTrace, int bitsDamageType)
 	{
+		CFFPlayer *pSlower = ToFFPlayer( GetOwnerEntity() );
+		
+		if (!pSlower)
+			return;
+
 		EmitSound(SLOWFIELDGRENADE_SOUND);
 		
 		CEffectData data;
 		data.m_vOrigin = GetAbsOrigin();
 		data.m_flScale = 1.0f;
 		data.m_flRadius = GetGrenadeRadius();
+
+		// using m_nColor as team num
+		data.m_nColor = pSlower->GetTeamNumber();
 		
 		DispatchEffect(SLOWFIELD_EFFECT, data);
 		
@@ -254,6 +278,22 @@ void CFFGrenadeSlowfield::Precache()
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeSlowfield::SlowThink() 
 	{
+		// If we're done deploying, deploy idle
+		if( m_Activity == ACT_GAS_DEPLOY )
+		{
+			m_Activity = ACT_GAS_DEPLOY_IDLE;
+			m_iSequence = SelectWeightedSequence( m_Activity );
+			SetSequence( m_iSequence );
+		}
+		
+		// If we were idling, deploy
+		if( m_Activity == ACT_GAS_IDLE )
+		{
+			m_Activity = ACT_GAS_DEPLOY;
+			m_iSequence = SelectWeightedSequence( m_Activity );
+			SetSequence( m_iSequence );
+		}
+
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
@@ -271,7 +311,6 @@ void CFFGrenadeSlowfield::Precache()
 				{
 					pPlayer->SetLaggedMovementValue(1.0f);
 					pPlayer->SetActiveSlowfield( NULL );
-					pPlayer->m_bInSlowfield = false;
 					
 					// remove status icon
 					CSingleUserRecipientFilter user( ( CBasePlayer * )pPlayer );
@@ -319,8 +358,6 @@ void CFFGrenadeSlowfield::Precache()
 			// inside the radius of the gren
 			if (flDistance < GetGrenadeRadius())
 			{
-				pPlayer->m_bInSlowfield = true;
-
 				if( SLOWFIELD_FRIENDLYIGNORE && !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 					continue;
 				
@@ -369,7 +406,6 @@ void CFFGrenadeSlowfield::Precache()
 			{
 				pPlayer->SetLaggedMovementValue( 1.0f );
 				pPlayer->SetActiveSlowfield( NULL );
-				pPlayer->m_bInSlowfield = false;
 				
 				// remove status icon
 				CSingleUserRecipientFilter user( ( CBasePlayer * )pPlayer );
@@ -381,6 +417,9 @@ void CFFGrenadeSlowfield::Precache()
 				MessageEnd();
 			}
 		}
+
+		// Animate
+		StudioFrameAdvance();
 
 		SetNextThink(gpGlobals->curtime);
 		m_flLastThinkTime = gpGlobals->curtime;

@@ -813,7 +813,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropBool( RECVINFO( m_bAmmoMe ) ),
 	RecvPropBool( RECVINFO( m_bConcussed ) ),
 	RecvPropBool( RECVINFO( m_bSliding ) ),
-	RecvPropBool( RECVINFO( m_bInSlowfield ) ),
+	RecvPropEHandle( RECVINFO( m_hActiveSlowfield ) ),
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
@@ -1233,8 +1233,6 @@ C_FFPlayer::C_FFPlayer() :
 	
 	m_flSlidingTime = 0;
 	m_bSliding = false;
-
-	m_bInSlowfield = false;
 
 	m_flSpeedModifier = 1.0f;
 	

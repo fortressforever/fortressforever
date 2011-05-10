@@ -17,6 +17,7 @@
 #include "ff_esp_shared.h"
 #include "ff_mapguide.h"
 #include "ff_weapon_base.h"
+#include "ff_grenade_base.h"
 #include "iviewrender_beams.h"
 #include "Sprite.h"
 #include "ff_fx_infection.h"
@@ -548,10 +549,12 @@ public:
 	// ----------------------------------
 	
 	// ----------------------------------
-    // Slowfield stuff
-public:
-	bool IsInSlowfield( void ) const { return m_bInSlowfield; }
-	bool m_bInSlowfield;
+	// Local slowfield
+public:	
+	C_FFGrenadeBase *GetActiveSlowfield( void )	{ return m_hActiveSlowfield.Get(); }
+	bool IsInSlowfield( void )	{ return (m_hActiveSlowfield != NULL); }
+private:
+	CNetworkHandle( C_FFGrenadeBase, m_hActiveSlowfield );
 	// ----------------------------------
 
 private:
