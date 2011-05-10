@@ -23,12 +23,20 @@
 #include "materialsystem/imaterialsystemhardwareconfig.h"
 
 #define FF_SLOWFIELD_MATERIAL "effects/slowfield"
+#define FF_SLOWFIELD_MATERIAL_BLUE "effects/slowfield_blue"
+#define FF_SLOWFIELD_MATERIAL_RED "effects/slowfield_red"
+#define FF_SLOWFIELD_MATERIAL_YELLOW "effects/slowfield_yellow"
+#define FF_SLOWFIELD_MATERIAL_GREEN "effects/slowfield_green"
 #define FF_SLOWFIELD_TEXTURE_GROUP TEXTURE_GROUP_CLIENT_EFFECTS
 
 extern ConVar ffdev_slowfield_duration;
 
 CLIENTEFFECT_REGISTER_BEGIN(PrecacheSlowfieldEmitter)
 	CLIENTEFFECT_MATERIAL(FF_SLOWFIELD_MATERIAL)
+	CLIENTEFFECT_MATERIAL(FF_SLOWFIELD_MATERIAL_BLUE)
+	CLIENTEFFECT_MATERIAL(FF_SLOWFIELD_MATERIAL_RED)
+	CLIENTEFFECT_MATERIAL(FF_SLOWFIELD_MATERIAL_YELLOW)
+	CLIENTEFFECT_MATERIAL(FF_SLOWFIELD_MATERIAL_GREEN)
 CLIENTEFFECT_REGISTER_END()
 
 class C_SlowfieldEffect : public C_BaseAnimating
@@ -36,7 +44,7 @@ class C_SlowfieldEffect : public C_BaseAnimating
 	typedef C_BaseAnimating BaseClass;
 public:
 
-	static C_SlowfieldEffect	*CreateClientsideEffect(const char *pszModelName, Vector vecOrigin);
+	static C_SlowfieldEffect	*CreateClientsideEffect(const char *pszModelName, Vector vecOrigin, int iTeam);
 
 	bool	InitializeEffect( const char *pszModelName, Vector vecOrigin );
 	void	ClientThink( void );
@@ -46,12 +54,13 @@ protected:
 
 	IMaterial	*m_pMaterial;
 	float		m_flStart;
+	int			m_iTeam;
 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Create the slowfield effect
 //-----------------------------------------------------------------------------
-C_SlowfieldEffect *C_SlowfieldEffect::CreateClientsideEffect(const char *pszModelName, Vector vecOrigin)
+C_SlowfieldEffect *C_SlowfieldEffect::CreateClientsideEffect(const char *pszModelName, Vector vecOrigin, int iTeam)
 {
 	C_SlowfieldEffect *pEffect = new C_SlowfieldEffect;
 
@@ -62,6 +71,7 @@ C_SlowfieldEffect *C_SlowfieldEffect::CreateClientsideEffect(const char *pszMode
 		return NULL;
 
 	pEffect->m_flStart = gpGlobals->curtime;
+	pEffect->m_iTeam = iTeam;
 
 	return pEffect;
 }
@@ -86,7 +96,24 @@ bool C_SlowfieldEffect::InitializeEffect( const char *pszModelName, Vector vecOr
 
 int C_SlowfieldEffect::DrawModel( int flags )
 {
-	FindOverrideMaterial(FF_SLOWFIELD_MATERIAL, FF_SLOWFIELD_TEXTURE_GROUP);
+	switch(m_iTeam)
+	{
+	case TEAM_BLUE:
+		FindOverrideMaterial(FF_SLOWFIELD_MATERIAL_BLUE, FF_SLOWFIELD_TEXTURE_GROUP);
+		break;
+	case TEAM_RED:
+		FindOverrideMaterial(FF_SLOWFIELD_MATERIAL_RED, FF_SLOWFIELD_TEXTURE_GROUP);
+		break;
+	case TEAM_YELLOW:
+		FindOverrideMaterial(FF_SLOWFIELD_MATERIAL_YELLOW, FF_SLOWFIELD_TEXTURE_GROUP);
+		break;
+	case TEAM_GREEN:
+		FindOverrideMaterial(FF_SLOWFIELD_MATERIAL_GREEN, FF_SLOWFIELD_TEXTURE_GROUP);
+		break;
+	default:
+		FindOverrideMaterial(FF_SLOWFIELD_MATERIAL, FF_SLOWFIELD_TEXTURE_GROUP);
+		break;
+	}
 
 	return BaseClass::DrawModel( flags );
 }
@@ -122,12 +149,15 @@ void C_SlowfieldEffect::ClientThink( void )
 //-----------------------------------------------------------------------------
 void FF_FX_SlowfieldEffect_Callback(const CEffectData &data)
 {
+	C_SlowfieldEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin, (int)data.m_nColor );
+	/*
 	// Okay so apparently dx7 is not so good for the 3d slowfield effect
 	// So instead we use the flat one for those systems
 	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() > 70)
 	{
 		C_SlowfieldEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin );
 	}
+	*/
 }
 
 DECLARE_CLIENT_EFFECT("FF_SlowfieldEffect", FF_FX_SlowfieldEffect_Callback);
