@@ -129,7 +129,7 @@ namespace vgui
 
 			iValue = clamp(iValue, iMin, iMax);
 
-			UpdateFromInput(iValue, false);
+			UpdateFromInput(iValue, true);
 		}
 
 		//-----------------------------------------------------------------------------
