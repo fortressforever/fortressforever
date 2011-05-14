@@ -42,6 +42,7 @@
 // Bug #0000310: fov doesn't reset |-- Mulch
 //ConVar default_fov( "default_fov", "90", FCVAR_NONE );
 ConVar default_fov( "default_fov", "90", FCVAR_ARCHIVE, "Default FOV value", true, 80.0, true, 120.0 );
+extern ConVar v_viewmodel_fov;
 
 IClientMode *g_pClientMode = NULL;
 
@@ -129,7 +130,7 @@ ClientModeFFNormal* GetClientModeFFNormal()
 
 float ClientModeFFNormal::GetViewModelFOV( void )
 {
-	return 74.0f;
+	return v_viewmodel_fov.GetFloat();
 }
 
 int ClientModeFFNormal::GetDeathMessageStartHeight( void )
