@@ -40,6 +40,8 @@ public:
 protected:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint();
+	virtual void	Init();
+	virtual void	OnTick();
 
 private:
 	// Crosshair sprite and colors

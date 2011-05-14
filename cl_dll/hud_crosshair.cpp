@@ -16,6 +16,8 @@
 #include "ff_weapon_base.h"
 #include "c_ff_player.h"
 #include "ff_utils.h"
+#include "ff_crosshairoptions.h"
+#include <vgui/IVGui.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -50,6 +52,20 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 	m_vecCrossHairOffsetAngle.Init();
 
 	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR );
+}
+
+void CHudCrosshair::Init() 
+{
+	ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
+}
+
+void CHudCrosshair::OnTick() 
+{
+	if( g_pCrosshairOptions->IsReady() )
+	{
+		// we only used the tick so that we would instigate the crosshair options loading
+		ivgui()->RemoveTickSignal( GetVPanel() );
+	}
 }
 
 void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )

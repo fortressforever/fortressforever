@@ -29,6 +29,8 @@ CFFCrosshairOptions::CFFCrosshairOptions(Panel *parent, char const *panelName) :
 
 	memset(&m_sCrosshairInfo, 0, sizeof(m_sCrosshairInfo));
 
+	m_bLoaded = false;
+
 	const char *pszInner = "1234567890-=!@#$%^?*()_+";
 	int nInner = strlen(pszInner);
 
@@ -258,6 +260,23 @@ void CFFCrosshairOptions::Apply()
 	kv->deleteThis();
 }
 
+bool CFFCrosshairOptions::IsReady()
+{
+	if(vgui::filesystem())
+	{
+		if(!m_bLoaded)
+		{
+			Load();
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Load all the settings from file into memory via keyvalues
 //-----------------------------------------------------------------------------
@@ -366,6 +385,8 @@ void CFFCrosshairOptions::Load()
 
 	// Now update the sliders
 	UpdateSliders();
+
+	m_bLoaded = true;
 }
 
 //-----------------------------------------------------------------------------

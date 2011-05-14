@@ -89,6 +89,9 @@ public:
 	//-----------------------------------------------------------------------------
 	void Reset();
 
+
+	bool IsReady();
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Get crosshair for a weapon
 	//-----------------------------------------------------------------------------
@@ -161,6 +164,9 @@ private:
 	WeaponCrosshair_t	m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 2];
 
 	bool	m_bForceGlobalCrosshair;
+	bool	m_bLoaded;
 };
+
+extern CFFCrosshairOptions *g_pCrosshairOptions;
 
 #endif
