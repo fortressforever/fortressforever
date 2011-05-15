@@ -859,14 +859,6 @@ CFFManCannon *CFFPlayer::GetManCannon( void ) const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Get shield
-//-----------------------------------------------------------------------------
-CFFShield *CFFPlayer::GetShield( void ) const
-{
-	return dynamic_cast<CFFShield *>( m_hShield.Get() );
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 CFFBuildableObject *CFFPlayer::GetBuildable( int iBuildable ) const
@@ -1149,7 +1141,9 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 				{
 					dmgInfo.ScaleDamageForce(0.01f);
 				}
-
+				
+				//Set the impact position in the damage info to figure out blood stuff in OnTakeDamage
+				dmgInfo.SetImpactPosition( tr.endpos );
 				tr.m_pEnt->DispatchTraceAttack(dmgInfo, vecDir, &tr);
 
 				if (bStartedInWater || !bHitWater || (info.m_nFlags & FIRE_BULLETS_ALLOW_WATER_SURFACE_IMPACTS))

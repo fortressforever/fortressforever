@@ -446,7 +446,10 @@ float CFFGrenadeLaser::getLengthPercent()
 				if (pTarget->IsPlayer() )
 				{
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
-					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK, DMG_ENERGYBEAM ) );
+					CTakeDamageInfo info = CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK, DMG_ENERGYBEAM );
+					//Adding the position for demoman shield blocks -GreenMushy
+					info.SetDamagePosition( GetAbsOrigin() );
+					pPlayerTarget->TakeDamage( info );
 				}
 				else if( FF_IsDispenser( pTarget ) )
 				{

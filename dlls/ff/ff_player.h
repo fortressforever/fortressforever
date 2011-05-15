@@ -32,7 +32,6 @@ class CFFDetpack;
 class CFFDispenser;
 class CFFSentryGun;
 class CFFManCannon;
-class CFFShield;
 
 class CFFGrenadeBase;
 
@@ -359,7 +358,6 @@ protected:
 	CNetworkHandle( CFFSentryGun, m_hSentryGun );
 	CNetworkHandle( CFFDetpack, m_hDetpack );
 	CNetworkHandle( CFFManCannon, m_hManCannon );
-	CNetworkHandle( CFFShield, m_hShield );
 	
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
@@ -391,9 +389,6 @@ public:
 	CFFDispenser *GetDispenser( void ) const;
 	CFFSentryGun *GetSentryGun( void ) const;
 	CFFManCannon *GetManCannon( void ) const;
-	//I keep shield accessors and mutators together -GreenMushy
-	CFFShield *GetShield( void ) const;
-	void SetShield( CFFShield* pShield ){ m_hShield = pShield; }
 	CFFBuildableObject *GetBuildable( int iBuildable ) const;
 	CFFWeaponBase* GetLastFFWeapon(){ return m_pLastWeapon; }
 	void SetLastFFWeapon( CFFWeaponBase* _pLastWeapon ){ m_pLastWeapon = _pLastWeapon; }
@@ -824,6 +819,8 @@ public:
 	// For shield blocking
 	void SetRiotShieldActive( bool _bActive ){ m_bRiotShieldActive = _bActive; }
 	bool IsRiotShieldActive(){ return m_bRiotShieldActive; }
+	bool IsDamageBlockedByShield( CTakeDamageInfo _info );
+	
 protected:
 	float m_flPipebombShotTime;
 	CNetworkVar( bool, m_bRiotShieldActive );

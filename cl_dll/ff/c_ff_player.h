@@ -31,7 +31,6 @@ class C_FFDetpack;
 class C_FFDispenser;
 class C_FFSentryGun;
 class C_FFManCannon;
-class C_FFShield;
 
 #define FF_BUILD_NONE		0
 #define FF_BUILD_DISPENSER	1
@@ -197,7 +196,6 @@ protected:
 	CNetworkHandle( C_FFSentryGun, m_hSentryGun );
 	CNetworkHandle( C_FFDetpack, m_hDetpack );
 	CNetworkHandle( C_FFManCannon, m_hManCannon );
-	CNetworkHandle( C_FFShield, m_hShield );
 
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
@@ -217,7 +215,6 @@ public:
 	C_FFDispenser *GetDispenser( void ) const;
 	C_FFSentryGun *GetSentryGun( void ) const;
 	C_FFManCannon *GetManCannon( void ) const;
-	C_FFShield *GetShield( void ) const;
 	C_FFBuildableObject *GetBuildable( int iBuildable ) const;
 	// End: Added by Mulchman for building objects and such
 

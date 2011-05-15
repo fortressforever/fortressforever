@@ -129,6 +129,9 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 				info.SetCustomKill(KILLTYPE_BACKSTAB);
 
+				//Adding the damage position for demoman shield blocks -GreenMushy
+				info.SetDamagePosition( traceHit.startpos );
+
 				pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 				ApplyMultiDamage();
 			}

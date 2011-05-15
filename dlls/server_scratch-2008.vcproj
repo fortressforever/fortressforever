@@ -4662,10 +4662,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_shield.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ff\ff_team.cpp"
 				>
 			</File>

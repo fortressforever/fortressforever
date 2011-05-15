@@ -60,6 +60,9 @@ public:
 	Vector			GetReportedPosition() const;
 	void			SetReportedPosition( const Vector &reportedPosition );
 
+	Vector			GetImpactPosition() const;
+	void			SetImpactPosition( const Vector &_vecImpactPosition );
+
 	int				GetDamageType() const;
 	void			SetDamageType( int bitsDamageType );
 	void			AddDamageType( int bitsDamageType );
@@ -86,11 +89,12 @@ private:
 	void			CopyDamageToBaseDamage();
 
 protected:
-	void			Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iKillType );
+	void			Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, const Vector &impactPosition, float flDamage, int bitsDamageType, int iKillType );
 
 	Vector			m_vecDamageForce;
 	Vector			m_vecDamagePosition;
 	Vector			m_vecReportedPosition;	// Position players are told damage is coming from
+	Vector			m_vecImpactPosition;	// Place where a trace hit
 	EHANDLE			m_hInflictor;
 	EHANDLE			m_hAttacker;
 	float			m_flDamage;
@@ -99,6 +103,7 @@ protected:
 	int				m_bitsDamageType;
 	int				m_iCustomKillType;
 	int				m_iAmmoType;			// AmmoType of the weapon used to cause this damage, if any
+
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -254,11 +259,20 @@ inline void CTakeDamageInfo::SetReportedPosition( const Vector &reportedPosition
 	m_vecReportedPosition = reportedPosition;
 }
 
+inline Vector CTakeDamageInfo::GetImpactPosition() const
+{
+	return m_vecImpactPosition;
+}
+
+inline void	CTakeDamageInfo::SetImpactPosition( const Vector &_vecImpactPosition )
+{
+	m_vecImpactPosition = _vecImpactPosition;
+}
+
 inline int CTakeDamageInfo::GetDamageType() const
 {
 	return m_bitsDamageType;
 }
-
 
 inline void CTakeDamageInfo::SetDamageType( int bitsDamageType )
 {

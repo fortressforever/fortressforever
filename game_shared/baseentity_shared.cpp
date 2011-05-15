@@ -1812,18 +1812,19 @@ void CBaseEntity::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	if ( m_takedamage )
 	{
 		AddMultiDamage( info, this );
-
-		int blood = BloodColor();
 		
-		if ( blood != DONT_BLEED )
-		{
-			// Fix blood showing for teammates when FF is off.
-			if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
-			{
-				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
-				TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
-			}			
-		}
+		// COMMENTING THIS BLOCK SO ALL BLOOD EFFECTS ARE IN OnTakeDamage() -GreenMushy
+		//int blood = BloodColor();
+		//
+		//if ( blood != DONT_BLEED )
+		//{
+		//	// Fix blood showing for teammates when FF is off.
+		//	if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
+		//	{
+		//		SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
+		//		TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
+		//	}			
+		//}
 	}
 }
 

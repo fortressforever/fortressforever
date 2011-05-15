@@ -23,6 +23,7 @@ BEGIN_SIMPLE_DATADESC( CTakeDamageInfo )
 	DEFINE_FIELD( m_vecDamageForce, FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecDamagePosition, FIELD_POSITION_VECTOR),
 	DEFINE_FIELD( m_vecReportedPosition, FIELD_POSITION_VECTOR),
+	DEFINE_FIELD( m_vecImpactPosition, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_hInflictor, FIELD_EHANDLE),
 	DEFINE_FIELD( m_hAttacker, FIELD_EHANDLE),
 	DEFINE_FIELD( m_flDamage, FIELD_FLOAT),
@@ -33,7 +34,7 @@ BEGIN_SIMPLE_DATADESC( CTakeDamageInfo )
 	DEFINE_FIELD( m_iAmmoType, FIELD_INTEGER),
 END_DATADESC()
 
-void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iKillType)
+void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, const Vector &impactPosition, float flDamage, int bitsDamageType, int iKillType)
 {
 	m_hInflictor = pInflictor;
 	if ( pAttacker )
@@ -56,12 +57,13 @@ void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, con
 	m_vecDamageForce = damageForce;
 	m_vecDamagePosition = damagePosition;
 	m_vecReportedPosition = reportedPosition;
+	m_vecImpactPosition = impactPosition;
 	m_iAmmoType = -1;
 }
 
 CTakeDamageInfo::CTakeDamageInfo()
 {
-	Init( NULL, NULL, vec3_origin, vec3_origin, vec3_origin, 0, 0, 0 );
+	Init( NULL, NULL, vec3_origin, vec3_origin, vec3_origin, vec3_origin, 0, 0, 0 );
 }
 
 
@@ -77,7 +79,7 @@ CTakeDamageInfo::CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacke
 
 void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType )
 {
-	Init( pInflictor, pAttacker, vec3_origin, vec3_origin, vec3_origin, flDamage, bitsDamageType, iKillType );
+	Init( pInflictor, pAttacker, vec3_origin, vec3_origin, vec3_origin, vec3_origin, flDamage, bitsDamageType, iKillType );
 }
 
 void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType, Vector *reportedPosition )
@@ -87,7 +89,7 @@ void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, cons
 	{
 		vecReported = *reportedPosition;
 	}
-	Init( pInflictor, pAttacker, damageForce, damagePosition, vecReported, flDamage, bitsDamageType, iKillType );
+	Init( pInflictor, pAttacker, damageForce, damagePosition, vecReported, vec3_origin, flDamage, bitsDamageType, iKillType );
 }
 
 //-----------------------------------------------------------------------------
@@ -164,7 +166,7 @@ CMultiDamage::CMultiDamage()
 void CMultiDamage::Init( CBaseEntity *pTarget, CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iKillType )
 {
 	m_hTarget = pTarget;
-	BaseClass::Init( pInflictor, pAttacker, damageForce, damagePosition, reportedPosition, flDamage, bitsDamageType, iKillType );
+	BaseClass::Init( pInflictor, pAttacker, damageForce, damagePosition, reportedPosition, vec3_origin, flDamage, bitsDamageType, iKillType );
 }
 
 //-----------------------------------------------------------------------------

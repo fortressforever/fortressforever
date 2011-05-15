@@ -37,6 +37,7 @@
 #include "gib.h"
 #include "omnibot_interface.h"
 #include "te_effect_dispatch.h"
+#include "IEffects.h"
 
 // added these so I could cast to check for grenades that are not derived from projectile base
 // Could probably do it more cleanly but I just went with what was already in place.  -> Defrag
@@ -123,8 +124,11 @@ ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED ,"When 
 ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_REPLICATED ,"When getting hit by a SG and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW_SG ffdev_dmgforfullslow_sg.GetFloat()
 
-//Shield convar to find the horizontal angle of a shield blocking radius
-ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "0 is 180 degree block. 1 is 0 degree block.  Choose a fraction in between those." );
+//Shield convars
+ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "32", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum distance from the demo needed for shield blocks to occur." );
+#define FFDEV_SHIELD_MIN_BLOCK_DIST ffdev_shield_min_block_dist.GetFloat()
+
+ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Dot product fraction.  0 is 180 degree block radius.  1 will be no block.  Find a fraction in between." );
 #define FFDEV_SHIELD_BLOCKING_ANGLE ffdev_shield_blocking_angle.GetFloat()
 
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
@@ -355,7 +359,6 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hSentryGun ) ),
 	SendPropEHandle( SENDINFO( m_hDetpack ) ),
 	SendPropEHandle( SENDINFO( m_hManCannon ) ),
-	SendPropEHandle( SENDINFO( m_hShield ) ),
 	SendPropBool( SENDINFO( m_bStaticBuilding ) ),
 	SendPropBool( SENDINFO( m_bBuilding ) ),
 	SendPropInt( SENDINFO( m_iCurBuild ), 3, SPROP_UNSIGNED ),
@@ -494,7 +497,6 @@ CFFPlayer::CFFPlayer()
 	m_hSentryGun = NULL;
 	m_hDetpack = NULL;
 	m_hManCannon = NULL;
-	m_hShield = NULL;
 	m_flBuildTime = 0.0f;
 
 	m_bRadioTagged = false;
@@ -850,29 +852,6 @@ void CFFPlayer::PostThink()
 
 		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 	}
-
-	//Demoman stuff
-	//if( GetClassSlot() == CLASS_DEMOMAN )
-	//{
-		//If the shield is valid
-		//if( m_hShield != NULL )
-		//{
-		//	//If the demoman is not equipped with a shield and the pointer is valid, delete it
-		//	if( GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_SHIELD )
-		//	{
-		//		DevMsg("Deleting Shield from ff_Player\n");
-		//		UTIL_Remove(m_hShield);
-		//		m_hShield = NULL;
-
-		//		//If the player is effected by the shield slow, remove it
-		//		if( IsSpeedEffectSet(SE_SHIELD) == true )
-		//		{
-		//			//Remove the effect that was put on earlier
-		//			RemoveSpeedEffect(SE_SHIELD);
-		//		}
-		//	}
-		//}
-	//}
 
 #endif // FF_BETA_TEST_COMPILE
 }
@@ -2067,14 +2046,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	// Detonate player's pipes
 	CFFProjectilePipebomb::DestroyAllPipes(this, true);
-
-	//Clean up the shield( when using the buildable mode )
-	if( m_hShield != NULL )
-	{
-		DevMsg("Removing shield on death\n");
-		UTIL_Remove(m_hShield);
-		m_hShield = NULL;
-	}
 
 	//Reset the shield boolean to false
 	m_bRiotShieldActive = false;
@@ -5236,41 +5207,13 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !IsAlive() )
 		return 0;
 
-	// check to see if the shield should block this incoming damage -GreenMushy
-	if( GetClassSlot() == CLASS_DEMOMAN && IsRiotShieldActive() == true )
+	// Demo blocked the damage with his shield?
+	if( IsDamageBlockedByShield( info ) == true )
 	{
-		//Get the damage source
-		Vector vDamageSource = info.GetReportedPosition();
+		g_pEffects->Sparks( info.GetDamagePosition(), 2, 2 );
+		UTIL_Smoke( info.GetDamagePosition(), random->RandomInt( 10, 15 ), 10 );
 
-		//Get the vector between the recipient and the damage origin
-		Vector vDisplacement = vDamageSource - GetAbsOrigin();
-
-		vDisplacement.z = 0; // for now just do x+y coordinates
-		vDisplacement.NormalizeInPlace();
-
-		//Get the direciton this player is blocking
-		Vector vFacing;
-		AngleVectors( GetLocalAngles(), &vFacing );
-		vFacing.z = 0; // for now just do x+y coordinates;
-		vFacing.NormalizeInPlace();
-
-		//See if the blocking direction is within the blocking boundary
-		float dotproduct = vFacing.Dot( vDisplacement ) ;
-		DevMsg( "Dot Product: %f\n", dotproduct );
-
-		if( dotproduct > FFDEV_SHIELD_BLOCKING_ANGLE )
-		{
-			DevMsg("Successful Shield Block!\n");
-
-			//Emit a blocking sound
-			EmitSound("Player.Shield_Block");
-			
-			//Viewpunch a little bit
-			ViewPunch(QAngle(random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f)));
-			
-			//Return out of the function, take no damage
-			return 0;
-		}
+		return 0;
 	}
 
 	// Reduce friendly fire damage across the board
@@ -5391,6 +5334,32 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// Early out if the base class took no damage
 	if ( !fTookDamage )
 		return 0;
+
+	// BLOOD CODE --->
+	int blood = BloodColor();
+	
+	if ( blood != DONT_BLEED )
+	{
+		// Fix blood showing for teammates when FF is off.
+		if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
+		{
+			Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
+			Vector vecOrigin = info.GetImpactPosition() - vecDir * 4;
+			
+			// Building an "empty" trace so we can use the tracebleed here -GreenMushy
+			trace_t tr;
+
+			float flMaxRange = MAX_TRACE_LENGTH;
+
+			VectorNormalize( vecDir );	
+			Vector vecEnd = info.GetDamagePosition() + ( vecDir * flMaxRange ); // max bullet range is 10000 units
+
+			UTIL_TraceLine( info.GetDamagePosition(), vecEnd, MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
+
+			SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
+			TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType() );
+		}			
+	}
 
 	// AfterShock - Reset sabotage timer on getting shot
 	SpyStopSabotaging();
@@ -6919,6 +6888,67 @@ bool CFFPlayer::HasItem(const char* itemname) const
 }
 
 //-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+// Description:  Checks if damage from a CTakeDamageInfo source is blocked by a shield or not
+//------------------------------------------------------------------------------------------
+bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
+{
+	// check to see if the shield should block this incoming damage -GreenMushy
+	if( IsRiotShieldActive() == true )
+	{
+		//Get the damage source
+		//Vector vDamageSource = info.GetDamagePosition();
+		//Vector vReportedDamageSource = info.GetReportedPosition();
+		Vector vDamageSource;
+		if( _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN1) || _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN2) )
+		{
+			vDamageSource = _info.GetDamagePosition();
+		}
+		else
+		{
+			vDamageSource = _info.GetAttacker()->GetAbsOrigin();
+		}
+
+		//Get the vector between the recipient and the damage origin
+		Vector vDisplacement = vDamageSource - GetAbsOrigin();
+
+		// Just print stuff to the console for no reasonv
+		DevMsg("info.GetDamagePosition() x: %f y: %f z: %f \nvDisplacement x: %f y: %f z: %f\n", _info.GetDamagePosition().x, _info.GetDamagePosition().y, _info.GetDamagePosition().z, vDisplacement.x, vDisplacement.y, vDisplacement.z);
+
+		//Only continue figuring out if the demo should block if it is above a minimum distance from the demo's origin
+		if( vDisplacement.Length() > FFDEV_SHIELD_MIN_BLOCK_DIST )
+		{
+			vDisplacement.z = 0; // for now just do x+y coordinates
+			vDisplacement.NormalizeInPlace();
+
+			//Get the direciton this player is blocking
+			Vector vFacing;
+			AngleVectors( GetLocalAngles(), &vFacing );
+			vFacing.z = 0; // for now just do x+y coordinates;
+			vFacing.NormalizeInPlace();
+
+			//See if the blocking direction is within the blocking boundary
+			float dotproduct = vFacing.Dot( vDisplacement );
+			DevMsg( "Dot Product to damage: %f\n", dotproduct );
+
+			if( dotproduct > FFDEV_SHIELD_BLOCKING_ANGLE )
+			{
+				DevMsg("Successful Shield Block!\n");
+
+				//Emit a blocking sound
+				EmitSound("Player.Shield_Block");
+				
+				//Viewpunch a little bit
+				ViewPunch(QAngle(random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f)));
+				
+				//Return out of the function, take no damage, (successful block)
+				return true;
+			}			
+		}
+	}
+	//the final return!
+	return false;
+}
 bool CFFPlayer::IsInNoBuild()
 {
 	Vector vecForward;

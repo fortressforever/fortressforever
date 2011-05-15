@@ -1446,20 +1446,21 @@ ConVar mp_prematch( "mp_prematch",
 			}
 			
 
-			// For the moment we'll play blood effects if its a teammate too so its consistant with other weapons
-			// NOT!  Adding no blood for teammates when FF is off. -> Defrag
-			if (pEntity->IsPlayer() && g_pGameRules->FCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
-			{
-				// Bug #0000539: Blood decals are projected onto shit
-				// (direction needed normalising)
-				Vector vecTraceDir = (tr.endpos - tr.startpos);
-				VectorNormalize(vecTraceDir);
+			// COMMENTING THIS BLOCK SO ALL BLOOD EFFECTS ARE IN OnTakeDamage() -GreenMushy
+			//// For the moment we'll play blood effects if its a teammate too so its consistant with other weapons
+			//// NOT!  Adding no blood for teammates when FF is off. -> Defrag
+			//if (pEntity->IsPlayer() && g_pGameRules->FCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
+			//{
+			//	// Bug #0000539: Blood decals are projected onto shit
+			//	// (direction needed normalising)
+			//	Vector vecTraceDir = (tr.endpos - tr.startpos);
+			//	VectorNormalize(vecTraceDir);
 
-				// Bug #0000168: Blood sprites for damage on players do not display
-				SpawnBlood(tr.endpos, vecTraceDir, pEntity->BloodColor(), adjustedInfo.GetDamage() * 3.0f);
+			//	// Bug #0000168: Blood sprites for damage on players do not display
+			//	SpawnBlood(tr.endpos, vecTraceDir, pEntity->BloodColor(), adjustedInfo.GetDamage() * 3.0f);
 
-				pEntity->TraceBleed(adjustedInfo.GetDamage(), vecTraceDir, &tr, adjustedInfo.GetDamageType());
-			}
+			//	pEntity->TraceBleed(adjustedInfo.GetDamage(), vecTraceDir, &tr, adjustedInfo.GetDamageType());
+			//}
 
 			// Now hit all triggers along the way that respond to damage... 
 			pEntity->TraceAttackToTriggers(adjustedInfo, vecSrc, tr.endpos, vecDirection);

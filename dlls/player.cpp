@@ -842,11 +842,11 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 		// <-- Mirv: No location damage please
 
 		// Fix blood showing for teammates when FF is off.
-		if ( g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
-		{
-			SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage());// a little surface blood.
-			TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
-		}
+		//if ( g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
+		//{
+		//	SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage());// a little surface blood.
+		//	TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
+		//}
 		
 		AddMultiDamage( info, this );
 	}

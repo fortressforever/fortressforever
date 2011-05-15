@@ -129,13 +129,6 @@ const char *g_pszFFDetpackSounds[ ] =
 	NULL
 };
 
-// Array of char *'s to shield models
-const char *g_pszFFShieldModels[ ] =
-{
-	FF_SHIELD_MODEL,
-	NULL
-};
-
 // Array of char *'s to dispenser models
 const char *g_pszFFManCannonModels[] =
 {
@@ -163,22 +156,6 @@ const char *g_pszFFManCannonSounds[] =
 
 ConVar ffdev_mancannon_combatcooldown( "ffdev_mancannon_combatcooldown", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
 
-//Distance in front of the player
-ConVar ffdev_shield_build_distance("ffdev_shield_build_distance", "-20", FCVAR_REPLICATED | FCVAR_NOTIFY );
-#define FF_BUILD_SHIELD_DIST	ffdev_shield_build_distance.GetFloat()
-
-//How high off the ground the shield should be
-ConVar ffdev_shield_build_height( "ffdev_shield_build_height", "24", FCVAR_REPLICATED | FCVAR_NOTIFY);
-#define FF_BUILD_SHIELD_HEIGHT	ffdev_shield_build_height.GetFloat()
-
-//What is the midpoint in this shield?
-ConVar ffdev_shield_build_center( "ffdev_shield_build_center", "6", FCVAR_REPLICATED | FCVAR_NOTIFY);
-#define FF_BUILD_SHIELD_CENTER ffdev_shield_build_center.GetFloat()
-
-//Allow vertical motion on the shield?
-ConVar ffdev_shield_vertical_motion( "ffdev_shield_vertical_motion", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
-#define FF_BUILD_SHIELD_VERTICAL_MOTION ffdev_shield_vertical_motion.GetBool()
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor - initializes a bunch of stuff and figures out if
 //			we can build here or not!
@@ -204,10 +181,6 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 		case FF_BUILD_SENTRYGUN: flBuildDist = FF_BUILD_SG_BUILD_DIST; flOffset = -22.0f; break;
 		case FF_BUILD_DETPACK: flBuildDist = FF_BUILD_DET_BUILD_DIST; break;
 		case FF_BUILD_MANCANNON: flBuildDist = FF_BUILD_MC_BUILD_DIST; break;
-		case FF_BUILD_SHIELD: 
-			flBuildDist = FF_BUILD_SHIELD_DIST; 
-			flOffset = FF_BUILD_SHIELD_HEIGHT; 
-			break;
 	}
 
 	// Player building the object
@@ -224,31 +197,16 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 	// Get some info from the player...
 	m_pPlayer->EyeVectors( &m_vecPlayerForward, &m_vecPlayerRight );
 
-	//Shield has a situation case here: Do i want it to move with the eye angles vertically?
-	if( iBuildObject == FF_BUILD_SHIELD )
-	{
-		//Only reset these if the bool is false to behave like other buildables
-		// true will skip over this and keep the vertical angles
-		if( FF_BUILD_SHIELD_VERTICAL_MOTION == false )
-		{
-			//Level off the vertical angles
-			m_vecPlayerForward.z = 0;
-			m_vecPlayerRight.z = 0;
-		}
-	}
-	//Level off vertical angles
-	else
-	{
-		m_vecPlayerForward.z = 0;
-		m_vecPlayerRight.z = 0;
-	}
+	// Level off
+	m_vecPlayerForward.z = 0;
+	m_vecPlayerRight.z = 0;
 
 	// Normalize
 	VectorNormalize( m_vecPlayerForward );
 	VectorNormalize( m_vecPlayerRight );
 
 	// Store player origin (offsetted)
-	m_vecPlayerOrigin = m_pPlayer->GetAbsOrigin() + ( m_vecPlayerForward * 16.0f ) + ( m_vecPlayerRight * FF_BUILD_SHIELD_CENTER) + Vector( 0, 0, flOffset );
+	m_vecPlayerOrigin = m_pPlayer->GetAbsOrigin() + ( m_vecPlayerForward * 16.0f ) + Vector( 0, 0, flOffset );
 
 	// Get a position in front of the player a certain distance & raise it up.
 	// This is the first position we'll try to build from (offsetted)
@@ -326,8 +284,8 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 	if( IsGeometryInTheWay() )
 		return;
 
-	// If we're dealing w/ a detpack, mancannon or shield then we're finished here
-	if( (m_iBuildObject == FF_BUILD_DETPACK) || (m_iBuildObject == FF_BUILD_MANCANNON) || (m_iBuildObject == FF_BUILD_SHIELD) )
+	// If we're dealing w/ a detpack, mancannon then we're finished here
+	if( (m_iBuildObject == FF_BUILD_DETPACK) || (m_iBuildObject == FF_BUILD_MANCANNON) )
 	{
 		m_BuildResult = BUILD_ALLOWED;
 		return;
@@ -350,7 +308,6 @@ bool CFFBuildableInfo::IsGeometryInTheWay( void )
 		case FF_BUILD_SENTRYGUN: vecMins = FF_SENTRYGUN_MINS; vecMaxs = FF_SENTRYGUN_MAXS; break;
 		case FF_BUILD_DETPACK:   vecMins = FF_DETPACK_MINS;   vecMaxs = FF_DETPACK_MAXS;   break;
 		case FF_BUILD_MANCANNON: vecMins = FF_MANCANNON_MINS; vecMaxs = FF_MANCANNON_MAXS; break;
-		case FF_BUILD_SHIELD: return false;
 	}
 
 	// We're going to do this test 3 times... building on an incline always kills us
