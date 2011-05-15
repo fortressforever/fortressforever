@@ -68,110 +68,110 @@
 // Debug visualization
 //ConVar	sg_debug( "ffdev_sg_debug", "1", FCVAR_CHEAT );
 //#define SG_DEBUG sg_debug.GetBool()
-//ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_REPLICATED );
+ConVar	sg_usepvs( "ffdev_sg_usepvs", "0", FCVAR_FF_FFDEV_REPLICATED );
 #define SG_USEPVS false // sg_usepvs.GetBool()
-//ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "5.5", FCVAR_REPLICATED );
-#define SG_TURNSPEED 5.5f //sg_turnspeed.GetFloat()
-//ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "4.0", FCVAR_REPLICATED );
-#define SG_PITCHSPEED 4.0f //sg_pitchspeed.GetFloat()
-//ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_REPLICATED );
-#define SG_RANGE 1050.0f // sg_range.GetFloat()
-//ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_REPLICATED );
-#define SG_RANGE_UNTARGET 1155.0f // sg_range_untarget.GetFloat()
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "5.5", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_TURNSPEED sg_turnspeed.GetFloat() // 5.5f
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "4.0", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_PITCHSPEED sg_pitchspeed.GetFloat() // 4.0f
+ConVar  sg_range( "ffdev_sg_range", "1050.0", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_RANGE sg_range.GetFloat() // 1050.0f
+ConVar  sg_range_untarget( "ffdev_sg_range_untarget", "1155.0", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_RANGE_UNTARGET sg_range_untarget.GetFloat() // 1155.0f
 
-//ConVar  sg_range_cloakmulti( "ffdev_sg_range_cloakmulti", "0.666", FCVAR_REPLICATED );
-#define SG_RANGE_CLOAKMULTI 0.666f // sg_range_cloakmulti.GetFloat()
+ConVar  sg_range_cloakmulti( "ffdev_sg_range_cloakmulti", "0.666", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_RANGE_CLOAKMULTI sg_range_cloakmulti.GetFloat() // 0.666f
 
-//ConVar  sg_cloaksonar_interval_near( "ffdev_sg_cloaksonar_interval_near", "2.02", FCVAR_REPLICATED );
-#define SG_CLOAKSONAR_INTERVAL_NEAR 2.02f // sg_cloaksonar_interval_near.GetFloat()
-//ConVar  sg_cloaksonar_interval_far( "ffdev_sg_cloaksonar_interval_far", "3.03", FCVAR_REPLICATED );
-#define SG_CLOAKSONAR_INTERVAL_FAR 3.03f // sg_cloaksonar_interval_far.GetFloat()
+ConVar  sg_cloaksonar_interval_near( "ffdev_sg_cloaksonar_interval_near", "2.02", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_CLOAKSONAR_INTERVAL_NEAR sg_cloaksonar_interval_near.GetFloat() // 2.02f
+ConVar  sg_cloaksonar_interval_far( "ffdev_sg_cloaksonar_interval_far", "3.03", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_CLOAKSONAR_INTERVAL_FAR sg_cloaksonar_interval_far.GetFloat() // 3.03f
 
-//ConVar  sg_cloaksonar_pitch_near( "ffdev_sg_cloaksonar_pitch_near", "92", FCVAR_REPLICATED );
-#define SG_CLOAKSONAR_PITCH_NEAR 92 // sg_cloaksonar_pitch_near.GetInt()
-//ConVar  sg_cloaksonar_pitch_far( "ffdev_sg_cloaksonar_pitch_far", "108", FCVAR_REPLICATED );
-#define SG_CLOAKSONAR_PITCH_FAR 108 // sg_cloaksonar_pitch_far.GetInt()
+ConVar  sg_cloaksonar_pitch_near( "ffdev_sg_cloaksonar_pitch_near", "92", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_CLOAKSONAR_PITCH_NEAR sg_cloaksonar_pitch_near.GetInt() // 92
+ConVar  sg_cloaksonar_pitch_far( "ffdev_sg_cloaksonar_pitch_far", "108", FCVAR_FF_FFDEV_REPLICATED );
+#define SG_CLOAKSONAR_PITCH_FAR sg_cloaksonar_pitch_far.GetInt() // 108
 
-//ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
-#define SG_EXPLOSIONDAMAGE_BASE 51.0f  // sg_explosiondamage_base.GetFloat()
-//ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "4.0", FCVAR_REPLICATED, "SG bullet push force");
-#define SG_BULLETPUSH 4.0f //ffdev_sg_bulletpush.GetFloat()
+ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_FF_FFDEV_REPLICATED, "Base damage for the SG explosion");
+#define SG_EXPLOSIONDAMAGE_BASE sg_explosiondamage_base.GetFloat() // 51.0f 
+ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "4.0", FCVAR_FF_FFDEV_REPLICATED, "SG bullet push force");
+#define SG_BULLETPUSH ffdev_sg_bulletpush.GetFloat() // 4.0f
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
-//ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "7.0", FCVAR_REPLICATED, "SG level 1 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL1 7.0f //ffdev_sg_groundpush_multiplier_lvl1.GetFloat()
-//ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "4.0", FCVAR_REPLICATED, "SG level 2 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL2 SG_GROUNDPUSH_MULTIPLIER_LVL1 //5.0f // ffdev_sg_groundpush_multiplier_lvl2.GetFloat()
-//ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_REPLICATED, "SG level 3 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL3 SG_GROUNDPUSH_MULTIPLIER_LVL1 //5.0f // ffdev_sg_groundpush_multiplier_lvl3.GetFloat()
-//ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "14", FCVAR_REPLICATED, "SG bullet damage");
-#define SG_BULLETDAMAGE 14.0f //ffdev_sg_bulletdamage.GetInt()
+ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "7.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 1 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL1 ffdev_sg_groundpush_multiplier_lvl1.GetFloat() // 7.0f
+ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "4.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 2 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL2 ffdev_sg_groundpush_multiplier_lvl2.GetFloat() // SG_GROUNDPUSH_MULTIPLIER_LVL1
+ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 3 ground bullet push multiplier");
+#define SG_GROUNDPUSH_MULTIPLIER_LVL3 ffdev_sg_groundpush_multiplier_lvl3.GetFloat() // SG_GROUNDPUSH_MULTIPLIER_LVL1
+ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "14", FCVAR_FF_FFDEV_REPLICATED, "SG bullet damage");
+#define SG_BULLETDAMAGE ffdev_sg_bulletdamage.GetInt() // 14.0f
 
 // AfterShock; These values will be rounded by the ActiveThink time (at time of writing 0.01), so 0.125 = 0.13
-//ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG time between shots");
+ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_FF_FFDEV_REPLICATED, "Level 1 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL1 0.2f //sg_shotcycletime_lvl1.GetFloat()
-//ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.129", FCVAR_REPLICATED, "Level 2 SG time between shots");
+ConVar sg_shotcycletime_lvl2("ffdev_sg_shotcycletime_lvl2", "0.129", FCVAR_FF_FFDEV_REPLICATED, "Level 2 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL2 0.129f //sg_shotcycletime_lvl2.GetFloat()
-//ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_REPLICATED, "Level 3 SG time between shots");
+ConVar sg_shotcycletime_lvl3("ffdev_sg_shotcycletime_lvl3", "0.1", FCVAR_FF_FFDEV_REPLICATED, "Level 3 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL3 0.1f //sg_shotcycletime_lvl3.GetFloat()
 
-//ConVar sg_warningshots_delay("ffdev_sg_warningshots_delay", "0.2", FCVAR_REPLICATED, "Time between warning shots");
+//ConVar sg_warningshots_delay("ffdev_sg_warningshots_delay", "0.2", FCVAR_FF_FFDEV_REPLICATED, "Time between warning shots");
 //#define SG_WARNINGSHOTS_DELAY sg_warningshots_delay.GetFloat()
-//ConVar sg_warningshots_angle("ffdev_sg_warningshots_angle", "0.985", FCVAR_REPLICATED, "Dotproduct angle where SG will start firing warning shots. 5deg=0.996, 10deg=0.985");
+//ConVar sg_warningshots_angle("ffdev_sg_warningshots_angle", "0.985", FCVAR_FF_FFDEV_REPLICATED, "Dotproduct angle where SG will start firing warning shots. 5deg=0.996, 10deg=0.985");
 //#define SG_WARNINGSHOTS_ANGLE sg_warningshots_angle.GetFloat()
-//ConVar sg_shoot_angle("ffdev_sg_shoot_angle", "30.0", FCVAR_REPLICATED, "Angle where SG will start firing.");
+//ConVar sg_shoot_angle("ffdev_sg_shoot_angle", "30.0", FCVAR_FF_FFDEV_REPLICATED, "Angle where SG will start firing.");
 //#define SG_SHOOT_ANGLE sg_shoot_angle.GetFloat()
-//ConVar sg_shoot_angle_distmult("ffdev_sg_shoot_angle_distmult", "0.008", FCVAR_REPLICATED, "The angle required to shoot the target is multiplied by (distance to target * this)");
+//ConVar sg_shoot_angle_distmult("ffdev_sg_shoot_angle_distmult", "0.008", FCVAR_FF_FFDEV_REPLICATED, "The angle required to shoot the target is multiplied by (distance to target * this)");
 //#define SG_SHOOT_ANGLE_DISTMULT sg_shoot_angle_distmult.GetFloat()
 
 
-//ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_REPLICATED, "Level 1 SG health");
-#define SG_HEALTH_LEVEL1 160 // sg_health_lvl1.GetInt()
-//ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_REPLICATED, "Level 2 SG health");
-#define SG_HEALTH_LEVEL2 180 // sg_health_lvl2.GetInt()
-//ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_REPLICATED, "Level 3 SG health");
-#define SG_HEALTH_LEVEL3 200 // sg_health_lvl3.GetInt()
+ConVar sg_health_lvl1("ffdev_sg_health_lvl1", "145", FCVAR_FF_FFDEV_REPLICATED, "Level 1 SG health");
+#define SG_HEALTH_LEVEL1 sg_health_lvl1.GetInt() // 160
+ConVar sg_health_lvl2("ffdev_sg_health_lvl2", "180", FCVAR_FF_FFDEV_REPLICATED, "Level 2 SG health");
+#define SG_HEALTH_LEVEL2 sg_health_lvl2.GetInt() // 180
+ConVar sg_health_lvl3("ffdev_sg_health_lvl3", "200", FCVAR_FF_FFDEV_REPLICATED, "Level 3 SG health");
+#define SG_HEALTH_LEVEL3 sg_health_lvl3.GetInt() // 200
 
-//ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_REPLICATED, "Level 1 SG lock on time");
-#define SG_LOCKONTIME_LVL1 0.2f //sg_lockontime_lvl1.GetFloat()
-//ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.20", FCVAR_REPLICATED, "Level 2 SG lock on time");
-#define SG_LOCKONTIME_LVL2 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl2.GetFloat()
-//ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, "Level 3 SG lock on time");
-#define SG_LOCKONTIME_LVL3 SG_LOCKONTIME_LVL1 //sg_lockontime_lvl3.GetFloat()
+ConVar sg_lockontime_lvl1("ffdev_sg_lockontime_lvl1", "0.20", FCVAR_FF_FFDEV_REPLICATED, "Level 1 SG lock on time");
+#define SG_LOCKONTIME_LVL1 sg_lockontime_lvl1.GetFloat() // 0.2f
+ConVar sg_lockontime_lvl2("ffdev_sg_lockontime_lvl2", "0.20", FCVAR_FF_FFDEV_REPLICATED, "Level 2 SG lock on time");
+#define SG_LOCKONTIME_LVL2 sg_lockontime_lvl2.GetFloat() // SG_LOCKONTIME_LVL1
+ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_FF_FFDEV_REPLICATED, "Level 3 SG lock on time");
+#define SG_LOCKONTIME_LVL3 sg_lockontime_lvl3.GetFloat() // SG_LOCKONTIME_LVL1
 
-//ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_REPLICATED, "% of player speed to lag behind");
+//ConVar sg_lagbehindmul("ffdev_sg_lagbehindmul", "10", FCVAR_FF_FFDEV_REPLICATED, "% of player speed to lag behind");
 //#define SG_LAGBEHINDMUL sg_lagbehindmul.GetFloat()
 
-//ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.0", FCVAR_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
+//ConVar sg_timetoreachfullturnspeed("ffdev_sg_timetoreachfullturnspeed", "0.0", FCVAR_FF_FFDEV_REPLICATED, "How many seconds should the SG take to accelerate up to full turnspeed when changing from idle to locked");
 //#define SG_TIMETOREACHFULLTURNSPEED sg_timetoreachfullturnspeed.GetFloat()
-//ConVar sg_timetoreachfullfirespeed("ffdev_sg_timetoreachfullfirespeed", "0.0", FCVAR_REPLICATED, "How many seconds should the SG take to reach full fire rate when changing from idle to locked");
+//ConVar sg_timetoreachfullfirespeed("ffdev_sg_timetoreachfullfirespeed", "0.0", FCVAR_FF_FFDEV_REPLICATED, "How many seconds should the SG take to reach full fire rate when changing from idle to locked");
 //#define SG_TIMETOREACHFULLFIRESPEED sg_timetoreachfullfirespeed.GetFloat()
-//ConVar sg_lowfirespeed("ffdev_sg_lowfirespeed", "0.1", FCVAR_REPLICATED, "This time is added to normal cycletime at beginning of a lock when it ramps up");
+//ConVar sg_lowfirespeed("ffdev_sg_lowfirespeed", "0.1", FCVAR_FF_FFDEV_REPLICATED, "This time is added to normal cycletime at beginning of a lock when it ramps up");
 //#define SG_LOWFIRESPEED sg_lowfirespeed.GetFloat()
 
-//ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
-#define SG_RETURNTOIDLETIME 1.0f //sg_returntoidletime.GetFloat()
-//ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.1", FCVAR_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
-#define SG_TURNSPEED_AFTERLOCK 0.1f //sg_returntoidlespeed.GetFloat()
+ConVar sg_returntoidletime("ffdev_sg_returntoidletime", "1.0", FCVAR_FF_FFDEV_REPLICATED, "How many seconds should the SG stay focused after losing a lock, in case the enemy re-appears");
+#define SG_RETURNTOIDLETIME sg_returntoidletime.GetFloat() // 1.0f
+ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.1", FCVAR_FF_FFDEV_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
+#define SG_TURNSPEED_AFTERLOCK sg_returntoidlespeed.GetFloat() // 0.1f
 
-//ConVar sg_empdmg_base("ffdev_sg_empdmg_base", "100", FCVAR_REPLICATED, "Base damage a sentry takes from an emp.");
-#define SG_EMPDMG_BASE 100.0f // sg_empdmg_base.GetFloat()
-//ConVar sg_empdmg_shells_multi("ffdev_sg_empdmg_shells_multi", "0.5", FCVAR_REPLICATED, "Base emp damage plus the sentry's shell count times this");
-#define SG_EMPDMG_SHELLS_MULTI 0.5f // sg_empdmg_shells_multi.GetFloat()
-//ConVar sg_empdmg_rockets_multi("ffdev_sg_empdmg_rockets_multi", "0.9", FCVAR_REPLICATED, "Base emp damage plus the sentry's rocket count times this");
-#define SG_EMPDMG_ROCKETS_MULTI 0.9f // sg_empdmg_rockets_multi.GetFloat()
+ConVar sg_empdmg_base("ffdev_sg_empdmg_base", "100", FCVAR_FF_FFDEV_REPLICATED, "Base damage a sentry takes from an emp.");
+#define SG_EMPDMG_BASE sg_empdmg_base.GetFloat() // 100.0f
+ConVar sg_empdmg_shells_multi("ffdev_sg_empdmg_shells_multi", "0.5", FCVAR_FF_FFDEV_REPLICATED, "Base emp damage plus the sentry's shell count times this");
+#define SG_EMPDMG_SHELLS_MULTI sg_empdmg_shells_multi.GetFloat() // 0.5f
+ConVar sg_empdmg_rockets_multi("ffdev_sg_empdmg_rockets_multi", "0.9", FCVAR_FF_FFDEV_REPLICATED, "Base emp damage plus the sentry's rocket count times this");
+#define SG_EMPDMG_ROCKETS_MULTI sg_empdmg_rockets_multi.GetFloat() // 0.9f
 
-//ConVar sg_acknowledge_sabotage_delay("ffdev_sg_acknowledge_sabotage_delay", "2.5", FCVAR_REPLICATED, "Sentry won't spot a maliciously sabotaged sentry for this long");
-#define SG_ACKNOWLEDGE_SABOTAGE_DELAY 2.5f // sg_acknowledge_sabotage_delay.GetFloat()
+ConVar sg_acknowledge_sabotage_delay("ffdev_sg_acknowledge_sabotage_delay", "2.5", FCVAR_FF_FFDEV_REPLICATED, "Sentry won't spot a maliciously sabotaged sentry for this long");
+#define SG_ACKNOWLEDGE_SABOTAGE_DELAY sg_acknowledge_sabotage_delay.GetFloat() // 2.5f
 
 // caes: limit angular acceleration of SG
-//ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.75", FCVAR_REPLICATED, "Maximum angular acceleration of SG in yaw");
-#define SG_ANGULAR_ACCEL_YAW 0.75f //sg_accel_yaw.GetFloat()
-//ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "1.5", FCVAR_REPLICATED, "Maximum angular acceleration of SG in pitch");
-#define SG_ANGULAR_ACCEL_PITCH 1.5f //sg_accel_pitch.GetFloat()
-//ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.008", FCVAR_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
-#define SG_ACCELDISTANCEMULT 0.008f //sg_accel_distmult.GetFloat()
-//ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
-#define SG_ACCELFRICTIONMULT 2.0f //sg_accel_fricmult.GetFloat()
+ConVar sg_accel_yaw("ffdev_sg_accel_yaw", "0.75", FCVAR_FF_FFDEV_REPLICATED, "Maximum angular acceleration of SG in yaw");
+#define SG_ANGULAR_ACCEL_YAW sg_accel_yaw.GetFloat() // 0.75f
+ConVar sg_accel_pitch("ffdev_sg_accel_pitch", "1.5", FCVAR_FF_FFDEV_REPLICATED, "Maximum angular acceleration of SG in pitch");
+#define SG_ANGULAR_ACCEL_PITCH sg_accel_pitch.GetFloat() // 1.5f
+ConVar sg_accel_distmult("ffdev_sg_accel_distmult", "0.008", FCVAR_FF_FFDEV_REPLICATED, "Multiplier of distance taken into account on turn accel (smaller value makes SG better at tracking 'weaving' ppl)");
+#define SG_ACCELDISTANCEMULT sg_accel_distmult.GetFloat() // 0.008f
+ConVar sg_accel_fricmult("ffdev_sg_accel_fricmult", "2.0", FCVAR_FF_FFDEV_REPLICATED, "Multiplier of maximum angular acceleration when slowing down");
+#define SG_ACCELFRICTIONMULT sg_accel_fricmult.GetFloat() // 2.0f
 // caes
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
