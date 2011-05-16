@@ -169,6 +169,7 @@ void CFFDetpack::GoLive( void )
 
 	UserMessageBegin(user, "DetpackMsg");
 		WRITE_FLOAT(m_flDetonateTime);
+		WRITE_BYTE(m_iFuseTime);
 	MessageEnd();
 
 	//DevMsg( "[Detpack] Next think in: %f seconds\n", flCurTime + m_flThinkTime );
