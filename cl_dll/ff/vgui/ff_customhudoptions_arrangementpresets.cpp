@@ -7,7 +7,8 @@
 #define QUANTITYPANELFONTSIZES 10
 #define QUANTITYBARICONSIZES 15
 
-#include "ff_customhudoptions_assignpresets.h"
+#include "ff_customhudoptions.h"
+
 extern CFFCustomHudAssignPresets *g_AP;
 
 namespace vgui
@@ -89,7 +90,13 @@ namespace vgui
 		
 		LoadControlSettings("resource/ui/FFOptionsSubCustomHudArrangementPresets.res");
 	}
-
+	
+	void CFFCustomHudArrangementPresets::ActivatePresetPage()
+	{
+		KeyValues *kvAction = new KeyValues("ActivateArrangementPage");
+		PostActionSignal ( kvAction );
+	}
+	
 	//-----------------------------------------------------------------------------
 	// Purpose: Tells the assignment class that this preset class is loaded
 	//-----------------------------------------------------------------------------	
@@ -111,17 +118,17 @@ namespace vgui
 		kvTemp->SetInt("itemsY", kvPreset->GetInt("itemsY", 20));
 		kvTemp->SetInt("showHeaderText", kvPreset->GetInt("showHeaderText", 1));
 		kvTemp->SetInt("headerTextShadow", kvPreset->GetInt("headerTextShadow", 0));
-		kvTemp->SetInt("headerTextSize", kvPreset->GetInt("headerTextSize", 3) + 1);
+		kvTemp->SetInt("headerTextSize", kvPreset->GetInt("headerTextSize", 3));
 		kvTemp->SetInt("headerTextX", kvPreset->GetInt("headerTextX", 20));
 		kvTemp->SetInt("headerTextY", kvPreset->GetInt("headerTextY", 7));
 		kvTemp->SetInt("showHeaderIcon", kvPreset->GetInt("showHeaderIcon", 1));
 		kvTemp->SetInt("headerIconShadow", kvPreset->GetInt("headerIconShadow", 0));
-		kvTemp->SetInt("headerIconSize", kvPreset->GetInt("headerIconSize", 3) + 1);
+		kvTemp->SetInt("headerIconSize", kvPreset->GetInt("headerIconSize", 3));
 		kvTemp->SetInt("headerIconX", kvPreset->GetInt("headerIconX", 3));
 		kvTemp->SetInt("headerIconY", kvPreset->GetInt("headerIconY", 3));
 		kvTemp->SetInt("showText", kvPreset->GetInt("showText", 1));
 		kvTemp->SetInt("textShadow", kvPreset->GetInt("textShadow", 0));
-		kvTemp->SetInt("textSize", kvPreset->GetInt("textSize", 3) + 1);
+		kvTemp->SetInt("textSize", kvPreset->GetInt("textSize", 3));
 		kvTemp->SetInt("textX", kvPreset->GetInt("textX", 25));
 		kvTemp->SetInt("textY", kvPreset->GetInt("textY", 20));
 		kvTemp->SetInt("showPanel", kvPreset->GetInt("showPanel", 1));

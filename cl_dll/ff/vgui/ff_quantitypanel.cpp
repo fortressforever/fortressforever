@@ -27,7 +27,7 @@ extern CFFCustomHudAssignPresets *g_AP;
 
 extern ConVar cl_teamcolourhud;
 
-#define BARUPDATE_WAITTIME 2 //2 seconds
+#define BARUPDATE_WAITTIME 1 //1 second
 
 namespace vgui
 {
@@ -66,7 +66,7 @@ namespace vgui
 
 		m_flCheckUpdateFlagTime = -1;
 	}
-
+	
 	void FFQuantityPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 	{
 		vgui::HScheme QuantityBarScheme = vgui::scheme()->LoadSchemeFromFile("resource/QuantityPanelScheme.res", "QuantityPanelScheme");
@@ -79,7 +79,7 @@ namespace vgui
 		m_ColorHeaderIcon = GetSchemeColor("HeaderIcon", qbScheme);
 		m_ColorText = GetSchemeColor("Text", qbScheme);
 		m_ColorText = GetSchemeColor("Border", qbScheme);
-				
+		
 		SetBgColor(m_ColorBackground);
 		SetPaintBackgroundEnabled(true);
 		SetPaintBackgroundType(2);
@@ -166,6 +166,33 @@ namespace vgui
 		m_bAddToHud = true;
 	}
 
+	void FFQuantityPanel::AddBooleanOption(KeyValues* kvMessage, const char *pszName, const char *pszText)
+	{
+		KeyValues *kv = new KeyValues("Boolean");
+		kv->SetString("name", pszName);
+		//TODO: localise "text" first
+		kv->SetString("text", pszText);
+		kvMessage->AddSubKey(kv);
+	}
+
+
+	void FFQuantityPanel::AddComboOption(KeyValues* kvMessage, const char *pszName, const char *pszText, KeyValues* kvOptions)
+	{
+		KeyValues *kv = new KeyValues("ComboBox");
+		kv->SetString("name", pszName);
+		//TODO: localise "text" first
+		kv->SetString("text", pszText);
+		kv->AddSubKey(kvOptions);
+		kvMessage->AddSubKey(kv);
+	}
+
+	/*
+	KeyValues* FFQuantityPanel::AddPanelSpecificOptions(KeyValues *kvPanelSpecificOptions)
+	{
+		return NULL;
+	}
+	*/
+
 	Color FFQuantityPanel::GetTeamColor()
 	{
 		C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
@@ -173,7 +200,7 @@ namespace vgui
 		return g_PR->GetTeamColor( pPlayer->GetTeamNumber() );
 
 	}
-
+	
 	void FFQuantityPanel::SetTeamColor(Color teamColor)
 	{
 		if(m_ColorTeam != teamColor)
@@ -201,6 +228,7 @@ namespace vgui
 					kv->SetString("selfText", m_szSelfText);
 					kv->SetString("parentName", m_szParentName);
 					kv->SetString("parentText", m_szParentText);
+					//kv->AddSubKey(AddPanelSpecificOptions(new KeyValues("PanelSpecificOptions")));
 					kv->SetPtr("panel", this);
 					PostMessage(g_AP, kv);
 					m_bAddToHudSent = true;
@@ -301,7 +329,7 @@ namespace vgui
 						return;
 				}
 			}
-
+			
 			//if we got here then they have all been updated
 			for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
 			{
@@ -322,13 +350,44 @@ namespace vgui
 		int iRow = 0;
 		int iColumn = 0;
 		
-		int m_iRowHeight[] = {0,0,0,0,0,0};
-		int m_iColumnWidth[] = {0,0,0,0,0,0};
-		int m_iColumnOffset[] = {0,0,0,0,0,0};
-		int m_iRowOffset[] = {0,0,0,0,0,0};	
+		int iSkipFromIndex = m_DarQuantityBars.GetCount();
+		int* m_iRowHeight = new int[iSkipFromIndex];// = {0,0,0,0,0,0};
+		int* m_iColumnWidth = new int[iSkipFromIndex];// = {0,0,0,0,0,0};
+		int* m_iColumnOffset = new int[iSkipFromIndex];// = {0,0,0,0,0,0};
+		int* m_iRowOffset = new int[iSkipFromIndex];// = {0,0,0,0,0,0};	
+		int iCountVisible = 0;
 
 		for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
 		{
+			m_iColumnOffset[i] = 0;
+			m_iColumnWidth[i] = 0;
+			m_iRowOffset[i] = 0;
+			m_iRowHeight[i] = 0;
+
+			if(!m_DarQuantityBars[i]->IsVisible())
+			{
+				if(i > 0 && iSkipFromIndex == m_DarQuantityBars.GetCount())
+					iSkipFromIndex = i;
+			}
+			else
+			{
+				iCountVisible++;
+				iSkipFromIndex = m_DarQuantityBars.GetCount();
+			}
+		}
+
+		if(iCountVisible == 0)
+		//if they're all invisible
+		{
+			//don't skip!
+			iSkipFromIndex = m_DarQuantityBars.GetCount();
+		}
+
+		for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
+		{
+			if(i >= iSkipFromIndex)
+				continue;
+
 			int iWidth, iHeight, iOffsetX, iOffsetY;
 			m_DarQuantityBars[i]->GetPanelPositioningData(iWidth, iHeight, iOffsetX, iOffsetY);
 
@@ -358,6 +417,9 @@ namespace vgui
 
 		for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
 		{
+			if(i >= iSkipFromIndex)
+				continue;
+
 			int iPosX, iPosY;
 	
 			iPosX = (m_iItemPositionX + iColumnWidths + iColumn * m_iItemMarginHorizontal) * m_flScale;
@@ -379,11 +441,13 @@ namespace vgui
 				}
 			}
 		}
-
+		
 		//now we can calculate the overall size of the quantity panel for automatic resizing!
-		for(;iColumn < ( m_DarQuantityBars.GetCount() < m_iItemColumns ? m_DarQuantityBars.GetCount() : m_iItemColumns );)
-		//make sure its calculated from the last (used) column incase we started a new row
+		for(int i=0;iColumn < ( m_DarQuantityBars.GetCount() < m_iItemColumns ? m_DarQuantityBars.GetCount() : m_iItemColumns );++i)
+		{
+			//make sure its calculated from the last (used) column incase we started a new row
 			iColumnWidths += m_iColumnWidth[iColumn++];
+		}
 		//include the height of the row
 		iRowHeights += m_iRowHeight[iRow++];
 
@@ -403,16 +467,15 @@ namespace vgui
 		bool HeaderIconTop = false;
 
 		if( m_iHeaderTextX < m_iItemPositionX || m_iHeaderIconX < m_iItemPositionX )
-			if(m_iHeaderTextX < m_iHeaderIconX && m_bShowHeaderText)
+			if( m_iHeaderTextX < m_iHeaderIconX && m_bShowHeaderText || m_bShowHeaderText && !m_bShowHeaderIcon  )
 				HeaderTextLeft = true;
-			else if(m_bShowHeaderIcon)
+			else if( m_bShowHeaderIcon )
 				HeaderIconLeft = true;
 		if( m_iHeaderTextY < m_iItemPositionY || m_iHeaderIconY < m_iItemPositionY )
-			if(m_iHeaderTextY < m_iHeaderIconY && m_bShowHeaderText)
+			if( m_iHeaderTextY < m_iHeaderIconY && m_bShowHeaderText || m_bShowHeaderText && !m_bShowHeaderIcon )
 				HeaderTextTop = true;
-			else if(m_bShowHeaderIcon)
+			else if( m_bShowHeaderIcon )
 				HeaderIconTop = true;
-	
 
 		if( (m_iHeaderTextX + m_iHeaderTextWidth) > iX1 && m_bShowHeaderText || (m_iHeaderIconX + m_iHeaderIconWidth) > iX1 && m_bShowHeaderIcon )
 		//if header text or header icon is furthest right
@@ -457,10 +520,10 @@ namespace vgui
 				iX1 = iX1 + m_iItemPositionX; //then use the xpadding of the bars
 		}
 
-			/***************************/
-			/***************************/
-			/***************************/
-			/***************************/
+		/***************************/
+		/***************************/
+		/***************************/
+		/***************************/
 
 		if( (m_iHeaderTextY + m_iHeaderTextHeight) > iY1 && m_bShowHeaderText || (m_iHeaderIconY + m_iHeaderIconHeight) > iY1 && m_bShowHeaderIcon )
 		//if header text or header icon is furthest bottom
@@ -546,6 +609,7 @@ namespace vgui
 		if(m_iHeaderTextSize != iSize)
 		{
 			m_iHeaderTextSize = iSize;
+			vgui::surface()->GetTextSize(m_hfHeaderText[m_iHeaderTextSize*3 + 2], m_wszHeaderText, m_iHeaderTextWidth, m_iHeaderTextHeight);
 			if(bUpdateQBPositions)
 				UpdateQBPositions();
 		}
@@ -642,12 +706,16 @@ namespace vgui
 		if(bUpdateQBPositions)
 			UpdateQBPositions();
 	}
-
-
 	
-	void FFQuantityPanel::OnStyleDataRecieved( KeyValues *kvStyleData )
+	void FFQuantityPanel::ApplyStyleData( KeyValues *kvStyleData, bool useDefaults )
 	{
-		KeyValues* kvDefaultStyleData = GetDefaultStyleData();	
+		KeyValues* kvDefaultStyleData;
+
+		if(useDefaults)
+			kvDefaultStyleData = GetDefaultStyleData();	
+		else
+			kvDefaultStyleData = new KeyValues("styleData");
+
 		bool bUpdateQBPositions = false;
 
 		int iX = kvStyleData->GetInt("x", kvDefaultStyleData->GetInt("x", -1));
@@ -806,17 +874,36 @@ namespace vgui
 			UpdateQBPositions();
 	}
 
+	void FFQuantityPanel::OnStyleDataRecieved( KeyValues *kvStyleData )
+	{
+		ApplyStyleData( kvStyleData );
+	}
+
 	void FFQuantityPanel::OnChildDimentionsChanged( KeyValues *data )
 	{
 		if(!m_bCheckUpdates)
 			m_bCheckUpdates = true;
 	}
+	void FFQuantityPanel::OnDefaultStyleDataRequested( KeyValues *data )
+	{
+		g_AP->CreatePresetFromPanelDefault(this->GetDefaultStyleData());
+	}
 
-	FFQuantityBar* FFQuantityPanel::AddChild( const char *pElementName )
+	FFQuantityBar* FFQuantityPanel::AddItem( const char *pElementName )
 	{
 		FFQuantityBar* newQBar = new FFQuantityBar(this, pElementName); 
 		m_DarQuantityBars.AddElement(newQBar);
 
 		return newQBar;
+	}
+	void FFQuantityPanel::HideItem( FFQuantityBar* qBar )
+	{
+		qBar->SetVisible(false);
+		UpdateQBPositions();
+	}
+	void FFQuantityPanel::ShowItem( FFQuantityBar* qBar )
+	{
+		qBar->SetVisible(true);
+		UpdateQBPositions();
 	}
 }

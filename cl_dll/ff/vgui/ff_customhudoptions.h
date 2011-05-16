@@ -29,13 +29,25 @@ public:
 	void Apply();
 	void Load();
 	void Reset();
+	
+	void SetActivePage(Panel *page);
+
+	void ActivatePositionPresetPage();
+	void ActivateArrangementPresetPage();
+	void ActivateStylePresetPage();
 
 private:
+	MESSAGE_FUNC_PARAMS( OnActivatePositionPage, "ActivatePositionPage", data );
+	MESSAGE_FUNC_PARAMS( OnActivateArrangmentPage, "ActivateArrangementPage", data );
+	MESSAGE_FUNC_PARAMS( OnActivateStylePage, "ActivateStylePage", data );
+	MESSAGE_FUNC_PARAMS( OnActivatePage, "ActivatePage", data );
+	
+
 	void UpdateSliders();
 
 	PropertySheet					*m_pPropertyPages;
 	CFFCustomHudAssignPresets		*m_pAssignPresets;
-	CFFCustomHudPositionPresets	*m_pPositionPresets;
+	CFFCustomHudPositionPresets		*m_pPositionPresets;
 	CFFCustomHudArrangementPresets	*m_pArrangementPresets;
 	CFFCustomHudStylePresets		*m_pStylePresets;
 };

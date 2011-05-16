@@ -10,6 +10,7 @@
 *********************************************************************/
 
 #include "cbase.h"
+#include "ff_customhudoptions.h"
 #include "ff_optionspresetpage.h"
 
 #include "filesystem.h"
@@ -60,24 +61,27 @@ namespace vgui {
 		if(kvPresets->GetFirstSubKey() == NULL)
 		//if no presets were in the file (or file not found)
 		{
-			KeyValues *kvPreset = new KeyValues("global");
+			KeyValues *kvPreset = RemoveNonEssentialValues(new KeyValues("global"));
 			//use RemoveNonEssentialValues to remove/add keys using defaults
-			m_pPresets->AddItem("#GameUI_Global", RemoveNonEssentialValues(new KeyValues("global")));
+			m_pPresets->AddItem("#GameUI_Global", kvPreset);
+			kvPreset->deleteThis();
 		}
 		else
 		//if presets exist
 		{
 			for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
 			{
+				KeyValues *kvCleanPreset = RemoveNonEssentialValues(kvPreset);
 				//use RemoveNonEssentialValues to remove/add keys using defaults
 				if(Q_stricmp(kvPreset->GetName(), "global") == 0)
 				{
-					m_pPresets->AddItem("#GameUI_Global", RemoveNonEssentialValues(kvPreset)); 
+					m_pPresets->AddItem("#GameUI_Global", kvCleanPreset); 
 				}
 				else
 				{
-					m_pPresets->AddItem(kvPreset->GetName(), RemoveNonEssentialValues(kvPreset));
+					m_pPresets->AddItem(kvPreset->GetName(), kvCleanPreset);
 				}
+				kvCleanPreset->deleteThis();
 			}
 		}
 		
@@ -258,32 +262,58 @@ namespace vgui {
 			m_kvChanges->AddSubKey(kvCommand);
 		}
 		else
-		{			
+		{
 			KeyValues *kvPreset = new KeyValues(data->GetString("text"));
 			if(m_bCopy)
+			//copy
 			{	
 				//copy from current
 				m_pPresets->GetActiveItemUserData()->CopySubkeys(kvPreset);
 			}
 			else
+			//new
 			{
-				//copy from global
-				m_pPresets->GetItemUserData(0)->CopySubkeys(kvPreset);
+				if(m_kvPanelDefaultCopy)
+				{
+					//copy from panel
+					m_kvPanelDefaultCopy->CopySubkeys(kvPreset);
+					m_kvPanelDefaultCopy->deleteThis();
+					m_kvPanelDefaultCopy = NULL;
+				}
+				else
+					//copy from global
+					m_pPresets->GetItemUserData(0)->CopySubkeys(kvPreset);
 			}
-			
-			//add the new item to the presets dropdown
-			m_pPresets->AddItem(kvPreset->GetName(), kvPreset);
-			m_pPresets->ActivateItemByRow(m_pPresets->GetItemCount() - 1);
-			kvPreset->deleteThis();
-
-			int iCount = m_kvChanges->GetInt("Count",0);
-			const char* szCount = m_kvChanges->GetString("Count","0");
-			//the idea is that the current count key doesn't exist and gets created
-			KeyValues *kvCommand = new KeyValues(szCount);
-			m_kvChanges->SetInt("Count",iCount+1);
-			kvCommand->SetString("New", data->GetString("text"));
-			m_kvChanges->AddSubKey(kvCommand);
+			AddPreset(kvPreset);
 		}
+	}
+	
+	void CFFOptionsPresetPage::AddPreset(KeyValues *kvPreset)
+	{
+		//add the new item to the presets dropdown
+		m_pPresets->AddItem(kvPreset->GetName(), kvPreset);
+		m_pPresets->ActivateItemByRow(m_pPresets->GetItemCount() - 1);
+
+		int iCount = m_kvChanges->GetInt("Count",0);
+		const char* szCount = m_kvChanges->GetString("Count","0");
+		//the idea is that the current count key doesn't exist and gets created
+		KeyValues *kvCommand = new KeyValues(szCount);
+		m_kvChanges->SetInt("Count",iCount+1);
+		kvCommand->SetString("New", kvPreset->GetName());
+		m_kvChanges->AddSubKey(kvCommand);
+
+		kvPreset->deleteThis();
+	}
+
+	void CFFOptionsPresetPage::CreatePresetFromPanelDefault(KeyValues *kvPreset)
+	{
+		SetVisible(true);
+		ActivatePresetPage();
+
+		m_kvPanelDefaultCopy = RemoveNonEssentialValues(kvPreset);
+
+		m_pPresetNameInput = new InputDialog(this, "#GameUI_EnterPresetName", "");
+		m_pPresetNameInput->DoModal();
 	}
 
 	//-----------------------------------------------------------------------------

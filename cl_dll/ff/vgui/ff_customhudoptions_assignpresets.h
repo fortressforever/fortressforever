@@ -26,6 +26,7 @@ class CFFCustomHudAssignPresets : public CFFOptionsPage
 public:
 	CFFCustomHudAssignPresets(Panel *parent, char const *panelName, CFFCustomHudStylePresets* stylePresetsClass, CFFCustomHudArrangementPresets* arrangementPresetsClass, CFFCustomHudPositionPresets* positionPresetsClass);
 	~CFFCustomHudAssignPresets();
+
 	virtual void Load();
 	virtual void Reset();
 	virtual void Apply();
@@ -55,7 +56,9 @@ public:
 
 	void RegisterAssignmentChange(KeyValues *kvSelf, KeyValues* kvParent = NULL);
 	
+	KeyValues* GetStyleDataForAssignment(KeyValues *kvAssignment);
 	void SendStyleDataToAssignment(KeyValues *kvAssignment);
+	void CreatePresetFromPanelDefault(KeyValues *kvPresetData);
 private:
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch quantity panels requesting to be added for 
@@ -71,11 +74,19 @@ private:
 	// Purpose: Catch the checkboxes changing their state
 	//-----------------------------------------------------------------------------
 	MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data);
+	
+	//-----------------------------------------------------------------------------
+	// Purpose: Catch the "Copy Default" buttons
+	//-----------------------------------------------------------------------------
+	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
+
+	Panel			*m_pPanelSpecificOptions;
 
 	ComboBox		*m_pPrimary, *m_pSecondary;
 	ComboBox		*m_pStylePresets, *m_pArrangementPresets, *m_pPositionPresets;
 
-	CheckButton		*m_pUseDefault, *m_pUseDefaultStyle, *m_pUseDefaultArrangement, *m_pUseDefaultPosition;
+	CheckButton		*m_pUseDefaultStyle, *m_pUseDefaultArrangement, *m_pUseDefaultPosition;
+	Button			*m_pCopyDefaultStyle, *m_pCopyDefaultArrangement, *m_pCopyDefaultPosition;
 
 	KeyValues		*m_kvRequestedAssignments, *m_kvLoadedAssignments;
 
@@ -85,13 +96,16 @@ private:
 
 	KeyValues *m_kvRequiredUpdates;
 
-	bool m_bAssignmentUseDefaultChanging;
-	bool m_bAssignmentStyleChanging;
-	bool m_bAssignmentStyleUseDefaultChanging;
-	bool m_bAssignmentArrangementChanging;
-	bool m_bAssignmentArrangementUseDefaultChanging;
 	bool m_bAssignmentPositionChanging;
 	bool m_bAssignmentPositionUseDefaultChanging;
+	bool m_bAssignmentArrangementChanging;
+	bool m_bAssignmentArrangementUseDefaultChanging;
+	bool m_bAssignmentStyleChanging;
+	bool m_bAssignmentStyleUseDefaultChanging;
+
+	bool m_bCopyDefaultPosition;
+	bool m_bCopyDefaultArrangement;
+	bool m_bCopyDefaultStyle;
 
 	bool m_bLoaded;
 	bool m_bIsLoading;

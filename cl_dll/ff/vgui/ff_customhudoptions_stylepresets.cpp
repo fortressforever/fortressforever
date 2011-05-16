@@ -7,7 +7,8 @@
 #define QUANTITYBARFONTSIZES 10
 #define QUANTITYBARICONSIZES 15
 
-#include "ff_customhudoptions_assignpresets.h"
+#include "ff_customhudoptions.h"
+
 extern CFFCustomHudAssignPresets *g_AP;
 
 namespace vgui
@@ -149,6 +150,11 @@ namespace vgui
 		LoadControlSettings("resource/ui/FFOptionsSubCustomHudStylePresets.res");
 	}
 
+	void CFFCustomHudStylePresets::ActivatePresetPage()
+	{
+		KeyValues *kvAction = new KeyValues("ActivateStylePage");
+		PostActionSignal ( kvAction );
+	}
 	
 	//-----------------------------------------------------------------------------
 	// Purpose: Tells the assignment class that this preset class is loaded
@@ -775,7 +781,7 @@ namespace vgui
 		else
 			BaseClass::OnUpdateCombos(data);
 	}
-
+	
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the checkboxes changing their state
 	//-----------------------------------------------------------------------------
@@ -784,7 +790,7 @@ namespace vgui
 		if(m_bLoaded && !m_bPresetLoading)
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 	}
-
+	
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the sliders moving
 	//-----------------------------------------------------------------------------

@@ -17,6 +17,8 @@ namespace vgui
 	public:
 		CFFCustomHudPositionPresets(Panel *parent, char const *panelName, char const *pszComboBoxName);
 
+		void ActivatePresetPage();
+
 		virtual void UpdatePresetFromControls(KeyValues *kvPreset);
 		virtual void ApplyPresetToControls(KeyValues *kvPreset);
 		virtual void RegisterSelfForPresetAssignment();

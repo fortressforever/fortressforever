@@ -4675,11 +4675,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_buildstate_detpack.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_detpack.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_buildstate_dispenser.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_buildstate_dispenser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_mancannon.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_mancannon.h"
 				>
 			</File>
 			<File

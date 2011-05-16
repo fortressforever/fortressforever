@@ -22,8 +22,33 @@ CFFCustomHudOptions::CFFCustomHudOptions(Panel *parent, char const *panelName) :
 	m_pPropertyPages->AddPage(m_pStylePresets, "#GameUI_StylePresets");
 	m_pPropertyPages->SetActivePage(m_pAssignPresets);
 	m_pPropertyPages->SetDragEnabled(false);
+		
+	m_pPositionPresets->AddActionSignalTarget( this );
+	m_pArrangementPresets->AddActionSignalTarget( this );
+	m_pStylePresets->AddActionSignalTarget( this );
 	
 	LoadControlSettings("resource/ui/FFOptionsSubCustomHud.res");
+}
+
+void CFFCustomHudOptions::OnActivatePage(KeyValues* data)
+{
+	if(Q_stricmp(data->GetString("Page"),"Arrangement"))
+	{
+		m_pPropertyPages->SetActivePage(m_pArrangementPresets);
+	}
+}
+
+void CFFCustomHudOptions::OnActivatePositionPage(KeyValues* data)
+{
+	m_pPropertyPages->SetActivePage(m_pPositionPresets);
+}
+void CFFCustomHudOptions::OnActivateArrangmentPage(KeyValues* data)
+{
+	m_pPropertyPages->SetActivePage(m_pArrangementPresets);
+}
+void CFFCustomHudOptions::OnActivateStylePage(KeyValues* data)
+{
+	m_pPropertyPages->SetActivePage(m_pStylePresets);
 }
 
 //-----------------------------------------------------------------------------

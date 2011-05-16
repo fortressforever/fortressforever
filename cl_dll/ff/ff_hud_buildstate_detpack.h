@@ -1,5 +1,5 @@
-#ifndef FF_HUDBUILDSTATESENTRY_H
-#define FF_HUDBUILDSTATESENTRY_H
+#ifndef FF_HUDBUILDSTATEDETPACK_H
+#define FF_HUDBUILDSTATEDETPACK_H
 
 #include "ff_quantitypanel.h"
 #include "hudelement.h"
@@ -15,23 +15,21 @@
 
 using namespace vgui;
 
-class CHudBuildStateDispenser : public CHudElement, public FFQuantityPanel
+class CHudBuildStateDetpack : public CHudElement, public FFQuantityPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CHudBuildStateDispenser, FFQuantityPanel );
+	DECLARE_CLASS_SIMPLE( CHudBuildStateDetpack, FFQuantityPanel );
 
-	FFQuantityBar *m_qbDispenserHealth;
-	FFQuantityBar *m_qbDispenserAmmo;
-	FFQuantityBar *m_qbCellCounter;
+	FFQuantityBar *m_qbDetpackTimeLeft;
 
 	bool	m_bBuilt;
 	bool	m_bBuilding;
-	int		m_iMaxCells;
+	float	m_flDetonateTime;
 	wchar_t* m_wszNotBuiltText;
 	wchar_t* m_wszBuildingText;
 public:
-	CHudBuildStateDispenser(const char *pElementName);
-	~CHudBuildStateDispenser();
+	CHudBuildStateDetpack(const char *pElementName);
+	~CHudBuildStateDetpack();
 
 	KeyValues* GetDefaultStyleData();
 
@@ -39,8 +37,8 @@ public:
 	void VidInit( void );
 	void OnTick( void );
 	void Paint( void );
-	
-	void	MsgFunc_DispenserMsg(bf_read &msg);
+
+	void	MsgFunc_DetpackMsg(bf_read &msg);
 };
 
 #endif

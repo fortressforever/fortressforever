@@ -33,6 +33,8 @@ namespace vgui
 		CFFOptionsPresetPage(Panel *parent, const char *panelName, const char *pszComboBoxName, const char *pszSourceFile);
 		~CFFOptionsPresetPage();
 
+		virtual void ActivatePresetPage() = 0;
+
 		bool HasLoaded();
 		virtual void UpdatePresetFromControls(KeyValues *kvPreset);
 		virtual void ApplyPresetToControls(KeyValues *kvPreset) = 0;
@@ -43,9 +45,14 @@ namespace vgui
 		virtual void SendDeletedPresetNameToPresetAssignment(const char *pszDeletedPresetName) = 0;
 		virtual void SendNewPresetNameToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset) = 0;
 
+		void AddPreset(KeyValues *kvPreset);
+
 		virtual void Load();
 		virtual void Reset();
 		virtual void Apply();
+
+		
+		void CreatePresetFromPanelDefault(KeyValues *kvPreset);
 
 		KeyValues *GetPresetDataByName(char const *styleName);
 		KeyValues *GetPresetData();
@@ -77,6 +84,7 @@ namespace vgui
 
 		KeyValues	*m_kvChanges;
 		KeyValues	*m_kvUpdates;
+		KeyValues	*m_kvPanelDefaultCopy;
 
 		InputDialog		*m_pPresetNameInput;
 		MessageBox		*m_pPresetNameInputError;

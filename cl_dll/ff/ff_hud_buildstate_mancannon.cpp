@@ -1,11 +1,10 @@
 #include "cbase.h"
-#include "ff_hud_buildstate_dispenser.h"
-#include "ff_buildableobjects_shared.h"
+#include "ff_hud_buildstate_mancannon.h"
 
-DECLARE_HUDELEMENT(CHudBuildStateDispenser);
-DECLARE_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
+DECLARE_HUDELEMENT(CHudBuildStateManCannon);
+DECLARE_HUD_MESSAGE(CHudBuildStateManCannon, ManCannonMsg);
 
-CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateSentry")
+CHudBuildStateManCannon::CHudBuildStateManCannon(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateManCannon")
 {
 	SetParent(g_pClientMode->GetViewport());
 
@@ -17,12 +16,12 @@ CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHu
 	m_bBuilt = false;
 	m_bBuilding = false;
 }
-
-CHudBuildStateDispenser::~CHudBuildStateDispenser() 
+	
+CHudBuildStateManCannon::~CHudBuildStateManCannon() 
 {
 }
 	
-KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
+KeyValues* CHudBuildStateManCannon::GetDefaultStyleData()
 {
 	KeyValues *kvPreset = new KeyValues("StyleData");
 
@@ -32,23 +31,23 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvPreset->SetInt("alignV", 0);
 
 	kvPreset->SetInt("columns", 1);
-	kvPreset->SetInt("headerTextX", 5);
-	kvPreset->SetInt("headerTextY", 5);
-	kvPreset->SetInt("headerIconX", 6);
-	kvPreset->SetInt("headerIconY", 16);
-	kvPreset->SetInt("textX", 35);
+	kvPreset->SetInt("headerTextX", 27);
+	kvPreset->SetInt("headerTextY", 8);
+	kvPreset->SetInt("headerIconX", 5);
+	kvPreset->SetInt("headerIconY", 3);
+	kvPreset->SetInt("textX", 25);
 	kvPreset->SetInt("textY", 22);
 	kvPreset->SetInt("itemsX", 5);
-	kvPreset->SetInt("itemsY", 15);
+	kvPreset->SetInt("itemsY", 22);
 	kvPreset->SetInt("showHeaderText", 1);
 	kvPreset->SetInt("showHeaderIcon", 1);
 	kvPreset->SetInt("showText", 1);
 	kvPreset->SetInt("headerTextShadow", 0);
 	kvPreset->SetInt("headerIconShadow", 0);
 	kvPreset->SetInt("textShadow", 0);
-	kvPreset->SetInt("headerTextSize", 1);
-	kvPreset->SetInt("headerIconSize", 11);
-	kvPreset->SetInt("textSize", 2);
+	kvPreset->SetInt("headerTextSize", 2);
+	kvPreset->SetInt("headerIconSize", 6);
+	kvPreset->SetInt("textSize", 3);
 	kvPreset->SetInt("showPanel", 1);
 	kvPreset->SetInt("panelColorCustom", 0);
 	kvPreset->SetInt("panelRed", 255);
@@ -145,57 +144,47 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 
 	return kvPreset;
 }
-
-void CHudBuildStateDispenser::VidInit()
+	
+void CHudBuildStateManCannon::VidInit()
 {
-	wchar_t *tempString = vgui::localize()->Find("#FF_PLAYER_DISPENSER");
-	
+	wchar_t *tempString = vgui::localize()->Find("#FF_PLAYER_MANCANNON");
+
 	if (!tempString) 
-		tempString = L"DISPENSER";
-	
+		tempString = L"MANCANNON";
+
 	SetHeaderText(tempString, false);
-	SetHeaderIconChar("4", false);
+	SetHeaderIconChar("6", false);
 
 	m_wszNotBuiltText = vgui::localize()->Find("#HudPanel_NotBuilt"); 
 
 	if (!m_wszNotBuiltText) 
 		m_wszNotBuiltText = L"Not Built";
-	SetText(m_wszNotBuiltText);
+	SetText(m_wszNotBuiltText, false);
 
 	m_wszBuildingText = vgui::localize()->Find("#HudPanel_Building"); 
 
 	if (!m_wszBuildingText) 
 		m_wszBuildingText = L"Building...";
-	
-	m_qbDispenserHealth->SetLabelText("#FF_ITEM_HEALTH", false);
-	m_qbDispenserHealth->SetIconChar("a", false);
-	m_qbDispenserHealth->ShowAmountMax(false);
-	
-	m_qbDispenserAmmo->SetLabelText("#FF_ITEM_AMMO", false);
-	m_qbDispenserAmmo->SetIconChar("r", false);
-	m_qbDispenserAmmo->ShowAmountMax(false);
-	
-	m_qbCellCounter->SetLabelText("#FF_ITEM_CELLS", false);
-	m_qbCellCounter->SetIconChar("p", false);
-	m_qbCellCounter->SetIntensityControl(0, (int)(FF_BUILDCOST_DISPENSER/3), (int)(FF_BUILDCOST_DISPENSER/3) * 2, FF_BUILDCOST_DISPENSER);
-	m_qbCellCounter->SetAmountMax(FF_BUILDCOST_DISPENSER);
-	
+
+	m_qbManCannonHealth->SetLabelText("#FF_ITEM_HEALTH", false);
+	m_qbManCannonHealth->SetIconChar("a", false);
+	m_qbManCannonHealth->ShowAmountMax(false);
+	m_qbManCannonHealth->SetAmount(0);
+
 	SetToggleTextVisible(true);
 }
 
-void CHudBuildStateDispenser::Init() 
+void CHudBuildStateManCannon::Init() 
 {
 	ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
-	HOOK_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
+	HOOK_HUD_MESSAGE(CHudBuildStateManCannon, ManCannonMsg);
 
-	m_qbDispenserHealth = AddItem("BuildStateDispenserHealth");
-	m_qbDispenserAmmo = AddItem("BuildStateDispenserAmmo");
-	m_qbCellCounter = AddItem("BuildStateCellCounter");
+	m_qbManCannonHealth = AddItem("BuildStateManCannonHealth"); 
 
-	AddPanelToHudOptions("Dispenser", "#HudPanel_Dispenser", "BuildState", "#HudPanel_BuildableState");
+	AddPanelToHudOptions("ManCannon", "#HudPanel_ManCannon", "BuildState", "#HudPanel_BuildableState");
 }
 
-void CHudBuildStateDispenser::OnTick() 
+void CHudBuildStateManCannon::OnTick() 
 {
 	BaseClass::OnTick();
 
@@ -203,36 +192,26 @@ void CHudBuildStateDispenser::OnTick()
 		return;
 
 	// Get the local player
-	C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
-	// If the player is not an FFPlayer or is not an Engineer
-	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_ENGINEER )
+
+	// If the player is not an FFPlayer or is not an Scout
+	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_SCOUT)
 	//hide the panel
 	{
 		m_bDraw = false;
 		SetVisible(false);
-		m_qbDispenserHealth->SetVisible(false);
-		m_qbDispenserAmmo->SetVisible(false);
-		m_qbCellCounter->SetVisible(false);
+		m_qbManCannonHealth->SetVisible(false);
 		return; //return and don't continue
 	}
-	else
+	else if(!m_bDraw)
 	//show the panel
 	{
-		if(!m_bDraw)
-			ShowItem(m_qbCellCounter);
 		m_bDraw = true;
 	}
-	
-	// Never below zero (dunno why this is here)
-	int iCells = max( pPlayer->GetAmmoCount( AMMO_CELLS ), 0);
-	iCells = min(iCells, FF_BUILDCOST_DISPENSER);
-	// Only update if we've changed cell count
-	if ( iCells != m_qbCellCounter->GetAmount() )
-		m_qbCellCounter->SetAmount(iCells);
 
-	bool bBuilt = pPlayer->GetDispenser() && pPlayer->GetDispenser()->IsBuilt();
-	bool bBuilding = pPlayer->GetDispenser() && !bBuilt;
+	bool bBuilt = pPlayer->GetManCannon() && pPlayer->GetManCannon()->IsBuilt();
+	bool bBuilding = pPlayer->GetManCannon() && !bBuilt;
 
 	//small optimisation by comparing building with what it was previously
 	//if building
@@ -249,7 +228,7 @@ void CHudBuildStateDispenser::OnTick()
 		SetText(m_wszNotBuiltText);
 		m_bBuilding = bBuilding;
 	}
-	
+
 	//small optimisation by comparing build with what it was previously
 	//if not built
 	if(!bBuilt && m_bBuilt)
@@ -257,9 +236,7 @@ void CHudBuildStateDispenser::OnTick()
 	{
 		m_bBuilt = false;
 		SetVisible(false);
-		m_qbDispenserHealth->SetVisible(false);
-		m_qbDispenserAmmo->SetVisible(false);
-		ShowItem(m_qbCellCounter);
+		m_qbManCannonHealth->SetVisible(false);
 		SetToggleTextVisible(true);
 	}
 	else if(bBuilt && !m_bBuilt)
@@ -267,27 +244,23 @@ void CHudBuildStateDispenser::OnTick()
 	{
 		m_bBuilt = true;
 		SetVisible(true);
-		m_qbDispenserHealth->SetVisible(true);
-		m_qbDispenserAmmo->SetVisible(true);
-		HideItem(m_qbCellCounter);
+		m_qbManCannonHealth->SetVisible(true);
 		SetToggleTextVisible(false);
 	}
 }
 
-void CHudBuildStateDispenser::Paint() 
+void CHudBuildStateManCannon::Paint() 
 {
 	if(m_bDraw)
-	{	
+	{
 		//paint header
 		BaseClass::Paint();
 	}
 }
 
-void CHudBuildStateDispenser::MsgFunc_DispenserMsg(bf_read &msg)
+void CHudBuildStateManCannon::MsgFunc_ManCannonMsg(bf_read &msg)
 {
     int iHealth = (int) msg.ReadByte();
-    int iAmmo = (int) msg.ReadByte();
 
-	m_qbDispenserHealth->SetAmount(iHealth);
-	m_qbDispenserAmmo->SetAmount(iAmmo);
+	m_qbManCannonHealth->SetAmount(iHealth);
 }

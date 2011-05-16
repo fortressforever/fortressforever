@@ -154,9 +154,7 @@ namespace vgui
 
 		void RecalculateColor( int colorMode, Color &color, Color &colorCustom );
 
-
 		bool m_bChildDimentionsChanged;
-		bool m_bTriggerParentPositionUpdate;
 
 		virtual void ApplySchemeSettings( IScheme *pScheme  );
 		

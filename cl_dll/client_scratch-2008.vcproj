@@ -3352,11 +3352,11 @@
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
@@ -3680,11 +3680,11 @@
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
@@ -4676,11 +4676,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_buildstate_detpack.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_detpack.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_buildstate_dispenser.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_buildstate_dispenser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_mancannon.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_mancannon.h"
 				>
 			</File>
 			<File

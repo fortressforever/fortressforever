@@ -3,7 +3,8 @@
 
 #define POSITIONPRESET_FILE "HudPositionPresets.vdf"
 
-#include "ff_customhudoptions_assignpresets.h"
+#include "ff_customhudoptions.h"
+
 extern CFFCustomHudAssignPresets *g_AP;
 
 namespace vgui
@@ -50,8 +51,12 @@ namespace vgui
 		
 		LoadControlSettings("resource/ui/FFOptionsSubCustomHudPositionPresets.res");
 	}
-
-
+	
+	void CFFCustomHudPositionPresets::ActivatePresetPage()
+	{
+		KeyValues *kvAction = new KeyValues("ActivatePositionPage");
+		PostActionSignal ( kvAction );
+	}
 
 	void CFFCustomHudPositionPresets::RegisterSelfForPresetAssignment()
 	{

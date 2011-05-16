@@ -56,9 +56,14 @@ namespace vgui
 			ORIENTATION_VERTICAL_INVERTED
 		};
 
+		void AddBooleanOption(KeyValues* kvMessage, const char *pszName, const char *pszText);
+		void AddComboOption(KeyValues* kvMessage, const char *pszName, const char *pszText, KeyValues* kvOptions);
+		//virtual KeyValues* AddPanelSpecificOptions(KeyValues *kvPanelSpecificOptions);
+
 		virtual void Paint( void );
 		virtual void OnTick( void );
 		virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+		virtual KeyValues* GetDefaultStyleData() = 0;
 
 		void SetHeaderText( wchar_t *newHeaderText, bool bUpdateQBPositions = true );
 		void SetHeaderIconChar( char *newHeaderIconChar, bool bUpdateQBPositions = true );
@@ -92,17 +97,20 @@ namespace vgui
 		void SetTeamColor( Color teamColor );
 		Color GetTeamColor();
 
-		virtual KeyValues* GetDefaultStyleData() = 0;
+		void ApplyStyleData( KeyValues *kvStyleData, bool useDefaults = true );
 	
 		void UpdateQBPositions();
+		FFQuantityBar* AddItem( const char *pElementName );
+		void HideItem( FFQuantityBar* qBar );
+		void ShowItem( FFQuantityBar* qBar );
 
 	private:
 		MESSAGE_FUNC_PARAMS( OnChildDimentionsChanged, "ChildDimentionsChanged", data );
-		MESSAGE_FUNC_PARAMS( OnStyleDataRecieved, "StyleData", data);
+		MESSAGE_FUNC_PARAMS( OnDefaultStyleDataRequested, "GetStyleData", data);
 
 	protected:
+		virtual MESSAGE_FUNC_PARAMS( OnStyleDataRecieved, "SetStyleData", kvStyleData );
 		void AddPanelToHudOptions( const char* szSelfName, const char* szSelfText, const char* szParentName, const char* szParentText );
-		FFQuantityBar* AddChild( const char *pElementName );
 
 		bool m_bDraw;
 

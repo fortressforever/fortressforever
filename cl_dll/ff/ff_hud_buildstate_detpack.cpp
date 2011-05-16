@@ -1,11 +1,10 @@
 #include "cbase.h"
-#include "ff_hud_buildstate_dispenser.h"
-#include "ff_buildableobjects_shared.h"
+#include "ff_hud_buildstate_detpack.h"
 
-DECLARE_HUDELEMENT(CHudBuildStateDispenser);
-DECLARE_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
+DECLARE_HUDELEMENT(CHudBuildStateDetpack);
+DECLARE_HUD_MESSAGE(CHudBuildStateDetpack, DetpackMsg);
 
-CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateSentry")
+CHudBuildStateDetpack::CHudBuildStateDetpack(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateDetpack")
 {
 	SetParent(g_pClientMode->GetViewport());
 
@@ -17,12 +16,12 @@ CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHu
 	m_bBuilt = false;
 	m_bBuilding = false;
 }
-
-CHudBuildStateDispenser::~CHudBuildStateDispenser() 
+	
+CHudBuildStateDetpack::~CHudBuildStateDetpack() 
 {
 }
 	
-KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
+KeyValues* CHudBuildStateDetpack::GetDefaultStyleData()
 {
 	KeyValues *kvPreset = new KeyValues("StyleData");
 
@@ -32,23 +31,23 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvPreset->SetInt("alignV", 0);
 
 	kvPreset->SetInt("columns", 1);
-	kvPreset->SetInt("headerTextX", 5);
-	kvPreset->SetInt("headerTextY", 5);
-	kvPreset->SetInt("headerIconX", 6);
-	kvPreset->SetInt("headerIconY", 16);
-	kvPreset->SetInt("textX", 35);
+	kvPreset->SetInt("headerTextX", 27);
+	kvPreset->SetInt("headerTextY", 8);
+	kvPreset->SetInt("headerIconX", 5);
+	kvPreset->SetInt("headerIconY", 3);
+	kvPreset->SetInt("textX", 25);
 	kvPreset->SetInt("textY", 22);
 	kvPreset->SetInt("itemsX", 5);
-	kvPreset->SetInt("itemsY", 15);
+	kvPreset->SetInt("itemsY", 22);
 	kvPreset->SetInt("showHeaderText", 1);
 	kvPreset->SetInt("showHeaderIcon", 1);
 	kvPreset->SetInt("showText", 1);
 	kvPreset->SetInt("headerTextShadow", 0);
 	kvPreset->SetInt("headerIconShadow", 0);
 	kvPreset->SetInt("textShadow", 0);
-	kvPreset->SetInt("headerTextSize", 1);
-	kvPreset->SetInt("headerIconSize", 11);
-	kvPreset->SetInt("textSize", 2);
+	kvPreset->SetInt("headerTextSize", 2);
+	kvPreset->SetInt("headerIconSize", 6);
+	kvPreset->SetInt("textSize", 3);
 	kvPreset->SetInt("showPanel", 1);
 	kvPreset->SetInt("panelColorCustom", 0);
 	kvPreset->SetInt("panelRed", 255);
@@ -61,7 +60,7 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 	kvPreset->SetInt("barBorderWidth", 1);
 	kvPreset->SetInt("barMarginHorizontal", 0);
 	kvPreset->SetInt("barMarginVertical", 0);
-	kvPreset->SetInt("barOrientation", ORIENTATION_HORIZONTAL);
+	kvPreset->SetInt("barOrientation", ORIENTATION_HORIZONTAL_INVERTED);
 
 	KeyValues *kvComponent = new KeyValues("Bar");
 	kvComponent->SetInt("show", 1);
@@ -145,16 +144,16 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 
 	return kvPreset;
 }
-
-void CHudBuildStateDispenser::VidInit()
+	
+void CHudBuildStateDetpack::VidInit()
 {
-	wchar_t *tempString = vgui::localize()->Find("#FF_PLAYER_DISPENSER");
-	
+	wchar_t *tempString = vgui::localize()->Find("#FF_PLAYER_DETPACK");
+
 	if (!tempString) 
-		tempString = L"DISPENSER";
-	
+		tempString = L"DETPACK";
+
 	SetHeaderText(tempString, false);
-	SetHeaderIconChar("4", false);
+	SetHeaderIconChar("5", false);
 
 	m_wszNotBuiltText = vgui::localize()->Find("#HudPanel_NotBuilt"); 
 
@@ -166,36 +165,26 @@ void CHudBuildStateDispenser::VidInit()
 
 	if (!m_wszBuildingText) 
 		m_wszBuildingText = L"Building...";
-	
-	m_qbDispenserHealth->SetLabelText("#FF_ITEM_HEALTH", false);
-	m_qbDispenserHealth->SetIconChar("a", false);
-	m_qbDispenserHealth->ShowAmountMax(false);
-	
-	m_qbDispenserAmmo->SetLabelText("#FF_ITEM_AMMO", false);
-	m_qbDispenserAmmo->SetIconChar("r", false);
-	m_qbDispenserAmmo->ShowAmountMax(false);
-	
-	m_qbCellCounter->SetLabelText("#FF_ITEM_CELLS", false);
-	m_qbCellCounter->SetIconChar("p", false);
-	m_qbCellCounter->SetIntensityControl(0, (int)(FF_BUILDCOST_DISPENSER/3), (int)(FF_BUILDCOST_DISPENSER/3) * 2, FF_BUILDCOST_DISPENSER);
-	m_qbCellCounter->SetAmountMax(FF_BUILDCOST_DISPENSER);
-	
+
+	m_qbDetpackTimeLeft->SetLabelText("#FF_ITEM_TIMELEFT", false);
+	m_qbDetpackTimeLeft->SetIconChar("f", false);
+	m_qbDetpackTimeLeft->SetIntensityAmountScaled(true);//max changes (is not 100) so we need to scale to a percentage amount for calculation
+	m_qbDetpackTimeLeft->SetAmount(0);
+
 	SetToggleTextVisible(true);
 }
 
-void CHudBuildStateDispenser::Init() 
+void CHudBuildStateDetpack::Init() 
 {
 	ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
-	HOOK_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
+	HOOK_HUD_MESSAGE(CHudBuildStateDetpack, DetpackMsg);
 
-	m_qbDispenserHealth = AddItem("BuildStateDispenserHealth");
-	m_qbDispenserAmmo = AddItem("BuildStateDispenserAmmo");
-	m_qbCellCounter = AddItem("BuildStateCellCounter");
+	m_qbDetpackTimeLeft = AddItem("BuildStateDetpackTimeLeft"); 
 
-	AddPanelToHudOptions("Dispenser", "#HudPanel_Dispenser", "BuildState", "#HudPanel_BuildableState");
+	AddPanelToHudOptions("Detpack", "#HudPanel_Detpack", "BuildState", "#HudPanel_BuildableState");
 }
 
-void CHudBuildStateDispenser::OnTick() 
+void CHudBuildStateDetpack::OnTick() 
 {
 	BaseClass::OnTick();
 
@@ -203,36 +192,26 @@ void CHudBuildStateDispenser::OnTick()
 		return;
 
 	// Get the local player
-	C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
-	// If the player is not an FFPlayer or is not an Engineer
-	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_ENGINEER )
+
+	// If the player is not an FFPlayer or is not an Scout
+	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_DEMOMAN)
 	//hide the panel
 	{
 		m_bDraw = false;
 		SetVisible(false);
-		m_qbDispenserHealth->SetVisible(false);
-		m_qbDispenserAmmo->SetVisible(false);
-		m_qbCellCounter->SetVisible(false);
+		m_qbDetpackTimeLeft->SetVisible(false);
 		return; //return and don't continue
 	}
-	else
+	else if(!m_bDraw)
 	//show the panel
 	{
-		if(!m_bDraw)
-			ShowItem(m_qbCellCounter);
 		m_bDraw = true;
 	}
-	
-	// Never below zero (dunno why this is here)
-	int iCells = max( pPlayer->GetAmmoCount( AMMO_CELLS ), 0);
-	iCells = min(iCells, FF_BUILDCOST_DISPENSER);
-	// Only update if we've changed cell count
-	if ( iCells != m_qbCellCounter->GetAmount() )
-		m_qbCellCounter->SetAmount(iCells);
 
-	bool bBuilt = pPlayer->GetDispenser() && pPlayer->GetDispenser()->IsBuilt();
-	bool bBuilding = pPlayer->GetDispenser() && !bBuilt;
+	bool bBuilt = pPlayer->GetDetpack() && pPlayer->GetDetpack()->IsBuilt();
+	bool bBuilding = pPlayer->GetDetpack() && !bBuilt;
 
 	//small optimisation by comparing building with what it was previously
 	//if building
@@ -249,7 +228,7 @@ void CHudBuildStateDispenser::OnTick()
 		SetText(m_wszNotBuiltText);
 		m_bBuilding = bBuilding;
 	}
-	
+
 	//small optimisation by comparing build with what it was previously
 	//if not built
 	if(!bBuilt && m_bBuilt)
@@ -257,9 +236,7 @@ void CHudBuildStateDispenser::OnTick()
 	{
 		m_bBuilt = false;
 		SetVisible(false);
-		m_qbDispenserHealth->SetVisible(false);
-		m_qbDispenserAmmo->SetVisible(false);
-		ShowItem(m_qbCellCounter);
+		m_qbDetpackTimeLeft->SetVisible(false);
 		SetToggleTextVisible(true);
 	}
 	else if(bBuilt && !m_bBuilt)
@@ -267,27 +244,31 @@ void CHudBuildStateDispenser::OnTick()
 	{
 		m_bBuilt = true;
 		SetVisible(true);
-		m_qbDispenserHealth->SetVisible(true);
-		m_qbDispenserAmmo->SetVisible(true);
-		HideItem(m_qbCellCounter);
+		m_qbDetpackTimeLeft->SetVisible(true);
 		SetToggleTextVisible(false);
 	}
 }
 
-void CHudBuildStateDispenser::Paint() 
+void CHudBuildStateDetpack::Paint() 
 {
 	if(m_bDraw)
-	{	
+	{
+		if(m_bBuilt)
+		{
+			float flCurTime = gpGlobals->curtime;
+			int iDetpackTimeLeft = (int)(m_flDetonateTime - gpGlobals->curtime + 1);
+			if(iDetpackTimeLeft < 0)
+				m_qbDetpackTimeLeft->SetAmount(m_flDetonateTime - flCurTime);
+			else
+				m_qbDetpackTimeLeft->SetAmount(iDetpackTimeLeft);
+		}
 		//paint header
 		BaseClass::Paint();
 	}
 }
 
-void CHudBuildStateDispenser::MsgFunc_DispenserMsg(bf_read &msg)
+void CHudBuildStateDetpack::MsgFunc_DetpackMsg(bf_read &msg)
 {
-    int iHealth = (int) msg.ReadByte();
-    int iAmmo = (int) msg.ReadByte();
-
-	m_qbDispenserHealth->SetAmount(iHealth);
-	m_qbDispenserAmmo->SetAmount(iAmmo);
+	m_flDetonateTime = msg.ReadFloat();
+	m_qbDetpackTimeLeft->SetAmountMax((int) msg.ReadByte());
 }
