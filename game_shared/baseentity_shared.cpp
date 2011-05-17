@@ -1807,7 +1807,7 @@ void CBaseEntity::DispatchTraceAttack( const CTakeDamageInfo &info, const Vector
 
 void CBaseEntity::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
 {
-	Vector vecOrigin = ptr->endpos - vecDir * 4;
+	//Vector vecOrigin = ptr->endpos - vecDir * 4;
 
 	if ( m_takedamage )
 	{

@@ -5210,8 +5210,8 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// Demo blocked the damage with his shield?
 	if( IsDamageBlockedByShield( info ) == true )
 	{
-		g_pEffects->Sparks( info.GetDamagePosition(), 2, 2 );
-		UTIL_Smoke( info.GetDamagePosition(), random->RandomInt( 10, 15 ), 10 );
+		//g_pEffects->Sparks( info.GetDamagePosition(), 2, 2 );
+		//UTIL_Smoke( info.GetDamagePosition(), random->RandomInt( 10, 15 ), 10 );
 
 		return 0;
 	}
@@ -5343,21 +5343,44 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		// Fix blood showing for teammates when FF is off.
 		if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
 		{
-			Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
-			Vector vecOrigin = info.GetImpactPosition() - vecDir * 4;
-			
-			// Building an "empty" trace so we can use the tracebleed here -GreenMushy
-			trace_t tr;
+			//If the inflictor is a player( so it should be hitscan damage )
+			if( info.GetInflictor()->IsPlayer() == true )
+			{
+				float flMaxRange = MAX_TRACE_LENGTH;
 
-			float flMaxRange = MAX_TRACE_LENGTH;
+				Vector vecDir;
+				AngleVectors( info.GetInflictor()->GetLocalAngles(), &vecDir );
+				VectorNormalize( vecDir );
 
-			VectorNormalize( vecDir );	
-			Vector vecEnd = info.GetDamagePosition() + ( vecDir * flMaxRange ); // max bullet range is 10000 units
+				Vector vecEnd = info.GetDamagePosition() + ( vecDir * flMaxRange ); // max bullet range is 10000 units
 
-			UTIL_TraceLine( info.GetDamagePosition(), vecEnd, MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
+				trace_t tr; // main enter bullet trace
+				UTIL_TraceLine( info.GetDamagePosition(), vecEnd, MASK_SOLID | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+				
+				//If the entity traced was not this player, then just redo the trace with values that guarentee a hit on the player
+				if( tr.m_pEnt != this )
+				{
+					//Go from the damage source to the abs origin of the player
+					UTIL_TraceLine( info.GetDamagePosition(), GetAbsOrigin(), MASK_SOLID | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+				}
 
-			SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
-			TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType() );
+				//I guess this spawns blood somewhat outside of where it hit
+				Vector vecOrigin = tr.endpos - (vecDir * 4);
+					
+				//Direction the blood should move in
+				Vector vecBloodAngle = tr.endpos - info.GetDamagePosition();
+				VectorNormalize( vecBloodAngle );
+
+				//Blood particle effect
+				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
+
+				//Blood Decals
+				TraceBleed( info.GetDamage(), vecBloodAngle, &tr, info.GetDamageType() );
+			}
+			else
+			{
+
+			}
 		}			
 	}
 
@@ -6940,6 +6963,10 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 				
 				//Viewpunch a little bit
 				ViewPunch(QAngle(random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f)));
+				
+				//Display some effects
+				g_pEffects->Sparks( _info.GetDamagePosition(), 2, 2 );
+				UTIL_Smoke( _info.GetDamagePosition(), random->RandomInt( 10, 15 ), 10 );
 				
 				//Return out of the function, take no damage, (successful block)
 				return true;
