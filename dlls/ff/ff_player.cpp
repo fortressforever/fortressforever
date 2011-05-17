@@ -125,7 +125,7 @@ ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_REPLICATED ,
 #define FFDEV_DMGFORFULLSLOW_SG ffdev_dmgforfullslow_sg.GetFloat()
 
 //Shield convars
-ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "32", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum distance from the demo needed for shield blocks to occur." );
+ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum distance from the demo needed for shield blocks to occur." );
 #define FFDEV_SHIELD_MIN_BLOCK_DIST ffdev_shield_min_block_dist.GetFloat()
 
 ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Dot product fraction.  0 is 180 degree block radius.  1 will be no block.  Find a fraction in between." );

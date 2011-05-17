@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="server_ff"
 	ProjectGUID="{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}"
 	RootNamespace="hl"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -102,6 +103,8 @@
 				MapFileName="$(IntDir)/server.map"
 				SubSystem="2"
 				BaseAddress="0x22000000"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="$(IntDir)/server.lib"
 				TargetMachine="1"
 			/>
@@ -122,9 +125,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -211,6 +211,8 @@
 				ProgramDatabaseFile="$(IntDir)/server.pdb"
 				SubSystem="2"
 				BaseAddress="0x22000000"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="$(IntDir)/server.lib"
 				TargetMachine="1"
 			/>
@@ -231,9 +233,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -4663,10 +4662,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_shield.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ff\ff_team.cpp"
 				>
 			</File>
@@ -5088,6 +5083,10 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_deploysentrygun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_deployshield.cpp"
 				>
 			</File>
 			<File

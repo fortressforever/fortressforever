@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="client_ff"
 	ProjectGUID="{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}"
 	RootNamespace="client"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -97,6 +98,8 @@
 				MapFileName="$(IntDir)/client.map"
 				SubSystem="2"
 				BaseAddress="0x24000000"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="$(IntDir)/client.lib"
 				TargetMachine="1"
 			/>
@@ -117,9 +120,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -214,6 +214,8 @@
 				MapFileName="$(IntDir)/client.map"
 				SubSystem="2"
 				BaseAddress="0x24000000"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="$(IntDir)/client.lib"
 				TargetMachine="1"
 			/>
@@ -234,9 +236,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -5508,6 +5507,10 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_deploysentrygun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_deployshield.cpp"
 				>
 			</File>
 			<File
