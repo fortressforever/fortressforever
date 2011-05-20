@@ -5091,8 +5091,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_weapon_deployshield.cpp"				>
-			</File>			<File				RelativePath="..\game_shared\ff\ff_weapon_flag.cpp"
+				RelativePath="..\game_shared\ff\ff_weapon_deployshield.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_flag.cpp"
 				>
 			</File>
 			<File
