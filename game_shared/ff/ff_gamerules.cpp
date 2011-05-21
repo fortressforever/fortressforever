@@ -1436,25 +1436,10 @@ ConVar mp_prematch( "mp_prematch",
 			// Now deal the damage
 			if (pEntity->IsPlayer())
 			{
-				if( ToFFPlayer(pEntity)->IsDamageBlockedByShield( adjustedInfo ) == false )
-				{
-					//Fuck it, use the trace in here instead of takedamage to figure out blood -GreenMushy
-					pEntity->TakeDamage(adjustedInfo);
-
-					//No blood if friendlyfire is off
-					if ( g_pGameRules->FCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
-					{
-						// Bug #0000539: Blood decals are projected onto shit
-						// (direction needed normalising)
-						Vector vecTraceDir = (tr.endpos - tr.startpos);
-						VectorNormalize(vecTraceDir);
-
-						// Bug #0000168: Blood sprites for damage on players do not display
-						SpawnBlood(tr.endpos, vecTraceDir, pEntity->BloodColor(), adjustedInfo.GetDamage() * 3.0f);
-
-						pEntity->TraceBleed(adjustedInfo.GetDamage(), vecTraceDir, &tr, adjustedInfo.GetDamageType());
-					}
-				}
+				//Takedamage figures out early returns and team orientation and blood displaying
+				adjustedInfo.SetDamagePosition( tr.startpos );
+				adjustedInfo.SetImpactPosition( tr.endpos );
+				pEntity->TakeDamage(adjustedInfo);
 			}
 			else
 			{

@@ -125,7 +125,8 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 
 		CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB);
 		CalculateBulletDamageForce(&dmgInfo, GetAmmoDef()->Index("AMMO_NAILS"), vecNormalizedVel, tr.endpos);
-		dmgInfo.SetDamagePosition(tr.endpos);
+		dmgInfo.SetDamagePosition(tr.startpos);
+		dmgInfo.SetImpactPosition(tr.endpos);
 
 		if (pOther->IsPlayer())
 		{

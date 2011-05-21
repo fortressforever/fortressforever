@@ -422,6 +422,9 @@ void CFFPlayer::FireBullet(
 		info.SetCustomKill(KILLTYPE_HEADSHOT);
 	}
 
+	//Re-adjusting damage trace locations to figure out blood spurts in the player's TakeDamage -GreenMushy
+	info.SetDamagePosition( tr.startpos );
+	info.SetImpactPosition( tr.endpos );
 	tr.m_pEnt->DispatchTraceAttack(info, vecDir, &tr);
 
 	// Bug #0000168: Blood sprites for damage on players do not display
@@ -1143,6 +1146,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 				}
 				
 				//Set the impact position in the damage info to figure out blood stuff in OnTakeDamage
+				dmgInfo.SetDamagePosition( tr.startpos );
 				dmgInfo.SetImpactPosition( tr.endpos );
 				tr.m_pEnt->DispatchTraceAttack(dmgInfo, vecDir, &tr);
 

@@ -131,6 +131,10 @@ ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "0", FCVAR_RE
 ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Dot product fraction.  0 is 180 degree block radius.  1 will be no block.  Find a fraction in between." );
 #define FFDEV_SHIELD_BLOCKING_ANGLE ffdev_shield_blocking_angle.GetFloat()
 
+//Blood convars
+ConVar ffdev_blood_modifier( "ffdev_blood_modifier", "6.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Amount of blood effect to multiply by" );
+#define FFDEV_BLOOD_MOD ffdev_blood_modifier.GetFloat() 
+
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 #define JERKMULTI 0.0004f
 
@@ -5210,9 +5214,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// Demo blocked the damage with his shield?
 	if( IsDamageBlockedByShield( info ) == true )
 	{
-		//g_pEffects->Sparks( info.GetDamagePosition(), 2, 2 );
-		//UTIL_Smoke( info.GetDamagePosition(), random->RandomInt( 10, 15 ), 10 );
-
+		//Shield Block Effects done inside that function ^
 		return 0;
 	}
 
@@ -5343,43 +5345,54 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		// Fix blood showing for teammates when FF is off.
 		if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
 		{
-			//If the inflictor is a player( so it should be hitscan damage )
-			if( info.GetInflictor()->IsPlayer() == true )
-			{
-				float flMaxRange = MAX_TRACE_LENGTH;
+			//If the damage is done by bullets or nails
+			if( info.GetAmmoType() == GetAmmoDef()->Index( AMMO_SHELLS )  ||
+				info.GetAmmoType() == GetAmmoDef()->Index( AMMO_NAILS  )  )
+			{	  
 
-				Vector vecDir;
-				AngleVectors( info.GetInflictor()->GetLocalAngles(), &vecDir );
+				//Get a vector from the damage source to the victim
+				Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
 				VectorNormalize( vecDir );
 
-				Vector vecEnd = info.GetDamagePosition() + ( vecDir * flMaxRange ); // max bullet range is 10000 units
-
-				trace_t tr; // main enter bullet trace
-				UTIL_TraceLine( info.GetDamagePosition(), vecEnd, MASK_SOLID | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-				
-				//If the entity traced was not this player, then just redo the trace with values that guarentee a hit on the player
-				if( tr.m_pEnt != this )
-				{
-					//Go from the damage source to the abs origin of the player
-					UTIL_TraceLine( info.GetDamagePosition(), GetAbsOrigin(), MASK_SOLID | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-				}
+				//Make a dummy trace but put in relevent information to spawn blood correctly
+				trace_t tr; 
+				tr.endpos = info.GetImpactPosition();
+				tr.startpos = info.GetDamagePosition();
+				tr.m_pEnt = this;
+				tr.hitbox = this->GetHitboxSet();
+				//UTIL_TraceLine( info.GetDamagePosition(), info.GetImpactPosition(), MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
 
 				//I guess this spawns blood somewhat outside of where it hit
-				Vector vecOrigin = tr.endpos - (vecDir * 4);
-					
-				//Direction the blood should move in
-				Vector vecBloodAngle = tr.endpos - info.GetDamagePosition();
-				VectorNormalize( vecBloodAngle );
+				Vector vecOrigin = info.GetImpactPosition() - (vecDir * 4);
 
 				//Blood particle effect
-				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
+				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() * FFDEV_BLOOD_MOD);// a little surface blood.
 
 				//Blood Decals
-				TraceBleed( info.GetDamage(), vecBloodAngle, &tr, info.GetDamageType() );
+				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType() );
 			}
 			else
+			//Any damage other then nails and shells like explosion damage
 			{
+				//Get a vector from the damage source to the victim
+				Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
+				VectorNormalize( vecDir );
 
+				//Make a dummy trace but put in relevent information to spawn blood correctly
+				trace_t tr;
+				tr.endpos = info.GetImpactPosition();
+				tr.startpos = info.GetDamagePosition();
+				tr.m_pEnt = this;
+				tr.hitbox = this->GetHitboxSet();
+				//UTIL_TraceLine( info.GetDamagePosition(), info.GetImpactPosition(), MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+
+				//I guess this spawns blood somewhat outside of where it hit
+				Vector vecOrigin = info.GetImpactPosition() - (vecDir * 4);
+
+				// Bug #0000168: Blood sprites for damage on players do not display
+				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() * 3.0f);
+
+				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType());
 			}
 		}			
 	}
@@ -6935,9 +6948,6 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 		//Get the vector between the recipient and the damage origin
 		Vector vDisplacement = vDamageSource - GetAbsOrigin();
 
-		// Just print stuff to the console for no reasonv
-		DevMsg("info.GetDamagePosition() x: %f y: %f z: %f \nvDisplacement x: %f y: %f z: %f\n", _info.GetDamagePosition().x, _info.GetDamagePosition().y, _info.GetDamagePosition().z, vDisplacement.x, vDisplacement.y, vDisplacement.z);
-
 		//Only continue figuring out if the demo should block if it is above a minimum distance from the demo's origin
 		if( vDisplacement.Length() > FFDEV_SHIELD_MIN_BLOCK_DIST )
 		{
@@ -6965,8 +6975,8 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 				ViewPunch(QAngle(random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f)));
 				
 				//Display some effects
-				g_pEffects->Sparks( _info.GetDamagePosition(), 2, 2 );
-				UTIL_Smoke( _info.GetDamagePosition(), random->RandomInt( 10, 15 ), 10 );
+				g_pEffects->Sparks( _info.GetImpactPosition(), 2, 2 );
+				UTIL_Smoke( _info.GetImpactPosition(), random->RandomInt( 10, 15 ), 10 );
 				
 				//Return out of the function, take no damage, (successful block)
 				return true;

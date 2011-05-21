@@ -250,7 +250,8 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 		CTakeDamageInfo	dmgInfo( this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB );
 		CalculateMeleeDamageForce( &dmgInfo, vecNormalizedVel, tr.endpos, 0.7f );
-		dmgInfo.SetDamagePosition( tr.endpos );
+		dmgInfo.SetImpactPosition( tr.endpos );
+		dmgInfo.SetDamagePosition( tr.startpos );
 		pOther->DispatchTraceAttack( dmgInfo, vecNormalizedVel, &tr );
 
 		ApplyMultiDamage();

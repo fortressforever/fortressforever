@@ -223,6 +223,7 @@ void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity )
 	g_MultiDamage.SetReportedPosition( info.GetReportedPosition() );
 	g_MultiDamage.SetMaxDamage( max( g_MultiDamage.GetMaxDamage(), info.GetDamage() ) );
 	g_MultiDamage.SetAmmoType( info.GetAmmoType() );
+	g_MultiDamage.SetImpactPosition( info.GetImpactPosition() );
 
 	if ( !( g_MultiDamage.GetDamageType() & DMG_NO_PHYSICS_FORCE ) && g_MultiDamage.GetDamageType() != DMG_GENERIC )
 	{
