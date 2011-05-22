@@ -360,7 +360,7 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 		pParticle->m_uchColor[1]	= min( 1.0f, color[1] * colorRamp ) * 255.0f;
 		pParticle->m_uchColor[2]	= min( 1.0f, color[2] * colorRamp ) * 255.0f;
 		
-		pParticle->m_uchStartSize	= random->RandomInt( 2, 4 );
+		pParticle->m_uchStartSize	= scale;//random->RandomInt( 2, 4 );
 		pParticle->m_uchEndSize		= pParticle->m_uchStartSize * 8;
 	
 		pParticle->m_uchStartAlpha	= 255;

@@ -284,6 +284,7 @@ public:
 	void KillAndRemoveItems( void );
 	
 	bool PlayerHasSkillCommand(const char *szCommand);
+	void DoBloodEffects( const CTakeDamageInfo &info );
 	virtual int OnTakeDamage(const CTakeDamageInfo &inputInfo);
 
 	// ---> end

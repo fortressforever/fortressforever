@@ -139,7 +139,8 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 				info.ScaleDamageForce(10.0f);
 			}
 
-			info.SetDamagePosition(traceHit.endpos);
+			info.SetDamagePosition(traceHit.startpos);
+			info.SetImpactPosition(traceHit.endpos);
 
 			pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 			ApplyMultiDamage();

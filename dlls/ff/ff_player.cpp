@@ -132,8 +132,14 @@ ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_
 #define FFDEV_SHIELD_BLOCKING_ANGLE ffdev_shield_blocking_angle.GetFloat()
 
 //Blood convars
-ConVar ffdev_blood_modifier( "ffdev_blood_modifier", "6.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Amount of blood effect to multiply by" );
+ConVar ffdev_blood_modifier( "ffdev_blood_modifier", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Amount of blood effect to multiply by" );
 #define FFDEV_BLOOD_MOD ffdev_blood_modifier.GetFloat() 
+
+ConVar ffdev_blood_min( "ffdev_blood_min", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Blood min to use as the scale in blood effect" );
+#define FFDEV_BLOOD_MIN ffdev_blood_min.GetFloat()
+
+ConVar ffdev_blood_max( "ffdev_blood_max", "4.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Blood max to use as the scale in blood effect" );
+#define FFDEV_BLOOD_MAX ffdev_blood_max.GetFloat()
 
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 #define JERKMULTI 0.0004f
@@ -5172,6 +5178,72 @@ static float DamageForce( const Vector &size, float damage )
 	return force;
 }
 
+void CFFPlayer::DoBloodEffects( const CTakeDamageInfo &info )
+{
+	// BLOOD CODE --->
+	int blood = BloodColor();
+	
+	if ( blood != DONT_BLEED )
+	{
+		// Fix blood showing for teammates when FF is off.
+		if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
+		{
+			//If the damage is done by bullets or nails
+			if( info.GetAmmoType() == GetAmmoDef()->Index( AMMO_SHELLS )  ||
+				info.GetAmmoType() == GetAmmoDef()->Index( AMMO_NAILS  )  )
+			{	  
+
+				//Get a vector from the damage source to the victim
+				Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
+				VectorNormalize( vecDir );
+
+				//Make a dummy trace but put in relevent information to spawn blood correctly
+				trace_t tr; 
+				tr.endpos = info.GetImpactPosition();
+				tr.startpos = info.GetDamagePosition();
+				tr.m_pEnt = this;
+				tr.hitbox = this->GetHitboxSet();
+				//UTIL_TraceLine( info.GetDamagePosition(), info.GetImpactPosition(), MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+
+				//I guess this spawns blood somewhat outside of where it hit
+				Vector vecOrigin = info.GetImpactPosition() - (vecDir * 4);
+
+				//Blood particle effect
+				float bloodScale = info.GetDamage() * FFDEV_BLOOD_MOD;
+				clamp( bloodScale, FFDEV_BLOOD_MIN, FFDEV_BLOOD_MAX );
+
+				SpawnBlood( vecOrigin, vecDir, blood, bloodScale );// a little surface blood.
+
+				//Blood Decals
+				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType() );
+			}
+			else
+			//Any damage other then nails and shells like explosion damage
+			{
+				//Get a vector from the damage source to the victim
+				Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
+				VectorNormalize( vecDir );
+
+				//Make a dummy trace but put in relevent information to spawn blood correctly
+				trace_t tr;
+				tr.endpos = info.GetImpactPosition();
+				tr.startpos = info.GetDamagePosition();
+				tr.m_pEnt = this;
+				tr.hitbox = this->GetHitboxSet();
+				//UTIL_TraceLine( info.GetDamagePosition(), info.GetImpactPosition(), MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+
+				//I guess this spawns blood somewhat outside of where it hit
+				Vector vecOrigin = info.GetImpactPosition() - (vecDir * 4);
+
+				//Blood sprites
+				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() * 3.0f);
+
+				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType());
+			}
+		}			
+	}
+}
+
 int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
 	// have suit diagnose the problem - ie: report damage type
@@ -5329,6 +5401,9 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		info.SetDamage(fHealthDamage);
 	}
 
+	// Any time the player takes damage, there should be blood regardless of if they die to this damage or not -GreenMushy
+	DoBloodEffects( info );
+
 	// Don't call up the baseclass, it does all this again
 	// Call instead the CBaseCombatChracter one which actually applies the damage
 	fTookDamage = CBaseCombatCharacter::OnTakeDamage( info );
@@ -5336,66 +5411,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// Early out if the base class took no damage
 	if ( !fTookDamage )
 		return 0;
-
-	// BLOOD CODE --->
-	int blood = BloodColor();
-	
-	if ( blood != DONT_BLEED )
-	{
-		// Fix blood showing for teammates when FF is off.
-		if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
-		{
-			//If the damage is done by bullets or nails
-			if( info.GetAmmoType() == GetAmmoDef()->Index( AMMO_SHELLS )  ||
-				info.GetAmmoType() == GetAmmoDef()->Index( AMMO_NAILS  )  )
-			{	  
-
-				//Get a vector from the damage source to the victim
-				Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
-				VectorNormalize( vecDir );
-
-				//Make a dummy trace but put in relevent information to spawn blood correctly
-				trace_t tr; 
-				tr.endpos = info.GetImpactPosition();
-				tr.startpos = info.GetDamagePosition();
-				tr.m_pEnt = this;
-				tr.hitbox = this->GetHitboxSet();
-				//UTIL_TraceLine( info.GetDamagePosition(), info.GetImpactPosition(), MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-
-				//I guess this spawns blood somewhat outside of where it hit
-				Vector vecOrigin = info.GetImpactPosition() - (vecDir * 4);
-
-				//Blood particle effect
-				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() * FFDEV_BLOOD_MOD);// a little surface blood.
-
-				//Blood Decals
-				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType() );
-			}
-			else
-			//Any damage other then nails and shells like explosion damage
-			{
-				//Get a vector from the damage source to the victim
-				Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
-				VectorNormalize( vecDir );
-
-				//Make a dummy trace but put in relevent information to spawn blood correctly
-				trace_t tr;
-				tr.endpos = info.GetImpactPosition();
-				tr.startpos = info.GetDamagePosition();
-				tr.m_pEnt = this;
-				tr.hitbox = this->GetHitboxSet();
-				//UTIL_TraceLine( info.GetDamagePosition(), info.GetImpactPosition(), MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-
-				//I guess this spawns blood somewhat outside of where it hit
-				Vector vecOrigin = info.GetImpactPosition() - (vecDir * 4);
-
-				// Bug #0000168: Blood sprites for damage on players do not display
-				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() * 3.0f);
-
-				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType());
-			}
-		}			
-	}
 
 	// AfterShock - Reset sabotage timer on getting shot
 	SpyStopSabotaging();
