@@ -131,16 +131,6 @@ ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "0", FCVAR_RE
 ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Dot product fraction.  0 is 180 degree block radius.  1 will be no block.  Find a fraction in between." );
 #define FFDEV_SHIELD_BLOCKING_ANGLE ffdev_shield_blocking_angle.GetFloat()
 
-//Blood convars
-ConVar ffdev_blood_modifier( "ffdev_blood_modifier", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Amount of blood effect to multiply by" );
-#define FFDEV_BLOOD_MOD ffdev_blood_modifier.GetFloat() 
-
-ConVar ffdev_blood_min( "ffdev_blood_min", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Blood min to use as the scale in blood effect" );
-#define FFDEV_BLOOD_MIN ffdev_blood_min.GetFloat()
-
-ConVar ffdev_blood_max( "ffdev_blood_max", "4.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Blood max to use as the scale in blood effect" );
-#define FFDEV_BLOOD_MAX ffdev_blood_max.GetFloat()
-
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 #define JERKMULTI 0.0004f
 
@@ -5209,10 +5199,7 @@ void CFFPlayer::DoBloodEffects( const CTakeDamageInfo &info )
 				Vector vecOrigin = info.GetImpactPosition() - (vecDir * 4);
 
 				//Blood particle effect
-				float bloodScale = info.GetDamage() * FFDEV_BLOOD_MOD;
-				clamp( bloodScale, FFDEV_BLOOD_MIN, FFDEV_BLOOD_MAX );
-
-				SpawnBlood( vecOrigin, vecDir, blood, bloodScale );// a little surface blood.
+				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() );// a little surface blood.
 
 				//Blood Decals
 				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType() );
@@ -5236,7 +5223,7 @@ void CFFPlayer::DoBloodEffects( const CTakeDamageInfo &info )
 				Vector vecOrigin = info.GetImpactPosition() - (vecDir * 4);
 
 				//Blood sprites
-				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage() * 3.0f);
+				SpawnBlood( vecOrigin, vecDir, blood, info.GetDamage());
 
 				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType());
 			}

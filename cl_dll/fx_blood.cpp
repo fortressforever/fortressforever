@@ -299,7 +299,7 @@ void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, uns
 //			normal - 
 //			scale - This parameter is not currently used
 //-----------------------------------------------------------------------------
-void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float scale /*NOTE: Unused!*/, unsigned char r, unsigned char g, unsigned char b )
+void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float scale, unsigned char r, unsigned char g, unsigned char b )
 {
 	if ( UTIL_IsLowViolence() )
 		return;
@@ -316,6 +316,8 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 		g = 0;
 		b = 10;
 	}
+
+	float remappedScale = SimpleSplineRemapVal( scale, 30.0f, 255.0f, 1.0f, 2.0f );
 
 	Vector color = Vector( (float)(worldLight[0] * r) / 255.0f, (float)(worldLight[1] * g) / 255.0f, (float)(worldLight[2] * b) / 255.0f );
 	float colorRamp;
@@ -360,7 +362,7 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 		pParticle->m_uchColor[1]	= min( 1.0f, color[1] * colorRamp ) * 255.0f;
 		pParticle->m_uchColor[2]	= min( 1.0f, color[2] * colorRamp ) * 255.0f;
 		
-		pParticle->m_uchStartSize	= scale;//random->RandomInt( 2, 4 );
+		pParticle->m_uchStartSize	= (int)(6.0f * remappedScale);
 		pParticle->m_uchEndSize		= pParticle->m_uchStartSize * 8;
 	
 		pParticle->m_uchStartAlpha	= 255;
@@ -396,7 +398,7 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 			pParticle->m_uchColor[1]	= min( 1.0f, color[1] * colorRamp ) * 255.0f;
 			pParticle->m_uchColor[2]	= min( 1.0f, color[2] * colorRamp ) * 255.0f;
 			
-			pParticle->m_uchStartSize	= random->RandomInt( 2, 4 );
+			pParticle->m_uchStartSize	= (int)(10.0f * remappedScale);
 			pParticle->m_uchEndSize		= pParticle->m_uchStartSize * 4;
 		
 			pParticle->m_uchStartAlpha	= 255;
