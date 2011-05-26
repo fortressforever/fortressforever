@@ -3999,6 +3999,8 @@ void CFFPlayer::StatusEffectsThink( void )
 			{
 				CTakeDamageInfo info( pInfector, pInfector, FFDEV_INFECT_DAMAGE, DMG_POISON );
 				info.SetCustomKill(KILLTYPE_INFECTION);
+				info.SetDamagePosition( GetAbsOrigin() );
+				info.SetImpactPosition( GetAbsOrigin() );
 				TakeDamage( info );
 			}
 			else if( this->GetHealth() > 1 )
@@ -5179,10 +5181,8 @@ void CFFPlayer::DoBloodEffects( const CTakeDamageInfo &info )
 		if ( IsPlayer() && g_pGameRules->FCanTakeDamage( ToFFPlayer(this), info.GetAttacker())) 
 		{
 			//If the damage is done by bullets or nails
-			if( info.GetAmmoType() == GetAmmoDef()->Index( AMMO_SHELLS )  ||
-				info.GetAmmoType() == GetAmmoDef()->Index( AMMO_NAILS  )  )
+			if( info.GetDamageType() & DMG_BULLET  )
 			{	  
-
 				//Get a vector from the damage source to the victim
 				Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();
 				VectorNormalize( vecDir );
@@ -5204,8 +5204,11 @@ void CFFPlayer::DoBloodEffects( const CTakeDamageInfo &info )
 				//Blood Decals
 				TraceBleed( info.GetDamage(), vecDir, &tr, info.GetDamageType() );
 			}
-			else
 			//Any damage other then nails and shells like explosion damage
+			//Need to make sure the damge type is not something that shouldnt spawn blood
+			else if( !(info.GetDamageType() & DMG_GENERIC ) &&	!(info.GetDamageType() & DMG_CRUSH )	&& 
+					 !(info.GetDamageType() & DMG_FALL )	&&	!(info.GetDamageType() & DMG_BURN )		&&
+					 !(info.GetDamageType() & DMG_DROWN)	)
 			{
 				//Get a vector from the damage source to the victim
 				Vector vecDir = info.GetImpactPosition() - info.GetDamagePosition();

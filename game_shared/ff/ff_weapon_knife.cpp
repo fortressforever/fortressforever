@@ -131,6 +131,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 
 				//Adding the damage position for demoman shield blocks -GreenMushy
 				info.SetDamagePosition( traceHit.startpos );
+				info.SetImpactPosition( traceHit.endpos );
 
 				pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 				ApplyMultiDamage();

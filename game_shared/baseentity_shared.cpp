@@ -1633,6 +1633,11 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 					dmgInfo.ScaleDamageForce(0.01f);
 				}
 				// <-- Mirv
+
+				//Set the trace start and end position to calculate blood if we need -GreenMushy
+				dmgInfo.SetDamagePosition( tr.startpos );
+				dmgInfo.SetImpactPosition( tr.endpos );
+
 				tr.m_pEnt->DispatchTraceAttack( dmgInfo, vecFinalDir, &tr );
 			
 				if ( bStartedInWater || !bHitWater || (info.m_nFlags & FIRE_BULLETS_ALLOW_WATER_SURFACE_IMPACTS) )

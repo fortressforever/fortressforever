@@ -139,7 +139,12 @@ void CFFProjectileGoop::ExplodeTouch( CBaseEntity *pOther )
 		}
 		else
 		{
-			pVictim->TakeDamage( CTakeDamageInfo( this, pPlayer, GetDamage(), DMG_BLAST ) );
+			//Have to edit this so i can send the positions and blood positions correctly
+			CTakeDamageInfo info = CTakeDamageInfo( this, pPlayer, GetDamage(), DMG_BLAST );
+			info.SetDamagePosition( GetAbsOrigin() );
+			info.SetImpactPosition( pVictim->GetAbsOrigin() );
+
+			pVictim->TakeDamage( info );
 			// HACK: Using m_nDamageType as effect type
 			data.m_nDamageType = GOOP_IMPACT_DAMAGE;
 			EmitSound( "goopgun.hitdamage" );

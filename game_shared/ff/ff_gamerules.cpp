@@ -1431,6 +1431,7 @@ ConVar mp_prematch( "mp_prematch",
 				// Now set all our calculated values
 				adjustedInfo.SetDamageForce(vecDirection * flCalculatedForce);
 				adjustedInfo.SetDamagePosition(vecSrc);
+				adjustedInfo.SetImpactPosition( tr.endpos );
 			}
 
 			// Now deal the damage

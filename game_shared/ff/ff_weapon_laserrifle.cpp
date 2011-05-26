@@ -489,7 +489,13 @@ void CFFWeaponLaserRifle::Fire()
 				if (pTarget->IsPlayer() )
 				{
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
-					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, ffdev_laserrifle_dmg.GetFloat() /* GetFFWpnData().m_iDamage */, DMG_ENERGYBEAM ) );
+					
+					//Editing this block so i can set where blood spawns?
+					CTakeDamageInfo info = CTakeDamageInfo( this, pPlayer, ffdev_laserrifle_dmg.GetFloat() /* GetFFWpnData().m_iDamage */, DMG_ENERGYBEAM );
+					info.SetDamagePosition( traceHit.startpos );
+					info.SetImpactPosition( traceHit.endpos );
+
+					pPlayerTarget->TakeDamage( info );
 					float flVelocityFactor = ffdev_laserrifle_slowdownfactor.GetFloat();
 					if ( flVelocityFactor != 1.0 && !(pPlayerTarget->GetFlags() & FL_ONGROUND) )
 						pPlayerTarget->SetAbsVelocity( Vector(	pPlayerTarget->GetAbsVelocity().x * flVelocityFactor , 

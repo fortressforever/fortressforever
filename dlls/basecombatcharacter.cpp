@@ -1211,6 +1211,9 @@ bool CBaseCombatCharacter::BecomeRagdollBoogie( CBaseEntity *pKiller, const Vect
 	CTakeDamageInfo ragdollInfo( pKiller, pKiller, 10000.0, DMG_GENERIC | DMG_REMOVENORAGDOLL );
 	ragdollInfo.SetDamagePosition(WorldSpaceCenter());
 	ragdollInfo.SetDamageForce( Vector( 0, 0, 1) );
+	//Do i need to do this? -GreenMushy
+	ragdollInfo.SetImpactPosition( pKiller->GetAbsOrigin() );
+
 	TakeDamage( ragdollInfo );
 
 	return true;
