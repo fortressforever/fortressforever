@@ -27,6 +27,7 @@
 #include "engine/IEngineSound.h"
 #include "ff_player.h"
 #include "ff_gamerules.h"
+#include "ff_luacontext.h"
 #include "tier0/vprof.h"
 #include "ff_bot_temp.h"
 #include "viewport_panel_names.h"
@@ -57,6 +58,8 @@ void FinishClientPutInServer( CFFPlayer *pPlayer )
 	pPlayer->InitialSpawn();
 	pPlayer->Spawn();
 
+	CFFLuaSC func( 1, pPlayer );
+	func.CallFunction( "player_connected" );
 
 	// --> Mirv: Various connectiong things
 	

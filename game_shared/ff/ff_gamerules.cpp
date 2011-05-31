@@ -429,7 +429,7 @@ ConVar mp_prematch( "mp_prematch",
 		func.Push( pszName );
 		func.Push( pszAddress );
 		func.Push( ENTINDEX( pEdict ) );
-		if( func.CallFunction( "player_connected" ) )
+		if( func.CallFunction( "player_canconnect" ) )
 		{
 			if( !func.GetBool() )
 			{
