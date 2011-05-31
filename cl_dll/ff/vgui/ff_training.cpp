@@ -52,7 +52,7 @@ CFFTrainingPanel::CFFTrainingPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FF
 
 	//Other useful options
 	SetVisible(false);//made visible on command later 
-	SetSizeable(true);
+	SetSizeable(false);
 	SetMoveable(true);
 } 
 
