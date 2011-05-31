@@ -4516,6 +4516,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_fx_cloaksmoke_emitter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_fx_cloaksmoke_emitter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_fx_conc_emitter.cpp"
 				>
 			</File>
@@ -5201,6 +5209,10 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_base.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_cloaksmoke.cpp"
 				>
 			</File>
 			<File

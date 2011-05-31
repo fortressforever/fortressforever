@@ -686,6 +686,9 @@ private:
 	float m_flCloakTime;
 	// Time until player can cloak again
 	float m_flNextCloak;
+
+	//Time for cloaksmoke to stop being active
+	float m_flCloakSmokeEndTime;
 	
 	// time before allowed to scream again
 	float m_flScreamTime;
@@ -696,12 +699,17 @@ public:
 	void Command_SpySilentCloak( void );
 	void Command_SpySmartCloak( void );
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
+	bool IsCloakSmoked( void ) const { return m_iCloakSmoked != 0; }
 	//Returns the time cloak started -GreenMushy
 	float GetCloakTime( void ) const { return m_flCloakTime; }
+	void CloakSmoke( void );	//Specifically for the smoke grenade cloaking
+	void RemoveCloakSmoke( void ); // removing smoke grenade cloaking
+	float GetCloakSmokeEndTime( void ) const { return m_flCloakSmokeEndTime; }
 private:
 	void Cloak( void );	
 	//unsigned int m_iCloaked;
 	CNetworkVar( unsigned int, m_iCloaked ); //gotta network this since lots of serverside-only code calls it, e.g. when touching a scout
+	CNetworkVar( unsigned int, m_iCloakSmoked ); // for smoke gren invisibility
 public:
 	void Overpressure( void );
 	void OverpressureThink( void );

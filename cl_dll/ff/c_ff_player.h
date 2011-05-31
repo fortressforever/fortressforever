@@ -169,7 +169,7 @@ public:
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual int  DrawModel( int flags );
-	virtual bool IsOverridingViewmodel( void ) { return IsCloaked(); };
+	virtual bool IsOverridingViewmodel( void ) { if( IsCloaked() || IsCloakSmoked() ) return true; else return false; };
 	virtual int	DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags ) { return pViewmodel ? pViewmodel->DrawOverriddenViewmodel( flags ) : 0; }
 	virtual const QAngle& GetRenderAngles( void );
 
@@ -515,15 +515,24 @@ public:
 	void Command_EngyMe( void );
 
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
+	bool IsCloakSmoked( void ) const { return m_iCloakSmoked != 0; }
 	float GetCloakStartTime( void ) const { return m_flCloakTime; }
 	float GetCloakNextTime( void ) const { return m_flNextCloak; }
+	void CloakSmoke( void );	//Specifically for the smoke grenade cloaking
+	void RemoveCloakSmoke( void ); // removing smoke grenade cloaking
+	float GetCloakSmokeEndTime( void ) const { return m_flCloakSmokeEndTime; }
 private:
 	void Cloak( void );
 	unsigned int m_iCloaked;
+	unsigned int m_iCloakSmoked;
 	// Time the spy started cloaking
 	float m_flCloakTime;
 	// Time until player can cloak again
 	float m_flNextCloak;
+
+	//Time when cloaksmoke should stop working
+	float m_flCloakSmokeEndTime;
+
 	bool m_bCloakFadeType; // Silent or nonsilent
 	
 

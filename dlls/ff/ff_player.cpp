@@ -439,6 +439,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iCloakSmoked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
@@ -734,6 +735,15 @@ void CFFPlayer::PreThink(void)
 	}
 
 	StatusEffectsThink();	
+
+	//Cloaksmoke timing checks to make sure the cloak goes away
+	if( m_iCloakSmoked == 1 )
+	{
+		if( gpGlobals->curtime > m_flCloakSmokeEndTime )
+		{
+			m_iCloakSmoked = 0;
+		}	
+	}
 
 	// Do some spy stuff
 	if (GetClassSlot() == CLASS_SPY)
@@ -1676,8 +1686,10 @@ void CFFPlayer::SetupClassVariables()
 	m_flMancannonDetTime = 0.0f;
 	// Reset Spy stuff
 	m_iCloaked = 0;
+	m_iCloakSmoked = 0;
 	m_flCloakTime = 0.0f;
 	m_flNextCloak = 0.0f;
+	m_flCloakSmokeEndTime = 0.0f;
 	m_flCloakFadeStart = 0.0f;
 	m_flCloakFadeFinish = 0.0f;
 	SetCloakable( true );
@@ -1924,6 +1936,10 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_flNextGas = 0;
 	m_flGasTime = 0;
 	m_hGasser = NULL;
+
+	//stop cloak smoke
+	m_iCloakSmoked = 0;
+	m_flCloakSmokeEndTime = 0.0f;
 
 	// Beg; Added by Mulchman
 	if( m_bStaticBuilding )

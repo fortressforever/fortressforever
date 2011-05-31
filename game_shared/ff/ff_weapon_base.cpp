@@ -463,6 +463,12 @@ int CFFWeaponBase::DrawModel( int flags )
 		if ( !pPlayer->ShouldDraw() )
 			return 1;
 
+		//Break out early and dont draw anything if ur under the effects of cloaksmoke -GreenMushy
+		if( pPlayer->IsCloakSmoked() )
+		{
+			return 1;
+		}
+
 		if( !pPlayer->IsCloaked() )
 		{
 			//Removing all cloak textures -GreenMushy
@@ -510,7 +516,7 @@ RenderGroup_t CFFWeaponBase::GetRenderGroup()
 	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
 	if( pPlayer )
 	{
-		if ( pPlayer->IsCloaked() )
+		if ( pPlayer->IsCloaked() || pPlayer->IsCloakSmoked() )
 			return RENDER_GROUP_TRANSLUCENT_ENTITY;
 	}
 
@@ -526,7 +532,7 @@ ShadowType_t CFFWeaponBase::ShadowCastType( void )
 	if( pPlayer )
 	{
 		// Cloaked players have no shadows
-		if( pPlayer->IsCloaked() )
+		if( pPlayer->IsCloaked() || pPlayer->IsCloakSmoked() )
 			return SHADOWS_NONE;
 
 		if( pPlayer == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )

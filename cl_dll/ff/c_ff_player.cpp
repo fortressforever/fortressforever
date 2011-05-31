@@ -76,6 +76,8 @@ extern ConVar cl_ffdlight_flashlight;
 //static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
+ConVar ffdev_cloaksmokerendermode("ffdev_cloaksmokerendermode", 0, FCVAR_CLIENTDLL );
+
 //static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
 static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );
 
@@ -816,6 +818,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
+	RecvPropInt( RECVINFO( m_iCloakSmoked ) ),
 	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
 	RecvPropInt( RECVINFO( m_iActiveSabotages ) ),
 END_RECV_TABLE( )
@@ -823,7 +826,8 @@ END_RECV_TABLE( )
 BEGIN_PREDICTION_DATA( C_FFPlayer )
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
-	DEFINE_PRED_FIELD( m_iCloaked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_iCloaked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iCloakSmoked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 class C_FFRagdoll : public C_BaseAnimatingOverlay
@@ -1726,7 +1730,7 @@ void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 //-----------------------------------------------------------------------------
 RenderGroup_t C_FFPlayer::GetRenderGroup()
 {
-	if (IsCloaked())
+	if (IsCloaked() || IsCloakSmoked() )
 		return RENDER_GROUP_TRANSLUCENT_ENTITY;
 	else
 		return RENDER_GROUP_TWOPASS; // BaseClass::GetRenderGroup();
@@ -2004,6 +2008,12 @@ void C_FFPlayer::DrawPlayerIcons()
 //-----------------------------------------------------------------------------
 int C_FFPlayer::DrawModel( int flags )
 {
+	if( IsCloakSmoked() )
+	{
+		//Disables the player model from even being drawn -GreenMushy
+		return 1;
+	}
+
 	// Render the player info icons during the transparent pass
 	if (flags & STUDIO_TRANSPARENCY)
 	{
@@ -2013,7 +2023,7 @@ int C_FFPlayer::DrawModel( int flags )
 		// RENDER_GROUP_TRANSLUCENT_ENTITY turns on the STUDIO_TRANSPARENCY flag for the model and adds it 
 		// to the translucent renderables list, but not to the opaque renderables list as well.
 		// RENDER_GROUP_TWOPASS adds the model to both renderables lists, so we need to return if not cloaked
-		if ( !IsCloaked() )
+		if ( !IsCloaked() || !IsCloakSmoked() )
 			return 1;
 	}
 
@@ -2569,7 +2579,7 @@ void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 ShadowType_t C_FFPlayer::ShadowCastType( void )
 {
 	// Cloaked players have no shadows
-	if( IsCloaked() )
+	if( IsCloaked() || IsCloakSmoked() )
 		return SHADOWS_NONE;
 
 	if( this == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )

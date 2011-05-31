@@ -313,6 +313,16 @@ int C_BaseViewModel::DrawOverriddenViewmodel( int flags )
 	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
 	if( pPlayer )
 	{
+		if( !pPlayer->IsCloakSmoked() )
+		{
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
+		}
+		else
+		{
+			FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
+			return BaseClass::DrawModel( flags );	
+		}
+
 		if( !pPlayer->IsCloaked() )
 		{
 			//Removing all cloak textures -GreenMushy

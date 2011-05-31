@@ -126,6 +126,10 @@ ConVar ffdev_cloakspeed( "ffdev_cloakspeed", "1.5", FCVAR_REPLICATED );
 //ConVar for cloaktime externed to c_ff_player and ffplayer -GreenMushy
 ConVar ffdev_cloaktime( "ffdev_cloaktime", "3", FCVAR_REPLICATED );
 
+//Convar for cloaksmoke duration
+ConVar ffdev_cloaksmoke_duration( "ffdev_cloaksmoke_duration", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define FFDEV_CLOAKSMOKE_DURATION ffdev_cloaksmoke_duration.GetFloat()
+
 //ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define FF_SNIPER_MINPUSH 2.5f // sniperrifle_pushmin.GetFloat()
 
@@ -556,7 +560,13 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force)
 {
 	// Remember last time idled
-	m_flIdleTime = gpGlobals->curtime;	
+	m_flIdleTime = gpGlobals->curtime;
+
+	//Dont do sounds if ur under the effects of cloaksmoke -GreenMushy
+	if( IsCloakSmoked() )
+	{
+		return;
+	}
 
 	switch( GetClassSlot() )
 	{
@@ -1482,6 +1492,34 @@ void CFFPlayer::Cloak( void )
 			gameeventmanager->FireEvent( pEvent, true );
 		}
 #endif
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Apply cloaksmoke
+//-----------------------------------------------------------------------------
+void CFFPlayer::CloakSmoke( void )
+{
+	if( !IsCloakSmoked() )
+	{
+		//Set CloakSmoke int to true
+		m_iCloakSmoked = 1;
+	}
+
+	//Reset the timer to uncloak for safety
+	m_flCloakSmokeEndTime = gpGlobals->curtime + FFDEV_CLOAKSMOKE_DURATION;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove cloaksmoke
+//-----------------------------------------------------------------------------
+void CFFPlayer::RemoveCloakSmoke( void )
+{
+	//Force cloaksmoke removal.  Doing this time check so we can test a timer method or an instant method by setting it to 0
+	if( IsCloakSmoked() && ( gpGlobals->curtime > m_flCloakSmokeEndTime ) )
+	{
+		//Set CloakSmoke int to false
+		m_iCloakSmoked = 0;
 	}
 }
 
