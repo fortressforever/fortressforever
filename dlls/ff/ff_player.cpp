@@ -4905,7 +4905,7 @@ void CFFPlayer::Command_PrimeTwo(void)
 				switch( GetClassSlot() )
 				{
 					case CLASS_SOLDIER: 
-						FF_SendHint( this, SOLDIER_NAILGREN, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_NAILGREN" );
+						FF_SendHint( this, SOLDIER_LASERGREN, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_LASERGREN" );
 						break;
 					case CLASS_MEDIC:
 					case CLASS_SCOUT:
