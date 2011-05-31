@@ -73,6 +73,8 @@ void CFFTrainingPanel::OnButtonCommand(KeyValues *data)
 		engine->ClientCmd("mp_timelimit 0\n");
 		engine->ClientCmd("sv_cheats 0\n");
 		engine->ClientCmd("map ff_training\n");
+		// Just make it invisible now...
+		SetVisible(false);
 	}
 	else if (Q_strcmp(pszCommand, "Cancel") == 0)
 	{
@@ -92,7 +94,10 @@ void CFFTrainingPanel::SetVisible(bool state)
 	{
 		RequestFocus();
 		MoveToFront();
-		Msg("Requesting focus...\n");
+	}
+	else
+	{
+		m_pStatusLabel->SetVisible( false );
 	}
 
 	BaseClass::SetVisible(state);
