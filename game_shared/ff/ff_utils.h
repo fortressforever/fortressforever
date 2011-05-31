@@ -178,7 +178,7 @@ enum HintType
 	SNIPER_NOCHARGE,	// Event: 3 consecutive uncharged shots from sniper rifle
 	// SOLDIER
 	SOLDIER_SPAWN,		// Event: First spawn +5 seconds
-	SOLDIER_NAILGREN,	// Event: Prime nail grenade
+	SOLDIER_LASERGREN,	// Event: Prime nail grenade
 	SOLDIER_SENTRY,		// Event: Enemy sentrygun locks onto you
 	SOLDIER_PLAYTIME,	// Event: Player logs 10 minutes of soldier class
 	// DEMOMAN
