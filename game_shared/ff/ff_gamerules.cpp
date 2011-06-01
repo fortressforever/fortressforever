@@ -625,6 +625,12 @@ ConVar mp_prematch( "mp_prematch",
 				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 				if( pPlayer )
 				{
+					// Since the Lua system got completely restarted,
+					// we need to tell it about the players that
+					// are connected; act like they just connected
+					CFFLuaSC func( 1, pPlayer );
+					func.CallFunction( "player_connected" );
+
 					// Going to be deleting the last spawn entity,
 					// so make sure the player knows it doesn't exist anymore!
 					pPlayer->SetLastSpawn( NULL );
