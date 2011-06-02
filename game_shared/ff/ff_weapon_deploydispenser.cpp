@@ -283,6 +283,14 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 
 		CFFDispenser *pDispenser = pPlayer->GetDispenser();
 
+		//Bug fix: dismantling a ghost dispenser 
+		//if the dispenser is in transparent form, dont dismantle it -GreenMushy
+		if( pDispenser->IsTransparent() )
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD");			
+			return;
+		}
+
 		// can't dismantle what doesn't exist
 		if (!pDispenser)
 		{
@@ -386,6 +394,14 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 			return;
 		}
 
+		//Bug fix: dismantling a ghost dispenser 
+		//if the dispenser is in transparent form, dont dismantle it -GreenMushy
+		if( pDispenser->IsTransparent() )
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD");			
+			return;
+		}
+
 		if (pDispenser->IsSabotaged())
 		{
 			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_BUILDINGUNRESPONSIVE");
@@ -393,8 +409,8 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		}
 
 		// Close enough to dismantle
-		// and if it is even built -GreenMushy
-		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f && pDispenser->IsBuilt())
+		//The previous IsBuilt function didnt seem to work so i removed it -GreenMushy
+		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f )
 		{
 			// Bug #0000333: Buildable Behavior (non build slot) while building
 			pPlayer->GiveAmmo(65.0f, AMMO_CELLS, true);
