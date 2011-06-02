@@ -64,7 +64,7 @@ ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_FF_FFDEV_REPLICATED, "Laser
 
 	ConVar laserdamage("ffdev_lasergren_damage", "350", FCVAR_FF_FFDEV, "Damage of laser");
 	#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
-	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", ".15", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
+	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "1.0", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
 	ConVar laserangv("ffdev_lasergren_angv", "120", FCVAR_FF_FFDEV, "Laser angular increment");
 	#define LASERGREN_ROTATION_PER_TICK laserangv.GetFloat()*gpGlobals->interval_per_tick
 	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_FF_FFDEV, "Laser grenade jump distance" );
