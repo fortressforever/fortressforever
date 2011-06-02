@@ -94,14 +94,14 @@ ConVar  sg_cloaksonar_pitch_far( "ffdev_sg_cloaksonar_pitch_far", "108", FCVAR_F
 
 ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_FF_FFDEV_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE sg_explosiondamage_base.GetFloat() // 51.0f 
-ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "4.0", FCVAR_FF_FFDEV_REPLICATED, "SG bullet push force");
-#define SG_BULLETPUSH ffdev_sg_bulletpush.GetFloat() // 4.0f
+ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "7.0", FCVAR_FF_FFDEV_REPLICATED, "SG bullet push force");
+#define SG_BULLETPUSH ffdev_sg_bulletpush.GetFloat() // 7.0f
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
-ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "7.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 1 ground bullet push multiplier");
+ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "10.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 1 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL1 ffdev_sg_groundpush_multiplier_lvl1.GetFloat() // 7.0f
-ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "4.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 2 ground bullet push multiplier");
+ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "7.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 2 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL2 ffdev_sg_groundpush_multiplier_lvl2.GetFloat() // SG_GROUNDPUSH_MULTIPLIER_LVL1
-ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "4.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 3 ground bullet push multiplier");
+ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "7.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 3 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL3 ffdev_sg_groundpush_multiplier_lvl3.GetFloat() // SG_GROUNDPUSH_MULTIPLIER_LVL1
 ConVar ffdev_sg_bulletdamage("ffdev_sg_bulletdamage", "14", FCVAR_FF_FFDEV_REPLICATED, "SG bullet damage");
 #define SG_BULLETDAMAGE ffdev_sg_bulletdamage.GetInt() // 14.0f
