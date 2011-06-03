@@ -553,6 +553,7 @@ private:
 	float m_flImmuneTime;							// Mulch: immunity: time in the future of when the immunity ends
 	int m_iInfectedTeam;							// Mulch: team the medic who infected us was on
     float m_flLastOverHealthTick;					// Mulch: last time we took health cause health > maxhealth
+	int m_nNumInfectDamage;
 	
 	// A hack flag to put on a player who was infected and tried to
 	// evade dying by infection by changing teams or typing kill. We
