@@ -83,6 +83,16 @@ static ConVar decap_test("ffdev_decaptest", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT )
 ConVar cl_jimmyleg_cap( "cl_jimmyleg_cap", "1.4", FCVAR_ARCHIVE | FCVAR_USERINFO, "Percentage speed needed to NOT jump." );
 ConVar cl_jimmyleg_mode( "cl_jimmyleg_mode", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Mode to display jimmylegs. 0 is default.  1 is speed conditional jimmyleg.  2 is full blown jimmyleg." );
 
+
+static ConVar tranq_on("ffdev_tranq_on", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Show tranq icon when conced. Default: 0 (boolean 0 or 1)"); 
+
+static ConVar concuss_alwaysOn("ffdev_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? Default: 0 (boolean 0 or 1)"); 
+static ConVar concuss_verticalDistance("ffdev_concuss_verticalDistance", "3", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
+static ConVar concuss_verticalSpeed("ffdev_concuss_verticalSpeed", "100", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Time taken for the sprite to up and down. Default: 100 (milliseconds)" );
+static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "90", FCVAR_CLIENTDLL | FCVAR_CHEAT, "How far (in degrees) the sprite rotates in 1 second. Must be a factor of 360 to operate smoothly. E.g. 360 180 120 90 45. Default: 90"  );
+static ConVar concuss_radius("ffdev_concuss_radius", "10", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite should be drawn from the origin. Default: 10 (hammer units)" );
+static ConVar concuss_height("ffdev_concuss_height", "6", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Height at which the sprite is drawn from the origin. Default: 6 (hammer units)");
+
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
@@ -107,6 +117,15 @@ extern void HudContextForceClose();
 #include "ff_weapon_base.h"
 
 STUB_WEAPON_CLASS( weapon_cubemap, WeaponCubemap, C_BaseCombatWeapon );
+
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheTranquilizedSprite )
+CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_tranquilized" )
+CLIENTEFFECT_REGISTER_END()
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheConcussedSprite )
+CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_concussed" )
+CLIENTEFFECT_REGISTER_END()
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheSpySprite )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_spy" )
@@ -1773,6 +1792,106 @@ void C_FFPlayer::DrawPlayerIcons()
 					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
 				}
 			}
+		}
+	}
+
+	// --------------------------------
+	// Check for "concussed"
+	// --------------------------------
+	if(m_flConcTime > gpGlobals->curtime || concuss_alwaysOn.GetBool())
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_concussed", TEXTURE_GROUP_CLIENT_EFFECTS );
+		if( pMaterial )
+		{
+			materials->Bind( pMaterial );
+			color32 c = { 255, 255, 0, 255 };
+			float time = gpGlobals->curtime;
+			
+			//distance from head
+			int radius = concuss_radius.GetInt();
+			int height = concuss_height.GetInt();
+			int spinSpeed = concuss_spinSpeed.GetInt();
+			//position around head
+			
+			float yawAngle = ((float)((int)(time*100) % spinSpeed) * 360/spinSpeed);
+			//360 or 180*2 or 90*4 etc.... -->> getting faster
+
+			//output from AngleVectors
+			Vector vecDirection; 
+			//origin of player at eye height + 12 units
+			Vector vecOrigin = Vector( EyePosition().x, EyePosition().y, EyePosition().z + height );
+			//for the wavey effect
+			Vector vecVerticalOffset;
+			Vector vecVerticalOffset2;
+
+			//make the wavey effect
+			int verticalSpeed = concuss_verticalSpeed.GetInt(); //speed (higher is slower)
+			float maxVerticalDistance = concuss_verticalDistance.GetFloat();//goes negative
+
+			float wave = (int)(time*100) % verticalSpeed;
+
+			if(wave < verticalSpeed/4)
+				vecVerticalOffset = Vector( 0, 0, (wave/(verticalSpeed/4)) * maxVerticalDistance);
+			else if(wave < verticalSpeed/2)
+				vecVerticalOffset = Vector( 0, 0, (verticalSpeed/2 - wave)/(verticalSpeed/4) * maxVerticalDistance);
+			else if(wave < (verticalSpeed/4)*3)
+				vecVerticalOffset = Vector( 0, 0, (wave - verticalSpeed/2)/(verticalSpeed/4) * -maxVerticalDistance);
+			else
+				vecVerticalOffset = Vector( 0, 0, (verticalSpeed - wave)/(verticalSpeed/4) * -maxVerticalDistance);
+
+			float wave2 = ((int)(time*100)+verticalSpeed/4) % verticalSpeed;
+
+			if(wave2 < verticalSpeed/4)
+				vecVerticalOffset2 = Vector( 0, 0, (wave2/(verticalSpeed/4)) * -maxVerticalDistance);
+			else if(wave2 < verticalSpeed/2)
+				vecVerticalOffset2 = Vector( 0, 0, (verticalSpeed/2 - wave2)/(verticalSpeed/4) * -maxVerticalDistance);
+			else if(wave2 < (verticalSpeed/4)*3)
+				vecVerticalOffset2 = Vector( 0, 0, (wave2 - verticalSpeed/2)/(verticalSpeed/4) * -maxVerticalDistance);
+			else
+				vecVerticalOffset2 = Vector( 0, 0, (verticalSpeed - wave2)/(verticalSpeed/4) * -maxVerticalDistance);
+
+			AngleVectors(QAngle(0.0f, yawAngle, 0.0f), &vecDirection);
+			VectorNormalizeFast(vecDirection);
+			DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset, 4.0f, 4.0f, c );
+			DrawSprite( vecOrigin - vecDirection*radius + vecVerticalOffset, 4.0f, 4.0f, c );
+
+			AngleVectors(QAngle(0.0f, yawAngle+45, 0.0f), &vecDirection);
+			VectorNormalizeFast(vecDirection);
+			DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset, 4.0f, 4.0f, c );
+			DrawSprite( vecOrigin - vecDirection*radius - vecVerticalOffset, 4.0f, 4.0f, c );
+
+			AngleVectors(QAngle(0.0f, yawAngle+90, 0), &vecDirection);
+			VectorNormalizeFast(vecDirection);
+			DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset2, 4.0f, 4.0f, c );
+			DrawSprite( vecOrigin - vecDirection*radius + vecVerticalOffset2, 4.0f, 4.0f, c );			
+			
+			AngleVectors(QAngle(0.0f, yawAngle+135, 0), &vecDirection);
+			VectorNormalizeFast(vecDirection);
+			DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset2, 4.0f, 4.0f, c );
+			DrawSprite( vecOrigin - vecDirection*radius - vecVerticalOffset2, 4.0f, 4.0f, c );			
+		}
+	}
+
+	// --------------------------------
+	// Check for "tranquilized"
+	// --------------------------------
+	if( m_flConcTime > gpGlobals->curtime && tranq_on.GetBool())
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_tranquilized", TEXTURE_GROUP_CLIENT_EFFECTS );
+		if( pMaterial )
+		{
+			materials->Bind( pMaterial );
+			float time = gpGlobals->curtime;
+
+			float alpha = (float)((int)(time*100) % 192)*4;
+			
+			color32 c1 = { 255, 255, 255, clamp(alpha,0,255) };
+			color32 c2 = { 255, 255, 255, clamp(alpha-255,0,255) };
+			color32 c3 = { 255, 255, 255, clamp(alpha-510,0,255) };
+			
+			DrawSprite( Vector( EyePosition().x+6.0f, EyePosition().y+6.0f, EyePosition().z + 12.0f ), 2.0f, 2.0f, c1 );
+			DrawSprite( Vector( EyePosition().x+8.0f, EyePosition().y+8.0f, EyePosition().z + 14.0f ), 4.0f, 4.0f, c2 );
+			DrawSprite( Vector( EyePosition().x+12.0f, EyePosition().y+12.0f, EyePosition().z + 18.0f ), 8.0f, 8.0f, c3 );
 		}
 	}
 }
