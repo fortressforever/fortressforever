@@ -587,7 +587,50 @@ void CC_SpySmartCloak( void )
 	pLocalPlayer->Command_SpySmartCloak();
 }
 
+void CC_EngyMe( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
 
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+
+	pLocalPlayer->Command_EngyMe();
+}
+
+void CC_SaveMe( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+
+	pLocalPlayer->Command_SaveMe();
+}
+
+void CC_AmmoMe( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+
+	pLocalPlayer->Command_AmmoMe();
+}
 
 #define FF_PLAYER_MODEL "models/player/terror.mdl"
 

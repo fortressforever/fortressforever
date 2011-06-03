@@ -482,7 +482,7 @@ void CFFPlayer::PlayJumpSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 	CRecipientFilter filter;
 	filter.AddRecipientsByPAS(vecOrigin);
 
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 	// Don't send to self
 	if (gpGlobals->maxClients > 1)
 	{
