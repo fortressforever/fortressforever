@@ -434,6 +434,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropBool( SENDINFO( m_bEngyMe ) ),
 	SendPropBool( SENDINFO( m_bAmmoMe ) ),
 	SendPropBool( SENDINFO( m_bConcussed ) ),
+	SendPropBool( SENDINFO( m_bTranqed ) ),
 	SendPropBool( SENDINFO( m_bSliding ) ),
 	SendPropEHandle( SENDINFO( m_hActiveSlowfield ) ),
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
@@ -559,6 +560,9 @@ CFFPlayer::CFFPlayer()
 
 	m_flConcTime = 0;		// Not concussed on creation
 	m_bConcussed = false;
+	
+	m_bTranqed = false;
+
 	m_iClassStatus = 0;		// No class sorted yet
 
 	m_flSlidingTime = 0;		// Not sliding on creation
@@ -1838,6 +1842,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if( m_bConcussed )
 		m_bConcussed = false;
+
+	if( m_bTranqed )
+		m_bTranqed = false;
 	
 	if( m_bSliding )
 		m_bSliding = false;
@@ -4298,6 +4305,12 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 		MessageEnd();
 	}
 	
+	// Set any player vars
+	switch( m_vSpeedEffects[i].type )
+	{
+		case SE_TRANQ: m_bTranqed = true; break;
+	}
+	
 	RecalculateSpeed();
 }
 
@@ -4359,6 +4372,12 @@ void CFFPlayer::RemoveSpeedEffectByIndex( int iSpeedEffectIndex )
 	{
 		// Turn it off
 		m_vSpeedEffects[ iSpeedEffectIndex ].active = false;
+		
+		// Set any player vars
+		switch( m_vSpeedEffects[ iSpeedEffectIndex ].type )
+		{
+			case SE_TRANQ: m_bTranqed = false; break;
+		}
 
 		int iIcon = -1;
 

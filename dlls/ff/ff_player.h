@@ -894,6 +894,13 @@ protected:
 	CNetworkVar( bool, m_bConcussed );
 	// **********************************
 
+	// **********************************
+	// Tranq stuffs
+public:
+	bool IsTranqed( void ) const { return m_bTranqed; }
+protected:
+	CNetworkVar( bool, m_bTranqed );
+	// **********************************
 
 
 public:

@@ -493,6 +493,16 @@ protected:
 	// ----------------------------------
 // *** ELMO 
 	
+// ELMO ***
+	// ----------------------------------
+	// Concussion
+public:
+	bool IsTranqed( void ) const { return m_bTranqed; }
+protected:
+	bool m_bTranqed;
+	// ----------------------------------
+// *** ELMO 
+	
 // SQUEEK ***
 	// ----------------------------------
 	// Sliding
