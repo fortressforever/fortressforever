@@ -416,9 +416,10 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 
 	SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
 
-	SendPropInt( SENDINFO( m_iSaveMe ), 1, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_iEngyMe ), 1, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_iAmmoMe ), 1, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bSaveMe ) ),
+	SendPropBool( SENDINFO( m_bEngyMe ) ),
+	SendPropBool( SENDINFO( m_bAmmoMe ) ),
+	SendPropBool( SENDINFO( m_bConcussed ) ),
 	SendPropBool( SENDINFO( m_bSliding ) ),
 	SendPropEHandle( SENDINFO( m_hActiveSlowfield ) ),
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
@@ -542,6 +543,7 @@ CFFPlayer::CFFPlayer()
 	m_iNextClass = 0;
 
 	m_flConcTime = 0;		// Not concussed on creation
+	m_bConcussed = false;
 	m_iClassStatus = 0;		// No class sorted yet
 
 	m_flSlidingTime = 0;		// Not sliding on creation
@@ -646,16 +648,20 @@ void CFFPlayer::PreThink(void)
 	}
 
 	// See if it's time to reset our saveme status
-	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iSaveMe != 0 ) )
-		m_iSaveMe = 0;
+	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_bSaveMe ) )
+		m_bSaveMe = false;
 
 	// See if it's time to reset our engyme status
-	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iEngyMe != 0 ) )
-		m_iEngyMe = 0;
+	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_bEngyMe ) )
+		m_bEngyMe = false;
 
 	// See if it's time to reset our engyme status
-	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iAmmoMe != 0 ) )
-		m_iAmmoMe = 0;
+	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_bAmmoMe ) )
+		m_bAmmoMe = false;
+
+	// See if it's time to reset our concussion status
+	if( ( m_flConcTime < gpGlobals->curtime ) && ( m_bConcussed ) )
+		m_bConcussed = false;
 
 	// Update our list of tagged players that the client
 	FindRadioTaggedPlayers();
@@ -1861,14 +1867,17 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_hSaveMe->SetLifeTime( gpGlobals->curtime );
 	}
 	*/
-	if( m_iSaveMe )
-		m_iSaveMe = 0;
+	if( m_bSaveMe )
+		m_bSaveMe = false;
 
-	if( m_iEngyMe )
-		m_iEngyMe = 0;
+	if( m_bEngyMe )
+		m_bEngyMe = false;
 	
-	if( m_iAmmoMe )
-		m_iAmmoMe = 0;
+	if( m_bAmmoMe )
+		m_bAmmoMe = false;
+
+	if( m_bConcussed )
+		m_bConcussed = false;
 
 	if( m_bSliding )
 		m_bSliding = false;
@@ -4186,7 +4195,7 @@ bool CFFPlayer::LuaIsEffectActive( int iEffect )
 	switch( iEffect )
 	{
 		case LUA_EF_ONFIRE: return ( m_iBurnTicks ? true : false ); break;
-		case LUA_EF_CONC: return (( m_flConcTime == -1 ) || ( m_flConcTime > gpGlobals->curtime )); break;
+		case LUA_EF_CONC: return IsConcussed(); break;
 		case LUA_EF_GAS: return IsGassed(); break;
 		case LUA_EF_INFECT: return IsInfected(); break;
 		case LUA_EF_RADIOTAG: return IsRadioTagged(); break;
@@ -5812,6 +5821,7 @@ const CFFPlayerClassInfo &CFFPlayer::GetFFClassData() const
 //-----------------------------------------------------------------------------
 void CFFPlayer::UnConcuss( void )
 {
+	m_bConcussed = false; //ELMO
 	m_flConcTime = gpGlobals->curtime - 1;
 
 	// Remove status icon
@@ -5829,6 +5839,8 @@ void CFFPlayer::UnConcuss( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::Concuss(float flDuration, float flIconDuration, const QAngle *viewjerk, float flDistance)
 {
+	m_bConcussed = true; //ELMO
+
 	if( flDuration == -1 )
 		m_flConcTime = flDuration;
 	else
@@ -5836,6 +5848,7 @@ void CFFPlayer::Concuss(float flDuration, float flIconDuration, const QAngle *vi
 
     // Send the status icon here... makes sense.
 	// send the concussion icon to be displayed
+
 	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
 	user.MakeReliable();
 
