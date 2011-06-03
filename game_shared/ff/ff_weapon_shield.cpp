@@ -136,7 +136,7 @@ bool CFFWeaponShield::Deploy()
 		{
 			DevMsg( "Last Weapon was DeployShield!  Doing special anim(server).\n" );
 			ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon(NULL);
-			return SendWeaponAnim( ACT_VM_IDLE );
+			return SendWeaponAnim( ACT_VM_LOWERED_TO_IDLE );
 		}
 	}
 #else
@@ -151,7 +151,7 @@ bool CFFWeaponShield::Deploy()
 		{
 			DevMsg( "Last Weapon was DeployShield!  Doing special anim(client).\n" );
 			ToFFPlayer(GetOwnerEntity())->SetLastFFWeaponClient(NULL);
-			return SendWeaponAnim( ACT_VM_IDLE );
+			return SendWeaponAnim( ACT_VM_LOWERED_TO_IDLE );
 		}
 	}
 #endif

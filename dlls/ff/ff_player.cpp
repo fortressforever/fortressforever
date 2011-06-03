@@ -4661,10 +4661,7 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 		{
 			AddHealth( m_nNumInfectDamage - FFDEV_INFECT_DAMAGE ) ;
 		}
-		else
-		{
-			AddHealth( m_nNumInfectDamage );
-		}
+		
 		//Reset the infect damamge counter
 		m_nNumInfectDamage = 0;
 
