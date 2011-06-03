@@ -700,8 +700,9 @@ void CFFMiniTurret::OnAutoSearchThink( void )
 	if( GetEnemy() )
 	{
 		// I see you new guy!
-		CPASAttenuationFilter filter( EyePosition() );
-		EmitSound( filter, entindex(), "RespawnTurret.Alert", &EyePosition() );
+		Vector vecSoundOrigin = EyePosition();
+		CPASAttenuationFilter filter( vecSoundOrigin );
+		EmitSound( filter, entindex(), "RespawnTurret.Alert", &vecSoundOrigin );
 
 		// Get a delay value from LUA
 		CFFLuaSC hContext( 1, GetEnemy() );
@@ -736,8 +737,9 @@ void CFFMiniTurret::OnDeploy( void )
 
 		m_OnDeploy.FireOutput( NULL, this );
 
-		CPASAttenuationFilter filter( EyePosition() );
-		EmitSound( filter, entindex(), "RespawnTurret.Deploy", &EyePosition() );
+		Vector vecSoundOrigin = EyePosition();
+		CPASAttenuationFilter filter( vecSoundOrigin );
+		EmitSound( filter, entindex(), "RespawnTurret.Deploy", &vecSoundOrigin );
 
 		EnableLaserDot();
 		EnableLaserBeam();
@@ -932,8 +934,9 @@ void CFFMiniTurret::OnRetire( void )
 
 			m_OnRetire.FireOutput( NULL, this );
 
-			CPASAttenuationFilter filter( EyePosition() );
-			EmitSound( filter, entindex(), "RespawnTurret.Retire", &EyePosition() );
+			Vector vecSoundOrigin = EyePosition();
+			CPASAttenuationFilter filter( vecSoundOrigin );
+			EmitSound( filter, entindex(), "RespawnTurret.Retire", &vecSoundOrigin );
 		}
 	}
 	else if( IsActivityFinished() )
@@ -1140,8 +1143,9 @@ void CFFMiniTurret::Ping( void )
 	if( m_flPingTime > gpGlobals->curtime )
 		return;
 
-	CPASAttenuationFilter filter( EyePosition() );
-	EmitSound( filter, entindex(), "RespawnTurret.Ping", &EyePosition() );
+	Vector vecSoundOrigin = EyePosition();
+	CPASAttenuationFilter filter( vecSoundOrigin );
+	EmitSound( filter, entindex(), "RespawnTurret.Ping", &vecSoundOrigin );
 
 	m_flPingTime = gpGlobals->curtime + FF_MINITURRET_PING_TIME;
 }
@@ -1194,8 +1198,9 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	{
 		FireBullets( info );
 
-		CPASAttenuationFilter filter( EyePosition() );
-		EmitSound( filter, entindex(), "RespawnTurret.Fire", &EyePosition() );
+		Vector vecSoundOrigin = EyePosition();
+		CPASAttenuationFilter filter( vecSoundOrigin );
+		EmitSound( filter, entindex(), "RespawnTurret.Fire", &vecSoundOrigin );
 
 		DoMuzzleFlash();
 	}
