@@ -534,7 +534,6 @@ public:
 	float GetCloakNextTime( void ) const { return m_flNextCloak; }
 	void CloakSmoke( void );	//Specifically for the smoke grenade cloaking
 	void RemoveCloakSmoke( void ); // removing smoke grenade cloaking
-	float GetCloakSmokeEndTime( void ) const { return m_flCloakSmokeEndTime; }
 private:
 	void Cloak( void );
 	unsigned int m_iCloaked;
@@ -543,9 +542,6 @@ private:
 	float m_flCloakTime;
 	// Time until player can cloak again
 	float m_flNextCloak;
-
-	//Time when cloaksmoke should stop working
-	float m_flCloakSmokeEndTime;
 
 	bool m_bCloakFadeType; // Silent or nonsilent
 	

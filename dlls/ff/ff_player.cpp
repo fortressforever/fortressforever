@@ -741,15 +741,6 @@ void CFFPlayer::PreThink(void)
 
 	StatusEffectsThink();	
 
-	//Cloaksmoke timing checks to make sure the cloak goes away
-	if( m_iCloakSmoked == 1 )
-	{
-		if( gpGlobals->curtime > m_flCloakSmokeEndTime )
-		{
-			m_iCloakSmoked = 0;
-		}	
-	}
-
 	// Do some spy stuff
 	if (GetClassSlot() == CLASS_SPY)
 	{
@@ -1694,7 +1685,6 @@ void CFFPlayer::SetupClassVariables()
 	m_iCloakSmoked = 0;
 	m_flCloakTime = 0.0f;
 	m_flNextCloak = 0.0f;
-	m_flCloakSmokeEndTime = 0.0f;
 	m_flCloakFadeStart = 0.0f;
 	m_flCloakFadeFinish = 0.0f;
 	SetCloakable( true );
@@ -1947,7 +1937,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	//stop cloak smoke
 	m_iCloakSmoked = 0;
-	m_flCloakSmokeEndTime = 0.0f;
 
 	// Beg; Added by Mulchman
 	if( m_bStaticBuilding )

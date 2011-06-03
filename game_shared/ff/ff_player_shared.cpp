@@ -1500,14 +1500,8 @@ void CFFPlayer::Cloak( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::CloakSmoke( void )
 {
-	if( !IsCloakSmoked() )
-	{
-		//Set CloakSmoke int to true
-		m_iCloakSmoked = 1;
-	}
-
-	//Reset the timer to uncloak for safety
-	m_flCloakSmokeEndTime = gpGlobals->curtime + FFDEV_CLOAKSMOKE_DURATION;
+	//Set CloakSmoke int to true
+	m_iCloakSmoked = 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -1515,12 +1509,8 @@ void CFFPlayer::CloakSmoke( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::RemoveCloakSmoke( void )
 {
-	//Force cloaksmoke removal.  Doing this time check so we can test a timer method or an instant method by setting it to 0
-	if( IsCloakSmoked() && ( gpGlobals->curtime > m_flCloakSmokeEndTime ) )
-	{
-		//Set CloakSmoke int to false
-		m_iCloakSmoked = 0;
-	}
+	//Set CloakSmoke int to false
+	m_iCloakSmoked = 0;
 }
 
 //-----------------------------------------------------------------------------

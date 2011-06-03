@@ -36,11 +36,8 @@
 ConVar ffdev_cloaksmoke_gren_lifetime("ffdev_cloaksmoke_gren_lifetime", "10.0f", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define FFDEV_CLOAKSMOKE_GREN_LIFETIME ffdev_cloaksmoke_gren_lifetime.GetFloat()
 
-ConVar ffdev_cloaksmoke_radius_outer("ffdev_cloaksmoke_radius_outer", "256.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
-#define FFDEV_CLOAKSMOKE_RADIUS_OUTER ffdev_cloaksmoke_radius_outer.GetFloat()
-
-ConVar ffdev_cloaksmoke_radius_inner("ffdev_cloaksmoke_radius_inner", "192.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
-#define FFDEV_CLOAKSMOKE_RADIUS_INNER ffdev_cloaksmoke_radius_inner.GetFloat()
+ConVar ffdev_cloaksmoke_radius("ffdev_cloaksmoke_radius", "192.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define FFDEV_CLOAKSMOKE_RADIUS ffdev_cloaksmoke_radius.GetFloat()
 
 class CFFGrenadeCloakSmoke : public CFFGrenadeBase
 {
@@ -51,10 +48,13 @@ public:
 	// Server spits out a complaint about this not being unsigned
 	CNetworkVar( unsigned int, m_bIsEmitting );
 
+	//Vector of all the players it is currently cloaking
+	CUtlVector<CFFPlayer*> m_vCloakSmokeList;
+
 	virtual void Precache();
 	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
 	virtual float GetGrenadeDamage() { return 0.0f; }
-	virtual float GetGrenadeRadius() { return FFDEV_CLOAKSMOKE_RADIUS_OUTER; }
+	virtual float GetGrenadeRadius() { return FFDEV_CLOAKSMOKE_RADIUS; }
 	virtual const char *GetBounceSound() { return "GasGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_CLOAKSMOKE; }
 
@@ -106,6 +106,8 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeCloakSmoke::Spawn( void )
 	{
+		m_vCloakSmokeList.RemoveAll();
+
 		SetModel( CLOAKSMOKE_MODEL );
 		BaseClass::Spawn();	
 
@@ -122,10 +124,11 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: Emit a ring that blows things up
+	// Purpose: 
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeCloakSmoke::Explode(trace_t *pTrace, int bitsDamageType)
 	{
+		//Destroy this grenade
 		UTIL_Remove(this);
 	}
 
@@ -144,9 +147,41 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 			m_bIsEmitting = 1;
 		}
 
+		//Grenade time is over
 		if (gpGlobals->curtime > m_flDetonateTime + FFDEV_CLOAKSMOKE_GREN_LIFETIME)
 		{
+			//Tell each cloaked player to uncloak
+			for( int i = m_vCloakSmokeList.Count() -1; i >= 0; i-- )
+			{
+				//Attempting a safety check to see if the player is valid first
+				CFFPlayer* pPlayer = dynamic_cast<CFFPlayer *>( m_vCloakSmokeList[i] );
+				if( !pPlayer )
+				{
+					//Player shouldnt be in the list anymore if hes null
+					m_vCloakSmokeList.Remove(i);
+
+					//move on to the next player
+					continue;
+				}
+
+				//Remove cloak from this player
+				pPlayer->RemoveCloakSmoke();
+			}
+
+			//Empty the list
+			m_vCloakSmokeList.RemoveAll();		
+
+			//Set the grenade to fadeout of existance
 			SetThink(&CBaseGrenade::SUB_FadeOut);
+		
+			// Animate
+			StudioFrameAdvance();
+
+			// Next think straight away
+			SetNextThink(gpGlobals->curtime);
+
+			//Dont do anymore logic
+			return;
 		}
 
 		if ( gpGlobals->curtime > m_flDetonateTime )
@@ -164,7 +199,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 			}
 
 			CBaseEntity *pEntity = NULL;
-			for( CEntitySphereQuery sphere( GetAbsOrigin(), FFDEV_CLOAKSMOKE_RADIUS_OUTER ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+			for( CEntitySphereQuery sphere( GetAbsOrigin(), FFDEV_CLOAKSMOKE_RADIUS ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 			{
 				if( !pEntity )
 					continue;
@@ -180,24 +215,49 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 				if( pPlayer->GetTeamNumber() != ToFFPlayer(GetOwnerEntity())->GetTeamNumber() )
 					continue;
 
-				//Get the player's distance from the gren origin
-				Vector vDisplacement = ( pPlayer->GetAbsOrigin() - GetAbsOrigin() );
-
-				//figure the length
-				float fDist = vDisplacement.Length();
-
-				//If the player is out
-				if( fDist <= FFDEV_CLOAKSMOKE_RADIUS_INNER )
+				if( m_vCloakSmokeList.HasElement( pPlayer ) == false )
 				{
+					//Add this player to the grenade list
+					m_vCloakSmokeList.AddToTail( pPlayer );
+
+					//Tell this player to start cloaksmoking
 					pPlayer->CloakSmoke();
-				}
-				else
-				{
-					pPlayer->RemoveCloakSmoke();
 				}
 			}
 		}
 
+
+		//Loop through the list of players( backwards so we can remove while we iterate) and see if they should remain cloaked
+		for( int i = m_vCloakSmokeList.Count() -1; i >= 0; i-- )
+		{
+			//Get the player in the list
+			//Attempting a safety check to see if the player is valid first
+			CFFPlayer* pPlayer = dynamic_cast<CFFPlayer *>( m_vCloakSmokeList[i] );
+			if( !pPlayer )
+			{
+				//Player shouldnt be in the list anymore if hes null
+				m_vCloakSmokeList.Remove(i);
+
+				//move on to the next player
+				continue;
+			}
+
+			//Get the player's distance from the gren origin
+			Vector vDisplacement = ( pPlayer->GetAbsOrigin() - GetAbsOrigin() );
+
+			//figure the length
+			float fDist = vDisplacement.Length();
+
+			//If the player is outside of the radius
+			if( fDist > FFDEV_CLOAKSMOKE_RADIUS )
+			{
+				//Turn the cloaksmoke flag off
+				pPlayer->RemoveCloakSmoke();
+
+				//Remove the player at this index from the list
+				m_vCloakSmokeList.Remove(i);
+			}
+		}
 		// Animate
 		StudioFrameAdvance();
 
