@@ -2498,7 +2498,7 @@ void C_FFPlayer::Simulate()
 	if ((m_flConcTime > gpGlobals->curtime) || (m_flConcTime < 0))
 	{
 		//Warning( "[prethink] conctime: %i\n", m_flConcTime );
-		float flLength = 7.5f;
+		float flLength = (GetClassSlot() == CLASS_MEDIC || GetClassSlot() == CLASS_SCOUT ) ? 7.5f : 15.0f;
 		float flConcAmount = 15.0f;
 		if( m_flConcTime > 0 )
 			flConcAmount *= (m_flConcTime - gpGlobals->curtime) / flLength;
