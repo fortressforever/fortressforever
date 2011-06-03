@@ -4660,6 +4660,15 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 			WRITE_FLOAT( 10.0f );
 		MessageEnd();
 
+		// Heal for the ammount lost, minus 1 tick of damage ( only if you have enough taken damage to subtract from )
+		if( m_nNumInfectDamage > FFDEV_INFECT_DAMAGE )
+		{
+			AddHealth( m_nNumInfectDamage - FFDEV_INFECT_DAMAGE ) ;
+		}
+		
+		//Reset the infect damamge counter
+		m_nNumInfectDamage = 0;
+
 		// credit the curer with a score
 		if( pCurer )
 			pCurer->AddFortPoints( 100, "#FF_FORTPOINTS_CUREINFECTION" );
