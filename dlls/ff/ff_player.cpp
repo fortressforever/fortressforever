@@ -530,6 +530,7 @@ CFFPlayer::CFFPlayer()
 	m_iInfectedTeam = TEAM_UNASSIGNED;
 	m_flImmuneTime = 0.0f;
 	m_flInfectTime = 0.0f; //Green Mushy
+	m_nNumInfectDamage = 0;
 	m_flLastOverHealthTick = 0.0f;
 	m_iActiveSabotages = 0;
 	m_iSabotagedSentries = 0;
@@ -4044,6 +4045,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			if( this->GetHealth() > FFDEV_INFECT_DAMAGE )// GreenMushy: dont damage if infection will kill you
 			{
 				CTakeDamageInfo info( pInfector, pInfector, FFDEV_INFECT_DAMAGE, DMG_POISON );
+				m_nNumInfectDamage += FFDEV_INFECT_DAMAGE;
 				info.SetCustomKill(KILLTYPE_INFECTION);
 				TakeDamage( info );
 			}
@@ -4051,14 +4053,15 @@ void CFFPlayer::StatusEffectsThink( void )
 			{
 				//Puts u down to 1 hp -GreenMushy
 				CTakeDamageInfo info( pInfector, pInfector, this->GetHealth() - 1, DMG_POISON );
+				m_nNumInfectDamage += ( this->GetHealth() - 1 );
 				info.SetCustomKill(KILLTYPE_INFECTION);
 				TakeDamage( info );
 			}
 
 			if( gpGlobals->curtime > m_flInfectTime )// GreenMushy: check to see if the infection should end
 			{
+				//Will heal for the correct amount
 				Cure( NULL );
-				AddHealth( ( FFDEV_INFECT_DAMAGE * FFDEV_INFECTION_TIME / FFDEV_INFECT_FREQ )- FFDEV_INFECT_DAMAGE ) ;
 			}
 
 			CSingleUserRecipientFilter user((CBasePlayer *)this);
@@ -4612,6 +4615,7 @@ bool CFFPlayer::Infect( CFFPlayer *pInfector )
 		m_bInfected = 1;
 		m_flInfectTime = gpGlobals->curtime + FFDEV_INFECTION_TIME;
 		m_fLastInfectedTick = gpGlobals->curtime;
+		m_nNumInfectDamage = 0;
 		m_hInfector = pInfector;
 		m_iInfectedTeam = pInfector->GetTeamNumber();
 
@@ -4685,6 +4689,7 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 		m_fLastInfectedTick = 0.0f;
 		m_hInfector = NULL;
 		m_flInfectTime = 0.0f;
+		m_nNumInfectDamage = 0;
 	}
 
 	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
