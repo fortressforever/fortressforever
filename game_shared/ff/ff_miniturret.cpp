@@ -700,7 +700,8 @@ void CFFMiniTurret::OnAutoSearchThink( void )
 	if( GetEnemy() )
 	{
 		// I see you new guy!
-		EmitSound( "RespawnTurret.Alert" );
+		CPASAttenuationFilter filter( EyePosition() );
+		EmitSound( filter, entindex(), "RespawnTurret.Alert", &EyePosition() );
 
 		// Get a delay value from LUA
 		CFFLuaSC hContext( 1, GetEnemy() );
@@ -735,7 +736,8 @@ void CFFMiniTurret::OnDeploy( void )
 
 		m_OnDeploy.FireOutput( NULL, this );
 
-		EmitSound( "RespawnTurret.Deploy" );
+		CPASAttenuationFilter filter( EyePosition() );
+		EmitSound( filter, entindex(), "RespawnTurret.Deploy", &EyePosition() );
 
 		EnableLaserDot();
 		EnableLaserBeam();
@@ -930,7 +932,8 @@ void CFFMiniTurret::OnRetire( void )
 
 			m_OnRetire.FireOutput( NULL, this );
 
-			EmitSound( "RespawnTurret.Retire" );
+			CPASAttenuationFilter filter( EyePosition() );
+			EmitSound( filter, entindex(), "RespawnTurret.Retire", &EyePosition() );
 		}
 	}
 	else if( IsActivityFinished() )
@@ -991,7 +994,7 @@ bool CFFMiniTurret::IsTargetVisible( CBaseEntity *pTarget )
 	// Can we trace to the target?
 	trace_t tr;
 	// Using MASK_SHOT instead of MASK_PLAYERSOLID so turrets track through anything they can actually shoot through
-	UTIL_TraceLine( vecMuzzle, vecTarget, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+	UTIL_TraceLine( EyePosition(), vecTarget, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 	//UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
 
 	/*if ( TURRET_DEBUG )
@@ -1005,7 +1008,8 @@ bool CFFMiniTurret::IsTargetVisible( CBaseEntity *pTarget )
 	}*/
 
 	// What did our trace hit?
-	if( tr.startsolid || /*( tr.fraction != 1.0f ) ||*/ !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
+	// Miniturrets honestly don't care about startsolid, they actually do start in a solid
+	if( /* tr.startsolid || ( tr.fraction != 1.0f ) ||*/ !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
 		return false;
 
 	if(tr.m_pEnt != pTarget)
@@ -1136,7 +1140,8 @@ void CFFMiniTurret::Ping( void )
 	if( m_flPingTime > gpGlobals->curtime )
 		return;
 
-	EmitSound( "RespawnTurret.Ping" );
+	CPASAttenuationFilter filter( EyePosition() );
+	EmitSound( filter, entindex(), "RespawnTurret.Ping", &EyePosition() );
 
 	m_flPingTime = gpGlobals->curtime + FF_MINITURRET_PING_TIME;
 }
@@ -1188,7 +1193,10 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	if( !miniturret_castrate.GetBool() )
 	{
 		FireBullets( info );
-		EmitSound( "RespawnTurret.Fire" );
+
+		CPASAttenuationFilter filter( EyePosition() );
+		EmitSound( filter, entindex(), "RespawnTurret.Fire", &EyePosition() );
+
 		DoMuzzleFlash();
 	}
 }
