@@ -283,18 +283,18 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 
 		CFFDispenser *pDispenser = pPlayer->GetDispenser();
 
+		// can't dismantle what doesn't exist
+		if (!pDispenser)
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NODISPENSERTODISMANTLE");	
+			return;
+		}
+
 		//Bug fix: dismantling a ghost dispenser 
 		//if the dispenser is in transparent form, dont dismantle it -GreenMushy
 		if( pDispenser->IsTransparent() )
 		{
 			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD");			
-			return;
-		}
-
-		// can't dismantle what doesn't exist
-		if (!pDispenser)
-		{
-			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_NODISPENSERTODISMANTLE");	
 			return;
 		}
 
