@@ -87,18 +87,20 @@ ConVar cl_jimmyleg_mode( "cl_jimmyleg_mode", "0", FCVAR_ARCHIVE | FCVAR_USERINFO
 
 static ConVar tranq_on("ffdev_tranq_on", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Show tranq icon when conced. Default: 0 (boolean 0 or 1)"); 
 
-static ConVar concuss_alwaysOn("ffdev_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? Default: 0 (boolean 0 or 1)"); 
-static ConVar concuss_spriteSize("ffdev_concuss_spriteSize", "8.0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Size of sprite. Default: 8"); 
-static ConVar concuss_spriteNum("ffdev_concuss_spriteNum", "5", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Number of sprites. Default: 5"); 
-static ConVar concuss_color_r("ffdev_concuss_color_r", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Red Component. Default: 255"); 
-static ConVar concuss_color_g("ffdev_concuss_color_g", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Green Component. Default: 255"); 
-static ConVar concuss_color_b("ffdev_concuss_color_b", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Blue Component. Default: 0"); 
-static ConVar concuss_color_a("ffdev_concuss_color_a", "128", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Alpha Component. Default: 128"); 
-static ConVar concuss_verticalDistance("ffdev_concuss_verticalDistance", "4", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
-static ConVar concuss_verticalSpeed("ffdev_concuss_verticalSpeed", "200", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Time taken for the sprite to loop up and down. Default: 200 (milliseconds)" );
-static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "30", FCVAR_CLIENTDLL | FCVAR_CHEAT, "The speed at which the sprites spin. Default: 30 (multiplier)"  );
-static ConVar concuss_radius("ffdev_concuss_radius", "10", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite should be drawn from the origin. Default: 10 (hammer units)" );
-static ConVar concuss_height("ffdev_concuss_height", "10", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Height at which the sprite is drawn from the origin. Default: 10 (hammer units)");
+#ifdef CLIENT_DLL
+static ConVar concuss_alwaysOn("cl_concuss_alwaysOn", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Status always on? Default: 0 (boolean 0 or 1)"); 
+static ConVar concuss_spriteSize("cl_concuss_spriteSize", "4.0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Size of sprite. Default: 8"); 
+static ConVar concuss_spriteNum("cl_concuss_spriteNum", "5", FCVAR_ARCHIVE | FCVAR_USERINFO, "Number of sprites. Default: 5"); 
+static ConVar concuss_color_r("cl_concuss_color_r", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Red Component. Default: 255"); 
+static ConVar concuss_color_g("cl_concuss_color_g", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Green Component. Default: 255"); 
+static ConVar concuss_color_b("cl_concuss_color_b", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Blue Component. Default: 0"); 
+static ConVar concuss_color_a("cl_concuss_color_a", "128", FCVAR_ARCHIVE | FCVAR_USERINFO, "Alpha Component. Default: 128"); 
+static ConVar concuss_verticalDistance("cl_concuss_verticalDistance", "4", FCVAR_ARCHIVE | FCVAR_USERINFO, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
+static ConVar concuss_verticalSpeed("cl_concuss_verticalSpeed", "200", FCVAR_ARCHIVE | FCVAR_USERINFO, "Time taken for the sprite to loop up and down. Default: 200 (milliseconds)" );
+static ConVar concuss_spinSpeed("cl_concuss_spinSpeed", "30", FCVAR_ARCHIVE | FCVAR_USERINFO, "The speed at which the sprites spin. Default: 30 (multiplier)"  );
+static ConVar concuss_radius("cl_concuss_radius", "10", FCVAR_ARCHIVE | FCVAR_USERINFO, "Distance the sprite should be drawn from the origin. Default: 10 (hammer units)" );
+static ConVar concuss_height("cl_concuss_height", "36", FCVAR_ARCHIVE | FCVAR_USERINFO, "Height at which the sprite is drawn from the origin. Default: 10 (hammer units)");
+#endif
 // *** ELMO
 
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
@@ -1830,8 +1832,12 @@ void C_FFPlayer::DrawPlayerIcons()
 
 			//output from AngleVectors
 			Vector vecDirection; 
-			//origin of player at eye height + 12 units
-			Vector vecOrigin = Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + height );
+			//origin of player
+			Vector vecOrigin = GetAbsOrigin();
+
+			//Now add the height in
+			vecOrigin.z += height;
+
 			//for the wavey effect (two for a more random feel.. might be a simpler way)
 			Vector vecVerticalOffset;
 			Vector vecVerticalOffset2;
