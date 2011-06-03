@@ -87,6 +87,12 @@ ConVar cl_jimmyleg_mode( "cl_jimmyleg_mode", "0", FCVAR_ARCHIVE | FCVAR_USERINFO
 static ConVar tranq_on("ffdev_tranq_on", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Show tranq icon when conced. Default: 0 (boolean 0 or 1)"); 
 
 static ConVar concuss_alwaysOn("ffdev_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? Default: 0 (boolean 0 or 1)"); 
+
+static ConVar concuss_spriteSize("ffdev_concuss_spriteSize", "4.0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Size of sprite. Default: 4"); 
+static ConVar concuss_color_r("ffdev_concuss_color_r", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Red Component. Default: 255"); 
+static ConVar concuss_color_g("ffdev_concuss_color_g", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Green Component. Default: 255"); 
+static ConVar concuss_color_b("ffdev_concuss_color_b", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status Component. Default: 0"); 
+static ConVar concuss_color_a("ffdev_concuss_color_a", "255", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status Component. Default: 255"); 
 static ConVar concuss_verticalDistance("ffdev_concuss_verticalDistance", "3", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
 static ConVar concuss_verticalSpeed("ffdev_concuss_verticalSpeed", "100", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Time taken for the sprite to up and down. Default: 100 (milliseconds)" );
 static ConVar concuss_spinSpeed("ffdev_concuss_spinSpeed", "90", FCVAR_CLIENTDLL | FCVAR_CHEAT, "How far (in degrees) the sprite rotates in 1 second. Must be a factor of 360 to operate smoothly. E.g. 360 180 120 90 45. Default: 90"  );
@@ -1804,8 +1810,9 @@ void C_FFPlayer::DrawPlayerIcons()
 		if( pMaterial )
 		{
 			materials->Bind( pMaterial );
-			color32 c = { 255, 255, 0, 255 };
+			color32 c = { concuss_color_r.GetInt(), concuss_color_g.GetInt(), concuss_color_b.GetInt(), concuss_color_a.GetInt() };
 			float time = gpGlobals->curtime;
+			float spriteSize = concuss_spriteSize.GetFloat();
 			
 			//distance from head
 			int radius = concuss_radius.GetInt();
@@ -1852,23 +1859,23 @@ void C_FFPlayer::DrawPlayerIcons()
 
 			AngleVectors(QAngle(0.0f, yawAngle, 0.0f), &vecDirection);
 			VectorNormalizeFast(vecDirection);
-			DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset, 4.0f, 4.0f, c );
-			DrawSprite( vecOrigin - vecDirection*radius + vecVerticalOffset, 4.0f, 4.0f, c );
+			DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset, spriteSize, spriteSize, c );
+			DrawSprite( vecOrigin - vecDirection*radius + vecVerticalOffset, spriteSize, spriteSize, c );
 
 			AngleVectors(QAngle(0.0f, yawAngle+45, 0.0f), &vecDirection);
 			VectorNormalizeFast(vecDirection);
-			DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset, 4.0f, 4.0f, c );
-			DrawSprite( vecOrigin - vecDirection*radius - vecVerticalOffset, 4.0f, 4.0f, c );
+			DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset, spriteSize, spriteSize, c );
+			DrawSprite( vecOrigin - vecDirection*radius - vecVerticalOffset, spriteSize, spriteSize, c );
 
 			AngleVectors(QAngle(0.0f, yawAngle+90, 0), &vecDirection);
 			VectorNormalizeFast(vecDirection);
-			DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset2, 4.0f, 4.0f, c );
-			DrawSprite( vecOrigin - vecDirection*radius + vecVerticalOffset2, 4.0f, 4.0f, c );			
+			DrawSprite( vecOrigin + vecDirection*radius - vecVerticalOffset2, spriteSize, spriteSize, c );
+			DrawSprite( vecOrigin - vecDirection*radius + vecVerticalOffset2, spriteSize, spriteSize, c );			
 			
 			AngleVectors(QAngle(0.0f, yawAngle+135, 0), &vecDirection);
 			VectorNormalizeFast(vecDirection);
-			DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset2, 4.0f, 4.0f, c );
-			DrawSprite( vecOrigin - vecDirection*radius - vecVerticalOffset2, 4.0f, 4.0f, c );			
+			DrawSprite( vecOrigin + vecDirection*radius + vecVerticalOffset2, spriteSize, spriteSize, c );
+			DrawSprite( vecOrigin - vecDirection*radius - vecVerticalOffset2, spriteSize, spriteSize, c );			
 		}
 	}
 
