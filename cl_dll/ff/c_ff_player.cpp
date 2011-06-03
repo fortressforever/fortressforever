@@ -84,23 +84,24 @@ ConVar cl_jimmyleg_cap( "cl_jimmyleg_cap", "1.4", FCVAR_ARCHIVE | FCVAR_USERINFO
 ConVar cl_jimmyleg_mode( "cl_jimmyleg_mode", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Mode to display jimmylegs. 0 is default.  1 is speed conditional jimmyleg.  2 is full blown jimmyleg." );
 
 // ELMO *** Concussion icon (above player head) 1 of 2
+static ConVar cl_tranq("cl_tranq", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Show tranq Zs above tranquilized players' heads? (boolean 0 or 1)"); 
 
-static ConVar tranq_on("ffdev_tranq_on", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Show tranq icon when conced. Default: 0 (boolean 0 or 1)"); 
+static ConVar cl_concuss("cl_concuss", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Show concussion stars above concussed players' heads? (boolean 0 or 1)"); 
+static ConVar concuss_spriteSize("cl_concuss_spriteSize", "3.0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Size of sprite.", true, 0.0f, true, 8.0f ); 
+static ConVar concuss_spriteNum("cl_concuss_spriteNum", "5", FCVAR_ARCHIVE | FCVAR_USERINFO, "Number of sprites."); 
+static ConVar concuss_color_r("cl_concuss_color_r", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Red Component."); 
+static ConVar concuss_color_g("cl_concuss_color_g", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Green Component."); 
+static ConVar concuss_color_b("cl_concuss_color_b", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Blue Component."); 
+static ConVar concuss_color_a("cl_concuss_color_a", "128", FCVAR_ARCHIVE | FCVAR_USERINFO, "Alpha Component."); 
+static ConVar concuss_verticalDistance("cl_concuss_verticalDistance", "2.5", FCVAR_ARCHIVE | FCVAR_USERINFO, "Distance the sprite travels from the origin (positive and negative).", true, 0.0f, true, 8.0f);
+static ConVar concuss_verticalSpeed("cl_concuss_verticalSpeed", "200", FCVAR_ARCHIVE | FCVAR_USERINFO, "Time taken for the sprite to loop up and down." );
+static ConVar concuss_spinSpeed("cl_concuss_spinSpeed", "25", FCVAR_ARCHIVE | FCVAR_USERINFO, "The speed at which the sprites spin."  );
+static ConVar concuss_radius("cl_concuss_radius", "8", FCVAR_ARCHIVE | FCVAR_USERINFO, "Distance the sprite should be drawn from the origin.", true, 0.0f, true, 16.0f );
+static ConVar concuss_height("cl_concuss_height", "36", FCVAR_ARCHIVE | FCVAR_USERINFO, "Height at which the sprite is drawn from the origin.", true, 0.0f, true, 36.0f );
 
-#ifdef CLIENT_DLL
-static ConVar concuss_alwaysOn("cl_concuss_alwaysOn", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Status always on? Default: 0 (boolean 0 or 1)"); 
-static ConVar concuss_spriteSize("cl_concuss_spriteSize", "4.0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Size of sprite. Default: 8"); 
-static ConVar concuss_spriteNum("cl_concuss_spriteNum", "5", FCVAR_ARCHIVE | FCVAR_USERINFO, "Number of sprites. Default: 5"); 
-static ConVar concuss_color_r("cl_concuss_color_r", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Red Component. Default: 255"); 
-static ConVar concuss_color_g("cl_concuss_color_g", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Green Component. Default: 255"); 
-static ConVar concuss_color_b("cl_concuss_color_b", "255", FCVAR_ARCHIVE | FCVAR_USERINFO, "Blue Component. Default: 0"); 
-static ConVar concuss_color_a("cl_concuss_color_a", "128", FCVAR_ARCHIVE | FCVAR_USERINFO, "Alpha Component. Default: 128"); 
-static ConVar concuss_verticalDistance("cl_concuss_verticalDistance", "4", FCVAR_ARCHIVE | FCVAR_USERINFO, "Distance the sprite travels from the origin (positive and negative). Default: 3 (hammer units)");
-static ConVar concuss_verticalSpeed("cl_concuss_verticalSpeed", "200", FCVAR_ARCHIVE | FCVAR_USERINFO, "Time taken for the sprite to loop up and down. Default: 200 (milliseconds)" );
-static ConVar concuss_spinSpeed("cl_concuss_spinSpeed", "30", FCVAR_ARCHIVE | FCVAR_USERINFO, "The speed at which the sprites spin. Default: 30 (multiplier)"  );
-static ConVar concuss_radius("cl_concuss_radius", "10", FCVAR_ARCHIVE | FCVAR_USERINFO, "Distance the sprite should be drawn from the origin. Default: 10 (hammer units)" );
-static ConVar concuss_height("cl_concuss_height", "36", FCVAR_ARCHIVE | FCVAR_USERINFO, "Height at which the sprite is drawn from the origin. Default: 10 (hammer units)");
-#endif
+static ConVar cl_tranq_alwaysOn("cl_tranq_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? (boolean 0 or 1)"); 
+static ConVar concuss_alwaysOn("cl_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? (boolean 0 or 1)"); 
+
 // *** ELMO
 
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
@@ -753,6 +754,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropBool( RECVINFO( m_bEngyMe ) ),
 	RecvPropBool( RECVINFO( m_bAmmoMe ) ),
 	RecvPropBool( RECVINFO( m_bConcussed ) ),
+	RecvPropBool( RECVINFO( m_bTranqed ) ),
 	RecvPropBool( RECVINFO( m_bSliding ) ),
 	RecvPropEHandle( RECVINFO( m_hActiveSlowfield ) ),
 	RecvPropInt( RECVINFO( m_bInfected ) ),
@@ -1170,6 +1172,8 @@ C_FFPlayer::C_FFPlayer() :
 
 	m_flConcTime = 0;
 	m_bConcussed = false;
+	
+	m_bTranqed = false;
 	
 	m_flSlidingTime = 0;
 	m_bSliding = false;
@@ -1811,7 +1815,7 @@ void C_FFPlayer::DrawPlayerIcons()
 	// --------------------------------
 	// Check for "concussed"
 	// --------------------------------
-	if(IsConcussed() || concuss_alwaysOn.GetBool())
+	if(cl_concuss.GetBool() && (IsConcussed() || concuss_alwaysOn.GetBool()))
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_concussed", TEXTURE_GROUP_CLIENT_EFFECTS );
 		if( pMaterial )
@@ -1903,7 +1907,7 @@ void C_FFPlayer::DrawPlayerIcons()
 	// --------------------------------
 	// Check for "tranquilized"
 	// --------------------------------
-	if( IsConcussed() && tranq_on.GetBool())
+	if( cl_tranq.GetBool() && (IsTranqed() || cl_tranq_alwaysOn.GetBool()) )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_tranquilized", TEXTURE_GROUP_CLIENT_EFFECTS );
 		if( pMaterial )
