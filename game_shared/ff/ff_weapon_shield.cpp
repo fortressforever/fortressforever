@@ -121,13 +121,8 @@ void CFFWeaponShield::ItemPostFrame()
 //----------------------------------------------------------------------------
 bool CFFWeaponShield::Deploy()
 {
-	//BaseClass::Deploy();
-
 	//Start the shield out inactive
 	m_bShieldActive = false;
-#ifdef CLIENT_DLL
-	DevMsg("Idle shield deploy called.\n");
-#endif
 
 #ifdef GAME_DLL
 	//Get this player's last weapon
@@ -139,7 +134,8 @@ bool CFFWeaponShield::Deploy()
 		//If the last weapon was the deploy shield, call a different deploy animation
 		if( pLastWeapon->GetWeaponID() == FF_WEAPON_DEPLOYSHIELD )
 		{
-			DevMsg( "Last Weapon was DeployShield!  Doing special anim.\n" );
+			DevMsg( "Last Weapon was DeployShield!  Doing special anim(server).\n" );
+			ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon(NULL);
 			return SendWeaponAnim( ACT_VM_IDLE );
 		}
 	}
@@ -153,15 +149,16 @@ bool CFFWeaponShield::Deploy()
 		//If the last weapon was the deploy shield, call a different deploy animation
 		if( pLastWeaponClient->GetWeaponID() == FF_WEAPON_DEPLOYSHIELD )
 		{
-			DevMsg( "Last Weapon was DeployShield!  Doing special anim.\n" );
+			DevMsg( "Last Weapon was DeployShield!  Doing special anim(client).\n" );
+			ToFFPlayer(GetOwnerEntity())->SetLastFFWeaponClient(NULL);
 			return SendWeaponAnim( ACT_VM_IDLE );
 		}
 	}
 #endif
 
+	//Normal deploy if the last weapon wasnt a deployshield
+	DevMsg( "Normal Deploy Called(shared)\n" );
 	return BaseClass::Deploy();
-	//just return true i guess
-	//return SendWeaponAnim( ACT_VM_HOLSTER );
 }
 
 //----------------------------------------------------------------------------
@@ -171,6 +168,13 @@ bool CFFWeaponShield::Holster()
 {
 	//Set the shield to idle to do cleanup and reseting stuff
 	//ShieldIdle();
+
+	//Clear the last weapon so it will reset appropriatly
+#ifdef CLIENT_DLL
+	ToFFPlayer(GetOwnerEntity())->SetLastFFWeaponClient(NULL);
+#else
+	ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon(NULL);
+#endif
 
 	//Now do normal holster
 	return BaseClass::Holster();
