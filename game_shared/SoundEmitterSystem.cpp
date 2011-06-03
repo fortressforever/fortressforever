@@ -1179,6 +1179,16 @@ void CBaseEntity::EmitSoundShared( const char *soundname, float soundtime /*= 0.
 
 	CPASAttenuationFilter filter( this, soundname );
 
+#ifdef GAME_DLL
+	// FF: AfterShock: Don't send to self. This fixes clientside prediction on sounds and means we can just do 1 shared EmitSound(bla)
+	if (gpGlobals->maxClients > 1)
+	{
+		CBasePlayer *pPlayer = ToBasePlayer( this );
+		if ( pPlayer )
+			filter.RemoveRecipient(pPlayer);
+	}
+#endif
+
 	EmitSound_t params;
 	params.m_pSoundName = soundname;
 	params.m_flSoundTime = soundtime;
