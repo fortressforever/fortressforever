@@ -1205,6 +1205,8 @@ C_FFPlayer::C_FFPlayer() :
 {
 	m_PlayerAnimState = CreatePlayerAnimState( this, this, LEGANIM_9WAY, true );
 
+	m_pLastWeaponClient = NULL;
+
 	// Default
 	m_clrTeamColor = Color( 255, 255, 255, 255 );
 
@@ -1475,6 +1477,8 @@ void C_FFPlayer::Spawn( void )
 	m_bCloakFadeType = false; // assume regular cloaking and not silent coaking
 	m_flNextClassSpecificSkill = 0.0f;
 	
+	m_pLastWeaponClient = NULL;
+
 	// Bug #0001448: Spy menu stuck on screen.  |----> Defrag
 	HudContextForceClose();
 

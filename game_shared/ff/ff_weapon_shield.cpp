@@ -128,6 +128,37 @@ bool CFFWeaponShield::Deploy()
 #ifdef CLIENT_DLL
 	DevMsg("Idle shield deploy called.\n");
 #endif
+
+#ifdef GAME_DLL
+	//Get this player's last weapon
+	CFFWeaponBase* pLastWeapon = ToFFPlayer(GetOwnerEntity())->GetLastFFWeapon();
+
+	//If the weapon is valid
+	if( pLastWeapon != NULL )
+	{
+		//If the last weapon was the deploy shield, call a different deploy animation
+		if( pLastWeapon->GetWeaponID() == FF_WEAPON_DEPLOYSHIELD )
+		{
+			DevMsg( "Last Weapon was DeployShield!  Doing special anim.\n" );
+			return SendWeaponAnim( ACT_VM_IDLE );
+		}
+	}
+#else
+	//Get this player's last weapon
+	CFFWeaponBase* pLastWeaponClient = ToFFPlayer(GetOwnerEntity())->GetLastFFWeaponClient();
+
+	//If the weapon is valid
+	if( pLastWeaponClient != NULL )
+	{
+		//If the last weapon was the deploy shield, call a different deploy animation
+		if( pLastWeaponClient->GetWeaponID() == FF_WEAPON_DEPLOYSHIELD )
+		{
+			DevMsg( "Last Weapon was DeployShield!  Doing special anim.\n" );
+			return SendWeaponAnim( ACT_VM_IDLE );
+		}
+	}
+#endif
+
 	return BaseClass::Deploy();
 	//just return true i guess
 	//return SendWeaponAnim( ACT_VM_HOLSTER );

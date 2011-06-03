@@ -86,6 +86,14 @@ bool CFFWeaponDeployShield::Deploy()
 #ifdef CLIENT_DLL
 	DevMsg("Active shield deployed.\n");
 #endif
+
+#ifdef GAME_DLL
+	//If this successfuly deploys, this is the last weapon
+	ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon(this);
+#else
+	ToFFPlayer(GetOwnerEntity())->SetLastFFWeaponClient(this);
+#endif
+
 	return CFFWeaponMeleeBase::Deploy();
 }
 //----------------------------------------------------------------------------

@@ -236,10 +236,14 @@ private:
 	unsigned int m_bImmune;
 	int m_iActiveSabotages;
 	int m_iSpyDisguising;
+	//Hold a last weapon?
+	CFFWeaponBase *m_pLastWeaponClient;
 // Called by shared code.
 public:
 	
 	// IFFPlayerAnimState overrides.
+	CFFWeaponBase* GetLastFFWeaponClient(){ return m_pLastWeaponClient; }
+	void SetLastFFWeaponClient(CFFWeaponBase* _pLastWeapon){ m_pLastWeaponClient = _pLastWeapon; }
 	virtual CFFWeaponBase* FFAnim_GetActiveWeapon();
 	virtual bool FFAnim_CanMove();
 	virtual CFFPlayer* FFAnim_GetPlayer();
