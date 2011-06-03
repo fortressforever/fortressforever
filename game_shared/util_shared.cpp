@@ -351,6 +351,9 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 
 			if( m_collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT )
 			{
+				if (pPassEnt == pHandle) 
+					return false;
+
 				// This allows players to pass through any team object (another player or entity), includes allies
 				CFFTeam *pTeam = GetGlobalFFTeam(pPassEnt->GetTeamNumber());
 				if( pHandle->IsPlayer() && ( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() || ( pTeam && ( pTeam->GetAllies() & ( 1 << pHandle->GetTeamNumber() ) ) ) ) )
