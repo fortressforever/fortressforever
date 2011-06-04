@@ -595,7 +595,8 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		//FIXME: Without this, triggers fire their EndTouch outputs when they are disabled!
 		//if ( !m_bDisabled )
 		//{
-			m_OnEndTouch.FireOutput(pOther, this);
+			// squeek: moved this line down below so it only gets fired if Lua allows it	
+			//m_OnEndTouch.FireOutput(pOther, this);
 		//}		
 
 		// If there are no more entities touching this trigger, fire the lost all touches
@@ -644,8 +645,8 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		{
 			if( hAllowed.GetBool() )
 			{
-				// Fire the lua output
-				_scriptman.RunPredicates_LUA( this, &hAllowed, "onendtouch" );
+				// Fire the output
+				m_OnEndTouch.FireOutput(pOther, this);
 			}
 		}
 	}
