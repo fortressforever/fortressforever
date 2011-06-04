@@ -97,6 +97,53 @@ namespace vgui
 		PostActionSignal ( kvAction );
 	}
 	
+	void CFFCustomHudArrangementPresets::SetControlsEnabled(bool bEnabled)
+	{
+		m_pColumns->SetEnabled( bEnabled );
+		m_pItemsX->SetEnabled( bEnabled );
+		m_pItemsY->SetEnabled( bEnabled );
+		m_pHeaderTextSize->SetEnabled( bEnabled );
+		m_pHeaderTextX->SetEnabled( bEnabled );
+		m_pHeaderTextY->SetEnabled( bEnabled );
+		m_pHeaderIconSize->SetEnabled( bEnabled );
+		m_pHeaderIconX->SetEnabled( bEnabled );
+		m_pHeaderIconY->SetEnabled( bEnabled );
+		m_pTextSize->SetEnabled( bEnabled );
+		m_pTextX->SetEnabled( bEnabled );
+		m_pTextY->SetEnabled( bEnabled );
+		m_pShowHeaderIcon->SetEnabled( bEnabled );
+		m_pShowHeaderText->SetEnabled( bEnabled );
+		m_pShowText->SetEnabled( bEnabled );
+		m_pHeaderIconShadow->SetEnabled( bEnabled );
+		m_pHeaderTextShadow->SetEnabled( bEnabled );
+		m_pTextShadow->SetEnabled( bEnabled );
+		m_pShowPanel->SetEnabled( bEnabled );
+		m_pPanelColorCustom->SetEnabled( bEnabled );
+
+
+		//if we're disabling
+		if(!bEnabled)
+		//disable all
+		{
+			m_pPanelRed->SetEnabled( bEnabled );
+			m_pPanelGreen->SetEnabled( bEnabled );
+			m_pPanelBlue->SetEnabled( bEnabled );
+			m_pPanelAlpha->SetEnabled( bEnabled );
+		}
+		//else we're enabling
+		else
+		//only enable based upon what is selected for custom panel colour
+		{
+			if(m_pPanelColorCustom->IsSelected())
+			{
+				m_pPanelRed->SetEnabled( bEnabled );
+				m_pPanelGreen->SetEnabled( bEnabled );
+				m_pPanelBlue->SetEnabled( bEnabled );
+				m_pPanelAlpha->SetEnabled( bEnabled );
+			}
+			//TODO: else might need to force false - might be sensible but not necessary??
+		}
+	}
 	//-----------------------------------------------------------------------------
 	// Purpose: Tells the assignment class that this preset class is loaded
 	//-----------------------------------------------------------------------------	

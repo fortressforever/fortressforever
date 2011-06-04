@@ -5,12 +5,12 @@
 DECLARE_HUDELEMENT(CHudBuildStateDispenser);
 DECLARE_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
 
-CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateSentry")
+CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateDispenser")
 {
 	SetParent(g_pClientMode->GetViewport());
 
-	// Hide when player is dead
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	// Hide when player is dead and not engi
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NOTENGINEER );
 
 	SetUseToggleText(true);
 
@@ -21,7 +21,7 @@ CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHu
 CHudBuildStateDispenser::~CHudBuildStateDispenser() 
 {
 }
-	
+
 KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 {
 	KeyValues *kvPreset = new KeyValues("StyleData");
@@ -170,10 +170,12 @@ void CHudBuildStateDispenser::VidInit()
 	m_qbDispenserHealth->SetLabelText("#FF_ITEM_HEALTH", false);
 	m_qbDispenserHealth->SetIconChar("a", false);
 	m_qbDispenserHealth->ShowAmountMax(false);
-	
+	m_qbDispenserAmmo->SetVisible(false);	
+
 	m_qbDispenserAmmo->SetLabelText("#FF_ITEM_AMMO", false);
 	m_qbDispenserAmmo->SetIconChar("r", false);
 	m_qbDispenserAmmo->ShowAmountMax(false);
+	m_qbDispenserHealth->SetVisible(false);
 	
 	m_qbCellCounter->SetLabelText("#FF_ITEM_CELLS", false);
 	m_qbCellCounter->SetIconChar("p", false);
@@ -199,31 +201,12 @@ void CHudBuildStateDispenser::OnTick()
 {
 	BaseClass::OnTick();
 
-	if (!engine->IsInGame()) 
+	if( !engine->IsInGame() | !ShouldDraw() )
 		return;
 
 	// Get the local player
 	C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
 
-	// If the player is not an FFPlayer or is not an Engineer
-	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_ENGINEER )
-	//hide the panel
-	{
-		m_bDraw = false;
-		SetVisible(false);
-		m_qbDispenserHealth->SetVisible(false);
-		m_qbDispenserAmmo->SetVisible(false);
-		m_qbCellCounter->SetVisible(false);
-		return; //return and don't continue
-	}
-	else
-	//show the panel
-	{
-		if(!m_bDraw)
-			ShowItem(m_qbCellCounter);
-		m_bDraw = true;
-	}
-	
 	// Never below zero (dunno why this is here)
 	int iCells = max( pPlayer->GetAmmoCount( AMMO_CELLS ), 0);
 	iCells = min(iCells, FF_BUILDCOST_DISPENSER);
@@ -256,7 +239,6 @@ void CHudBuildStateDispenser::OnTick()
 	//hide quantity bars
 	{
 		m_bBuilt = false;
-		SetVisible(false);
 		m_qbDispenserHealth->SetVisible(false);
 		m_qbDispenserAmmo->SetVisible(false);
 		ShowItem(m_qbCellCounter);
@@ -266,7 +248,6 @@ void CHudBuildStateDispenser::OnTick()
 	//show quantity bars
 	{
 		m_bBuilt = true;
-		SetVisible(true);
 		m_qbDispenserHealth->SetVisible(true);
 		m_qbDispenserAmmo->SetVisible(true);
 		HideItem(m_qbCellCounter);
@@ -276,11 +257,8 @@ void CHudBuildStateDispenser::OnTick()
 
 void CHudBuildStateDispenser::Paint() 
 {
-	if(m_bDraw)
-	{	
-		//paint header
-		BaseClass::Paint();
-	}
+	//paint header
+	BaseClass::Paint();
 }
 
 void CHudBuildStateDispenser::MsgFunc_DispenserMsg(bf_read &msg)

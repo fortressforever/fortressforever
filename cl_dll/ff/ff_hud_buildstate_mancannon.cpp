@@ -8,8 +8,8 @@ CHudBuildStateManCannon::CHudBuildStateManCannon(const char *pElementName) : CHu
 {
 	SetParent(g_pClientMode->GetViewport());
 
-	// Hide when player is dead
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	// Hide when player is dead and not scout
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NOTSCOUT );
 
 	SetUseToggleText(true);
 
@@ -20,7 +20,7 @@ CHudBuildStateManCannon::CHudBuildStateManCannon(const char *pElementName) : CHu
 CHudBuildStateManCannon::~CHudBuildStateManCannon() 
 {
 }
-	
+
 KeyValues* CHudBuildStateManCannon::GetDefaultStyleData()
 {
 	KeyValues *kvPreset = new KeyValues("StyleData");
@@ -170,6 +170,7 @@ void CHudBuildStateManCannon::VidInit()
 	m_qbManCannonHealth->SetIconChar("a", false);
 	m_qbManCannonHealth->ShowAmountMax(false);
 	m_qbManCannonHealth->SetAmount(0);
+	m_qbManCannonHealth->SetVisible(false);
 
 	SetToggleTextVisible(true);
 }
@@ -188,27 +189,11 @@ void CHudBuildStateManCannon::OnTick()
 {
 	BaseClass::OnTick();
 
-	if (!engine->IsInGame()) 
+	if( !engine->IsInGame() | !ShouldDraw() )
 		return;
 
 	// Get the local player
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-
-	// If the player is not an FFPlayer or is not an Scout
-	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_SCOUT)
-	//hide the panel
-	{
-		m_bDraw = false;
-		SetVisible(false);
-		m_qbManCannonHealth->SetVisible(false);
-		return; //return and don't continue
-	}
-	else if(!m_bDraw)
-	//show the panel
-	{
-		m_bDraw = true;
-	}
 
 	bool bBuilt = pPlayer->GetManCannon() && pPlayer->GetManCannon()->IsBuilt();
 	bool bBuilding = pPlayer->GetManCannon() && !bBuilt;
@@ -235,7 +220,6 @@ void CHudBuildStateManCannon::OnTick()
 	//hide quantity bars
 	{
 		m_bBuilt = false;
-		SetVisible(false);
 		m_qbManCannonHealth->SetVisible(false);
 		SetToggleTextVisible(true);
 	}
@@ -243,7 +227,6 @@ void CHudBuildStateManCannon::OnTick()
 	//show quantity bars
 	{
 		m_bBuilt = true;
-		SetVisible(true);
 		m_qbManCannonHealth->SetVisible(true);
 		SetToggleTextVisible(false);
 	}
@@ -251,11 +234,8 @@ void CHudBuildStateManCannon::OnTick()
 
 void CHudBuildStateManCannon::Paint() 
 {
-	if(m_bDraw)
-	{
-		//paint header
-		BaseClass::Paint();
-	}
+	//paint header
+	BaseClass::Paint();
 }
 
 void CHudBuildStateManCannon::MsgFunc_ManCannonMsg(bf_read &msg)

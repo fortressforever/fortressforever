@@ -9,7 +9,7 @@ CHudBuildStateDetpack::CHudBuildStateDetpack(const char *pElementName) : CHudEle
 	SetParent(g_pClientMode->GetViewport());
 
 	// Hide when player is dead
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NOTDEMOMAN );
 
 	SetUseToggleText(true);
 
@@ -159,7 +159,7 @@ void CHudBuildStateDetpack::VidInit()
 
 	if (!m_wszNotBuiltText) 
 		m_wszNotBuiltText = L"Not Built";
-	SetText(m_wszNotBuiltText);
+	SetText(m_wszNotBuiltText, false);
 
 	m_wszBuildingText = vgui::localize()->Find("#HudPanel_Building"); 
 
@@ -170,6 +170,7 @@ void CHudBuildStateDetpack::VidInit()
 	m_qbDetpackTimeLeft->SetIconChar("f", false);
 	m_qbDetpackTimeLeft->SetIntensityAmountScaled(true);//max changes (is not 100) so we need to scale to a percentage amount for calculation
 	m_qbDetpackTimeLeft->SetAmount(0);
+	m_qbDetpackTimeLeft->SetVisible(false);
 
 	SetToggleTextVisible(true);
 }
@@ -179,7 +180,7 @@ void CHudBuildStateDetpack::Init()
 	ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
 	HOOK_HUD_MESSAGE(CHudBuildStateDetpack, DetpackMsg);
 
-	m_qbDetpackTimeLeft = AddItem("BuildStateDetpackTimeLeft"); 
+	m_qbDetpackTimeLeft = AddItem("HudBuildStateDetpackTimeLeft"); 
 
 	AddPanelToHudOptions("Detpack", "#HudPanel_Detpack", "BuildState", "#HudPanel_BuildableState");
 }
@@ -188,27 +189,11 @@ void CHudBuildStateDetpack::OnTick()
 {
 	BaseClass::OnTick();
 
-	if (!engine->IsInGame()) 
+	if( !engine->IsInGame() | !ShouldDraw() )
 		return;
 
 	// Get the local player
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-
-	// If the player is not an FFPlayer or is not an Scout
-	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_DEMOMAN)
-	//hide the panel
-	{
-		m_bDraw = false;
-		SetVisible(false);
-		m_qbDetpackTimeLeft->SetVisible(false);
-		return; //return and don't continue
-	}
-	else if(!m_bDraw)
-	//show the panel
-	{
-		m_bDraw = true;
-	}
 
 	bool bBuilt = pPlayer->GetDetpack() && pPlayer->GetDetpack()->IsBuilt();
 	bool bBuilding = pPlayer->GetDetpack() && !bBuilt;
@@ -235,7 +220,6 @@ void CHudBuildStateDetpack::OnTick()
 	//hide quantity bars
 	{
 		m_bBuilt = false;
-		SetVisible(false);
 		m_qbDetpackTimeLeft->SetVisible(false);
 		SetToggleTextVisible(true);
 	}
@@ -243,7 +227,6 @@ void CHudBuildStateDetpack::OnTick()
 	//show quantity bars
 	{
 		m_bBuilt = true;
-		SetVisible(true);
 		m_qbDetpackTimeLeft->SetVisible(true);
 		SetToggleTextVisible(false);
 	}
@@ -251,20 +234,17 @@ void CHudBuildStateDetpack::OnTick()
 
 void CHudBuildStateDetpack::Paint() 
 {
-	if(m_bDraw)
+	if(m_bBuilt)
 	{
-		if(m_bBuilt)
-		{
-			float flCurTime = gpGlobals->curtime;
-			int iDetpackTimeLeft = (int)(m_flDetonateTime - gpGlobals->curtime + 1);
-			if(iDetpackTimeLeft < 0)
-				m_qbDetpackTimeLeft->SetAmount(m_flDetonateTime - flCurTime);
-			else
-				m_qbDetpackTimeLeft->SetAmount(iDetpackTimeLeft);
-		}
-		//paint header
-		BaseClass::Paint();
+		float flCurTime = gpGlobals->curtime;
+		int iDetpackTimeLeft = (int)(m_flDetonateTime - gpGlobals->curtime + 1);
+		if(iDetpackTimeLeft < 0)
+			m_qbDetpackTimeLeft->SetAmount(m_flDetonateTime - flCurTime);
+		else
+			m_qbDetpackTimeLeft->SetAmount(iDetpackTimeLeft);
 	}
+	//paint header
+	BaseClass::Paint();
 }
 
 void CHudBuildStateDetpack::MsgFunc_DetpackMsg(bf_read &msg)

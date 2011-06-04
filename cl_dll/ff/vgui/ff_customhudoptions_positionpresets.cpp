@@ -40,6 +40,8 @@ namespace vgui
 		m_pAlignV->AddItem("#GameUI_Bottom", kv);
 		kv->deleteThis();
 		m_pAlignV->ActivateItemByRow(0);
+
+		kv = NULL;
 		
 		m_pX = new CFFInputSlider(this, "X", "XInput");
 		m_pX->SetRange(0, 640);
@@ -56,6 +58,14 @@ namespace vgui
 	{
 		KeyValues *kvAction = new KeyValues("ActivatePositionPage");
 		PostActionSignal ( kvAction );
+	}
+
+	void CFFCustomHudPositionPresets::SetControlsEnabled(bool bEnabled)
+	{
+		m_pAlignH->SetEnabled( bEnabled );
+		m_pAlignV->SetEnabled( bEnabled );
+		m_pX->SetEnabled( bEnabled );
+		m_pY->SetEnabled( bEnabled );
 	}
 
 	void CFFCustomHudPositionPresets::RegisterSelfForPresetAssignment()

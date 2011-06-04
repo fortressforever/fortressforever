@@ -1,5 +1,5 @@
-#ifndef FF_HUDBUILDSTATESENTRY_H
-#define FF_HUDBUILDSTATESENTRY_H
+#ifndef FF_HUDBUILDSTATEDISPENSER_H
+#define FF_HUDBUILDSTATEDISPENSER_H
 
 #include "ff_quantitypanel.h"
 #include "hudelement.h"
@@ -7,8 +7,6 @@
 #include "hud_macros.h"
 
 #include "iclientmode.h" //to set panel parent as the clients viewport
-#include "c_ff_player.h" //required to cast base player
-
 #include <vgui/ISurface.h>
 #include <vgui/IVGui.h>
 #include <vgui/ILocalize.h>

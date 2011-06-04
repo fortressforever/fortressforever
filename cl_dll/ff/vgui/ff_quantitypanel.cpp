@@ -106,7 +106,15 @@ namespace vgui
 		}		
 		
 		BaseClass::ApplySchemeSettings( pScheme );
+		//this is needed to reverse the HudLayout.res setting default size...
+		SetSize(m_iWidth, m_iHeight);
 	}
+
+	KeyValues* FFQuantityPanel::GetDefaultStyleData()
+	{
+		return new KeyValues("styleData");
+	}
+
 	void FFQuantityPanel::Paint() 
 	{
 		if(m_bShowHeaderText)
@@ -149,10 +157,6 @@ namespace vgui
 				vgui::surface()->DrawUnicodeString( m_wszText );
 			}
 		}
-		//SetPaintBackgroundEnabled(true);
-		//SetPaintBackgroundType(2);
-		//SetPaintBorderEnabled(false);
-		//SetPaintEnabled(true);
 
 		BaseClass::Paint();
 	}
@@ -185,13 +189,6 @@ namespace vgui
 		kv->AddSubKey(kvOptions);
 		kvMessage->AddSubKey(kv);
 	}
-
-	/*
-	KeyValues* FFQuantityPanel::AddPanelSpecificOptions(KeyValues *kvPanelSpecificOptions)
-	{
-		return NULL;
-	}
-	*/
 
 	Color FFQuantityPanel::GetTeamColor()
 	{
@@ -228,7 +225,6 @@ namespace vgui
 					kv->SetString("selfText", m_szSelfText);
 					kv->SetString("parentName", m_szParentName);
 					kv->SetString("parentText", m_szParentText);
-					//kv->AddSubKey(AddPanelSpecificOptions(new KeyValues("PanelSpecificOptions")));
 					kv->SetPtr("panel", this);
 					PostMessage(g_AP, kv);
 					m_bAddToHudSent = true;
@@ -239,19 +235,7 @@ namespace vgui
 		if (!engine->IsInGame()) 
 			return;
 
-		//TODO: this is a work around for the SetVisible not working properly - need to figure out why it does what it does
-		//have really tried but just couldn't see what was wrong.
-		if(!m_bDraw)
-		{
-			SetPaintEnabled(false);
-			SetPaintBackgroundEnabled(false);
-		}
-		else
-		{
-			SetPaintEnabled(true);
-			SetPaintBackgroundEnabled(m_bShowPanel);
-		}
-
+		SetPaintBackgroundEnabled(m_bShowPanel);
 		SetTeamColor(GetTeamColor());
 
 		if(m_bShowPanel)
@@ -698,15 +682,6 @@ namespace vgui
 	void FFQuantityPanel::SetHeaderIconShadow( bool bHasShadow) { m_bHeaderIconShadow = bHasShadow; }
 	void FFQuantityPanel::SetTextShadow( bool bHasShadow) { m_bTextShadow = bHasShadow; }
 	
-	void FFQuantityPanel::SetBarsVisible( bool bIsVisible, bool bUpdateQBPositions )
-	{
-		for(int i = 0; i < m_DarQuantityBars.GetCount(); ++i)
-			m_DarQuantityBars[i]->SetVisible(bIsVisible);
-
-		if(bUpdateQBPositions)
-			UpdateQBPositions();
-	}
-	
 	void FFQuantityPanel::ApplyStyleData( KeyValues *kvStyleData, bool useDefaults )
 	{
 		KeyValues* kvDefaultStyleData;
@@ -886,7 +861,7 @@ namespace vgui
 	}
 	void FFQuantityPanel::OnDefaultStyleDataRequested( KeyValues *data )
 	{
-		g_AP->CreatePresetFromPanelDefault(this->GetDefaultStyleData());
+		g_AP->CreatePresetFromPanelDefault(GetDefaultStyleData());
 	}
 
 	FFQuantityBar* FFQuantityPanel::AddItem( const char *pElementName )

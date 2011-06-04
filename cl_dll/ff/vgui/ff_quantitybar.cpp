@@ -152,9 +152,7 @@ namespace vgui
 		SetBorder(pScheme->GetBorder("ScoreBoardItemBorder"));
 
 		SetPaintBackgroundEnabled(true);
-		//SetPaintBackgroundType(2);
 		SetPaintBorderEnabled(false);
-		//SetPaintEnabled(true);
 
 		//now we've got settings lets update everything
 		RecalculateIconPosition();
@@ -168,21 +166,24 @@ namespace vgui
 
 	void FFQuantityBar::SetAmountFontShadow( bool bHasShadow ) 
 	{
+		//TODO: Find out... do the font dimentions need to be altered when we add a shadow?
 		m_bAmountFontShadow = bHasShadow;
 	}
 	void FFQuantityBar::SetIconFontShadow( bool bHasShadow ) 
 	{
+		//TODO: Find out... do the font dimentions need to be altered when we add a shadow?
 		m_bIconFontShadow = bHasShadow;
 	}
 	void FFQuantityBar::SetLabelFontShadow( bool bHasShadow ) 
 	{
+		//TODO: Find out... do the font dimentions need to be altered when we add a shadow?
 		m_bLabelFontShadow = bHasShadow;
 	}
 	void FFQuantityBar::SetIconFontGlyph( bool bIconIsGlyph, bool bRecalculateBarPositioningOffset  )
 	{
 		m_bIconFontGlyph = bIconIsGlyph;
 		RecalculateIconPosition( bRecalculateBarPositioningOffset );
-	}	
+	}
 	void FFQuantityBar::SetLabelFontTahoma( bool bLabelFontTahoma, bool bRecalculateBarPositioningOffset  )
 	{
 		if(m_bLabelFontTahoma != bLabelFontTahoma)
@@ -650,21 +651,33 @@ namespace vgui
 		if( m_bShowAmount && (m_iAmountMaxPosY + m_iAmountMaxHeight) > iY1 )
 			iY1 = m_iAmountMaxPosY + m_iAmountMaxHeight;
 		
+		bool bSetChildDimentionsChanged = false;
+
+		if(m_iOffsetX != -iX0 || m_iOffsetY != -iY0)
+		{
+			m_iOffsetX = -iX0;
+			m_iOffsetY = -iY0;
+			bSetChildDimentionsChanged = true;
+		}
+
 		if(m_iWidth != (iX1 - iX0) || m_iHeight != (iY1 - iY0))
 		{
 			m_iWidth = iX1 - iX0;
 			m_iHeight = iY1 - iY0;
-			m_iOffsetX = -iX0;
-			m_iOffsetY = -iY0;
-			SetChildDimentionsChanged(true);
+			bSetChildDimentionsChanged = true;
 		}
 
 		//just so if we ever use the quantity bar on its own and not in a panel it will set it's own size
 		if( m_iOffsetOverrideX == -1 || m_iOffsetOverrideY == -1 )
 		{
 			//can't remember if there's a reason SetChildDimentionsChanged is here
-			SetChildDimentionsChanged(true);
+			bSetChildDimentionsChanged = true;
 			SetSize(m_iWidth * m_flScale, m_iHeight * m_flScale);
+		}
+
+		if(bSetChildDimentionsChanged)
+		{
+			SetChildDimentionsChanged(true);
 		}
 	}
 	
@@ -1004,9 +1017,9 @@ namespace vgui
 		int iIconAlignmentOffsetX, iIconAlignmentOffsetY;
 
 		if(m_bIconFontGlyph)
-			CalculateTextAlignmentOffset(iIconAlignmentOffsetX, iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarGlyph[m_iSizeIcon*3 + 2], m_wszIcon);
+			CalculateTextAlignmentOffset(iIconAlignmentOffsetX, iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarGlyph[m_iSizeIcon*3 + (m_bIconFontShadow ? 1 : 0)], m_wszIcon);
 		else
-			CalculateTextAlignmentOffset(iIconAlignmentOffsetX, iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarIcon[m_iSizeIcon*3 + 2], m_wszIcon);
+			CalculateTextAlignmentOffset(iIconAlignmentOffsetX, iIconAlignmentOffsetY, m_iIconWidth, m_iIconHeight, m_iAlignHIcon, m_iAlignVIcon, m_hfQuantityBarIcon[m_iSizeIcon*3 + (m_bIconFontShadow ? 1 : 0)], m_wszIcon);
 		
 		m_iIconPosX = m_iOffsetXIcon + iIconAlignmentOffsetX;
 		m_iIconPosY = m_iOffsetYIcon + iIconAlignmentOffsetY;
@@ -1020,9 +1033,9 @@ namespace vgui
 		int iLabelAlignmentOffsetX, iLabelAlignmentOffsetY;
 
 		if(m_bLabelFontTahoma)
-			CalculateTextAlignmentOffset(iLabelAlignmentOffsetX, iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iAlignHLabel, m_iAlignVLabel, m_hfQuantityBarTahomaText[m_iSizeLabel*3 + 2], m_wszLabel);
+			CalculateTextAlignmentOffset(iLabelAlignmentOffsetX, iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iAlignHLabel, m_iAlignVLabel, m_hfQuantityBarTahomaText[m_iSizeLabel*3 + (m_bLabelFontShadow ? 1 : 0)], m_wszLabel);
 		else
-			CalculateTextAlignmentOffset(iLabelAlignmentOffsetX, iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iAlignHLabel, m_iAlignVLabel, m_hfQuantityBarText[m_iSizeLabel*3 + 2], m_wszLabel);
+			CalculateTextAlignmentOffset(iLabelAlignmentOffsetX, iLabelAlignmentOffsetY, m_iLabelWidth, m_iLabelHeight, m_iAlignHLabel, m_iAlignVLabel, m_hfQuantityBarText[m_iSizeLabel*3 + (m_bLabelFontShadow ? 1 : 0)], m_wszLabel);
 		
 		m_iLabelPosX = m_iOffsetXLabel + iLabelAlignmentOffsetX;
 		m_iLabelPosY = m_iOffsetYLabel + iLabelAlignmentOffsetY;
@@ -1036,9 +1049,9 @@ namespace vgui
 		int iAmountAlignmentOffsetX, iAmountAlignmentOffsetY;
 
 		if(m_bAmountFontTahoma)
-			CalculateTextAlignmentOffset(iAmountAlignmentOffsetX, iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarTahomaText[m_iSizeAmount*3 + 2], m_wszAmountString);
+			CalculateTextAlignmentOffset(iAmountAlignmentOffsetX, iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarTahomaText[m_iSizeAmount*3 + (m_bAmountFontShadow ? 1 : 0)], m_wszAmountString);
 		else
-			CalculateTextAlignmentOffset(iAmountAlignmentOffsetX, iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarText[m_iSizeAmount*3 + 2], m_wszAmountString);
+			CalculateTextAlignmentOffset(iAmountAlignmentOffsetX, iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarText[m_iSizeAmount*3 + (m_bAmountFontShadow ? 1 : 0)], m_wszAmountString);
 		m_iAmountPosX = m_iOffsetXAmount + iAmountAlignmentOffsetX;
 		m_iAmountPosY = m_iOffsetYAmount + iAmountAlignmentOffsetY;
 	}
@@ -1060,9 +1073,9 @@ namespace vgui
 		int iAmountMaxAlignmentOffsetY;
 		
 		if(m_bAmountFontTahoma)
-			CalculateTextAlignmentOffset(iAmountMaxAlignmentOffsetX, iAmountMaxAlignmentOffsetY, m_iAmountMaxWidth, m_iAmountMaxHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarTahomaText[m_iSizeAmount*3 + 2], wszMaxAmountString);
+			CalculateTextAlignmentOffset(iAmountMaxAlignmentOffsetX, iAmountMaxAlignmentOffsetY, m_iAmountMaxWidth, m_iAmountMaxHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarTahomaText[m_iSizeAmount*3 + (m_bAmountFontShadow ? 1 : 0)], wszMaxAmountString);
 		else
-			CalculateTextAlignmentOffset(iAmountMaxAlignmentOffsetX, iAmountMaxAlignmentOffsetY, m_iAmountMaxWidth, m_iAmountMaxHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarText[m_iSizeAmount*3 + 2], wszMaxAmountString);
+			CalculateTextAlignmentOffset(iAmountMaxAlignmentOffsetX, iAmountMaxAlignmentOffsetY, m_iAmountMaxWidth, m_iAmountMaxHeight, m_iAlignHAmount, m_iAlignVAmount, m_hfQuantityBarText[m_iSizeAmount*3 + (m_bAmountFontShadow ? 1 : 0)], wszMaxAmountString);
 		m_iAmountMaxPosX = m_iOffsetXAmount + iAmountMaxAlignmentOffsetX;
 		m_iAmountMaxPosY = m_iOffsetYAmount + iAmountMaxAlignmentOffsetY;
 
@@ -1285,7 +1298,15 @@ namespace vgui
 
 	void FFQuantityBar::CalculateTextAlignmentOffset( int &outX, int &outY, int &iWide, int &iTall, int iAlignH, int iAlignV, HFont hfFont, wchar_t* wszString )
 	{
-		surface()->GetTextSize(hfFont, wszString, iWide, iTall);
+		//TODO: calculate this with real font to calculate real size 
+		//and then scale it down to 640*480 (but make sure its rouned up so we don't cut text off!)
+		int iWideTemp = 0, iTallTemp = 0;
+		surface()->GetTextSize(hfFont, wszString, iWideTemp, iTallTemp);
+
+		//+0.5 so it rounds up!
+		//+0.1 for grace...
+		iWide = (int)((float)(iWideTemp) / m_flScale + 0.6f);
+		iTall = (int)((float)(iTallTemp) / m_flScale + 0.6f);
 
 		switch(iAlignH)
 		{

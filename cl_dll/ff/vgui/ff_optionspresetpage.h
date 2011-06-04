@@ -33,6 +33,7 @@ namespace vgui
 		CFFOptionsPresetPage(Panel *parent, const char *panelName, const char *pszComboBoxName, const char *pszSourceFile);
 		~CFFOptionsPresetPage();
 
+		virtual void SetControlsEnabled(bool bEnabled) = 0;
 		virtual void ActivatePresetPage() = 0;
 
 		bool HasLoaded();

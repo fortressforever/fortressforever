@@ -7,6 +7,7 @@ using namespace vgui;
 
 CFFCustomHudAssignPresets *g_AP = NULL;
 
+
 CFFCustomHudAssignPresets::CFFCustomHudAssignPresets(Panel *parent, char const *panelName, CFFCustomHudStylePresets* stylePresetsClass, CFFCustomHudArrangementPresets* arrangementPresetsClass, CFFCustomHudPositionPresets* positionPresetsClass) : BaseClass(parent, panelName)
 {
 	m_bIsLoading = false;
@@ -16,7 +17,6 @@ CFFCustomHudAssignPresets::CFFCustomHudAssignPresets(Panel *parent, char const *
 	m_pArrangementPresetsClass = arrangementPresetsClass;
 	m_pPositionPresetsClass = positionPresetsClass;
 
-	m_kvRequestedAssignments = new KeyValues("Assignments");
 	m_pPrimary = new ComboBox(this, "ParentCombo", 7, false);
 	m_pSecondary = new ComboBox(this, "ChildCombo", 7, false);
 
@@ -31,10 +31,6 @@ CFFCustomHudAssignPresets::CFFCustomHudAssignPresets(Panel *parent, char const *
 	m_pCopyDefaultStyle = new Button(this, "CopyDefaultStyle", "#GameUI_CopyDefault", this, "CopyDefaultStyle");
 	m_pCopyDefaultArrangement = new Button(this, "CopyDefaultArrangement", "#GameUI_CopyDefault", this, "CopyDefaultArrangement");
 	m_pCopyDefaultPosition = new Button(this, "CopyDefaultPosition", "#GameUI_CopyDefault", this, "CopyDefaultPosition");
-
-	m_pPanelSpecificOptions = new Panel(this, "SpecificOptions");
-	m_pPanelSpecificOptions->SetPos(10, 135);
-	m_pPanelSpecificOptions->SetSize(585, 130);
 
 	m_pUseDefaultStyle->SetSelected(true);
 	m_pUseDefaultArrangement->SetSelected(true);
@@ -56,6 +52,10 @@ CFFCustomHudAssignPresets::CFFCustomHudAssignPresets(Panel *parent, char const *
 }
 CFFCustomHudAssignPresets::~CFFCustomHudAssignPresets()
 {
+	m_kvRequiredUpdates->deleteThis();
+	m_kvRequiredUpdates = NULL;
+	m_kvLoadedAssignments->deleteThis();
+	m_kvLoadedAssignments = NULL;
 	g_AP = NULL;
 }
 	
@@ -81,6 +81,8 @@ void CFFCustomHudAssignPresets::Load()
 	}
 	else if(m_pPrimary->GetItemCount() > 0)
 	{
+		m_kvRequiredUpdates->deleteThis();
+		m_kvRequiredUpdates = NULL;
 		m_kvRequiredUpdates = new KeyValues("Changes");
 
 		if(m_pSecondary->IsVisible())
@@ -101,19 +103,19 @@ void CFFCustomHudAssignPresets::Load()
 void CFFCustomHudAssignPresets::Reset() {}
 void CFFCustomHudAssignPresets::Apply() {
 	//update hud elements that need updating
-	for (KeyValues *kvPrimaryUpdate = m_kvRequiredUpdates->GetFirstSubKey(); kvPrimaryUpdate != NULL; kvPrimaryUpdate = kvPrimaryUpdate->GetNextKey())
+	for(KeyValues *kvPrimaryUpdate = m_kvRequiredUpdates->GetFirstSubKey(); kvPrimaryUpdate != NULL; kvPrimaryUpdate = kvPrimaryUpdate->GetNextKey())
 	{
 		if(kvPrimaryUpdate->IsEmpty())
 		//then this is an assignment and not a parent
 		{
 			//go through primary and check for assignments which need an update
-			for (int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
+			for(int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
 			{
 				KeyValues *kvPrimary = m_pPrimary->GetItemUserData(rowIndex);
 				if(Q_stricmp(kvPrimary->GetString("CategoryName"), "") != 0)
 				//if this is a parent node
 				{
-					//were not looking for a parent so continue
+					//we're not looking for a parent so continue
 					continue;
 				}
 				else
@@ -132,8 +134,8 @@ void CFFCustomHudAssignPresets::Apply() {
 		else
 		//we're dealing with an assignment that has a parent
 		{
-			//go through primary and check for assignments which need an update
-			for (int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
+			//go through primary
+			for(int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
 			{
 				KeyValues *kvPrimary = m_pPrimary->GetItemUserData(rowIndex);
 				if(Q_stricmp(kvPrimary->GetName(), kvPrimaryUpdate->GetName()) == 0)
@@ -160,20 +162,19 @@ void CFFCustomHudAssignPresets::Apply() {
 	m_kvRequiredUpdates->Clear();
 
 	KeyValues *kvPresets = new KeyValues("PresetAssignments");
+	
 	for (int i = 0; i < m_pPrimary->GetItemCount(); ++i)
 	{
 		KeyValues *kvPreset = m_pPrimary->GetItemUserData(i);
 
-		//use a new copied keyvalue
+		//use new copied keyvalues
 		//crash occurred when saving twice, 
-		//something to do with deleting the preset used in the combobox
+		//something to do with deleting the preset used in the combobox (I think)
 		KeyValues *kvPresetToSave = new KeyValues(kvPreset->GetName());
 		kvPreset->CopySubkeys(kvPresetToSave);				
 		kvPresets->AddSubKey(kvPresetToSave);
 	}
 
-	//TODO: remove the panel options before saving and just keep the values.
-	//kvPresets->RemoveSubKey(kvPresets->FindKey("PanelSpecificOptions"));
 	kvPresets->SaveToFile(vgui::filesystem(), PRESETASSIGNMENT_FILE);
 	kvPresets->deleteThis();
 }
@@ -189,53 +190,77 @@ void CFFCustomHudAssignPresets::SendStyleDataToAssignment(KeyValues *kvAssignmen
 
 KeyValues* CFFCustomHudAssignPresets::GetStyleDataForAssignment(KeyValues *kvAssignment)
 {
-	KeyValues *kvPositionPresetData = m_pPositionPresetsClass->GetPresetDataByName(kvAssignment->GetString("Position", "global"));
-	KeyValues *kvArrangementPresetData = m_pArrangementPresetsClass->GetPresetDataByName(kvAssignment->GetString("Arrangement", "global"));
-	KeyValues *kvStylePresetData = m_pStylePresetsClass->GetPresetDataByName(kvAssignment->GetString("Style", "global"));
-	
-	if(kvPositionPresetData == NULL)
-	//if no position data found (preset has been deleted perhaps?)
+	KeyValues *kvPositionPresetData;
+	KeyValues *kvArrangementPresetData;
+	KeyValues *kvStylePresetData;
+
+	if(kvAssignment->GetInt("UseDefaultPosition") == 0)
 	{
-		//set it to use the default position
-		kvAssignment->SetInt("UseDefaultPosition", 1);
+		kvPositionPresetData = m_pPositionPresetsClass->GetPresetDataByName(kvAssignment->GetString("Position"));
+
+		if(kvPositionPresetData == NULL)
+		//if no position data found (preset has been deleted perhaps?)
+		{
+			//set it to use the default position
+			kvAssignment->SetInt("UseDefaultPosition", 1);
+		}
 	}
-	if(kvArrangementPresetData == NULL)
-	//if no arrangment data found (preset has been deleted perhaps?)
+	else
 	{
-		//set it to use the default arrangement
-		kvAssignment->SetInt("UseDefaultArrangement", 1);
+		kvPositionPresetData = NULL;
 	}
-	if(kvStylePresetData == NULL)
-	//if no style data found (preset has been deleted perhaps?)
+
+
+	if(kvAssignment->GetInt("UseDefaultArrangement") == 0)
 	{
-		//set it to use the default arrangement
-		kvAssignment->SetInt("UseDefaultStyle", 1);
+		kvArrangementPresetData = m_pArrangementPresetsClass->GetPresetDataByName(kvAssignment->GetString("Arrangement"));
+
+		if(kvArrangementPresetData == NULL)
+		//if no arrangment data found (preset has been deleted perhaps?)
+		{
+			//set it to use the default arrangement
+			kvAssignment->SetInt("UseDefaultArrangement", 1);
+		}
+	}
+	else
+	{
+		kvArrangementPresetData = NULL;
+	}
+
+	if(kvAssignment->GetInt("UseDefaultStyle") == 0)
+	{
+		kvStylePresetData = m_pStylePresetsClass->GetPresetDataByName(kvAssignment->GetString("Style"));
+
+		if(kvStylePresetData == NULL)
+		//if no style data found (preset has been deleted perhaps?)
+		{
+			//set it to use the default style
+			kvAssignment->SetInt("UseDefaultStyle", 1);
+		}
+	}
+	else
+	{
+		kvStylePresetData = NULL;
 	}
 
 	KeyValues *kvPresetData = new KeyValues("SetStyleData");
 	KeyValues *kvChainTo = kvPresetData;
 	//because copying all keys is retarded (impossible?!) 
 	//we'll have to chain....
-	if(kvAssignment->GetInt("UseDefaultStyle", 1) == 0)
+	if(kvStylePresetData != NULL)
 	{
 		kvChainTo->ChainKeyValue(kvStylePresetData);
 		kvChainTo = kvStylePresetData;
 	}
-	if(kvAssignment->GetInt("UseDefaultArrangement", 1) == 0)
+	if(kvArrangementPresetData != NULL)
 	{
 		kvChainTo->ChainKeyValue(kvArrangementPresetData);
 		kvChainTo = kvArrangementPresetData;
 	}
-	if(kvAssignment->GetInt("UseDefaultPosition", 1) == 0)
+	if(kvPositionPresetData != NULL)
 	{
 		kvChainTo->ChainKeyValue(kvPositionPresetData);
 		//kvChainTo = kvPositionPresetData;
-	}
-
-	KeyValues *kvPanelSpecificValues = kvAssignment->FindKey("PanelSpecificValues");
-	if(kvPanelSpecificValues)
-	{
-		kvPresetData->AddSubKey(kvPanelSpecificValues->MakeCopy());
 	}
 
 	return kvPresetData;
@@ -252,7 +277,7 @@ void CFFCustomHudAssignPresets::UpdateSecondaryComboFromParentKey(KeyValues *kvP
 		{
 			m_pSecondary->AddItem(kvSecondary->GetString("AssignmentName", kvSecondary->GetName()), kvSecondary);
 		}
-		//if theres assignments which there should be! (just in case)
+		//if theres assignments which there should now be! (just in case)
 		if(m_pSecondary->GetItemCount() > 0)
 		{
 			m_pSecondary->ActivateItemByRow(0);
@@ -268,7 +293,11 @@ void CFFCustomHudAssignPresets::UpdateSecondaryComboFromParentKey(KeyValues *kvP
 void CFFCustomHudAssignPresets::ApplyAssignmentToControls(KeyValues *kvAssignment)
 {
 	bool bPositionMatched = false;
-	for (int i = 0; i < m_pPositionPresets->GetItemCount() && !bPositionMatched; ++i)
+	//for:
+	//1. It's not matched
+	//2. hasn't reached the last Position preset
+	//3. assignment has a Position to look for
+	for (int i = 0; Q_stricmp(kvAssignment->GetString("Position"), "") != 0 && i < m_pPositionPresets->GetItemCount() && !bPositionMatched; ++i)
 	{
 		//if name exists
 		if(Q_stricmp(kvAssignment->GetString("Position"), m_pPositionPresets->GetItemUserData(i)->GetName()) == 0)
@@ -290,11 +319,8 @@ void CFFCustomHudAssignPresets::ApplyAssignmentToControls(KeyValues *kvAssignmen
 		}
 	}
 	if(!bPositionMatched)
-	//if not matched
-	//TODO: strickedly speaking we shouldn't get here as assignments are fixed as we add them
-	//but what if we delete presets?
 	{	
-		//So lets just tick the default for this preset! (No styling)
+		//So lets just tick the default for this preset! (No custom styling)
 		kvAssignment->SetInt("UseDefaultPosition", 1);
 		if(!m_pUseDefaultPosition->IsSelected())
 		{
@@ -304,7 +330,11 @@ void CFFCustomHudAssignPresets::ApplyAssignmentToControls(KeyValues *kvAssignmen
 	}
 
 	bool bArrangementMatched = false;
-	for (int i = 0; i < m_pArrangementPresets->GetItemCount() && !bArrangementMatched; ++i)
+	//for:
+	//1. It's not matched
+	//2. hasn't reached the last Arrangement preset
+	//3. assignment has a Arrangement to look for
+	for (int i = 0; Q_stricmp(kvAssignment->GetString("Arrangement"), "") != 0 && i < m_pArrangementPresets->GetItemCount() && !bArrangementMatched; ++i)
 	{
 		//if name exists
 		if(Q_stricmp(kvAssignment->GetString("Arrangement"), m_pArrangementPresets->GetItemUserData(i)->GetName()) == 0)
@@ -326,11 +356,8 @@ void CFFCustomHudAssignPresets::ApplyAssignmentToControls(KeyValues *kvAssignmen
 		}
 	}
 	if(!bArrangementMatched)
-	//if not matched
-	//TODO: strickedly speaking we shouldn't get here as assignments are fixed as we add them
-	//but what if we delete presets?
 	{	
-		//So lets just tick the default for this preset! (No styling)
+		//So lets just tick the default for this preset! (No custom styling)
 		kvAssignment->SetInt("UseDefaultArrangement", 1);
 		if(!m_pUseDefaultArrangement->IsSelected())
 		{
@@ -340,7 +367,11 @@ void CFFCustomHudAssignPresets::ApplyAssignmentToControls(KeyValues *kvAssignmen
 	}
 
 	bool bStyleMatched = false;
-	for (int i = 0; i < m_pStylePresets->GetItemCount() && !bStyleMatched; ++i)
+	//for:
+	//1. It's not matched
+	//2. hasn't reached the last Style preset
+	//3. assignment has a Style to look for
+	for (int i = 0; Q_stricmp(kvAssignment->GetString("Style"), "") != 0 && i < m_pStylePresets->GetItemCount() && !bStyleMatched; ++i)
 	{
 		//if name exists
 		if(Q_stricmp(kvAssignment->GetString("Style"), m_pStylePresets->GetItemUserData(i)->GetName()) == 0)
@@ -362,11 +393,8 @@ void CFFCustomHudAssignPresets::ApplyAssignmentToControls(KeyValues *kvAssignmen
 		}
 	}
 	if(!bStyleMatched)
-	//if not matched
-	//TODO: strickedly speaking we shouldn't get here as assignments are fixed as we add them
-	//but what if we delete presets? todo = check this
 	{	
-		//So lets just tick the default for this preset! (No styling)
+		//So lets just tick the default for this preset! (No custom styling)
 		kvAssignment->SetInt("UseDefaultStyle", 1);
 		if(!m_pUseDefaultStyle->IsSelected())
 		{
@@ -374,100 +402,6 @@ void CFFCustomHudAssignPresets::ApplyAssignmentToControls(KeyValues *kvAssignmen
 			m_pUseDefaultStyle->SetSelected(true);	
 		}
 	}
-	
-	/*
-	//remove all exisiting options
-	for(int i = m_pPanelSpecificOptions->GetChildCount() - 1; i >= 0; --i)
-	//count backwards cause we're removing stuff (counting forwards will FAIL EPICLY?EPICALLY?!!)
-	{
-		m_pPanelSpecificOptions->GetChild(i)->DeletePanel();
-	}
-	
-	//deal with assignment specific options
-	KeyValues *kvPanelSpecificOptions = kvAssignment->FindKey("PanelSpecificOptions");
-	if(kvPanelSpecificOptions)
-	{
-		int  iYCoords = 0;
-		int  iRowHeight = 30;
-		// Loop through creating new options for each one
-		for (KeyValues *kvPanelSpecificOption = kvPanelSpecificOptions->GetFirstSubKey(); kvPanelSpecificOption != NULL; kvPanelSpecificOption = kvPanelSpecificOption->GetNextKey())
-		{
-			// Boolean is just a simple checkbox
-			if (Q_strnicmp(kvPanelSpecificOption->GetName(), "boolean", 7) == 0)
-			{
-				CheckButton *cb = new CheckButton(m_pPanelSpecificOptions, kvPanelSpecificOption->GetString("name"), kvPanelSpecificOption->GetString("text"));
-
-				if (!cb)
-					continue;
-
-				cb->SetPos(0, iYCoords);
-				cb->SetSize(80, iRowHeight);
-
-				iYCoords += iRowHeight;
-			}
-			else if (Q_strnicmp(kvPanelSpecificOption->GetName(), "combobox", 8) == 0)
-			{
-				KeyValues *kvValues = kvPanelSpecificOption->FindKey("values");
-				int nValues = 0;
-
-				if (!kvValues)
-					continue;
-
-				// First count all the values so we know how many lines are
-				// needed for the combobox
-				nValues = 0;
-				KeyValues *kvValue = kvValues->GetFirstSubKey();
-				while (kvValue)
-				{
-					nValues++;
-					kvValue = kvValue->GetNextKey();
-				}
-
-				ComboBox *cb = new ComboBox(m_pPanelSpecificOptions, kvPanelSpecificOption->GetString("name"), nValues, false);
-
-				if (!cb)
-					continue;
-
-				kvValues = kvPanelSpecificOption->FindKey("values", false);
-
-				if (!kvValues)
-					continue;
-
-				// Now go through all the values and add them to the combobox
-				kvValue = kvValues->GetFirstSubKey();
-				while (kvValue)
-				{
-					const char *pszValue = kvValue->GetName();
-					const char *pszCaption = kvValues->GetString(pszValue);
-
-					KeyValues *kvItem = new KeyValues("kvItem");
-					kvItem->SetString("value", pszValue);
-					cb->AddItem(pszCaption, kvItem);
-					kvItem->deleteThis();
-
-					kvValue = kvValue->GetNextKey();
-				}
-
-
-				cb->SetPos(0, iYCoords);
-				cb->SetSize(100, iRowHeight);
-				cb->ActivateItemByRow(0);
-
-				// label the combobox!
-				char labelName[128];
-				Q_snprintf( labelName, sizeof( labelName ), "%sLabel", kvPanelSpecificOption->GetString("name") );
-				Label *l = new Label(m_pPanelSpecificOptions, labelName, kvPanelSpecificOption->GetString("text"));
-				if (l)
-				{
-					l->SetPos(110, iYCoords);
-					l->SetSize(420, iRowHeight);
-				}
-
-				iYCoords += iRowHeight;
-			}
-		}
-	}
-	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -487,9 +421,10 @@ void CFFCustomHudAssignPresets::OnUpdateCombos(KeyValues *data)
 		{
 			//this keyvalue holds the assignmets which were saved for the item we are selecting
 			KeyValues *kvSecondary = m_pSecondary->GetActiveItemUserData();
+	
 			ApplyAssignmentToControls(kvSecondary);
 		}
-		else if (data->GetPtr("panel") == m_pPositionPresets)
+		else if(data->GetPtr("panel") == m_pPositionPresets)
 		{
 			if(m_pSecondary->IsVisible())
 			//if the assignment is in secondary
@@ -502,7 +437,7 @@ void CFFCustomHudAssignPresets::OnUpdateCombos(KeyValues *data)
 				
 				KeyValues *kvPrimary = m_pPrimary->GetActiveItemUserData();
 				KeyValues *kvAssignment = kvPrimary->FindKey(kvSecondary->GetName());
-					
+
 				kvAssignment->SetString("Position", m_pPositionPresets->GetActiveItemUserData()->GetName());
 
 				if(m_bAssignmentPositionChanging)
@@ -658,6 +593,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvSecondary->SetInt("UseDefaultPosition", 0);
+				kvSecondary->SetString("Position", m_pPositionPresets->GetActiveItemUserData()->GetName());
 			}
 			
 			KeyValues *kvPrimary = m_pPrimary->GetActiveItemUserData();
@@ -670,6 +606,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvAssignment->SetInt("UseDefaultPosition", 0);
+				kvAssignment->SetString("Position", m_pPositionPresets->GetActiveItemUserData()->GetName());
 			}
 
 			if(m_bAssignmentPositionUseDefaultChanging)
@@ -687,6 +624,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvPrimary->SetInt("UseDefaultPosition", 0);
+				kvPrimary->SetString("Position", m_pPositionPresets->GetActiveItemUserData()->GetName());
 			}
 
 			if(m_bAssignmentPositionUseDefaultChanging)
@@ -714,6 +652,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvSecondary->SetInt("UseDefaultArrangement", 0);
+				kvSecondary->SetString("Arrangement", m_pArrangementPresets->GetActiveItemUserData()->GetName());
 			}
 			
 			KeyValues *kvPrimary = m_pPrimary->GetActiveItemUserData();
@@ -726,6 +665,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvAssignment->SetInt("UseDefaultArrangement", 0);
+				kvAssignment->SetString("Arrangement", m_pArrangementPresets->GetActiveItemUserData()->GetName());
 			}
 			
 			if(m_bAssignmentArrangementUseDefaultChanging)
@@ -743,6 +683,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvPrimary->SetInt("UseDefaultArrangement", 0);
+				kvPrimary->SetString("Arrangement", m_pArrangementPresets->GetActiveItemUserData()->GetName());
 			}
 
 			if(m_bAssignmentArrangementUseDefaultChanging)
@@ -770,6 +711,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvSecondary->SetInt("UseDefaultStyle", 0);
+				kvSecondary->SetString("Style", m_pStylePresets->GetActiveItemUserData()->GetName());
 			}
 			
 			KeyValues *kvPrimary = m_pPrimary->GetActiveItemUserData();
@@ -782,6 +724,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvAssignment->SetInt("UseDefaultStyle", 0);
+				kvAssignment->SetString("Style", m_pStylePresets->GetActiveItemUserData()->GetName());
 			}
 
 			if(m_bAssignmentStyleUseDefaultChanging)
@@ -800,6 +743,7 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 			else
 			{
 				kvPrimary->SetInt("UseDefaultStyle", 0);
+				kvPrimary->SetString("Style", m_pStylePresets->GetActiveItemUserData()->GetName());
 			}
 
 			if(m_bAssignmentStyleUseDefaultChanging)
@@ -809,66 +753,6 @@ void CFFCustomHudAssignPresets::OnUpdateCheckbox(KeyValues *data)
 		}
 
 		m_pStylePresets->SetEnabled(!m_pUseDefaultStyle->IsSelected());
-	}
-	else
-	//panel specific option
-	{
-		/*
-		if(m_pSecondary->IsVisible())
-		//if the assignment is in secondary
-		{	
-			//we have to update the assignent in the secondary combo
-			//as well as the data in the primary to keep them in sync!
-
-			KeyValues *kvSecondary = m_pSecondary->GetActiveItemUserData();
-			
-			if(m_pUseDefaultStyle->IsSelected())
-			{
-				kvSecondary->SetInt("UseDefaultStyle", 1);
-			}
-			else
-			{
-				kvSecondary->SetInt("UseDefaultStyle", 0);
-			}
-			
-			KeyValues *kvPrimary = m_pPrimary->GetActiveItemUserData();
-			KeyValues *kvAssignment = kvPrimary->FindKey(kvSecondary->GetName());
-				
-			if(m_pUseDefaultStyle->IsSelected())
-			{
-				kvAssignment->SetInt("UseDefaultStyle", 1);
-			}
-			else
-			{
-				kvAssignment->SetInt("UseDefaultStyle", 0);
-			}
-
-			if(m_bAssignmentStyleUseDefaultChanging)
-				m_bAssignmentStyleUseDefaultChanging = false;
-			else
-				RegisterAssignmentChange(kvAssignment, kvPrimary);
-
-		}
-		else
-		{
-			KeyValues *kvPrimary = m_pPrimary->GetActiveItemUserData();
-			if(m_pUseDefaultStyle->IsSelected())
-			{
-				kvPrimary->SetInt("UseDefaultStyle", 1);
-			}
-			else
-			{
-				kvPrimary->SetInt("UseDefaultStyle", 0);
-			}
-
-			if(m_bAssignmentStyleUseDefaultChanging)
-				m_bAssignmentStyleUseDefaultChanging = false;
-			else
-				RegisterAssignmentChange(kvPrimary);
-		}
-
-		m_pStylePresets->SetEnabled(!m_pUseDefaultStyle->IsSelected());		
-		*/
 	}
 }
 
@@ -897,10 +781,7 @@ void CFFCustomHudAssignPresets::OnButtonCommand(KeyValues *data)
 
 	if(m_pSecondary->IsVisible())
 	//if the assignment is in secondary
-	{	
-		//we have to update the assignent in the secondary combo
-		//as well as the data in the primary to keep them in sync!
-
+	{
 		kvAssignment = m_pSecondary->GetActiveItemUserData();
 	}
 	else
@@ -909,8 +790,7 @@ void CFFCustomHudAssignPresets::OnButtonCommand(KeyValues *data)
 	}
 
 	Panel* pSender = (Panel* ) kvAssignment->GetPtr("panel", NULL);
-	PostMessage(pSender, kvPresetData);
-	
+	PostMessage(pSender, kvPresetData);	
 }
 
 void CFFCustomHudAssignPresets::CreatePresetFromPanelDefault(KeyValues *kvPresetData)
@@ -937,13 +817,13 @@ void CFFCustomHudAssignPresets::CreatePresetFromPanelDefault(KeyValues *kvPreset
 //-----------------------------------------------------------------------------
 // Purpose: Catch quantity panels requesting the ability of customisation
 //-----------------------------------------------------------------------------
+	
 void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 {
 	//before we get here the quantity panel should have checked IsReady()
 	if(!IsReady())
 		return;
 
-	//bool bParentMatched = false;
 	bool bSelfMatched = false;
 
 	Panel* pSender = (Panel* ) data->GetPtr("panel", NULL);
@@ -971,12 +851,6 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 		kvParent = NULL;
 	}
 
-	/*
-	KeyValues *kvPanelSpecificOptions = data->FindKey("PanelSpecificOptions");
-	if(kvPanelSpecificOptions)
-		kvSelf->AddSubKey(kvPanelSpecificOptions);
-	*/
-
 	for (KeyValues *kvLoadedPriAssignment = m_kvLoadedAssignments->GetFirstTrueSubKey(); kvLoadedPriAssignment != NULL && !bSelfMatched; kvLoadedPriAssignment = kvLoadedPriAssignment->GetNextTrueSubKey())
 	//go through loaded assignments and look for a match
 	//will break out on self match
@@ -1003,7 +877,6 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 						}
 						else
 						{
-							kvSelf->SetString("Position", "global");
 							kvSelf->SetInt("UseDefaultPosition", 1);
 						}
 
@@ -1014,7 +887,6 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 						}
 						else
 						{
-							kvSelf->SetString("Arrangement", "global");
 							kvSelf->SetInt("UseDefaultArrangement", 1);
 						}
 
@@ -1025,28 +897,29 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 						}
 						else
 						{
-							kvSelf->SetString("Style", "global");
 							kvSelf->SetInt("UseDefaultStyle", 1);
 						}
-
-						SendStyleDataToAssignment(kvSelf);
 
 						bool bAddedToCombo = false;
 						for (int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
 						{
 							if(Q_stricmp(m_pPrimary->GetItemUserData(rowIndex)->GetName(),kvParent->GetName()) == 0)
-							{								
-								bAddedToCombo = true;
+							{	
 								KeyValues *kvPrimary = m_pPrimary->GetItemUserData(rowIndex);
-								kvPrimary->AddSubKey(kvSelf);
+
+								kvPrimary->AddSubKey(kvSelf->MakeCopy());
 								
 								if(m_pPrimary->GetActiveItem() == rowIndex)
 									UpdateSecondaryComboFromParentKey(kvPrimary);
+
+								bAddedToCombo = true;
 								break;
 							}
 						}
 						if(!bAddedToCombo)
 							m_pPrimary->AddItem(kvParent->GetString("CategoryName"), kvParent);
+
+						SendStyleDataToAssignment(kvSelf->MakeCopy());
 
 						bSelfMatched = true;
 						//stop looking for a self match
@@ -1056,6 +929,7 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 			}
 		}
 		else
+		//just match self in the primary assignents.
 		{
 			if(Q_stricmp(kvSelf->GetName(), kvLoadedPriAssignment->GetName()) == 0)
 			//if we've got a match
@@ -1070,7 +944,6 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 				}
 				else
 				{
-					kvSelf->SetString("Position", "global");
 					kvSelf->SetInt("UseDefaultPosition", 1);
 				}
 
@@ -1081,7 +954,6 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 				}
 				else
 				{
-					kvSelf->SetString("Arrangement", "global");
 					kvSelf->SetInt("UseDefaultArrangement", 1);
 				}
 
@@ -1092,35 +964,22 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 				}
 				else
 				{
-					kvSelf->SetString("Style", "global");
 					kvSelf->SetInt("UseDefaultStyle", 1);
 				}
-
-				SendStyleDataToAssignment(kvSelf);
 				
 				m_pPrimary->AddItem(kvSelf->GetString("AssignmentName"), kvSelf);
+
+				SendStyleDataToAssignment(kvSelf->MakeCopy());
 		
 				bSelfMatched = true;
+				break;
 			}
 		}
-		if(bSelfMatched)
-			break;
 	}
 
 	if(!bSelfMatched)
 	{
-		//should always have global (but just in case)
-		if(m_pPositionPresets->GetItemCount() > 0)
-			kvSelf->SetString("Position",  m_pPositionPresets->GetItemUserData(0)->GetName());
-
-		//should always have global (but just in case)
-		if(m_pArrangementPresets->GetItemCount() > 0)
-			kvSelf->SetString("Arrangement",  m_pArrangementPresets->GetItemUserData(0)->GetName());
-
-		//should always have global (but just in case)
-		if(m_pStylePresets->GetItemCount() > 0)
-			kvSelf->SetString("Style", m_pStylePresets->GetItemUserData(0)->GetName());
-
+		//Just use that quantity panel's defaults 
 		kvSelf->SetInt("UseDefaultPosition", 1);
 		kvSelf->SetInt("UseDefaultArrangement", 1);
 		kvSelf->SetInt("UseDefaultStyle", 1);
@@ -1132,13 +991,14 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 			for (int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
 			{
 				if(Q_stricmp(m_pPrimary->GetItemUserData(rowIndex)->GetName(),kvParent->GetName()) == 0)
-				{								
-					bAddedToCombo = true;
+				{	
 					KeyValues *kvPrimary = m_pPrimary->GetItemUserData(rowIndex);
-					kvPrimary->AddSubKey(kvSelf);
-					
+
+					kvPrimary->AddSubKey(kvSelf->MakeCopy());
 					if(m_pPrimary->GetActiveItem() == rowIndex)
 						UpdateSecondaryComboFromParentKey(kvPrimary);
+
+					bAddedToCombo = true;
 					break;
 				}
 			}
@@ -1147,11 +1007,24 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 
 		}
 		else
+		//it is itself an assignment
 		{
 			m_pPrimary->AddItem(kvSelf->GetString("AssignmentName"), kvSelf);
 		}
 	
-		SendStyleDataToAssignment(kvSelf);
+		SendStyleDataToAssignment(kvSelf->MakeCopy());
+	}
+	if(kvParent != NULL)
+	{
+		kvParent->deleteThis();
+		kvParent = NULL;
+
+		//self becomes a child of parent... so we shouldn't need to deal with self aswell
+	}
+	else
+	{
+		kvSelf->deleteThis();
+		kvSelf = NULL;
 	}
 
 	//if this is the first one we've added and the presets are loaded
@@ -1165,6 +1038,7 @@ void CFFCustomHudAssignPresets::OnAddQuantityPanel(KeyValues *data)
 
 bool CFFCustomHudAssignPresets::IsReady()
 {
+
 	if(vgui::filesystem())
 	{
 		if(!m_bLoaded)
@@ -1172,7 +1046,7 @@ bool CFFCustomHudAssignPresets::IsReady()
 			Load();
 		}
 		else
-		{		
+		{
 			if(!m_pPositionPresetsClass->HasLoaded())	
 				m_pPositionPresetsClass->Load();
 			if(!m_pArrangementPresetsClass->HasLoaded())	
@@ -1204,7 +1078,6 @@ void CFFCustomHudAssignPresets::PositionPresetUpdated(const char* pszPresetName)
 			for(KeyValues *kvAssignment = kvPrimary->GetFirstTrueSubKey(); kvAssignment != NULL; kvAssignment = kvAssignment->GetNextTrueSubKey())
 			//go through assignments within the parent node
 			{
-				//REMOVE: DevMsg("%s : %s == %s\n", kvAssignment->GetName(), kvAssignment->GetString("Position", "fail"), pszPresetName);
 				if(Q_stricmp(kvAssignment->GetString("Position"), pszPresetName) == 0 && kvAssignment->GetInt("UseDefaultPosition") == 0)
 				//if update needed
 				{
@@ -1244,7 +1117,6 @@ void CFFCustomHudAssignPresets::PositionPresetRenamed(const char* pszOldPresetNa
 			for(KeyValues *kvAssignment = kvPrimary->GetFirstTrueSubKey(); kvAssignment != NULL; kvAssignment = kvAssignment->GetNextTrueSubKey())
 			//go through assignments within the parent node
 			{
-				//REMOVE: DevMsg("%s : %s == %s\n", kvAssignment->GetName(), kvAssignment->GetString("Position", "fail"), pszPresetName);
 				if(Q_stricmp(kvAssignment->GetString("Position"), pszOldPresetName) == 0)
 				//if update needed
 				{
@@ -1278,22 +1150,35 @@ void CFFCustomHudAssignPresets::PositionPresetDeleted(const char* pszDeletedPres
 			//now delete the end one
 			m_pPositionPresets->DeleteItem(m_pPositionPresets->GetItemCount()-1);
 
-			if(rowIndex < m_pPositionPresets->GetItemCount())
-			//if the row we deleted wasn't the last one
+			//if we just deleted the last preset
+			if(m_pPositionPresets->GetItemCount() == 0)
+			//disable the controls
 			{
-				//select the same index
-				m_pPositionPresets->ActivateItemByRow(rowIndex);
+				//remove the text remaining from the last removed item
+				m_pPositionPresets->SetText( "" );
+				m_pPositionPresets->SetEnabled( false );
+				m_pUseDefaultPosition->SetSelected( true );
+				m_pUseDefaultPosition->SetEnabled( false );
 			}
 			else
 			{
-				//select the new last one
-				m_pPositionPresets->ActivateItemByRow(m_pPositionPresets->GetItemCount() - 1);
+				if(rowIndex < m_pPositionPresets->GetItemCount())
+				//if the row we deleted wasn't the last one
+				{
+					//select the same index
+					m_pPositionPresets->ActivateItemByRow(rowIndex);
+				}
+				else
+				{
+					//select the new last one
+					m_pPositionPresets->ActivateItemByRow(m_pPositionPresets->GetItemCount() - 1);
+				}
 			}
 			break;
 		}
 	}
 
-	//go through primary and check for assignments that were using the deleted preset which now need an update
+	//go through primary and check for assignments that were using the now deleted preset and so need an update
 	for (int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
 	{
 		KeyValues *kvPrimary = m_pPrimary->GetItemUserData(rowIndex);
@@ -1303,26 +1188,32 @@ void CFFCustomHudAssignPresets::PositionPresetDeleted(const char* pszDeletedPres
 			for(KeyValues *kvAssignment = kvPrimary->GetFirstTrueSubKey(); kvAssignment != NULL; kvAssignment = kvAssignment->GetNextTrueSubKey())
 			//go through assignments within the parent node
 			{
-				//REMOVE: DevMsg("%s : %s == %s\n", kvAssignment->GetName(), kvAssignment->GetString("Position", "fail"), pszPresetName);
 				if(Q_stricmp(kvAssignment->GetString("Position"), pszDeletedPresetName) == 0)
 				//if update needed
 				{
 					kvAssignment->SetInt("UseDefaultPosition",1);
-					kvAssignment->SetString("Position", m_pPositionPresets->GetItemUserData(0)->GetName());
+					kvAssignment->SetString("Position", "");
 				}
 			}
 		}
 		else if(Q_stricmp(kvPrimary->GetString("Position"), pszDeletedPresetName) == 0)
 		//if update needed
 		{
-			kvPrimary->SetInt("UseDefaultPosition",1);
-			kvPrimary->SetString("Position", m_pPositionPresets->GetItemUserData(0)->GetName());
+			kvPrimary->SetInt("UseDefaultPosition", 1);
+			kvPrimary->SetString("Position", "");
 		}
-	}	
+	}
 }
 void CFFCustomHudAssignPresets::PositionPresetAdded(const char* pszPresetName, KeyValues *kvPreset)
 {
 	m_pPositionPresets->AddItem(pszPresetName, kvPreset);	
+	if( !m_pUseDefaultPosition->IsEnabled() ) 
+	{
+		m_pUseDefaultPosition->SetEnabled( true );
+		m_pPositionPresets->ActivateItemByRow(0);
+	}
+	kvPreset->deleteThis();
+	kvPreset = NULL;
 }
 	
 void CFFCustomHudAssignPresets::ArrangementPresetUpdated(const char* pszPresetName)
@@ -1337,7 +1228,6 @@ void CFFCustomHudAssignPresets::ArrangementPresetUpdated(const char* pszPresetNa
 			for(KeyValues *kvAssignment = kvPrimary->GetFirstTrueSubKey(); kvAssignment != NULL; kvAssignment = kvAssignment->GetNextTrueSubKey())
 			//go through assignments within the parent node
 			{
-				//REMOVE: DevMsg("%s : %s == %s\n", kvAssignment->GetName(), kvAssignment->GetString("Arrangement", "fail"), pszPresetName);
 				if(Q_stricmp(kvAssignment->GetString("Arrangement"), pszPresetName) == 0 && kvAssignment->GetInt("UseDefaultArrangement") == 0)
 				//if update needed
 				{
@@ -1377,7 +1267,6 @@ void CFFCustomHudAssignPresets::ArrangementPresetRenamed(const char* pszOldPrese
 			for(KeyValues *kvAssignment = kvPrimary->GetFirstTrueSubKey(); kvAssignment != NULL; kvAssignment = kvAssignment->GetNextTrueSubKey())
 			//go through assignments within the parent node
 			{
-				//REMOVE: DevMsg("%s : %s == %s\n", kvAssignment->GetName(), kvAssignment->GetString("Arrangement", "fail"), pszPresetName);
 				if(Q_stricmp(kvAssignment->GetString("Arrangement"), pszOldPresetName) == 0)
 				//if update needed
 				{
@@ -1411,22 +1300,35 @@ void CFFCustomHudAssignPresets::ArrangementPresetDeleted(const char* pszDeletedP
 			//now delete the end one
 			m_pArrangementPresets->DeleteItem(m_pArrangementPresets->GetItemCount()-1);
 
-			if(rowIndex < m_pArrangementPresets->GetItemCount())
-			//if the row we deleted wasn't the last one
+			//if we just deleted the last preset
+			if(m_pArrangementPresets->GetItemCount() == 0)
+			//disable the controls
 			{
-				//select the same index
-				m_pArrangementPresets->ActivateItemByRow(rowIndex);
+				//remove the text remaining from the last removed item
+				m_pArrangementPresets->SetText( "" );
+				m_pArrangementPresets->SetEnabled( false );
+				m_pUseDefaultArrangement->SetSelected( true );
+				m_pUseDefaultArrangement->SetEnabled( false );
 			}
 			else
 			{
-				//select the new last one
-				m_pArrangementPresets->ActivateItemByRow(m_pArrangementPresets->GetItemCount() - 1);
+				if(rowIndex < m_pArrangementPresets->GetItemCount())
+				//if the row we deleted wasn't the last one
+				{
+					//select the same index
+					m_pArrangementPresets->ActivateItemByRow(rowIndex);
+				}
+				else
+				{
+					//select the new last one
+					m_pArrangementPresets->ActivateItemByRow(m_pArrangementPresets->GetItemCount() - 1);
+				}
 			}
 			break;
 		}
 	}
 
-	//go through primary and check for assignments that were using the deleted preset which now need an update
+	//go through primary and check for assignments that were using the now deleted preset and so need an update
 	for (int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
 	{
 		KeyValues *kvPrimary = m_pPrimary->GetItemUserData(rowIndex);
@@ -1436,12 +1338,11 @@ void CFFCustomHudAssignPresets::ArrangementPresetDeleted(const char* pszDeletedP
 			for(KeyValues *kvAssignment = kvPrimary->GetFirstTrueSubKey(); kvAssignment != NULL; kvAssignment = kvAssignment->GetNextTrueSubKey())
 			//go through assignments within the parent node
 			{
-				//REMOVE: DevMsg("%s : %s == %s\n", kvAssignment->GetName(), kvAssignment->GetString("Arrangement", "fail"), pszPresetName);
 				if(Q_stricmp(kvAssignment->GetString("Arrangement"), pszDeletedPresetName) == 0)
 				//if update needed
 				{
 					kvAssignment->SetInt("UseDefaultArrangement",1);
-					kvAssignment->SetString("Arrangement", m_pArrangementPresets->GetItemUserData(0)->GetName());
+					kvAssignment->SetString("Arrangement", "");
 				}
 			}
 		}
@@ -1449,13 +1350,21 @@ void CFFCustomHudAssignPresets::ArrangementPresetDeleted(const char* pszDeletedP
 		//if update needed
 		{
 			kvPrimary->SetInt("UseDefaultArrangement",1);
-			kvPrimary->SetString("Arrangement", m_pArrangementPresets->GetItemUserData(0)->GetName());
+			kvPrimary->SetString("Arrangement", "");
 		}
-	}	
+	}
 }
 void CFFCustomHudAssignPresets::ArrangementPresetAdded(const char* pszPresetName, KeyValues *kvPreset)
 {
 	m_pArrangementPresets->AddItem(pszPresetName, kvPreset);
+	if( !m_pUseDefaultArrangement->IsEnabled() ) 
+	{
+		m_pUseDefaultArrangement->SetEnabled( true );
+		m_pArrangementPresets->ActivateItemByRow(0);
+	}
+		
+	kvPreset->deleteThis();
+	kvPreset = NULL;
 }
 	
 void CFFCustomHudAssignPresets::StylePresetUpdated(const char* pszPresetName)
@@ -1484,6 +1393,7 @@ void CFFCustomHudAssignPresets::StylePresetUpdated(const char* pszPresetName)
 		}
 	}
 }
+
 void CFFCustomHudAssignPresets::StylePresetRenamed(const char* pszOldPresetName, const char* pszNewPresetName)
 {
 	for (int rowIndex = 0; rowIndex < m_pStylePresets->GetItemCount(); ++rowIndex)
@@ -1541,22 +1451,35 @@ void CFFCustomHudAssignPresets::StylePresetDeleted(const char* pszDeletedPresetN
 			//now delete the end one
 			m_pStylePresets->DeleteItem(m_pStylePresets->GetItemCount()-1);
 
-			if(rowIndex < m_pStylePresets->GetItemCount())
-			//if the row we deleted wasn't the last one
+			//if we just deleted the last preset
+			if(m_pStylePresets->GetItemCount() == 0)
+			//disable the controls
 			{
-				//select the same index
-				m_pStylePresets->ActivateItemByRow(rowIndex);
+				//remove the text remaining from the last removed item
+				m_pStylePresets->SetText( "" );
+				m_pStylePresets->SetEnabled( false );
+				m_pUseDefaultStyle->SetSelected( true );
+				m_pUseDefaultStyle->SetEnabled( false );
 			}
 			else
 			{
-				//select the new last one
-				m_pStylePresets->ActivateItemByRow(m_pStylePresets->GetItemCount() - 1);
+				if(rowIndex < m_pStylePresets->GetItemCount())
+				//if the row we deleted wasn't the last one
+				{
+					//select the same index
+					m_pStylePresets->ActivateItemByRow(rowIndex);
+				}
+				else
+				{
+					//select the new last one
+					m_pStylePresets->ActivateItemByRow(m_pStylePresets->GetItemCount() - 1);
+				}
 			}
 			break;
 		}
 	}
 
-	//go through primary and check for assignments which need an update
+	//go through primary and check for assignments that were using the now deleted preset and so need an update
 	for (int rowIndex = 0; rowIndex < m_pPrimary->GetItemCount(); ++rowIndex)
 	{
 		KeyValues *kvPrimary = m_pPrimary->GetItemUserData(rowIndex);
@@ -1566,12 +1489,11 @@ void CFFCustomHudAssignPresets::StylePresetDeleted(const char* pszDeletedPresetN
 			for(KeyValues *kvAssignment = kvPrimary->GetFirstTrueSubKey(); kvAssignment != NULL; kvAssignment = kvAssignment->GetNextTrueSubKey())
 			//go through assignments within the parent node
 			{
-				//REMOVE: DevMsg("%s : %s == %s\n", kvAssignment->GetName(), kvAssignment->GetString("Arrangement", "fail"), pszPresetName);
 				if(Q_stricmp(kvAssignment->GetString("Style"), pszDeletedPresetName) == 0)
 				//if update needed
 				{
 					kvAssignment->SetInt("UseDefaultStyle",1);
-					kvAssignment->SetString("Style", m_pStylePresets->GetItemUserData(0)->GetName());
+					kvAssignment->SetString("Style", "");
 				}
 			}
 		}
@@ -1579,14 +1501,20 @@ void CFFCustomHudAssignPresets::StylePresetDeleted(const char* pszDeletedPresetN
 		//if update needed
 		{
 			kvPrimary->SetInt("UseDefaultStyle",1);
-			kvPrimary->SetString("Style", m_pStylePresets->GetItemUserData(0)->GetName());
+			kvPrimary->SetString("Style", "");
 		}
-	}	
+	}
 }
 void CFFCustomHudAssignPresets::StylePresetAdded(const char* pszPresetName, KeyValues *kvPreset)
 {
 	m_pStylePresets->AddItem(pszPresetName, kvPreset);
+	if( !m_pUseDefaultStyle->IsEnabled() ) 
+	{
+		m_pUseDefaultStyle->SetEnabled( true );
+		m_pStylePresets->ActivateItemByRow(0);
+	}
 	kvPreset->deleteThis();
+	kvPreset = NULL;
 }
 	
 void CFFCustomHudAssignPresets::OnStylePresetsClassLoaded()
@@ -1594,51 +1522,62 @@ void CFFCustomHudAssignPresets::OnStylePresetsClassLoaded()
 	m_pStylePresets->RemoveAll();
 	KeyValues *kvPresets = m_pStylePresetsClass->GetPresetData();
 
-	// Now go through all the values and add them to the combobox
-	for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
+	if(kvPresets->GetFirstSubKey() == NULL)
 	{
-		if(Q_stricmp(kvPreset->GetName(), "global") == 0)
-		{
-			m_pStylePresets->AddItem("#GameUI_Global", kvPreset); 
-		}
-		else
+		m_pUseDefaultStyle->SetEnabled( false );
+	}
+	else
+	{
+		// Now go through all the values and add them to the combobox
+		for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
 		{
 			m_pStylePresets->AddItem(kvPreset->GetName(), kvPreset);
 		}
+		m_pStylePresets->ActivateItemByRow(0);
 	}
+	kvPresets->deleteThis();
+	kvPresets = NULL;
 }
 
 void CFFCustomHudAssignPresets::OnArrangementPresetsClassLoaded()
 {
 	m_pArrangementPresets->RemoveAll();
 	KeyValues *kvPresets = m_pArrangementPresetsClass->GetPresetData();
-	// Now go through all the values and add them to the combobox
-	for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
+
+	if(kvPresets->GetFirstSubKey() == NULL)
 	{
-		if(Q_stricmp(kvPreset->GetName(), "global") == 0)
-		{
-			m_pArrangementPresets->AddItem("#GameUI_Global", kvPreset); 
-		}
-		else
+		m_pUseDefaultArrangement->SetEnabled( false );
+	}
+	else
+	{
+		// Now go through all the values and add them to the combobox
+		for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
 		{
 			m_pArrangementPresets->AddItem(kvPreset->GetName(), kvPreset);
 		}
+		m_pArrangementPresets->ActivateItemByRow(0);
 	}
+	kvPresets->deleteThis();
+	kvPresets = NULL;
 }
 void CFFCustomHudAssignPresets::OnPositionPresetsClassLoaded()
 {
 	m_pPositionPresets->RemoveAll();
 	KeyValues *kvPresets = m_pPositionPresetsClass->GetPresetData();
-	// Now go through all the values and add them to the combobox
-	for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
+
+	if(kvPresets->GetFirstSubKey() == NULL)
 	{
-		if(Q_stricmp(kvPreset->GetName(), "global") == 0)
-		{
-			m_pPositionPresets->AddItem("#GameUI_Global", kvPreset); 
-		}
-		else
+		m_pUseDefaultPosition->SetEnabled( false );
+	}
+	else
+	{
+		// Now go through all the values and add them to the combobox
+		for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
 		{
 			m_pPositionPresets->AddItem(kvPreset->GetName(), kvPreset);
 		}
+		m_pPositionPresets->ActivateItemByRow(0);
 	}
+	kvPresets->deleteThis();
+	kvPresets = NULL;
 }

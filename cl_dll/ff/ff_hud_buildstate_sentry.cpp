@@ -13,8 +13,8 @@ CHudBuildStateSentry::CHudBuildStateSentry(const char *pElementName) : CHudEleme
 {
 	SetParent(g_pClientMode->GetViewport());
 
-	// Hide when player is dead
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	// Hide when player is dead and not engi
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NOTENGINEER );
 
 	SetUseToggleText(true);
 
@@ -25,35 +25,10 @@ CHudBuildStateSentry::CHudBuildStateSentry(const char *pElementName) : CHudEleme
 CHudBuildStateSentry::~CHudBuildStateSentry() 
 {
 }
-/*	
-KeyValues* CHudBuildStateSentry::AddPanelSpecificOptions(KeyValues *kvPanelSpecificOptions)
-{
-	if(!kvPanelSpecificOptions)
-		return NULL;
-
-	AddBooleanOption(kvPanelSpecificOptions,"ShowShit","ShowShit");
-	AddBooleanOption(kvPanelSpecificOptions,"ShowShit2","ShowShit2");
-	AddBooleanOption(kvPanelSpecificOptions,"ShowShit3","ShowShit3");
-	KeyValues* kvHide = new KeyValues("Values");
-	kvHide->SetString("0", "Never");
-	kvHide->SetString("1", "Always");
-	kvHide->SetString("2", "If Built");
-	AddComboOption(kvPanelSpecificOptions,"HideCells","HideCells", kvHide);
-
-	return kvPanelSpecificOptions;
-}
-*/
 
 KeyValues* CHudBuildStateSentry::GetDefaultStyleData()
 {
 	KeyValues *kvPreset = new KeyValues("StyleData");
-
-	/*
-	KeyValues *kvPanelSpecificValues = new KeyValues("PanelSpecificValues");
-	kvPanelSpecificValues->SetString("HideCells", "Never");
-
-	kvPreset->AddSubKey(kvPanelSpecificValues);
-	*/
 
 	kvPreset->SetInt("x", 480);
 	kvPreset->SetInt("y", 325);
@@ -175,33 +150,6 @@ KeyValues* CHudBuildStateSentry::GetDefaultStyleData()
 	return kvPreset;
 }
 
-/*
-//we override this from the base class so we can catch the panel specific options
-void CHudBuildStateSentry::OnStyleDataRecieved( KeyValues *kvStyleData )
-{
-	KeyValues *kvPanelSpecificValues = kvStyleData->FindKey("PanelSpecificValues");
-	
-	if(kvPanelSpecificValues)
-	{
-		const char* szHideCells = kvStyleData->GetString("HideCells","");
-		if(Q_stricmp(szHideCells,"Never"))
-		{
-			
-		}
-		else if(Q_stricmp(szHideCells,"Always"))
-		{
-			
-		}
-		else if(Q_stricmp(szHideCells,"If Built"))
-		{
-			
-		}
-	}
-
-	BaseClass::OnStyleDataRecieved(kvStyleData);	
-}
-*/
-
 void CHudBuildStateSentry::VidInit()
 {
 	wchar_t *tempString = vgui::localize()->Find("#FF_PLAYER_SENTRYGUN");
@@ -227,6 +175,7 @@ void CHudBuildStateSentry::VidInit()
 	m_qbSentryHealth->SetIconChar("a", false);
 	m_qbSentryHealth->SetIntensityAmountScaled(true);//max changes (is not 100) so we need to scale to a percentage amount for calculation
 	m_qbSentryHealth->SetAmount(0);
+	m_qbSentryHealth->SetVisible(false);
 
 	m_qbSentryLevel->SetLabelText("#FF_ITEM_LEVEL", false);
 	m_qbSentryLevel->SetIconChar("d", false);
@@ -234,13 +183,13 @@ void CHudBuildStateSentry::VidInit()
 	m_qbSentryLevel->SetIntensityControl(1,2,2,3);
 	m_qbSentryLevel->SetIntensityValuesFixed(true);
 	m_qbSentryLevel->SetAmount(0);
+	m_qbSentryLevel->SetVisible(false);
 
 	m_qbCellCounter->SetLabelText("#FF_ITEM_CELLS", false);
 	m_qbCellCounter->SetIconChar("p", false);
 	m_qbCellCounter->SetIntensityControl(0, (int)(FF_BUILDCOST_SENTRYGUN/3), (int)(FF_BUILDCOST_SENTRYGUN/3) * 2, FF_BUILDCOST_SENTRYGUN);
 	m_qbCellCounter->SetAmountMax(FF_BUILDCOST_SENTRYGUN);
 	m_iMaxCells = FF_BUILDCOST_SENTRYGUN;
-
 
 	SetToggleTextVisible(true);
 }
@@ -261,29 +210,11 @@ void CHudBuildStateSentry::OnTick()
 {
 	BaseClass::OnTick();
 
-	if (!engine->IsInGame()) 
+	if( !engine->IsInGame() | !ShouldDraw() )
 		return;
 
 	// Get the local player
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-	// If the player is not an FFPlayer or is not an Engineer
-	if (!pPlayer || pPlayer->GetClassSlot() != CLASS_ENGINEER)
-	//hide the panel
-	{
-		m_bDraw = false;
-		SetVisible(false);
-		m_qbSentryHealth->SetVisible(false);
-		m_qbSentryLevel->SetVisible(false);
-		m_qbCellCounter->SetVisible(false);
-		return; //return and don't continue
-	}
-	else if(!m_bDraw)
-	//show the panel
-	{
-		m_bDraw = true;
-		ShowItem(m_qbCellCounter);
-	}
 
 	// Never below zero (dunno why this is here)
 	int iCells = max( pPlayer->GetAmmoCount( AMMO_CELLS ), 0);
@@ -317,7 +248,6 @@ void CHudBuildStateSentry::OnTick()
 	//hide quantity bars
 	{
 		m_bBuilt = false;
-		SetVisible(false);
 		m_qbSentryHealth->SetVisible(false);
 		m_qbSentryLevel->SetVisible(false);
 		ShowItem(m_qbCellCounter);
@@ -327,7 +257,6 @@ void CHudBuildStateSentry::OnTick()
 	//show quantity bars
 	{
 		m_bBuilt = true;
-		SetVisible(true);
 		m_qbSentryHealth->SetVisible(true);
 		m_qbSentryLevel->SetVisible(true);
 		SetToggleTextVisible(false);
@@ -336,11 +265,8 @@ void CHudBuildStateSentry::OnTick()
 
 void CHudBuildStateSentry::Paint() 
 {
-	if(m_bDraw)
-	{
-		//paint header
-		BaseClass::Paint();
-	}
+	//paint header
+	BaseClass::Paint();
 }
 
 void CHudBuildStateSentry::MsgFunc_SentryMsg(bf_read &msg)

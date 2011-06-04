@@ -33,15 +33,12 @@ public:
 	CHudBuildStateSentry(const char *pElementName);
 	~CHudBuildStateSentry();
 
-	//KeyValues* AddPanelSpecificOptions(KeyValues *kvOptions);
 	KeyValues* GetDefaultStyleData();
 
 	void Init( void );
 	void VidInit( void );
 	void OnTick( void );
 	void Paint( void );
-	
-	//void OnStyleDataRecieved( KeyValues *kvStyleData );
 
 	void	MsgFunc_SentryMsg(bf_read &msg);
 };

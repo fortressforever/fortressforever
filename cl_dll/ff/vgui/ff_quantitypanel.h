@@ -58,12 +58,11 @@ namespace vgui
 
 		void AddBooleanOption(KeyValues* kvMessage, const char *pszName, const char *pszText);
 		void AddComboOption(KeyValues* kvMessage, const char *pszName, const char *pszText, KeyValues* kvOptions);
-		//virtual KeyValues* AddPanelSpecificOptions(KeyValues *kvPanelSpecificOptions);
 
 		virtual void Paint( void );
 		virtual void OnTick( void );
 		virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-		virtual KeyValues* GetDefaultStyleData() = 0;
+		virtual KeyValues* GetDefaultStyleData();
 
 		void SetHeaderText( wchar_t *newHeaderText, bool bUpdateQBPositions = true );
 		void SetHeaderIconChar( char *newHeaderIconChar, bool bUpdateQBPositions = true );
@@ -92,8 +91,6 @@ namespace vgui
 		void SetHeaderIconColor( Color newHeaderIconColor );
 		void SetTextColor( Color newTextColor );
 
-		void SetBarsVisible( bool bIsVisible, bool bUpdateQBPositions = true );
-
 		void SetTeamColor( Color teamColor );
 		Color GetTeamColor();
 
@@ -111,9 +108,7 @@ namespace vgui
 	protected:
 		virtual MESSAGE_FUNC_PARAMS( OnStyleDataRecieved, "SetStyleData", kvStyleData );
 		void AddPanelToHudOptions( const char* szSelfName, const char* szSelfText, const char* szParentName, const char* szParentText );
-
-		bool m_bDraw;
-
+		
 		char m_szSelfName[128];
 		char m_szSelfText[128];
 		char m_szParentName[128];

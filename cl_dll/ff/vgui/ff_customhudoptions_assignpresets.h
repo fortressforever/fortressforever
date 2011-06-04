@@ -80,21 +80,18 @@ private:
 	//-----------------------------------------------------------------------------
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 
-	Panel			*m_pPanelSpecificOptions;
-
 	ComboBox		*m_pPrimary, *m_pSecondary;
 	ComboBox		*m_pStylePresets, *m_pArrangementPresets, *m_pPositionPresets;
 
 	CheckButton		*m_pUseDefaultStyle, *m_pUseDefaultArrangement, *m_pUseDefaultPosition;
 	Button			*m_pCopyDefaultStyle, *m_pCopyDefaultArrangement, *m_pCopyDefaultPosition;
 
-	KeyValues		*m_kvRequestedAssignments, *m_kvLoadedAssignments;
+	KeyValues		*m_kvLoadedAssignments;
+	KeyValues		*m_kvRequiredUpdates;
 
 	CFFCustomHudArrangementPresets *m_pArrangementPresetsClass;
 	CFFCustomHudStylePresets *m_pStylePresetsClass;
 	CFFCustomHudPositionPresets *m_pPositionPresetsClass;
-
-	KeyValues *m_kvRequiredUpdates;
 
 	bool m_bAssignmentPositionChanging;
 	bool m_bAssignmentPositionUseDefaultChanging;

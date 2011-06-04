@@ -148,6 +148,8 @@ namespace vgui
 		//we add these in ApplyPresetToControls
 		
 		LoadControlSettings("resource/ui/FFOptionsSubCustomHudStylePresets.res");
+
+		kv = NULL;
 	}
 
 	void CFFCustomHudStylePresets::ActivatePresetPage()
@@ -156,6 +158,54 @@ namespace vgui
 		PostActionSignal ( kvAction );
 	}
 	
+	void CFFCustomHudStylePresets::SetControlsEnabled(bool bEnabled)
+	{
+		m_pBarWidth->SetEnabled( bEnabled );
+		m_pBarHeight->SetEnabled( bEnabled );
+		m_pBarBorderWidth->SetEnabled( bEnabled );
+		m_pBarMarginHorizontal->SetEnabled( bEnabled );
+		m_pBarMarginVertical->SetEnabled( bEnabled );
+		m_pBarOrientation->SetEnabled( bEnabled );
+
+		m_pComponentSelection->SetEnabled( bEnabled );
+		m_pShow->SetEnabled( bEnabled );
+		m_pColorMode->SetEnabled( bEnabled );
+		m_pAlpha->SetEnabled( bEnabled );
+
+		//if we're disabling
+		if(!bEnabled)
+		//disable all
+		{
+			m_pOffsetX->SetEnabled( bEnabled );
+			m_pOffsetY->SetEnabled( bEnabled );
+			m_pSize->SetEnabled( bEnabled );
+			m_pRed->SetEnabled( bEnabled );
+			m_pGreen->SetEnabled( bEnabled );
+			m_pBlue->SetEnabled( bEnabled );
+			m_pShadow->SetEnabled( bEnabled );
+			m_pFontTahoma->SetEnabled( bEnabled );
+			m_pAlignH->SetEnabled( bEnabled );
+			m_pAlignV->SetEnabled( bEnabled );
+		}
+		//else we're enabling
+		else
+		//only enable based upon what is selected in the component dropdown
+		{
+			if(m_pComponentSelection->GetItemCount() > 0)
+			{			
+				int activeItem = m_pComponentSelection->GetActiveItem();
+				//TODO: bit hacky.. maybe we should put the code this runs into a function... probably
+				//this only works if it wasn't already selected I think.. so we might have a problem here ^^
+				m_pComponentSelection->ActivateItem(activeItem);
+			}
+					
+			int activeItem = m_pColorMode->GetActiveItem();
+			//TODO: bit hacky.. maybe we should put the code this runs into a function... probably
+			//this only works if it wasn't already selected I think.. so we might have a problem here ^^
+			m_pColorMode->ActivateItem(activeItem);
+		}
+	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Tells the assignment class that this preset class is loaded
 	//-----------------------------------------------------------------------------	
@@ -499,10 +549,13 @@ namespace vgui
 
 		//see if component data exists
 		KeyValues *kvComponent = kvPreset->FindKey("Bar");
+
+		//if it does exist
 		if(kvComponent)	
-		//if it does
+		{
 			//add it to the drop down
-			m_pComponentSelection->AddItem("#GameUI_Bar", kvComponent);
+			m_pComponentSelection->AddItem("#GameUI_Bar", kvComponent);		
+		}
 		else
 		{
 			//create the component using these defaults
@@ -520,11 +573,15 @@ namespace vgui
 			kvPreset->AddSubKey(kvComponent);
 		}
 		
+		//see if component data exists
 		kvComponent = kvPreset->FindKey("BarBorder");
+
+		//if it does exist
 		if(kvComponent)	
-		//if it does
+		{
 			//add it to the drop down
 			m_pComponentSelection->AddItem("#GameUI_BarBorder", kvComponent);
+		}
 		else
 		{
 			//create the component using these defaults
@@ -542,9 +599,15 @@ namespace vgui
 			kvPreset->AddSubKey(kvComponent);
 		}
 		
+		//see if component data exists
 		kvComponent = kvPreset->FindKey("BarBackground");
+
+		//if it does exist
 		if(kvComponent)	
+		{
+			//add it to the drop down
 			m_pComponentSelection->AddItem("#GameUI_BarBackground", kvComponent);
+		}
 		else
 		{
 			//create the component using these defaults
@@ -561,9 +624,16 @@ namespace vgui
 			//also add component data to the preset
 			kvPreset->AddSubKey(kvComponent);
 		}
+		
+		//see if component data exists
 		kvComponent = kvPreset->FindKey("Icon");
+
+		//if it does exist
 		if(kvComponent)	
+		{
+			//add it to the drop down
 			m_pComponentSelection->AddItem("#GameUI_Icon", kvComponent);
+		}
 		else
 		{
 			//create the component using these defaults
@@ -587,9 +657,15 @@ namespace vgui
 			kvPreset->AddSubKey(kvComponent);
 		}
 		
+		//see if component data exists
 		kvComponent = kvPreset->FindKey("Label");
+
+		//if it does exist
 		if(kvComponent)
+		{
+			//add it to the drop down
 			m_pComponentSelection->AddItem("#GameUI_Label", kvComponent);
+		}
 		else
 		{
 			//create the component using these defaults
@@ -613,10 +689,15 @@ namespace vgui
 			//also add component data to the preset
 			kvPreset->AddSubKey(kvComponent);
 		}
-		
+		//see if component exists
 		kvComponent = kvPreset->FindKey("Amount");
+
+		//if it does exist
 		if(kvComponent)	
+		{
+			//add it to the drop down
 			m_pComponentSelection->AddItem("#GameUI_Amount", kvComponent);
+		}
 		else
 		{
 			//create the component using these defaults
@@ -647,7 +728,7 @@ namespace vgui
 		UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
 
 		m_bPresetLoading = false;
-		//this enables the preset options to register follwoing changes as a preset update!
+		//this enables the preset options to register following changes as a preset update!
 	}
 	
 	//-----------------------------------------------------------------------------

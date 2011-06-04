@@ -17,6 +17,7 @@ namespace vgui
 		CFFCustomHudStylePresets(Panel *parent, char const *panelName, char const *pszComboBoxName);
 
 		virtual void ActivatePresetPage();
+		virtual void SetControlsEnabled(bool bEnabled);
 
 		virtual void UpdatePresetFromControls(KeyValues *kvPreset);
 		virtual void ApplyPresetToControls(KeyValues *kvPreset);

@@ -24,9 +24,9 @@ namespace vgui {
 		Q_strncpy( m_szSourceFile, pszSourceFile, 127 );
 		Q_strncpy( m_szPresetTypeName, pszPresetType, 127 );
 
-		//preset changes (new delete rename
+		//preset changes (new delete rename)
 		m_kvChanges = new KeyValues("Changes");
-		//updates to changes which need to be 
+		//updates to changes which need to be sent to assignment
 		m_kvUpdates = new KeyValues("Updates");
 
 		m_bLoaded = false;
@@ -41,11 +41,16 @@ namespace vgui {
 		m_pCopyPreset = new Button(this, "CopyPresetButton", "", this, "CopyPreset");
 		m_pDeletePreset = new Button(this, "DeletePresetButton", "", this, "DeletePreset");
 		m_pRenamePreset = new Button(this, "RenamePresetButton", "", this, "RenamePreset");
+		
+		m_kvPanelDefaultCopy = NULL;
+
 	}
 	CFFOptionsPresetPage::~CFFOptionsPresetPage()
 	{
 		m_kvChanges->deleteThis();
+		m_kvChanges = NULL;
 		m_kvUpdates->deleteThis();
+		m_kvUpdates = NULL;
 	}
 	void CFFOptionsPresetPage::Load()
 	{
@@ -60,37 +65,34 @@ namespace vgui {
 
 		if(kvPresets->GetFirstSubKey() == NULL)
 		//if no presets were in the file (or file not found)
-		{
-			KeyValues *kvPreset = RemoveNonEssentialValues(new KeyValues("global"));
-			//use RemoveNonEssentialValues to remove/add keys using defaults
-			m_pPresets->AddItem("#GameUI_Global", kvPreset);
-			kvPreset->deleteThis();
+		{			
+			m_pDeletePreset->SetEnabled(false);
+			m_pRenamePreset->SetEnabled(false);
+			m_pCopyPreset->SetEnabled(false);
+			m_pPresets->SetEnabled(false);
+			SetControlsEnabled(false);
 		}
 		else
 		//if presets exist
 		{
 			for (KeyValues *kvPreset = kvPresets->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
 			{
-				KeyValues *kvCleanPreset = RemoveNonEssentialValues(kvPreset);
+				KeyValues *kvCleanedPreset = RemoveNonEssentialValues(kvPreset);
 				//use RemoveNonEssentialValues to remove/add keys using defaults
-				if(Q_stricmp(kvPreset->GetName(), "global") == 0)
-				{
-					m_pPresets->AddItem("#GameUI_Global", kvCleanPreset); 
-				}
-				else
-				{
-					m_pPresets->AddItem(kvPreset->GetName(), kvCleanPreset);
-				}
-				kvCleanPreset->deleteThis();
+				m_pPresets->AddItem(kvPreset->GetName(), kvCleanedPreset);
+
+				kvCleanedPreset->deleteThis();
+				kvCleanedPreset = NULL;
 			}
-		}
 		
-		// Default to the global preset
-		m_pPresets->ActivateItemByRow(0);
-	
-		ApplyPresetToControls(m_pPresets->GetActiveItemUserData());
+			//load the first one to the controls by activating it
+			m_pPresets->ActivateItemByRow(0);
+
+			ApplyPresetToControls(m_pPresets->GetActiveItemUserData());
+		}	
 
 		kvPresets->deleteThis();
+		kvPresets = NULL;
 
 		RegisterSelfForPresetAssignment();
 
@@ -126,13 +128,17 @@ namespace vgui {
 				SendDeletedPresetNameToPresetAssignment(kvCommand->GetString("Delete"));
 			}
 		}
-		m_kvChanges->Clear();
+		m_kvChanges->deleteThis();
+		m_kvChanges = NULL;
+		m_kvChanges = new KeyValues("Changes");
 
 		for (KeyValues *kvPreset = m_kvUpdates->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
 		{
 			SendUpdatedPresetNameToPresetAssignment(kvPreset->GetName());
 		}
-		m_kvUpdates->Clear();
+		m_kvUpdates->deleteThis();
+		m_kvUpdates = NULL;
+		m_kvUpdates = new KeyValues("Updates");
 
 		KeyValues *kvPresets = GetPresetData();
 		kvPresets->SaveToFile(*pFilesystem, m_szSourceFile);	
@@ -157,6 +163,9 @@ namespace vgui {
 	//-----------------------------------------------------------------------------
 	KeyValues *CFFOptionsPresetPage::GetPresetDataByName(char const *styleName)
 	{
+		if(Q_strcmp(styleName, "") == 0)
+			return NULL;
+
 		for (int i = 0; i < m_pPresets->GetItemCount(); ++i)
 		{
 			//if name exists
@@ -176,9 +185,6 @@ namespace vgui {
 		{
 			KeyValues *kvPreset = m_pPresets->GetItemUserData(i);
 
-			//use a new copied keyvalue
-			//crash occurred when saving twice, 
-			//something to do with deleting the preset used in the combobox
 			KeyValues *kvPresetToSave = new KeyValues(kvPreset->GetName());
 			kvPreset->CopySubkeys(kvPresetToSave);				
 			kvPresets->AddSubKey(kvPresetToSave);
@@ -192,16 +198,6 @@ namespace vgui {
 	{
 		if (m_bLoaded && data->GetPtr("panel") == m_pPresets)
 		{
-			if(m_pPresets->GetActiveItem() == 0)
-			{
-				m_pDeletePreset->SetEnabled(false);
-				m_pRenamePreset->SetEnabled(false);
-			}
-			else
-			{
-				m_pDeletePreset->SetEnabled(true);
-				m_pRenamePreset->SetEnabled(true);
-			}
 			ApplyPresetToControls(m_pPresets->GetActiveItemUserData());
 		}
 	}
@@ -281,13 +277,29 @@ namespace vgui {
 					m_kvPanelDefaultCopy = NULL;
 				}
 				else
-					//copy from global
-					m_pPresets->GetItemUserData(0)->CopySubkeys(kvPreset);
+				{
+					//get the control defaults an make a preset out of them
+					kvPreset = RemoveNonEssentialValues(new KeyValues("newPreset"));
+				}
 			}
 			AddPreset(kvPreset);
+			kvPreset->deleteThis();
+			kvPreset = NULL;
+
+			if( !m_pPresets->IsEnabled() )
+			{
+				m_pDeletePreset->SetEnabled(true);
+				m_pRenamePreset->SetEnabled(true);
+				m_pCopyPreset->SetEnabled(true);
+				m_pPresets->SetEnabled(true);
+				SetControlsEnabled(true);
+			}
 		}
 	}
 	
+	/*
+	If the function calling this is finished with kvPreset then it should be deleted in that function
+	*/
 	void CFFOptionsPresetPage::AddPreset(KeyValues *kvPreset)
 	{
 		//add the new item to the presets dropdown
@@ -301,8 +313,6 @@ namespace vgui {
 		m_kvChanges->SetInt("Count",iCount+1);
 		kvCommand->SetString("New", kvPreset->GetName());
 		m_kvChanges->AddSubKey(kvCommand);
-
-		kvPreset->deleteThis();
 	}
 
 	void CFFOptionsPresetPage::CreatePresetFromPanelDefault(KeyValues *kvPreset)
@@ -365,13 +375,29 @@ namespace vgui {
 			}
 			//now delete the end one
 			m_pPresets->DeleteItem(m_pPresets->GetItemCount()-1);
-
-			if(index < m_pPresets->GetItemCount())
-				m_pPresets->ActivateItemByRow(index);
+			
+			//if we just deleted the last preset
+			if(m_pPresets->GetItemCount() == 0)
+			//disable all the controls
+			{
+				//remove the text remaining from the last removed item
+				m_pPresets->SetText("");
+				m_pDeletePreset->SetEnabled(false);
+				m_pRenamePreset->SetEnabled(false);
+				m_pCopyPreset->SetEnabled(false);
+				m_pPresets->SetEnabled(false);
+				SetControlsEnabled(false);
+			}
 			else
-				m_pPresets->ActivateItemByRow(m_pPresets->GetItemCount() - 1);
+			{
+				if(index < m_pPresets->GetItemCount())
+					m_pPresets->ActivateItemByRow(index);
+				else
+					m_pPresets->ActivateItemByRow(m_pPresets->GetItemCount() - 1);
+			}
 
 			m_kvChanges->AddSubKey(kvCommand);
+
 		}
 	}
 };

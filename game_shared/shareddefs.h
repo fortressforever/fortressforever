@@ -125,8 +125,18 @@ public:
 #define	HIDEHUD_CROSSHAIR			( 1<<8 )	// Hide crosshairs
 #define	HIDEHUD_VEHICLE_CROSSHAIR	( 1<<9 )	// Hide vehicle crosshair
 #define HIDEHUD_INVEHICLE			( 1<<10 )
+#define HIDEHUD_NOTSCOUT			( 1<<11 )
+#define HIDEHUD_NOTSNIPER			( 1<<12 )
+#define HIDEHUD_NOTSOLDIER			( 1<<13 )
+#define HIDEHUD_NOTDEMOMAN			( 1<<14 )
+#define HIDEHUD_NOTMEDIC			( 1<<15 )
+#define HIDEHUD_NOTHWGUY			( 1<<16 )
+#define HIDEHUD_NOTPYRO				( 1<<17 )
+#define HIDEHUD_NOTSPY				( 1<<18 )
+#define HIDEHUD_NOTENGINEER			( 1<<19 )
+#define HIDEHUD_NOTCIVILIAN			( 1<<20 )
 
-#define HIDEHUD_BITCOUNT			11
+#define HIDEHUD_BITCOUNT			21
 
 //===================================================================================================================
 // suit usage bits
