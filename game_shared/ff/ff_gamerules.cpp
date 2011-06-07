@@ -1841,6 +1841,13 @@ bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		// swap so that lowest is always first
 		swap(collisionGroup0,collisionGroup1);
 	}
+
+	// squeek: Clientside buildables thought they could get blocked by ragdolls
+	if( collisionGroup0 == COLLISION_GROUP_BUILDABLE_BUILDING &&
+		collisionGroup1 == COLLISION_GROUP_WEAPON )
+	{
+		return false;
+	}
 	
 	//Don't stand on COLLISION_GROUP_WEAPON
 	if( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
