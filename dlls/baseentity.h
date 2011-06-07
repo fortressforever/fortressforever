@@ -1136,7 +1136,7 @@ public:
 	CNetworkVarForDerived( int, m_iHealth );
 
 	CNetworkVarForDerived( char, m_lifeState );
-	CNetworkVarForDerived( char , m_takedamage );
+	CNetworkVar( unsigned char, m_takedamage );
 
 	// --> Added by Mulch for testing
 	CNetworkVarForDerived( int, m_iArmor );
