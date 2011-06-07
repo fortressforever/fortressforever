@@ -563,8 +563,9 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 					return BUILD_TOOFAR;
 				else if( tr[i].startsolid )
 					return BUILD_NOROOM;
-				else if( ( tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( tr[i].m_pEnt->Classify() == CLASS_DISPENSER ) )
-					return BUILD_NOROOM;
+				// squeek: allow dispensers to be built on other buildables
+				//else if( ( tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( tr[i].m_pEnt->Classify() == CLASS_DISPENSER ) )
+				//	return BUILD_NOROOM;
 			}
 
 			// Make an X shaped vector from our 4 corner position traces and do the cross product
@@ -632,8 +633,9 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 					return BUILD_TOOFAR;
 				else if( tr[i].startsolid )
 					return BUILD_NOROOM;
-				else if( ( tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( tr[i].m_pEnt->Classify() == CLASS_DISPENSER ) )
-					return BUILD_NOROOM;
+				// squeek: allow SGs to be built on other buildables
+				//else if( ( tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( tr[i].m_pEnt->Classify() == CLASS_DISPENSER ) )
+				//	return BUILD_NOROOM;
 			}
 
 			float flIntercept;
