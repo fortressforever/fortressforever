@@ -21,14 +21,19 @@
 	#include "ilagcompensationmanager.h"
 #endif
 
-ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "16", FCVAR_REPLICATED); //16.0f
+ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "32", FCVAR_REPLICATED); //16.0f
 #define MELEE_HULL_DIM	ffdev_melee_hull_dim.GetFloat() //If this is changed, need to change the hardcoded cube root of 2 around line 305
 
-ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "1.732", FCVAR_REPLICATED); //1.732f
+ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "-1", FCVAR_REPLICATED); //1.732f
 #define MELEE_HULL_DIM_BACKOFF	ffdev_melee_hull_backoffradius.GetFloat()
 
-ConVar ffdev_melee_maxhitangle("ffdev_melee_maxhitangle", "0.70721", FCVAR_REPLICATED); //0.70721f
+ConVar ffdev_melee_maxhitangle("ffdev_melee_maxhitangle", "0.3", FCVAR_REPLICATED); //0.70721f
 #define MELEE_HIT_MAX_ANGLE	ffdev_melee_maxhitangle.GetFloat()
+
+ConVar ffdev_melee_usesphere("ffdev_melee_usesphere", "1", FCVAR_REPLICATED);
+#define MELEE_HIT_USESPHERE	ffdev_melee_usesphere.GetBool()
+
+ConVar melee_reach("ffdev_meleereach", "64.0", FCVAR_REPLICATED);
 
 static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
@@ -50,8 +55,6 @@ LINK_ENTITY_TO_CLASS(ff_weapon_basemelee, CFFWeaponMeleeBase);
 //=============================================================================
 // CFFWeaponMeleeBase implementation
 //=============================================================================
-
-ConVar melee_reach("ffdev_meleereach", "32.0", FCVAR_REPLICATED | FCVAR_CHEAT);
 
 //----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -161,6 +164,7 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 //----------------------------------------------------------------------------
 Activity CFFWeaponMeleeBase::ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner) 
 {
+	/*
 	int			i, j, k;
 	float		distance;
 	const float	*minmaxs[2] = {mins.Base(), maxs.Base() };
@@ -203,7 +207,7 @@ Activity CFFWeaponMeleeBase::ChooseIntersectionPointAndActivity(trace_t &hitTrac
 	{
 		hitTrace = tmpTrace;
 	}
-
+	*/
 
 	return ACT_VM_HITCENTER;
 } 
@@ -295,80 +299,168 @@ void CFFWeaponMeleeBase::Swing()
 
 	pOwner->EyeVectors(&forward, NULL, NULL);
 
-	// 0000732 Vector swingEnd = swingStart + forward * (pWeaponInfo.m_flRange + 20.0f);
-	Vector swingEnd = swingStart + forward * (melee_reach.GetFloat() + 20.0f);
-	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
-
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
-	// Like bullets, melee traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo(this, GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
+	// USING SPHERE
+	if (MELEE_HIT_USESPHERE)
+	{
+		CBaseEntity *pHitEntity = NULL;
+		CBaseEntity *pObject = NULL;
+		trace_t trHit;
+		float nearestDot = CONE_90_DEGREES;
+
+		for ( CEntitySphereQuery sphere( swingStart, melee_reach.GetFloat() ); ( pObject = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if ( !pObject )
+				continue;
+			if (pObject == pOwner)
+				continue;
+			if (pObject->m_takedamage == DAMAGE_NO) 
+			{
+				continue;
+			}
+
+			// see if it's more roughly in front of the player than previous guess
+			Vector point;
+			//pObject->CollisionProp()->CalcNearestPoint( swingStart, &point );
+			point = pObject->GetAbsOrigin();
+
+			Vector dir = point - swingStart;
+			VectorNormalize(dir);
+			float dot = DotProduct( dir, forward );
+
+			// Need to be looking at the object more or less
+			if ( dot < MELEE_HIT_MAX_ANGLE )
+				continue;
+			
+			if ( dot > nearestDot )
+			{
+				// Since this has purely been a radius search to this point, we now
+				// make sure the object isn't behind glass or a grate.
+				trace_t tr;
+				UTIL_TraceLine( swingStart, point, MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
+
+				if ( tr.fraction == 1.0 || tr.m_pEnt == pObject )
+				{
+					trHit = tr;
+					pHitEntity = pObject;
+					nearestDot = dot;
+				}
+			}
+		}
+
+		WeaponSound(SINGLE);
+		
+		//	Miss
+		if (pHitEntity == NULL) 
+		{
+			// we missed all things that can take damage, see if we collide with the world using a simple traceline
+			Vector swingEnd = swingStart + forward * (melee_reach.GetFloat());
+			UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &trHit);
+
+			//	still missed
+			if (trHit.fraction == 1.0f) 
+			{
+				nHitActivity = ACT_VM_MISSCENTER;
+
+				// See if we happened to hit water
+				ImpactWater(swingStart, swingEnd);
 
 #ifdef GAME_DLL
-	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin);
+				// If this _IS_ a knife, then always undisguise if they miss with it
+				// The rest of the undisguise logic is handled by the knife itself
+				if (GetWeaponID() == FF_WEAPON_KNIFE)
+				{
+					pOwner->ResetDisguise();
+				}
 #endif
-
-	if (traceHit.fraction == 1.0) 
-	{
-		float meleeHullRadius = MELEE_HULL_DIM_BACKOFF * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
-		//float meleeHullRadius = 1.732f * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
-
-		// Back off by hull "radius"
-		swingEnd -= forward * meleeHullRadius;
-		//swingStart += forward * meleeHullRadius;
-		
-		Vector meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
-		Vector meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
-		
-		UTIL_TraceHull(swingStart, swingEnd, meleeMins, meleeMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
-
-		if (traceHit.fraction < 1.0 && traceHit.m_pEnt) 
-		{
-			Vector vecToTarget = traceHit.m_pEnt->GetAbsOrigin() - swingStart;
-			VectorNormalize(vecToTarget);
-
-			float dot = vecToTarget.Dot(forward);
-
-			// YWB:  Make sure they are sort of facing the guy at least...
-			if (dot < MELEE_HIT_MAX_ANGLE) // 0.70721f
-			{
-				// Force amiss
-				traceHit.fraction = 1.0f;
 			}
 			else
 			{
-				nHitActivity = ChooseIntersectionPointAndActivity(traceHit, meleeMins, meleeMaxs, pOwner);
+				Hit(trHit, nHitActivity);
 			}
 		}
-	}
-
-	// Play swing sound first
-	WeaponSound(SINGLE);
-
-	//	Miss
-	if (traceHit.fraction == 1.0f) 
-	{
-		nHitActivity = ACT_VM_MISSCENTER;
-
-		// We want to test the first swing again
-		// 0000732		Vector testEnd = swingStart + forward * pWeaponInfo.m_flRange;
-		Vector testEnd = swingStart + forward * melee_reach.GetFloat();
-		// See if we happened to hit water
-		ImpactWater(swingStart, testEnd);
-
-#ifdef GAME_DLL
-		// If this _IS_ a knife, then always undisguise if they miss with it
-		// The rest of the undisguise logic is handled by the knife itself
-		if (GetWeaponID() == FF_WEAPON_KNIFE)
+		else
 		{
-			pOwner->ResetDisguise();
+			Hit(trHit, nHitActivity);
 		}
-#endif
 	}
+	// NOT USING SPHERE
 	else
 	{
-		Hit(traceHit, nHitActivity);
-	}
+		// 0000732 Vector swingEnd = swingStart + forward * (pWeaponInfo.m_flRange + 20.0f);
+		Vector swingEnd = swingStart + forward * (melee_reach.GetFloat() + 20.0f);
+		UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
+
+		// Like bullets, melee traces have to trace against triggers.
+		CTakeDamageInfo triggerInfo(this, GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
+
+	#ifdef GAME_DLL
+		TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin);
+	#endif
+
+		if (traceHit.fraction == 1.0) 
+		{
+			float meleeHullRadius = MELEE_HULL_DIM_BACKOFF * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
+			//float meleeHullRadius = 1.732f * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
+
+			// Back off by hull "radius"
+			swingEnd -= forward * meleeHullRadius;
+			//swingStart += forward * meleeHullRadius;
+			
+			Vector meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
+			Vector meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
+			
+			UTIL_TraceHull(swingStart, swingEnd, meleeMins, meleeMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
+
+			if (traceHit.fraction < 1.0 && traceHit.m_pEnt) 
+			{
+				Vector vecToTarget = traceHit.m_pEnt->GetAbsOrigin() - swingStart;
+				VectorNormalize(vecToTarget);
+
+				float dot = vecToTarget.Dot(forward);
+
+				// YWB:  Make sure they are sort of facing the guy at least...
+				if (dot < MELEE_HIT_MAX_ANGLE) // 0.70721f
+				{
+					// Force amiss
+					traceHit.fraction = 1.0f;
+				}
+				else
+				{
+					nHitActivity = ChooseIntersectionPointAndActivity(traceHit, meleeMins, meleeMaxs, pOwner);
+				}
+			}
+		}
+
+		// Play swing sound first
+		WeaponSound(SINGLE);
+
+		//	Miss
+		if (traceHit.fraction == 1.0f) 
+		{
+			nHitActivity = ACT_VM_MISSCENTER;
+
+			// We want to test the first swing again
+			// 0000732		Vector testEnd = swingStart + forward * pWeaponInfo.m_flRange;
+			Vector testEnd = swingStart + forward * melee_reach.GetFloat();
+			// See if we happened to hit water
+			ImpactWater(swingStart, testEnd);
+
+	#ifdef GAME_DLL
+			// If this _IS_ a knife, then always undisguise if they miss with it
+			// The rest of the undisguise logic is handled by the knife itself
+			if (GetWeaponID() == FF_WEAPON_KNIFE)
+			{
+				pOwner->ResetDisguise();
+			}
+	#endif
+		}
+		else
+		{
+			Hit(traceHit, nHitActivity);
+		}
+	} // END NOT USING SPHERE
 
 	// Send the anim
 	SendWeaponAnim(nHitActivity);
