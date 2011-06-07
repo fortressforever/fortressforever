@@ -72,7 +72,7 @@ static ConVar ffdev_rampslide_zchange_threshold("ffdev_rampslide_zchange_thresho
 static ConVar ffdev_rampslide_speedmaintained("ffdev_rampslide_speedmaintained", ".98", FCVAR_REPLICATED);
 
 static ConVar ffdev_headcrush_damage("ffdev_headcrush_damage", "108", FCVAR_REPLICATED, "Straight headcrush damage; not used if usefalldamage is on");
-static ConVar ffdev_headcrush_usefalldamage("ffdev_headcrush_usefalldamage", "1.0", FCVAR_REPLICATED, "0 = off, > 0 means take FALLDAMAGE * val damage");
+static ConVar ffdev_headcrush_usefalldamage("ffdev_headcrush_usefalldamage", "2.0", FCVAR_REPLICATED, "0 = off, > 0 means take FALLDAMAGE * val damage");
 
 #ifndef _XBOX
 void COM_Log( char *pszFile, char *fmt, ...)
