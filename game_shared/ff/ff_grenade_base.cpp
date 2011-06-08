@@ -48,9 +48,13 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeBase, DT_FFGrenadeBase)
 
 BEGIN_NETWORK_TABLE(CFFGrenadeBase, DT_FFGrenadeBase)
 #ifdef CLIENT_DLL
-	RecvPropFloat(RECVINFO(m_flSpawnTime)) 
+	RecvPropFloat(RECVINFO(m_flSpawnTime)),
+	RecvPropFloat(RECVINFO(m_flDetonateTime)),
+	RecvPropBool(RECVINFO(m_bIsOn)),
 #else
 	SendPropFloat(SENDINFO(m_flSpawnTime)),
+	SendPropFloat(SENDINFO(m_flDetonateTime)),
+	SendPropBool(SENDINFO(m_bIsOn)),
 #endif
 END_NETWORK_TABLE()
 
@@ -80,9 +84,9 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 //=============================================================================
 
 #ifdef GAME_DLL
-
 	extern short g_sModelIndexFireball;
 	extern short g_sModelIndexWExplosion;
+#endif
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Set all the spawn stuff
@@ -90,6 +94,10 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 	void CFFGrenadeBase::Spawn()
 	{
 		BaseClass::Spawn();
+
+		m_fIsHandheld = true;
+
+#ifdef GAME_DLL
 
 		SetSolid(SOLID_BBOX);
 		SetSolidFlags(FSOLID_NOT_STANDABLE);
@@ -114,14 +122,20 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 
 		// Flag for whether grenade has hit the water
 		m_bHitwater = false;
-		m_fIsHandheld = true;
+		m_bIsOn = false;
+
+		CreateTrail();
 
 		SetThink(&CFFGrenadeBase::GrenadeThink);
 		SetNextThink(gpGlobals->curtime);
+#endif
 
-		CreateTrail();
+#ifdef CLIENT_DLL
+		SetNextClientThink(gpGlobals->curtime);
+#endif
 	}	
 
+#ifdef GAME_DLL
 	void CFFGrenadeBase::CreateTrail()
 	{
 		m_pTrail = CSpriteTrail::SpriteTrailCreate("sprites/ff_trail.vmt", GetLocalOrigin(), false);
@@ -146,22 +160,26 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 	{
 		m_flDetonateTime = gpGlobals->curtime + timer;
 	}
+#endif
 
 	//-----------------------------------------------------------------------------
 	// Purpose: If we're trying to detonate, run through Lua first to check allowed
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeBase::Detonate()
 	{
+#ifdef GAME_DLL
 		// Remove if not allowed by Lua 
 		if (FFScriptRunPredicates(this, "onexplode", true) == false)
 		{
 			UTIL_Remove(this);
 			return;
 		}
+#endif
 
 		BaseClass::Detonate();
 	}
 
+#ifdef GAME_DLL
 	//-----------------------------------------------------------------------------
 	// Purpose: Check for end of fuse, stuff like that
 	//-----------------------------------------------------------------------------
@@ -194,7 +212,43 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 		// Check for water
 		WaterCheck();		
 	}
+#endif
+	
+#ifdef CLIENT_DLL
+	//-----------------------------------------------------------------------------
+	// Purpose: Check for end of fuse, stuff like that
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeBase::ClientThink()
+	{
+		// Remove if we're nolonger in the world
+		if (!IsInWorld())
+		{
+			Remove();
+			return;
+		}
 
+		// Blow up if we've reached the end of our fuse
+		if (gpGlobals->curtime > m_flDetonateTime)
+		{
+			Detonate();
+			return;
+		}
+
+		// Bug #0000501: Doors can be blocked by shit that shouldn't block them.
+		if( GetGroundEntity() && ( GetAbsVelocity() == vec3_origin ) )
+		{
+			if( GetGroundEntity()->GetMoveType() != MOVETYPE_PUSH )
+				SetMoveType( MOVETYPE_NONE );
+		}
+
+		BaseClass::ClientThink();
+
+		// Next think straight away
+		SetNextClientThink(gpGlobals->curtime);
+	}
+#endif
+
+#ifdef GAME_DLL
 	//-----------------------------------------------------------------------------
 	// Purpose: Mulch bug 0000273: make grens sink-ish in water
 	//-----------------------------------------------------------------------------
@@ -400,6 +454,7 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 		}
 		BounceSound();*/
 	}
+#endif
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Added so that grenades aren't using projectiles explode code.
@@ -408,6 +463,7 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
 	{
+#ifdef GAME_DLL
 		SetModelName( NULL_STRING );//invisible
 		AddSolidFlags( FSOLID_NOT_SOLID );
 
@@ -476,7 +532,9 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 		AddEffects( EF_NODRAW );
 		SetAbsVelocity( vec3_origin );
 		SetNextThink( gpGlobals->curtime );
+#endif
 	}
+#ifdef GAME_DLL
 #else
 	//----------------------------------------------------------------------------
 	// Purpose: Get script file grenade data
@@ -504,6 +562,7 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 	ConVar target_rotation("ffdev_target_rotation", "-118.2", FCVAR_CHEAT); // -100
 
 	ConVar grenadetargets("cl_grenadetargets", "1", FCVAR_ARCHIVE);
+	ConVar grenadedurationtargets("cl_grenadedurationtargets", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);
 
 	int CFFGrenadeBase::DrawModel(int flags)
 	{
@@ -512,7 +571,10 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 		if (ret == 0)
 			return 0;
 
-		if (grenadetargets.GetBool() == false)
+		if (!m_bIsOn && grenadetargets.GetBool() == false)
+			return ret;
+
+		if (m_bIsOn && grenadedurationtargets.GetBool() == false)
 			return ret;
 
 		float flSpeed = GetAbsVelocity().Length();
@@ -562,8 +624,8 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 		if (flRemaining < 0.f) // for grenades that have just gone off, but remain in game and need a persistent halo, e.g. hover turret / slow field
 			return ret; //flRemaining = 0.01f;
 
-		if (( Classify() == CLASS_GREN_LASER ) && ( m_flDetonateTime - m_flSpawnTime > 5.f))
-			return ret;
+		//if (( Classify() == CLASS_GREN_LASER ) && ( m_flDetonateTime - m_flSpawnTime > 5.f))
+		//	return ret;
 			
 		float flSize = m_flModelSize * target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
 		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());

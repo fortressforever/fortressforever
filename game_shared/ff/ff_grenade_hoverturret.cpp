@@ -188,6 +188,7 @@ void CFFGrenadeHoverTurret::Precache()
 		}
 
 		SetDetonateTimerLength( FFDEV_HOVERGREN_LIFETIME );
+		m_bIsOn = true;
 
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);

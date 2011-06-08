@@ -41,14 +41,9 @@
 #endif
 
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag
-#ifdef GAME_DLL
-
-
 
 //ConVar ffdev_mancannon_conc_speed( "ffdev_mancannon_conc_speed", "1700.0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_CHEAT, "Max conc speed a player can attain after just using a jump pad." );
 #define MAX_JUMPPAD_TO_CONC_SPEED 1700.0f // ffdev_mancannon_conc_speed.GetFloat()
-
-
 //static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_CHEAT, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
 #define FFDEV_CONC_LATERAL_POWER 2.74f //ffdev_conc_lateral_power.GetFloat() //2.74f
 //static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_CHEAT, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
@@ -56,7 +51,6 @@
 //static ConVar ffdev_conc_newbconc_uppush( "ffdev_conc_newbconc_uppush", "90", FCVAR_CHEAT, "Vertical movement boost value for newb-didnt-jump hh concs" );
 #define FFDEV_CONC_NEWBCONC_UPPUSH 90
 //
-#endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
 ConVar conc_ragdoll_push("conc_ragdoll_push","600", FCVAR_CHEAT | FCVAR_REPLICATED,"How much to push ragdolls");
@@ -135,13 +129,14 @@ public:
 
 	virtual color32 GetColour() { color32 col = { 255, 255, 210, GREN_ALPHA_DEFAULT }; return col; }
 
+	virtual void Explode(trace_t *pTrace, int bitsDamageType);
+
 #ifdef CLIENT_DLL
 	CFFGrenadeConcussion() {}
 	CFFGrenadeConcussion(const CFFGrenadeConcussion&) {}
 	virtual void DoEffectIdle();
 #else
 	virtual void Spawn();
-	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual float GetGrenadeFriction()		{ return gren_fric_conc.GetFloat(); }
 	virtual float GetGrenadeElasticity()	{ return gren_elas_conc.GetFloat(); }
 #endif
@@ -180,13 +175,16 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 		BaseClass::Spawn();
 	}
 
+#endif
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Do a proper conc explosion
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeConcussion::Explode(trace_t *pTrace, int bitsDamageType)
 	{
-		EmitSound(CONCUSSION_SOUND);
+		EmitSoundShared(CONCUSSION_SOUND);
 
+#ifdef GAME_DLL
 		CEffectData data;
 		data.m_vOrigin = GetAbsOrigin();
 		data.m_flScale = 1.0f;
@@ -201,6 +199,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 		}
 
 		g_pEffects->EnergySplash(GetAbsOrigin(), Vector(0, 0, 1.0f), true);
+#endif
 
 		//Need this so they make ragdolls go flying.
 		Vector vecAbsOrigin = GetAbsOrigin();
@@ -259,6 +258,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			float flDistance = vecDisplacement.Length();
 			Vector vecDir = vecDisplacement / flDistance;
 
+#ifdef GAME_DLL
 			// Concuss the player first
 			if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 			{
@@ -275,6 +275,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 						pPlayer->Concuss( flDuration, flIconDuration, &angDirection, flDistance);
 				}					
 			}
+#endif
 
 			// People who are building shouldn't be pushed around by anything
 			if (pPlayer->IsStaticBuilding())
@@ -336,6 +337,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			// Jiggles: players can easily get insane speeds by using a jump pad and then concing
 			// AfterShock: This takes into account vertical speed too, limiting horizontal speed if you're going upwards aswell
 			//             is this a bad thing? 
+#ifdef GAME_DLL
 			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
 			{
 				if ( vecResult.Length() > MAX_JUMPPAD_TO_CONC_SPEED )
@@ -344,6 +346,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 					vecResult *= MAX_JUMPPAD_TO_CONC_SPEED;
 				}
 			}
+#endif
 			pPlayer->SetAbsVelocity(vecResult);
 
 			//AfterShock: If we ever want to play effects on whoever got hit, we can do it like this
@@ -353,9 +356,10 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 		}
 
 		// Now get rid of this
+#ifdef GAME_DLL
 		UTIL_Remove(this);
-	}
 #endif
+	}
 
 #ifndef GAME_DLL
 void CFFGrenadeConcussion::DoEffectIdle()

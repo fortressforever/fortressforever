@@ -278,6 +278,7 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 
 		// Now do a napalm burning think
 		SetDetonateTimerLength(nap_flame_time.GetFloat());
+		m_bIsOn = true;
 
 		// Should this maybe be noclip?
 		SetMoveType( MOVETYPE_NONE );
