@@ -313,23 +313,42 @@ int C_BaseViewModel::DrawOverriddenViewmodel( int flags )
 	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
 	if( pPlayer )
 	{
+		//if ur not cloaksmoked, release this cloak texture
 		if( !pPlayer->IsCloakSmoked() )
 		{
 			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
 		}
-		else
+		//If ur in a cloaksmoke, but ur also cloaked, override and use the electric cloak
+		else if( pPlayer->IsCloakSmoked() && pPlayer->IsCloaked() )
+		{
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);		
+		}
+		//if the player is in cloaksmoke, but is not cloaked, use the predator texture
+		else if( pPlayer->IsCloakSmoked() && !pPlayer->IsCloaked() )
 		{
 			FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
-			return BaseClass::DrawModel( flags );	
+			return BaseClass::DrawModel( flags );
 		}
+
 
 		if( !pPlayer->IsCloaked() )
 		{
 			//Removing all cloak textures -GreenMushy
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_BLUE);
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_RED);	
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW);
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_GREEN);
+			switch( pPlayer->GetTeamNumber())
+			{
+			case 2:
+				ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_BLUE);
+				break;
+			case 3:
+				ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_RED);
+				break;
+			case 4:
+				ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW);
+				break;
+			case 5:
+				ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_GREEN);
+				break;
+			}
 		}
 		else
 		{

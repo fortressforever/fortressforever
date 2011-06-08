@@ -2017,10 +2017,13 @@ void C_FFPlayer::DrawPlayerIcons()
 //-----------------------------------------------------------------------------
 int C_FFPlayer::DrawModel( int flags )
 {
+	//Use this bool to check each frame whether to draw and appropriately apply or remove textures
+	bool bDrawModel = true;
+
 	if( IsCloakSmoked() )
 	{
 		//Disables the player model from even being drawn -GreenMushy
-		return 1;
+		bDrawModel = false;
 	}
 
 	// Render the player info icons during the transparent pass
@@ -2032,17 +2035,30 @@ int C_FFPlayer::DrawModel( int flags )
 		// RENDER_GROUP_TRANSLUCENT_ENTITY turns on the STUDIO_TRANSPARENCY flag for the model and adds it 
 		// to the translucent renderables list, but not to the opaque renderables list as well.
 		// RENDER_GROUP_TWOPASS adds the model to both renderables lists, so we need to return if not cloaked
-		if ( !IsCloaked() || !IsCloakSmoked() )
-			return 1;
+		if ( IsCloaked() )
+		{
+			bDrawModel = true;
+		}
 	}
 
 	if ( !IsCloaked() )
 	{
-		//Removing all cloak textures -GreenMushy
-		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_BLUE);
-		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_RED);	
-		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW);
-		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_GREEN);
+		//Getting team number and removing the right cloak texture -GreenMushy
+		switch( this->GetTeamNumber() )
+		{
+		case 2:
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_BLUE);
+			break;
+		case 3:
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_RED);
+			break;
+		case 4:
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW);
+			break;
+		case 5:
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_GREEN);
+			break;
+		}
 	}
 	else
 	{
@@ -2132,7 +2148,14 @@ int C_FFPlayer::DrawModel( int flags )
 			SetModel( "models/player/engineer/engineer.mdl" );
 	}
 
-	return BaseClass::DrawModel( flags );
+	//If the bool is true here, go ahead and draw it
+	if( bDrawModel )
+	{
+		BaseClass::DrawModel( flags );
+	}
+
+	//Just return this bool, i dont know if is important
+	return bDrawModel;
 }
 
 // Handy function to get the midpoint angle between two angles

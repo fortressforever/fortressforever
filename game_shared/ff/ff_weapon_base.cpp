@@ -458,6 +458,7 @@ bool CFFWeaponBase::ShouldPredict()
 int CFFWeaponBase::DrawModel( int flags )
 {
 	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
+	bool bDrawModel = true;
 	if( pPlayer )
 	{
 		if ( !pPlayer->ShouldDraw() )
@@ -466,16 +467,27 @@ int CFFWeaponBase::DrawModel( int flags )
 		//Break out early and dont draw anything if ur under the effects of cloaksmoke -GreenMushy
 		if( pPlayer->IsCloakSmoked() )
 		{
-			return 1;
+			bDrawModel = false;
 		}
 
 		if( !pPlayer->IsCloaked() )
 		{
 			//Removing all cloak textures -GreenMushy
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_BLUE);
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_RED);	
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW);
-			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_GREEN);
+			switch( pPlayer->GetTeamNumber() )
+			{
+			case 2:
+				ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_BLUE);
+				break;
+			case 3:
+				ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_RED);
+				break;
+			case 4:
+				ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_YELLOW);
+				break;
+			case 5:
+				ReleaseOverrideMaterial(FF_CLOAK_MATERIAL_GREEN);
+				break;
+			}
 		}
 		else
 		{	
@@ -505,7 +517,13 @@ int CFFWeaponBase::DrawModel( int flags )
 		}
 	}
 
-	return BaseClass::DrawModel( flags );
+	if( bDrawModel )
+	{
+		BaseClass::DrawModel( flags );
+	}
+
+	return bDrawModel;
+
 }
 
 //-----------------------------------------------------------------------------
