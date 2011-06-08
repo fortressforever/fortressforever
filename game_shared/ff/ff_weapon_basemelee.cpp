@@ -27,13 +27,13 @@ ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "32", FCVAR_REPLICATED); //1
 ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "-1", FCVAR_REPLICATED); //1.732f
 #define MELEE_HULL_DIM_BACKOFF	ffdev_melee_hull_backoffradius.GetFloat()
 
-ConVar ffdev_melee_maxhitangle("ffdev_melee_maxhitangle", "0.3", FCVAR_REPLICATED); //0.70721f
+ConVar ffdev_melee_maxhitangle("ffdev_melee_maxhitangle", "0.7071", FCVAR_REPLICATED); //0.70721f
 #define MELEE_HIT_MAX_ANGLE	ffdev_melee_maxhitangle.GetFloat()
 
 ConVar ffdev_melee_usesphere("ffdev_melee_usesphere", "1", FCVAR_REPLICATED);
 #define MELEE_HIT_USESPHERE	ffdev_melee_usesphere.GetBool()
 
-ConVar melee_reach("ffdev_meleereach", "64.0", FCVAR_REPLICATED);
+ConVar melee_reach("ffdev_meleereach", "52.0", FCVAR_REPLICATED);
 
 static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
@@ -340,7 +340,7 @@ void CFFWeaponMeleeBase::Swing()
 				trace_t tr;
 				UTIL_TraceLine( swingStart, point, MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
 
-				if ( tr.fraction == 1.0 || tr.m_pEnt == pObject )
+				if ( tr.m_pEnt == pObject )
 				{
 					trHit = tr;
 					pHitEntity = pObject;
