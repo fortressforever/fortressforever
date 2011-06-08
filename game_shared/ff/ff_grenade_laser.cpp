@@ -630,7 +630,7 @@ float CFFGrenadeLaser::getLengthPercent()
 
 				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
 								vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), 
-								MASK_PLAYERSOLID, this, COLLISION_GROUP_LASER, &tr );
+								MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
 				
 				if( !pBeam[i] )
 				{
