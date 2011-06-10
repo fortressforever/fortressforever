@@ -136,11 +136,6 @@ CFFScheduleCallback::CFFScheduleCallback(const CFFScheduleCallback& rhs)
 /////////////////////////////////////////////////////////////////////////////
 bool CFFScheduleCallback::Update()
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-	return true;
-#else
 	m_timeLeft -= gpGlobals->frametime;
 
 	if(m_timeLeft <= 0.0f)
@@ -181,7 +176,6 @@ bool CFFScheduleCallback::Update()
 	}
 
 	return false;
-#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -216,10 +210,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 float timer,
 									 const luabind::adl::object& fn)
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -231,7 +221,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 															timer);
 
 	m_schedules.Insert(id, pCallback);
-#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -240,10 +229,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 const luabind::adl::object& fn,
 									 int nRepeat)
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -256,7 +241,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 														   nRepeat);
 
 	m_schedules.Insert(id, pCallback);
-#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -266,10 +250,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 int nRepeat,
 									 const luabind::adl::object& param)
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -283,7 +263,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 														   param);
 
 	m_schedules.Insert(id, pCallback);
-#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -294,10 +273,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 const luabind::adl::object& param1,
 									 const luabind::adl::object& param2)
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -312,7 +287,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 														   param2);
 
 	m_schedules.Insert(id, pCallback);
-#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -324,10 +298,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 const luabind::adl::object& param2,
 									 const luabind::adl::object& param3)
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -343,7 +313,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 															param3);
 
 	m_schedules.Insert(id, pCallback);
-#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -356,10 +325,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 const luabind::adl::object& param3,
 									 const luabind::adl::object& param4)
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -376,7 +341,6 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 															param4);
 
 	m_schedules.Insert(id, pCallback);
-#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
