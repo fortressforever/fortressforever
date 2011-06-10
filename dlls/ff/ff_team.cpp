@@ -42,10 +42,6 @@ CFFTeam *GetGlobalFFTeam( int iIndex )
 //-----------------------------------------------------------------------------
 void CFFTeam::Init( const char *pName, int iNumber )
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	BaseClass::Init( pName, iNumber );
 
 	// --> Mirv: Some default settings
@@ -56,7 +52,6 @@ void CFFTeam::Init( const char *pName, int iNumber )
 
 	// Only detect changes every half-second.
 	NetworkProp()->SetUpdateInterval( 0.75f );
-#endif // FF_BETA_TEST_COMPILE
 }
 
 // --> Mirv: Some allies and avail classes functions
@@ -67,12 +62,7 @@ void CFFTeam::SetAllies( int allies )
 
 void CFFTeam::SetEasyAllies( int iTeam )
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	m_iAllies |= (1<<iTeam);
-#endif // FF_BETA_TEST_COMPILE
 }
 
 void CFFTeam::ClearAllies()
@@ -121,10 +111,6 @@ inline int minifnotzero( int a, int b )
 
 void CFFTeam::UpdateLimits( void )
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	// This is a really messy way of doing it
 	m_iClasses.Set( 1, minifnotzero( cr_scout.GetInt(), m_iClassesMap[1] ) );
 	m_iClasses.Set( 2, minifnotzero( cr_sniper.GetInt(), m_iClassesMap[2] ) );
@@ -137,6 +123,5 @@ void CFFTeam::UpdateLimits( void )
 	m_iClasses.Set( 9, minifnotzero( cr_engineer.GetInt(), m_iClassesMap[9] ) );
 
 	m_iClasses.Set( 10, m_iClassesMap[10] );
-#endif // FF_BETA_TEST_COMPILE
 }
 // <-- Mirv: Some allies and avail classes functions
