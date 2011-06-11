@@ -1309,7 +1309,7 @@ public:
 	// Object model index
 	short							m_nModelIndex;
 
-	char							m_takedamage;
+	unsigned char					m_takedamage;
 	char							m_lifeState;
 
 	int								m_iHealth;
