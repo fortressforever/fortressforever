@@ -341,7 +341,7 @@ float CFFGrenadeLaser::getLengthPercent()
 	{
 		SetModel(NAILGRENADE_MODEL);
 		BaseClass::Spawn();
-		m_bIsOn = 0;
+		m_bIsOn = false;
 		m_flAngleOffset = 0.0f;
 		m_iOffset = 0;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
@@ -370,7 +370,7 @@ float CFFGrenadeLaser::getLengthPercent()
 			SetThink(&CFFGrenadeLaser::NailEmit);
 		else
 		{
-			m_bIsOn = 1;
+			m_bIsOn = true;
 			SetThink(&CFFGrenadeLaser::BeamEmit);
 		}
 		SetNextThink(gpGlobals->curtime);
