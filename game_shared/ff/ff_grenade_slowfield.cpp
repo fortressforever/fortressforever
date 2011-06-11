@@ -66,13 +66,13 @@ ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_FF_FFDEV_CL
 ConVar ffdev_slowfield_radius("ffdev_slowfield_radius", "176", FCVAR_FF_FFDEV_REPLICATED, "Radius of slowfield grenade");
 #define SLOWFIELD_RADIUS ffdev_slowfield_radius.GetFloat()
 
-ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "6", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
+ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "8", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
 #define SLOWFIELD_DURATION ffdev_slowfield_duration.GetFloat()
 
 ConVar ffdev_slowfield_min_slow("ffdev_slowfield_min_slow", ".20", FCVAR_FF_FFDEV_REPLICATED, "Minimum slow motion percentage of slowfield grenade");
 #define SLOWFIELD_MIN_SLOW ffdev_slowfield_min_slow.GetFloat()
 
-ConVar ffdev_slowfield_min_slow_radius("ffdev_slowfield_min_slow_radius", "32", FCVAR_FF_FFDEV_REPLICATED, "Minimum slow motion radius of slowfield grenade");
+ConVar ffdev_slowfield_min_slow_radius("ffdev_slowfield_min_slow_radius", "128", FCVAR_FF_FFDEV_REPLICATED, "Minimum slow motion radius of slowfield grenade");
 #define SLOWFIELD_MIN_SLOW_RADIUS ffdev_slowfield_min_slow_radius.GetFloat()
 
 ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_FF_FFDEV_REPLICATED, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
@@ -87,7 +87,7 @@ ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCV
 ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", ".35", FCVAR_FF_FFDEV_REPLICATED, "When selfignore is 0, modifies the slow amount for the thrower");
 #define SLOWFIELD_SELFSCALE ffdev_slowfield_selfscale.GetFloat()
 
-ConVar ffdev_slowfield_fastspeedmod_start("ffdev_slowfield_fastspeedmod_start", "800", FCVAR_FF_FFDEV_REPLICATED, "When the slowed person is above this speed, they get slowed more depending on how fast they are moving");
+ConVar ffdev_slowfield_fastspeedmod_start("ffdev_slowfield_fastspeedmod_start", "750", FCVAR_FF_FFDEV_REPLICATED, "When the slowed person is above this speed, they get slowed more depending on how fast they are moving");
 #define SLOWFIELD_FASTSPEEDMOD_START ffdev_slowfield_fastspeedmod_start.GetFloat()
 
 
