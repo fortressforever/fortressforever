@@ -266,6 +266,7 @@ void CFFGrenadeSlowfield::Precache()
 		}
 
 		SetDetonateTimerLength(SLOWFIELD_DURATION);
+		m_bIsOn = true;
 
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);
