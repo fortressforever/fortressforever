@@ -25,11 +25,13 @@ ConVar cl_observercrosshair( "cl_observercrosshair", "1", FCVAR_ARCHIVE | FCVAR_
 ConVar cl_acchargebar("cl_acchargebar", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 
 //Tie crosshair values to cheats -GreenMushy
-ConVar cl_concaim_movexhair("cl_concaim_movexhair", "3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL | FCVAR_CHEAT, "0 = always show xhair in centre. 1 = show xhair trueaim. 2 = hide xhair when conced. 3 = flash trueaim when shooting");
-ConVar cl_concaim_fadetime("cl_concaim_fadetime", "0.3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL | FCVAR_CHEAT, "When cl_concaim_movexhair = 3, controls the time the xhair stays visible");
+ConVar cl_concaim("cl_concaim", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL, "0 = always show crosshair in center. 1 = flash trueaim after shooting. 2 = hide crosshair when conced.");
+ConVar cl_concaim_fadetime("cl_concaim_fadetime", "0.25", FCVAR_ARCHIVE | FCVAR_CLIENTDLL | FCVAR_CHEAT, "When cl_concaim is 1, controls the time the crosshair stays visible after shooting. Requires sv_cheats 1");
+ConVar cl_concaim_showtrueaim("cl_concaim_showtrueaim", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Good way to learn how to concaim. If set to 1, when conced, the crosshair will show exactly where you will shoot. Requires sv_cheats 1");
 
-#define FFDEV_CONCAIM_MOVEXHAIR cl_concaim_movexhair.GetInt()
+#define FFDEV_CONCAIM cl_concaim.GetInt()
 #define FFDEV_CONCAIM_FADETIME cl_concaim_fadetime.GetFloat()
+#define FFDEV_CONCAIM_SHOWTRUEAIM cl_concaim_showtrueaim.GetBool()
 	
 using namespace vgui;
 
@@ -165,7 +167,7 @@ void CHudCrosshair::Paint( void )
 	}
 
 	// AfterShock: Conc aim -> plot crosshair properly
-	if ( ( FFDEV_CONCAIM_MOVEXHAIR == 1) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	if ( ( FFDEV_CONCAIM_SHOWTRUEAIM ) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
 	{
 		QAngle angles;
 		Vector forward;
@@ -184,12 +186,14 @@ void CHudCrosshair::Paint( void )
 		x_chargebar = x;
 		y_chargebar = y;
 	}
-	else if ( ( FFDEV_CONCAIM_MOVEXHAIR == 2) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	// hide crosshair
+	else if ( ( FFDEV_CONCAIM == 2) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
 	{
 		x = -1;
 		y = -1;
 	}
-	else if ( ( FFDEV_CONCAIM_MOVEXHAIR == 3) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	// flash crosshair
+	else if ( ( FFDEV_CONCAIM == 1) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
 	{
 		// if should be flashing
 		if (gpGlobals->curtime < pPlayer->m_flTrueAimTime + FFDEV_CONCAIM_FADETIME)
@@ -251,8 +255,8 @@ void CHudCrosshair::Paint( void )
 	HFont currentFont;
 	GetCrosshair(weaponID, innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 
-	// movexhair 3 = flash xhair when shooting
-	if ( ( FFDEV_CONCAIM_MOVEXHAIR == 3) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	// concaim 1 = flash xhair when shooting
+	if ( ( FFDEV_CONCAIM == 1) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
 	{
 		//Get the weapon and see if you should draw the crosshair while conced
 		if( weaponID == FF_WEAPON_ASSAULTCANNON || 
