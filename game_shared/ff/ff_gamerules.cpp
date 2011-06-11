@@ -612,6 +612,14 @@ ConVar mp_prematch( "mp_prematch",
 			// final task, trigger the recreation of any entities that need it.
 			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
 
+			// Send event
+			IGameEvent *pEvent = gameeventmanager->CreateEvent( "ff_restartround" );
+			if( pEvent )
+			{
+				pEvent->SetFloat( "curtime", gpGlobals->curtime );
+				gameeventmanager->FireEvent( pEvent );
+			}
+
 			// Run startup stuff again!
 			CFFLuaSC hStartup;
 			_scriptman.RunPredicates_LUA(NULL, &hStartup, "startup");
@@ -670,14 +678,6 @@ ConVar mp_prematch( "mp_prematch",
 				pTeam->SetScore( 0 );
 				pTeam->SetFortPoints( 0 );
 				pTeam->SetDeaths( 0 );
-			}
-
-			// Send event
-			IGameEvent *pEvent = gameeventmanager->CreateEvent( "ff_restartround" );
-			if( pEvent )
-			{
-				pEvent->SetFloat( "curtime", gpGlobals->curtime );
-				gameeventmanager->FireEvent( pEvent );
 			}
 		}
 		else
