@@ -1551,8 +1551,6 @@ void CFFPlayer::Overpressure( void )
 		// Play a sound
 		EmitSoundShared("overpressure.explode");
 
-#ifdef GAME_DLL
-
 		CBaseEntity *pEntity = NULL;
 
 		float fRadius = ffdev_overpressure_radius.GetFloat();
@@ -1592,8 +1590,10 @@ void CFFPlayer::Overpressure( void )
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 				float flHorizontalSpeed = vecLatVelocity.Length();
 
+#ifdef GAME_DLL
 				if (ffdev_overpressure_slide_affectsself.GetBool())
 					pPlayer->StartSliding( ffdev_overpressure_slide_duration.GetFloat(), ffdev_overpressure_slide_duration.GetFloat() );
+#endif
 
 				// apply push force
 				if (pPlayer->GetFlags() & FL_ONGROUND)
@@ -1620,8 +1620,10 @@ void CFFPlayer::Overpressure( void )
 
 				pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
 
+#ifdef GAME_DLL
 				if (ffdev_overpressure_slide.GetBool())
 					pPlayer->StartSliding( ffdev_overpressure_slide_duration.GetFloat(), ffdev_overpressure_slide_duration.GetFloat() );
+#endif
 
 
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
@@ -1661,6 +1663,7 @@ void CFFPlayer::Overpressure( void )
 				}
 			}
 
+#ifdef GAME_DLL
 			// cap mancannon + overpressure speed
 			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
 			{
@@ -1670,10 +1673,10 @@ void CFFPlayer::Overpressure( void )
 					vecResult *= 1700.0f;
 				}
 			}
+#endif
 			pPlayer->SetAbsVelocity(vecResult);
 		}
 
-#endif
 	}
 }
 
