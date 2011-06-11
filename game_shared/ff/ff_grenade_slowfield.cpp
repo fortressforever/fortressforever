@@ -72,6 +72,9 @@ ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "6", FCVAR_FF_FFDEV_
 ConVar ffdev_slowfield_min_slow("ffdev_slowfield_min_slow", ".20", FCVAR_FF_FFDEV_REPLICATED, "Minimum slow motion percentage of slowfield grenade");
 #define SLOWFIELD_MIN_SLOW ffdev_slowfield_min_slow.GetFloat()
 
+ConVar ffdev_slowfield_min_slow_radius("ffdev_slowfield_min_slow_radius", "32", FCVAR_FF_FFDEV_REPLICATED, "Minimum slow motion radius of slowfield grenade");
+#define SLOWFIELD_MIN_SLOW_RADIUS ffdev_slowfield_min_slow_radius.GetFloat()
+
 ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_FF_FFDEV_REPLICATED, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
 #define SLOWFIELD_FRIENDLYIGNORE ffdev_slowfield_friendlyignore.GetBool()
 
@@ -385,8 +388,16 @@ void CFFGrenadeSlowfield::Precache()
 
 				float flFastSpeedMod = 1 / max(1.0f, flHorizontalSpeed / SLOWFIELD_FASTSPEEDMOD_START);
 
-				float flLaggedMovement = SimpleSplineRemapVal(flDistance, 0.0f, SLOWFIELD_RADIUS, min( 1.0f, (flFriendlyScale > 0) ? (SLOWFIELD_MIN_SLOW / flFriendlyScale * flFastSpeedMod) : (1.0f) ), 1.0f);
-				
+				float flLaggedMovement;
+
+				if(flDistance < SLOWFIELD_MIN_SLOW_RADIUS)
+				{
+					flLaggedMovement = SLOWFIELD_MIN_SLOW;
+				}
+				else
+				{
+					flLaggedMovement = SimpleSplineRemapVal(flDistance, SLOWFIELD_MIN_SLOW_RADIUS, SLOWFIELD_RADIUS, min( 1.0f, (flFriendlyScale > 0) ? (SLOWFIELD_MIN_SLOW / flFriendlyScale * flFastSpeedMod) : (1.0f) ), 1.0f);
+				}
 				// only change players active slowfield if they will be going slower
 				if (pPlayer->GetActiveSlowfield() != this && pPlayer->GetLaggedMovementValue() > flLaggedMovement)
 				{
