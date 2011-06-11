@@ -55,7 +55,6 @@ public:
 	virtual float GetGrenadeRadius()		{ return GetGrenadeDamage() * 1.5f; }
 	virtual float GetShakeAmplitude()		{ return 2.5f; }
 
-	bool m_fIsHandheld;
 #endif
 
 #ifdef CLIENT_DLL
@@ -66,24 +65,26 @@ public:
 #endif
 
 	virtual void	Precache();
+	virtual void	Spawn();
+	virtual void	Detonate();
+	virtual void	Explode(trace_t *pTrace, int bitsDamageType);
+	void SetDetonateTimerLength(float timer);
 	
 	virtual Class_T		Classify( void ) { return CLASS_GREN; }
 	Class_T	GetGrenId() { return Classify(); }
 	virtual color32 CFFGrenadeBase::GetColour();
 
+	bool	m_fIsHandheld;
+	CNetworkVar( bool, m_bIsOn );
+
 #ifdef GAME_DLL
 
 	DECLARE_DATADESC();
 
-	virtual void	Spawn();
+	virtual void	GrenadeThink();
 	virtual void	CreateTrail();
 
-	virtual void	GrenadeThink();
-	virtual void	Detonate();
-	virtual void	Explode(trace_t *pTrace, int bitsDamageType);
-
 	void WaterCheck( void );
-	void SetDetonateTimerLength(float timer);
 
 	// BaseClass projectile was making grens use its takeemp which just removed
 	// them from the level
@@ -95,7 +96,7 @@ protected:
 	//Custom collision to allow for constant elasticity on hit surfaces
 	virtual void ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
 
-	CNetworkVarForDerived(float, m_flDetonateTime);
+	CNetworkVar(float, m_flDetonateTime);
 
 	bool	m_bHitwater;
 	float	m_flHitwaterTimer;
@@ -105,6 +106,7 @@ protected:
 protected:
 
 	float	m_flModelSize;
+	float	m_flDetonateTime;
 
 private:	
 	// This is only needed client-side so far
@@ -115,6 +117,7 @@ public:
 	CFFGrenadeInfo const &GetFFGrenadeData() const;
 
 	int		DrawModel(int flags);
+	virtual void ClientThink();
 
 #endif
 

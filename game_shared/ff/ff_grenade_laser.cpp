@@ -214,7 +214,6 @@ public:
 
 	virtual color32 GetColour() { color32 col = { 128, 225, 255, GREN_ALPHA_DEFAULT }; return col; }
 
-	CNetworkVar( unsigned int, m_bIsOn );
 	float getLengthPercent();
 	bool m_bPlayingDeploySound;
 
@@ -271,11 +270,6 @@ BEGIN_NETWORK_TABLE(CFFGrenadeLaser, DT_FFGrenadeLaser)
 	RecvPropFloat(RECVINFO(m_flDetonateTime)), 
 #else
 	SendPropFloat(SENDINFO(m_flDetonateTime)),
-#endif
-#ifdef GAME_DLL
-SendPropInt(SENDINFO(m_bIsOn), 1, SPROP_UNSIGNED),
-#else
-RecvPropInt(RECVINFO(m_bIsOn)),
 #endif
 END_NETWORK_TABLE()
 
