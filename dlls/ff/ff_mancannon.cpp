@@ -45,15 +45,15 @@ extern const char *g_pszFFManCannonSounds[];
 
 extern const char *g_pszFFGenGibModels[];
 
-ConVar ffdev_mancannon_push_forward( "ffdev_mancannon_push_forward", "1024", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_push_forward( "ffdev_mancannon_push_forward", "1024", FCVAR_FF_FFDEV_REPLICATED );
 #define MANCANNON_PUSH_FORWARD ffdev_mancannon_push_forward.GetInt()
-ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_FF_FFDEV_REPLICATED );
 #define MANCANNON_PUSH_UP ffdev_mancannon_push_up.GetInt()
-ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "125", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "125", FCVAR_FF_FFDEV_REPLICATED );
 #define MANCANNON_HEALTH ffdev_mancannon_health.GetInt()
-ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_FF_FFDEV_REPLICATED );
 #define MANCANNON_HEALTH_REGEN ffdev_mancannon_health_regen.GetFloat()
-ConVar ffdev_mancannon_healticklength( "ffdev_mancannon_healticklength", "1", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_healticklength( "ffdev_mancannon_healticklength", "1", FCVAR_FF_FFDEV_REPLICATED );
 #define MANCANNON_HEALTICKLENGTH ffdev_mancannon_healticklength.GetFloat()
 extern ConVar ffdev_mancannon_combatcooldown;
 #define MANCANNON_COMBATCOOLDOWN ffdev_mancannon_combatcooldown.GetFloat()

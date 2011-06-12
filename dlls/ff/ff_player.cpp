@@ -71,11 +71,11 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
 #define BURN_MULTIPLIER_2BURNS 2.5f
 
-ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_REPLICATED, "flame size multiplier for burn level 1");
+ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
 #define FFDEV_FLAMESIZE_BURN1 ffdev_flamesize_burn1.GetFloat()
-ConVar ffdev_flamesize_burn2("ffdev_flamesize_burn2","0.04", FCVAR_REPLICATED, "flame size multiplier for burn level 2");
+ConVar ffdev_flamesize_burn2("ffdev_flamesize_burn2","0.04", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 2");
 #define FFDEV_FLAMESIZE_BURN2 ffdev_flamesize_burn2.GetFloat()
-ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, "flame size multiplier for burn level 3");
+ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 3");
 #define FFDEV_FLAMESIZE_BURN3 ffdev_flamesize_burn3.GetFloat()
 
 // [integer] Max distance a player can be from us to be shown
@@ -97,7 +97,7 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 #define FFDEV_INFECT_FREQ 2.0f
-ConVar ffdev_infect_damage("ffdev_infect_damage","10",0,"Amount of health a player loses while infected");
+ConVar ffdev_infect_damage("ffdev_infect_damage","10",FCVAR_FF_FFDEV_REPLICATED,"Amount of health a player loses while infected");
 #define FFDEV_INFECT_DAMAGE ffdev_infect_damage.GetFloat()
 //ConVar ffdev_regen_freq("ffdev_regen_freq","3",0,"Frequency (in seconds) a player loses health when a medic");
 #define FFDEV_REGEN_FREQ 3.0f
@@ -109,15 +109,15 @@ ConVar ffdev_infect_damage("ffdev_infect_damage","10",0,"Amount of health a play
 #define FFDEV_OVERHEALTH_FREQ 3.0f
 
 #define FFDEV_INFECTION_TIME ffdev_infection_time.GetFloat()
-ConVar ffdev_infection_time( "ffdev_infection_time", "10", 0, "Amount of time for infection to last( in seconds )" );
+ConVar ffdev_infection_time( "ffdev_infection_time", "10", FCVAR_FF_FFDEV_REPLICATED, "Amount of time for infection to last( in seconds )" );
 
 #define FFDEV_IMMUNE_TIME ffdev_immune_time.GetFloat()
-ConVar ffdev_immune_time( "ffdev_immune_time", "2", 0, "Amount of time for immunity to last( in seconds )" );
+ConVar ffdev_immune_time( "ffdev_immune_time", "2", FCVAR_FF_FFDEV_REPLICATED, "Amount of time for immunity to last( in seconds )" );
 
-ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_REPLICATED ,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
+ConVar ffdev_dmgforfullslow("ffdev_dmgforfullslow","90",FCVAR_FF_FFDEV_REPLICATED ,"When getting hit and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW ffdev_dmgforfullslow.GetFloat()
 
-ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_REPLICATED ,"When getting hit by a SG and player is moving above run speed, he gets slowed down in proportion to this damage");
+ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_FF_FFDEV_REPLICATED ,"When getting hit by a SG and player is moving above run speed, he gets slowed down in proportion to this damage");
 #define FFDEV_DMGFORFULLSLOW_SG ffdev_dmgforfullslow_sg.GetFloat()
 
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
@@ -137,7 +137,7 @@ extern ConVar sv_maxspeed;
 //ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_REPLICATED, "To tweak z factor of velocity when spy is cloaked" );
 #define FFDEV_SPY_CLOAKZVEL 0.5f
 
-ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
+ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_FF_FFDEV_REPLICATED );
 
 ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "nailgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
 ConVar ff_defaultweapon_sniper("cl_spawnweapon_sniper", "sniperrifle", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Sniper spawn.");

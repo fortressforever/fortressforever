@@ -40,12 +40,12 @@ extern "C"
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		12
-ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_CHEAT );
-ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "1.05", FCVAR_CHEAT );
-ConVar ffdev_flag_float_force2( "ffdev_flag_float_force2", "0.9", FCVAR_CHEAT );
-ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "1.0", FCVAR_CHEAT );
-ConVar ffdev_flag_float_offset( "ffdev_flag_float_offset", "48.0", FCVAR_CHEAT );
-ConVar ffdev_flag_rotation( "ffdev_flag_rotation", "50.0", FCVAR_CHEAT );
+ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_FF_FFDEV );
+ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "1.05", FCVAR_FF_FFDEV );
+ConVar ffdev_flag_float_force2( "ffdev_flag_float_force2", "0.9", FCVAR_FF_FFDEV );
+ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "1.0", FCVAR_FF_FFDEV );
+ConVar ffdev_flag_float_offset( "ffdev_flag_float_offset", "48.0", FCVAR_FF_FFDEV );
+ConVar ffdev_flag_rotation( "ffdev_flag_rotation", "50.0", FCVAR_FF_FFDEV );
 
 int ACT_INFO_RETURNED;
 int ACT_INFO_CARRIED;
