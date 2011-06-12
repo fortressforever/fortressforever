@@ -70,7 +70,7 @@ BEGIN_DATADESC( CFFBuildableFlickerer )
 	DEFINE_THINKFUNC( OnObjectThink ),
 END_DATADESC()
 
-static ConVar flicker_time( "ffdev_flicker_time", "0.1", FCVAR_CHEAT );
+static ConVar flicker_time( "ffdev_flicker_time", "0.1", FCVAR_FF_FFDEV );
 
 //-----------------------------------------------------------------------------
 // Purpose: Spawn a flickerer

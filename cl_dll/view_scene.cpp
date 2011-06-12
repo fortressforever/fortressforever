@@ -48,7 +48,7 @@
 #include "ScreenSpaceEffects.h"
 #include "ff_vieweffects.h"
 
-static ConVar ffdev_showrenderbounds("ffdev_showrenderbounds", "0", FCVAR_CHEAT);
+static ConVar ffdev_showrenderbounds("ffdev_showrenderbounds", "0", FCVAR_FF_FFDEV_CLIENT);
 
 // Bug #0000385: point_camera & func_monitor in-titties
 // Allways USE_MONITORS

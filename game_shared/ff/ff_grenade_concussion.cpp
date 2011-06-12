@@ -52,7 +52,7 @@
 #define FFDEV_CONC_NEWBCONC_UPPUSH 90
 //
 
-//ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
+//ConVar conc_radius("ffdev_conc_radius", "280.0f", FCVAR_FF_FFDEV_REPLICATED, "Radius of grenade explosions");
 ConVar conc_ragdoll_push("conc_ragdoll_push","600", FCVAR_FF_FFDEV_REPLICATED,"How much to push ragdolls");
 
 #define CONCUSSIONGRENADE_MODEL			"models/grenades/conc/conc.mdl"

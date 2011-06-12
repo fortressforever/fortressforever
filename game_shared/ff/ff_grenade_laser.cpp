@@ -37,7 +37,7 @@
 
 #define MAX_BEAMS 16
 
-//ConVar laser_ng_streams("ffdev_lasergren_ng_streams", "2", FCVAR_REPLICATED, "Number of streams per arm" );
+//ConVar laser_ng_streams("ffdev_lasergren_ng_streams", "2", FCVAR_FF_FFDEV_REPLICATED, "Number of streams per arm" );
 ConVar laser_ng_offset("ffdev_lasergren_ng_offset", "8", FCVAR_FF_FFDEV_REPLICATED, "Stream offset" );
 ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_FF_FFDEV_REPLICATED );
 ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_FF_FFDEV_REPLICATED );
