@@ -21,6 +21,8 @@
 #include "model_types.h"
 #include "effect_dispatch_data.h"
 #include "IEffects.h"
+#include "beam_shared.h"
+
 
 #ifdef GAME_DLL
 	#include "ff_entity_system.h"
@@ -38,6 +40,7 @@ ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.
 //#define SLOWFIELDGRENADE_GLOW_SPRITE	"sprites/ff_slowfieldoutline1.vmt"
 #define SLOWFIELDGRENADE_SOUND			"Slowfield.Explode"
 #define SLOWFIELDGRENADE_LOOP			"Slowfield.SlowLoop"
+#define SLOWFIELDGRENADE_BEAM_LOOP		"Slowfield.LaserLoop"
 #define SLOWFIELD_EFFECT				"FF_SlowFieldEffect" // "ConcussionExplosion"
 #define CONCBITS_EFFECT					"FF_ConcBitsEffect"
 #define FLASH_EFFECT					"FF_FlashEffect"
@@ -62,6 +65,26 @@ ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_CHEAT, "Slo
 #define SLOWFIELD_GLOW_SIZE slowfield_glow_size.GetFloat()
 
 #endif
+
+#define GRENADE_BEAM_SPRITE	"sprites/plasma.spr"
+
+ConVar ffdev_slowfield_beam_widthstart("ffdev_slowfield_beam_widthstart", "4", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Width at the start of the slowfield grenade beam");
+#define SLOWFIELD_BEAM_WIDTHSTART ffdev_slowfield_beam_widthstart.GetFloat()
+
+ConVar ffdev_slowfield_beam_widthend("ffdev_slowfield_beam_widthend", "4", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Width at the end of the slowfield grenade beam");
+#define SLOWFIELD_BEAM_WIDTHEND ffdev_slowfield_beam_widthend.GetFloat()
+
+ConVar ffdev_slowfield_beam_noise("ffdev_slowfield_beam_noise", "0.5", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Noise of the slowfield grenade beam");
+#define SLOWFIELD_BEAM_NOISE ffdev_slowfield_beam_noise.GetFloat()
+
+ConVar ffdev_slowfield_shrinktime_stack("ffdev_slowfield_shrinktime_stack", "1", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "If stacked (1) then the slowfiled inner radius shrinks followed by outer");
+#define SLOWFIELD_SHRINKTIME_STACK ffdev_slowfield_shrinktime_stack.GetBool()
+
+ConVar ffdev_slowfield_shrinktime_inner("ffdev_slowfield_shrinktime_inner", "0.15", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Time it takes the slowfiled inner radius to shrink when the slowfield expires");
+#define SLOWFIELD_SHRINKTIME_INNER ffdev_slowfield_shrinktime_inner.GetFloat()
+
+ConVar ffdev_slowfield_shrinktime_outer("ffdev_slowfield_shrinktime_outer", "0.25", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Time it takes the slowfiled outer radius to shrink when the slowfield expires");
+#define SLOWFIELD_SHRINKTIME_OUTER ffdev_slowfield_shrinktime_outer.GetFloat()
 
 ConVar ffdev_slowfield_radius_outer("ffdev_slowfield_radius_outer", "200", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Outer radius of slowfield grenade (scales from no effect to full effect at inner radius)");
 #define SLOWFIELD_RADIUS_OUTER ffdev_slowfield_radius_outer.GetFloat()
@@ -171,7 +194,7 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 
 protected:
-
+	bool m_bBeamLoopPlaying;
 	float	m_flLastThinkTime;
 
 	int m_iSequence;
@@ -204,6 +227,7 @@ void CFFGrenadeSlowfield::Precache()
 	PrecacheModel(SLOWFIELDGRENADE_GLOW_SPRITE);
 	PrecacheScriptSound(SLOWFIELDGRENADE_SOUND);
 	PrecacheScriptSound(SLOWFIELDGRENADE_LOOP);
+	PrecacheScriptSound(SLOWFIELDGRENADE_BEAM_LOOP);
 
 	BaseClass::Precache();
 }
@@ -228,6 +252,7 @@ void CFFGrenadeSlowfield::Precache()
 
 		m_Activity = ( Activity )ACT_GAS_IDLE;
 		m_iSequence = SelectWeightedSequence( m_Activity );
+		m_bBeamLoopPlaying = false;
 		SetSequence( m_iSequence );		
 	}
 
@@ -307,6 +332,11 @@ void CFFGrenadeSlowfield::Precache()
 		{
 			UTIL_Remove(this);
 			StopSound(SLOWFIELDGRENADE_LOOP);
+			if(m_bBeamLoopPlaying)
+			{
+				m_bBeamLoopPlaying = false;
+				StopSound(SLOWFIELDGRENADE_BEAM_LOOP);
+			}
 
 			// loop through all players
 			for(int i = 1 ; i <= gpGlobals->maxClients; i++)
@@ -340,6 +370,26 @@ void CFFGrenadeSlowfield::Precache()
 
 		float flRisingheight = 0;
 
+		float flOuterStartShrinkTime = m_flDetonateTime - SLOWFIELD_SHRINKTIME_OUTER;
+		float flOuterRadiusShrink = 1.0f;
+		if( gpGlobals->curtime >= flOuterStartShrinkTime )
+			flOuterRadiusShrink = 1 - ( gpGlobals->curtime - flOuterStartShrinkTime ) / ( m_flDetonateTime - flOuterStartShrinkTime );
+
+		bool bShrinkStack = SLOWFIELD_SHRINKTIME_STACK;
+	
+		float flInnerStartShrinkTime = ( bShrinkStack ? m_flDetonateTime - ( SLOWFIELD_SHRINKTIME_OUTER + SLOWFIELD_SHRINKTIME_INNER ) : m_flDetonateTime - SLOWFIELD_SHRINKTIME_INNER );
+		float flInnerRadiusShrink = 1.0f;
+
+		if( bShrinkStack && gpGlobals->curtime >= flOuterStartShrinkTime )
+			flInnerRadiusShrink = 0.0f;
+		else if( bShrinkStack && gpGlobals->curtime >= flInnerStartShrinkTime )
+			flInnerRadiusShrink = 1 - ( gpGlobals->curtime - flInnerStartShrinkTime ) / ( flOuterStartShrinkTime - flInnerStartShrinkTime );
+		else if( gpGlobals->curtime >= flInnerStartShrinkTime )
+			flInnerRadiusShrink = 1 - ( gpGlobals->curtime - flInnerStartShrinkTime ) / ( m_flDetonateTime - flInnerStartShrinkTime );
+
+		float flInnerRadius = SLOWFIELD_RADIUS_INNER * flInnerRadiusShrink;
+		float flOuterRadius = SLOWFIELD_RADIUS_OUTER * flOuterRadiusShrink;
+
 		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
 		//if (gpGlobals->curtime > m_flDetonateTime - 0.3 && !m_fIsHandheld)
 		//	flRisingheight = 80;
@@ -348,6 +398,8 @@ void CFFGrenadeSlowfield::Precache()
 		SetAbsAngles(GetAbsAngles() + QAngle(0, 15, 0));
 
 		Vector vecOrigin = GetAbsOrigin();
+
+		bool bHitPlayer = false;
 
 		CBaseEntity *pEntity = NULL;
 		for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() + 64.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
@@ -387,9 +439,9 @@ void CFFGrenadeSlowfield::Precache()
 				float flDistanceMult = 1.0f;
 				//if we're scaling between outer and inner radius (linear!!)
 				//don't allow divide by zero or for inner/outer to be reversed
-				if(flDistance > SLOWFIELD_RADIUS_INNER && ( SLOWFIELD_RADIUS_OUTER - SLOWFIELD_RADIUS_INNER ) > 0.0f)
+				if(flDistance > (flInnerRadius * flInnerRadiusShrink) && ( flOuterRadius - flInnerRadius ) > 0.0f)
 				{
-					flDistanceMult = 1.0f - ( flDistance - SLOWFIELD_RADIUS_INNER ) / ( SLOWFIELD_RADIUS_OUTER - SLOWFIELD_RADIUS_INNER );
+					flDistanceMult = clamp(1.0f - ( flDistance - flInnerRadius ) / ( flOuterRadius - flInnerRadius ), 0.0f, 1.0f);
 				}
 
 				float flSpeed = pPlayer->GetAbsVelocity().Length();
@@ -405,7 +457,7 @@ void CFFGrenadeSlowfield::Precache()
 				}
 
 				// only change players active slowfield if they will be going slower
-				if (pPlayer->GetActiveSlowfield() != this && pPlayer->GetLaggedMovementValue() > flLaggedMovement)
+				if (pPlayer->GetActiveSlowfield() != this && pPlayer->GetLaggedMovementValue() > flLaggedMovement || pPlayer->GetActiveSlowfield() == NULL)
 				{
 					pPlayer->SetLaggedMovementValue(flLaggedMovement);
 					pPlayer->SetActiveSlowfield( this );
@@ -423,7 +475,29 @@ void CFFGrenadeSlowfield::Precache()
 				else if (pPlayer->GetActiveSlowfield() == this)
 				{
 					pPlayer->SetLaggedMovementValue(flLaggedMovement);
-				}
+				}		
+
+				CFFPlayer *pGrenOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
+				
+				bHitPlayer = true;
+	
+				CBeam *pBeam = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 1 );
+				pBeam->SetWidth( SLOWFIELD_BEAM_WIDTHSTART );
+				pBeam->SetEndWidth( SLOWFIELD_BEAM_WIDTHEND );
+				pBeam->LiveForTime(gpGlobals->interval_per_tick);
+				pBeam->SetNoise( SLOWFIELD_BEAM_NOISE );
+				pBeam->SetBrightness( (1 - flLaggedMovement) * 128 + 128 );
+				if(pGrenOwner->GetTeamNumber() == TEAM_RED)
+					pBeam->SetColor( 255, 64, 64 );
+				else if(pGrenOwner->GetTeamNumber() == TEAM_BLUE)
+					pBeam->SetColor( 64, 128, 255 );
+				else if(pGrenOwner->GetTeamNumber() == TEAM_GREEN)
+					pBeam->SetColor( 153, 255, 153 );
+				else if(pGrenOwner->GetTeamNumber() == TEAM_YELLOW)
+					pBeam->SetColor( 255, 178, 0 );
+				else // just in case
+					pBeam->SetColor( 204, 204, 204 );
+				pBeam->PointsInit( vecOrigin, pPlayer->GetLegacyAbsOrigin() );
 			}
 			// outside the radius of the gren
 			else if (pPlayer->GetActiveSlowfield() == this)
@@ -442,15 +516,24 @@ void CFFGrenadeSlowfield::Precache()
 			}
 		}
 
+
+		if(!bHitPlayer && m_bBeamLoopPlaying)
+		{
+			m_bBeamLoopPlaying = false;
+			StopSound( SLOWFIELDGRENADE_BEAM_LOOP );
+		}
+		else if(bHitPlayer && !m_bBeamLoopPlaying)
+		{
+			m_bBeamLoopPlaying = true;
+			EmitSound( SLOWFIELDGRENADE_BEAM_LOOP );
+		}
+
 		// Animate
 		StudioFrameAdvance();
 
 		SetNextThink(gpGlobals->curtime);
 		m_flLastThinkTime = gpGlobals->curtime;
 	}
-
-
-
 
 #endif
 
