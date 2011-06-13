@@ -81,13 +81,13 @@ ConVar ffdev_slowfield_multiplier("ffdev_slowfield_multiplier", "28", FCVAR_REPL
 ConVar ffdev_slowfield_power("ffdev_slowfield_power", "0.35", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "Power by which to raise speed reduction of slowfield grenade", true, 0.0f, true, 1.0f);
 #define SLOWFIELD_POWER ffdev_slowfield_power.GetFloat()
 
-ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "0", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
+ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
 #define SLOWFIELD_FRIENDLYIGNORE ffdev_slowfield_friendlyignore.GetBool()
 
 ConVar ffdev_slowfield_selfignore("ffdev_slowfield_selfignore", "0", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When set to 1, the grenade does not affect the thrower");
 #define SLOWFIELD_SELFIGNORE ffdev_slowfield_selfignore.GetBool()
 
-ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When friendly fire is on, modifies the slow amount for teammates", true, 0.0f, true, 1.0f);
+ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", "1", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When friendly fire is on, modifies the slow amount for teammates", true, 0.0f, true, 1.0f);
 #define SLOWFIELD_FRIENDLYSCALE ffdev_slowfield_friendlyscale.GetFloat()
 
 ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", "1", FCVAR_REPLICATED/* | FCVAR_CHEAT */, "When selfignore is 0, modifies the slow amount for the thrower", true, 0.0f, true, 1.0f);
