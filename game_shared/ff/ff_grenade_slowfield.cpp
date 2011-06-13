@@ -384,35 +384,25 @@ void CFFGrenadeSlowfield::Precache()
 				else if (pPlayer == pSlower)
 					flFriendlyScale = SLOWFIELD_SELFSCALE;
 
-				Vector vecVelocity = pPlayer->GetAbsVelocity();
-				//Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-
-				//float flHorizontalSpeed = vecLatVelocity.Length();
-				float flHorizontalSpeed = vecVelocity.Length();
-				float flSpeedReduction = 0.0f;
 				float flDistanceMult = 1.0f;
-
 				//if we're scaling between outer and inner radius (linear!!)
 				//don't allow divide by zero or for inner/outer to be reversed
-				if(flDistance > SLOWFIELD_RADIUS_INNER && (SLOWFIELD_RADIUS_OUTER - SLOWFIELD_RADIUS_INNER) > 0.0f)
+				if(flDistance > SLOWFIELD_RADIUS_INNER && ( SLOWFIELD_RADIUS_OUTER - SLOWFIELD_RADIUS_INNER ) > 0.0f)
 				{
-					flDistanceMult = 1.0f - (flDistance - SLOWFIELD_RADIUS_INNER)/(SLOWFIELD_RADIUS_OUTER - SLOWFIELD_RADIUS_INNER);
+					flDistanceMult = 1.0f - ( flDistance - SLOWFIELD_RADIUS_INNER ) / ( SLOWFIELD_RADIUS_OUTER - SLOWFIELD_RADIUS_INNER );
 				}
-				
-				float flLaggedMovement = 1.0f;
 
-				flSpeedReduction = flHorizontalSpeed - pow( flHorizontalSpeed, SLOWFIELD_POWER ) * SLOWFIELD_MULTIPLIER;
+				float flSpeed = pPlayer->GetAbsVelocity().Length();
+				float flSpeedReduction = flSpeed - ( pow( flSpeed, SLOWFIELD_POWER ) * SLOWFIELD_MULTIPLIER );
 				flSpeedReduction *= pow( flDistanceMult, SLOWFIELD_RADIUS_POWER );
 				flSpeedReduction *= flFriendlyScale;
 
-				if(flHorizontalSpeed > 0)
+				float flLaggedMovement = 1.0f;
+				if(flSpeed > 0.0f)
 				//no divide by zero
 				{
-					flLaggedMovement = (flHorizontalSpeed - flSpeedReduction) / flHorizontalSpeed;
+					flLaggedMovement = clamp( (flSpeed - flSpeedReduction), 1.0f, flSpeed ) / flSpeed;
 				}
-
-				//clamp to sensible values just in case
-				flLaggedMovement = clamp( flLaggedMovement, 0.0f, 1.0f );
 
 				// only change players active slowfield if they will be going slower
 				if (pPlayer->GetActiveSlowfield() != this && pPlayer->GetLaggedMovementValue() > flLaggedMovement)
