@@ -307,9 +307,9 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 	CSingleUserRecipientFilter user(pPipeOwner);
 	user.MakeReliable();
 
-	UserMessageBegin(user, "PipeMsg");
-		WRITE_BYTE(0);
-	MessageEnd();
+	//UserMessageBegin(user, "PipeMsg");
+	//	WRITE_BYTE(0);
+	//MessageEnd();
 
 	// Detonate all the pipes belonging to us
 	CFFProjectilePipebomb *pPipe = NULL; 
@@ -480,7 +480,7 @@ void CFFProjectilePipebomb::DecrementHUDCount()
 void CFFProjectilePipebomb::PipebombThink() 
 {
 	// Remove if we're nolonger in the world
-	if (!IsInWorld() || gpGlobals->curtime > m_flDetonateTime) 
+	if ( !IsInWorld() || gpGlobals->curtime > m_flDetonateTime && m_flDetonateTime != 0.0f )
 	{
 		DecrementHUDCount();
 	}
