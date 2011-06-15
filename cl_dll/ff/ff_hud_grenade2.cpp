@@ -99,6 +99,9 @@ void CHudGrenade2::OnTick()
 
 	C_FFPlayer *ffplayer = ToFFPlayer(player);
 
+	if (!ffplayer) 
+		return;
+
 	int iClass = ffplayer->GetClassSlot();
 	int iGrenade2 = ffplayer->m_iSecondary;
 

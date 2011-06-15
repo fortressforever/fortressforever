@@ -69,6 +69,7 @@ CHudGrenade1::CHudGrenade1(const char *pElementName) : BaseClass(NULL, "HudGrena
 void CHudGrenade1::Init() 
 {
 	m_iGrenade		= -1;
+	m_iClass		= 0;
 
 	SetLabelText(L"");
 	ivgui()->AddTickSignal( GetVPanel(), 100 );
@@ -96,7 +97,10 @@ void CHudGrenade1::OnTick()
 		return;
 
 	C_FFPlayer *ffplayer = ToFFPlayer(player);
-	
+
+	if (!ffplayer) 
+		return;
+
 	int iClass = ffplayer->GetClassSlot();
 	int iGrenade1 = ffplayer->m_iPrimary;
 
@@ -167,11 +171,7 @@ void CHudGrenade1::SetGrenade(int iGrenade, bool playAnimation)
 }
 
 void CHudGrenade1::Paint() 
-{
-	// Draw grenade icon
-	if( !iconTexture )
-		iconTexture = gHUD.GetIcon("death_grenade_normal");
-	
+{	
 	if(iconTexture)
 	{
 		Color iconColor( 255, 255, 255, 125 );
