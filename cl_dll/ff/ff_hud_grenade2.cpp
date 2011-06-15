@@ -17,6 +17,7 @@
 
 #include "iclientmode.h"
 #include "c_ff_player.h"
+#include "ff_playerclass_parse.h"
 
 #include <KeyValues.h>
 #include <vgui/IVGui.h>
@@ -108,9 +109,7 @@ void CHudGrenade2::OnTick()
 	if(m_iClass != iClass)
 	{
 		m_iClass = iClass;
-		if (!ffplayer 
-			|| iClass == CLASS_CIVILIAN
-			|| iClass == CLASS_SNIPER ) 
+		if (!ffplayer) 
 		{
 			SetPaintEnabled(false);
 			SetPaintBackgroundEnabled(false);
@@ -124,46 +123,54 @@ void CHudGrenade2::OnTick()
 			SetPaintBackgroundEnabled(false);
 			return;
 		}
+		const char *szClassNames[] = { 
+			"scout", "sniper", "soldier", 
+			"demoman", "medic", "hwguy", 
+			"pyro", "spy", "engineer", 
+			"civilian" 
+		};
+
+		PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
+		bool bReadInfo = ReadPlayerClassDataFromFileForSlot( vgui::filesystem(), szClassNames[m_iClass - 1], &hClassInfo, NULL );
+
+		if (!bReadInfo)
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
+			return;
+		}
+
+		const CFFPlayerClassInfo *pClassInfo = GetFilePlayerClassInfoFromHandle(hClassInfo);
+
+		if (!pClassInfo)
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
+			return;
+		}
 
 		SetPaintEnabled(true);
 		SetPaintBackgroundEnabled(true);
-
-		// Different class, don't show anims
 		SetGrenade(iGrenade2, false);
-
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasGrenades");
 
-		// Get the correct grenade to display
-		switch (iClass) 
+
+		if ( strcmp( pClassInfo->m_szSecondaryClassName, "None" ) != 0 )
 		{
-			case CLASS_SCOUT:
-			case CLASS_MEDIC:
-				iconTexture = gHUD.GetIcon("death_grenade_concussion");
-				break;
+			const char *grenade_name = pClassInfo->m_szSecondaryClassName;
 
-			case CLASS_SOLDIER:
-				iconTexture = gHUD.GetIcon("death_grenade_laser");
-				break;
+			//if grenade names start with ff_
+			if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
+			//remove ff_
+			{
+				grenade_name += 3;
+			}
+			
+			char grenade_icon_name[MAX_PLAYERCLASS_STRING + 3];
 
-			case CLASS_DEMOMAN:
-				iconTexture = gHUD.GetIcon("death_grenade_mirv");
-				break;
+			Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
 
-			case CLASS_HWGUY:
-				iconTexture = gHUD.GetIcon("death_grenade_slowfield");
-				break;
-
-			case CLASS_ENGINEER:
-				iconTexture = gHUD.GetIcon("death_grenade_hoverturret");
-				break;
-
-			case CLASS_SPY:
-				iconTexture = gHUD.GetIcon("death_grenade_cloaksmoke");
-				break;
-
-			case CLASS_PYRO:
-				iconTexture = gHUD.GetIcon("death_grenade_napalm");
-				break;
+			iconTexture = gHUD.GetIcon(grenade_icon_name);
 		}
 	}
 	else
