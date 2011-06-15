@@ -11,33 +11,23 @@
 *********************************************************************/
 
 #include "cbase.h"
-#include "hud.h"
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "hud_numericdisplay.h"
+
 #include "iclientmode.h"
-#include "iclientvehicle.h"
+#include "c_ff_player.h"
 
 #include <KeyValues.h>
+#include <vgui/IVGui.h>
 #include <vgui/ISurface.h>
-#include <vgui/ISystem.h>
 #include <vgui_controls/AnimationController.h>
-
-#include <vgui/ILocalize.h>
-
-#include "c_ff_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
 
-// Yeah macros suck, but this is the quickest way to do it
-/*#define ADD_GRENADE_ICON(id, filename) \
-	m_pPrimaryGrenade[id] = new CHudTexture(); \
-	m_pPrimaryGrenade[id]->textureId = surface()->CreateNewTextureID(); \
-	surface()->DrawSetTextureFile(m_pPrimaryGrenade[id]->textureId, filename, true, false);
-*/
 //-----------------------------------------------------------------------------
 // Purpose: Displays current ammunition level
 //-----------------------------------------------------------------------------
@@ -48,26 +38,18 @@ class CHudGrenade1 : public CHudNumericDisplay, public CHudElement
 public:
 	CHudGrenade1(const char *pElementName);
 	void Init();
-	void VidInit();
 	void Reset();
 
 	void SetGrenade(int Grenade, bool playAnimation);
 	virtual void Paint();
 
 protected:
-	virtual void OnThink();
-
-	void UpdateGrenadeDisplays();
-	void UpdatePlayerGrenade(C_BasePlayer *player);
+	virtual void OnTick();
 
 private:
 	int		m_iGrenade;
-
-	// Last recorded player class
 	int		m_iClass;
 
-	//CHudTexture	*m_pHudElementTexture;
-	//CHudTexture *m_pPrimaryGrenade[2];
 	CHudTexture *iconTexture;
 };
 
@@ -88,32 +70,8 @@ void CHudGrenade1::Init()
 {
 	m_iGrenade		= -1;
 
-/*	wchar_t *tempString = vgui::localize()->Find("#FF_HUD_GRENADE");
-	if (tempString) 
-	{
-		SetLabelText(tempString);
-	}
-	else
-	{
-		SetLabelText(L"Grenade");
-	}*/
-
 	SetLabelText(L"");
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CHudGrenade1::VidInit() 
-{
-	// Precache the background texture
-	//m_pHudElementTexture = new CHudTexture();
-	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_ammo1", true, false);
-
-	// Add the grenades icons(only these 2 are needed) 
-	//ADD_GRENADE_ICON(0, "vgui/hud_grenade_frag");
-	//ADD_GRENADE_ICON(1, "vgui/hud_grenade_caltop");
+	ivgui()->AddTickSignal( GetVPanel(), 100 );
 }
 
 //-----------------------------------------------------------------------------
@@ -125,97 +83,73 @@ void CHudGrenade1::Reset()
 
 	m_iGrenade = 0;
 	m_iClass = 0;
-
-	UpdateGrenadeDisplays();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: called every frame to get Grenade info from the weapon
 //-----------------------------------------------------------------------------
-void CHudGrenade1::UpdatePlayerGrenade(C_BasePlayer *player) 
+void CHudGrenade1::OnTick() 
 {
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	
 	if (!player) 
 		return;
 
 	C_FFPlayer *ffplayer = ToFFPlayer(player);
+	
+	int iClass = ffplayer->GetClassSlot();
+	int iGrenade1 = ffplayer->m_iPrimary;
 
-	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN) 
+	if(m_iClass != iClass)
 	{
-		SetPaintEnabled(false);
-		SetPaintBackgroundEnabled(false);
-		return;
-	}
+		m_iClass = iClass;
+		if( !ffplayer 
+			|| iClass == CLASS_CIVILIAN
+			|| iClass == CLASS_SCOUT ) 
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
+			return;
+		}
 
-	int Grenade1 = ffplayer->m_iPrimary;
+		// Class doesn't have grenades
+		if (iGrenade1 == -1) 
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
+			return;
+		}
 
-	// Class doesn't have grenades
-	if (Grenade1 == -1) 
-	{
-		SetPaintEnabled(false);
-		SetPaintBackgroundEnabled(false);
-		return;
-	}
+		SetPaintEnabled(true);
+		SetPaintBackgroundEnabled(true);
 
-	SetPaintEnabled(true);
-	SetPaintBackgroundEnabled(true);
+		// Different class, don't show anims
+		SetGrenade(iGrenade1, false);
 
-	if (m_iClass == ffplayer->GetClassSlot()) 
-	{
-		// Same class, just update counts
-		SetGrenade(Grenade1, true);
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasGrenades");
 	}
 	else
 	{
-		// Different class, don't show anims
-		SetGrenade(Grenade1, false);
-
-		// Update whether to show one or two grenades(only 1 for sniper) 
-		if (ffplayer->GetClassSlot() == CLASS_SNIPER) 
-		{
-			//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasOneGrenade");
-			//SetShouldDisplaySecondaryValue(false);
-		}
-		else
-		{
-			//SetShouldDisplaySecondaryValue(true);
-			//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasTwoGrenades");
-		}
-
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasGrenades");
-		m_iClass = ffplayer->GetClassSlot();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: called every frame to get Grenade info from the weapon
-//-----------------------------------------------------------------------------
-void CHudGrenade1::OnThink() 
-{
-	UpdateGrenadeDisplays();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: updates the Grenade display counts
-//-----------------------------------------------------------------------------
-void CHudGrenade1::UpdateGrenadeDisplays() 
-{
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+		// Same class, just update counts
+		SetGrenade(iGrenade1, true);
+	}	
 	
-	UpdatePlayerGrenade(player);
+	if( !iconTexture )
+		iconTexture = gHUD.GetIcon("death_grenade_normal");
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Updates Grenade display
 //-----------------------------------------------------------------------------
-void CHudGrenade1::SetGrenade(int Grenade, bool playAnimation) 
+void CHudGrenade1::SetGrenade(int iGrenade, bool playAnimation) 
 {
-	if (Grenade != m_iGrenade) 
+	if (iGrenade != m_iGrenade) 
 	{
-		if (Grenade == 0) 
+		if (iGrenade == 0) 
 		{
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("GrenadeEmpty");
 		}
-		else if (Grenade < m_iGrenade) 
+		else if (iGrenade < m_iGrenade) 
 		{
 			// Grenade has decreased
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("GrenadeDecreased");
@@ -226,40 +160,14 @@ void CHudGrenade1::SetGrenade(int Grenade, bool playAnimation)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("GrenadeIncreased");
 		}
 
-		m_iGrenade = Grenade;
-	}
+		m_iGrenade = iGrenade;
 
-	SetDisplayValue(Grenade);
+		SetDisplayValue(m_iGrenade);
+	}
 }
 
 void CHudGrenade1::Paint() 
 {
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-
-	if (!player) 
-		return;
-
-	C_FFPlayer *ffplayer = ToFFPlayer(player);
-
-	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN || !ffplayer->GetClassSlot()) 
-		return;
-
-	// Don't show while spec
-	if (ffplayer->GetTeamNumber() < TEAM_BLUE || ffplayer->GetTeamNumber() > TEAM_GREEN)
-		return;
-
-	/* comment this out - was used for caltrops
-	int gren_num = 0;
-
-	if (ffplayer->GetClassSlot() == CLASS_SCOUT) 
-		gren_num = 1;
-	*/
-
-	// Draw background box
-	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-	//surface()->DrawSetColor(255, 255, 255, 255);
-	//surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
-
 	// Draw grenade icon
 	if( !iconTexture )
 		iconTexture = gHUD.GetIcon("death_grenade_normal");
@@ -267,11 +175,9 @@ void CHudGrenade1::Paint()
 	if(iconTexture)
 	{
 		Color iconColor( 255, 255, 255, 125 );
-		int iconWide;
-		int iconTall;
-		// always use font rendering method
-		iconWide = surface()->GetCharacterWidth( iconTexture->hFont, iconTexture->cCharacterInFont );
-		iconTall = surface()->GetFontTall( iconTexture->hFont );
+		int iconWide = iconTexture->Width();
+		int iconTall = iconTexture->Height();
+
 		//If we're using a font char, this will ignore iconTall and iconWide
 		iconTexture->DrawSelf( icon_xpos, icon_ypos - (iconTall / 2), iconWide, iconTall, iconColor );
 	}
