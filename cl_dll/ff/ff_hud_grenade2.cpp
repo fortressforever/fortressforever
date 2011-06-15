@@ -106,7 +106,15 @@ void CHudGrenade2::OnTick()
 	int iClass = ffplayer->GetClassSlot();
 	int iGrenade2 = ffplayer->m_iSecondary;
 
-	if(m_iClass != iClass)
+	//if no class
+	if(iClass == 0)
+	{
+		SetPaintEnabled(false);
+		SetPaintBackgroundEnabled(false);
+		m_iClass = iClass;
+		return;
+	}
+	else if(m_iClass != iClass)
 	{
 		m_iClass = iClass;
 		if (!ffplayer) 
@@ -153,7 +161,6 @@ void CHudGrenade2::OnTick()
 		SetPaintBackgroundEnabled(true);
 		SetGrenade(iGrenade2, false);
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasGrenades");
-
 
 		if ( strcmp( pClassInfo->m_szSecondaryClassName, "None" ) != 0 )
 		{

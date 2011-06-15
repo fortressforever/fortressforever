@@ -17,6 +17,7 @@
 
 #include "iclientmode.h"
 #include "c_ff_player.h"
+#include "ff_playerclass_parse.h"
 
 #include <KeyValues.h>
 #include <vgui/IVGui.h>
@@ -104,12 +105,18 @@ void CHudGrenade1::OnTick()
 	int iClass = ffplayer->GetClassSlot();
 	int iGrenade1 = ffplayer->m_iPrimary;
 
-	if(m_iClass != iClass)
+	//if no class
+	if(iClass == 0)
+	{
+		SetPaintEnabled(false);
+		SetPaintBackgroundEnabled(false);
+		m_iClass = iClass;
+		return;
+	}
+	else if(m_iClass != iClass)
 	{
 		m_iClass = iClass;
-		if( !ffplayer 
-			|| iClass == CLASS_CIVILIAN
-			|| iClass == CLASS_SCOUT ) 
+		if (!ffplayer) 
 		{
 			SetPaintEnabled(false);
 			SetPaintBackgroundEnabled(false);
@@ -123,23 +130,60 @@ void CHudGrenade1::OnTick()
 			SetPaintBackgroundEnabled(false);
 			return;
 		}
+		const char *szClassNames[] = { 
+			"scout", "sniper", "soldier", 
+			"demoman", "medic", "hwguy", 
+			"pyro", "spy", "engineer", 
+			"civilian" 
+		};
+
+		PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
+		bool bReadInfo = ReadPlayerClassDataFromFileForSlot( vgui::filesystem(), szClassNames[m_iClass - 1], &hClassInfo, NULL );
+
+		if (!bReadInfo)
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
+			return;
+		}
+
+		const CFFPlayerClassInfo *pClassInfo = GetFilePlayerClassInfoFromHandle(hClassInfo);
+
+		if (!pClassInfo)
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
+			return;
+		}
 
 		SetPaintEnabled(true);
 		SetPaintBackgroundEnabled(true);
-
-		// Different class, don't show anims
 		SetGrenade(iGrenade1, false);
-
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ClassHasGrenades");
+
+		if ( strcmp( pClassInfo->m_szPrimaryClassName, "None" ) != 0 )
+		{
+			const char *grenade_name = pClassInfo->m_szPrimaryClassName;
+
+			//if grenade names start with ff_
+			if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
+			//remove ff_
+			{
+				grenade_name += 3;
+			}
+			
+			char grenade_icon_name[MAX_PLAYERCLASS_STRING + 3];
+
+			Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
+
+			iconTexture = gHUD.GetIcon(grenade_icon_name);
+		}
 	}
 	else
 	{
 		// Same class, just update counts
 		SetGrenade(iGrenade1, true);
-	}	
-	
-	if( !iconTexture )
-		iconTexture = gHUD.GetIcon("death_grenade_normal");
+	}
 }
 
 //-----------------------------------------------------------------------------
