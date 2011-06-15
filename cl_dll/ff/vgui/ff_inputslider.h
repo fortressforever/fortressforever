@@ -54,6 +54,13 @@ namespace vgui
 			m_pInputBox->SetText(VarArgs("%d", value));
 			BaseClass::SetValue(value, bTriggerChangeMessage);
 		}
+		virtual void SetPos(int x, int y)
+		{
+			int iWide, iTall;
+			GetSize(iWide, iTall);
+			m_pInputBox->SetPos(x + iWide, y);
+			BaseClass::SetPos(x,y);
+		}
 
 		//-----------------------------------------------------------------------------
 		// Purpose: Keep the input box up to date
