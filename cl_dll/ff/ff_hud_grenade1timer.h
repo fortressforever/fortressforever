@@ -4,22 +4,23 @@
 #include "cbase.h"
 #include "ff_panel.h"
 
-typedef struct timer_s
-{
-	float m_flStartTime;
-	float m_flDuration;
-
-	timer_s(float s, float d) 
-	{
-		m_flStartTime = s;
-		m_flDuration = d;
-	}
-
-} timer_t;
 
 class CHudGrenade1Timer : public CHudElement, public vgui::FFPanel
 {
 private:
+	typedef struct timer_s
+	{
+		float m_flStartTime;
+		float m_flDuration;
+
+		timer_s(float s, float d) 
+		{
+			m_flStartTime = s;
+			m_flDuration = d;
+		}
+
+	} timer_t;
+
 	DECLARE_CLASS_SIMPLE(CHudGrenade1Timer, vgui::FFPanel);
 
 	CUtlLinkedList<timer_t> m_Timers;
