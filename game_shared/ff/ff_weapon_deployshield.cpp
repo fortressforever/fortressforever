@@ -84,7 +84,7 @@ bool CFFWeaponDeployShield::Deploy()
 	//Start the shield out inactive
 	m_bShieldActive = false;
 #ifdef CLIENT_DLL
-	DevMsg("Active shield deployed.\n");
+	DevMsg("Active shield deploy called.\n");
 #endif
 
 #ifdef GAME_DLL
