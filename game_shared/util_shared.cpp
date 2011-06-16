@@ -14,6 +14,7 @@
 #include "IceKey.H"
 #include "checksum_crc.h"
 #include "ff_triggerclip.h"
+#include "ff_gamerules.h"
 
 #ifdef CLIENT_DLL
 	#include "c_ff_team.h"
@@ -355,8 +356,26 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 					return false;
 
 				// This allows players to pass through any team object (another player or entity), includes allies
-				CFFTeam *pTeam = GetGlobalFFTeam(pPassEnt->GetTeamNumber());
-				if( pHandle->IsPlayer() && ( pPassEnt->GetTeamNumber() == pHandle->GetTeamNumber() || ( pTeam && ( pTeam->GetAllies() & ( 1 << pHandle->GetTeamNumber() ) ) ) ) )
+				int iPassTeam = pPassEnt->GetTeamNumber();
+				int iHandleTeam = pHandle->GetTeamNumber();
+
+				if (pPassEnt->IsPlayer())
+				{
+					CFFPlayer *pPassPlayer = static_cast< CFFPlayer * >( const_cast< CBaseEntity * >( pPassEnt ) );
+
+					if (pPassPlayer && pPassPlayer->IsDisguised())
+						iPassTeam = pPassPlayer->GetDisguisedTeam();
+				}
+				
+				if (pHandle->IsPlayer())
+				{
+					CFFPlayer *pHandlePlayer = ToFFPlayer(pHandle);
+
+					if (pHandlePlayer && pHandlePlayer->IsDisguised())
+						iHandleTeam = pHandlePlayer->GetDisguisedTeam();
+				}
+				
+				if( pHandle->IsPlayer() && FFGameRules()->IsTeam1AlliedToTeam2( iPassTeam, iHandleTeam ) == GR_TEAMMATE )
 				{
 					// If player lands on top of a team entity make sure they hit
 					Vector vecOrigin = pPassEnt->GetAbsOrigin();

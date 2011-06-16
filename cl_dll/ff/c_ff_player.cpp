@@ -3016,9 +3016,10 @@ C_BaseEntity* C_FFPlayer::FindTeamIntersect( C_Team *pTeam, const Vector& boxMin
 {
 	C_BaseEntity *pAvoidEnt = NULL;
 
-	for ( int i = 0; i < pTeam->Get_Number_Players(); ++i )
+	for (int i=1; i <= gpGlobals->maxClients; ++i)
 	{
-		C_FFPlayer *pAvoidPlayer = static_cast< C_FFPlayer * >( pTeam->GetPlayer( i ) );
+		C_FFPlayer *pAvoidPlayer = static_cast< C_FFPlayer * >(UTIL_PlayerByIndex(i));
+
 		if ( pAvoidPlayer == NULL )
 			continue;
 
@@ -3029,25 +3030,14 @@ C_BaseEntity* C_FFPlayer::FindTeamIntersect( C_Team *pTeam, const Vector& boxMin
 		// Is the avoid player solid?
 		if ( pAvoidPlayer->IsSolidFlagSet( FSOLID_NOT_SOLID ) )
 			continue;
-
-		// Check to see if should avoid engineers buildables
-		/*
-		if( pAvoidPlayer->GetClassSlot() == CLASS_ENGINEER )
-		{
-			//pAvoidEnt = static_cast< C_BaseEntity * >( pAvoidPlayer->GetDispenser() );
-			pAvoidEnt = (C_BaseEntity *)pAvoidPlayer->GetDispenser();
-			if( IsEntIntersectingBox( pAvoidEnt, boxMin, boxMax ) )
-				return pAvoidEnt;
-
-			//pAvoidEnt = static_cast< C_BaseEntity * >( pAvoidPlayer->GetSentryGun() );
-			pAvoidEnt = (C_BaseEntity *)pAvoidPlayer->GetSentryGun();
-			if( IsEntIntersectingBox( pAvoidEnt, boxMin, boxMax ) )
-				return pAvoidEnt;
-		}
-		*/
-
+		
 		// Is the avoid player me?
 		if ( pAvoidPlayer == this )
+			continue;
+
+		int iAvoidTeam = (pAvoidPlayer->IsDisguised()) ? pAvoidPlayer->GetDisguisedTeam() : pAvoidPlayer->GetTeamNumber();
+
+		if (FFGameRules()->IsTeam1AlliedToTeam2( pTeam->m_iTeamNum, iAvoidTeam ) == GR_NOTTEAMMATE)
 			continue;
 
 		pAvoidEnt = (C_BaseEntity *)pAvoidPlayer;
@@ -3065,7 +3055,7 @@ void C_FFPlayer::AvoidPlayers( CUserCmd *pCmd )
 	if ( IsAlive() == false )
 		return;
 
-	C_FFTeam *pTeam = (C_FFTeam *)GetGlobalTeam( GetTeamNumber() );
+	C_FFTeam *pTeam = (IsDisguised()) ? ((C_FFTeam *)GetGlobalTeam( GetDisguisedTeam() )) : ((C_FFTeam *)GetGlobalTeam( GetTeamNumber() ));
 	if ( !pTeam )
 		return;
 
@@ -3082,21 +3072,7 @@ void C_FFPlayer::AvoidPlayers( CUserCmd *pCmd )
 	C_BaseEntity *pIntersectPlayer = NULL;
 	float flAvoidRadius = 0.0f;
 
-	// Check if allied teams should be avoided
-	int iAlliedTeams[TEAM_COUNT], iNumAllies;
-	iNumAllies = pTeam->GetAlliedTeams( iAlliedTeams );
-	iAlliedTeams[iNumAllies++] = GetTeamNumber(); // Add this players team
-
-	for ( int i = 0; i < iNumAllies; i++ )
-	{
-		C_Team *pTeam = GetGlobalTeam( iAlliedTeams[i] );
-		if ( !pTeam )
-			continue;
-
-		pIntersectPlayer = FindTeamIntersect( pTeam, vecSDKPlayerMin, vecSDKPlayerMax );
-		if( pIntersectPlayer )
-			break;
-	}
+	pIntersectPlayer = FindTeamIntersect( pTeam, vecSDKPlayerMin, vecSDKPlayerMax );
 
 	// Anything to avoid?
 	if ( !pIntersectPlayer )
