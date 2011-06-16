@@ -517,6 +517,8 @@ private:
 	CNetworkVar( unsigned char, m_nMuzzleFlashParity );
 	unsigned char m_nOldMuzzleFlashParity;
 
+	bool							m_bAttemptingMatHack;
+
 private:
 	mutable CStudioHdr				*m_pStudioHdr;
 };
