@@ -241,6 +241,19 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 				//move on to the next player
 				continue;
 			}
+			
+			//Check if the player should be temporarily revealed ( just remove cloaksmoke and put it back on later )
+			if( pPlayer->GetCloakSmokeRevealTime() > gpGlobals->curtime )
+			{
+				//Turn the cloaksmoke flag off
+				pPlayer->RemoveCloakSmoke();
+
+				//Remove the player at this index from the list
+				m_vCloakSmokeList.Remove(i);
+
+				//Continue to the next player
+				continue;
+			}
 
 			//Get the player's distance from the gren origin
 			Vector vDisplacement = ( pPlayer->GetAbsOrigin() - GetAbsOrigin() );

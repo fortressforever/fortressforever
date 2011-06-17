@@ -822,6 +822,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
 	RecvPropInt( RECVINFO( m_iCloakSmoked ) ),
+	RecvPropFloat( RECVINFO( m_flCloakSmokeTempRevealTime ) ),
 	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
 	RecvPropInt( RECVINFO( m_iActiveSabotages ) ),
 END_RECV_TABLE( )
@@ -831,6 +832,7 @@ BEGIN_PREDICTION_DATA( C_FFPlayer )
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_iCloaked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_iCloakSmoked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flCloakSmokeTempRevealTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 class C_FFRagdoll : public C_BaseAnimatingOverlay

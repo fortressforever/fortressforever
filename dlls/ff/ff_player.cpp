@@ -151,6 +151,13 @@ extern ConVar sv_maxspeed;
 //Adding an extern for the cloak duration -GreenMushy
 extern ConVar ffdev_cloaktime;
 
+//Convar for how long to reveal a damaged player inside cloaksmoke
+ConVar ffdev_cloaksmoke_reveal_time( "ffdev_cloaksmoke_reveal_time", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time damage reveals the player." );
+#define CLOAKSMOKE_REVEAL_TIME	ffdev_cloaksmoke_reveal_time.GetFloat()
+
+ConVar ffdev_cloaksmoke_reveal_damage_mod( "ffdev_cloaksmoke_reveal_damage_mod", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Percentage of damage to convert to raw added reveal time" );
+#define CLOAKSMOKE_REVEAL_DAMAGE_MOD ffdev_cloaksmoke_reveal_damage_mod.GetFloat()
+
 ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
 
 ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "jumpdown", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
@@ -441,6 +448,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloakSmoked ), 1, SPROP_UNSIGNED ),
+	SendPropFloat( SENDINFO( m_flCloakSmokeTempRevealTime ) ),
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
@@ -1629,6 +1637,7 @@ void CFFPlayer::SetupClassVariables()
 	// Reset Spy stuff
 	m_iCloaked = 0;
 	m_iCloakSmoked = 0;
+	m_flCloakSmokeTempRevealTime = 0.0f;
 	m_flCloakTime = 0.0f;
 	m_flNextCloak = 0.0f;
 	m_flCloakFadeStart = 0.0f;
@@ -1873,6 +1882,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	//stop cloak smoke
 	m_iCloakSmoked = 0;
+	m_flCloakSmokeTempRevealTime = 0.0f;
 
 	// Beg; Added by Mulchman
 	if( m_bStaticBuilding )
@@ -5377,6 +5387,13 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	// AfterShock - Reset sabotage timer on getting shot
 	SpyStopSabotaging();
+
+	//Tell any cloaksmoked player to temporarily uncloak
+	if( IsCloakSmoked() )
+	{
+		//Set the time in the future when you can re-enable it 
+		m_flCloakSmokeTempRevealTime = ( gpGlobals->curtime + (CLOAKSMOKE_REVEAL_TIME + (info.GetDamage() * CLOAKSMOKE_REVEAL_DAMAGE_MOD)) );
+	}
 
 // COMMENTED - NOT READY YET (not fully tested)
 	// AfterShock: slow the player depending on how much damage they took, down to a minimum of standard run speed - mostly useful for slowing bhoppers and concers

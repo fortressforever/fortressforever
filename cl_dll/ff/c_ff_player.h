@@ -532,12 +532,15 @@ public:
 	bool IsCloakSmoked( void ) const { return m_iCloakSmoked != 0; }
 	float GetCloakStartTime( void ) const { return m_flCloakTime; }
 	float GetCloakNextTime( void ) const { return m_flNextCloak; }
+	float GetCloakSmokeRevealTime( void ) const { return m_flCloakSmokeTempRevealTime; }
 	void CloakSmoke( void );	//Specifically for the smoke grenade cloaking
 	void RemoveCloakSmoke( void ); // removing smoke grenade cloaking
 private:
 	void Cloak( void );
 	unsigned int m_iCloaked;
 	unsigned int m_iCloakSmoked;
+	float m_flCloakSmokeTempRevealTime;
+
 	// Time the spy started cloaking
 	float m_flCloakTime;
 	// Time until player can cloak again

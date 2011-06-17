@@ -1522,8 +1522,12 @@ void CFFPlayer::Cloak( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::CloakSmoke( void )
 {
-	//Set CloakSmoke int to true
-	m_iCloakSmoked = 1;
+	//Make sure the player is able to be cloaksmoked
+	if( gpGlobals->curtime > GetCloakSmokeRevealTime() )
+	{
+		//Set CloakSmoke int to true
+		m_iCloakSmoked = 1;
+	}
 }
 
 //-----------------------------------------------------------------------------

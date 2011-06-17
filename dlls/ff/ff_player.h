@@ -700,6 +700,7 @@ public:
 	bool IsCloakSmoked( void ) const { return m_iCloakSmoked != 0; }
 	//Returns the time cloak started -GreenMushy
 	float GetCloakTime( void ) const { return m_flCloakTime; }
+	float GetCloakSmokeRevealTime( void ) const { return m_flCloakSmokeTempRevealTime; }
 	void CloakSmoke( void );	//Specifically for the smoke grenade cloaking
 	void RemoveCloakSmoke( void ); // removing smoke grenade cloaking
 private:
@@ -707,6 +708,7 @@ private:
 	//unsigned int m_iCloaked;
 	CNetworkVar( unsigned int, m_iCloaked ); //gotta network this since lots of serverside-only code calls it, e.g. when touching a scout
 	CNetworkVar( unsigned int, m_iCloakSmoked ); // for smoke gren invisibility
+	CNetworkVar( float, m_flCloakSmokeTempRevealTime );
 public:
 	void Overpressure( void );
 	void OverpressureThink( void );
