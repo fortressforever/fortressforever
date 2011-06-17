@@ -139,7 +139,10 @@ ConVar ffdev_cloaksmoke_duration( "ffdev_cloaksmoke_duration", "0.5", FCVAR_REPL
 #define OVERPRESSURE_EFFECT "FF_OverpressureEffect"
 
 //0001279: Need convar for pipe det delay
-#define PIPE_DET_DELAY 0.55 // this is mirrored in ff_projectile_pipebomb.cpp and ff_player.cpp
+extern ConVar pipebomb_time_till_live;
+extern ConVar ffdev_pipebomb_mode;
+#define PIPE_DET_DELAY pipebomb_time_till_live.GetFloat() //0.55 // this is mirrored in ff_projectile_pipebomb.cpp and ff_player.cpp
+#define PIPE_MODE ffdev_pipebomb_mode.GetInt()
 extern ConVar ai_debug_shoot_positions;
 
 void DispatchEffect(const char *pName, const CEffectData &data);
@@ -618,9 +621,28 @@ void CFFPlayer::ClassSpecificSkill()
 	{
 #ifdef GAME_DLL
 	case CLASS_DEMOMAN:
-		//Commenting out the delay stuff for a new system - GreenMushy
-		//if( ( GetPipebombShotTime() + PIPE_DET_DELAY ) < gpGlobals->curtime )
-		CFFProjectilePipebomb::DestroyAllPipes(this, false);
+		//Look at all these pipe modes! - GreenMushy
+		if( PIPE_MODE == 0 )
+		{
+			//Normal detting
+			if( ( GetPipebombShotTime() + PIPE_DET_DELAY ) < gpGlobals->curtime )
+			{
+				CFFProjectilePipebomb::DestroyAllPipes(this, false);
+			}
+		}
+		else if( PIPE_MODE == 1 )
+		{
+			//Instantly det because of magnetic det delay
+			CFFProjectilePipebomb::DestroyAllPipes(this, false);
+		}
+		else if( PIPE_MODE == 2 )
+		{
+			//Normal detting
+			if( ( GetPipebombShotTime() + PIPE_DET_DELAY ) < gpGlobals->curtime )
+			{
+				CFFProjectilePipebomb::DestroyAllPipes(this, false);
+			}
+		}
 		break;
 
 	case CLASS_MEDIC:

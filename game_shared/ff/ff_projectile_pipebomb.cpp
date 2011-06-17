@@ -49,47 +49,63 @@ LINK_ENTITY_TO_CLASS(ff_projectile_pl, CFFProjectilePipebomb);
 PRECACHE_WEAPON_REGISTER(ff_projectile_pl);
 
 
-ConVar ffdev_pipe_friction("ffdev_pipe_friction", "256", FCVAR_REPLICATED | FCVAR_CHEAT, "");
+ConVar ffdev_pipe_friction("ffdev_pipe_friction", "0.375", FCVAR_REPLICATED | FCVAR_CHEAT, "256 for sticky pipes.  0.375 for normal");
 //0001279: Need convar for pipe det delay
-//ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.55", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar pipebomb_time_till_live("ffdev_pipe_detdelay", "0.55", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define PIPE_DET_DELAY 0.55	// this is mirrored in ff_player_shared.cpp(97) and ff_player.cpp
 
-ConVar ffdev_pipebomb_arm_delay("ffdev_pipebomb_arm_delay", "0.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_arm_delay("ffdev_pipe_arm_delay", "0.0", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_ARM_DELAY ffdev_pipebomb_arm_delay.GetFloat()
 
-ConVar ffdev_pipebomb_follow_speed_factor( "ffdev_pipebomb_follow_speed_factor", "0.8", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_follow_speed_factor( "ffdev_pipe_follow_speed_factor", "0.8", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_FOLLOW_SPEED_FACTOR ffdev_pipebomb_follow_speed_factor.GetFloat()
 
-ConVar ffdev_pipebomb_magnet_radius( "ffdev_pipebomb_magnet_radius", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_magnet_radius( "ffdev_pipe_magnet_radius", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MAGNET_RADIUS ffdev_pipebomb_magnet_radius.GetInt()
 
 //My own det delay so i can revert easily, and i think mine is a little different
-ConVar ffdev_pipebomb_detdelay( "ffdev_pipebomb_detdelay", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_detdelay( "ffdev_pipe_detdelay", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_DETONATE_DELAY ffdev_pipebomb_detdelay.GetFloat()
 
 //Convar for the det time on magnetic pipes
-ConVar ffdev_pipebomb_magnetic_detdelay( "ffdev_pipebomb_magnetic_detdelay", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_magnetic_detdelay( "ffdev_pipe_magnetic_detdelay", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MAGNETIC_DETONATE_DELAY ffdev_pipebomb_magnetic_detdelay.GetFloat()
 
 //Pipes max follow distance
-ConVar ffdev_pipebomb_maxfollowdist( "ffdev_pipebomb_maxfollowdist", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_maxfollowdist( "ffdev_pipe_maxfollowdist", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MAX_FOLLOW_DIST ffdev_pipebomb_maxfollowdist.GetInt()
 
 //Pipes min pecentage base speed of player to activate the magnet
-ConVar ffdev_pipebomb_min_activation_speed_factor( "ffdev_pipebomb_min_activation_speed_factor", "0.6", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_min_activation_speed_factor( "ffdev_pipe_min_activation_speed_factor", "0.6", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_MIN_ACTIVATION_SPEED_FACTOR ffdev_pipebomb_min_activation_speed_factor.GetFloat()
 
 //Radius that pipes randomize when they stop
-ConVar ffdev_pipebomb_randomize_radius( "ffdev_pipebomb_randomize_radius", "16", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_randomize_radius( "ffdev_pipe_randomize_radius", "16", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_RANDOMIZE_RADIUS ffdev_pipebomb_randomize_radius.GetInt()
 
 //Speed that pipes move when they randomize
-ConVar ffdev_pipebomb_randomize_speed( "ffdev_pipebomb_randomize_speed", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_randomize_speed( "ffdev_pipe_randomize_speed", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_RANDOMIZE_SPEED ffdev_pipebomb_randomize_speed.GetInt()
 
 //Allow the player to attach to himself for easier testing/debugging
-ConVar ffdev_pipebomb_friendly_attach( "ffdev_pipebomb_friendly_attach", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+ConVar ffdev_pipebomb_friendly_attach( "ffdev_pipe_friendly_attach", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define PIPE_FRIENDLY_ATTACH ffdev_pipebomb_friendly_attach.GetBool()
+
+//Allow for different pipe modes
+ConVar ffdev_pipebomb_mode( "ffdev_pipe_mode", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define PIPE_MODE ffdev_pipebomb_mode.GetInt()
+
+//Radius for Proximity pipes
+ConVar ffdev_pipebomb_proximity_radius( "ffdev_pipe_proximity_radius", "128", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define PIPE_PROXIMITY_RADIUS  ffdev_pipebomb_proximity_radius.GetInt()
+
+//Time after activation to detonate via proximity
+ConVar ffdev_pipebomb_proximity_det_delay( "ffdev_pipe_proximity_det_delay", "0.75", FCVAR_REPLICATED | FCVAR_NOTIFY );
+#define PIPE_PROXIMITY_DETONATE_DELAY ffdev_pipebomb_proximity_det_delay.GetFloat()
+
+//Speed required to activate pipe behavior
+ConVar ffdev_pipebomb_activation_speed( "ffdev_pipebomb_activation_speed", "4.0f", FCVAR_REPLICATED | FCVAR_NOTIFY, "Max speed to activate magnet/autodet");
+#define PIPE_ACTIVATION_SPEED ffdev_pipebomb_activation_speed.GetFloat()
 
 //=============================================================================
 // CFFProjectilePipebomb implementation
@@ -99,6 +115,25 @@ ConVar ffdev_pipebomb_friendly_attach( "ffdev_pipebomb_friendly_attach", "0", FC
 
 	void CFFProjectilePipebomb::CreateProjectileEffects()
 	{
+		if( PIPE_MODE == 0 )
+		{
+			// Start up the eye glow
+			m_hMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
+
+			int nAttachment = LookupAttachment( "fuse" );
+
+			if ( m_hMainGlow != NULL )
+			{
+				m_hMainGlow->FollowEntity( this );
+				m_hMainGlow->SetAttachment( this, nAttachment );
+				m_hMainGlow->SetTransparency( kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation );
+				m_hMainGlow->SetScale( 0.2f );
+				m_hMainGlow->SetGlowProxySize( 4.0f );
+				m_hMainGlow->SetThink(&CBaseEntity::SUB_Remove);
+				m_hMainGlow->SetNextThink(gpGlobals->curtime + PIPE_DET_DELAY);
+			}
+		}
+
 		int nAttachment = LookupAttachment( "fuse" );
 
 		// Start up the eye trail
@@ -131,7 +166,18 @@ ConVar ffdev_pipebomb_friendly_attach( "ffdev_pipebomb_friendly_attach", "0", FC
 			m_hMainGlow->SetScale( 0.2f );
 			m_hMainGlow->SetGlowProxySize( 4.0f );
 			m_hMainGlow->SetThink(&CBaseEntity::SUB_Remove);
-			m_hMainGlow->SetNextThink(gpGlobals->curtime + PIPE_DET_DELAY);
+			if( PIPE_MODE == 0 )
+			{
+				m_hMainGlow->SetNextThink(gpGlobals->curtime + PIPE_DET_DELAY);
+			}
+			else if( PIPE_MODE == 1 )
+			{
+				m_hMainGlow->SetNextThink(gpGlobals->curtime + PIPE_MAGNETIC_DETONATE_DELAY);
+			}
+			else if( PIPE_MODE == 2 )
+			{
+				m_hMainGlow->SetNextThink(gpGlobals->curtime + PIPE_PROXIMITY_DETONATE_DELAY);
+			}
 		}
 	}
 
@@ -187,10 +233,8 @@ void CFFProjectilePipebomb::Spawn()
 	m_flDetonateTime = 0.0f;
 	m_bMagnetActive = false;
 
-
 	//Set the Pipebomb collision so it doesnt hit players -Green Mushy
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
-
 
 #ifdef CLIENT_DLL
 	// Rebo you are quite mean with this tomfoolery!!!!!!!!!!
@@ -307,9 +351,9 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 	CSingleUserRecipientFilter user(pPipeOwner);
 	user.MakeReliable();
 
-	//UserMessageBegin(user, "PipeMsg");
-	//	WRITE_BYTE(0);
-	//MessageEnd();
+	UserMessageBegin(user, "PipeMsg");
+		WRITE_BYTE(0);
+	MessageEnd();
 
 	// Detonate all the pipes belonging to us
 	CFFProjectilePipebomb *pPipe = NULL; 
@@ -330,45 +374,48 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 			return;
 		}
 
-		if (pPipe->GetOwnerEntity() == pOwner)
+		if( PIPE_MODE == 0 || PIPE_MODE == 2 )
 		{
-			//Use this "force" boolean to mean: "Force all pipes to detonate immediately"
-			if( force == true )
+			if (pPipe->GetOwnerEntity() == pOwner)
 			{
-				// Detonate!				
-				pPipe->SetShouldDetonate(true);
-				pPipe->SetDetonateTime(gpGlobals->curtime);
-			
-				//Continue the while loop to the next pipe
+				pPipe->DetonatePipe(force);
 				continue;
 			}
+		}
 
-			//Check if the pipe hasnt already been detted, and it is detable
-			//Also check if the magnet is armed, meaning it has impacted a solid surface since its creation
-			if( pPipe->GetShouldDetonate() == false && pPipe->GetArmed() == true )
+		//If it is magnetic mode 1
+		if( PIPE_MODE == 1 )
+		{
+			if (pPipe->GetOwnerEntity() == pOwner)
 			{
-				//Emit the sound from each pipe
-				pPipe->EmitSoundShared( "Pipe.Pre_Detonate" );
-
-				//Set to true so you cant detonate it again before it explodes
-				pPipe->SetShouldDetonate(true);
-
-				//Depending on if the pipe is currently magnetic or not, set the detonation times
-				//If the target is VALID, meaning it is currently a magnetic pipe
-				if( pPipe->GetMagnetTarget() != NULL )
+				//Use this "force" boolean to mean: "Force all pipes to detonate immediately"
+				if( force == true )
 				{
+					// Detonate!				
+					pPipe->SetShouldDetonate(true);
+					pPipe->SetDetonateTime(gpGlobals->curtime);
+				
+					//Continue the while loop to the next pipe
+					continue;
+				}
+			
+
+				//Check if the pipe hasnt already been detted, and it is detable
+				//Also check if the magnet is armed, meaning it has impacted a solid surface since its creation
+				if( pPipe->GetShouldDetonate() == false && pPipe->GetArmed() == true )
+				{
+					//Emit the sound from each pipe
+					pPipe->EmitSoundShared( "Pipe.Pre_Detonate" );
+
+					//Set to true so you cant detonate it again before it explodes
+					pPipe->SetShouldDetonate(true);
+
 					//Set the pipes detonation time in the future: MAGNETIC PIPES
 					pPipe->SetDetonateTime(gpGlobals->curtime + PIPE_MAGNETIC_DETONATE_DELAY);
-				}
-				//else the target is NULL, so explode normally
-				else
-				{
-					//Set the pipes detonation time in the future: NORMAL PIPES
-					pPipe->SetDetonateTime(gpGlobals->curtime + PIPE_DETONATE_DELAY);
-				}
 
-				//Start glowing this pipe
-				pPipe->StartGlowEffect();
+					//Start glowing this pipe
+					pPipe->StartGlowEffect();
+				}
 			}
 		}
 	}
@@ -479,98 +526,179 @@ void CFFProjectilePipebomb::DecrementHUDCount()
 //----------------------------------------------------------------------------
 void CFFProjectilePipebomb::PipebombThink() 
 {
-	// Remove if we're nolonger in the world
-	if ( !IsInWorld() || gpGlobals->curtime > m_flDetonateTime && m_flDetonateTime != 0.0f )
+	if( PIPE_MODE == 0 )
 	{
-		DecrementHUDCount();
+		BaseClass::GrenadeThink();
+		return;
 	}
-
-	//First check if the pipe has hit a surface yet
-	if( m_bMagnetArmed )
+	else if( PIPE_MODE == 1 )
 	{
-		//If the pipe has not yet magnetized to a target
-		if( m_bMagnetActive == false )
+		//First check if the pipe has hit a surface yet
+		if( m_bMagnetArmed )
 		{
-			//Attempting to check for players in a radius by way of a sphere query
-			CBaseEntity *pEntity = NULL;
-			for( CEntitySphereQuery sphere( GetAbsOrigin(), PIPE_MAGNET_RADIUS ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+			//If the pipe has not yet magnetized to a target
+			if( m_bMagnetActive == false )
 			{
-				//If this is not an entity, move on
-				if( !pEntity )
-					continue;
-
-				//If this is not a player, move on
-				if( !pEntity->IsPlayer() )
-					continue;
-
-				//Should be a player now ->
-
-				//If the #define says attach to teammates self or teammates
-				if( PIPE_FRIENDLY_ATTACH == false )
+				//Attempting to check for players in a radius by way of a sphere query
+				CBaseEntity *pEntity = NULL;
+				for( CEntitySphereQuery sphere( GetAbsOrigin(), PIPE_MAGNET_RADIUS ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 				{
-					//just dont bother magnetizing to the owner, move on
-					if( pEntity == GetOwnerEntity() )
+					//If this is not an entity, move on
+					if( !pEntity )
 						continue;
-				}
 
-				//dont magnetize if the player is moving slower then base movespeed
-				CFFPlayer* pTarget = ToFFPlayer(pEntity);
-				if( pTarget->GetAbsVelocity().Length() < ( pTarget->MaxSpeed() * PIPE_MIN_ACTIVATION_SPEED_FACTOR ))
-					continue;
-
-				//If the #define says attach to teammates self or teammates
-				if( PIPE_FRIENDLY_ATTACH == false )
-				{
-					//dont magnetize to teammates of this pipe's owner
-					if( pTarget->GetTeam() == GetOwnerEntity()->GetTeam() )
+					//If this is not a player, move on
+					if( !pEntity->IsPlayer() )
 						continue;
+
+					//Should be a player now ->
+
+					//If the #define says attach to teammates self or teammates
+					if( PIPE_FRIENDLY_ATTACH == false )
+					{
+						//just dont bother magnetizing to the owner, move on
+						if( pEntity == GetOwnerEntity() )
+							continue;
+					}
+
+					//dont magnetize if the player is moving slower then base movespeed
+					CFFPlayer* pTarget = ToFFPlayer(pEntity);
+					if( pTarget->GetAbsVelocity().Length() < ( pTarget->MaxSpeed() * PIPE_MIN_ACTIVATION_SPEED_FACTOR ))
+						continue;
+
+					//If the #define says attach to teammates self or teammates
+					if( PIPE_FRIENDLY_ATTACH == false )
+					{
+						//dont magnetize to teammates of this pipe's owner
+						if( pTarget->GetTeam() == GetOwnerEntity()->GetTeam() )
+							continue;
+					}
+
+					//Checks complete, target acquired->
+
+					//Set the magnet target in the pipe to this entity
+					SetMagnetTarget( pEntity );
+					
+					//Set the magnet bool to true so it doesnt sphere query anymore
+					m_bMagnetActive = true;
+
+					DevMsg("Magnet acquired target\n");
+					//break out of the loop
+					break;
 				}
+			}
 
-				//Checks complete, target acquired->
-
-				//Set the magnet target in the pipe to this entity
-				SetMagnetTarget( pEntity );
-				
-				//Set the magnet bool to true so it doesnt sphere query anymore
-				m_bMagnetActive = true;
-
-				DevMsg("Magnet acquired target\n");
-				//break out of the loop
-				break;
+			//If the pipe is currently set to magnetize to somewhere
+			if( m_bMagnetActive == true )
+			{
+				//Call this function to handle the vectors and stuff for magnetizing
+				Magnetize( GetMagnetTarget() );
 			}
 		}
 
-		//If the pipe is currently set to magnetize to somewhere
-		if( m_bMagnetActive == true )
+		//Check if this pipe was armed and should detonate
+		if( m_bShouldDetonate == true )
 		{
-			//Call this function to handle the vectors and stuff for magnetizing
-			Magnetize( GetMagnetTarget() );
+			//If the detonate time is up
+			if( gpGlobals->curtime > m_flDetonateTime )
+			{
+				//Stop the pre-det sound: This doesnt work! -GreenMushy
+				StopSound("Pipe.Pre-Detonate");
+
+#ifdef GAME_DLL
+				//Blow this pipe up
+				DetonatePipe( false, GetOwnerEntity() );
+#endif
+			}
+		}
+
+		//Check if the pipe's explosive is active yet
+		if( m_bArmed == false )
+		{
+			//if its been in the world long enough
+			if( gpGlobals->curtime > m_flSpawnTime + PIPE_ARM_DELAY )
+			{
+				//set this bool to true so it can not be detonated
+				m_bArmed = true;
+			}
 		}
 	}
-
-	//Check if this pipe was armed and should detonate
-	if( m_bShouldDetonate == true )
+	else if( PIPE_MODE == 2 )
 	{
-		//If the detonate time is up
-		if( gpGlobals->curtime > m_flDetonateTime )
+#ifdef GAME_DLL
+		//Check if this pipe was armed and should detonate
+		if( m_bShouldDetonate == true )
 		{
-			//Stop the pre-det sound: This doesnt work! -GreenMushy
-			StopSound("Pipe.Pre-Detonate");
+			//If the detonate time is up
+			if( gpGlobals->curtime > m_flDetonateTime )
+			{
+				//Stop the pre-det sound: This doesnt work! -GreenMushy
+				StopSound("Pipe.Pre-Detonate");
 
-			//Blow this pipe up
-			Detonate();
+				//Blow this pipe up
+				DetonatePipe( false, GetOwnerEntity() );
+
+				//Tell the hud there is 1 less pipe
+				DecrementHUDCount();
+
+				//Bail out now
+				return;
+			}
 		}
-	}
 
-	//Check if the pipe's explosive is active yet
-	if( m_bArmed == false )
-	{
-		//if its been in the world long enough
-		if( gpGlobals->curtime > m_flSpawnTime + PIPE_ARM_DELAY )
+		//Attempting to check for players in a radius by way of a sphere query
+		CBaseEntity *pEntity = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), PIPE_PROXIMITY_RADIUS ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
-			//set this bool to true so it can not be detonated
-			m_bArmed = true;
+			//If this is not an entity, move on
+			if( !pEntity )
+				continue;
+
+			//If this is not a player, move on
+			if( !pEntity->IsPlayer() )
+				continue;
+
+			//just dont bother magnetizing to the owner, move on
+			if( pEntity == GetOwnerEntity() )
+			{
+				continue;
+			}
+
+			//Should be a player now ->
+			CFFPlayer* pTarget = ToFFPlayer(pEntity);
+
+			//Find the distance from this pipe to the target
+			Vector vDist = pTarget->GetAbsOrigin() - GetAbsOrigin();
+			if( vDist.Length() > PIPE_PROXIMITY_RADIUS  )
+			{
+				//Outside the radius, continue to next target
+				continue;
+			}
+
+			//dont magnetize to teammates of this pipe's owner
+			if( pTarget->GetTeam() == GetOwnerEntity()->GetTeam() )
+			{
+				continue;
+			}
+		
+			//Check if it is able to detonate
+			if( GetShouldDetonate() == false && GetArmed() == true)
+			{
+				//Arm the pipe and detonate in the future
+				//Emit the sound from each pipe
+				EmitSoundShared( "Pipe.Pre_Detonate" );
+
+				//This pipe is in detonate mode now
+				SetShouldDetonate(true);
+
+				//Set the pipes detonation time in the future
+				SetDetonateTime(gpGlobals->curtime + PIPE_PROXIMITY_DETONATE_DELAY );
+
+				//Start glowing this pipe
+				StartGlowEffect();
+			}
 		}
+#endif		
 	}
 
 	BaseClass::GrenadeThink();
@@ -680,11 +808,22 @@ void CFFProjectilePipebomb::Magnetize( CBaseEntity* _pTarget )
 //----------------------------------------------------------------------------
 void CFFProjectilePipebomb::ResolveFlyCollisionCustom(trace_t &trace, Vector &vecVelocity)
 {
-	//Arm the magnet upon impact
-	m_bMagnetArmed = true;
+	if( vecVelocity.Length() < (float)PIPE_ACTIVATION_SPEED )
+	{
+		if( PIPE_MODE == 1 )
+		{
+			//Arm the magnet upon impact
+			m_bMagnetArmed = true;
 
-	//Send dev msg for debugging
-	DevMsg("Magnet Armed\n");
+			//Send dev msg for debugging
+			DevMsg("Magnet Armed\n");
+		}
+		else if( PIPE_MODE == 2 )
+		{
+			//Use this armed variable for this mode
+			m_bArmed = true;
+		}
+	}
 
 	//Now do the normal base class collision stuff
 	BaseClass::ResolveFlyCollisionCustom( trace, vecVelocity );
