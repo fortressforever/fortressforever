@@ -93,6 +93,9 @@
 //ConVar  sg_cloaksonar_pitch_far( "ffdev_sg_cloaksonar_pitch_far", "108", FCVAR_REPLICATED );
 #define SG_CLOAKSONAR_PITCH_FAR 108 // sg_cloaksonar_pitch_far.GetInt()
 
+ConVar	ffdev_sg_target_cloaksmokers( "ffdev_sg_target_cloaksmokers", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "1 == true" );
+#define SG_TARGET_CLOAKSMOKERS ffdev_sg_target_cloaksmokers.GetBool()
+
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f  // sg_explosiondamage_base.GetFloat()
 ConVar ffdev_sg_bulletpush_lvl1("ffdev_sg_bulletpush_lvl1", "4.0", FCVAR_REPLICATED, "SG bullet push force");
@@ -538,6 +541,7 @@ void CFFSentryGun::OnActiveThink( void )
 			|| ( !FVisible( enemy ) && ( pFFPlayer && !FVisible( pFFPlayer->GetLegacyAbsOrigin() ) ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
 			|| !enemy->IsAlive()
 			|| ( pFFPlayer && pFFPlayer->IsCloaked() )
+			|| ( pFFPlayer && ( SG_TARGET_CLOAKSMOKERS == 0 && pFFPlayer->IsCloakSmoked() ) )
 			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
 			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAKMULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
 	{
@@ -845,7 +849,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 				continue;
 		}
 
-		if ( pPlayer->IsCloaked() )
+		if ( pPlayer->IsCloaked() || ( SG_TARGET_CLOAKSMOKERS == 0 && pPlayer->IsCloakSmoked() ) )
 		{
 			// the player won't be visible, but m_flCloakDistance may change and cause the sonar sound to emit
 			IsTargetVisible( pPlayer );
@@ -1075,7 +1079,7 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 	if( !IsTargetClassTValid( tr.m_pEnt->Classify() ) )
 		return false;
 
-	if ( pFFPlayer && pFFPlayer->IsCloaked() )
+	if ( pFFPlayer && ( pFFPlayer->IsCloaked() || ( SG_TARGET_CLOAKSMOKERS == 0 && pFFPlayer->IsCloakSmoked() )) )
 	{
 		if (flDistToTarget <= ( SG_RANGE * SG_RANGE_CLOAKMULTI ) && flDistToTarget < m_flCloakDistance )
 			m_flCloakDistance = flDistToTarget;
