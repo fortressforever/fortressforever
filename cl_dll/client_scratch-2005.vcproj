@@ -4863,6 +4863,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ProxySlowfield.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ProxyTeam.cpp"
 				>
 			</File>
