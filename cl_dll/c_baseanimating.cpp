@@ -684,6 +684,9 @@ C_BaseAnimating::C_BaseAnimating() :
 #ifdef _XBOX
 	m_iAccumulatedBoneMask = 0;
 #endif
+
+	m_bAttemptingMatHack = false;
+
 	m_pStudioHdr = NULL;
 }
 
@@ -960,6 +963,33 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 	if ( hdr->GetNumAttachments() != 0 )
 	{
 		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
+	}
+
+
+	studiohdr_t *pStudioModel = modelinfo->GetStudiomodel( const_cast<model_t*>(GetModel()) );
+
+	if (pStudioModel)
+	{
+		for (int i=0; i<pStudioModel->numtextures && i<pStudioModel->numcdtextures; i++)
+		{
+			mstudiotexture_t *pTex = pStudioModel->pTexture(i);
+			if (pTex)
+			{
+				char searchPath[MAX_PATH] = "";
+				Q_strcat(searchPath, pStudioModel->pCdtexture(i), MAX_PATH);
+				Q_strcat(searchPath, pTex->pszName(), MAX_PATH);
+
+				IMaterial *pMat = materials->FindMaterial(searchPath, TEXTURE_GROUP_MODEL);
+				if (pMat)
+				{
+					int ignorezval = (int)(pMat->GetMaterialVarFlag( MATERIAL_VAR_IGNOREZ ));
+					if (ignorezval != 0)
+					{
+						m_bAttemptingMatHack = true;
+					}
+				}
+			}
+		}
 	}
 
 	return hdr;
@@ -2417,6 +2447,9 @@ int C_BaseAnimating::DrawModel( int flags )
 {
 	VPROF_BUDGET( "C_BaseAnimating::DrawModel", VPROF_BUDGETGROUP_MODEL_RENDERING );
 	if ( !m_bReadyToDraw )
+		return 0;
+
+	if ( m_bAttemptingMatHack )
 		return 0;
 
 	int drawn = 0;
