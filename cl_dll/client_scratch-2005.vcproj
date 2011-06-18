@@ -5018,6 +5018,18 @@
 					</File>
 				</Filter>
 			</Filter>
+			<Filter
+				Name="irc"
+				>
+				<File
+					RelativePath=".\ff\irc\ff_socks.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\irc\ff_socks.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="FF Shared Source Files"
