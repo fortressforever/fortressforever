@@ -126,6 +126,10 @@ ConVar ffdev_cloakspeed( "ffdev_cloakspeed", "1.5", FCVAR_REPLICATED );
 //ConVar for cloaktime externed to c_ff_player and ffplayer -GreenMushy
 ConVar ffdev_cloaktime( "ffdev_cloaktime", "3", FCVAR_REPLICATED );
 
+//Reveal time specifically for shooting from within cloaksmoke
+ConVar ffdev_cloaksmoke_reveal_time_shot( "ffdev_cloaksmoke_reveal_time_shot", "0.25", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time after a shot to reveal the shooter." );
+#define CLOAKSMOKE_SHOOT_REVEAL_TIME	ffdev_cloaksmoke_reveal_time_shot.GetFloat()
+
 //Convar for cloaksmoke duration
 ConVar ffdev_cloaksmoke_duration( "ffdev_cloaksmoke_duration", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY );
 #define FFDEV_CLOAKSMOKE_DURATION ffdev_cloaksmoke_duration.GetFloat()
@@ -243,6 +247,12 @@ void CFFPlayer::FireBullet(
 
 #ifdef GAME_DLL
 	//NDebugOverlay::SweptBox(vecSrc, vecEnd, -vecHull, vecHull, tmpAngle, 255, 0, 0, 255, 10.0f);
+
+	//small reveal on cloaksmoke when the player fires bullets
+	if( IsCloakSmoked() )
+	{
+		CloakSmokeShootReveal();
+	}
 #endif
 
 	if (tr.fraction == 1.0f)
@@ -1016,6 +1026,12 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation(pPlayer, pPlayer->GetCurrentCommand());
+
+	//small reveal on cloaksmoke when the player fires bullets
+	if( pPlayer->IsCloakSmoked() )
+	{
+		pPlayer->CloakSmokeShootReveal();
+	}
 #endif
 
 	int nBloodSpurts = 0;
@@ -1529,6 +1545,19 @@ void CFFPlayer::CloakSmoke( void )
 		m_iCloakSmoked = 1;
 	}
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Used to temporarily reveal the player by shooting
+//-----------------------------------------------------------------------------
+void CFFPlayer::CloakSmokeShootReveal( void )
+{
+#ifdef GAME_DLL
+	//Set the time in the future when the cloaksmoke can can re-apply it 
+	m_flCloakSmokeTempRevealTime = ( gpGlobals->curtime + CLOAKSMOKE_SHOOT_REVEAL_TIME );
+#endif
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Remove cloaksmoke

@@ -292,6 +292,12 @@ void CFFWeaponMeleeBase::Swing()
 
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation(pOwner, pOwner->GetCurrentCommand());
+
+	//small reveal on cloaksmoke when the player swings
+	if( pOwner->IsCloakSmoked() )
+	{
+		pOwner->CloakSmokeShootReveal();
+	}
 #endif
 
 	Vector swingStart = pOwner->Weapon_ShootPosition();

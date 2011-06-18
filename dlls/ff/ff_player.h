@@ -701,6 +701,8 @@ public:
 	//Returns the time cloak started -GreenMushy
 	float GetCloakTime( void ) const { return m_flCloakTime; }
 	float GetCloakSmokeRevealTime( void ) const { return m_flCloakSmokeTempRevealTime; }
+	void SetCloakSmokeRevealTime( float _flRevealTime ){ m_flCloakSmokeTempRevealTime = _flRevealTime; }
+	void CloakSmokeShootReveal( void );
 	void CloakSmoke( void );	//Specifically for the smoke grenade cloaking
 	void RemoveCloakSmoke( void ); // removing smoke grenade cloaking
 private:

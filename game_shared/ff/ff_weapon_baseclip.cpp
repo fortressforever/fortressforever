@@ -191,6 +191,12 @@ void CFFWeaponBaseClip::PrimaryAttack()
 
 #ifdef GAME_DLL
 	pPlayer->ResetDisguise();
+
+	//small reveal on cloaksmoke when the player fires bullets
+	if( pPlayer->IsCloakSmoked() )
+	{
+		pPlayer->CloakSmokeShootReveal();
+	}
 #endif
 
 	// No longer reloading (cancel any deferred ammo too)

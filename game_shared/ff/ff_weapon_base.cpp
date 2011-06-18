@@ -591,6 +591,12 @@ void CFFWeaponBase::PrimaryAttack()
 	pPlayer->ResetDisguise();
 #endif
 
+	//small reveal on cloaksmoke
+	if( pPlayer->IsCloakSmoked() )
+	{
+		pPlayer->CloakSmokeShootReveal();
+	}
+
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
 
@@ -718,7 +724,7 @@ void CFFWeaponBase::ItemPostFrame()
 			{
 				m_flNextPrimaryAttack = gpGlobals->curtime;
 			}
-
+	
 			PrimaryAttack();
 		}
 	}
