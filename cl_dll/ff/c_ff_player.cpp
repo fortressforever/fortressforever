@@ -1266,6 +1266,7 @@ C_FFPlayer::C_FFPlayer() :
 
 	memset(&m_hCrosshairInfo, 0, sizeof(m_hCrosshairInfo));
 	
+	m_bMathackDetected = false;
 
 	//Loop through all classes.
 	for (int i=1; i < 11; i++)
