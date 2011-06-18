@@ -63,33 +63,35 @@ ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_FF_FFDEV_CL
 
 #endif
 
-ConVar ffdev_slowfield_radius("ffdev_slowfield_radius", "176", FCVAR_FF_FFDEV_REPLICATED, "Radius of slowfield grenade");
-#define SLOWFIELD_RADIUS ffdev_slowfield_radius.GetFloat()
+ConVar ffdev_slowfield_radius_outer("ffdev_slowfield_radius_outer", "200", FCVAR_FF_FFDEV_REPLICATED, "Outer radius of slowfield grenade (scales from no effect to full effect at inner radius)");
+#define SLOWFIELD_RADIUS_OUTER ffdev_slowfield_radius_outer.GetFloat()
 
-ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "8", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
+ConVar ffdev_slowfield_radius_inner("ffdev_slowfield_radius_inner", "176", FCVAR_FF_FFDEV_REPLICATED, "Inner radius of slowfield grenade (where slowfield has full effect)");
+#define SLOWFIELD_RADIUS_INNER ffdev_slowfield_radius_inner.GetFloat()
+
+ConVar ffdev_slowfield_radius_power("ffdev_slowfield_radius_power", "3", FCVAR_FF_FFDEV_REPLICATED, "Power by which to raise the pecentage that a player is between inner & outer radius of the slowfield grenade (so it ramps up and feels less like a brick wall)");
+#define SLOWFIELD_RADIUS_POWER ffdev_slowfield_radius_power.GetFloat()
+
+ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "10", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
 #define SLOWFIELD_DURATION ffdev_slowfield_duration.GetFloat()
 
-ConVar ffdev_slowfield_min_slow("ffdev_slowfield_min_slow", ".20", FCVAR_FF_FFDEV_REPLICATED, "Minimum slow motion percentage of slowfield grenade");
-#define SLOWFIELD_MIN_SLOW ffdev_slowfield_min_slow.GetFloat()
+ConVar ffdev_slowfield_multiplier("ffdev_slowfield_multiplier", "28", FCVAR_FF_FFDEV_REPLICATED, "Speed multiplier (percentage) of slowfield grenade");
+#define SLOWFIELD_MULTIPLIER ffdev_slowfield_multiplier.GetFloat()
 
-ConVar ffdev_slowfield_min_slow_radius("ffdev_slowfield_min_slow_radius", "128", FCVAR_FF_FFDEV_REPLICATED, "Minimum slow motion radius of slowfield grenade");
-#define SLOWFIELD_MIN_SLOW_RADIUS ffdev_slowfield_min_slow_radius.GetFloat()
+ConVar ffdev_slowfield_power("ffdev_slowfield_power", "0.35", FCVAR_FF_FFDEV_REPLICATED, "Power by which to raise speed reduction of slowfield grenade", true, 0.0f, true, 1.0f);
+#define SLOWFIELD_POWER ffdev_slowfield_power.GetFloat()
 
-ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_FF_FFDEV_REPLICATED, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
+ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
 #define SLOWFIELD_FRIENDLYIGNORE ffdev_slowfield_friendlyignore.GetBool()
 
 ConVar ffdev_slowfield_selfignore("ffdev_slowfield_selfignore", "0", FCVAR_FF_FFDEV_REPLICATED, "When set to 1, the grenade does not affect the thrower");
 #define SLOWFIELD_SELFIGNORE ffdev_slowfield_selfignore.GetBool()
 
-ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCVAR_FF_FFDEV_REPLICATED, "When friendly fire is on, modifies the slow amount for teammates");
+ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", ".35", FCVAR_FF_FFDEV_REPLICATED, "When friendly fire is on, modifies the slow amount for teammates", true, 0.0f, true, 1.0f);
 #define SLOWFIELD_FRIENDLYSCALE ffdev_slowfield_friendlyscale.GetFloat()
 
-ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", ".35", FCVAR_FF_FFDEV_REPLICATED, "When selfignore is 0, modifies the slow amount for the thrower");
+ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", "1", FCVAR_FF_FFDEV_REPLICATED, "When selfignore is 0, modifies the slow amount for the thrower", true, 0.0f, true, 1.0f);
 #define SLOWFIELD_SELFSCALE ffdev_slowfield_selfscale.GetFloat()
-
-ConVar ffdev_slowfield_fastspeedmod_start("ffdev_slowfield_fastspeedmod_start", "750", FCVAR_FF_FFDEV_REPLICATED, "When the slowed person is above this speed, they get slowed more depending on how fast they are moving");
-#define SLOWFIELD_FASTSPEEDMOD_START ffdev_slowfield_fastspeedmod_start.GetFloat()
-
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeSlowfield C_FFGrenadeSlowfield
@@ -150,7 +152,7 @@ public:
 	virtual const char *GetBounceSound() { return "ConcussionGrenade.Bounce"; }
 	
 	virtual float GetGrenadeDamage()		{ return 0.0f; }
-	virtual float GetGrenadeRadius()		{ return SLOWFIELD_RADIUS; }
+	virtual float GetGrenadeRadius()		{ return SLOWFIELD_RADIUS_OUTER; }
 	virtual float GetShakeAmplitude()		{ return 0.0f; }
 
 	virtual Class_T Classify( void ) { return CLASS_GREN_SLOWFIELD; } 
@@ -368,7 +370,7 @@ void CFFGrenadeSlowfield::Precache()
 			// inside the radius of the gren
 			if (flDistance < GetGrenadeRadius())
 			{
-				if( SLOWFIELD_FRIENDLYIGNORE && !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+ 				if( SLOWFIELD_FRIENDLYIGNORE && !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 					continue;
 				
 				if( SLOWFIELD_SELFIGNORE && pPlayer == pSlower )
@@ -384,20 +386,29 @@ void CFFGrenadeSlowfield::Precache()
 
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+
 				float flHorizontalSpeed = vecLatVelocity.Length();
+				float flSpeedReduction = 0.0f;
+				float flDistanceMult = 1.0f;
 
-				float flFastSpeedMod = 1 / max(1.0f, flHorizontalSpeed / SLOWFIELD_FASTSPEEDMOD_START);
-
-				float flLaggedMovement;
-
-				if(flDistance < SLOWFIELD_MIN_SLOW_RADIUS)
+				//if we're scaling between outer and inner radius (linear!!)
+				//don't allow divide by zero or for inner/outer to be reversed
+				if(flDistance > SLOWFIELD_RADIUS_INNER && (SLOWFIELD_RADIUS_OUTER - SLOWFIELD_RADIUS_INNER) > 0.0f)
 				{
-					flLaggedMovement = SLOWFIELD_MIN_SLOW;
+					flDistanceMult = 1.0f - (flDistance - SLOWFIELD_RADIUS_INNER)/(SLOWFIELD_RADIUS_OUTER - SLOWFIELD_RADIUS_INNER);
 				}
-				else
+				
+				float flLaggedMovement = 1.0f;
+
+				flSpeedReduction = flHorizontalSpeed - pow( flHorizontalSpeed, SLOWFIELD_POWER ) * SLOWFIELD_MULTIPLIER;
+				flSpeedReduction *= pow( flDistanceMult, SLOWFIELD_RADIUS_POWER );
+				flSpeedReduction *= flFriendlyScale;
+
+				if(flHorizontalSpeed > 0)
 				{
-					flLaggedMovement = SimpleSplineRemapVal(flDistance, SLOWFIELD_MIN_SLOW_RADIUS, SLOWFIELD_RADIUS, min( 1.0f, (flFriendlyScale > 0) ? (SLOWFIELD_MIN_SLOW / flFriendlyScale * flFastSpeedMod) : (1.0f) ), 1.0f);
+					flLaggedMovement = flHorizontalSpeed - flSpeedReduction / flHorizontalSpeed;
 				}
+
 				// only change players active slowfield if they will be going slower
 				if (pPlayer->GetActiveSlowfield() != this && pPlayer->GetLaggedMovementValue() > flLaggedMovement)
 				{
@@ -503,7 +514,7 @@ int CFFGrenadeSlowfieldGlow::DrawModel(int flags)
 	if (!slowgren)
 		return 0;
 
-	/*
+	/* I (Elmo) presume that this commented code is a TODO/TO-DO
 	THIS SHOULD NOT STAY LIKE THIS, MAKES THE SPRITE VISIBLE TO ALL PLAYERS AT ALL TIMES
 
 	// Because we're using a NOZ sprite, need to traceline to ensure this is really
@@ -544,7 +555,7 @@ int CFFGrenadeSlowfieldGlow::DrawModel(int flags)
 		/*m_clrRender->r */ SLOWFIELD_GLOW_R, 
 		/*m_clrRender->g */ SLOWFIELD_GLOW_G, 
 		/*m_clrRender->b */ SLOWFIELD_GLOW_B, 
-		SLOWFIELD_RADIUS / 64 * SLOWFIELD_GLOW_SIZE);			// sprite scale
+		SLOWFIELD_RADIUS_INNER / 64 * SLOWFIELD_GLOW_SIZE);			// sprite scale
 
 	return drawn;
 }
