@@ -6928,10 +6928,22 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 	if( IsRiotShieldActive() == true )
 	{
 		//Get the damage source
-		//Vector vDamageSource = info.GetDamagePosition();
-		//Vector vReportedDamageSource = info.GetReportedPosition();
 		Vector vDamageSource;
-		if( _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN1) || _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN2) )
+
+		//Bail out early if the damage type is not one we indended on blocking( like fall damage )
+		if( (_info.GetDamageType() | DMG_FALL ) == DMG_FALL
+			|| (_info.GetDamageType() | DMG_DROWN ) == DMG_DROWN 
+			|| (_info.GetDamageType() | DMG_CRUSH ) == DMG_CRUSH	)
+		{
+			return false;
+		}
+
+		//Detpack is the source of this damage
+		if( _info.GetInflictor()->Classify() == CLASS_DETPACK )
+		{
+			vDamageSource = _info.GetInflictor()->GetAbsOrigin();
+		}
+		else if( _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN1) || _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN2) )
 		{
 			vDamageSource = _info.GetDamagePosition();
 		}
