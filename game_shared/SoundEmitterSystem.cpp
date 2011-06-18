@@ -1028,7 +1028,7 @@ IGameSystem *SoundEmitterSystem()
 #if defined( CLIENT_DLL )
 CON_COMMAND( cl_soundemitter_flush, "Flushes the sounds.txt system (client only)" )
 #else
-CON_COMMAND( sv_soundemitter_flush, "Flushes the sounds.txt system (server only)" )
+CON_COMMAND_F( sv_soundemitter_flush, "Flushes the sounds.txt system (server only)", FCVAR_CHEAT )
 #endif
 {
 	// save the current soundscape
@@ -1056,13 +1056,13 @@ CON_COMMAND( sv_soundemitter_flush, "Flushes the sounds.txt system (server only)
 
 #if !defined( _XBOX )
 
-CON_COMMAND( sv_soundemitter_filecheck, "Report missing wave files for sounds and game_sounds files." )
+CON_COMMAND_F( sv_soundemitter_filecheck, "Report missing wave files for sounds and game_sounds files.", FCVAR_CHEAT )
 {
 	int missing = soundemitterbase->CheckForMissingWavFiles( true );
 	DevMsg( "---------------------------\nTotal missing files %i\n", missing );
 }
 
-CON_COMMAND( sv_findsoundname, "Find sound names which reference the specified wave files." )
+CON_COMMAND_F( sv_findsoundname, "Find sound names which reference the specified wave files.", FCVAR_CHEAT )
 {
 	if ( engine->Cmd_Argc() != 2 )
 		return;
