@@ -385,9 +385,10 @@ void CFFGrenadeSlowfield::Precache()
 					flFriendlyScale = SLOWFIELD_SELFSCALE;
 
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
-				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+				//Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 
-				float flHorizontalSpeed = vecLatVelocity.Length();
+				//float flHorizontalSpeed = vecLatVelocity.Length();
+				float flHorizontalSpeed = vecVelocity.Length();
 				float flSpeedReduction = 0.0f;
 				float flDistanceMult = 1.0f;
 
@@ -405,9 +406,13 @@ void CFFGrenadeSlowfield::Precache()
 				flSpeedReduction *= flFriendlyScale;
 
 				if(flHorizontalSpeed > 0)
+				//no divide by zero
 				{
-					flLaggedMovement = flHorizontalSpeed - flSpeedReduction / flHorizontalSpeed;
+					flLaggedMovement = (flHorizontalSpeed - flSpeedReduction) / flHorizontalSpeed;
 				}
+
+				//clamp to sensible values just in case
+				flLaggedMovement = clamp( flLaggedMovement, 0.0f, 1.0f );
 
 				// only change players active slowfield if they will be going slower
 				if (pPlayer->GetActiveSlowfield() != this && pPlayer->GetLaggedMovementValue() > flLaggedMovement)
