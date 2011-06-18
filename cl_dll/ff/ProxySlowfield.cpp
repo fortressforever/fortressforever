@@ -72,8 +72,6 @@ void CProxySlowfieldSlow::OnBind(void *pC_BaseEntity)
 
 	flResultVar = clamp( flResultVar, 0.0f, 1.0f );
 	
-	Msg("resultvar: %f\n", flResultVar);
-	
 	SetFloatResult(flResultVar);
 }
 
