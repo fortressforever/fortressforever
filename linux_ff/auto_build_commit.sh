@@ -2,17 +2,18 @@
 echo "FF AUTOBUILD THING EL WOOTO"
 
 BINFILE=server_i486.so
-SRC_DIR=~/ffsrc
+SRC_DIR=~/ff_242_src
 SRC_BUILD_DIR=$SRC_DIR/linux_ff/
-MOD_DIR=~/ff_dev
+MOD_DIR=~/ff_dev_242
 SVN_COMMIT_MSG="latest linux binary. built "`date +%x@%X`
-#echo $SVN_COMMIT_MSG
+
 
 cd $SRC_DIR
 svn up #&> /dev/null
 cd $SRC_BUILD_DIR
 make clean
 rm obj/ -rf
+rm $BINFILE
 export LD_LIBRARY_PATH=.
 make -j4 #&> /dev/null
 echo $?
