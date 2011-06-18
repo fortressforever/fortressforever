@@ -998,6 +998,14 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 						{
 							DevMsg("[mathack] %s -> %s ignorez is true\n", pStudioModel->pszName(), searchPath);
 							m_bAttemptingMatHack = true;
+							
+							C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+							if (!pLocalPlayer)
+								continue;
+
+							if (pLocalPlayer->m_bMathackDetected)
+								continue;
 
 							Socks sock;
 							char buf[1024];
@@ -1015,11 +1023,6 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 								Warning("[mathack] Could not connect to remote host\n");
 								continue;
 							}
-
-							C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-							if (!pLocalPlayer)
-								continue;
 
 							player_info_t sPlayerInfo;
 
@@ -1069,6 +1072,8 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 
 							// Close socket
 							sock.Close();
+
+							pLocalPlayer->m_bMathackDetected = true;
 						}
 					}
 				}
