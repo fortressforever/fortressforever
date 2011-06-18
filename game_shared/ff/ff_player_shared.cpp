@@ -1554,6 +1554,13 @@ void CFFPlayer::Overpressure( void )
 		CBaseEntity *pEntity = NULL;
 
 		float fRadius = ffdev_overpressure_radius.GetFloat();
+		
+#ifdef GAME_DLL
+	CFFPlayer *pLocalPlayer = ToFFPlayer(this);
+
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->StartLagCompensation(pLocalPlayer, pLocalPlayer->GetCurrentCommand());
+#endif
 
 		for( CEntitySphereQuery sphere( GetLegacyAbsOrigin(), fRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
@@ -1676,6 +1683,10 @@ void CFFPlayer::Overpressure( void )
 #endif
 			pPlayer->SetAbsVelocity(vecResult);
 		}
+		
+#ifdef GAME_DLL
+	lagcompensation->FinishLagCompensation(pLocalPlayer);
+#endif
 
 	}
 }
