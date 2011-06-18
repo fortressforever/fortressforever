@@ -394,7 +394,7 @@ void CC_PrimeOne( void )
 	pLocalPlayer->EmitSound(filter, pLocalPlayer->entindex(), params);
 
 	Assert (g_pGrenade1Timer);
-	g_pGrenade1Timer->SetTimer(4.0f);
+	g_pGrenade1Timer->SetTimer(3.81f);
 
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
@@ -474,7 +474,7 @@ void CC_PrimeTwo( void )
 	pLocalPlayer->EmitSound(filter, pLocalPlayer->entindex(), params);
 
 	Assert (g_pGrenade2Timer);
-	g_pGrenade2Timer->SetTimer(4.0f);
+	g_pGrenade2Timer->SetTimer(3.81f);
 
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
