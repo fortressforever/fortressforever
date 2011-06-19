@@ -448,6 +448,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloakSmoked ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iWithinCloakSmoke ), 1, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_flCloakSmokeTempRevealTime ) ),
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
@@ -1637,6 +1638,7 @@ void CFFPlayer::SetupClassVariables()
 	// Reset Spy stuff
 	m_iCloaked = 0;
 	m_iCloakSmoked = 0;
+	m_iWithinCloakSmoke = 0;
 	m_flCloakSmokeTempRevealTime = 0.0f;
 	m_flCloakTime = 0.0f;
 	m_flNextCloak = 0.0f;
@@ -1882,6 +1884,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	//stop cloak smoke
 	m_iCloakSmoked = 0;
+	m_iWithinCloakSmoke = 0;
 	m_flCloakSmokeTempRevealTime = 0.0f;
 
 	// Beg; Added by Mulchman

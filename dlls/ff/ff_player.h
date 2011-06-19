@@ -698,18 +698,20 @@ public:
 	void Command_SpySmartCloak( void );
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
 	bool IsCloakSmoked( void ) const { return m_iCloakSmoked != 0; }
+	bool IsWithinCloakSmoke( void ) const { return m_iWithinCloakSmoke != 0; }
 	//Returns the time cloak started -GreenMushy
 	float GetCloakTime( void ) const { return m_flCloakTime; }
 	float GetCloakSmokeRevealTime( void ) const { return m_flCloakSmokeTempRevealTime; }
 	void SetCloakSmokeRevealTime( float _flRevealTime ){ m_flCloakSmokeTempRevealTime = _flRevealTime; }
 	void CloakSmokeShootReveal( void );
-	void CloakSmoke( void );	//Specifically for the smoke grenade cloaking
+	void CloakSmoke( bool _bSameTeam );	//Specifically for the smoke grenade cloaking
 	void RemoveCloakSmoke( void ); // removing smoke grenade cloaking
 private:
 	void Cloak( void );	
 	//unsigned int m_iCloaked;
 	CNetworkVar( unsigned int, m_iCloaked ); //gotta network this since lots of serverside-only code calls it, e.g. when touching a scout
 	CNetworkVar( unsigned int, m_iCloakSmoked ); // for smoke gren invisibility
+	CNetworkVar( unsigned int, m_iWithinCloakSmoke ); // to tell if enemies are inside it too
 	CNetworkVar( float, m_flCloakSmokeTempRevealTime );
 public:
 	void Overpressure( void );

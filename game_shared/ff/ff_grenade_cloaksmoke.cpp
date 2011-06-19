@@ -212,16 +212,22 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 				if( !pPlayer || pPlayer->IsObserver() )
 					continue;
 
-				if( pPlayer->GetTeamNumber() != ToFFPlayer(GetOwnerEntity())->GetTeamNumber() )
-					continue;
-
 				if( m_vCloakSmokeList.HasElement( pPlayer ) == false )
 				{
 					//Add this player to the grenade list
 					m_vCloakSmokeList.AddToTail( pPlayer );
 
-					//Tell this player to start cloaksmoking
-					pPlayer->CloakSmoke();
+					//If the player is on the grenade owner's team, cloak them
+					if( pPlayer->GetTeamNumber() == ToFFPlayer(GetOwnerEntity())->GetTeamNumber() )
+					{
+						//Tell this player to start cloaksmoking
+						pPlayer->CloakSmoke( true );
+					}
+					//Otherwise tell the player to set that they are INSIDE the radius, but not cloaked
+					else
+					{
+						pPlayer->CloakSmoke( false );
+					}
 				}
 			}
 		}

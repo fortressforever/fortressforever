@@ -1536,13 +1536,25 @@ void CFFPlayer::Cloak( void )
 //-----------------------------------------------------------------------------
 // Purpose: Apply cloaksmoke
 //-----------------------------------------------------------------------------
-void CFFPlayer::CloakSmoke( void )
+void CFFPlayer::CloakSmoke( bool _bSameTeam )
 {
 	//Make sure the player is able to be cloaksmoked
 	if( gpGlobals->curtime > GetCloakSmokeRevealTime() )
 	{
-		//Set CloakSmoke int to true
-		m_iCloakSmoked = 1;
+		//Check whether to make them invisible or to just set them to be inside the radius
+		if( _bSameTeam )
+		{
+			//Set CloakSmoke int to true
+			m_iCloakSmoked = 1;
+
+			//Also set that they are within the smoke
+			m_iWithinCloakSmoke = 1;
+		}	
+		else
+		{
+			//Only set that they are within the smoke
+			m_iWithinCloakSmoke = 1;
+		}
 	}
 }
 
@@ -1566,6 +1578,9 @@ void CFFPlayer::RemoveCloakSmoke( void )
 {
 	//Set CloakSmoke int to false
 	m_iCloakSmoked = 0;
+
+	//Set that they aren't in the radius anymore
+	m_iWithinCloakSmoke = 0;
 }
 
 //-----------------------------------------------------------------------------

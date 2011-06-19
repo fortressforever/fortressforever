@@ -822,6 +822,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
 	RecvPropInt( RECVINFO( m_iCloakSmoked ) ),
+	RecvPropInt( RECVINFO( m_iWithinCloakSmoke ) ),
 	RecvPropFloat( RECVINFO( m_flCloakSmokeTempRevealTime ) ),
 	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
 	RecvPropInt( RECVINFO( m_iActiveSabotages ) ),
@@ -832,6 +833,7 @@ BEGIN_PREDICTION_DATA( C_FFPlayer )
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_iCloaked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_iCloakSmoked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iWithinCloakSmoke, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flCloakSmokeTempRevealTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
@@ -2023,11 +2025,29 @@ int C_FFPlayer::DrawModel( int flags )
 	//Use this bool to check each frame whether to draw and appropriately apply or remove textures
 	bool bDrawModel = true;
 
+	//Get the local player?
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
 	if( IsCloakSmoked() )
 	{
-		//Disables the player model from even being drawn -GreenMushy
-		bDrawModel = false;
+		//Minor thing, if this player is the local player and they are within cloaksmoke dont draw them in third person
+		if( pLocalPlayer == this )
+		{
+			bDrawModel = false;
+		}
+		//If the local player is also cloaksmoked, draw them normally
+		else if( pLocalPlayer->IsWithinCloakSmoke() )
+		{
+			//Tell the model to draw
+			bDrawModel = true;
+		}
+		else
+		{
+			//Disables the player model from even being drawn -GreenMushy
+			bDrawModel = false;
+		}
 	}
+
 
 	// Render the player info icons during the transparent pass
 	if (flags & STUDIO_TRANSPARENCY)
@@ -2091,7 +2111,7 @@ int C_FFPlayer::DrawModel( int flags )
 
 	// If we're hallucinating, players intermittently get swapped.  But only for
 	// enemy players because we don't want the teamkills
-	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	//C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if (pLocalPlayer && pLocalPlayer->m_iHallucinationIndex && !IsLocalPlayer())
 	{
