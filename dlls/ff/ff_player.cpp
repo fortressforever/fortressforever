@@ -125,7 +125,7 @@ ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_REPLICATED ,
 #define FFDEV_DMGFORFULLSLOW_SG ffdev_dmgforfullslow_sg.GetFloat()
 
 //Shield convars
-ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum distance from the demo needed for shield blocks to occur." );
+ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "16", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum distance from the demo needed for shield blocks to occur." );
 #define FFDEV_SHIELD_MIN_BLOCK_DIST ffdev_shield_min_block_dist.GetFloat()
 
 ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Dot product fraction.  0 is 180 degree block radius.  1 will be no block.  Find a fraction in between." );
@@ -6927,8 +6927,11 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 	// check to see if the shield should block this incoming damage -GreenMushy
 	if( IsRiotShieldActive() == true )
 	{
-		//Get the damage source
+		//Vector to the point where damage is coming from
 		Vector vDamageSource;
+
+		//Vector to hold the difference between this player and the damage position
+		Vector vDisplacement;
 
 		//Bail out early if the damage type is not one we indended on blocking( like fall damage )
 		if( (_info.GetDamageType() | DMG_FALL ) == DMG_FALL
@@ -6941,11 +6944,21 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 		//Detpack is the source of this damage
 		if( _info.GetInflictor()->Classify() == CLASS_DETPACK )
 		{
+			//Use inflictor to get the detpack's position
 			vDamageSource = _info.GetInflictor()->GetAbsOrigin();
 		}
 		else if( _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN1) || _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN2) )
 		{
 			vDamageSource = _info.GetDamagePosition();
+
+			//Get the vector between the recipient and the damage origin
+			vDisplacement = vDamageSource - GetAbsOrigin();
+
+			//Early bail out if the grenade is not past a certain distance ( so they cant bug block hh's )
+			if( vDisplacement.Length() < FFDEV_SHIELD_MIN_BLOCK_DIST )
+			{
+				return false;
+			}
 		}
 		else
 		{
@@ -6953,42 +6966,38 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 		}
 
 		//Get the vector between the recipient and the damage origin
-		Vector vDisplacement = vDamageSource - GetAbsOrigin();
+		vDisplacement = vDamageSource - GetAbsOrigin();
 
-		//Only continue figuring out if the demo should block if it is above a minimum distance from the demo's origin
-		if( vDisplacement.Length() > FFDEV_SHIELD_MIN_BLOCK_DIST )
+		vDisplacement.z = 0; // for now just do x+y coordinates
+		vDisplacement.NormalizeInPlace();
+
+		//Get the direciton this player is blocking
+		Vector vFacing;
+		AngleVectors( GetLocalAngles(), &vFacing );
+		vFacing.z = 0; // for now just do x+y coordinates;
+		vFacing.NormalizeInPlace();
+
+		//See if the blocking direction is within the blocking boundary
+		float dotproduct = vFacing.Dot( vDisplacement );
+		DevMsg( "Dot Product to damage: %f\n", dotproduct );
+
+		if( dotproduct > FFDEV_SHIELD_BLOCKING_ANGLE )
 		{
-			vDisplacement.z = 0; // for now just do x+y coordinates
-			vDisplacement.NormalizeInPlace();
+			DevMsg("Successful Shield Block!\n");
 
-			//Get the direciton this player is blocking
-			Vector vFacing;
-			AngleVectors( GetLocalAngles(), &vFacing );
-			vFacing.z = 0; // for now just do x+y coordinates;
-			vFacing.NormalizeInPlace();
-
-			//See if the blocking direction is within the blocking boundary
-			float dotproduct = vFacing.Dot( vDisplacement );
-			DevMsg( "Dot Product to damage: %f\n", dotproduct );
-
-			if( dotproduct > FFDEV_SHIELD_BLOCKING_ANGLE )
-			{
-				DevMsg("Successful Shield Block!\n");
-
-				//Emit a blocking sound
-				EmitSound("Player.Shield_Block");
-				
-				//Viewpunch a little bit
-				ViewPunch(QAngle(random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f)));
-				
-				//Display some effects
-				g_pEffects->Sparks( _info.GetImpactPosition(), 2, 2 );
-				UTIL_Smoke( _info.GetImpactPosition(), random->RandomInt( 10, 15 ), 10 );
-				
-				//Return out of the function, take no damage, (successful block)
-				return true;
-			}			
-		}
+			//Emit a blocking sound
+			EmitSound("Player.Shield_Block");
+			
+			//Viewpunch a little bit
+			ViewPunch(QAngle(random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f), random->RandomFloat(-4.0f, 4.0f)));
+			
+			//Display some effects
+			g_pEffects->Sparks( _info.GetImpactPosition(), 2, 2 );
+			UTIL_Smoke( _info.GetImpactPosition(), random->RandomInt( 10, 15 ), 10 );
+			
+			//Return out of the function, take no damage, (successful block)
+			return true;
+		}			
 	}
 	//the final return!
 	return false;
