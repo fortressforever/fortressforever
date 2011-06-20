@@ -15,9 +15,9 @@
 #include "hud_macros.h"
 #include "hud_numericdisplay.h"
 
-#include "iclientmode.h"
-#include "c_ff_player.h"
-#include "ff_playerclass_parse.h"
+#include "iclientmode.h" //for animation stuff
+#include "c_ff_player.h" //for gettuing ff player
+#include "ff_playerclass_parse.h" //for parseing ff player txts
 
 #include <KeyValues.h>
 #include <vgui/IVGui.h>
