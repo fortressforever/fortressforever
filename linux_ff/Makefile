@@ -36,11 +36,8 @@ USER_CFLAGS=
 #LDFLAGS="-lm -ldl $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so"
 
 #LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a tier1_i486.a"
-
-LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl  tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a  tier1_i486.a"
-
+LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl  tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a tier1_i486.a"
 #LDFLAGS="-lm tier0_i486.so vstdlib_i486.so"
-
 # XERCES 2.6.0 or above ( http://xml.apache.org/xerces-c/ ) is used by the vcproj to makefile converter
 # it must be installed before being able to run this makefile
 #XERCES_INC_DIR=/home/alfred/tmp/xerces-c-src_2_6_0/include

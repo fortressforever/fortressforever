@@ -7,9 +7,8 @@ SRC_BUILD_DIR=$SRC_DIR/linux_ff/
 MOD_DIR=~/srcds/ff_dev/
 SVN_COMMIT_MSG="latest linux binary. built "`date +%x@%X`
 
-
 cd $SRC_DIR
-svn up &> /dev/null
+svn up #&> /dev/null
 cd $SRC_BUILD_DIR
 rm obj/ -rf
 rm $BINFILE
