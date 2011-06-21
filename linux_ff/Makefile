@@ -16,23 +16,29 @@ MOD_PROJ=../dlls/server_scratch-2003.vcproj
 MOD_CONFIG=server_ff_ReleaseFFWin32
 
 # the directory the base binaries (tier0_i486.so, etc) are located
-#GAME_DIR=../../
-GAME_DIR=~/srcds
+#GAME_DIR=../../srcds
+GAME_DIR=/home/ffdev/srcds
 
 # compiler options (gcc 3.4.1 or above is required)
-CC=gcc-3.4.4
-CPLUS=g++-3.4.4
-CLINK=gcc-3.4.4
+#dexter - edited for 'gcc34' for 3.4.6 bins on CentOS 5
+CC=gcc34
+CPLUS=g++34
+CLINK=gcc34
 #CPP_LIB="/usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.5/libstdc++.a /usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.5/libgcc_eh.a"
-CPP_LIB="/usr/lib/gcc/i686-pc-linux-gnu/3.4.4/libstdc++.a /usr/lib/gcc/i686-pc-linux-gnu/3.4.4/libgcc_eh.a"
-
+#CPP_LIB="/usr/lib/gcc/i386-redhat-linux/3.4.3/libstdc++.a /usr/lib/gcc/i386-redhat-linux/3.4.3/libgcc_eh.a"
+# dexter - FUUUUUUUU here is path to 3.4.6 on CentOS 5
+CPP_LIB="/usr/lib/gcc/i386-redhat-linux/3.4.6/libstdc++.a /usr/lib/gcc/i386-redhat-linux/3.4.6/libgcc_eh.a"
 # put any compiler flags you want passed here
-USER_CFLAGS=-g
-#USER_CFLAGS=
+# DEBUG - USER_CFLAGS=-g
+USER_CFLAGS=
 
 # link flags for your mod, make sure to include any special libraries here
 #LDFLAGS="-lm -ldl $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so"
-LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a tier1_i486.a"
+
+#LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a tier1_i486.a"
+
+LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl  tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a  tier1_i486.a"
+
 #LDFLAGS="-lm tier0_i486.so vstdlib_i486.so"
 
 # XERCES 2.6.0 or above ( http://xml.apache.org/xerces-c/ ) is used by the vcproj to makefile converter
@@ -40,7 +46,7 @@ LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ld
 #XERCES_INC_DIR=/home/alfred/tmp/xerces-c-src_2_6_0/include
 #XERCES_LIB_DIR=/home/alfred/tmp/xerces-c-src_2_6_0/lib
 # if you have xerces installed already you should be able to use the two lines below
-XERCES_INC_DIR=/usr/include/xercesc
+XERCES_INC_DIR=/usr/include
 XERCES_LIB_DIR=/usr/lib
 
 
