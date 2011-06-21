@@ -770,7 +770,8 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	// Adding so projectiles dont collide with players -GreenMushy
 	if ( collisionGroup1 == COLLISION_GROUP_PROJECTILE )
 	{
-		if ( collisionGroup0 == COLLISION_GROUP_DEBRIS || 
+		if ( collisionGroup0 == COLLISION_GROUP_DEBRIS ||
+			collisionGroup0 == COLLISION_GROUP_INTERACTIVE ||
 			collisionGroup0 == COLLISION_GROUP_WEAPON ||
 			collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
 			collisionGroup0 == COLLISION_GROUP_PLAYER)
