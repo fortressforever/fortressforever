@@ -64,6 +64,8 @@ void CHudBuildTimer::SetBuildTimer(int iBuildType, float flDuration)
 			m_pIconTexture = NULL;
 			m_fVisible = false;
 			m_flDuration = 0.0f;
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
 			return;
 		case FF_BUILD_DISPENSER:
 			m_pIconTexture = m_pDispenserIconTexture;
@@ -168,8 +170,8 @@ void CHudBuildTimer::Paint()
 {
 	if(m_pIconTexture)
 	{
-		int iconWide = m_pIconTexture->Width();
-		int iconTall = m_pIconTexture->Height();
+		int iconWide = 32.0f; //m_pIconTexture->Width();
+		int iconTall = 32.0f; //m_pIconTexture->Height();
 		
 		m_pIconTexture->DrawSelf( bar_xpos - 2/*boarderwidth*/ - iconWide - icon_offset, bar_ypos + bar_height/2 - iconTall/2, iconWide, iconTall, m_HudForegroundColour );
 	}
