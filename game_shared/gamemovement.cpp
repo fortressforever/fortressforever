@@ -596,7 +596,8 @@ void CGameMovement::CheckParameters( void )
 		}
 	}
 
-	if ( !m_bSpeedCropped && ( mv->m_nButtons & IN_SPEED ) && !(mv->m_nButtons & IN_DUCK) && !( player->m_Local.m_bDucked && !player->m_Local.m_bDucking ))
+	// squeek: transition from walk -> crouch brought you back to full speed; only stop cropping speed when the player is fully ducked
+	if ( !m_bSpeedCropped && ( mv->m_nButtons & IN_SPEED ) /*&& !(mv->m_nButtons & IN_DUCK)*/ && !( player->m_Local.m_bDucked /*&& !player->m_Local.m_bDucking*/ ))
 	{
 		// Bug ID #0000363: +speed command not fully implemented
 		float frac = 0.5f;
