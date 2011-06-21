@@ -15,9 +15,9 @@
 #include "hud_macros.h"
 #include "hud_numericdisplay.h"
 
-#include "iclientmode.h"
-#include "c_ff_player.h"
-#include "ff_playerclass_parse.h"
+#include "iclientmode.h" //for animation stuff
+#include "c_ff_player.h" //for gettuing ff player
+#include "ff_playerclass_parse.h" //for parseing ff player txts
 
 #include <KeyValues.h>
 #include <vgui/IVGui.h>
@@ -93,15 +93,14 @@ void CHudGrenade2::Reset()
 //-----------------------------------------------------------------------------
 void CHudGrenade2::OnTick() 
 {
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-
-	if (!player) 
-		return;
-
-	C_FFPlayer *ffplayer = ToFFPlayer(player);
+	C_FFPlayer *ffplayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if (!ffplayer) 
+	{
+		SetPaintEnabled(false);
+		SetPaintBackgroundEnabled(false);
 		return;
+	}
 
 	int iClass = ffplayer->GetClassSlot();
 	int iGrenade2 = ffplayer->m_iSecondary;
@@ -117,14 +116,8 @@ void CHudGrenade2::OnTick()
 	else if(m_iClass != iClass)
 	{
 		m_iClass = iClass;
-		if (!ffplayer) 
-		{
-			SetPaintEnabled(false);
-			SetPaintBackgroundEnabled(false);
-			return;
-		}
 
-		// Class doesn't have grenades
+		// Class doesn't have grenades (not sure this check is valid but we check again later)
 		if (iGrenade2 == -1) 
 		{
 			SetPaintEnabled(false);
@@ -178,6 +171,12 @@ void CHudGrenade2::OnTick()
 			Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
 
 			iconTexture = gHUD.GetIcon(grenade_icon_name);
+		}
+		else
+		//Player doesn't have grenades
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
 		}
 	}
 	else

@@ -1,16 +1,3 @@
-/********************************************************************
-	created:	2006/02/04
-	created:	4:2:2006   20:02
-	filename: 	f:\cvs\code\cl_dll\ff\ff_hud_grenade2timer.cpp
-	file path:	f:\cvs\code\cl_dll\ff
-	file base:	ff_hud_grenade2timer
-	file ext:	cpp
-	author:		Gavin "Mirvin_Monkey" Bramhill
-	
-	purpose:	For now this is just a straight copy
-				THIS WILL BE SORTED AT A LATER DATE OKAY!!
-*********************************************************************/
-
 #include "cbase.h"
 #include "hudelement.h"
 #include "hud_macros.h"
@@ -21,16 +8,27 @@
 #include "ff_hud_grenade2timer.h"
 #include "ff_playerclass_parse.h"
 
-#include <KeyValues.h>
 #include <vgui/IVGui.h>
 #include <vgui/ISurface.h>
 #include <vgui_controls/AnimationController.h>
+
+#include "c_playerresource.h"
+extern C_PlayerResource *g_PR;
+
+extern ConVar cl_teamcolourhud;
 
 using namespace vgui;
 
 CHudGrenade2Timer *g_pGrenade2Timer = NULL;
 
 DECLARE_HUDELEMENT(CHudGrenade2Timer);
+
+
+CHudGrenade2Timer::CHudGrenade2Timer(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudGrenade2Timer") 
+{
+	SetParent( g_pClientMode->GetViewport() );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
+}
 
 CHudGrenade2Timer::~CHudGrenade2Timer() 
 {
@@ -41,10 +39,7 @@ void CHudGrenade2Timer::Init()
 	g_pGrenade2Timer = this;
 	ivgui()->AddTickSignal( GetVPanel(), 100 );
 
-	m_Timers.RemoveAll();
-	m_fVisible = false;
-	m_flLastTime = -10.0f;
-	m_iClass = 0;
+	ResetTimer();
 }
 
 void CHudGrenade2Timer::SetTimer(float duration) 
@@ -52,7 +47,6 @@ void CHudGrenade2Timer::SetTimer(float duration)
 	// Fade it in if needed
 	if (!m_fVisible) 
 	{
-		SetAlpha(0);
 		m_fVisible = true;
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("FadeInGrenade2Timer");
 	}
@@ -70,6 +64,7 @@ void CHudGrenade2Timer::ResetTimer( void )
 	m_fVisible = false;
 	m_flLastTime = -10.0f;
 	m_iClass = 0;
+	m_iTeam = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -87,19 +82,24 @@ void CHudGrenade2Timer::MsgFunc_FF_Grenade1Timer(bf_read &msg)
 	SetTimer(duration);
 }
 
+void CHudGrenade2Timer::ApplySchemeSettings(IScheme *pScheme)
+{
+	m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
+	m_HudBackgroundColour = GetSchemeColor("HudItem.Background", pScheme);
+	m_TeamColorHudBackgroundColour = GetSchemeColor("TeamColorHud.BackgroundAlpha", pScheme);
+
+	BaseClass::ApplySchemeSettings(pScheme);
+}
+
 void CHudGrenade2Timer::OnTick()
 {
-	CBasePlayer *player = CBasePlayer::GetLocalPlayer();
-
-	if (!player) 
-		return;
-
-	C_FFPlayer *ffplayer = ToFFPlayer(player);
+	CFFPlayer *ffplayer = CFFPlayer::GetLocalFFPlayer();
 
 	if (!ffplayer) 
 		return;
 
 	int iClass = ffplayer->GetClassSlot();
+	int iTeam = ffplayer->GetTeamNumber();
 
 	//if no class
 	if(iClass == 0)
@@ -131,6 +131,13 @@ void CHudGrenade2Timer::OnTick()
 
 		if ( strcmp( pClassInfo->m_szSecondaryClassName, "None" ) != 0 )
 		{
+			if(m_iTeam != iTeam)
+			{
+				m_iTeam = iTeam;
+				Color newTeamColor = g_PR->GetTeamColor(m_iTeam);
+				m_TeamColorHudBackgroundColour.SetColor(newTeamColor.r(), newTeamColor.g(), newTeamColor.b(), m_TeamColorHudBackgroundColour.a());
+			}
+
 			const char *grenade_name = pClassInfo->m_szSecondaryClassName;
 
 			//if grenade names start with ff_
@@ -145,7 +152,12 @@ void CHudGrenade2Timer::OnTick()
 
 			Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
 
-			iconTexture = gHUD.GetIcon(grenade_icon_name);
+			m_pIconTexture = gHUD.GetIcon(grenade_icon_name);
+		}
+		else
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
 		}
 	}
 
@@ -172,19 +184,33 @@ void CHudGrenade2Timer::OnTick()
 	}
 }
 
+void CHudGrenade2Timer::PaintBackground() 
+{
+	// Draw progress bar background
+	if(cl_teamcolourhud.GetBool())
+		surface()->DrawSetColor(m_TeamColorHudBackgroundColour);
+	else
+		surface()->DrawSetColor(m_HudBackgroundColour);
+	surface()->DrawFilledRect(bar_xpos, bar_ypos, bar_xpos + bar_width, bar_ypos + bar_height);
+
+	// Draw progress bar border
+	surface()->DrawSetColor(m_HudForegroundColour);
+	surface()->DrawOutlinedRect(bar_xpos-1, bar_ypos-1, bar_xpos + bar_width+1, bar_ypos + bar_height+1);
+	surface()->DrawOutlinedRect(bar_xpos-2, bar_ypos-2, bar_xpos + bar_width+2, bar_ypos + bar_height+2);
+}
+
 void CHudGrenade2Timer::Paint() 
 {
-	if(iconTexture)
+	if(m_pIconTexture)
 	{
-		int iconWide = iconTexture->Width();
-		int iconTall = iconTexture->Height();
+		int iconWide = m_pIconTexture->Width();
+		int iconTall = m_pIconTexture->Height();
 
-		iconTexture->DrawSelf( 5, iconTall - bar_height / 2, iconWide, iconTall, m_HudForegroundColour );
+		m_pIconTexture->DrawSelf( bar_xpos - 2/*boarderwidth*/ - iconWide - icon_offset, bar_ypos + bar_height/2 - iconTall/2, iconWide, iconTall, m_HudForegroundColour );
 	}
 
 	int num_timers = m_Timers.Count();
 	int timer_to_remove = -1;
-
 	float timer_height = bar_height / num_timers;
 	float bar_newypos = bar_ypos;
 
@@ -205,9 +231,9 @@ void CHudGrenade2Timer::Paint()
 
 			// Draw progress bar
 			if (amount < 0.15f || ( bIsLastTimer && pPlayer && pPlayer->m_iGrenadeState == FF_GREN_PRIMETWO ))
-				surface()->DrawSetColor(bar_color.r(), bar_color.g(), bar_color.b(), bar_color.a());
+				surface()->DrawSetColor(m_HudForegroundColour);
 			else
-				surface()->DrawSetColor(bar_color.r(), bar_color.g(), bar_color.b(), bar_color.a() * 0.3f);
+				surface()->DrawSetColor(m_HudForegroundColour.r(), m_HudForegroundColour.g(), m_HudForegroundColour.b(), m_HudForegroundColour.a() * 0.3f);
 
 			surface()->DrawFilledRect(bar_xpos, bar_newypos, bar_xpos + bar_width * amount, bar_newypos + timer_height);
 

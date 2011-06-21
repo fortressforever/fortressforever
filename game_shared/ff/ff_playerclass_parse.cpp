@@ -319,14 +319,14 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 	m_iSpeed			= pKeyValuesData->GetInt("speed", 0);
 
 	// Grenade types
-	Q_strncpy(m_szPrimaryClassName, pKeyValuesData->GetString("primary_classname", PLAYERCLASS_PRINTNAME_MISSING), MAX_PLAYERCLASS_STRING);
-	Q_strncpy(m_szSecondaryClassName, pKeyValuesData->GetString("secondary_classname", PLAYERCLASS_PRINTNAME_MISSING), MAX_PLAYERCLASS_STRING);
+	Q_strncpy(m_szPrimaryClassName, pKeyValuesData->GetString("primary_classname", "None"), MAX_PLAYERCLASS_STRING);
+	Q_strncpy(m_szSecondaryClassName, pKeyValuesData->GetString("secondary_classname", "None"), MAX_PLAYERCLASS_STRING);
 
 	// Grenade numbers
-	m_iPrimaryInitial	= pKeyValuesData->GetInt("primary_initial", 0);
-	m_iPrimaryMax		= pKeyValuesData->GetInt("primary_max", 0);
-	m_iSecondaryInitial	= pKeyValuesData->GetInt("secondary_initial", 0);
-	m_iSecondaryMax		= pKeyValuesData->GetInt("secondary_max", 0);
+	m_iPrimaryInitial	= pKeyValuesData->GetInt("primary_initial", -1);
+	m_iPrimaryMax		= pKeyValuesData->GetInt("primary_max", -1);
+	m_iSecondaryInitial	= pKeyValuesData->GetInt("secondary_initial", -1);
+	m_iSecondaryMax		= pKeyValuesData->GetInt("secondary_max", -1);
 
 	// Make sure two player classes aren't in the same slot
 	if (g_bUsedPlayerClassSlots[m_iSlot]) 

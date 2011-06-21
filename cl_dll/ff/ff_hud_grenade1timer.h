@@ -2,10 +2,11 @@
 #define FF_HUD_GRENADE1TIMER_H
 
 #include "cbase.h"
-#include "ff_panel.h"
+#include <vgui_controls/Panel.h>
 
+using namespace vgui;
 
-class CHudGrenade1Timer : public CHudElement, public vgui::FFPanel
+class CHudGrenade1Timer : public CHudElement, public Panel
 {
 private:
 	typedef struct timer_s
@@ -21,34 +22,35 @@ private:
 
 	} timer_t;
 
-	DECLARE_CLASS_SIMPLE(CHudGrenade1Timer, vgui::FFPanel);
+	DECLARE_CLASS_SIMPLE(CHudGrenade1Timer, Panel);
 
 	CUtlLinkedList<timer_t> m_Timers;
 	int m_iClass;
+	int m_iTeam;
 	bool m_fVisible;
 	float m_flLastTime;
-	CHudTexture *iconTexture;
+	CHudTexture *m_pIconTexture;
+	
+	Color m_HudForegroundColour;
+	Color m_HudBackgroundColour;
+	Color m_TeamColorHudBackgroundColour;
 
 	CPanelAnimationVarAliasType(float, bar_xpos, "bar_xpos", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_ypos, "bar_ypos", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_width, "bar_width", "1", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_height, "bar_height", "1", "proportional_float");
-	CPanelAnimationVarAliasType(Color, bar_color, "bar_color", "255 255 255", "color");
-	CPanelAnimationVarAliasType(float, icon_xpos, "icon_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_ypos, "icon_ypos", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, icon_offset, "icon_offset", "2", "proportional_float");
 
 public:
-	CHudGrenade1Timer(const char *pElementName) : CHudElement(pElementName), vgui::FFPanel(NULL, "HudGrenade1Timer") 
-	{
-		SetParent( g_pClientMode->GetViewport() );
-		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
-	}
+	CHudGrenade1Timer(const char *pElementName);
 
 	~CHudGrenade1Timer();
 
-	void	Init();
-	void	Paint();
-	void	OnTick();
+	virtual void	Init();
+	virtual void	Paint();
+	virtual void	PaintBackground();
+	virtual void	OnTick();
+	virtual void	ApplySchemeSettings(IScheme *pScheme);
 
 	void	SetTimer(float duration);
 	bool	ActiveTimer( void ) const;
