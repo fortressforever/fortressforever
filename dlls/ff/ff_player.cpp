@@ -3536,7 +3536,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			CSingleUserRecipientFilter user( this );
 			user.MakeReliable();
 			UserMessageBegin( user, "FF_BuildTimer" );
-				WRITE_SHORT( m_iCurBuild );
+				WRITE_SHORT( FF_BUILD_NONE );
 				WRITE_FLOAT( 0 );
 			MessageEnd();
 
