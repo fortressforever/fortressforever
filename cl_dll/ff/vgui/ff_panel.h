@@ -23,6 +23,8 @@ namespace vgui
 {
 	class FFPanel : public Panel
 	{
+		DECLARE_CLASS_SIMPLE( FFPanel, Panel ); 
+
 	public:
 		FFPanel() : Panel() { InitFFPanel(); }
 		FFPanel(Panel *parent) : Panel(parent) { InitFFPanel(); }
