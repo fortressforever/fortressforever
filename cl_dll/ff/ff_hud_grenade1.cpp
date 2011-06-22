@@ -18,6 +18,7 @@
 #include "iclientmode.h" //for animation stuff
 #include "c_ff_player.h" //for gettuing ff player
 #include "ff_playerclass_parse.h" //for parseing ff player txts
+#include "ff_grenade_parse.h" //for parseing ff gren txts
 
 #include <KeyValues.h>
 #include <vgui/IVGui.h>
@@ -165,18 +166,15 @@ void CHudGrenade1::OnTick()
 		{
 			const char *grenade_name = pClassInfo->m_szPrimaryClassName;
 
-			//if grenade names start with ff_
-			if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
-			//remove ff_
-			{
-				grenade_name += 3;
-			}
-			
-			char grenade_icon_name[MAX_PLAYERCLASS_STRING + 3];
+			GRENADE_FILE_INFO_HANDLE hGrenInfo = LookupGrenadeInfoSlot(grenade_name);
+			if (!hGrenInfo)
+				return;
 
-			Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
+			CFFGrenadeInfo *pGrenInfo = GetFileGrenadeInfoFromHandle(hGrenInfo);
+			if (!pGrenInfo)
+				return;
 
-			iconTexture = gHUD.GetIcon(grenade_icon_name);
+			iconTexture = pGrenInfo->iconHud;
 		}
 	}
 	else
