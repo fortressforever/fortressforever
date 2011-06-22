@@ -125,7 +125,7 @@ ConVar ffdev_dmgforfullslow_sg("ffdev_dmgforfullslow_sg","90",FCVAR_REPLICATED ,
 #define FFDEV_DMGFORFULLSLOW_SG ffdev_dmgforfullslow_sg.GetFloat()
 
 //Shield convars
-ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "16", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum distance from the demo needed for shield blocks to occur." );
+ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum distance from the demo needed for shield blocks to occur." );
 #define FFDEV_SHIELD_MIN_BLOCK_DIST ffdev_shield_min_block_dist.GetFloat()
 
 ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Dot product fraction.  0 is 180 degree block radius.  1 will be no block.  Find a fraction in between." );
@@ -6927,6 +6927,13 @@ bool CFFPlayer::HasItem(const char* itemname) const
 //------------------------------------------------------------------------------------------
 bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 {
+	//No need to run this code if ur not a demoman atm is there? -GreenMushy
+	if( GetClassSlot() != CLASS_DEMOMAN )
+	{
+		//Bail out, no block
+		return false;
+	}
+
 	// check to see if the shield should block this incoming damage -GreenMushy
 	if( IsRiotShieldActive() == true )
 	{
@@ -6952,24 +6959,37 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 		}
 		else if( _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN1) || _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN2) )
 		{
-			vDamageSource = _info.GetDamagePosition();
+			//Get the grenade that is doing the damage
+			CFFGrenadeBase* pGrenade = ((CFFGrenadeBase *)_info.GetInflictor());
 
-			//Get the vector between the recipient and the damage origin
-			vDisplacement = vDamageSource - GetAbsOrigin();
-
-			//Early bail out if the grenade is not past a certain distance ( so they cant bug block hh's )
-			if( vDisplacement.Length() < FFDEV_SHIELD_MIN_BLOCK_DIST )
+			//Check if it is owned by this player
+			if( ToFFPlayer(pGrenade->GetOwnerEntity()) == this )
 			{
-				return false;
+				//If the grenade is set to handheld, dont block it
+				if( pGrenade->m_fIsHandheld == true )
+				{
+					//Bail out, no block
+					return false;
+				}
 			}
+
+			//Get the grenade position?
+			vDamageSource = _info.GetDamagePosition();
 		}
 		else
 		{
-			vDamageSource = _info.GetAttacker()->GetAbsOrigin();
+			//vDamageSource = _info.GetAttacker()->GetAbsOrigin();
+			vDamageSource = _info.GetDamagePosition();
 		}
 
 		//Get the vector between the recipient and the damage origin
 		vDisplacement = vDamageSource - GetAbsOrigin();
+
+		//Early bail out if the damage is not far enough away
+		if( vDisplacement.Length() < FFDEV_SHIELD_MIN_BLOCK_DIST )
+		{
+			return false;
+		}
 
 		vDisplacement.z = 0; // for now just do x+y coordinates
 		vDisplacement.NormalizeInPlace();
