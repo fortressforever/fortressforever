@@ -43,6 +43,7 @@ public:
 	virtual void	PaintBackground();
 	virtual void	OnTick();
 	virtual void	ApplySchemeSettings(IScheme *pScheme);
+	virtual void	Reset();
 
 	void	SetBuildTimer(int iBuildType, float flDuration);
 
