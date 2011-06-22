@@ -7,6 +7,7 @@
 
 #include "ff_hud_grenade2timer.h"
 #include "ff_playerclass_parse.h"
+#include "ff_grenade_parse.h"
 
 #include <vgui/IVGui.h>
 #include <vgui/ISurface.h>
@@ -140,19 +141,15 @@ void CHudGrenade2Timer::OnTick()
 
 			const char *grenade_name = pClassInfo->m_szSecondaryClassName;
 
-			//if grenade names start with ff_
-			if( Q_strnicmp( grenade_name, "ff_", 3 ) == 0 )
-			//remove ff_
-			{
-				grenade_name += 3;
-			}
+			GRENADE_FILE_INFO_HANDLE hGrenInfo = LookupGrenadeInfoSlot(grenade_name);
+			if (!hGrenInfo)
+				return;
 
-			
-			char grenade_icon_name[MAX_PLAYERCLASS_STRING + 3];
+			CFFGrenadeInfo *pGrenInfo = GetFileGrenadeInfoFromHandle(hGrenInfo);
+			if (!pGrenInfo)
+				return;
 
-			Q_snprintf( grenade_icon_name, sizeof(grenade_icon_name), "death_%s", grenade_name );
-
-			m_pIconTexture = gHUD.GetIcon(grenade_icon_name);
+			m_pIconTexture = pGrenInfo->iconHud;
 		}
 		else
 		{
@@ -206,7 +203,7 @@ void CHudGrenade2Timer::Paint()
 		int iconWide = m_pIconTexture->Width();
 		int iconTall = m_pIconTexture->Height();
 
-		m_pIconTexture->DrawSelf( bar_xpos - 2/*boarderwidth*/ - iconWide - icon_offset, bar_ypos + bar_height/2 - iconTall/2, iconWide, iconTall, m_HudForegroundColour );
+		m_pIconTexture->DrawSelf( bar_xpos - 2/*boarderwidth*/ - iconWide - icon_offset, bar_ypos + bar_height/2 - iconTall/2, iconWide, iconTall, icon_color );
 	}
 
 	int num_timers = m_Timers.Count();
