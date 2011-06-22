@@ -38,11 +38,7 @@ void CHudBuildTimer::Init()
 	
 	ivgui()->AddTickSignal( GetVPanel(), 100 );
 
-	m_fVisible = false;
-	m_iBuildType = 0;	
-	m_iTeam = -1;
-	m_flStartTime = 0.0f;
-	m_flDuration = 0.0f;
+	Reset();
 }
 
 void CHudBuildTimer::VidInit()
@@ -51,6 +47,20 @@ void CHudBuildTimer::VidInit()
 	m_pSentrygunIconTexture = gHUD.GetIcon("build_sentrygun");
 	m_pDetpackIconTexture = gHUD.GetIcon("build_detpack");
 	m_pMancannonIconTexture = gHUD.GetIcon("build_jumppad");
+
+	Reset();
+}
+
+void CHudBuildTimer::Reset()
+{
+	m_fVisible = false;
+	m_iBuildType = 0;	
+	m_iTeam = -1;
+	m_flStartTime = 0.0f;
+	m_flDuration = 0.0f;
+	
+	SetPaintEnabled(false);
+	SetPaintBackgroundEnabled(false);
 }
 
 void CHudBuildTimer::SetBuildTimer(int iBuildType, float flDuration) 
@@ -61,11 +71,7 @@ void CHudBuildTimer::SetBuildTimer(int iBuildType, float flDuration)
 		switch(iBuildType)
 		{
 		case FF_BUILD_NONE: //cancel build timer
-			m_pIconTexture = NULL;
-			m_fVisible = false;
-			m_flDuration = 0.0f;
-			SetPaintEnabled(false);
-			SetPaintBackgroundEnabled(false);
+			Reset();
 			return;
 		case FF_BUILD_DISPENSER:
 			m_pIconTexture = m_pDispenserIconTexture;
