@@ -239,7 +239,7 @@ void CHudGrenade1Timer::Paint()
 			float amount = clamp((gpGlobals->curtime - timer->m_flStartTime) / timer->m_flDuration, 0, 1.0f);
 
 			// Draw progress bar
-			if (amount < 0.15f || ( bIsLastTimer && pPlayer && pPlayer->m_iGrenadeState == FF_GREN_PRIMETWO ))
+			if (amount < 0.15f || ( bIsLastTimer && pPlayer && pPlayer->m_iGrenadeState == FF_GREN_PRIMEONE ))
 				surface()->DrawSetColor(m_HudForegroundColour.r(), m_HudForegroundColour.g(), m_HudForegroundColour.b(), m_HudForegroundColour.a());
 			else
 				surface()->DrawSetColor(m_HudForegroundColour.r(), m_HudForegroundColour.g(), m_HudForegroundColour.b(), m_HudForegroundColour.a() * 0.3f);
