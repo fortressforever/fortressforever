@@ -106,8 +106,8 @@ void CHudGrenade2::OnTick()
 	int iClass = ffplayer->GetClassSlot();
 	int iGrenade2 = ffplayer->m_iSecondary;
 
-	//if no class
-	if(iClass == 0)
+	//if no class or class doesn't have grenades
+	if(iClass == 0 || iGrenade2 == -1)
 	{
 		SetPaintEnabled(false);
 		SetPaintBackgroundEnabled(false);
@@ -118,13 +118,6 @@ void CHudGrenade2::OnTick()
 	{
 		m_iClass = iClass;
 
-		// Class doesn't have grenades (not sure this check is valid but we check again later)
-		if (iGrenade2 == -1) 
-		{
-			SetPaintEnabled(false);
-			SetPaintBackgroundEnabled(false);
-			return;
-		}
 		const char *szClassNames[] = { 
 			"scout", "sniper", "soldier", 
 			"demoman", "medic", "hwguy", 
