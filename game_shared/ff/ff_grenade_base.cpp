@@ -220,10 +220,8 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeBase::ClientThink()
 	{
-		// Remove if we're nolonger in the world
 		if (!IsInWorld())
 		{
-			Remove();
 			return;
 		}
 
