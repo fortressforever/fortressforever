@@ -219,10 +219,8 @@ ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_FF_FFDEV_REPL
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeBase::ClientThink()
 	{
-		// Remove if we're nolonger in the world
 		if (!IsInWorld())
 		{
-			Remove();
 			return;
 		}
 
