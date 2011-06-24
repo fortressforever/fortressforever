@@ -93,21 +93,20 @@ void CHudGrenade1::Reset()
 //-----------------------------------------------------------------------------
 void CHudGrenade1::OnTick() 
 {
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-	
-	if (!player) 
-		return;
-
-	C_FFPlayer *ffplayer = ToFFPlayer(player);
+	C_FFPlayer *ffplayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if (!ffplayer) 
+	{
+		SetPaintEnabled(false);
+		SetPaintBackgroundEnabled(false);
 		return;
+	}
 
 	int iClass = ffplayer->GetClassSlot();
 	int iGrenade1 = ffplayer->m_iPrimary;
 
-	//if no class
-	if(iClass == 0)
+	//if no class or class doesn't have grenades
+	if(iClass == 0 || iGrenade1 == -1)
 	{
 		SetPaintEnabled(false);
 		SetPaintBackgroundEnabled(false);
@@ -117,20 +116,7 @@ void CHudGrenade1::OnTick()
 	else if(m_iClass != iClass)
 	{
 		m_iClass = iClass;
-		if (!ffplayer) 
-		{
-			SetPaintEnabled(false);
-			SetPaintBackgroundEnabled(false);
-			return;
-		}
 
-		// Class doesn't have grenades
-		if (iGrenade1 == -1) 
-		{
-			SetPaintEnabled(false);
-			SetPaintBackgroundEnabled(false);
-			return;
-		}
 		const char *szClassNames[] = { 
 			"scout", "sniper", "soldier", 
 			"demoman", "medic", "hwguy", 
@@ -175,6 +161,12 @@ void CHudGrenade1::OnTick()
 				return;
 
 			iconTexture = pGrenInfo->iconHud;
+		}
+		else
+		//Player doesn't have grenades
+		{
+			SetPaintEnabled(false);
+			SetPaintBackgroundEnabled(false);
 		}
 	}
 	else
