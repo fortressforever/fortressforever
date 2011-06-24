@@ -197,11 +197,10 @@ void CHudGrenade1::SetGrenade(int iGrenade, bool playAnimation)
 			// ammunition has increased
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("GrenadeIncreased");
 		}
-
-		m_iGrenade = iGrenade;
-
-		SetDisplayValue(m_iGrenade);
 	}
+	m_iGrenade = iGrenade;
+
+	SetDisplayValue(m_iGrenade);
 }
 
 void CHudGrenade1::Paint() 
