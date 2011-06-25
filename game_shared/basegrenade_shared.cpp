@@ -297,12 +297,14 @@ void CBaseGrenade::PreDetonate( void )
 
 void CBaseGrenade::Detonate( void )
 {
+#ifdef GAME_DLL
 	// Verify our owner is still here!
 	if( !GetOwnerEntity() )
 	{
 		Remove();
 		return;
 	}
+#endif
 
 	trace_t		tr;
 	Vector		vecSpot;// trace starts here!
