@@ -141,6 +141,9 @@ class PseudoNail
 			if (traceHit.m_pEnt)
 			{
 				CBaseEntity *pTarget = traceHit.m_pEnt;
+
+				if (!pTarget)
+					return false;
 				
 				// only interested in players, dispensers & sentry guns
 				if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN )
@@ -151,7 +154,8 @@ class PseudoNail
 						if (traceHit.m_pEnt->IsPlayer() )
 						{
 							CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
-							pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt(), DMG_BULLET ) );
+							if (pPlayerTarget)
+								pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt(), DMG_BULLET ) );
 						}
 						else if( FF_IsDispenser( pTarget ) )
 						{
@@ -431,6 +435,9 @@ float CFFGrenadeLaser::getLengthPercent()
 
 	void CFFGrenadeLaser::DoDamage( CBaseEntity *pTarget )
 	{
+		if (!pTarget)
+			return;
+
 		// only interested in players, dispensers & sentry guns
 		if ( pTarget->IsPlayer() || pTarget->Classify() == CLASS_DISPENSER || pTarget->Classify() == CLASS_SENTRYGUN || pTarget->Classify() == CLASS_MANCANNON )
 		{
@@ -440,6 +447,9 @@ float CFFGrenadeLaser::getLengthPercent()
 				if (pTarget->IsPlayer() )
 				{
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+					if (!pPlayerTarget)
+						return;
+
 					CTakeDamageInfo info = CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK, DMG_ENERGYBEAM );
 					//Adding the position for demoman shield blocks -GreenMushy
 					info.SetDamagePosition( GetAbsOrigin() );
@@ -615,6 +625,9 @@ float CFFGrenadeLaser::getLengthPercent()
 
 			CFFPlayer *pgrenOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
 
+			if (!pgrenOwner)
+				return;
+
 			float flDeltaAngle = 360.0f / laserbeams.GetInt();
 		
 			for( i = 0; i < laserbeams.GetInt(); i++ )
@@ -629,6 +642,9 @@ float CFFGrenadeLaser::getLengthPercent()
 				if( !pBeam[i] )
 				{
 					pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, LASERGREN_WIDTHCREATE );
+					if (!pBeam[i])
+						continue;
+
 					pBeam[i]->SetWidth( LASERGREN_WIDTHSTART );
 					pBeam[i]->SetEndWidth( LASERGREN_WIDTHEND );
 					pBeam[i]->LiveForTime( 1  );
