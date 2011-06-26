@@ -21,8 +21,9 @@
 #include "tier0/memdbgon.h"
 
 // Yuck
-extern ConVar ffdev_slowfield_radius;
-extern ConVar ffdev_slowfield_min_slow;
+extern ConVar ffdev_slowfield_radius_outer;
+extern ConVar ffdev_slowfield_radius_inner;
+extern ConVar ffdev_slowfield_radius_power;
 
 //-----------------------------------------------------------------------------
 // Returns charge of current weapon
@@ -60,7 +61,14 @@ void CProxySlowfieldSlow::OnBind(void *pC_BaseEntity)
 	Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - pSlowfield->GetAbsOrigin();
 	float flDistance = vecDisplacement.Length();
 
-	float flResultVar = 1.0f - (flDistance / ffdev_slowfield_radius.GetFloat() * 0.5f);
+	float flResultVar = 1.0f;
+
+	//if we're scaling between outer and inner radius (linear!!)
+	//don't allow divide by zero or for inner/outer to be reversed
+	if(flDistance > ffdev_slowfield_radius_inner.GetFloat() && (ffdev_slowfield_radius_outer.GetFloat() - ffdev_slowfield_radius_inner.GetFloat()) > 0.0f)
+	{
+		flResultVar = 1.0f - (flDistance - ffdev_slowfield_radius_inner.GetFloat())/(ffdev_slowfield_radius_outer.GetFloat() - ffdev_slowfield_radius_inner.GetFloat());
+	}
 
 	flResultVar = clamp( flResultVar, 0.0f, 1.0f );
 	
