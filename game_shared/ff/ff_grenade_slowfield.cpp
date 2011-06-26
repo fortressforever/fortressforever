@@ -86,22 +86,22 @@ ConVar ffdev_slowfield_shrinktime_inner("ffdev_slowfield_shrinktime_inner", "0.1
 ConVar ffdev_slowfield_shrinktime_outer("ffdev_slowfield_shrinktime_outer", "0.25", FCVAR_FF_FFDEV_REPLICATED, "Time it takes the slowfiled outer radius to shrink when the slowfield expires");
 #define SLOWFIELD_SHRINKTIME_OUTER ffdev_slowfield_shrinktime_outer.GetFloat()
 
-ConVar ffdev_slowfield_radius_outer("ffdev_slowfield_radius_outer", "200", FCVAR_FF_FFDEV_REPLICATED, "Outer radius of slowfield grenade (scales from no effect to full effect at inner radius)");
+ConVar ffdev_slowfield_radius_outer("ffdev_slowfield_radius_outer", "176", FCVAR_FF_FFDEV_REPLICATED, "Outer radius of slowfield grenade (scales from no effect to full effect at inner radius)");
 #define SLOWFIELD_RADIUS_OUTER ffdev_slowfield_radius_outer.GetFloat()
 
-ConVar ffdev_slowfield_radius_inner("ffdev_slowfield_radius_inner", "176", FCVAR_FF_FFDEV_REPLICATED, "Inner radius of slowfield grenade (where slowfield has full effect)");
+ConVar ffdev_slowfield_radius_inner("ffdev_slowfield_radius_inner", "64", FCVAR_FF_FFDEV_REPLICATED, "Inner radius of slowfield grenade (where slowfield has full effect)");
 #define SLOWFIELD_RADIUS_INNER ffdev_slowfield_radius_inner.GetFloat()
 
-ConVar ffdev_slowfield_radius_power("ffdev_slowfield_radius_power", "3", FCVAR_FF_FFDEV_REPLICATED, "Power by which to raise the pecentage that a player is between inner & outer radius of the slowfield grenade (so it ramps up and feels less like a brick wall)");
+ConVar ffdev_slowfield_radius_power("ffdev_slowfield_radius_power", "1", FCVAR_FF_FFDEV_REPLICATED, "Power by which to raise the pecentage that a player is between inner & outer radius of the slowfield grenade (so it ramps up and feels less like a brick wall)");
 #define SLOWFIELD_RADIUS_POWER ffdev_slowfield_radius_power.GetFloat()
 
-ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "10", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
+ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "7", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
 #define SLOWFIELD_DURATION ffdev_slowfield_duration.GetFloat()
 
 ConVar ffdev_slowfield_multiplier("ffdev_slowfield_multiplier", "28", FCVAR_FF_FFDEV_REPLICATED, "Multiplier to compensate for the effect of the ffdev_slowfield_power cvar");
 #define SLOWFIELD_MULTIPLIER ffdev_slowfield_multiplier.GetFloat()
 
-ConVar ffdev_slowfield_power("ffdev_slowfield_power", "0.35", FCVAR_FF_FFDEV_REPLICATED, "Lower Power = slow fast players more", true, 0.0f, true, 1.0f);
+ConVar ffdev_slowfield_power("ffdev_slowfield_power", "0.375", FCVAR_FF_FFDEV_REPLICATED, "Lower Power = slow fast players more", true, 0.0f, true, 1.0f);
 #define SLOWFIELD_POWER ffdev_slowfield_power.GetFloat()
 
 ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_FF_FFDEV_REPLICATED, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
