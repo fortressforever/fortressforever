@@ -491,8 +491,8 @@ void CFFGrenadeSlowfield::UpdateOnRemove()
 					pPlayer->SetLaggedMovementValue(flLaggedMovement);
 				}		
 
-				CFFPlayer *pGrenOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
-				
+				CFFPlayer *pGrenOwner = ToFFPlayer( this->GetOwnerEntity() );
+
 				bHitPlayer = true;
 	
 				CBeam *pBeam = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, 1 );
@@ -602,6 +602,9 @@ int CFFGrenadeSlowfieldGlow::DrawModel(int flags)
 	}
 
 	CFFGrenadeSlowfield *slowgren = dynamic_cast<CFFGrenadeSlowfield *> (GetOwnerEntity());
+#ifdef _DEBUG
+	Assert(slowgren != 0);
+#endif
 
 	if (!slowgren)
 		return 0;
