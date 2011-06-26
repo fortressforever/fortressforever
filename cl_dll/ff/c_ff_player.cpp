@@ -3394,7 +3394,7 @@ DECLARE_CLIENT_EFFECT("Hallucination", Hallucination_Callback);
 
 void Gib_Callback(const CEffectData &data)
 {
-	C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer *> (data.GetEntity());
+	C_FFPlayer *pPlayer = ToFFPlayer(data.GetEntity());
 
 	Vector vecPosition = data.m_vOrigin;
 	Vector vecOffset;

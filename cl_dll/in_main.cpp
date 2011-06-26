@@ -887,7 +887,7 @@ void CInput::ScaleMovements( CUserCmd *cmd )
 	// telling the server to move at its own maxspeed and the client/server movements
 	// won't diverge.
 
-	C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer *> (CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 
 	if (!pPlayer)
 		return;
