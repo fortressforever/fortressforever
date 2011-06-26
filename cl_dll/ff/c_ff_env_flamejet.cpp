@@ -226,7 +226,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 		return;
 	}
 
-	CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (GetOwnerEntity());
+	CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
 
 	// A bunch of conditions that may stop the flamethrower
 	if (!pOwner || !pOwner->GetActiveFFWeapon() || pOwner->GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_FLAMETHROWER)

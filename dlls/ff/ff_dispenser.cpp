@@ -641,7 +641,7 @@ void CFFDispenser::PhysicsSimulate()
 	{
 		m_flLastClientUpdate = gpGlobals->curtime;
 
-		CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (m_hOwner.Get());
+		CFFPlayer *pPlayer = ToFFPlayer( m_hOwner.Get() );
 
 		if (!pPlayer)
 			return;
