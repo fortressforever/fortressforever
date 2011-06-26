@@ -360,9 +360,6 @@ public:
 	float m_flLatency;
 	// End: Added by L0ki for grenade stuff
 
-	// squeek: If the player has been detected as attempting to mathack
-	bool m_bMathackDetected;
-
 	// 0000818: Grenade timer not playing on second of double primes
 	float m_flLastServerPrimeTime;
 
