@@ -346,7 +346,8 @@ enum Collision_Group_t
 	COLLISION_GROUP_IN_VEHICLE,		// for any entity inside a vehicle
 	COLLISION_GROUP_WEAPON,			// for any weapons that need collision detection
 	COLLISION_GROUP_VEHICLE_CLIP,	// vehicle clip brush to restrict vehicle movement
-	COLLISION_GROUP_PROJECTILE,		// Projectiles!
+	COLLISION_GROUP_ROCKET,			// Projectiles that HIT PLAYERS
+	COLLISION_GROUP_PROJECTILE,		// Projectiles that DONT hit players
 	COLLISION_GROUP_DOOR_BLOCKER,	// Blocks entities not permitted to get near moving doors
 	COLLISION_GROUP_PASSABLE_DOOR,	// Doors that the player shouldn't collide with
 	COLLISION_GROUP_DISSOLVING,		// Things that are dissolving are in this group

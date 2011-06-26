@@ -209,8 +209,8 @@ void CFFProjectileBase::Spawn()
 
 	//SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 
-	// Hits everything but debris and interactive debris -GreenMushy
-	SetCollisionGroup(COLLISION_GROUP_INTERACTIVE);
+	// New Group that everything "projectiles" do, and players -GreenMushy
+	SetCollisionGroup(COLLISION_GROUP_ROCKET);
 }
 
 //----------------------------------------------------------------------------
