@@ -555,7 +555,7 @@ void CBasePlayerAnimState::ComputePlaybackRate()
 		else
 			GetOuter()->SetPlaybackRate( 1 );
 	}
-#else
+#endif
 	if ( m_AnimConfig.m_LegAnimType != LEGANIM_9WAY && m_AnimConfig.m_LegAnimType != LEGANIM_8WAY )
 	{
 		// When using a 9-way blend, playback rate is always 1 and we just scale the pose params
@@ -567,7 +567,6 @@ void CBasePlayerAnimState::ComputePlaybackRate()
 		else
 			GetOuter()->SetPlaybackRate( 1 );
 	}
-#endif
 }
 
 
