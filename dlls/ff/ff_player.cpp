@@ -4929,7 +4929,7 @@ void CFFPlayer::Command_PrimeTwo(void)
 		if(m_iSecondary > 0)
 		{
 			// ax1
-			EmitSound("Grenade.Prime"); // This is mirrored in CC_PrimeTwo for client
+			EmitSoundShared("Grenade.Prime"); // This is mirrored in CC_PrimeTwo for client
 
 			// Jiggles: Added lua callback for squeek's training map
 			CFFLuaSC hContext( 1, this );
