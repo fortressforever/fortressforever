@@ -153,7 +153,7 @@ class PseudoNail
 					{
 						if (traceHit.m_pEnt->IsPlayer() )
 						{
-							CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+							CFFPlayer *pPlayerTarget = ToFFPlayer ( pTarget );
 							if (pPlayerTarget)
 								pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt(), DMG_BULLET ) );
 						}
@@ -446,7 +446,7 @@ float CFFGrenadeLaser::getLengthPercent()
 			{
 				if (pTarget->IsPlayer() )
 				{
-					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+					CFFPlayer *pPlayerTarget = ToFFPlayer( pTarget );
 					if (!pPlayerTarget)
 						return;
 					
@@ -619,7 +619,7 @@ float CFFGrenadeLaser::getLengthPercent()
 			trace_t tr;
 			char i;
 
-			CFFPlayer *pgrenOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
+			CFFPlayer *pgrenOwner = ToFFPlayer( this->GetOwnerEntity() );
 
 			if (!pgrenOwner)
 				return;
