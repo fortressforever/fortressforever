@@ -217,20 +217,16 @@ bool PassServerEntityFilter( const IHandleEntity *pTouch, const IHandleEntity *p
 	if ( !pEntTouch || !pEntPass )
 		return true;
 
-	// Tweaked 2 lines here to add FSOLID_COLLIDE_WITH_OWNER as per http://developer.valvesoftware.com/wiki/Owner#Collisions_with_owner - AfterShock
 	// don't clip against own missiles
-	if ( !pEntTouch->IsSolidFlagSet(FSOLID_COLLIDE_WITH_OWNER) && pEntTouch->GetOwnerEntity() == pEntPass )
+	if ( pEntTouch->GetOwnerEntity() == pEntPass )
 		return false;
 	
 	// don't clip against owner
 	if(!pEntPass->CanClipOwnerEntity())
 	{
-		if ( !pEntPass->IsSolidFlagSet(FSOLID_COLLIDE_WITH_OWNER) && pEntPass->GetOwnerEntity() == pEntTouch )
+		if(pEntPass->GetOwnerEntity() == pEntTouch)
 			return false;
 	}
-
-	
-
 
 	if(!pEntPass->CanClipPlayer() && pEntTouch->IsPlayer())
 		return false;
