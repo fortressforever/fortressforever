@@ -154,7 +154,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 			for( int i = m_vCloakSmokeList.Count() -1; i >= 0; i-- )
 			{
 				//Attempting a safety check to see if the player is valid first
-				CFFPlayer* pPlayer = dynamic_cast<CFFPlayer *>( m_vCloakSmokeList[i] );
+				CFFPlayer* pPlayer = ToFFPlayer( m_vCloakSmokeList[i] );
 				if( !pPlayer )
 				{
 					//Player shouldnt be in the list anymore if hes null
@@ -238,7 +238,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_CloakSmoke );
 		{
 			//Get the player in the list
 			//Attempting a safety check to see if the player is valid first
-			CFFPlayer* pPlayer = dynamic_cast<CFFPlayer *>( m_vCloakSmokeList[i] );
+			CFFPlayer* pPlayer = ToFFPlayer( m_vCloakSmokeList[i] );
 			if( !pPlayer )
 			{
 				//Player shouldnt be in the list anymore if hes null

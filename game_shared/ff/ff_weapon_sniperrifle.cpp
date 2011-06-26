@@ -183,7 +183,7 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 
 		int alpha = clamp(150 + 15 * (gpGlobals->curtime - m_flStartTime), 0, 255);
 
-		CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (GetOwnerEntity());
+		CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
 
 		// We're going to predict it using the players' angles
 		if (pOwner != NULL && pOwner->IsDormant() == false) 

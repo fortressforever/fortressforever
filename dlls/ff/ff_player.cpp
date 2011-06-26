@@ -1793,7 +1793,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		SpyCloakFadeIn( true );
 
 	// TODO: Take SGs into account here?
-	CFFPlayer *pKiller = dynamic_cast<CFFPlayer *>(dynamic_cast<CMultiplayRules *>(g_pGameRules)->GetDeathScorer( info.GetAttacker(), info.GetInflictor() ));
+	CFFPlayer *pKiller = ToFFPlayer(dynamic_cast<CMultiplayRules *>(g_pGameRules)->GetDeathScorer( info.GetAttacker(), info.GetInflictor() ));
 
 	if ( info.GetInflictor() )
 	{

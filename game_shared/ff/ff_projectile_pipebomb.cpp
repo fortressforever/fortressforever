@@ -347,7 +347,7 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 {
 #ifdef GAME_DLL
 	// tell the client to reset the count for the hud
-	CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (pOwner);
+	CFFPlayer *pPipeOwner = ToFFPlayer(pOwner);
 	CSingleUserRecipientFilter user(pPipeOwner);
 	user.MakeReliable();
 
@@ -491,7 +491,7 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity 
 		pOldestPipe->DetonatePipe();
 	else {
 		// tell the client to increment the count for the hud
-		CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (pPipebomb->GetOwnerEntity());
+		CFFPlayer *pPipeOwner = ToFFPlayer(pPipebomb->GetOwnerEntity());
 		CSingleUserRecipientFilter user(pPipeOwner);
 		user.MakeReliable();
 
@@ -511,7 +511,7 @@ void CFFProjectilePipebomb::DecrementHUDCount()
 {
 #ifdef GAME_DLL
 	// tell the client (demoman) to decrement the hud pipe count
-	CFFPlayer *pPipeOwner = dynamic_cast<CFFPlayer *> (this->GetOwnerEntity());
+	CFFPlayer *pPipeOwner = ToFFPlayer(this->GetOwnerEntity());
 	CSingleUserRecipientFilter user(pPipeOwner);
 	user.MakeReliable();
 
