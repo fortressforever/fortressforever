@@ -116,6 +116,14 @@ namespace vgui
 		m_bShowAmount = true;
 		m_bShowAmountMax = true;
 
+		for (int i = 0; i < QUANTITYBARFONTSIZES * 3; i++)
+		{
+			m_hfQuantityBarText[i]			= NULL;
+			m_hfQuantityBarTahomaText[i]	= NULL;
+			m_hfQuantityBarIcon[i]			= NULL;
+			m_hfQuantityBarGlyph[i]			= NULL;
+		}
+
 		//do this just in case.
 		RecalculateAmountMaxPosition();
 
@@ -1295,9 +1303,13 @@ namespace vgui
 		else
 			color = colorCustom;
 	}
-
+ 
 	void FFQuantityBar::CalculateTextAlignmentOffset( int &outX, int &outY, int &iWide, int &iTall, int iAlignH, int iAlignV, HFont hfFont, wchar_t* wszString )
 	{
+		// havent loaded a font yet, probably during first tick so return
+		if (hfFont == NULL)
+			return;
+
 		//TODO: calculate this with real font to calculate real size 
 		//and then scale it down to 640*480 (but make sure its rouned up so we don't cut text off!)
 		int iWideTemp = 0, iTallTemp = 0;
