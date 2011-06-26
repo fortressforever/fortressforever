@@ -182,6 +182,9 @@ public:
 
 	virtual color32 GetColour() { color32 col = { 255, 225, 255, GREN_ALPHA_DEFAULT }; return col; }
 
+	virtual void StopLoopingSounds( void );
+	virtual void UpdateOnRemove( void );
+
 	CHandle<CFFGrenadeSlowfieldGlow> m_hGlowSprite;
 
 #ifdef CLIENT_DLL
@@ -230,6 +233,48 @@ void CFFGrenadeSlowfield::Precache()
 	PrecacheScriptSound(SLOWFIELDGRENADE_BEAM_LOOP);
 
 	BaseClass::Precache();
+}
+
+void CFFGrenadeSlowfield::StopLoopingSounds()
+{
+#ifdef GAME_DLL
+	StopSound(SLOWFIELDGRENADE_LOOP);
+	if(m_bBeamLoopPlaying)
+	{
+		m_bBeamLoopPlaying = false;
+		StopSound(SLOWFIELDGRENADE_BEAM_LOOP);
+	}
+#endif
+}
+
+void CFFGrenadeSlowfield::UpdateOnRemove()
+{
+#ifdef GAME_DLL
+	// loop through all players
+	for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer* pPlayer = ToFFPlayer(UTIL_EntityByIndex(i));
+
+		if( !pPlayer || pPlayer->IsObserver() )
+			continue;
+
+		if (pPlayer->GetActiveSlowfield() == this)
+		{
+			pPlayer->SetLaggedMovementValue(1.0f);
+			pPlayer->SetActiveSlowfield( NULL );
+			
+			// remove status icon
+			CSingleUserRecipientFilter user( ( CBasePlayer * )pPlayer );
+			user.MakeReliable();
+
+			UserMessageBegin( user, "StatusIconUpdate" );
+				WRITE_BYTE( FF_STATUSICON_SLOWMOTION );
+				WRITE_FLOAT( 0.0f );
+			MessageEnd();
+		}
+	}
+#endif
+	BaseClass::UpdateOnRemove();
 }
 
 #ifdef GAME_DLL
@@ -331,37 +376,6 @@ void CFFGrenadeSlowfield::Precache()
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
 			UTIL_Remove(this);
-			StopSound(SLOWFIELDGRENADE_LOOP);
-			if(m_bBeamLoopPlaying)
-			{
-				m_bBeamLoopPlaying = false;
-				StopSound(SLOWFIELDGRENADE_BEAM_LOOP);
-			}
-
-			// loop through all players
-			for(int i = 1 ; i <= gpGlobals->maxClients; i++)
-			{
-				CFFPlayer* pPlayer = ToFFPlayer(UTIL_EntityByIndex(i));
-
-				if( !pPlayer || pPlayer->IsObserver() )
-					continue;
-
-				if (pPlayer->GetActiveSlowfield() == this)
-				{
-					pPlayer->SetLaggedMovementValue(1.0f);
-					pPlayer->SetActiveSlowfield( NULL );
-					
-					// remove status icon
-					CSingleUserRecipientFilter user( ( CBasePlayer * )pPlayer );
-					user.MakeReliable();
-
-					UserMessageBegin( user, "StatusIconUpdate" );
-						WRITE_BYTE( FF_STATUSICON_SLOWMOTION );
-						WRITE_FLOAT( 0.0f );
-					MessageEnd();
-				}
-			}
-
 			return;
 		}
 
