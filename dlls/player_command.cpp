@@ -177,7 +177,7 @@ void CPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *p
 	// m_flMaxspeedChangeTime is set to curtime + the client's latency
 	move->m_flClientMaxSpeed		= player->m_flMaxspeed;
 
-	CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (player);
+	CFFPlayer *pPlayer = ToFFPlayer(player);
 
 	// Don't do this if not yet ready to apply the new speed modifier
 	if (pPlayer && pPlayer->m_flSpeedModifierChangeTime <= gpGlobals->curtime)

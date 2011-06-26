@@ -592,7 +592,7 @@ inline C_FFPlayer *ToFFPlayer( CBaseEntity *pEntity )
 #ifdef _DEBUG
 	Assert( dynamic_cast< C_FFPlayer * >( pEntity ) != 0 );
 #endif
-	return static_cast< C_FFPlayer * >( pEntity );
+	return static_cast< C_FFPlayer * >( pEntity );	
 }
 
 #endif // C_FF_PLAYER_H

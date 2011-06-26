@@ -212,7 +212,8 @@ void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime 
 //----------------------------------------------------------------------------
 CFFPlayer * CFFWeaponBase::GetPlayerOwner() const
 {
-	return dynamic_cast<CFFPlayer *> (GetOwner());
+	//return dynamic_cast<CFFPlayer *> (GetOwner());
+	return ToFFPlayer(GetOwner());
 }
 
 const char *CFFWeaponBase::GetWorldModel( void ) const

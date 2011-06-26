@@ -615,7 +615,7 @@ void CPrediction::SetupMove( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper *
 	move->m_nOldButtons		= player->m_Local.m_nOldButtons;
 	move->m_flClientMaxSpeed = player->m_flMaxspeed;
 
-	CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (player);
+	CFFPlayer *pPlayer = ToFFPlayer(player);
 
 	// Update client max speed if there are speed modifiers active
 	if (pPlayer)
