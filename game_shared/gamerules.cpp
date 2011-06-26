@@ -773,10 +773,21 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if ( collisionGroup1 == COLLISION_GROUP_PROJECTILE )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_DEBRIS ||
-			collisionGroup0 == COLLISION_GROUP_INTERACTIVE ||
-			collisionGroup0 == COLLISION_GROUP_WEAPON ||
-			collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
-			collisionGroup0 == COLLISION_GROUP_PLAYER)
+			 collisionGroup0 ==	COLLISION_GROUP_PLAYER ||
+			 collisionGroup0 ==	COLLISION_GROUP_WEAPON ||
+			 collisionGroup0 == COLLISION_GROUP_ROCKET ||
+			 collisionGroup0 == COLLISION_GROUP_PROJECTILE )
+		{
+			return false;
+		}
+	}
+
+	//COLLISION_GROUP_ROCKET hits the same stuff as "projectiles" but hits players
+	if ( collisionGroup1 == COLLISION_GROUP_ROCKET )
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_DEBRIS ||
+			 collisionGroup0 == COLLISION_GROUP_WEAPON ||
+			 collisionGroup0 == COLLISION_GROUP_ROCKET )
 		{
 			return false;
 		}
