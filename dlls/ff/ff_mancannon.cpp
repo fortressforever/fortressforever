@@ -49,7 +49,7 @@ ConVar ffdev_mancannon_push_forward( "ffdev_mancannon_push_forward", "900", FCVA
 #define MANCANNON_PUSH_FORWARD ffdev_mancannon_push_forward.GetInt()
 ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define MANCANNON_PUSH_UP ffdev_mancannon_push_up.GetInt()
-ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "125", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "150", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define MANCANNON_HEALTH ffdev_mancannon_health.GetInt()
 ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_REPLICATED | FCVAR_CHEAT );
 #define MANCANNON_HEALTH_REGEN ffdev_mancannon_health_regen.GetFloat()
