@@ -876,7 +876,10 @@ int CFFPlayer::GetCurBuild( void ) const
 //-----------------------------------------------------------------------------
 CFFDetpack *CFFPlayer::GetDetpack( void ) const
 {
-	return dynamic_cast< CFFDetpack * >( m_hDetpack.Get() );
+#ifdef _DEBUG
+	Assert( dynamic_cast< CFFDetpack * >( m_hDetpack.Get() ) != 0 );
+#endif
+	return static_cast< CFFDetpack * >( m_hDetpack.Get() );
 }
 
 //-----------------------------------------------------------------------------
@@ -884,7 +887,10 @@ CFFDetpack *CFFPlayer::GetDetpack( void ) const
 //-----------------------------------------------------------------------------
 CFFDispenser *CFFPlayer::GetDispenser( void ) const
 {
-	return dynamic_cast< CFFDispenser * >( m_hDispenser.Get() );
+#ifdef _DEBUG
+	Assert( dynamic_cast<CFFDispenser *>( m_hDispenser.Get()) ) != 0 );
+#endif
+	return static_cast< CFFDispenser * >( m_hDispenser.Get() );
 }
 
 //-----------------------------------------------------------------------------
@@ -892,7 +898,10 @@ CFFDispenser *CFFPlayer::GetDispenser( void ) const
 //-----------------------------------------------------------------------------
 CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 {
-	return dynamic_cast< CFFSentryGun * >( m_hSentryGun.Get() );
+#ifdef _DEBUG
+	Assert( dynamic_cast<CFFSentryGun *>( m_hSentryGun.Get() ) != 0 );
+#endif
+	return static_cast< CFFSentryGun * >( m_hSentryGun.Get() );
 }
 
 //-----------------------------------------------------------------------------
@@ -900,7 +909,10 @@ CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 //-----------------------------------------------------------------------------
 CFFManCannon *CFFPlayer::GetManCannon( void ) const
 {
-	return dynamic_cast<CFFManCannon *>( m_hManCannon.Get() );
+#ifdef _DEBUG
+	Assert( dynamic_cast<CFFManCannon *>( m_hManCannon.Get() ) != 0 );
+#endif
+	return static_cast<CFFManCannon *>( m_hManCannon.Get() );
 }
 
 //-----------------------------------------------------------------------------
