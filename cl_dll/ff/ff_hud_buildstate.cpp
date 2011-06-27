@@ -207,7 +207,7 @@ void CHudBuildState::OnTick()
 
 	// Get the local player
 	C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
-
+	
 	if (!pPlayer) 
 		return;
 
