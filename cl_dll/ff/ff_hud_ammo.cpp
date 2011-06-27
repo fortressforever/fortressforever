@@ -5,26 +5,25 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "hud.h"
+//#include "hud.h"
 #include "hudelement.h"
-#include "hud_macros.h"
+//#include "hud_macros.h"
 #include "hud_numericdisplay.h"
 #include "iclientmode.h"
-#include "iclientvehicle.h"
-#include "ammodef.h"
+//#include "ammodef.h"
 
-#include <KeyValues.h>
+//#include <KeyValues.h>
 #include <vgui/ISurface.h>
-#include <vgui/ISystem.h>
-#include <vgui_controls/AnimationController.h>
-#include <igameresources.h>
+#include <vgui/IVGUI.h>
+//#include <vgui_controls/AnimationController.h>
+//#include <igameresources.h>
 
 #include "c_ff_player.h"
 #include "ff_weapon_base.h"
-#include "ff_hud_boxes.h"
+//#include "ff_hud_boxes.h"
 #include "ff_utils.h"
 
-#include <vgui/ILocalize.h>
+//#include <vgui/ILocalize.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -44,10 +43,9 @@ public:
 	
 	virtual void Init();
 	virtual void Reset();
-	virtual void OnThink();
+	virtual void OnTick();
 
 protected:
-
 	CHandle< C_BaseCombatWeapon > m_hCurrentActiveWeapon;
 
 	virtual void SetAmmo(int ammo, bool playAnimation);
@@ -83,50 +81,32 @@ public:
 //-----------------------------------------------------------------------------
 // Purpose: Displays current weapon & ammo
 //-----------------------------------------------------------------------------
-class CHudAmmoInfo : public CHudElement, public vgui::FFPanel
+class CHudAmmoInfo : public CHudElement, public FFPanel
 {
 public:
-	CHudAmmoInfo(const char *pElementName) : CHudElement(pElementName), vgui::FFPanel(NULL, "HudAmmoInfo")
+	CHudAmmoInfo(const char *pElementName) : CHudElement(pElementName), FFPanel(NULL, "HudAmmoInfo")
 	{
 		// Set our parent window
 		SetParent(g_pClientMode->GetViewport());
 
 		// Hide when player is dead
-		SetHiddenBits(HIDEHUD_PLAYERDEAD);
-	}
-
-	virtual void Paint()
-	{
-		// Various things here
-		// pWeapon->GetAmmoIcon
-		// pWeapon->GetWeaponIcon
-
-		FFPanel::Paint();
+		SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
 	}
 };
 
 //-----------------------------------------------------------------------------
 // Purpose: A copy/paste so that glyphs draw correctly
 //-----------------------------------------------------------------------------
-class CHudAmmoInfo2 : public CHudElement, public vgui::FFPanel
+class CHudAmmoInfo2 : public CHudElement, public FFPanel
 {
 public:
-	CHudAmmoInfo2(const char *pElementName) : CHudElement(pElementName), vgui::FFPanel(NULL, "HudAmmoInfo2")
+	CHudAmmoInfo2(const char *pElementName) : CHudElement(pElementName), FFPanel(NULL, "HudAmmoInfo2")
 	{
 		// Set our parent window
 		SetParent(g_pClientMode->GetViewport());
 
 		// Hide when player is dead
-		SetHiddenBits(HIDEHUD_PLAYERDEAD);
-	}
-
-	virtual void Paint()
-	{
-		// Various things here
-		// pWeapon->GetAmmoIcon
-		// pWeapon->GetWeaponIcon
-
-		FFPanel::Paint();
+		SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
 	}
 };
 
@@ -137,61 +117,57 @@ DECLARE_HUDELEMENT(CHudAmmoInfo2);
 
 CHudAmmo::CHudAmmo(const char *pElementName) : BaseClass(NULL, "HudAmmo"), CHudElement(pElementName)
 {
+	// Set our parent window
+	SetParent(g_pClientMode->GetViewport());
+
+	// Hide when player is dead
 	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
 }
 
+int CHudAmmo::GetPlayerAmmo(C_FFPlayer *pPlayer, C_BaseCombatWeapon *pWeapon)
+{
+	if (!pWeapon || !pPlayer)
+		return -1;
+
+	return pPlayer->GetAmmoCount(pWeapon->GetPrimaryAmmoType());
+}
 void CHudAmmo::Init()
 {
+	ivgui()->AddTickSignal( GetVPanel(), 100 );
+	m_hCurrentActiveWeapon = NULL;
 	m_iAmmo = -1;
 	SetLabelText(L"");
 }
 
 void CHudAmmo::Reset()
 {
-	m_iAmmo = 0;
+	m_iAmmo = -1;
 }
 
-int CHudAmmo::GetPlayerAmmo(C_FFPlayer *pPlayer, C_BaseCombatWeapon *pWeapon)
+void CHudAmmo::OnTick()
 {
-	if (!pPlayer || !pWeapon)
-		return -1;
-
-	return pPlayer->GetAmmoCount(pWeapon->GetPrimaryAmmoType());
-}
-
-void CHudAmmo::OnThink()
-{
-	// Fix for ToFFPlayer( NULL ) being called.
-	if( !engine->IsInGame() )
+	BaseClass::OnTick();
+	if (!m_pFFPlayer)
 		return;
 
-	// A ha! One of the ToFFPlayer( NULL ) calls!
-	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
-
-	if (!pPlayer)
-		return;
-
-	C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
+	C_BaseCombatWeapon *pWeapon = m_pFFPlayer->GetActiveWeapon();
 
 	int iAmmo = -1;
 
 	if (pWeapon && pWeapon->UsesPrimaryAmmo())
 	{
-		iAmmo = GetPlayerAmmo(pPlayer, pWeapon);
+		iAmmo = GetPlayerAmmo(m_pFFPlayer, pWeapon);
 	}
 
-	if (iAmmo < 0 || FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
+	if ( iAmmo < 0 )
 	{
 		SetPaintEnabled(false);
-		SetShouldDisplayValue(false);
 		SetPaintBackgroundEnabled(false);
-
 		return;
 	}
 	else
 	{
 		SetPaintEnabled(true);
-		SetShouldDisplayValue(true);
 		SetPaintBackgroundEnabled(true);
 	}
 
@@ -204,9 +180,8 @@ void CHudAmmo::OnThink()
 	{
 		// Different weapon, update w/o animations
 		SetAmmo(iAmmo, false);
+		m_hCurrentActiveWeapon = pWeapon;
 	}
-
-	m_hCurrentActiveWeapon = pWeapon;
 }
 
 void CHudAmmo::SetAmmo(int iAmmo, bool bPlayAnimation)
