@@ -83,7 +83,6 @@ private:
 	ComboBox		*m_pPrimary, *m_pSecondary;
 	ComboBox		*m_pStylePresets, *m_pArrangementPresets, *m_pPositionPresets;
 
-	CheckButton		*m_pUseDefaultStyle, *m_pUseDefaultArrangement, *m_pUseDefaultPosition;
 	Button			*m_pCopyDefaultStyle, *m_pCopyDefaultArrangement, *m_pCopyDefaultPosition;
 
 	KeyValues		*m_kvLoadedAssignments;
@@ -94,11 +93,8 @@ private:
 	CFFCustomHudPositionPresets *m_pPositionPresetsClass;
 
 	bool m_bAssignmentPositionChanging;
-	bool m_bAssignmentPositionUseDefaultChanging;
 	bool m_bAssignmentArrangementChanging;
-	bool m_bAssignmentArrangementUseDefaultChanging;
 	bool m_bAssignmentStyleChanging;
-	bool m_bAssignmentStyleUseDefaultChanging;
 
 	bool m_bCopyDefaultPosition;
 	bool m_bCopyDefaultArrangement;

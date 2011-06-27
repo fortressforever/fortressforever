@@ -43,7 +43,6 @@ namespace vgui {
 		m_pRenamePreset = new Button(this, "RenamePresetButton", "", this, "RenamePreset");
 		
 		m_kvPanelDefaultCopy = NULL;
-
 	}
 	CFFOptionsPresetPage::~CFFOptionsPresetPage()
 	{
@@ -207,10 +206,26 @@ namespace vgui {
 	void CFFOptionsPresetPage::OnInputDialogCommand(KeyValues *data)
 	{
 		//if name empty
-		if(Q_strcmp(data->GetString("text"), "") == 0)
+		if(Q_stricmp(data->GetString("text"), "") == 0)
 		{
 			//tell the user what's wrong
 			m_pPresetNameInputError = new MessageBox("#GameUI_ErrorPresetNameTitle","#GameUI_ErrorPresetNameEmpty", this);
+			m_pPresetNameInputError->DoModal();
+			//cant seem catch the close of the messagebox to reopen the input dialog
+			//dont continue
+			return;
+		}
+
+		//get localisation of default
+		wchar_t *pszDefault = vgui::localize()->Find("#GameUI_Default");
+		char szDefault[30];
+		Q_snprintf( szDefault, sizeof( szDefault ), "%s", pszDefault );
+
+		//if name is default (a reserved name) or equal to the localization of GameUI_Default
+		if(Q_stricmp(data->GetString("text"), "Default") == 0 || Q_stricmp(data->GetString("text"), szDefault) == 0)
+		{
+			//tell the user what's wrong
+			m_pPresetNameInputError = new MessageBox("#GameUI_ErrorPresetNameTitle","#GameUI_ErrorPresetNameReserved", this);
 			m_pPresetNameInputError->DoModal();
 			//cant seem catch the close of the messagebox to reopen the input dialog
 			//dont continue
