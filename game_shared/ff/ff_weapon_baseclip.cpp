@@ -13,7 +13,7 @@
 #ifdef CLIENT_DLL
 	#include "c_ff_player.h"
 
-	ConVar auto_reload("cl_autoreload", "1", FCVAR_ARCHIVE, "Automatic weapon reload");
+	ConVar auto_reload("cl_autoreload", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Automatic weapon reload");
 #else
 	#include "ff_player.h"
 #endif
@@ -213,10 +213,6 @@ void CFFWeaponBaseClip::PrimaryAttack()
 	m_bInReload = false;
 	m_flReloadTime = -1.0f;
 
-#ifdef CLIENT_DLL
-	m_flNextAutoReload = gpGlobals->curtime;
-#endif
-
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
 
@@ -363,22 +359,28 @@ void CFFWeaponBaseClip::ItemPostFrame()
 				}
 			}
 
-			// Autoreload
-			// This would be better done reading a client off the client
-			// Added: Don't do it if they are holding down fire while there is still ammo in clip
+			// get autoreload
+			bool bAutoReload = false;
 #ifdef CLIENT_DLL
-			if (!m_bInReload && !(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
-				&& m_flNextAutoReload <= gpGlobals->curtime 
-				&& m_iClip1 < GetMaxClip1() 
-				&& auto_reload.GetBool())
+			if ( auto_reload.GetBool() )
 			{
-				if(pOwner->IsAlive())
-				{
-					engine->ClientCmd("+reload");
-					m_flNextAutoReload = gpGlobals->curtime + 0.2f;
-				}
+				bAutoReload = true;
+			}
+#else
+			if ( Q_atoi( engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ) ) != 0 )
+			{
+				bAutoReload = true;
 			}
 #endif
+			// Autoreload
+			if (bAutoReload && !m_bInReload)
+			{
+				if (StartReload())
+				{
+					// if we've successfully started to reload, we're done
+					return;
+				}
+			}
 		}
 
 		WeaponIdle();
@@ -392,8 +394,4 @@ void CFFWeaponBaseClip::ItemPostFrame()
 CFFWeaponBaseClip::CFFWeaponBaseClip()
 {
 	m_bReloadsSingly = true;
-
-#ifdef CLIENT_DLL
-	m_flNextAutoReload = 0;
-#endif
 }

@@ -26,10 +26,6 @@ public:
 
 private:
 
-#ifdef CLIENT_DLL
-	float		m_flNextAutoReload;
-#endif
-
 public:
 	virtual	bool StartReload();
 	virtual bool Reload();
