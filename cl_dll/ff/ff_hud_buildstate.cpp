@@ -93,7 +93,7 @@ void CHudBuildState::VidInit()
 
 void CHudBuildState::Init() 
 {
-	vgui::ivgui()->AddTickSignal(GetVPanel());
+	vgui::ivgui()->AddTickSignal(GetVPanel(), 100);
 
 	HOOK_HUD_MESSAGE(CHudBuildState, DispenserMsg);
 	HOOK_HUD_MESSAGE(CHudBuildState, SentryMsg);
