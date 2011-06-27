@@ -888,7 +888,7 @@ CFFDetpack *CFFPlayer::GetDetpack( void ) const
 CFFDispenser *CFFPlayer::GetDispenser( void ) const
 {
 #ifdef _DEBUG
-	Assert( dynamic_cast<CFFDispenser *>( m_hDispenser.Get()) ) != 0 );
+	Assert( dynamic_cast<CFFDispenser *>( m_hDispenser.Get() ) != 0 );
 #endif
 	return static_cast< CFFDispenser * >( m_hDispenser.Get() );
 }
