@@ -782,44 +782,44 @@ int CFFPlayer::GetCurBuild( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Get detpack
 //-----------------------------------------------------------------------------
-CFFDetpack *CFFPlayer::GetDetpack( void ) const
+inline CFFDetpack *CFFPlayer::GetDetpack( void ) const
 {
-#ifdef _DEBUG
-	Assert( dynamic_cast< CFFDetpack * >( m_hDetpack.Get() ) != 0 );
-#endif
+//#ifdef _DEBUG
+//	Assert( dynamic_cast< CFFDetpack * >( m_hDetpack.Get() ) != 0 );
+//#endif
 	return static_cast< CFFDetpack * >( m_hDetpack.Get() );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Get dispenser
 //-----------------------------------------------------------------------------
-CFFDispenser *CFFPlayer::GetDispenser( void ) const
+inline CFFDispenser *CFFPlayer::GetDispenser( void ) const
 {
-#ifdef _DEBUG
-	Assert( dynamic_cast<CFFDispenser *>( m_hDispenser.Get() ) != 0 );
-#endif
+//#ifdef _DEBUG
+//	Assert( dynamic_cast<CFFDispenser *>( m_hDispenser.Get() ) != 0 );
+//#endif
 	return static_cast< CFFDispenser * >( m_hDispenser.Get() );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Get sentrygun
 //-----------------------------------------------------------------------------
-CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
+inline CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 {
-#ifdef _DEBUG
-	Assert( dynamic_cast<CFFSentryGun *>( m_hSentryGun.Get() ) != 0 );
-#endif
+//#ifdef _DEBUG
+//	Assert( dynamic_cast<CFFSentryGun *>( m_hSentryGun.Get() ) != 0 );
+//#endif
 	return static_cast< CFFSentryGun * >( m_hSentryGun.Get() );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Get man cannon
 //-----------------------------------------------------------------------------
-CFFManCannon *CFFPlayer::GetManCannon( void ) const
+inline CFFManCannon *CFFPlayer::GetManCannon( void ) const
 {
-#ifdef _DEBUG
-	Assert( dynamic_cast<CFFManCannon *>( m_hManCannon.Get() ) != 0 );
-#endif
+//#ifdef _DEBUG
+//	Assert( dynamic_cast<CFFManCannon *>( m_hManCannon.Get() ) != 0 );
+//#endif
 	return static_cast<CFFManCannon *>( m_hManCannon.Get() );
 }
 
