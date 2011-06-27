@@ -2,11 +2,11 @@
 #define FF_HUD_GRENADE2TIMER_H
 
 #include "cbase.h"
-#include <vgui_controls/Panel.h>
+#include "ff_panel.h"
 
 using namespace vgui;
 
-class CHudGrenade2Timer : public CHudElement, public Panel
+class CHudGrenade2Timer : public CHudElement, public FFPanel
 {
 private:
 	typedef struct timer_s
@@ -22,18 +22,14 @@ private:
 
 	} timer_t;
 
-	DECLARE_CLASS_SIMPLE(CHudGrenade2Timer, Panel);
+	DECLARE_CLASS_SIMPLE(CHudGrenade2Timer, FFPanel);
 
 	CUtlLinkedList<timer_t> m_Timers;
 	int m_iClass;
-	int m_iTeam;
+	int m_iPlayerTeam;
 	bool m_fVisible;
 	float m_flLastTime;
 	CHudTexture *m_pIconTexture;
-	
-	Color m_HudForegroundColour;
-	Color m_HudBackgroundColour;
-	Color m_TeamColorHudBackgroundColour;
 
 	CPanelAnimationVarAliasType(float, bar_xpos, "bar_xpos", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_ypos, "bar_ypos", "0", "proportional_float");
@@ -51,7 +47,6 @@ public:
 	virtual void	Paint();
 	virtual void	PaintBackground();
 	virtual void	OnTick();
-	virtual void	ApplySchemeSettings(IScheme *pScheme);
 
 	void	SetTimer(float duration);
 	bool	ActiveTimer( void ) const;

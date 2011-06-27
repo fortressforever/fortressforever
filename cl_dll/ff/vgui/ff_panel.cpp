@@ -15,17 +15,16 @@
 
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
-#include <vgui/ISystem.h>
 #include <vgui/IScheme.h>
+#include <vgui/IVGui.h>
 #include "convar.h"
 
-#include "c_ff_player.h"
 #include "c_playerresource.h"
 #include "c_ff_team.h"
 #include "ff_panel.h"
 #include "ff_utils.h"
 
-ConVar cl_teamcolourhud("cl_teamcolourhud", "1", FCVAR_ARCHIVE);
+ConVar cl_teamcolourhud( "cl_teamcolourhud", "1", FCVAR_ARCHIVE );
 
 extern ConVar cl_teamcolourhud;
 
@@ -36,27 +35,31 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	// Purpose: Load the textures
 	//-----------------------------------------------------------------------------
-	void FFPanel::ApplySettings(KeyValues *inResourceData)
+	void FFPanel::ApplySettings( KeyValues *inResourceData )
 	{
-		const char *pszFG = inResourceData->GetString("ForegroundTexture", NULL);
-		const char *pszBG = inResourceData->GetString("BackgroundTexture", NULL);
+		const char *pszFG = inResourceData->GetString( "ForegroundTexture", NULL );
+		const char *pszBG = inResourceData->GetString( "BackgroundTexture", NULL );
 
-		m_pHudBackground = (pszBG ? gHUD.GetIcon(pszBG) : NULL);
-		m_pHudForeground = (pszFG ? gHUD.GetIcon(pszFG) : NULL);
+		m_pHudBackground = ( pszBG ? gHUD.GetIcon(pszBG) : NULL );
+		m_pHudForeground = ( pszFG ? gHUD.GetIcon(pszFG) : NULL );
 
-		Panel::ApplySettings(inResourceData);
+		BaseClass::ApplySettings(inResourceData);
 	}
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Load the colours
 	//-----------------------------------------------------------------------------
-	void FFPanel::ApplySchemeSettings(IScheme *pScheme)
+	void FFPanel::ApplySchemeSettings( IScheme *pScheme )
 	{
-		m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
-		m_HudBackgroundColour = GetSchemeColor("HudItem.Background", pScheme);
-		m_TeamColorHudBackgroundColour = GetSchemeColor("TeamColorHud.BackgroundAlpha", pScheme);
+		//reinit the players team so that the team colour gets recalculated
+		//this is needed when changing resolutions!
+		m_iPlayerTeam = -1;
 
-		Panel::ApplySchemeSettings(pScheme);
+		m_HudForegroundColour = GetSchemeColor( "HudItem.Foreground", pScheme );
+		m_HudBackgroundColour = GetSchemeColor( "HudItem.Background", pScheme );
+		m_TeamColorHudBackgroundColour = GetSchemeColor( "TeamColorHud.BackgroundAlpha", pScheme );
+
+		BaseClass::ApplySchemeSettings( pScheme );
 	}
 
 	//-----------------------------------------------------------------------------
@@ -65,32 +68,43 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	void FFPanel::PaintBackground()
 	{
-		Color bg = m_HudBackgroundColour;
-		Color fg = m_HudForegroundColour;
-		Color teamcolorbg = m_TeamColorHudBackgroundColour;
+		// Don't draw if we're a spectator or we have no class	
+		//if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
+		//	return;
 
-		C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+		if ( m_pHudBackground )
+			if ( cl_teamcolourhud.GetBool() )
+				m_pHudBackground->DrawSelf( 0, 0, m_TeamColorHudBackgroundColour );
+			else
+				m_pHudBackground->DrawSelf( 0, 0, m_HudBackgroundColour );
+		if ( m_pHudForeground )
+			m_pHudForeground->DrawSelf( 0, 0, m_HudForegroundColour );
 
-		// Don't draw if we're a spectator or we have no class
-		if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
+		BaseClass::PaintBackground();
+	}
+	
+	//-----------------------------------------------------------------------------
+	// Purpose: The background consists of a separate foreground and background
+	//			texture.
+	//-----------------------------------------------------------------------------
+	void FFPanel::OnTick()
+	{
+		m_pFFPlayer = CFFPlayer::GetLocalFFPlayer();
+
+		if (!m_pFFPlayer) 
 			return;
 
-		if (cl_teamcolourhud.GetBool())
+		if( cl_teamcolourhud.GetBool() )
 		{
-			Color HudBackgroundColour = Color( g_PR->GetTeamColor( pPlayer->GetTeamNumber() ).r(), g_PR->GetTeamColor( pPlayer->GetTeamNumber() ).g(), g_PR->GetTeamColor( pPlayer->GetTeamNumber() ).b(), teamcolorbg.a() /*175*/ ) ;
-			//Color HudForegroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
-
-			bg = HudBackgroundColour;
-			//fg = HudForegroundColour;
+			int iPlayerTeam = m_pFFPlayer->GetTeamNumber();
+			
+			if( m_iPlayerTeam != iPlayerTeam )
+			{
+				m_iPlayerTeam = iPlayerTeam;
+				Color newTeamColor = g_PR->GetTeamColor( m_iPlayerTeam );
+				m_TeamColorHudBackgroundColour.SetColor( newTeamColor.r(), newTeamColor.g(), newTeamColor.b(), m_TeamColorHudBackgroundColour.a() );
+			}
 		}
-
-		if (m_pHudBackground)
-			m_pHudBackground->DrawSelf(0, 0, bg);
-
-		if (m_pHudForeground)
-			m_pHudForeground->DrawSelf(0, 0, fg);
-
-		Panel::PaintBackground();
 	}
 
 	//-----------------------------------------------------------------------------
@@ -98,7 +112,10 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	void FFPanel::InitFFPanel()
 	{
-		//HScheme scheme = vgui::scheme()->LoadSchemeFromFile("resource/HudScheme.res", "HudScheme");
+		m_iPlayerTeam = -1;
+		
+		ivgui()->AddTickSignal( GetVPanel(), 500 );
+		//HScheme scheme = vgui::scheme()->LoadSchemeFromFile( "resource/HudScheme.res", "HudScheme");
 		//SetScheme(scheme);
 	}
 }

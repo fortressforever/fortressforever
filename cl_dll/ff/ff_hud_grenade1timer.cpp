@@ -1,22 +1,8 @@
-/********************************************************************
-	created:	2006/02/04
-	created:	4:2:2006   15:15
-	filename: 	f:\cvs\code\cl_dll\ff\ff_hud_grenade1timer.cpp
-	file path:	f:\cvs\code\cl_dll\ff
-	file base:	ff_hud_grenade1timer
-	file ext:	cpp
-	author:		Gavin "Mirvin_Monkey" Bramhill
-	
-	purpose:	For now this is just a straight copy
-				THIS WILL BE SORTED AT A LATER DATE OKAY!!
-*********************************************************************/
-
 #include "cbase.h"
 #include "hudelement.h"
 #include "hud_macros.h"
 
 #include "iclientmode.h"
-#include "c_ff_player.h"
 
 #include "ff_hud_grenade1timer.h"
 #include "ff_playerclass_parse.h"
@@ -77,7 +63,7 @@ void CHudGrenade1Timer::ResetTimer( void )
 	m_fVisible = false;
 	m_flLastTime = -10.0f;
 	m_iClass = 0;
-	m_iTeam = -1;
+	m_iPlayerTeam = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -95,24 +81,18 @@ void CHudGrenade1Timer::MsgFunc_FF_Grenade1Timer(bf_read &msg)
 	SetTimer(duration);
 }
 
-void CHudGrenade1Timer::ApplySchemeSettings(IScheme *pScheme)
-{
-	m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
-	m_HudBackgroundColour = GetSchemeColor("HudItem.Background", pScheme);
-	m_TeamColorHudBackgroundColour = GetSchemeColor("TeamColorHud.BackgroundAlpha", pScheme);
-
-	BaseClass::ApplySchemeSettings(pScheme);
-}
-
 void CHudGrenade1Timer::OnTick()
 {
-	CFFPlayer *ffplayer = CFFPlayer::GetLocalFFPlayer();
+	BaseClass::OnTick();
 
-	if (!ffplayer) 
+	if (!m_pFFPlayer) 
+	{
+		SetPaintEnabled(false);
+		SetPaintBackgroundEnabled(false);
 		return;
+	}
 
-	int iClass = ffplayer->GetClassSlot();
-	int iTeam = ffplayer->GetTeamNumber();
+	int iClass = m_pFFPlayer->GetClassSlot();
 
 	//if no class
 	if(iClass == 0)
@@ -144,13 +124,6 @@ void CHudGrenade1Timer::OnTick()
 
 		if ( strcmp( pClassInfo->m_szPrimaryClassName, "None" ) != 0 )
 		{
-			if(m_iTeam != iTeam)
-			{
-				m_iTeam = iTeam;
-				Color newTeamColor = g_PR->GetTeamColor(m_iTeam);
-				m_TeamColorHudBackgroundColour.SetColor(newTeamColor.r(), newTeamColor.g(), newTeamColor.b(), m_TeamColorHudBackgroundColour.a());
-			}
-
 			const char *grenade_name = pClassInfo->m_szPrimaryClassName;
 
 			GRENADE_FILE_INFO_HANDLE hGrenInfo = LookupGrenadeInfoSlot(grenade_name);
