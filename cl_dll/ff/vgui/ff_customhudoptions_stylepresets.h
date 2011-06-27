@@ -31,6 +31,7 @@ namespace vgui
 		void UpdateComponentControls(KeyValues *kvComponent);
 
 	private:
+
 		//-----------------------------------------------------------------------------
 		// Purpose: Catch the sliders moving
 		//-----------------------------------------------------------------------------
@@ -49,8 +50,10 @@ namespace vgui
 		CFFInputSlider	*m_pBarWidth;
 		CFFInputSlider	*m_pBarHeight;
 		CFFInputSlider	*m_pBarBorderWidth;
-		CFFInputSlider	*m_pBarMarginHorizontal;
-		CFFInputSlider	*m_pBarMarginVertical;
+
+		CFFInputSlider	*m_pItemMarginHorizontal;
+		CFFInputSlider	*m_pItemMarginVertical;
+		CFFInputSlider	*m_pItemColumns;
 
 		Label			*m_pSizeLabel, *m_pTextLabel;
 		Label			*m_pOffsetXLabel, *m_pOffsetYLabel, *m_pOffsetLabel;

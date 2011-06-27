@@ -16,7 +16,7 @@ namespace vgui
 	CFFCustomHudArrangementPresets::CFFCustomHudArrangementPresets(Panel *parent, char const *panelName, char const *pszComboBoxName) : BaseClass(parent, panelName, pszComboBoxName, ARRANGEMENTPRESET_FILE)
 	{
 		m_pPanelRed = new CFFInputSlider(this, "PanelRed", "PanelRedInput");
-		m_pPanelRed->SetRange(0, 255);
+		m_pPanelRed->SetRange(0, 255); 
 		m_pPanelRed->SetValue(255);
 		
 		m_pPanelGreen = new CFFInputSlider(this, "PanelGreen", "PanelGreenInput");
@@ -84,10 +84,6 @@ namespace vgui
 		m_pShowPanel = new CheckButton(this, "ShowPanel", "#GameUI_Show");
 		m_pPanelColorCustom = new CheckButton(this, "PanelColorCustom", "#GameUI_CustomColor");
 
-		m_pColumns = new CFFInputSlider(this, "Columns", "ColumnsInput");
-		m_pColumns->SetRange(1, 6);
-		m_pColumns->SetValue(1);
-		
 		LoadControlSettings("resource/ui/FFOptionsSubCustomHudArrangementPresets.res");
 	}
 	
@@ -99,27 +95,29 @@ namespace vgui
 	
 	void CFFCustomHudArrangementPresets::SetControlsEnabled(bool bEnabled)
 	{
-		m_pColumns->SetEnabled( bEnabled );
-		m_pItemsX->SetEnabled( bEnabled );
-		m_pItemsY->SetEnabled( bEnabled );
-		m_pHeaderTextSize->SetEnabled( bEnabled );
 		m_pHeaderTextX->SetEnabled( bEnabled );
 		m_pHeaderTextY->SetEnabled( bEnabled );
-		m_pHeaderIconSize->SetEnabled( bEnabled );
 		m_pHeaderIconX->SetEnabled( bEnabled );
 		m_pHeaderIconY->SetEnabled( bEnabled );
-		m_pTextSize->SetEnabled( bEnabled );
 		m_pTextX->SetEnabled( bEnabled );
 		m_pTextY->SetEnabled( bEnabled );
+		m_pItemsX->SetEnabled( bEnabled );
+		m_pItemsY->SetEnabled( bEnabled );
+
+		m_pHeaderTextSize->SetEnabled( bEnabled );
+		m_pHeaderIconSize->SetEnabled( bEnabled );
+		m_pTextSize->SetEnabled( bEnabled );
+
 		m_pShowHeaderIcon->SetEnabled( bEnabled );
 		m_pShowHeaderText->SetEnabled( bEnabled );
 		m_pShowText->SetEnabled( bEnabled );
+
 		m_pHeaderIconShadow->SetEnabled( bEnabled );
 		m_pHeaderTextShadow->SetEnabled( bEnabled );
 		m_pTextShadow->SetEnabled( bEnabled );
+
 		m_pShowPanel->SetEnabled( bEnabled );
 		m_pPanelColorCustom->SetEnabled( bEnabled );
-
 
 		//if we're disabling
 		if(!bEnabled)
@@ -134,14 +132,10 @@ namespace vgui
 		else
 		//only enable based upon what is selected for custom panel colour
 		{
-			if(m_pPanelColorCustom->IsSelected())
-			{
-				m_pPanelRed->SetEnabled( bEnabled );
-				m_pPanelGreen->SetEnabled( bEnabled );
-				m_pPanelBlue->SetEnabled( bEnabled );
-				m_pPanelAlpha->SetEnabled( bEnabled );
-			}
-			//TODO: else might need to force false - might be sensible but not necessary??
+			m_pPanelRed->SetEnabled( m_pPanelColorCustom->IsSelected() );
+			m_pPanelGreen->SetEnabled( m_pPanelColorCustom->IsSelected() );
+			m_pPanelBlue->SetEnabled( m_pPanelColorCustom->IsSelected() );
+			m_pPanelAlpha->SetEnabled( m_pPanelColorCustom->IsSelected() );			
 		}
 	}
 	//-----------------------------------------------------------------------------
@@ -160,24 +154,27 @@ namespace vgui
 	{
 		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
 
-		kvTemp->SetInt("columns", kvPreset->GetInt("columns", 2));
-		kvTemp->SetInt("itemsX", kvPreset->GetInt("itemsX", 5));
-		kvTemp->SetInt("itemsY", kvPreset->GetInt("itemsY", 20));
-		kvTemp->SetInt("showHeaderText", kvPreset->GetInt("showHeaderText", 1));
-		kvTemp->SetInt("headerTextShadow", kvPreset->GetInt("headerTextShadow", 0));
-		kvTemp->SetInt("headerTextSize", kvPreset->GetInt("headerTextSize", 3));
 		kvTemp->SetInt("headerTextX", kvPreset->GetInt("headerTextX", 20));
 		kvTemp->SetInt("headerTextY", kvPreset->GetInt("headerTextY", 7));
-		kvTemp->SetInt("showHeaderIcon", kvPreset->GetInt("showHeaderIcon", 1));
-		kvTemp->SetInt("headerIconShadow", kvPreset->GetInt("headerIconShadow", 0));
-		kvTemp->SetInt("headerIconSize", kvPreset->GetInt("headerIconSize", 3));
 		kvTemp->SetInt("headerIconX", kvPreset->GetInt("headerIconX", 3));
 		kvTemp->SetInt("headerIconY", kvPreset->GetInt("headerIconY", 3));
-		kvTemp->SetInt("showText", kvPreset->GetInt("showText", 1));
-		kvTemp->SetInt("textShadow", kvPreset->GetInt("textShadow", 0));
-		kvTemp->SetInt("textSize", kvPreset->GetInt("textSize", 3));
 		kvTemp->SetInt("textX", kvPreset->GetInt("textX", 25));
 		kvTemp->SetInt("textY", kvPreset->GetInt("textY", 20));
+		kvTemp->SetInt("itemsX", kvPreset->GetInt("itemsX", 5));
+		kvTemp->SetInt("itemsY", kvPreset->GetInt("itemsY", 20));
+
+		kvTemp->SetInt("showHeaderText", kvPreset->GetInt("showHeaderText", 1));
+		kvTemp->SetInt("showHeaderIcon", kvPreset->GetInt("showHeaderIcon", 1));
+		kvTemp->SetInt("showText", kvPreset->GetInt("showText", 1));
+
+		kvTemp->SetInt("headerTextSize", kvPreset->GetInt("headerTextSize", 3));
+		kvTemp->SetInt("headerIconSize", kvPreset->GetInt("headerIconSize", 3));
+		kvTemp->SetInt("textSize", kvPreset->GetInt("textSize", 3));
+
+		kvTemp->SetInt("headerTextShadow", kvPreset->GetInt("headerTextShadow", 0));
+		kvTemp->SetInt("headerIconShadow", kvPreset->GetInt("headerIconShadow", 0));
+		kvTemp->SetInt("textShadow", kvPreset->GetInt("textShadow", 0));
+
 		kvTemp->SetInt("showPanel", kvPreset->GetInt("showPanel", 1));
 		kvTemp->SetInt("panelColorCustom", kvPreset->GetInt("panelColorCustom", 0));
 		kvTemp->SetInt("panelRed", kvPreset->GetInt("panelRed", 255));
@@ -195,24 +192,27 @@ namespace vgui
 	{
 		BaseClass::UpdatePresetFromControls(kvPreset);
 
-		kvPreset->SetInt("columns", m_pColumns->GetValue());
-		kvPreset->SetInt("itemsX", m_pItemsX->GetValue());
-		kvPreset->SetInt("itemsY", m_pItemsY->GetValue());
-		kvPreset->SetInt("showHeaderText", m_pShowHeaderText->IsSelected());
-		kvPreset->SetInt("headerTextShadow", m_pHeaderTextShadow->IsSelected());
-		kvPreset->SetInt("headerTextSize", m_pHeaderTextSize->GetValue() - 1);
 		kvPreset->SetInt("headerTextX", m_pHeaderTextX->GetValue());
 		kvPreset->SetInt("headerTextY", m_pHeaderTextY->GetValue());
-		kvPreset->SetInt("showHeaderIcon", m_pShowHeaderIcon->IsSelected());
-		kvPreset->SetInt("headerIconShadow", m_pHeaderIconShadow->IsSelected());
-		kvPreset->SetInt("headerIconSize", m_pHeaderIconSize->GetValue() - 1);
 		kvPreset->SetInt("headerIconX", m_pHeaderIconX->GetValue());
 		kvPreset->SetInt("headerIconY", m_pHeaderIconY->GetValue());
-		kvPreset->SetInt("showText", m_pShowText->IsSelected());
-		kvPreset->SetInt("textShadow", m_pTextShadow->IsSelected());
-		kvPreset->SetInt("textSize", m_pTextSize->GetValue() - 1);
 		kvPreset->SetInt("textX", m_pTextX->GetValue());
 		kvPreset->SetInt("textY", m_pTextY->GetValue());
+		kvPreset->SetInt("itemsX", m_pItemsX->GetValue());
+		kvPreset->SetInt("itemsY", m_pItemsY->GetValue());
+		
+		kvPreset->SetInt("headerTextSize", m_pHeaderTextSize->GetValue() - 1);
+		kvPreset->SetInt("headerIconSize", m_pHeaderIconSize->GetValue() - 1);
+		kvPreset->SetInt("textSize", m_pTextSize->GetValue() - 1);
+
+		kvPreset->SetInt("showHeaderText", m_pShowHeaderText->IsSelected());
+		kvPreset->SetInt("showHeaderIcon", m_pShowHeaderIcon->IsSelected());
+		kvPreset->SetInt("showText", m_pShowText->IsSelected());
+
+		kvPreset->SetInt("headerTextShadow", m_pHeaderTextShadow->IsSelected());
+		kvPreset->SetInt("headerIconShadow", m_pHeaderIconShadow->IsSelected());
+		kvPreset->SetInt("textShadow", m_pTextShadow->IsSelected());
+
 		kvPreset->SetInt("showPanel", m_pShowPanel->IsSelected());
 		kvPreset->SetInt("panelColorCustom", m_pPanelColorCustom->IsSelected());
 		kvPreset->SetInt("panelRed", m_pPanelRed->GetValue());
@@ -231,24 +231,27 @@ namespace vgui
 		m_bPresetLoading = true;
 		//this disables the preset options from registering these changes as a preset update!
 
-		m_pColumns->SetValue(kvPreset->GetInt("columns", 2));
 		m_pItemsX->SetValue(kvPreset->GetInt("itemsX", 5));
 		m_pItemsY->SetValue(kvPreset->GetInt("itemsY", 20));
-		m_pShowHeaderText->SetSelected(kvPreset->GetInt("showHeaderText", 1));
-		m_pHeaderTextShadow->SetSelected(kvPreset->GetInt("headerTextShadow", 0));
-		m_pHeaderTextSize->SetValue(kvPreset->GetInt("headerTextSize", 3) + 1);
 		m_pHeaderTextX->SetValue(kvPreset->GetInt("headerTextX", 20));
 		m_pHeaderTextY->SetValue(kvPreset->GetInt("headerTextY", 7));
-		m_pShowHeaderIcon->SetSelected(kvPreset->GetInt("showHeaderIcon", 1));
-		m_pHeaderIconShadow->SetSelected(kvPreset->GetInt("headerIconShadow", 0));
-		m_pHeaderIconSize->SetValue(kvPreset->GetInt("headerIconSize", 3) + 1);
 		m_pHeaderIconX->SetValue(kvPreset->GetInt("headerIconX", 3));
 		m_pHeaderIconY->SetValue(kvPreset->GetInt("headerIconY", 3));
-		m_pShowText->SetSelected(kvPreset->GetInt("showText", 1));
-		m_pTextShadow->SetSelected(kvPreset->GetInt("textShadow", 0));
-		m_pTextSize->SetValue(kvPreset->GetInt("textSize", 3) + 1);
 		m_pTextX->SetValue(kvPreset->GetInt("textX", 25));
 		m_pTextY->SetValue(kvPreset->GetInt("textY", 20));
+
+		m_pShowHeaderText->SetSelected(kvPreset->GetInt("showHeaderText", 1));
+		m_pShowHeaderIcon->SetSelected(kvPreset->GetInt("showHeaderIcon", 1));
+		m_pShowText->SetSelected(kvPreset->GetInt("showText", 1));
+
+		m_pHeaderTextSize->SetValue(kvPreset->GetInt("headerTextSize", 3) + 1);
+		m_pHeaderIconSize->SetValue(kvPreset->GetInt("headerIconSize", 3) + 1);
+		m_pTextSize->SetValue(kvPreset->GetInt("textSize", 3) + 1);
+
+		m_pHeaderTextShadow->SetSelected(kvPreset->GetInt("headerTextShadow", 0));
+		m_pHeaderIconShadow->SetSelected(kvPreset->GetInt("headerIconShadow", 0));
+		m_pTextShadow->SetSelected(kvPreset->GetInt("textShadow", 0));
+
 		m_pShowPanel->SetSelected(kvPreset->GetInt("showPanel", 1));
 		m_pPanelColorCustom->SetSelected(kvPreset->GetInt("panelColorCustom", 0));
 		m_pPanelRed->SetValue(kvPreset->GetInt("panelRed", 255));
