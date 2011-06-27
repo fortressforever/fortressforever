@@ -38,15 +38,16 @@ void CHudBuildTimer::Init()
 	
 	ivgui()->AddTickSignal( GetVPanel(), 100 );
 
-	m_pDispenserIconTexture = gHUD.GetIcon("build_dispenser");
-	m_pSentrygunIconTexture = gHUD.GetIcon("build_sentrygun");
-	m_pDetpackIconTexture = gHUD.GetIcon("build_detpack");
-	m_pMancannonIconTexture = gHUD.GetIcon("build_jumppad");
 	Reset();
 }
 
 void CHudBuildTimer::VidInit()
 {
+	m_pDispenserIconTexture = gHUD.GetIcon("build_dispenser");
+	m_pSentrygunIconTexture = gHUD.GetIcon("build_sentrygun");
+	m_pDetpackIconTexture = gHUD.GetIcon("build_detpack");
+	m_pMancannonIconTexture = gHUD.GetIcon("build_jumppad");
+	
 	Reset();
 }
 
@@ -112,6 +113,8 @@ void CHudBuildTimer::MsgFunc_FF_BuildTimer(bf_read &msg)
 
 void CHudBuildTimer::OnTick()
 {
+	BaseClass::OnTick();
+
 	if ( gpGlobals->curtime > m_flStartTime + m_flDuration ) 
 	{
 		float iFadeLength = g_pClientMode->GetViewportAnimationController()->GetAnimationSequenceLength("FadeOutBuildTimer");
