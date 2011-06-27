@@ -708,8 +708,12 @@ CFFTeam *CFFBuildableObject::GetOwnerTeam( void )
 {
 	CFFPlayer *pOwner = GetOwnerPlayer();
 	if( pOwner )
-		return dynamic_cast< CFFTeam * >( pOwner->GetTeam() );
-
+	{
+#ifdef _DEBUG
+		Assert( dynamic_cast< CFFTeam * >( pOwner->GetTeam() ) != 0 );
+#endif
+		return static_cast< CFFTeam * >( pOwner->GetTeam() );
+	}
 	return NULL;
 }
 
