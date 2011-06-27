@@ -58,7 +58,7 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 
 void CHudCrosshair::Init() 
 {
-	ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
+	ivgui()->AddTickSignal(GetVPanel(), 500); //only update 2 times a second
 }
 
 void CHudCrosshair::OnTick() 

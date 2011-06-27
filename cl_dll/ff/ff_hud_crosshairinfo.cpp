@@ -67,7 +67,7 @@ public:
 		// Hide when player is dead
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );
 
-		vgui::ivgui()->AddTickSignal( GetVPanel() );
+		vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 
 		m_flDuration = 0.2f;
 		m_flDrawDuration = 2.0f;

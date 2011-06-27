@@ -40,9 +40,6 @@ public:
 	virtual void		LevelInit( void );
 	virtual void		LevelShutdown( void );
 
-	// Run effects and let them decide whether to remove themselves
-	void				OnTick( void );
-
 private:
 
 	// Render all panel effects

@@ -52,9 +52,6 @@ C_FFRootPanel::C_FFRootPanel( vgui::VPANEL parent )
 
 	// Make it screen sized
 	SetBounds( 0, 0, ScreenWidth(), ScreenHeight() );
-
-	// Ask for OnTick messages
-	vgui::ivgui()->AddTickSignal( GetVPanel() );
 }
 
 //-----------------------------------------------------------------------------
@@ -80,13 +77,6 @@ void C_FFRootPanel::PostChildPaint()
 //  this panel/surface if so
 //-----------------------------------------------------------------------------
 void C_FFRootPanel::RenderPanelEffects( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_FFRootPanel::OnTick( void )
 {
 }
 
