@@ -27,13 +27,17 @@ namespace vgui
 		m_pBarBorderWidth->SetRange(1, 5);
 		m_pBarBorderWidth->SetValue(1);
 		
-		m_pBarMarginHorizontal = new CFFInputSlider(this, "BarMarginHorizontal", "BarMarginHorizontalInput");
-		m_pBarMarginHorizontal->SetRange(0, 20);
-		m_pBarMarginHorizontal->SetValue(5);
+		m_pItemMarginHorizontal = new CFFInputSlider(this, "ItemMarginHorizontal", "ItemMarginHorizontalInput");
+		m_pItemMarginHorizontal->SetRange(0, 20);
+		m_pItemMarginHorizontal->SetValue(5);
 		
-		m_pBarMarginVertical = new CFFInputSlider(this, "BarMarginVertical", "BarMarginVerticalInput");
-		m_pBarMarginVertical->SetRange(0, 20);
-		m_pBarMarginVertical->SetValue(5);
+		m_pItemMarginVertical = new CFFInputSlider(this, "ItemMarginVertical", "ItemMarginVerticalInput");
+		m_pItemMarginVertical->SetRange(0, 20);
+		m_pItemMarginVertical->SetValue(5);
+		
+		m_pItemColumns = new CFFInputSlider(this, "Columns", "ColumnsInput");
+		m_pItemColumns->SetRange(1, 12);
+		m_pItemColumns->SetValue(1);
 
 		m_pSizeLabel = new Label(this, "SizeLabel", "#GameUI_Size");
 		m_pTextLabel = new Label(this, "TextLabel", "#GameUI_Text");
@@ -160,11 +164,12 @@ namespace vgui
 	
 	void CFFCustomHudStylePresets::SetControlsEnabled(bool bEnabled)
 	{
+		m_pItemColumns->SetEnabled( bEnabled );
 		m_pBarWidth->SetEnabled( bEnabled );
 		m_pBarHeight->SetEnabled( bEnabled );
 		m_pBarBorderWidth->SetEnabled( bEnabled );
-		m_pBarMarginHorizontal->SetEnabled( bEnabled );
-		m_pBarMarginVertical->SetEnabled( bEnabled );
+		m_pItemMarginHorizontal->SetEnabled( bEnabled );
+		m_pItemMarginVertical->SetEnabled( bEnabled );
 		m_pBarOrientation->SetEnabled( bEnabled );
 
 		m_pComponentSelection->SetEnabled( bEnabled );
@@ -222,11 +227,12 @@ namespace vgui
 	{
 		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
 
+		kvTemp->SetInt("itemColumns", kvPreset->GetInt("itemColumns", 2));
 		kvTemp->SetInt("barWidth", kvPreset->GetInt("barWidth", 60));
 		kvTemp->SetInt("barHeight", kvPreset->GetInt("barHeight", 10));
 		kvTemp->SetInt("barBorderWidth", kvPreset->GetInt("barBorderWidth", 1));
-		kvTemp->SetInt("barMarginHorizontal", kvPreset->GetInt("barMarginHorizontal", 10));
-		kvTemp->SetInt("barMarginVertical", kvPreset->GetInt("barMarginVertical", 10));
+		kvTemp->SetInt("itemMarginHorizontal", kvPreset->GetInt("itemMarginHorizontal", 10));
+		kvTemp->SetInt("itemMarginVertical", kvPreset->GetInt("itemMarginVertical", 10));
 		kvTemp->SetInt("barOrientation", kvPreset->GetInt("barOrientation", 0));
 
 		//see if component data exists
@@ -479,6 +485,7 @@ namespace vgui
 		kvComponent->SetInt("green", m_pGreen->GetValue());
 		kvComponent->SetInt("blue", m_pBlue->GetValue());
 		kvComponent->SetInt("alpha", m_pAlpha->GetValue());
+
 		if(m_pShadow->IsEnabled())
 			kvComponent->SetInt("shadow", m_pShadow->IsSelected());
 		if(m_pSize->IsEnabled())
@@ -513,9 +520,10 @@ namespace vgui
 			kvPreset->SetInt("barWidth", m_pBarWidth->GetValue());
 			kvPreset->SetInt("barHeight", m_pBarHeight->GetValue());
 			kvPreset->SetInt("barBorderWidth", m_pBarBorderWidth->GetValue());
-			kvPreset->SetInt("barMarginHorizontal", m_pBarMarginHorizontal->GetValue());
-			kvPreset->SetInt("barMarginVertical", m_pBarMarginVertical->GetValue());
+			kvPreset->SetInt("itemMarginHorizontal", m_pItemMarginHorizontal->GetValue());
+			kvPreset->SetInt("itemMarginVertical", m_pItemMarginVertical->GetValue());
 			kvPreset->SetInt("barOrientation", m_pBarOrientation->GetActiveItem());
+			kvPreset->SetInt("itemColumns", m_pItemColumns->GetValue());
 		}
 
 		//TODO: send preset to preview
@@ -532,9 +540,10 @@ namespace vgui
 		m_pBarWidth->SetValue(kvPreset->GetInt("barWidth", 60));
 		m_pBarHeight->SetValue(kvPreset->GetInt("barHeight", 10));
 		m_pBarBorderWidth->SetValue(kvPreset->GetInt("barBorderWidth", 1));
-		m_pBarMarginHorizontal->SetValue(kvPreset->GetInt("barMarginHorizontal", 10));
-		m_pBarMarginVertical->SetValue(kvPreset->GetInt("barMarginVertical", 10));
 		m_pBarOrientation->ActivateItemByRow(kvPreset->GetInt("barOrientation", 0));
+		m_pItemMarginHorizontal->SetValue(kvPreset->GetInt("itemMarginHorizontal", 10));
+		m_pItemMarginVertical->SetValue(kvPreset->GetInt("itemMarginVertical", 10));
+		m_pItemColumns->SetValue(kvPreset->GetInt("itemColumns", 2));
 
 		int iMenuItemToShow = 0;
 

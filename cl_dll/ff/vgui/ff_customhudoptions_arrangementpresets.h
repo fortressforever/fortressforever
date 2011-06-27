@@ -42,10 +42,8 @@ namespace vgui
 		// Purpose: Catch the checkbox selection changes
 		//-----------------------------------------------------------------------------
 		MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data);
-	private:
-		CFFInputSlider	*m_pColumns;
 
-		ComboBox		*m_pPanelColorMode;
+	private:
 
 		CFFInputSlider	*m_pItemsX, *m_pItemsY;
 		CFFInputSlider	*m_pHeaderTextX, *m_pHeaderTextY;
