@@ -14,63 +14,34 @@
 #include "cbase.h"
 #include "hud.h"
 #include "hudelement.h"
-#include "hud_macros.h"
 
-//#include <KeyValues.h>
 #include <vgui/ISurface.h>
-#include <vgui/ISystem.h>
+#include <vgui/IVGUI.h>
 
 #include "ff_panel.h"
 #include "c_ff_player.h"
-#include "ff_utils.h"
-#include "c_playerresource.h"
-
-#include <vgui/ILocalize.h>
+#include "iclientmode.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-/*
-ConVar cl_box1( 
-	"cl_box1", 
-	"0", 
-	FCVAR_REPLICATED, 
-	"sds" );
-ConVar cl_box2( 
-	"cl_box2", 
-	"0", 
-	FCVAR_REPLICATED, 
-	"sds" );
-ConVar cl_box3( 
-	"cl_box3", 
-	"100", 
-	FCVAR_REPLICATED, 
-	"sds" );
-ConVar cl_box4( 
-	"cl_box4", 
-	"100", 
-	FCVAR_REPLICATED, 
-	"sds" );
-*/
-
 
 using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current disguised class
 //-----------------------------------------------------------------------------
-class CHudWeaponInfo : public CHudElement, public vgui::FFPanel
+class CHudWeaponInfo : public CHudElement, public FFPanel
 {
 public:
-	DECLARE_CLASS_SIMPLE( CHudWeaponInfo, vgui::FFPanel );
+	DECLARE_CLASS_SIMPLE( CHudWeaponInfo, FFPanel );
 
-	CHudWeaponInfo( const char *pElementName ) : vgui::FFPanel( NULL, "HudWeaponInfo" ), CHudElement( pElementName )
+	CHudWeaponInfo( const char *pElementName ) : BaseClass( NULL, "HudWeaponInfo" ), CHudElement( pElementName )
 	{
 		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
 
 		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
 	}
 
 	virtual ~CHudWeaponInfo( void )
@@ -88,8 +59,9 @@ public:
 	}
 
 	virtual void Paint( void );
+	virtual void Init( void );
 	virtual void VidInit( void );
-	virtual bool ShouldDraw( void );
+	virtual void OnTick( void );
 
 protected:
 	CHudTexture		*m_pWeaponIcon;
@@ -109,79 +81,70 @@ DECLARE_HUDELEMENT( CHudWeaponInfo );
 //-----------------------------------------------------------------------------
 // Purpose: Done each map load
 //-----------------------------------------------------------------------------
+void CHudWeaponInfo::Init( void )
+{
+	ivgui()->AddTickSignal( GetVPanel(), 100 );
+}
+
+
 void CHudWeaponInfo::VidInit( void )
 {
-		
-	m_pWeaponIcon = new CHudTexture;
-	m_pAmmoIcon = new CHudTexture;
-	SetPaintBackgroundEnabled( false );
+	m_pWeaponIcon = new CHudTexture();
+	m_pAmmoIcon = new CHudTexture();
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Should we draw? (Are we ingame? have we picked a class, etc)
+// Purpose: Get stuff!
 //-----------------------------------------------------------------------------
-bool CHudWeaponInfo::ShouldDraw() 
-{ 
-   if( !engine->IsInGame() ) 
-      return false; 
+void CHudWeaponInfo::OnTick() 
+{
+	BaseClass::OnTick();
 
-   C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
+	if(!m_pFFPlayer)
+		return;
+	
+	C_BaseCombatWeapon *pSelectedWeapon = m_pFFPlayer->GetActiveWeapon();
 
-   if( !pPlayer ) 
-      return false; 
-
-   if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) ) 
-      return false; 
-
-   return true; 
-} 
+	if (!pSelectedWeapon)
+	{
+		SetPaintEnabled(false);
+		SetPaintBackgroundEnabled(false);
+	}
+	else
+	{
+		*m_pWeaponIcon = *pSelectedWeapon->GetSpriteInactive();
+		*m_pAmmoIcon = *pSelectedWeapon->GetSpriteAmmo();
+		SetPaintEnabled(true);
+		SetPaintBackgroundEnabled(true);
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Draw stuff!
 //-----------------------------------------------------------------------------
 void CHudWeaponInfo::Paint() 
 { 
-   FFPanel::Paint(); // Draws the background glyphs 
+	if(m_pWeaponIcon)
+	{
+		// Shallow copy of the weapon scrolling icon
+		// Change the font so it uses 28 size instead of 64
+		m_pWeaponIcon->hFont = m_hIconFont;
+		m_pWeaponIcon->bRenderUsingFont = true;
 
-   if( m_pWeaponIcon && m_pAmmoIcon) 
-   { 
-      C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
-      if ( !pPlayer ) 
-         return; 
+		// Draw itself in the bottom right corner
+		//m_pWeaponIcon->DrawSelf(cl_box1.GetInt(), cl_box2.GetInt(), col);
+		// for widescreen stuff we take width scaled, then subtract the X not scaled (as we dont stretch the hud)
+		// then we add the 44 not scaled (GetProportionalScaledValue is scaled due to height but not width)
 
-		C_BaseCombatWeapon *pSelectedWeapon = pPlayer->GetActiveWeapon();
-		if (!pSelectedWeapon)
-			return;
+		m_pWeaponIcon->DrawSelf( scheme()->GetProportionalScaledValue(44) , 0, GetFgColor());
+	}
 
-	  if (pSelectedWeapon)
-	  {
-			Color col = GetFgColor();
+	if(m_pAmmoIcon)
+	{
+		// Shallow copy of the ammo icon
+		m_pAmmoIcon->hFont = m_hAmmoIconFont;
 
-			// Shallow copy of the weapon scrolling icon
-			*m_pWeaponIcon = *pSelectedWeapon->GetSpriteInactive();
-			// Change the font so it uses 28 size instead of 64
-			m_pWeaponIcon->hFont = m_hIconFont;
-			m_pWeaponIcon->bRenderUsingFont = true;
-			SetPaintBackgroundEnabled( false );
-
-			// Draw itself in the bottom right corner
-			//m_pWeaponIcon->DrawSelf(cl_box1.GetInt(), cl_box2.GetInt(), col);
-			// for widescreen stuff we take width scaled, then subtract the X not scaled (as we dont stretch the hud)
-			// then we add the 44 not scaled (GetProportionalScaledValue is scaled due to height but not width)
-
-			m_pWeaponIcon->DrawSelf( scheme()->GetProportionalScaledValue(44) , 0, col);
-	//DevMsg( "wide: %i; tall: %i" , screenWide , screenTall );
-
-			// Shallow copy of the ammo icon
-			*m_pAmmoIcon = *pSelectedWeapon->GetSpriteAmmo();
-			m_pAmmoIcon->hFont = m_hAmmoIconFont;
-
-			// Draw itself in the bottom right corner
-			// *** commented until we find a place to fit the ammo icon! - AfterShock
-			m_pAmmoIcon->DrawSelf(ammo_xpos, ammo_ypos, col);
-
-		// Draw the icon -- yeah, it's not actually a weapon icon – it’s the hint lightbulb 
-		//m_pWeaponIcon->DrawSelf( 0, 0, clr ); // Draws it in the top left corner of the panel 
-	  }
-	} 
+		// Draw itself in the bottom right corner
+		m_pAmmoIcon->DrawSelf(ammo_xpos, ammo_ypos, GetFgColor());
+	}
 }
