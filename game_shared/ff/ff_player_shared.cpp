@@ -88,7 +88,7 @@ ConVar ffdev_overpressure_slide_wearsoff_bias( "ffdev_overpressure_slide_wearsof
 
 ConVar ffdev_overpressure_friendlyscale( "ffdev_overpressure_friendlyscale", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_FRIENDLYSCALE ffdev_overpressure_friendlyscale.GetFloat()
-ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "1", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_IGNOREFRIENDLY ffdev_overpressure_friendlyignore.GetBool()
 
 
