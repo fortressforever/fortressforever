@@ -88,7 +88,10 @@ namespace vgui
 	void FFPanel::OnTick()
 	{
 		if( !engine->IsInGame() )
+		{
+			m_pFFPlayer = NULL; // not in game so make m_pFFPlayer NULL!
 			return;
+		}
 
 		m_pFFPlayer = CFFPlayer::GetLocalFFPlayer();
 
