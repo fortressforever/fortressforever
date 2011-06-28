@@ -54,7 +54,7 @@ void CHudBuildTimer::VidInit()
 void CHudBuildTimer::Reset()
 {
 	m_fVisible = false;
-	m_iBuildType = 0;	
+	m_iBuildType = FF_BUILD_NONE;	
 	m_iPlayerTeam = -1;
 	m_flStartTime = 0.0f;
 	m_flDuration = 0.0f;
