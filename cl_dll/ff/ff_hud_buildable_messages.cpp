@@ -101,7 +101,8 @@ void CHudBuildableMessages::VidInit( void )
 {
 	//SetPaintBackgroundEnabled( false );
 	SetVisible( false );
-	m_flStartTime = -99;		// |-- Mirv: Fix messages reappearing next map
+	m_flStartTime = -99.0f;		// |-- Mirv: Fix messages reappearing next map
+	m_flDuration = 0.0f;
 }
 
 void CHudBuildableMessages::MsgFunc_DetpackStartTimer( bf_read &msg )
@@ -219,16 +220,13 @@ void CHudBuildableMessages::OnTick( void )
 	if( !engine->IsInGame() )
 		return;
 
-	if(( m_flStartTime + m_flDuration ) > gpGlobals->curtime )
-	{
-		if( !IsVisible() )
-			SetVisible( true );
-	}
+	if(m_flDuration = 0.0f)
+		m_flDuration = 4.0f;
+
+	if( ( m_flStartTime + m_flDuration ) > gpGlobals->curtime )
+		SetPaintEnabled(true);
 	else
-	{
-		if( IsVisible() )
-			SetVisible( false );
-	}
+		SetPaintEnabled(false);
 }
 
 void CHudBuildableMessages::Paint( void )
