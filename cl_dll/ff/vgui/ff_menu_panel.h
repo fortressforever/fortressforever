@@ -39,10 +39,10 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(FFMenuPanel, Panel);
 
 	public:
-		FFMenuPanel() : Panel() { InitFFMenuPanel(); }
-		FFMenuPanel(Panel *parent) : Panel(parent) { InitFFMenuPanel(); }
-		FFMenuPanel(Panel *parent, const char *panelName) : Panel(parent, panelName) { InitFFMenuPanel(); }
-		FFMenuPanel(Panel *parent, const char *panelName, HScheme scheme) : Panel(parent, panelName, scheme) { InitFFMenuPanel(); }
+		FFMenuPanel() : BaseClass() { InitFFMenuPanel(); }
+		FFMenuPanel(Panel *parent) : BaseClass(parent) { InitFFMenuPanel(); }
+		FFMenuPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName) { InitFFMenuPanel(); }
+		FFMenuPanel(Panel *parent, const char *panelName, HScheme scheme) : BaseClass(parent, panelName, scheme) { InitFFMenuPanel(); }
 
 		void ApplySettings(KeyValues *inResourceData);
 		void ApplySchemeSettings(IScheme *pScheme);

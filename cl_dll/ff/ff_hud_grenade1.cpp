@@ -1,15 +1,3 @@
-/********************************************************************
-	created:	2006/01/04
-	created:	4:1:2006   9:26
-	filename: 	f:\cvs\code\cl_dll\ff\ff_hud_grenade1.cpp
-	file path:	f:\cvs\code\cl_dll\ff
-	file base:	ff_hud_grenade1
-	file ext:	cpp
-	author:		Gavin "Mirvin_Monkey" Bramhill
-	
-	purpose:	
-*********************************************************************/
-
 #include "cbase.h"
 #include "hudelement.h"
 #include "hud_macros.h"
@@ -52,7 +40,7 @@ private:
 	int		m_iGrenade;
 	int		m_iClass;
 
-	CHudTexture *iconTexture;
+	CHudTexture *m_pIconTexture;
 };
 
 DECLARE_HUDELEMENT(CHudGrenade1);
@@ -74,7 +62,7 @@ void CHudGrenade1::Init()
 	m_iClass		= 0;
 
 	SetLabelText(L"");
-	ivgui()->AddTickSignal( GetVPanel(), 100 );
+	ivgui()->AddTickSignal( GetVPanel(), 500 );
 }
 
 //-----------------------------------------------------------------------------
@@ -84,8 +72,8 @@ void CHudGrenade1::Reset()
 {
 	BaseClass::Reset();
 
-	m_iGrenade = 0;
-	m_iClass = 0;
+	m_iGrenade = -1;
+	m_iClass = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -93,17 +81,17 @@ void CHudGrenade1::Reset()
 //-----------------------------------------------------------------------------
 void CHudGrenade1::OnTick() 
 {
-	C_FFPlayer *ffplayer = C_FFPlayer::GetLocalFFPlayer();
+	BaseClass::OnTick();
 
-	if (!ffplayer) 
+	if (!m_pFFPlayer) 
 	{
 		SetPaintEnabled(false);
 		SetPaintBackgroundEnabled(false);
 		return;
 	}
 
-	int iClass = ffplayer->GetClassSlot();
-	int iGrenade1 = ffplayer->m_iPrimary;
+	int iClass = m_pFFPlayer->GetClassSlot();
+	int iGrenade1 = m_pFFPlayer->m_iPrimary;
 
 	//if no class or class doesn't have grenades
 	if(iClass == 0 || iGrenade1 == -1)
@@ -160,7 +148,7 @@ void CHudGrenade1::OnTick()
 			if (!pGrenInfo)
 				return;
 
-			iconTexture = pGrenInfo->iconHud;
+			m_pIconTexture = pGrenInfo->iconHud;
 		}
 		else
 		//Player doesn't have grenades
@@ -204,15 +192,15 @@ void CHudGrenade1::SetGrenade(int iGrenade, bool playAnimation)
 }
 
 void CHudGrenade1::Paint() 
-{	
-	if(iconTexture)
+{
+	if(m_pIconTexture)
 	{
 		Color iconColor( 255, 255, 255, 125 );
-		int iconWide = iconTexture->Width();
-		int iconTall = iconTexture->Height();
+		int iconWide = m_pIconTexture->Width();
+		int iconTall = m_pIconTexture->Height();
 
 		//If we're using a font char, this will ignore iconTall and iconWide
-		iconTexture->DrawSelf( icon_xpos, icon_ypos - (iconTall / 2), iconWide, iconTall, iconColor );
+		m_pIconTexture->DrawSelf( icon_xpos, icon_ypos - (iconTall / 2), iconWide, iconTall, iconColor );
 	}
 
 	BaseClass::Paint();

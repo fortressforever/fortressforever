@@ -38,16 +38,15 @@ void CHudBuildTimer::Init()
 	
 	ivgui()->AddTickSignal( GetVPanel(), 100 );
 
+	m_pDispenserIconTexture = gHUD.GetIcon("build_dispenser");
+	m_pSentrygunIconTexture = gHUD.GetIcon("build_sentrygun");
+	m_pDetpackIconTexture = gHUD.GetIcon("build_detpack");
+	m_pMancannonIconTexture = gHUD.GetIcon("build_jumppad");
 	Reset();
 }
 
 void CHudBuildTimer::VidInit()
 {
-	m_pDispenserIconTexture = gHUD.GetIcon("build_dispenser");
-	m_pSentrygunIconTexture = gHUD.GetIcon("build_sentrygun");
-	m_pDetpackIconTexture = gHUD.GetIcon("build_detpack");
-	m_pMancannonIconTexture = gHUD.GetIcon("build_jumppad");
-
 	Reset();
 }
 
@@ -55,10 +54,11 @@ void CHudBuildTimer::Reset()
 {
 	m_fVisible = false;
 	m_iBuildType = 0;	
-	m_iTeam = -1;
+	m_iPlayerTeam = -1;
 	m_flStartTime = 0.0f;
 	m_flDuration = 0.0f;
 	
+	SetAlpha( 0 );
 	SetPaintEnabled(false);
 	SetPaintBackgroundEnabled(false);
 }
@@ -110,30 +110,8 @@ void CHudBuildTimer::MsgFunc_FF_BuildTimer(bf_read &msg)
 	SetBuildTimer(type, duration);
 }
 
-void CHudBuildTimer::ApplySchemeSettings(IScheme *pScheme)
-{
-	m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
-	m_HudBackgroundColour = GetSchemeColor("HudItem.Background", pScheme);
-	m_TeamColorHudBackgroundColour = GetSchemeColor("TeamColorHud.BackgroundAlpha", pScheme);
-
-	BaseClass::ApplySchemeSettings(pScheme);
-}
-
 void CHudBuildTimer::OnTick()
 {
-	CFFPlayer *ffplayer = CFFPlayer::GetLocalFFPlayer();
-
-	if (!ffplayer) 
-		return;
-		
-	int iTeam = ffplayer->GetTeamNumber();
-	
-	if(m_iTeam != iTeam)
-	{
-		m_iTeam = iTeam;
-		Color newTeamColor = g_PR->GetTeamColor(m_iTeam);
-		m_TeamColorHudBackgroundColour.SetColor(newTeamColor.r(), newTeamColor.g(), newTeamColor.b(), m_TeamColorHudBackgroundColour.a());
-	}
 	if ( gpGlobals->curtime > m_flStartTime + m_flDuration ) 
 	{
 		float iFadeLength = g_pClientMode->GetViewportAnimationController()->GetAnimationSequenceLength("FadeOutBuildTimer");

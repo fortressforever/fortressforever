@@ -3,7 +3,6 @@
 #include "hud_macros.h"
 
 #include "iclientmode.h"
-#include "c_ff_player.h"
 
 #include "ff_hud_grenade2timer.h"
 #include "ff_playerclass_parse.h"
@@ -23,7 +22,6 @@ using namespace vgui;
 CHudGrenade2Timer *g_pGrenade2Timer = NULL;
 
 DECLARE_HUDELEMENT(CHudGrenade2Timer);
-
 
 CHudGrenade2Timer::CHudGrenade2Timer(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudGrenade2Timer") 
 {
@@ -65,7 +63,7 @@ void CHudGrenade2Timer::ResetTimer( void )
 	m_fVisible = false;
 	m_flLastTime = -10.0f;
 	m_iClass = 0;
-	m_iTeam = -1;
+	m_iPlayerTeam = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -83,24 +81,18 @@ void CHudGrenade2Timer::MsgFunc_FF_Grenade1Timer(bf_read &msg)
 	SetTimer(duration);
 }
 
-void CHudGrenade2Timer::ApplySchemeSettings(IScheme *pScheme)
-{
-	m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
-	m_HudBackgroundColour = GetSchemeColor("HudItem.Background", pScheme);
-	m_TeamColorHudBackgroundColour = GetSchemeColor("TeamColorHud.BackgroundAlpha", pScheme);
-
-	BaseClass::ApplySchemeSettings(pScheme);
-}
-
 void CHudGrenade2Timer::OnTick()
 {
-	CFFPlayer *ffplayer = CFFPlayer::GetLocalFFPlayer();
+	BaseClass::OnTick();
 
-	if (!ffplayer) 
+	if (!m_pFFPlayer) 
+	{
+		SetPaintEnabled(false);
+		SetPaintBackgroundEnabled(false);
 		return;
+	}
 
-	int iClass = ffplayer->GetClassSlot();
-	int iTeam = ffplayer->GetTeamNumber();
+	int iClass = m_pFFPlayer->GetClassSlot();
 
 	//if no class
 	if(iClass == 0)
@@ -120,7 +112,7 @@ void CHudGrenade2Timer::OnTick()
 									 "civilian" };
 
 		PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
-		bool bReadInfo = ReadPlayerClassDataFromFileForSlot( vgui::filesystem(), szClassNames[m_iClass - 1], &hClassInfo, NULL );
+		bool bReadInfo = ReadPlayerClassDataFromFileForSlot( vgui::filesystem(), szClassNames[m_iClass - 1], &hClassInfo, NULL);
 
 		if (!bReadInfo)
 			return;
@@ -132,13 +124,6 @@ void CHudGrenade2Timer::OnTick()
 
 		if ( strcmp( pClassInfo->m_szSecondaryClassName, "None" ) != 0 )
 		{
-			if(m_iTeam != iTeam)
-			{
-				m_iTeam = iTeam;
-				Color newTeamColor = g_PR->GetTeamColor(m_iTeam);
-				m_TeamColorHudBackgroundColour.SetColor(newTeamColor.r(), newTeamColor.g(), newTeamColor.b(), m_TeamColorHudBackgroundColour.a());
-			}
-
 			const char *grenade_name = pClassInfo->m_szSecondaryClassName;
 
 			GRENADE_FILE_INFO_HANDLE hGrenInfo = LookupGrenadeInfoSlot(grenade_name);
