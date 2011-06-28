@@ -19,7 +19,7 @@
 
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
-#include <vgui/ISystem.h>
+#include <vgui/IVGUI.h>
 #include <vgui_controls/AnimationController.h>
 
 #include <vgui/ILocalize.h>
@@ -50,20 +50,21 @@ public:
 	CHudHealth( const char *pElementName );
 	virtual void Init( void );
 	virtual void VidInit( void );
+	virtual void OnTick( void );
 	virtual void Reset( void );
-	virtual void OnThink();
 			void MsgFunc_Damage( bf_read &msg );
-	virtual void Paint();
+			void MsgFunc_PlayerAddHealth( bf_read &msg );
+			void UpdateDisplay( void );
 
 private:
 	// old variables
 	int		m_iHealth;
-	
 	int		m_bitsDamage;
 };	
 
 DECLARE_HUDELEMENT( CHudHealth );
 DECLARE_HUD_MESSAGE( CHudHealth, Damage );
+DECLARE_HUD_MESSAGE( CHudHealth, PlayerAddHealth );
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -71,6 +72,9 @@ DECLARE_HUD_MESSAGE( CHudHealth, Damage );
 CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay( NULL, "HudHealth" )
 {
 	SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	//updating health is fairly important!
+	//the only reason we need the tick signal is for when we respawn and get a new health value
+	ivgui()->AddTickSignal( GetVPanel(), 250 ); 
 }
 
 //-----------------------------------------------------------------------------
@@ -79,6 +83,7 @@ CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName )
 void CHudHealth::Init()
 {
 	HOOK_HUD_MESSAGE( CHudHealth, Damage );
+	HOOK_HUD_MESSAGE( CHudHealth, PlayerAddHealth );
 	Reset();
 }
 
@@ -87,10 +92,11 @@ void CHudHealth::Init()
 //-----------------------------------------------------------------------------
 void CHudHealth::Reset()
 {
+	BaseClass::Reset();
+
 	m_iHealth		= INIT_HEALTH;
 	m_bitsDamage	= 0;
 
-	SetLabelText( L"" );
 	SetDisplayValue( m_iHealth );
 }
 
@@ -105,110 +111,99 @@ void CHudHealth::VidInit()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudHealth::OnThink()
+void CHudHealth::UpdateDisplay()
 {
-	// Fix for ToFFPlayer( NULL ) being called.
-	if( !engine->IsInGame() )
-		return;
+	int iHealth = 0;
+	int iMaxHealth = 0;	
 
-	int newHealth = 0;
-	int maxHealth = 0;	
-
-	C_FFPlayer *local = C_FFPlayer::GetLocalFFPlayer();
-	if (!local)
+	if (!m_pFFPlayer)
 		return;
 
 	// Never below zero
-	newHealth = max( local->GetHealth(), 0 );
-	maxHealth = local->GetMaxHealth();
+	iHealth = max( m_pFFPlayer->GetHealth(), 0 );
+	iMaxHealth = m_pFFPlayer->GetMaxHealth();
 
 	// Hullucination
-	if (local->m_iHallucinationIndex)
+	if (m_pFFPlayer->m_iHallucinationIndex)
 	{
-		newHealth = local->m_iHallucinationIndex * 4;
+		iHealth = m_pFFPlayer->m_iHallucinationIndex * 4;
 	}
 
 	// Only update the fade if we've changed health
-	if ( newHealth == m_iHealth )
-	{
+	if ( iHealth == m_iHealth )
 		return;
-	}
 
 	// Get a health percentage
-	bool bUnder25Perc = ( float )( ( ( float )newHealth / ( float )maxHealth ) * 100 ) < 25;
+	float flHealthPercent = ( float )iHealth / ( float )iMaxHealth;
 
 	// Play appropriate animation whether health has gone up or down
-	if( newHealth > m_iHealth )
+	if( iHealth > m_iHealth )
+	// Health went up
 	{
-		// Health went up
-
-		if( bUnder25Perc )
+		if( flHealthPercent < 0.25f )
 		{
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthIncreaseBelow25" );
 		}
 		else
 		{
-			if( ( ( float )( ( float )newHealth / ( float )maxHealth ) ) >= 1.0f )
+			if( flHealthPercent >= 1.0f )
 				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthIncreaseAbove100" );
 			else
 				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthIncrease" );
 		}		
 	}
 	else
+	// Health went down or didn't change
 	{
-		// Health went down
-
-		if( bUnder25Perc )
+		if( flHealthPercent < 0.25f )
 		{
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthBelow25" );
 		}
 	}
 
-	m_iHealth = newHealth;
+	m_iHealth = iHealth;
 
 	SetDisplayValue( m_iHealth );
 }
+
+//TODO remove on tick and fix it so it updates properly all the time using msgfunc
+void CHudHealth::OnTick( void )
+{
+	BaseClass::OnTick();
+
+	UpdateDisplay();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHudHealth::MsgFunc_Damage( bf_read &msg )
 {
-
-	int armor = msg.ReadByte();	// armor
-	int damageTaken = msg.ReadByte();	// health
-	long bitsDamage = msg.ReadLong(); // damage bits
-	bitsDamage; // variable still sent but not used
-
-	Vector vecFrom;
-
-	vecFrom.x = msg.ReadBitCoord();
-	vecFrom.y = msg.ReadBitCoord();
-	vecFrom.z = msg.ReadBitCoord();
+	msg.ReadByte(); //waste the armour msg
+	int iHealthTaken = msg.ReadByte();
 
 	// Actually took damage?
-	if ( damageTaken > 0 || armor > 0 )
+	if ( iHealthTaken > 0 )
 	{
-		if ( damageTaken > 0 )
-		{
-			// start the animation
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthDamageTaken" );
-		}
+		// start the animation
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthDamageTaken" );
+
+		//make the display update instantly when we take health damage
+		UpdateDisplay();
 	}
 }
-
-void CHudHealth::Paint()
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHudHealth::MsgFunc_PlayerAddHealth( bf_read &msg )
 {
-	if( !engine->IsInGame() )
-		return;
+	int iHealthAdded = msg.ReadByte();
 
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-	if( !pPlayer )
-		return;
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
-		return;
-
-	BaseClass::Paint();
+	// Actually took damage?
+	if ( iHealthAdded > 0 )
+	{
+		//make the display update instantly when we get health
+		UpdateDisplay();
+	}
 }

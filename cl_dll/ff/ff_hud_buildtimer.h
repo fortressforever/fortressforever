@@ -2,28 +2,20 @@
 #define FF_HUD_BUILDTIMER_H
 
 #include "cbase.h"
-#include <vgui_controls/Panel.h>
+#include "ff_panel.h"
 
 using namespace vgui;
 
-class CHudBuildTimer : public CHudElement, public Panel
+class CHudBuildTimer : public CHudElement, public FFPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE(CHudBuildTimer, Panel);
+	DECLARE_CLASS_SIMPLE(CHudBuildTimer, FFPanel);
 
-	CPanelAnimationVarAliasType(float, bar_xpos, "bar_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, bar_ypos, "bar_ypos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, bar_width, "bar_width", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, bar_height, "bar_height", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_offset, "icon_offset", "2", "proportional_float");
-
-	Color m_HudForegroundColour;
-	Color m_HudBackgroundColour;
-	Color m_TeamColorHudBackgroundColour;
-
-	float	m_flStartTime, m_flDuration;
+	int		m_iBuildType;
+	int		m_iPlayerTeam;
 	bool	m_fVisible;
-	int		m_iBuildType, m_iTeam;
+	float	m_flStartTime;
+	float	m_flDuration;
 
 	CHudTexture *m_pIconTexture; // the one being used
 
@@ -31,10 +23,15 @@ private:
 	CHudTexture *m_pSentrygunIconTexture;
 	CHudTexture *m_pDetpackIconTexture;
 	CHudTexture *m_pMancannonIconTexture;
+	
+	CPanelAnimationVarAliasType(float, bar_xpos, "bar_xpos", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, bar_ypos, "bar_ypos", "0", "proportional_float");
+	CPanelAnimationVarAliasType(float, bar_width, "bar_width", "1", "proportional_float");
+	CPanelAnimationVarAliasType(float, bar_height, "bar_height", "1", "proportional_float");
+	CPanelAnimationVarAliasType(float, icon_offset, "icon_offset", "2", "proportional_float");
 
 public:
 	CHudBuildTimer(const char *pElementName);
-
 	~CHudBuildTimer();
 
 	virtual void	Init();
@@ -42,7 +39,6 @@ public:
 	virtual void	Paint();
 	virtual void	PaintBackground();
 	virtual void	OnTick();
-	virtual void	ApplySchemeSettings(IScheme *pScheme);
 	virtual void	Reset();
 
 	void	SetBuildTimer(int iBuildType, float flDuration);

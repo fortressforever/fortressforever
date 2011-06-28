@@ -19,7 +19,7 @@
 
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
-#include <vgui/ISystem.h>
+#include <vgui/IVGUI.h>
 #include <vgui_controls/AnimationController.h>
 
 #include <vgui/ILocalize.h>
@@ -50,10 +50,11 @@ public:
 	CHudArmor( const char *pElementName );
 	virtual void Init( void );
 	virtual void VidInit( void );
+	virtual void OnTick( void );
 	virtual void Reset( void );
-	virtual void OnThink();
-	void MsgFunc_Damage( bf_read &msg );
-	virtual void Paint();
+			void MsgFunc_Damage( bf_read &msg );
+			void MsgFunc_PlayerAddArmor( bf_read &msg );
+			void UpdateDisplay( void );
 
 private:
 	// old variables
@@ -64,6 +65,7 @@ private:
 
 DECLARE_HUDELEMENT( CHudArmor );
 DECLARE_HUD_MESSAGE( CHudArmor, Damage );
+DECLARE_HUD_MESSAGE( CHudArmor, PlayerAddArmor );
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -72,6 +74,9 @@ CHudArmor::CHudArmor( const char *pElementName ) : CHudElement( pElementName ), 
 {
 	//SetHiddenBits(HIDEHUD_PLAYERDEAD);
 	SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	//updating armor is fairly important!
+	//the only reason we need the tick signal is for when we respawn and get a new armor value
+	ivgui()->AddTickSignal( GetVPanel(), 250 ); 
 }
 
 //-----------------------------------------------------------------------------
@@ -80,6 +85,7 @@ CHudArmor::CHudArmor( const char *pElementName ) : CHudElement( pElementName ), 
 void CHudArmor::Init()
 {
 	HOOK_HUD_MESSAGE( CHudArmor, Damage );
+	HOOK_HUD_MESSAGE( CHudArmor, PlayerAddArmor );
 	Reset();
 }
 
@@ -88,10 +94,10 @@ void CHudArmor::Init()
 //-----------------------------------------------------------------------------
 void CHudArmor::Reset()
 {
+	BaseClass::Reset();
 	m_iArmor		= INIT_ARMOR;
 	m_bitsDamage	= 0;
 
-	SetLabelText(L"");
 	SetDisplayValue(m_iArmor);
 }
 
@@ -106,34 +112,36 @@ void CHudArmor::VidInit()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudArmor::OnThink()
+void CHudArmor::UpdateDisplay()
 {
-	int newArmor = 0;
-	int maxArmor = 0;
-	C_BasePlayer *baselocal = C_BasePlayer::GetLocalPlayer();
-	if( baselocal )
+	int iArmor = 0;
+	int iMaxArmor = 0;
+	
+	if (!m_pFFPlayer)
+		return;
+
+	// Never below zero
+	iArmor = max( m_pFFPlayer->GetArmor(), 0 );
+	iMaxArmor = m_pFFPlayer->GetMaxArmor();
+
+	// Hullucination
+	if (m_pFFPlayer->m_iHallucinationIndex)
 	{
-		C_FFPlayer *local = ToFFPlayer( baselocal );
-		// Never below zero
-		newArmor = max( local->GetArmor(), 0 );
-		maxArmor = local->GetMaxArmor();
+		iArmor = m_pFFPlayer->m_iHallucinationIndex * 4;
 	}
 
 	// Only update the fade if we've changed armor
-	if ( newArmor == m_iArmor )
-	{
+	if ( iArmor == m_iArmor )
 		return;
-	}
 
-	// Get an armor percentage
-	bool bUnder25Perc = ( float )( ( ( float )newArmor / ( float )maxArmor ) * 100 ) < 25;
+	// Get a health percentage
+	float flArmorPercent = ( float )iArmor / ( float )iMaxArmor;
 
 	// Play appropriate animation whether armor has gone up or down
-	if( newArmor > m_iArmor )
+	if( iArmor > m_iArmor )
+	// Armor went up
 	{
-		// Armor went up
-
-		if( bUnder25Perc )
+		if( flArmorPercent < 0.25f )
 		{
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorIncreaseBelow25" );
 		}
@@ -143,60 +151,57 @@ void CHudArmor::OnThink()
 		}		
 	}
 	else
+	// Armor went down or didn't change
 	{
-		// Armor went down
-
-		if( bUnder25Perc )
+		if( flArmorPercent < 0.25f )
 		{
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorBelow25" );
 		}
 	}
 
-	m_iArmor = newArmor;
+	m_iArmor = iArmor;
 
 	SetDisplayValue( m_iArmor );
 }
+
+//TODO remove on tick and fix it so it updates properly all the time using msgfunc
+void CHudArmor::OnTick( void )
+{
+	BaseClass::OnTick();
+
+	UpdateDisplay();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHudArmor::MsgFunc_Damage( bf_read &msg )
 {
-
-	int armor = msg.ReadByte();	// armor
-	int damageTaken = msg.ReadByte();	// health
-	long bitsDamage = msg.ReadLong(); // damage bits
-	bitsDamage; // variable still sent but not used
-
-	Vector vecFrom;
-
-	vecFrom.x = msg.ReadBitCoord();
-	vecFrom.y = msg.ReadBitCoord();
-	vecFrom.z = msg.ReadBitCoord();
+	int iArmorTaken = msg.ReadByte();	// armor
 
 	// Actually took damage?
-	if ( damageTaken > 0 || armor > 0 )
+	if ( iArmorTaken > 0 )
 	{
-		if ( armor > 0 )
-		{
-			// start the animation
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorDamageTaken" );
-		}
+		// start the animation
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorDamageTaken" );
+
+		//make the display update instantly when we take armour damage
+		UpdateDisplay();
 	}
 }
 
-void CHudArmor::Paint()
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHudArmor::MsgFunc_PlayerAddArmor( bf_read &msg )
 {
-	if( !engine->IsInGame() )
-		return;
+	int iArmorAdded = msg.ReadByte();	// armor
 
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-	if( !pPlayer )
-		return;
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
-		return;
-
-	BaseClass::Paint();
+	// Actually took damage?
+	if ( iArmorAdded > 0 )
+	{
+		//make the display update instantly when we get armour
+		UpdateDisplay();
+	}
 }
