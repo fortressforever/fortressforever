@@ -112,7 +112,7 @@ CStatusIcons::CStatusIcons( const char *pElementName ) : CHudElement( pElementNa
 		sStatusIcons[i].m_flStart = sStatusIcons[i].m_flDuration = 0.0f;
 	}
 
-	vgui::ivgui()->AddTickSignal( GetVPanel() );
+	//vgui::ivgui()->AddTickSignal( GetVPanel() );
 };
 
 // Need these for the texture caching

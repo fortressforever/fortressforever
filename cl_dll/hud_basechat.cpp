@@ -321,7 +321,7 @@ CBaseHudChat::CBaseHudChat( const char *pElementName )
 
 	if ( IsPC() )
 	{
-		vgui::ivgui()->AddTickSignal( GetVPanel() );
+		vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 	}
 
 	// (We don't actually want input until they bring up the chat line).
