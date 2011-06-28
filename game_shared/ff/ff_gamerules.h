@@ -158,6 +158,8 @@ public:
 	virtual bool	ClientConnected( edict_t *pEdict, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen );
 	virtual void	ClientDisconnected( edict_t *pClient );
 	virtual void	LevelShutdown( void );
+	
+	virtual void	CreateStandardEntities();
 
 //private:
 //	CFFMapFilter	m_hMapFilter;
@@ -170,7 +172,7 @@ protected:
 	void	StartGame();
 	float	m_flGameStarted;
 	float	m_flNextMsg;
-	float	m_flRoundStarted;
+	CNetworkVar( float, m_flRoundStarted );
 
 public:
 	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }
