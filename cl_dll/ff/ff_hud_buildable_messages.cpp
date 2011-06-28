@@ -51,7 +51,7 @@ public:
 		// Hide when player is dead
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );
 
-		vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
+		vgui::ivgui()->AddTickSignal( GetVPanel() );
 	}
 
 	void Init( void );
@@ -75,8 +75,6 @@ protected:
 };
 
 DECLARE_HUDELEMENT( CHudBuildableMessages );
-DECLARE_HUD_MESSAGE( CHudBuildableMessages, DetpackStartTimer );
-DECLARE_HUD_MESSAGE( CHudBuildableMessages, DetpackStopTimer );
 DECLARE_HUD_MESSAGE( CHudBuildableMessages, Dispenser_EnemiesUsing );
 DECLARE_HUD_MESSAGE( CHudBuildableMessages, Dispenser_TouchEnemy );
 DECLARE_HUD_MESSAGE( CHudBuildableMessages, Dispenser_Destroyed );
@@ -84,8 +82,6 @@ DECLARE_HUD_MESSAGE( CHudBuildableMessages, SentryGun_Destroyed );
 
 void CHudBuildableMessages::Init( void )
 {
-	HOOK_HUD_MESSAGE( CHudBuildableMessages, DetpackStartTimer );
-	HOOK_HUD_MESSAGE( CHudBuildableMessages, DetpackStopTimer );
 	HOOK_HUD_MESSAGE( CHudBuildableMessages, Dispenser_EnemiesUsing );
 	HOOK_HUD_MESSAGE( CHudBuildableMessages, Dispenser_TouchEnemy );
 	HOOK_HUD_MESSAGE( CHudBuildableMessages, Dispenser_Destroyed );
@@ -101,39 +97,7 @@ void CHudBuildableMessages::VidInit( void )
 {
 	//SetPaintBackgroundEnabled( false );
 	SetVisible( false );
-	m_flStartTime = -99.0f;		// |-- Mirv: Fix messages reappearing next map
-	m_flDuration = 0.0f;
-}
-
-void CHudBuildableMessages::MsgFunc_DetpackStartTimer( bf_read &msg )
-{
-	int iRead = msg.ReadShort();
-
-	if( iRead )
-	{
-		/*
-		C_FFTimer *pTimer = g_FFTimers.Create( FF_BUILDABLE_TIMER_DETPACK_STRING, ( float )iRead );
-		if( pTimer )
-		{
-			pTimer->m_bRemoveWhenExpired = true;
-			pTimer->StartTimer();
-		}
-		*/
-	}
-}
-
-void CHudBuildableMessages::MsgFunc_DetpackStopTimer( bf_read &msg )
-{
-	int iRead = msg.ReadShort();
-
-	if( iRead )
-	{
-		/*
-		C_FFTimer *pTimer = g_FFTimers.FindTimer( FF_BUILDABLE_TIMER_DETPACK_STRING );
-		if( pTimer )
-			g_FFTimers.DeleteTimer( FF_BUILDABLE_TIMER_DETPACK_STRING );
-			*/
-	}
+	m_flStartTime = -99;		// |-- Mirv: Fix messages reappearing next map
 }
 
 void CHudBuildableMessages::MsgFunc_Dispenser_EnemiesUsing( bf_read &msg )
@@ -219,9 +183,6 @@ void CHudBuildableMessages::OnTick( void )
 {
 	if( !engine->IsInGame() )
 		return;
-
-	if(m_flDuration = 0.0f)
-		m_flDuration = 4.0f;
 
 	if( ( m_flStartTime + m_flDuration ) > gpGlobals->curtime )
 		SetPaintEnabled(true);
