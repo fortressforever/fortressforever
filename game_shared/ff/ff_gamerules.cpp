@@ -125,6 +125,11 @@ REGISTER_GAMERULES_CLASS( CFFGameRules );
 
 
 BEGIN_NETWORK_TABLE_NOBASE( CFFGameRules, DT_FFGameRules )
+#ifdef CLIENT_DLL
+	RecvPropFloat( RECVINFO( m_flRoundStarted ) ),
+#else
+	SendPropFloat( SENDINFO( m_flRoundStarted ) ),
+#endif
 END_NETWORK_TABLE()
 
 
@@ -500,6 +505,19 @@ ConVar mp_prematch( "mp_prematch",
 
 		BaseClass::LevelShutdown();
 	}
+	
+	//-----------------------------------------------------------------------------
+	// Purpose: create ff_gamerules ent so that networked vars get sent
+	//-----------------------------------------------------------------------------
+	void CFFGameRules::CreateStandardEntities()
+	{
+		CFFGameRulesProxy *pFFGameRulesProxy = (CFFGameRulesProxy*)CBaseEntity::Create( "ff_gamerules", vec3_origin, vec3_angle );
+		if (pFFGameRulesProxy)
+			pFFGameRulesProxy->AddEFlags( EFL_KEEP_ON_RECREATE_ENTITIES );
+
+		BaseClass::CreateStandardEntities();
+	}
+
 
 	//-----------------------------------------------------------------------------
 	// Purpose: 
@@ -619,6 +637,8 @@ ConVar mp_prematch( "mp_prematch",
 				pEvent->SetFloat( "curtime", gpGlobals->curtime );
 				gameeventmanager->FireEvent( pEvent );
 			}
+
+			SetRoundStart( gpGlobals->curtime );
 
 			// Run startup stuff again!
 			CFFLuaSC hStartup;
