@@ -784,10 +784,7 @@ int CFFPlayer::GetCurBuild( void ) const
 //-----------------------------------------------------------------------------
 inline CFFDetpack *CFFPlayer::GetDetpack( void ) const
 {
-//#ifdef _DEBUG
-//	Assert( dynamic_cast< CFFDetpack * >( m_hDetpack.Get() ) != 0 );
-//#endif
-	return static_cast< CFFDetpack * >( m_hDetpack.Get() );
+	return dynamic_cast< CFFDetpack * >( m_hDetpack.Get() );
 }
 
 //-----------------------------------------------------------------------------
@@ -795,10 +792,7 @@ inline CFFDetpack *CFFPlayer::GetDetpack( void ) const
 //-----------------------------------------------------------------------------
 inline CFFDispenser *CFFPlayer::GetDispenser( void ) const
 {
-//#ifdef _DEBUG
-//	Assert( dynamic_cast<CFFDispenser *>( m_hDispenser.Get() ) != 0 );
-//#endif
-	return static_cast< CFFDispenser * >( m_hDispenser.Get() );
+	return dynamic_cast< CFFDispenser * >( m_hDispenser.Get() );
 }
 
 //-----------------------------------------------------------------------------
@@ -806,10 +800,7 @@ inline CFFDispenser *CFFPlayer::GetDispenser( void ) const
 //-----------------------------------------------------------------------------
 inline CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 {
-//#ifdef _DEBUG
-//	Assert( dynamic_cast<CFFSentryGun *>( m_hSentryGun.Get() ) != 0 );
-//#endif
-	return static_cast< CFFSentryGun * >( m_hSentryGun.Get() );
+	return dynamic_cast< CFFSentryGun * >( m_hSentryGun.Get() );
 }
 
 //-----------------------------------------------------------------------------
@@ -817,10 +808,7 @@ inline CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 //-----------------------------------------------------------------------------
 inline CFFManCannon *CFFPlayer::GetManCannon( void ) const
 {
-//#ifdef _DEBUG
-//	Assert( dynamic_cast<CFFManCannon *>( m_hManCannon.Get() ) != 0 );
-//#endif
-	return static_cast<CFFManCannon *>( m_hManCannon.Get() );
+	return dynamic_cast<CFFManCannon *>( m_hManCannon.Get() );
 }
 
 //-----------------------------------------------------------------------------
