@@ -184,7 +184,7 @@ void CHudBuildableMessages::OnTick( void )
 	if( !engine->IsInGame() )
 		return;
 
-	if(m_flDuration = 0.0f)
+	if(m_flDuration == 0.0f)
 		m_flDuration = 4.0f;
 
 	if( ( m_flStartTime + m_flDuration ) > gpGlobals->curtime )
