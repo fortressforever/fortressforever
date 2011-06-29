@@ -98,6 +98,7 @@ void CHudArmor::Reset()
 	m_iArmor		= INIT_ARMOR;
 	m_bitsDamage	= 0;
 
+	SetShouldDisplayValue(false);
 	SetDisplayValue(m_iArmor);
 }
 
@@ -162,6 +163,7 @@ void CHudArmor::UpdateDisplay()
 	m_iArmor = iArmor;
 
 	SetDisplayValue( m_iArmor );
+	SetShouldDisplayValue(true);
 }
 
 //TODO remove on tick and fix it so it updates properly all the time using msgfunc
