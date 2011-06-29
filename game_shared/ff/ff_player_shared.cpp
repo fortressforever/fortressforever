@@ -1688,10 +1688,6 @@ else
 
 		// Play a sound
 		EmitSoundShared("overpressure.explode");
-
-		CBaseEntity *pEntity = NULL;
-
-		float fRadius = ffdev_overpressure_radius.GetFloat();
 		
 #ifdef GAME_DLL
 	CFFPlayer *pLocalPlayer = ToFFPlayer(this);
@@ -1700,14 +1696,18 @@ else
 	lagcompensation->StartLagCompensation(pLocalPlayer, pLocalPlayer->GetCurrentCommand());
 #endif
 
-		for( CEntitySphereQuery sphere( GetLegacyAbsOrigin(), fRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
-			if (!pEntity || !pEntity->IsPlayer())
+			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
+
+			if (!pPlayer)
 				continue;
 
-			CFFPlayer *pPlayer = ToFFPlayer(pEntity);
-
 			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+				continue;
+			
+			// People who are building shouldn't be pushed around by anything
+			if (pPlayer->IsStaticBuilding())
 				continue;
 			
 			// Ignore people that can't take damage (teammates when friendly fire is off)
@@ -1720,13 +1720,12 @@ else
 			Vector vecDir = vecDisplacement;
 			vecDir.NormalizeInPlace();
 
-			// People who are building shouldn't be pushed around by anything
-			if (pPlayer->IsStaticBuilding())
+			if (flDistance > ffdev_overpressure_radius.GetFloat())
 				continue;
 
 			// TFC considers a displacement < 16units to be a hh
 			Vector vecResult;
-			if ((pEntity == this) || (flDistance < 16.0f))
+			if ((pPlayer == this) || (flDistance < 16.0f))
 			{
 				float flSelfLateral = ffdev_overpressure_selfpush_horizontal.GetFloat();
 				float flSelfVertical = ffdev_overpressure_selfpush_vertical.GetFloat();
