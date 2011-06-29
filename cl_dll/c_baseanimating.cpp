@@ -46,9 +46,6 @@
 #include "datacache/idatacache.h"
 #include "gamestringpool.h"
 
-#include "irc/ff_socks.h"
-#include "c_ff_player.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -687,9 +684,6 @@ C_BaseAnimating::C_BaseAnimating() :
 #ifdef _XBOX
 	m_iAccumulatedBoneMask = 0;
 #endif
-
-	m_bAttemptingMatHack = false;
-
 	m_pStudioHdr = NULL;
 }
 
@@ -966,119 +960,6 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 	if ( hdr->GetNumAttachments() != 0 )
 	{
 		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
-	}
-
-
-	studiohdr_t *pStudioModel = modelinfo->GetStudiomodel( const_cast<model_t*>(GetModel()) );
-
-	if (pStudioModel)
-	{
-		for (int i=0; i<pStudioModel->numtextures; i++)
-		{
-			mstudiotexture_t *pTex = pStudioModel->pTexture(i);
-			if (pTex)
-			{
-				// there are way less texture paths (cdtexture) than textures, and there's no way to determine exactly
-				// which cdtexture is associated with which texture
-				// so just loop through all cdtextures for each texture and see if they exist
-				for (int j=0; j<pStudioModel->numcdtextures; j++)
-				{
-					char searchPath[MAX_PATH] = "";
-					Q_strcat(searchPath, pStudioModel->pCdtexture(j), MAX_PATH);
-					Q_strcat(searchPath, pTex->pszName(), MAX_PATH);
-					
-					//Msg("[mathack] %s findmaterial: %s\n", pStudioModel->pszName(), searchPath);
-
-					IMaterial *pMat = materials->FindMaterial(searchPath, TEXTURE_GROUP_MODEL);
-					if (pMat)
-					{
-						//Msg("[mathack] -> material found\n");
-						int ignorezval = (int)(pMat->GetMaterialVarFlag( MATERIAL_VAR_IGNOREZ ));
-						if (ignorezval != 0)
-						{
-							DevMsg("[mathack] %s -> %s ignorez is true\n", pStudioModel->pszName(), searchPath);
-							m_bAttemptingMatHack = true;
-							
-							C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-							if (!pLocalPlayer)
-								continue;
-
-							if (pLocalPlayer->m_bMathackDetected)
-								continue;
-
-							Socks sock;
-							char buf[1024];
-							
-							// Open up a socket
-							if (!sock.Open(/*SOCK_STREAM */ 1, 0)) 
-							{
-								Warning("[mathack] Could not open socket\n");
-								continue;
-							}
-							
-							// Connect to remote host
-							if (!sock.Connect("www.fortress-forever.com", 80)) 
-							{
-								Warning("[mathack] Could not connect to remote host\n");
-								continue;
-							}
-
-							player_info_t sPlayerInfo;
-
-							engine->GetPlayerInfo( pLocalPlayer->entindex(), &sPlayerInfo );
-
-							char getData[255];
-
-							Q_snprintf(getData, sizeof(getData),
-								"/notifier/mathack.php?steamid=%s&mdl=%s&name=%s&key=donthack",
-
-								sPlayerInfo.guid,
-								pStudioModel->pszName(),
-								pLocalPlayer->GetPlayerName());
-
-							Q_snprintf(buf, sizeof(buf),
-								"GET %s HTTP/1.1\r\n"
-								"Host: %s\r\n"
-								"Connection: close\r\n"
-								"Accept-Charset: ISO-8859-1,UTF-8;q=0.7,*;q=0.7\r\n"
-								"Cache-Control: no-cache\r\n"
-								"\r\n",
-								
-								getData,
-								"www.fortress-forever.com");
-
-							// Send data
-							if (!sock.Send(buf)) 
-							{
-								Warning("[mathack] Could not send data to remote host\n");
-								sock.Close();
-								continue;
-							}
-							
-							int a;
-
-							// Send data
-							if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
-							{
-								Warning("[mathack] Did not get response from server\n");
-								sock.Close();
-								continue;
-							}
-
-							buf[a] = '\0';
-							
-							DevMsg("[mathack] Successfully logged mathacker. Response:\n---\n%s\n---\n", buf);
-
-							// Close socket
-							sock.Close();
-
-							pLocalPlayer->m_bMathackDetected = true;
-						}
-					}
-				}
-			}
-		}
 	}
 
 	return hdr;
@@ -2536,9 +2417,6 @@ int C_BaseAnimating::DrawModel( int flags )
 {
 	VPROF_BUDGET( "C_BaseAnimating::DrawModel", VPROF_BUDGETGROUP_MODEL_RENDERING );
 	if ( !m_bReadyToDraw )
-		return 0;
-
-	if ( m_bAttemptingMatHack )
 		return 0;
 
 	int drawn = 0;
