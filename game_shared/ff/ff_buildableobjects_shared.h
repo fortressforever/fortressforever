@@ -935,11 +935,7 @@ inline CFFBuildableObject *FF_ToBuildableObject( CBaseEntity *pEntity )
 	if( !pEntity || !FF_IsBuildableObject( pEntity ) )
 		return NULL;
 
-#ifdef _DEBUG
-	Assert( dynamic_cast< CFFBuildableObject * >( pEntity ) != 0 );
-#endif
-
-	return static_cast< CFFBuildableObject * >( pEntity );
+	return dynamic_cast< CFFBuildableObject * >( pEntity );
 }
 
 //-----------------------------------------------------------------------------
@@ -950,11 +946,7 @@ inline CFFDispenser *FF_ToDispenser( CBaseEntity *pEntity )
 	if( !pEntity || !FF_IsDispenser( pEntity ) )
 		return NULL;
 
-#ifdef _DEBUG
-	Assert( dynamic_cast< CFFDispenser * >( pEntity ) != 0 );
-#endif
-
-	return static_cast< CFFDispenser * >( pEntity );
+	return dynamic_cast< CFFDispenser * >( pEntity );
 }
 
 //-----------------------------------------------------------------------------
@@ -965,11 +957,7 @@ inline CFFSentryGun *FF_ToSentrygun( CBaseEntity *pEntity )
 	if( !pEntity || !FF_IsSentrygun( pEntity ) )
 		return NULL;
 
-#ifdef _DEBUG
-	Assert( dynamic_cast< CFFSentryGun * >( pEntity ) != 0);
-#endif
-
-	return static_cast< CFFSentryGun * >( pEntity );
+	return dynamic_cast< CFFSentryGun * >( pEntity );
 }
 
 //-----------------------------------------------------------------------------
@@ -980,11 +968,7 @@ inline CFFDetpack *FF_ToDetpack( CBaseEntity *pEntity )
 	if( !pEntity || !FF_IsDetpack( pEntity ) )
 		return NULL;
 
-#ifdef _DEBUG
-	Assert( dynamic_cast< CFFDetpack * >( pEntity ) != 0 );
-#endif
-
-	return static_cast< CFFDetpack * >( pEntity );
+	return dynamic_cast< CFFDetpack * >( pEntity );
 }
 
 //-----------------------------------------------------------------------------
@@ -995,11 +979,7 @@ inline CFFManCannon *FF_ToManCannon( CBaseEntity *pEntity )
 	if( !pEntity || !FF_IsManCannon( pEntity ) )
 		return NULL;
 
-#ifdef _DEBUG
-	Assert( dynamic_cast< CFFManCannon * >( pEntity ) != 0);
-#endif
-
-	return static_cast< CFFManCannon * >( pEntity );
+	return dynamic_cast< CFFManCannon * >( pEntity );
 }
 
 #endif // FF_BUILDABLEOBJECTS_SHARED_H
