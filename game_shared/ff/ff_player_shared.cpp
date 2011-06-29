@@ -874,7 +874,7 @@ int CFFPlayer::GetCurBuild( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Get detpack
 //-----------------------------------------------------------------------------
-inline CFFDetpack *CFFPlayer::GetDetpack( void ) const
+CFFDetpack *CFFPlayer::GetDetpack( void ) const
 {
 //#ifdef _DEBUG
 //	Assert( dynamic_cast< CFFDetpack * >( m_hDetpack.Get() ) != 0 );
@@ -885,7 +885,7 @@ inline CFFDetpack *CFFPlayer::GetDetpack( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Get dispenser
 //-----------------------------------------------------------------------------
-inline CFFDispenser *CFFPlayer::GetDispenser( void ) const
+CFFDispenser *CFFPlayer::GetDispenser( void ) const
 {
 //#ifdef _DEBUG
 //	Assert( dynamic_cast<CFFDispenser *>( m_hDispenser.Get() ) != 0 );
@@ -896,7 +896,7 @@ inline CFFDispenser *CFFPlayer::GetDispenser( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Get sentrygun
 //-----------------------------------------------------------------------------
-inline CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
+CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 {
 //#ifdef _DEBUG
 //	Assert( dynamic_cast<CFFSentryGun *>( m_hSentryGun.Get() ) != 0 );
@@ -907,7 +907,7 @@ inline CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Get man cannon
 //-----------------------------------------------------------------------------
-inline CFFManCannon *CFFPlayer::GetManCannon( void ) const
+CFFManCannon *CFFPlayer::GetManCannon( void ) const
 {
 //#ifdef _DEBUG
 //	Assert( dynamic_cast<CFFManCannon *>( m_hManCannon.Get() ) != 0 );
