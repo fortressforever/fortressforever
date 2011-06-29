@@ -110,7 +110,7 @@ ConVar ffdev_infect_damage("ffdev_infect_damage","10",0,"Amount of health a play
 #define FFDEV_OVERHEALTH_FREQ 3.0f
 
 #define FFDEV_INFECTION_TIME ffdev_infection_time.GetFloat()
-ConVar ffdev_infection_time( "ffdev_infection_time", "10", 0, "Amount of time for infection to last( in seconds )" );
+ConVar ffdev_infection_time( "ffdev_infection_time", "14", 0, "Amount of time for infection to last( in seconds )" );
 
 #define FFDEV_IMMUNE_TIME ffdev_immune_time.GetFloat()
 ConVar ffdev_immune_time( "ffdev_immune_time", "2", 0, "Amount of time for immunity to last( in seconds )" );
