@@ -1455,7 +1455,35 @@ namespace FFLib
 		if( pConvar->IsBitSet( FCVAR_CHEAT ) )
 			return;
 
-		pConvar->SetValue( flValue );
+		static char		string[1024];
+		Q_snprintf (string, sizeof( string ), "%s %f\n", pszConvarName, flValue);
+
+		engine->ServerCommand( string );
+	}
+	
+	void SetConvar( const char *pszConvarName, const char *pszValue )
+	{
+		if( !pszConvarName )
+			return;
+
+		// Don't allow sv_cheats setting
+		if( !Q_stricmp( pszConvarName, "sv_cheats" ) )
+			return;
+
+		if( !cvar )
+			return;
+
+		ConVar *pConvar = cvar->FindVar( pszConvarName );
+		if( !pConvar )
+			return;
+
+		if( pConvar->IsBitSet( FCVAR_CHEAT ) )
+			return;
+
+		static char		string[1024];
+		Q_snprintf (string, sizeof( string ), "%s %s\n", pszConvarName, pszValue);
+
+		engine->ServerCommand( string );
 	}
 
 	const char *GetSteamID( CFFPlayer *pPlayer )
@@ -2685,7 +2713,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SetPlayerLimit",			&FFLib::SetPlayerLimit),
 		def("SetPlayerLimits",			&FFLib::SetPlayerLimits),
 		def("SetClassLimits",			&FFLib::SmartClassLimits),
-		def("SetConvar",				&FFLib::SetConvar),
+		def("SetConvar",				(void(*)(const char*, float))&FFLib::SetConvar),
+		def("SetConvar",				(void(*)(const char*, const char*))&FFLib::SetConvar),
 		def("SetTeamClassLimit",		&FFLib::SetTeamClassLimit),
 		def("SetTeamName",				&FFLib::SetTeamName),
 		def("SmartMessage",				(void(*)(CBaseEntity *, const char*, const char*, const char*))&FFLib::SmartMessage),
