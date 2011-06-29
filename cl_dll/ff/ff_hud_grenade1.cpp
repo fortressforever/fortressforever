@@ -62,7 +62,7 @@ void CHudGrenade1::Init()
 	m_iClass		= 0;
 
 	SetLabelText(L"");
-	ivgui()->AddTickSignal( GetVPanel(), 500 );
+	ivgui()->AddTickSignal( GetVPanel(), 100 );
 }
 
 //-----------------------------------------------------------------------------
