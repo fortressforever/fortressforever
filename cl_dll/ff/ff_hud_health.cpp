@@ -97,6 +97,7 @@ void CHudHealth::Reset()
 	m_iHealth		= INIT_HEALTH;
 	m_bitsDamage	= 0;
 
+	SetShouldDisplayValue(false);
 	SetDisplayValue( m_iHealth );
 }
 
@@ -164,6 +165,7 @@ void CHudHealth::UpdateDisplay()
 	m_iHealth = iHealth;
 
 	SetDisplayValue( m_iHealth );
+	SetShouldDisplayValue(true);
 }
 
 //TODO remove on tick and fix it so it updates properly all the time using msgfunc
