@@ -415,18 +415,11 @@ void CFFGrenadeSlowfield::UpdateOnRemove()
 
 		bool bHitPlayer = false;
 
-		CBaseEntity *pEntity = NULL;
-		for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() + 64.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
-			if( !pEntity )
-				continue;
-
-			if( !pEntity->IsPlayer() )
-				continue;
-
-			CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
 			CFFPlayer *pSlower = ToFFPlayer( GetOwnerEntity() );
-			
+				
 			if( !pPlayer || pPlayer->IsObserver() || !pSlower)
 				continue;
 
@@ -436,7 +429,7 @@ void CFFGrenadeSlowfield::UpdateOnRemove()
 			// inside the radius of the gren
 			if (flDistance < GetGrenadeRadius())
 			{
- 				if( SLOWFIELD_FRIENDLYIGNORE && !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+				if( SLOWFIELD_FRIENDLYIGNORE && !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 					continue;
 				
 				if( SLOWFIELD_SELFIGNORE && pPlayer == pSlower )
