@@ -39,6 +39,8 @@ ConVar developer("developer", "0", 0, "Set developer message level" ); // develo
 //Adding ConVars to toggle grenades/pipes colliding with the enemy
 ConVar ffdev_grenade_collidewithenemy("ffdev_grenade_collidewithenemy", "1", FCVAR_FF_FFDEV_REPLICATED, "If set to 0, grenades pass through enemies" );
 
+ConVar ffdev_softclip_asdisguisedteam("ffdev_softclip_asdisguisedteam", "0", FCVAR_FF_FFDEV_REPLICATED, "If set to 1, spies soft clip as though they were on their disguised team");
+
 float UTIL_VecToYaw( const Vector &vec )
 {
 	if (vec.y == 0 && vec.x == 0)
@@ -355,20 +357,24 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 				int iPassTeam = pPassEnt->GetTeamNumber();
 				int iHandleTeam = pHandle->GetTeamNumber();
 
-				if (pPassEnt->IsPlayer())
+				// get disguised team if we should
+				if (ffdev_softclip_asdisguisedteam.GetBool())
 				{
-					CFFPlayer *pPassPlayer = static_cast< CFFPlayer * >( const_cast< CBaseEntity * >( pPassEnt ) );
+					if (pPassEnt->IsPlayer())
+					{
+						CFFPlayer *pPassPlayer = static_cast< CFFPlayer * >( const_cast< CBaseEntity * >( pPassEnt ) );
 
-					if (pPassPlayer && pPassPlayer->IsDisguised())
-						iPassTeam = pPassPlayer->GetDisguisedTeam();
-				}
-				
-				if (pHandle->IsPlayer())
-				{
-					CFFPlayer *pHandlePlayer = ToFFPlayer(pHandle);
+						if (pPassPlayer && pPassPlayer->IsDisguised())
+							iPassTeam = pPassPlayer->GetDisguisedTeam();
+					}
+					
+					if (pHandle->IsPlayer())
+					{
+						CFFPlayer *pHandlePlayer = ToFFPlayer(pHandle);
 
-					if (pHandlePlayer && pHandlePlayer->IsDisguised())
-						iHandleTeam = pHandlePlayer->GetDisguisedTeam();
+						if (pHandlePlayer && pHandlePlayer->IsDisguised())
+							iHandleTeam = pHandlePlayer->GetDisguisedTeam();
+					}
 				}
 				
 				if( pHandle->IsPlayer() && FFGameRules()->IsTeam1AlliedToTeam2( iPassTeam, iHandleTeam ) == GR_TEAMMATE )

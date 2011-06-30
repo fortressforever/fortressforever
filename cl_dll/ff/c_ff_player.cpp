@@ -102,6 +102,8 @@ static ConVar concuss_height("cl_concuss_height", "36", FCVAR_ARCHIVE | FCVAR_US
 static ConVar cl_tranq_alwaysOn("cl_tranq_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? (boolean 0 or 1)"); 
 static ConVar concuss_alwaysOn("cl_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? (boolean 0 or 1)"); 
 
+extern ConVar ffdev_softclip_asdisguisedteam;
+
 // *** ELMO
 
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
@@ -3035,7 +3037,9 @@ C_BaseEntity* C_FFPlayer::FindTeamIntersect( C_Team *pTeam, const Vector& boxMin
 		if ( pAvoidPlayer == this )
 			continue;
 
-		int iAvoidTeam = (pAvoidPlayer->IsDisguised()) ? pAvoidPlayer->GetDisguisedTeam() : pAvoidPlayer->GetTeamNumber();
+		int iAvoidTeam = pAvoidPlayer->GetTeamNumber();
+		if (ffdev_softclip_asdisguisedteam.GetBool() && pAvoidPlayer->IsDisguised())
+			iAvoidTeam = pAvoidPlayer->GetDisguisedTeam();
 
 		if (FFGameRules()->IsTeam1AlliedToTeam2( pTeam->m_iTeamNum, iAvoidTeam ) == GR_NOTTEAMMATE)
 			continue;
@@ -3055,7 +3059,10 @@ void C_FFPlayer::AvoidPlayers( CUserCmd *pCmd )
 	if ( IsAlive() == false )
 		return;
 
-	C_FFTeam *pTeam = (IsDisguised()) ? ((C_FFTeam *)GetGlobalTeam( GetDisguisedTeam() )) : ((C_FFTeam *)GetGlobalTeam( GetTeamNumber() ));
+	C_FFTeam *pTeam = (C_FFTeam *)GetGlobalTeam( GetTeamNumber() );
+	if (ffdev_softclip_asdisguisedteam.GetBool() && IsDisguised())
+		pTeam = (C_FFTeam *)GetGlobalTeam( GetDisguisedTeam() );
+
 	if ( !pTeam )
 		return;
 
