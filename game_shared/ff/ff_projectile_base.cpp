@@ -207,7 +207,7 @@ void CFFProjectileBase::Spawn()
 
 	BaseClass::Spawn();
 
-	//SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
+	SetSolidFlags(FSOLID_NOT_STANDABLE);
 
 	// New Group that everything "projectiles" do, and players -GreenMushy
 	SetCollisionGroup(COLLISION_GROUP_ROCKET);
