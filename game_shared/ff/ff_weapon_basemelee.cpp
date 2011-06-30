@@ -30,6 +30,9 @@ ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "-1", FC
 ConVar ffdev_melee_maxhitangle("ffdev_melee_maxhitangle", "0.7071", FCVAR_FF_FFDEV_REPLICATED); //0.70721f
 #define MELEE_HIT_MAX_ANGLE	ffdev_melee_maxhitangle.GetFloat()
 
+ConVar ffdev_melee_softcliphitdist("ffdev_melee_softcliphitdist", "24", FCVAR_FF_FFDEV_REPLICATED, "Distance under which melee attacks always hit, as you are assumed to be inside the player under this distance"); //16
+#define MELEE_HIT_SOFTCLIPHITDIST ffdev_melee_softcliphitdist.GetFloat()
+
 ConVar ffdev_melee_usesphere("ffdev_melee_usesphere", "1", FCVAR_FF_FFDEV_REPLICATED);
 #define MELEE_HIT_USESPHERE	ffdev_melee_usesphere.GetBool()
 
@@ -318,11 +321,34 @@ void CFFWeaponMeleeBase::Swing()
 			{
 				continue;
 			}
+			// we don't care about weapons, rockets, or projectiles
+			if (pObject->GetCollisionGroup() == COLLISION_GROUP_WEAPON
+				|| pObject->GetCollisionGroup() == COLLISION_GROUP_ROCKET
+				|| pObject->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+				continue;
 
 			// see if it's more roughly in front of the player than previous guess
 			Vector point;
 			//pObject->CollisionProp()->CalcNearestPoint( swingStart, &point );
 			point = pObject->GetAbsOrigin();
+
+			// get horiz distance from swingstart to origin
+			Vector vecHorizDist = Vector(point.x, point.y, 0.0f) - Vector(swingStart.x, swingStart.y, 0.0f);
+			float flVertDist = abs(point.z - GetAbsOrigin().z);
+			// get vertical distance from each origin
+			float flHorizDist = vecHorizDist.Length();
+			
+			// if under this distance, it is safe to assume the entities are inside eachother (due to softclipping), so we always want to hit
+			if (pObject->IsPlayer() && flHorizDist <= MELEE_HIT_SOFTCLIPHITDIST && flVertDist <= MELEE_HIT_SOFTCLIPHITDIST)
+			{
+				trace_t tr;
+				UTIL_TraceLine( swingStart, point, MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
+
+				trHit = tr;
+				pHitEntity = pObject;
+				// we're inside this target, so there's no reason to check for closer targets
+				break;
+			}
 
 			Vector dir = point - swingStart;
 			VectorNormalize(dir);
