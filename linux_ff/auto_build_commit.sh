@@ -2,7 +2,7 @@
 echo "FF AUTOBUILD THING EL WOOTO"
 
 BINFILE=server_i486.so
-SRC_DIR=~/ff_src/2.42/
+SRC_DIR=~/ff_src/2.43/
 SRC_BUILD_DIR=$SRC_DIR/linux_ff/
 MOD_DIR=~/srcds/ff_dev/
 SVN_COMMIT_MSG="latest linux binary. built "`date +%x@%X`
