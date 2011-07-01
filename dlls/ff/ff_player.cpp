@@ -6957,7 +6957,8 @@ bool CFFPlayer::IsDamageBlockedByShield( CTakeDamageInfo _info )
 			//Use inflictor to get the detpack's position
 			vDamageSource = _info.GetInflictor()->GetAbsOrigin();
 		}
-		else if( _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN1) || _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN2) )
+		//else if( _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN1) || _info.GetAmmoType() == GetAmmoDef()->Index(AMMO_GREN2) )
+		else if( _info.GetInflictor()->GetFlags() & FL_GRENADE )
 		{
 			//Get the grenade that is doing the damage
 			CFFGrenadeBase* pGrenade = ((CFFGrenadeBase *)_info.GetInflictor());

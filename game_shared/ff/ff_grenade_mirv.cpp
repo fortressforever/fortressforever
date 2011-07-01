@@ -138,6 +138,11 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 		pMirvlet->SetLocalAngularVelocity(angRotate);
 		pMirvlet->ChangeTeam( pOwner->GetTeamNumber() );  // dexter - move changeteam here so createtrail can use team# (called from spawn)
 		pMirvlet->Spawn();
+
+		//Mirvlets spawn with the handheld bool on true, and messes up shield block calculations 
+		//theres no possibility that mirvlets can be handheld right? -GreenMushy
+		pMirvlet->m_fIsHandheld = false;
+
 		pMirvlet->SetOwnerEntity( pOwner );
 
 		// Set the speed and the initial transmitted velocity
