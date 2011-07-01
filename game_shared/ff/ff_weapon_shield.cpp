@@ -111,10 +111,10 @@ void CFFWeaponShield::ItemPostFrame()
 	// -----------------------
 	//  No buttons down
 	// -----------------------
-	//if (! ((pPlayer->m_nButtons & IN_ATTACK)))
-	//{
-		//ShieldIdle();
-	//}
+	if (! ((pPlayer->m_nButtons & IN_ATTACK)))
+	{
+		ShieldIdle();
+	}
 }
 //----------------------------------------------------------------------------
 // Purpose: Override the deploy call and immediatly start holstering it so its not "active"to the player's viewmodel
@@ -221,5 +221,12 @@ void CFFWeaponShield::ShieldActive( void )
 //----------------------------------------------------------------------------
 void CFFWeaponShield::ShieldIdle( void ) 
 {
-	//Nothing!
+	//This should send an idle animation
+	if ( HasWeaponIdleTimeElapsed() )
+	{
+#ifdef CLIENT_DLL
+		DevMsg("Starting Idle Animation.\n");
+#endif
+		SendWeaponAnim( ACT_VM_IDLE );
+	}
 }
