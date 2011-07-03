@@ -149,7 +149,7 @@ ConVar ffdev_pipe_sticky("ffdev_pipe_sticky", "0", FCVAR_REPLICATED );
 
 		// Bug #0000512: Blue pipes don't explode on impact on buildables
 		// Explode on contact w/ buildables if pipe bomb
-		if( trace.m_pEnt && ( ( trace.m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( trace.m_pEnt->Classify() == CLASS_DISPENSER ) ) )
+		if( trace.m_pEnt && ( ( trace.m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( trace.m_pEnt->Classify() == CLASS_DISPENSER ) || ( trace.m_pEnt->Classify() == CLASS_MANCANNON ) ) )
 		{
 			if( m_bIsLive )
 			{
