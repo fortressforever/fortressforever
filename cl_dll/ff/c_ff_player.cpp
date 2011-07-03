@@ -669,7 +669,7 @@ public:
 		if ( pPlayer && !pPlayer->IsDormant() )
 		{
 			//Check when the event is jump, depending on the jimmyleg mode or cap, whether to animate a jump or not -GreenMushy
-			if( (PlayerAnimEvent_t)m_iEvent.Get() == PLAYERANIMEVENT_JUMP )
+			if( cl_jimmyleg_mode.GetInt() != 0 && (PlayerAnimEvent_t)m_iEvent.Get() == PLAYERANIMEVENT_JUMP )
 			{
 				//check convars and speed
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
@@ -685,7 +685,6 @@ public:
 						pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get() );
 					}
 					break;
-				case 0:
 				default:
 					//Always do the animation event if previous stuff wasnt hit
 					pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get() );
@@ -2594,7 +2593,7 @@ void C_FFPlayer::Simulate()
 void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 {
 	//Check on the jump event whether to play the animation or not -GreenMushy
-	if( event == PLAYERANIMEVENT_JUMP )
+	if( cl_jimmyleg_mode.GetInt() != 0 && event == PLAYERANIMEVENT_JUMP )
 	{
 		//Check the player speed
 		Vector vecVelocity = this->GetAbsVelocity();
@@ -2613,7 +2612,6 @@ void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 				m_PlayerAnimState->DoAnimationEvent( event );
 			}
 			break;
-		case 0:
 		default:
 			//Always do the animation event if previous stuff wasnt hit
 			m_PlayerAnimState->DoAnimationEvent( event );
