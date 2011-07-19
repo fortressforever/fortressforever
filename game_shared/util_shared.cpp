@@ -350,7 +350,7 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 			}
 
 			// need to also check for IsPlayer for things that don't send a collision group (like moveable brushes/doors)
-			if( m_collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT || (pPassEnt->IsPlayer() && contentsMask == MASK_PLAYERSOLID) )
+			if( m_collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT || (pPassEnt->IsPlayer() && contentsMask == MASK_PLAYERSOLID && m_collisionGroup == COLLISION_GROUP_PLAYER) )
 			{
 				if (pPassEnt == pHandle) 
 					return false;
