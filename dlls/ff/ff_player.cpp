@@ -131,6 +131,9 @@ ConVar ffdev_shield_min_block_dist( "ffdev_shield_min_block_dist", "0", FCVAR_RE
 ConVar ffdev_shield_blocking_angle( "ffdev_shield_blocking_angle", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Dot product fraction.  0 is 180 degree block radius.  1 will be no block.  Find a fraction in between." );
 #define FFDEV_SHIELD_BLOCKING_ANGLE ffdev_shield_blocking_angle.GetFloat()
 
+ConVar ffdev_shield_flyreduction( "ffdev_shield_flyreduction", "0.975", FCVAR_REPLICATED | FCVAR_NOTIFY, "Percentage X and Y speed reduction when you are in the air with the shield activated" );
+#define FFDEV_SHIELD_FLYREDUCTION ffdev_shield_flyreduction.GetFloat()
+
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 #define JERKMULTI 0.0004f
 
@@ -797,6 +800,13 @@ void CFFPlayer::PreThink(void)
 
 				//Remove the effect that was put on earlier
 				RemoveSpeedEffect(SE_SHIELD);
+			}
+			//if the demoman is off the ground and the shield is active
+			else if( IsRiotShieldActive() == true && !(GetFlags() & FL_ONGROUND) )
+			{
+				//Is this frame based?  I dont know!
+				//Reduce the x and y speeds
+				SetAbsVelocity( Vector( GetAbsVelocity().x * FFDEV_SHIELD_FLYREDUCTION, GetAbsVelocity().y * FFDEV_SHIELD_FLYREDUCTION, GetAbsVelocity().z ) );
 			}
 		}
 	}
