@@ -71,8 +71,9 @@ private:
 	Vector	m_vecVelocity;
 
 	float	m_flDieTime;
-	float	m_flFastModeEndTime;
 	float	m_flNextParticle;
+
+	bool	m_bInitiated;
 
 	static PMaterialHandle m_hMaterial;
 };

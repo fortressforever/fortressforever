@@ -127,7 +127,7 @@ ConVar ffdev_cloakspeed( "ffdev_cloakspeed", "1.5", FCVAR_REPLICATED );
 ConVar ffdev_cloaktime( "ffdev_cloaktime", "3", FCVAR_REPLICATED );
 
 //Reveal time specifically for shooting from within cloaksmoke
-ConVar ffdev_cloaksmoke_reveal_time_shot( "ffdev_cloaksmoke_reveal_time_shot", "0.25", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time after a shot to reveal the shooter." );
+ConVar ffdev_cloaksmoke_reveal_time_shot( "ffdev_cloaksmoke_reveal_time_shot", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time after a shot to reveal the shooter." );
 #define CLOAKSMOKE_SHOOT_REVEAL_TIME	ffdev_cloaksmoke_reveal_time_shot.GetFloat()
 
 //Convar for cloaksmoke duration
