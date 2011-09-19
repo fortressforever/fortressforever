@@ -394,6 +394,11 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 {
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
+	if (pPlayer->m_nButtons & IN_ATTACK)
+	{	
+		CANCEL_IF_BUILDING();
+	}
+
 	float flTotalChargeTime = gpGlobals->curtime - m_flStartTime;
 	float flClampedChargeTime = clamp(gpGlobals->curtime - m_flStartTime, 0, RAILGUN_MAXCHARGETIME);
 
