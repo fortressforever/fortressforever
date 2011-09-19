@@ -252,7 +252,7 @@ void CFFWeaponBaseClip::PrimaryAttack()
 //-----------------------------------------------------------------------------
 void CFFWeaponBaseClip::ItemPostFrame()
 {
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CFFPlayer *pOwner = GetPlayerOwner();
 	if (!pOwner)
 	{
 		return;
@@ -260,6 +260,13 @@ void CFFWeaponBaseClip::ItemPostFrame()
 
 	if (m_bInReload)
 	{
+		// don't allow reloading while building
+		if (pOwner->IsStaticBuilding())
+		{
+			m_bInReload = false;
+			return;
+		}
+
 		// Add the ammo now
 		if (m_flReloadTime > 0 && m_flReloadTime <= gpGlobals->curtime)
 		{
