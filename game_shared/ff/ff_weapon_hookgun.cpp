@@ -193,32 +193,31 @@ void CFFWeaponHookGun::ItemPostFrame()
 				}
 			}
 
-			// Autoreload
-			// This would be better done reading a client off the client
-			// Added: Don't do it if they are holding down fire while there is still ammo in clip
-			// Dexter: add checks for m_bInReload FIRST, this will hopefully fix StartReload being called twice(server, then client)
-			//			- which was the source of jittery animations, ammo miscounts etc between frames
-			if (!m_bInReload)
-			{
+			// get autoreload
+			bool bAutoReload = false;
 #ifdef CLIENT_DLL
-				if( auto_reload.GetBool() )
+			if ( auto_reload.GetBool() )
+			{
+				bAutoReload = true;
+			}
 #else
-				if((Q_atoi(engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ))))
+			if ( Q_atoi( engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ) ) != 0 )
+			{
+				bAutoReload = true;
+			}
 #endif
+			// Autoreload
+			if (bAutoReload && !m_bInReload)
+			{
+				if (!m_pHook)
 				{
-					if (!(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
-						&& m_flNextAutoReload <= gpGlobals->curtime 
-						&& m_iClip1 < GetMaxClip1())
+					if (StartReload())
 					{
-						if(pOwner->IsAlive())
-						{
-							StartReload();
-							// if(StartReload())
-							//     m_bInAutoReload = true;
-						}
+						// if we've successfully started to reload, we're done
+						return;
 					}
 				}
-			}			
+			}	
 		}
 		
 		WeaponIdle();

@@ -54,8 +54,6 @@ bool CFFWeaponBaseClip::StartReload()
 	pOwner->m_flNextAttack = gpGlobals->curtime;
 	m_flTimeWeaponIdle = gpGlobals->curtime + GetFFWpnData().m_flPreReloadTime;
 
-	m_flNextAutoReload = gpGlobals->curtime + 0.2f;
-
 	m_bInReload = true;
 	return true;
 }
@@ -202,7 +200,6 @@ void CFFWeaponBaseClip::PrimaryAttack()
 	// No longer reloading (cancel any deferred ammo too)
 	m_bInReload = false;
 	m_flReloadTime = -1.0f;
-	m_flNextAutoReload = gpGlobals->curtime;
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
@@ -360,32 +357,32 @@ void CFFWeaponBaseClip::ItemPostFrame()
 			}
 			// }
 
-			// Autoreload
-			// This would be better done reading a client off the client
-			// Added: Don't do it if they are holding down fire while there is still ammo in clip
+			// get autoreload
+			bool bAutoReload = false;
 			// Dexter: add checks for m_bInReload FIRST, this will hopefully fix StartReload being called twice(server, then client)
 			//			- which was the source of jittery animations, ammo miscounts etc between frames
-			if (!m_bInReload)
-			{
 #ifdef CLIENT_DLL
-				if( auto_reload.GetBool() )
+			if ( auto_reload.GetBool() )
+			{
+				bAutoReload = true;
+			}
 #else
-				if((Q_atoi(engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ))))
+			if ( Q_atoi( engine->GetClientConVarValue( pOwner->entindex(), "cl_autoreload" ) ) != 0 )
+			{
+				bAutoReload = true;
+			}
 #endif
-
+			// Autoreload
+			if (bAutoReload && !m_bInReload)
+			{
+				if (StartReload())
 				{
-					if (!(pOwner->m_nButtons & IN_ATTACK && m_iClip1 > 0) 
-						&& m_flNextAutoReload <= gpGlobals->curtime 
-						&& m_iClip1 < GetMaxClip1())
-					{
-						if(pOwner->IsAlive())
-						{
-							m_bNeedsReloadStarted = true;
-						}
-					}
+					// if we've successfully started to reload, we're done
+					return;
 				}
 			}
-		}		
+		}
+
 		WeaponIdle();
 		return;
 	}
@@ -397,5 +394,4 @@ void CFFWeaponBaseClip::ItemPostFrame()
 CFFWeaponBaseClip::CFFWeaponBaseClip()
 {
 	m_bReloadsSingly = true;
-	m_flNextAutoReload = 0;
 }

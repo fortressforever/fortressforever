@@ -24,8 +24,7 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
-protected:
-	float		m_flNextAutoReload;
+private:
 
 public:
 	virtual	bool StartReload();
