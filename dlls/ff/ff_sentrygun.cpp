@@ -96,8 +96,12 @@
 ConVar	ffdev_sg_target_cloaksmokers( "ffdev_sg_target_cloaksmokers", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "1 == true" );
 #define SG_TARGET_CLOAKSMOKERS ffdev_sg_target_cloaksmokers.GetBool()
 
+ConVar ffdev_sg_explosiondamage_enabled("ffdev_sg_explosiondamage_enabled", "1", FCVAR_REPLICATED, "Determines if the SG explosion does damage");
+#define SG_EXPLOSIONDAMAGE_ENABLED ffdev_sg_explosiondamage_enabled.GetBool()
 //ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE 51.0f  // sg_explosiondamage_base.GetFloat()
+ConVar ffdev_sg_explosionradius("ffdev_sg_explosionradius", "128.0", FCVAR_REPLICATED, "SG explosion radius");
+#define SG_EXPLOSIONRADIUS ffdev_sg_explosionradius.GetFloat()
 ConVar ffdev_sg_bulletpush_lvl1("ffdev_sg_bulletpush_lvl1", "4.0", FCVAR_REPLICATED, "SG bullet push force");
 #define SG_BULLETPUSH_LVL1 ffdev_sg_bulletpush_lvl1.GetFloat()
 ConVar ffdev_sg_bulletpush_lvl2("ffdev_sg_bulletpush_lvl2", "5.0", FCVAR_REPLICATED, "SG bullet push force");
@@ -1981,23 +1985,24 @@ bool CFFSentryGun::CanDisable() const
 //-----------------------------------------------------------------------------
 void CFFSentryGun::DoExplosionDamage()
 {
-	/* No more SG explosion damage! Engineers rejoice!
 	VPROF_BUDGET( "CFFSentryGun::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	//float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
-	float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel;
-	// COmmented out for testing explosion damage - AfterShock
-	//flDamage = min(280, flDamage);
-	
-	if (m_hOwner.Get())
+	if (SG_EXPLOSIONDAMAGE_ENABLED)
 	{
-		CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
-		info.SetCustomKill( KILLTYPE_SENTRYGUN_DET );
-		RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
+		//float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
+		float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel;
+		// COmmented out for testing explosion damage - AfterShock
+		//flDamage = min(280, flDamage);
+		
+		if (m_hOwner.Get())
+		{
+			CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
+			info.SetCustomKill( KILLTYPE_SENTRYGUN_DET );
+			RadiusDamage(info, GetAbsOrigin(), SG_EXPLOSIONRADIUS, CLASS_NONE, NULL);
 
-		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
+			UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
+		}
 	}
-	*/
 }
 
 //-----------------------------------------------------------------------------
