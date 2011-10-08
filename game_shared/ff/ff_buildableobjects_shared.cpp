@@ -155,6 +155,8 @@ const char *g_pszFFManCannonSounds[] =
 };
 
 ConVar ffdev_mancannon_combatcooldown( "ffdev_mancannon_combatcooldown", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar ffdev_sg_buildonwalls("ffdev_sg_buildonwalls", "0", FCVAR_REPLICATED, "Can you build SGs on walls?");
+#define FFDEV_SG_BUILDONWALLS ffdev_sg_buildonwalls.GetBool()
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor - initializes a bunch of stuff and figures out if
@@ -281,7 +283,30 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 	m_BuildResult = BUILD_NOROOM;
 
 	// If we can't trace the hull
-	if( IsGeometryInTheWay() )
+	if( iBuildObject == FF_BUILD_SENTRYGUN )
+	{
+		// try building on floor first
+		if( !IsGeometryInTheWay() )
+		{
+			m_BuildResult = CanOrientToGround();
+
+			if (m_BuildResult == BUILD_ALLOWED)
+				return;
+		}
+		// try building on the wall
+		if ( FFDEV_SG_BUILDONWALLS )
+		{
+			if ( m_BuildResult != BUILD_ALLOWED )
+			{
+				m_BuildResult  = CanBuildOnWall();
+				return;
+			}
+		}
+		return;
+	}
+	
+
+	else if( IsGeometryInTheWay() )
 		return;
 
 	// If we're dealing w/ a detpack, mancannon then we're finished here
@@ -661,6 +686,167 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 	m_vecBuildGroundOrigin = vecGround;
 
 	return BUILD_ALLOWED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Sees if a buildable can be placed on the wall
+//-----------------------------------------------------------------------------
+BuildInfoResult_t CFFBuildableInfo::CanBuildOnWall( void ) 
+{
+	Vector vecNormal, vecGround;
+	float flTestDist = 64.0f;
+
+	switch( m_iBuildObject )
+	{
+		/*
+		case FF_BUILD_DISPENSER:
+		{
+			Vector vecRightAdjWidth = m_vecPlayerRight * FF_BUILD_DISP_HALF_WIDTH;
+			Vector vecForwardAdjWidth = m_vecPlayerForward * FF_BUILD_DISP_HALF_WIDTH;
+
+			// These are object aligned positions - to orient us to the ground correctly
+			Vector vecCorners[ 4 ];
+			vecCorners[ 0 ] = m_vecBuildAirOrigin + ( vecRightAdjWidth ) + ( vecForwardAdjWidth ) + Vector( 0, 0, 2.0f ); // Front right corner
+			vecCorners[ 1 ] = m_vecBuildAirOrigin + ( vecRightAdjWidth ) - ( vecForwardAdjWidth ) + Vector( 0, 0, 2.0f ); // Back right corner
+			vecCorners[ 2 ] = m_vecBuildAirOrigin - ( vecRightAdjWidth ) + ( vecForwardAdjWidth ) + Vector( 0, 0, 2.0f ); // Front left corner
+			vecCorners[ 3 ] = m_vecBuildAirOrigin - ( vecRightAdjWidth ) - ( vecForwardAdjWidth ) + Vector( 0, 0, 2.0f ); // Back left corner
+
+#ifdef FF_BUILD_DEBUG_VISUALIZATIONS
+#ifdef GAME_DLL
+#ifdef _DEBUG
+			// Some visualizations
+			if( !engine->IsDedicatedServer() )
+			{				
+				for( int j = 0; j < 4; j++ )
+				{
+					// Draw object aligned corners in blue
+					NDebugOverlay::Line( vecCorners[ j ], vecCorners[ j ] - Vector( 0, 0, flTestDist ), 0, 0, 255, false, 10.0f );
+				}
+			}
+#endif // _DEBUG
+#endif // GAME_DLL
+#endif // FF_BUILD_DEBUG_VISUALIZATIONS
+
+			// For feet traces to come
+			trace_t tr[ 4 ];
+
+			// Loop through and do traces from each corner of the dispenser to the ground
+			// The mask is normal PLAYER_SOLID minus PLAYER_CLIP as we don't want to build on those(Bug #0000185: Buildable objects can be built on clips.) 
+			// HACK Changed to COLLISION_GROUP_PROJECTILE so it doesn't clip healthpacks (Bug #0000242: SG/Disp when building clips on health pack.)
+			for( int i = 0; i < 4; i++ ) 
+			{
+				UTIL_TraceLine(vecCorners[i], vecCorners[i] - Vector(0, 0, flTestDist), CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE, m_pPlayer, COLLISION_GROUP_PROJECTILE, &tr[i]);				
+
+				// Bug #0000246: Dispenser and sg overlap if built on each other
+				if( !tr[i].DidHit() )
+					return BUILD_TOOFAR;
+				else if( tr[i].startsolid )
+					return BUILD_NOROOM;
+				else if( ( tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( tr[i].m_pEnt->Classify() == CLASS_DISPENSER ) )
+					return BUILD_NOROOM;
+			}
+
+			// Make an X shaped vector from our 4 corner position traces and do the cross product
+			ComputeRectangularPlane( tr[0].endpos, tr[1].endpos, tr[2].endpos, tr[3].endpos, vecNormal );
+			vecGround = GetMiddle( &tr[0].endpos, &tr[1].endpos, &tr[2].endpos, &tr[3].endpos );
+		}
+		break;
+*/
+		case FF_BUILD_SENTRYGUN:
+		{
+			// Trace out in front of us from build origin (but raised a little as building
+			// on steep ramps will auto rotate us cause the forward trace is hitting the ramp)
+			// Will need to redo this trace so it comes from the player rather than next to him
+			Vector m_vecPlayerTrueForward;
+			m_pPlayer->EyeVectors( &m_vecPlayerTrueForward );
+
+			trace_t tr_fwd;
+			UTIL_TraceLine( m_pPlayer->Weapon_ShootPosition(), 
+				m_pPlayer->Weapon_ShootPosition() + ( m_vecPlayerTrueForward * 128.0f ), 
+				MASK_SHOT, NULL, COLLISION_GROUP_NONE, &tr_fwd );
+
+			//// If we hit a wall then we want to face towards us instead
+			// If we hit a wall then good, try building on it!
+			if( tr_fwd.DidHit() ) 
+			{				
+				//m_vecPlayerForward *= -1;
+				// Redo the right vector (was making the normal negative later on)
+				//m_vecPlayerRight = CrossProduct( m_vecPlayerForward, Vector( 0, 0, 1 ) );
+				//VectorAngles( m_vecPlayerForward, m_angBuildAirAngles );
+
+				if ( tr_fwd.plane.normal.z != 0 ) // if the wall isnt perfectly vertical, return
+					return BUILD_TOOSTEEP;
+
+				m_vecBuildGroundOrigin = tr_fwd.endpos;
+				m_vecBuildAirOrigin = tr_fwd.endpos + (tr_fwd.plane.normal * 32.f); // pull out from the wall 32 units
+
+				m_angBuildGroundAngles = OrientToVectors( tr_fwd.plane.normal, m_vecPlayerTrueForward );
+
+				//VectorAngles ( m_vecBuildAirOrigin, m_angBuildGroundAngles );
+				//m_angBuildGroundAngles = OrientToVectors( vecNormal, m_vecPlayerForward );
+				//m_vecBuildGroundOrigin = vecGround;
+
+				return BUILD_ALLOWED;
+			}
+			else
+				return BUILD_TOOFAR; // or BUILD_NOROOM, whatever
+
+/*
+			Vector vecRightAdjWidth = m_vecPlayerRight * 4.5f;//18.0f;
+			Vector vecForwardAdjWidth = m_vecPlayerForward * 2.0f;//8.0f;
+
+			// Set up these vectors to reflect the position above the ground at each
+			// of the feet of the sg where we want to start traces from
+			Vector vecFeet[ 3 ];
+			vecFeet[ 0 ] = m_vecBuildAirOrigin + ( m_vecPlayerForward * 5.0f );//20.0f );
+			vecFeet[ 1 ] = m_vecBuildAirOrigin - ( vecRightAdjWidth ) - ( vecForwardAdjWidth );
+			vecFeet[ 2 ] = m_vecBuildAirOrigin + ( vecRightAdjWidth ) - ( vecForwardAdjWidth );
+
+			// For feet traces to come
+			trace_t tr[3];
+
+			// Loop through and do traces from each corner of the sentry to the ground
+			// The mask is normal PLAYER_SOLID minus PLAYER_CLIP and CONTENTS_MOVEABLE as we don't want to build on those(Bug #0000185: Buildable objects can be built on clips.) 
+			// HACK Changed to COLLISION_GROUP_PROJECTILE so it doesn't clip healthpacks (Bug #0000242: SG/Disp when building clips on health pack.)
+			for (int i = 0; i < 3; i++) 
+			{
+				UTIL_TraceLine(vecFeet[i], vecFeet[i] - Vector(0, 0, flTestDist), CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE, m_pPlayer, COLLISION_GROUP_PROJECTILE, &tr[i]);
+
+				// Bug #0000246: Dispenser and sg overlap if built on each other
+				if( !tr[i].DidHit() )
+					return BUILD_TOOFAR;
+				else if( tr[i].startsolid )
+					return BUILD_NOROOM;
+				else if( ( tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( tr[i].m_pEnt->Classify() == CLASS_DISPENSER ) )
+					return BUILD_NOROOM;
+			}
+
+			float flIntercept;
+			ComputeTrianglePlane( tr[0].endpos, tr[1].endpos, tr[2].endpos, vecNormal, flIntercept );
+			vecGround = GetMiddle( &tr[0].endpos, &tr[1].endpos, &tr[2].endpos );
+			*/
+		}
+		break;
+		
+/*
+		// Shouldn't get here w/ the detpack
+		case FF_BUILD_DETPACK: Assert( 0 ); return BUILD_ALLOWED; break;
+		case FF_BUILD_MANCANNON: Assert( 0 ); return BUILD_ALLOWED; break;
+*/
+		default: AssertMsg( 0, "Invalid buildable!" ); return BUILD_ERROR; break;
+	}
+/*
+	float flEpsilon = vecNormal.z / VectorLength( vecNormal );
+
+	// AfterShock: comment these 2 lines for near vertical building (but this won't allow you to build on walls unfortunately :)
+	if (flEpsilon < 0.90f) 
+		return BUILD_TOOSTEEP;
+
+	m_angBuildGroundAngles = OrientToVectors( vecNormal, m_vecPlayerForward );
+	m_vecBuildGroundOrigin = vecGround;
+
+	return BUILD_ALLOWED;
+	*/
 }
 
 //-----------------------------------------------------------------------------

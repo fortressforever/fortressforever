@@ -228,6 +228,7 @@ protected:
 	//bool				IsGroundTooSteep( void );
 	// See's if the ground is suitable for building
 	BuildInfoResult_t	CanOrientToGround( void );
+	BuildInfoResult_t	CanBuildOnWall( void );
 
 };
 
