@@ -31,6 +31,32 @@
 
 //ConVar ffdev_rocketsize("ffdev_rocketsize", "2.0", FCVAR_REPLICATED );
 #define FFDEV_ROCKETSIZE 2.0f //ffdev_rocketsize.GetFloat() //2.0f
+
+#ifdef GAME_DLL
+
+//ConVar ffdev_rocket_fx_spawnrate("ffdev_rocket_fx_spawnrate", "2", FCVAR_REPLICATED ); // doesnt do anything?
+#define FFDEV_ROCKET_FX_SPAWNRATE 2.0f //ffdev_rocket_fx_spawnrate.GetFloat()
+//ConVar ffdev_rocket_fx_opacity("ffdev_rocket_fx_opacity", "0.3", FCVAR_REPLICATED );
+#define FFDEV_ROCKET_FX_OPACITY 0.3f //ffdev_rocket_fx_opacity.GetFloat()
+//ConVar ffdev_rocket_fx_lifetime("ffdev_rocket_fx_lifetime", "0.3", FCVAR_REPLICATED );
+#define FFDEV_ROCKET_FX_LIFETIME 0.3f //ffdev_rocket_fx_lifetime.GetFloat() 
+//ConVar ffdev_rocket_fx_startsize("ffdev_rocket_fx_startsize", "1", FCVAR_REPLICATED );
+#define FFDEV_ROCKET_FX_STARTSIZE 1 //ffdev_rocket_fx_startsize.GetFloat()
+//ConVar ffdev_rocket_fx_endsize("ffdev_rocket_fx_endsize", "1", FCVAR_REPLICATED );
+#define FFDEV_ROCKET_FX_ENDSIZE 1 //ffdev_rocket_fx_endsize.GetFloat()
+//ConVar ffdev_rocket_fx_spawnradius("ffdev_rocket_fx_spawnradius", "1", FCVAR_REPLICATED ); // doesnt do anything?
+#define FFDEV_ROCKET_FX_SPAWNRADIUS 1 //ffdev_rocket_fx_spawnradius.GetFloat() 
+//ConVar ffdev_rocket_fx_minspeed("ffdev_rocket_fx_minspeed", "0", FCVAR_REPLICATED );
+#define FFDEV_ROCKET_FX_MINSPEED 0 //ffdev_rocket_fx_minspeed.GetFloat()
+//ConVar ffdev_rocket_fx_maxspeed("ffdev_rocket_fx_maxspeed", "0", FCVAR_REPLICATED );
+#define FFDEV_ROCKET_FX_MAXSPEED 0 //ffdev_rocket_fx_maxspeed.GetFloat() 
+//ConVar ffdev_rocket_fx_startcolor("ffdev_rocket_fx_startcolor", "0.8", FCVAR_REPLICATED );
+#define FFDEV_ROCKET_FX_STARTCOLOR 0.8f //ffdev_rocket_fx_startcolor.GetFloat() 
+//ConVar ffdev_rocket_fx_endcolor("ffdev_rocket_fx_endcolor", "0.8", FCVAR_REPLICATED ); // doesnt do anything?
+#define FFDEV_ROCKET_FX_ENDCOLOR 0.8f //ffdev_rocket_fx_endcolor.GetFloat() 
+
+#endif
+
 //#define PREDICTED_ROCKETS
 
 //=============================================================================
@@ -198,18 +224,18 @@ void CFFProjectileRocket::CreateSmokeTrail()
 	// Smoke trail.
 	if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL) 
 	{
-		m_hRocketTrail->m_Opacity = 0.2f;
-		m_hRocketTrail->m_SpawnRate = 100;
-		m_hRocketTrail->m_ParticleLifetime = 0.5f;
-		m_hRocketTrail->m_StartColor.Init(0.65f, 0.65f , 0.65f);
-		m_hRocketTrail->m_EndColor.Init(0.45f, 0.45f, 0.45f);
-		m_hRocketTrail->m_StartSize = 6;
-		m_hRocketTrail->m_EndSize = 10; // 24; // 32; Reduced a bit now
-		m_hRocketTrail->m_SpawnRadius = 4;
-		m_hRocketTrail->m_MinSpeed = 2;
-		m_hRocketTrail->m_MaxSpeed = 16;
+		m_hRocketTrail->m_Opacity = FFDEV_ROCKET_FX_OPACITY;
+		m_hRocketTrail->m_SpawnRate = FFDEV_ROCKET_FX_SPAWNRATE;
+		m_hRocketTrail->m_ParticleLifetime = FFDEV_ROCKET_FX_LIFETIME;
+		m_hRocketTrail->m_StartColor.Init(FFDEV_ROCKET_FX_STARTCOLOR, FFDEV_ROCKET_FX_STARTCOLOR , FFDEV_ROCKET_FX_STARTCOLOR);
+		m_hRocketTrail->m_EndColor.Init(FFDEV_ROCKET_FX_ENDCOLOR, FFDEV_ROCKET_FX_ENDCOLOR, FFDEV_ROCKET_FX_ENDCOLOR);
+		m_hRocketTrail->m_StartSize = FFDEV_ROCKET_FX_STARTSIZE;
+		m_hRocketTrail->m_EndSize = FFDEV_ROCKET_FX_ENDSIZE; // 24; // 32; Reduced a bit now
+		m_hRocketTrail->m_SpawnRadius = FFDEV_ROCKET_FX_SPAWNRADIUS;
+		m_hRocketTrail->m_MinSpeed = FFDEV_ROCKET_FX_MINSPEED;
+		m_hRocketTrail->m_MaxSpeed = FFDEV_ROCKET_FX_MAXSPEED;
 		
-		m_hRocketTrail->SetLifetime(999);
+		m_hRocketTrail->SetLifetime(20);
 		m_hRocketTrail->FollowEntity(this, "0");
 	}
 #endif
