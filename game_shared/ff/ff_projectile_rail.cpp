@@ -66,6 +66,8 @@ unsigned char g_uchRailColors[3][3] = { {64, 128, 192}, {32, 192, 160}, {0, 255,
 #define RAIL_BOUNCEDAMAGEFACTOR 1.4f // ffdev_rail_bouncedamagefactor.GetFloat()
 ConVar ffdev_rail_bounceuppushfactor( "ffdev_rail_bounceuppushfactor", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Upwards push multiplier per bounce" );
 #define RAIL_BOUNCEUPPUSHFACTOR ffdev_rail_bounceuppushfactor.GetFloat()
+ConVar ffdev_rail_maxtraveldistance( "ffdev_rail_maxtraveldistance", "0", FCVAR_REPLICATED, "Distance before the rail fizzles out" );
+#define RAIL_MAXTRAVELDISTANCE ffdev_rail_maxtraveldistance.GetFloat()
 
 
 ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "40.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a half-charge shot." );
@@ -186,6 +188,7 @@ void CFFProjectileRail::Spawn( void )
 	SetGravity(0.01f);
 
 	flSpawnTime = gpGlobals->curtime;
+	m_vecStartOrigin = GetAbsOrigin();
 
 	// Oh really we're invisible
 	//AddEffects(EF_NODRAW);
@@ -538,6 +541,12 @@ void CFFProjectileRail::DieThink( void )
 //----------------------------------------------------------------------------
 void CFFProjectileRail::RailThink( void ) 
 {
+	// if maxtraveldistance is set, don't let rails fly forever; fizzle out after a certain distance traveled -squeek
+	if (RAIL_MAXTRAVELDISTANCE > 0 && Vector(GetAbsOrigin() - m_vecStartOrigin).Length() > RAIL_MAXTRAVELDISTANCE)
+	{
+		SetupEnd(GetAbsOrigin());
+		return;
+	}
 
 	// after short break, allow collision with owner for rail jumping
 	if (gpGlobals->curtime - flSpawnTime > 0.05f)

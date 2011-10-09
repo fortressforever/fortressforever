@@ -78,6 +78,7 @@ public:
 	// set transmit filter to always transmit
 	int UpdateTransmitState() { return SetTransmitState( FL_EDICT_PVSCHECK ); }
 
+	Vector m_vecStartOrigin;
 	Vector m_vecSameOriginCheck;
 	float m_flSameOriginCheckTimer;
 	float flSpawnTime;
