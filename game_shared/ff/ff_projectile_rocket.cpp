@@ -54,6 +54,8 @@
 #define FFDEV_ROCKET_FX_STARTCOLOR 0.8f //ffdev_rocket_fx_startcolor.GetFloat() 
 //ConVar ffdev_rocket_fx_endcolor("ffdev_rocket_fx_endcolor", "0.8", FCVAR_REPLICATED ); // doesnt do anything?
 #define FFDEV_ROCKET_FX_ENDCOLOR 0.8f //ffdev_rocket_fx_endcolor.GetFloat() 
+//ConVar ffdev_rocket_fx_flarescale("ffdev_rocket_fx_flarescale", "1.2", FCVAR_REPLICATED ); // default is 1.5f
+#define FFDEV_ROCKET_FX_FLARESCALE 1.2f //ffdev_rocket_fx_flarescale.GetFloat() 
 
 #endif
 
@@ -234,6 +236,7 @@ void CFFProjectileRocket::CreateSmokeTrail()
 		m_hRocketTrail->m_SpawnRadius = FFDEV_ROCKET_FX_SPAWNRADIUS;
 		m_hRocketTrail->m_MinSpeed = FFDEV_ROCKET_FX_MINSPEED;
 		m_hRocketTrail->m_MaxSpeed = FFDEV_ROCKET_FX_MAXSPEED;
+		m_hRocketTrail->m_flFlareScale = FFDEV_ROCKET_FX_FLARESCALE;
 		
 		m_hRocketTrail->SetLifetime(20);
 		m_hRocketTrail->FollowEntity(this, "0");
