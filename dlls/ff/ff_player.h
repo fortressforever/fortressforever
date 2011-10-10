@@ -50,6 +50,8 @@ class CFFGrenadeBase;
 #define FF_TEAM_GREEN		5
 // END: Added by Mulchman for team junk
 
+extern ConVar ffdev_cloaktime;
+
 // Speed effect type
 enum SpeedEffectType
 {
@@ -701,6 +703,7 @@ public:
 	bool IsWithinCloakSmoke( void ) const { return m_iWithinCloakSmoke != 0; }
 	//Returns the time cloak started -GreenMushy
 	float GetCloakTime( void ) const { return m_flCloakTime; }
+	float GetCloakPercent( void ) { 	return (gpGlobals->curtime - GetCloakTime()) / ffdev_cloaktime.GetFloat(); }
 	float GetCloakSmokeRevealTime( void ) const { return m_flCloakSmokeTempRevealTime; }
 	void SetCloakSmokeRevealTime( float _flRevealTime ){ m_flCloakSmokeTempRevealTime = _flRevealTime; }
 	void CloakSmokeShootReveal( void );
