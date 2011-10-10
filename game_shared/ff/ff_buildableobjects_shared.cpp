@@ -81,6 +81,11 @@ const char *g_pszFFSentryGunModels[] =
 // Array of char *'s to gib models
 const char *g_pszFFSentryGunGibModels[] =
 {
+	FF_SENTRYGUN_GIB3A_MODEL,
+	FF_SENTRYGUN_GIB3B_MODEL,
+	FF_SENTRYGUN_GIB3C_MODEL,
+	FF_SENTRYGUN_GIB3D_MODEL,
+	FF_SENTRYGUN_GIB3E_MODEL,
 	NULL
 };
 
@@ -1013,7 +1018,7 @@ void DispenserGib_Callback(const CEffectData &data)
 	int iGib = 0;
 	while (g_pszFFDispenserGibModels[iGib])
 	{
-		C_Gib *pGib = C_Gib::CreateClientsideGib(g_pszFFDispenserGibModels[iGib], vecPosition, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), RandomAngularImpulse( -90, 90 ), 10.0f);
+		C_Gib *pGib = C_Gib::CreateClientsideGib(g_pszFFDispenserGibModels[iGib], vecPosition, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 400)), RandomAngularImpulse( -60, 60 ), 10.0f);
 	
 		if (pGib)
 		{
@@ -1025,5 +1030,28 @@ void DispenserGib_Callback(const CEffectData &data)
 }
 
 DECLARE_CLIENT_EFFECT("DispenserGib", DispenserGib_Callback);
+
+void SentryGunGib_Callback(const CEffectData &data)
+{
+	Vector vecPosition = data.m_vOrigin;
+	Vector vecOffset;
+	int nSkin = data.m_nMaterial;
+
+	// Now spawn a number of gibs
+	int iGib = 0;
+	while (g_pszFFSentryGunGibModels[iGib])
+	{
+		C_Gib *pGib = C_Gib::CreateClientsideGib(g_pszFFSentryGunGibModels[iGib], vecPosition, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), RandomAngularImpulse( -90, 90 ), 10.0f);
+	
+		if (pGib)
+		{
+			pGib->m_nSkin = nSkin;
+			pGib->LeaveBloodDecal(false);
+		}
+		++iGib;
+	}
+}
+
+DECLARE_CLIENT_EFFECT("SentryGunGib", SentryGunGib_Callback);
 
 #endif

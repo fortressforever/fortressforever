@@ -69,6 +69,11 @@
 #define FF_SENTRYGUN_MODEL					"models/buildable/sg/sg_lvl1.mdl"
 #define FF_SENTRYGUN_MODEL_LVL2				"models/buildable/sg/sg_lvl2.mdl"
 #define FF_SENTRYGUN_MODEL_LVL3				"models/buildable/sg/sg_lvl3.mdl"
+#define FF_SENTRYGUN_GIB3A_MODEL			"models/buildable/sg/gibs/3a.mdl"
+#define FF_SENTRYGUN_GIB3B_MODEL			"models/buildable/sg/gibs/3b.mdl"
+#define FF_SENTRYGUN_GIB3C_MODEL			"models/buildable/sg/gibs/3c.mdl"
+#define FF_SENTRYGUN_GIB3D_MODEL			"models/buildable/sg/gibs/3d.mdl"
+#define FF_SENTRYGUN_GIB3E_MODEL			"models/buildable/sg/gibs/3e.mdl"
 #define FF_SENTRYGUN_BUILD_SOUND			"Sentry.Onelonger"
 #define FF_SENTRYGUN_UNBUILD_SOUND			"Sentry.unbuild"
 #define FF_SENTRYGUN_EXPLODE_SOUND			"Sentry.Explode"
@@ -724,7 +729,7 @@ public:
 	//int GetInitialHealth( void );
 
 	virtual void DoExplosionDamage();
-
+	virtual void SpawnGibs( void );
 	// These are for updating the user
 	virtual void	PhysicsSimulate();
 	float			m_flLastClientUpdate;
