@@ -44,6 +44,11 @@ ConVar ffdev_spanner_bagthrowforce("ffdev_spanner_bagthrowforce", "200", FCVAR_R
 ConVar ffdev_spanner_bagsonlyonsteal("ffdev_spanner_bagsonlyonsteal", "1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Spanner: only spawn bags when you steal armor with spanner");
 #define FFDEV_SPANNER_BAGSONLYONSTEAL ffdev_spanner_bagsonlyonsteal.GetBool()
 
+ConVar ffdev_spanner_removescloak("ffdev_spanner_removescloak", "1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Spanner: only spawn bags when you steal armor with spanner");
+#define FFDEV_SPANNER_REMOVESCLOAK ffdev_spanner_removescloak.GetBool()
+
+
+
 class CFFWeaponSpanner : public CFFWeaponMeleeBase
 {
 public:
@@ -203,6 +208,14 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					//pBackpack->SetAbsVelocity( Vector( random->RandomFloat(-100.0f, 0.0f), random->RandomFloat(-100.0f, 100.0f), random->RandomFloat(20.0f, 100.0f) ) );
 					pBackpack->SetAbsVelocity( Vector(vecForward.x, vecForward.y, FFDEV_SPANNER_BAGTHROWFORCEUP) * FFDEV_SPANNER_BAGTHROWFORCE );
 					pBackpack->SetOwnerEntity( GetOwner() );
+				}
+			}
+
+			if ( FFDEV_SPANNER_REMOVESCLOAK )
+			{
+				if ( pHitPlayer->IsCloaked() )
+				{
+					pHitPlayer->Uncloak( true );
 				}
 			}
 #endif
