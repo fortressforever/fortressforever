@@ -56,6 +56,7 @@ class C_FFManCannon;
 #define FF_CLOAK_TEXTURE_GROUP TEXTURE_GROUP_CLIENT_EFFECTS
 
 extern ConVar r_selfshadows;
+extern ConVar ffdev_cloaktime;
 
 void SetStealMouseForAimSentry( bool bValue );
 bool CanStealMouseForAimSentry( void );
@@ -558,6 +559,7 @@ public:
 	bool IsCloakable( void ) const		{ return m_bCloakable != 0; }
 	//Returns the time the cloak started -GreenMushy
 	float GetCloakTime( void ) const    { return m_flCloakTime; }
+	float GetCloakPercent( void ) { 	return (gpGlobals->curtime - GetCloakTime()) / ffdev_cloaktime.GetFloat(); }
 private:
 	unsigned int m_bCloakable;
 	// ----------------------------------
