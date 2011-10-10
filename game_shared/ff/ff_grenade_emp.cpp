@@ -46,6 +46,10 @@ int g_iEmpRingTexture = -1;
 	ConVar emp_amplitude("ffdev_emp_amplitude","1",FCVAR_CHEAT,"amplitude of the emp shockwave");
 	ConVar emp_speed("ffdev_emp_speed","0",FCVAR_CHEAT,"speed of the emp shockwave");
 	ConVar emp_damage("ffdev_emp_damage","90.0",FCVAR_CHEAT,"Amount of damage dealt to anyone right in the center of the blast");
+
+	ConVar ffdev_emp_removepipesquietly("ffdev_emp_removepipesquietly","1",FCVAR_CHEAT,"1 = EMPing pipes removes them without detonation");
+	#define FFDEV_EMP_REMOVEPIPESQUIETLY ffdev_emp_removepipesquietly.GetBool()
+
 #endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeEmp, DT_FFGrenadeEmp)
@@ -112,7 +116,21 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_emp );
 					// This will handle the pipes blowing up and setting
 					// the correct owner
 					((CFFProjectilePipebomb *)pEntity)->DecrementHUDCount();
-					((CFFProjectilePipebomb *)pEntity)->DetonatePipe(true, GetOwnerEntity());
+
+					if ( FFDEV_EMP_REMOVEPIPESQUIETLY == 1)
+					{
+						// spark and remove
+						Vector vecUp(0, 0, 1.0f);
+						g_pEffects->Sparks( pEntity->GetAbsOrigin(), 2, 5, &vecUp );
+						EmitSound( "DoSpark" );
+		
+						UTIL_Remove(pEntity);
+					}
+					else
+					{
+						// detonate as normal
+						((CFFProjectilePipebomb *)pEntity)->DetonatePipe(true, GetOwnerEntity());
+					}
 					break;
 
 				default:
