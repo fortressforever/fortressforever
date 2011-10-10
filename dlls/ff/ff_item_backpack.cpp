@@ -88,6 +88,7 @@ void CFFItemBackpack::PreDespawnThink()
 
 int CFFItemBackpack::TakeEmp()
 {
+	/* Backpacks no longer get destroyed by EMPs - AfterShock
 	int ammo = 0;
 
 	for (int i = 1; i < MAX_AMMO_SLOTS; i++)
@@ -99,6 +100,9 @@ int CFFItemBackpack::TakeEmp()
 	UTIL_Remove(this);
 
 	return int ( ammo / 2) ;
+	*/
+
+	return 0;
 }
 
 void CFFItemBackpack::RestockTouch( CBaseEntity *pPlayer )

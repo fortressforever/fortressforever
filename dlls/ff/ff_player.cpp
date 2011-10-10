@@ -6187,6 +6187,8 @@ int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 
 int CFFPlayer::TakeEmp()
 {
+	return 0; // Dont take direct damage from EMPs
+
 	// Rockets, shells, and cells explode from EMPs, unless you are an engineer
 	// in which case cells do not
 	// EMPs also reduce your ammo store by 25%!

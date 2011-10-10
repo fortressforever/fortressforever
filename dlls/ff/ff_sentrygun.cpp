@@ -122,6 +122,9 @@ ConVar ffdev_sg_bulletdamage_lvl2("ffdev_sg_bulletdamage_lvl12", "14", FCVAR_REP
 ConVar ffdev_sg_bulletdamage_lvl3("ffdev_sg_bulletdamage_lvl3", "17", FCVAR_REPLICATED, "SG bullet damage for level 3");
 #define SG_BULLETDAMAGE_LVL3 ffdev_sg_bulletdamage_lvl3.GetInt()
 
+ConVar ffdev_emp_disabletime("ffdev_emp_disabletime", "2.5", FCVAR_REPLICATED, "SG disable time when getting EMPd");
+#define FFDEV_EMP_DISABLETIME ffdev_emp_disabletime.GetFloat()
+
 // AfterShock; These values will be rounded by the ActiveThink time (at time of writing 0.01), so 0.125 = 0.13
 //ConVar sg_shotcycletime_lvl1("ffdev_sg_shotcycletime_lvl1", "0.2", FCVAR_REPLICATED, "Level 1 SG time between shots");
 #define SG_SHOTCYCLETIME_LVL1 0.2f //sg_shotcycletime_lvl1.GetFloat()
@@ -170,8 +173,8 @@ ConVar sg_lockontime_lvl3("ffdev_sg_lockontime_lvl3", "0.20", FCVAR_REPLICATED, 
 //ConVar sg_returntoidlespeed("ffdev_sg_returntoidlespeed", "0.1", FCVAR_REPLICATED, "Speed the SG turns when it's just lost a lock, should be slower than scan speed (1.0)");
 #define SG_TURNSPEED_AFTERLOCK 0.1f //sg_returntoidlespeed.GetFloat()
 
-//ConVar sg_empdmg_base("ffdev_sg_empdmg_base", "100", FCVAR_REPLICATED, "Base damage a sentry takes from an emp.");
-#define SG_EMPDMG_BASE 100.0f // sg_empdmg_base.GetFloat()
+ConVar sg_empdmg_base("ffdev_sg_empdmg_base", "70", FCVAR_REPLICATED, "Base damage a sentry takes from an emp.");
+#define SG_EMPDMG_BASE sg_empdmg_base.GetFloat()
 //ConVar sg_empdmg_shells_multi("ffdev_sg_empdmg_shells_multi", "0.5", FCVAR_REPLICATED, "Base emp damage plus the sentry's shell count times this");
 #define SG_EMPDMG_SHELLS_MULTI 0.5f // sg_empdmg_shells_multi.GetFloat()
 //ConVar sg_empdmg_rockets_multi("ffdev_sg_empdmg_rockets_multi", "0.9", FCVAR_REPLICATED, "Base emp damage plus the sentry's rocket count times this");
@@ -1835,6 +1838,8 @@ int CFFSentryGun::TakeEmp( void )
 	// This base damage matches up the total damage with tfc
 	int ammodmg = SG_EMPDMG_BASE;
 
+	Disable( FFDEV_EMP_DISABLETIME );
+
 	// These values are from tfc.
 	//ammodmg += m_iShells * SG_EMPDMG_SHELLS_MULTI;
 	//ammodmg += m_iRockets * SG_EMPDMG_ROCKETS_MULTI;
@@ -2003,6 +2008,24 @@ void CFFSentryGun::DoExplosionDamage()
 			UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Spawn SG specific gibs
+//-----------------------------------------------------------------------------
+void CFFSentryGun::SpawnGibs()
+{
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	
+	if( !pOwner ) 
+		return;
+
+	CEffectData data;
+		data.m_nEntIndex = entindex();
+		data.m_vOrigin = GetAbsOrigin();
+		data.m_nMaterial = clamp( pOwner->GetTeamNumber() + 1 - TEAM_BLUE, 0, 4 ); // using this for skin, not sure what it's meant to be used for
+	// UNCOMMENT THIS WHEN GIB MODELS ARE FIXED (ORIGINS) - AfterShock
+	//DispatchEffect("SentryGunGib", data);
 }
 
 //-----------------------------------------------------------------------------

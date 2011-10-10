@@ -45,7 +45,7 @@ int g_iEmpRingTexture = -1;
 	ConVar emp_spread("ffdev_emp_spread","0",FCVAR_CHEAT,"spread of the emp shockwave");
 	ConVar emp_amplitude("ffdev_emp_amplitude","1",FCVAR_CHEAT,"amplitude of the emp shockwave");
 	ConVar emp_speed("ffdev_emp_speed","0",FCVAR_CHEAT,"speed of the emp shockwave");
-	ConVar emp_buildable_damage("ffdev_emp_buildable_damage","10.0",FCVAR_CHEAT,"Amount of damage to deal to sentryguns and dispensers in the emp radius.");
+	ConVar emp_damage("ffdev_emp_damage","90.0",FCVAR_CHEAT,"Amount of damage dealt to anyone right in the center of the blast");
 #endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeEmp, DT_FFGrenadeEmp)
@@ -88,6 +88,11 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_emp );
 
 		DispatchEffect(EMP_EFFECT, data);
 		g_pEffects->Sparks(GetAbsOrigin(), 20, 10, &vecUp);
+
+		// Do small bonus damage in center
+		Vector vecReported = pTrace->endpos;
+		CTakeDamageInfo info( this, GetThrower(), GetBlastForce(), GetAbsOrigin(), emp_damage.GetFloat(), bitsDamageType, 0, &vecReported );
+		RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
 		float radius = GetGrenadeRadius();
 

@@ -192,8 +192,12 @@ END_NETWORK_TABLE()
 	//----------------------------------------------------------------------------
 	int CFFProjectileBase::TakeEmp() 
 	{
-		UTIL_Remove(this);
-		return m_flDamage;
+		// Projectiles no longer get destroyed by EMPs - AfterShock
+
+		//UTIL_Remove(this);
+		//return m_flDamage;
+
+		return 0;
 	}
 #endif
 
