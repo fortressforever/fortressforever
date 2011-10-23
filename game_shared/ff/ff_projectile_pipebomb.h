@@ -129,6 +129,10 @@ public:
 #ifdef GAME_DLL	
 	void DetonatePipe(bool force = false, CBaseEntity *pOther = NULL);
 
+	bool IsDetonated() { return m_bIsDetonated; }
+	void SetDetonated( bool bIsDetonated ) { m_bIsDetonated = bIsDetonated; }
+	bool m_bIsDetonated;
+
 	// Override projectile_base so object isn't removed
 	int TakeEmp( void ) { return m_flDamage; } 
 

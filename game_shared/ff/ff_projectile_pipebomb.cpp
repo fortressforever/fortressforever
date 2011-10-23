@@ -199,6 +199,7 @@ ConVar ffdev_pipebomb_activation_speed( "ffdev_pipebomb_activation_speed", "4.0f
 		}
 
 		// Detonate!
+		SetDetonated(true);
 		SetThink(&CFFProjectilePipebomb::Detonate);
 		SetNextThink(gpGlobals->curtime);
 	}
@@ -376,7 +377,7 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 
 		if( PIPE_MODE == 0 || PIPE_MODE == 2 )
 		{
-			if (pPipe->GetOwnerEntity() == pOwner)
+			if (pPipe->GetOwnerEntity() == pOwner && !pPipe->IsDetonated()) 
 			{
 				pPipe->DetonatePipe(force);
 				continue;
@@ -450,6 +451,8 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity 
 	pPipebomb->SetDetonateTimerLength(120);
 
 	pPipebomb->SetElasticity(GetGrenadeElasticity());
+
+	pPipebomb->SetDetonated(false);
 #endif
 	
 	//Null out the magnet target
