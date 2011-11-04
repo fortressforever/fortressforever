@@ -3351,11 +3351,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
@@ -3679,11 +3679,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
@@ -4522,7 +4522,7 @@
 				RelativePath=".\ff\ff_fx_cloaksmoke_emitter.h"
 				>
 			</File>
-			<File			
+			<File
 				RelativePath=".\ff\ff_fx_conc_emitter.cpp"
 				>
 			</File>
@@ -4868,6 +4868,14 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_in_main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_mathackman.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_mathackman.h"
 				>
 			</File>
 			<File
@@ -5218,7 +5226,7 @@
 				RelativePath="..\game_shared\ff\ff_grenade_cloaksmoke.cpp"
 				>
 			</File>
-			<File			
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_concussion.cpp"
 				>
 			</File>

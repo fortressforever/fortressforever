@@ -46,6 +46,8 @@
 
 #include "collisionutils.h" // hlstriker: For player avoidance
 
+#include "ff_mathackman.h" // squeek: For mathack manager update in ClientThink
+
 #if defined( CFFPlayer )
 	#undef CFFPlayer
 #endif
@@ -1267,6 +1269,7 @@ C_FFPlayer::C_FFPlayer() :
 
 	memset(&m_hCrosshairInfo, 0, sizeof(m_hCrosshairInfo));
 	
+	m_bMathackDetected = false;
 
 	//Loop through all classes.
 	for (int i=1; i < 11; i++)
@@ -2531,6 +2534,8 @@ void C_FFPlayer::ClientThink( void )
 			m_pImmunityEmitter2 = NULL;
 		}
 	}
+
+	_mathackman.Update();
 
 	BaseClass::ClientThink();
 }

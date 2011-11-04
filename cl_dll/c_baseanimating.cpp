@@ -46,6 +46,9 @@
 #include "datacache/idatacache.h"
 #include "gamestringpool.h"
 
+#include "ff_mathackman.h"
+#include "c_ff_player.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -961,6 +964,8 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 	{
 		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 	}
+	
+	_mathackman.AddMathackModel( GetModelIndex(), modelinfo->GetStudiomodel( const_cast<model_t*>(GetModel()) ) );
 
 	return hdr;
 }
@@ -2417,6 +2422,9 @@ int C_BaseAnimating::DrawModel( int flags )
 {
 	VPROF_BUDGET( "C_BaseAnimating::DrawModel", VPROF_BUDGETGROUP_MODEL_RENDERING );
 	if ( !m_bReadyToDraw )
+		return 0;
+
+	if ( C_FFPlayer::GetLocalFFPlayer() &&  (C_FFPlayer::GetLocalFFPlayer())->m_bMathackDetected )
 		return 0;
 
 	int drawn = 0;
