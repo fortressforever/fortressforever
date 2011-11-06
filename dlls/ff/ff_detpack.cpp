@@ -504,19 +504,45 @@ void CFFDetpack::DoExplosionDamage( void )
 				continue;
 
 			// See if the world is not blocking this object from us
-			bool bDoDamage = true;
+			bool bDoDamage = true, bBail = false;
 			Vector vecBeg = vecOrigin, vecTarget = pEntity->GetAbsOrigin();
+			CBaseEntity *pIgnore = this;
+			int iCount = 0;			
 
-			// Now, Trace! 
-			trace_t tr;
-			UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_DEBRIS_TRIGGER, &tr );
-
-			// If we hit something...
-			if( tr.DidHit() )
+			while( bDoDamage && ( iCount < 256 ) && !bBail )
 			{
-				// We hit something other than the target (something is blocking it)
-				if( tr.m_pEnt != pEntity )
-					bDoDamage = false;
+				// Now, Trace! 
+				trace_t tr;
+				UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, pIgnore, COLLISION_GROUP_NONE, &tr );
+
+				// If we hit something...
+				if( tr.DidHit() )
+				{
+					// Skip object if we hit one of these while tracing to it
+					/*
+					if( tr.DidHitWorld() ||
+						FClassnameIs( tr.m_pEnt, "func_door" ) ||
+						FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
+						FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
+						FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
+						*/
+					if( FF_TraceHitWorld( &tr ) )
+						bDoDamage = false;	// Get out of loop
+
+					// Traced until we hit ourselves
+					if( tr.m_pEnt == pEntity )
+						bBail = true;
+				}
+
+				// Haven't hit a wall or pEntity so keep tracing
+				// Update start & ignore entity
+				vecBeg = tr.endpos;
+				pIgnore = tr.m_pEnt;
+
+				iCount++; // In case we get stuck tracing this will bail us out after so many traces
+
+				if( vecBeg == vecTarget )
+					bBail = true;
 			}
 
 			// If we traced to the object w/o hitting world or something else
