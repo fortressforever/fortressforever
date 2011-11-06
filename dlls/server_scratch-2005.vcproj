@@ -4559,6 +4559,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_lualib_data.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_lualib_globals.cpp"
 				>
 			</File>
@@ -4782,7 +4786,7 @@
 				RelativePath="..\game_shared\ff\ff_grenade_cloaksmoke.cpp"
 				>
 			</File>
-			<File			
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_concussion.cpp"
 				>
 			</File>

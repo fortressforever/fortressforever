@@ -32,6 +32,7 @@ private:
 	static void InitTeam(lua_State* L);
 	static void InitUtil(lua_State* L);
 	static void InitWeapons(lua_State* L);
+	static void InitData(lua_State* L);
 };
 
 //---------------------------------------------------------------------------

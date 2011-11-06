@@ -3756,6 +3756,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath=".\ff\ff_lualib_constants.h">
 			</File>
 			<File
+				RelativePath=".\ff\ff_lualib_data.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_lualib_globals.cpp">
 			</File>
 			<File
