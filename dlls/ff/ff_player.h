@@ -327,6 +327,9 @@ private:
 	//float GetCloakSpeed( void ) const { return m_flCloakSpeed; }
 
 public:
+	float GetMovementSpeed() const;
+
+public:
 	// ---> FF server-side player command handlers
 	void Command_TestCommand(void);
 	void Command_Class(void);
