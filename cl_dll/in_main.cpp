@@ -897,6 +897,11 @@ void CInput::ScaleMovements( CUserCmd *cmd )
 						 (cmd->upmove * cmd->upmove));
 
 	float flMaxSpeed = pPlayer->MaxSpeed() * pPlayer->m_flSpeedModifier;
+	
+	// SourceTV clients' maxspeed is set to zero, which made it impossible to move in freelook
+	// the commented code below (original SDK code?) has this if check -squeek
+	if (flMaxSpeed == 0)
+		return;
 
 	if (flSpeed > flMaxSpeed)
 	{
