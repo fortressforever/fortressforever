@@ -1850,6 +1850,12 @@ bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	{
 		return false;
 	}
+	
+	if (collisionGroup0 == COLLISION_GROUP_PLAYER &&
+		collisionGroup1 == COLLISION_GROUP_ROCKET)
+	{
+		return false;
+	}
 
 	// #0001026: backpacks & flags can be discarded through doors
 	// Modified this as per Mirv's suggestion.  If a trigger only object flies into a regular object, they collide -> Defrag
@@ -1891,6 +1897,13 @@ bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	// Don't get caught on projectiles
 	if (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
 		collisionGroup1 == COLLISION_GROUP_PROJECTILE)
+	{
+		return false;
+	}
+	
+	// Don't get caught on rockets
+	if (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
+		collisionGroup1 == COLLISION_GROUP_ROCKET)
 	{
 		return false;
 	}
