@@ -6570,7 +6570,8 @@ int CFFPlayer::LuaAddHealth(int iAmount)
 		m_iHealth += iAmount;
 	else
 	{
-		CTakeDamageInfo info( this, this, -iAmount, DMG_GENERIC );
+		// use direct damage so armor is ignored -squeek
+		CTakeDamageInfo info( this, this, -iAmount, DMG_DIRECT );
 		//info.SetDamageForce( Vector( 0, 0, -1 ) );
 		//info.SetDamagePosition( Vector( 0, 0, 1 ) );
 		info.SetCustomKill(KILLTYPE_INFECTION);
