@@ -132,7 +132,7 @@ ConVar projectile_gren_normaldmg("ffdev_projectile_gren_normaldmg", "80.0", FCVA
 
 		// Bug #0000512: Blue pipes don't explode on impact on buildables
 		// Explode on contact w/ buildables if pipe bomb
-		if( trace.m_pEnt && ( ( trace.m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( trace.m_pEnt->Classify() == CLASS_DISPENSER ) ) )
+		if( trace.m_pEnt && ( ( trace.m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( trace.m_pEnt->Classify() == CLASS_DISPENSER ) || ( trace.m_pEnt->Classify() == CLASS_MANCANNON ) ) )
 		{
 			if( m_bIsLive )
 			{
