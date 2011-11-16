@@ -92,8 +92,12 @@ ConVar  sg_cloaksonar_pitch_near( "ffdev_sg_cloaksonar_pitch_near", "92", FCVAR_
 ConVar  sg_cloaksonar_pitch_far( "ffdev_sg_cloaksonar_pitch_far", "108", FCVAR_FF_FFDEV_REPLICATED );
 #define SG_CLOAKSONAR_PITCH_FAR sg_cloaksonar_pitch_far.GetInt() // 108
 
+ConVar ffdev_sg_explosiondamage_enabled("ffdev_sg_explosiondamage_enabled", "1", FCVAR_FF_FFDEV_REPLICATED, "Determines if the SG explosion does damage");
+#define SG_EXPLOSIONDAMAGE_ENABLED ffdev_sg_explosiondamage_enabled.GetBool()
 ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_FF_FFDEV_REPLICATED, "Base damage for the SG explosion");
 #define SG_EXPLOSIONDAMAGE_BASE sg_explosiondamage_base.GetFloat() // 51.0f 
+ConVar ffdev_sg_explosionradius("ffdev_sg_explosionradius", "128.0", FCVAR_FF_FFDEV_REPLICATED, "SG explosion radius");
+#define SG_EXPLOSIONRADIUS ffdev_sg_explosionradius.GetFloat()
 ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "7.0", FCVAR_FF_FFDEV_REPLICATED, "SG bullet push force");
 #define SG_BULLETPUSH ffdev_sg_bulletpush.GetFloat() // 7.0f
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
@@ -1859,17 +1863,20 @@ void CFFSentryGun::DoExplosionDamage()
 {
 	VPROF_BUDGET( "CFFSentryGun::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
-	// COmmented out for testing explosion damage - AfterShock
-	//flDamage = min(280, flDamage);
-	
-	if (m_hOwner.Get())
+	if (SG_EXPLOSIONDAMAGE_ENABLED)
 	{
-		CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
-		info.SetCustomKill( KILLTYPE_SENTRYGUN_DET );
-		RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
+		float flDamage = SG_EXPLOSIONDAMAGE_BASE * m_iLevel  + (m_iRockets * 1.4f);
+		// COmmented out for testing explosion damage - AfterShock
+		//flDamage = min(280, flDamage);
+		
+		if (m_hOwner.Get())
+		{
+			CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
+			info.SetCustomKill( KILLTYPE_SENTRYGUN_DET );
+			RadiusDamage(info, GetAbsOrigin(), SG_EXPLOSIONRADIUS, CLASS_NONE, NULL);
 
-		UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
+			UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
+		}
 	}
 }
 
