@@ -422,7 +422,7 @@ float CFFGrenadeLaser::getLengthPercent()
 			AngleVectors(angRadial, &vecDirection);
 			VectorNormalizeFast(vecDirection);
 
-			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
+			UTIL_TraceLine( vecOrigin/* + vecDirection * flSize*/, 
 				vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), MASK_SHOT, NULL, COLLISION_GROUP_PLAYER, &tr );
 
 			if ( tr.m_pEnt )
