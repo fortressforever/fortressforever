@@ -1095,7 +1095,8 @@ void CViewRender::Render( vrect_t *rect )
 	if ( pPlayer )
 	{
 		// Override view model if necessary
-		if ( !pPlayer->m_Local.m_bDrawViewmodel )
+		// Added a conditional for SourceTV as this was turning off viewmodels for SourceTV demos -squeek
+		if ( !pPlayer->m_Local.m_bDrawViewmodel && !pPlayer->IsHLTV() )
 		{
 			drawViewModel = false;
 		}
