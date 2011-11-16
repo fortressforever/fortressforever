@@ -23,4 +23,5 @@ void CFFLuaLib::Init(lua_State* L)
 	InitGlobals(L);
 	InitOmnibot(L);
 	InitUtil(L);
+	InitData(L);
 }
