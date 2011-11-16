@@ -42,6 +42,8 @@ public:
 		gameeventmanager->AddListener( this, "sentrygun_upgraded", true );
 		gameeventmanager->AddListener( this, "sentry_sabotaged", true );
 		gameeventmanager->AddListener( this, "dispenser_sabotaged", true );
+		gameeventmanager->AddListener( this, "dispenser_sabotaged", true );
+		gameeventmanager->AddListener( this, "ff_restartround", true );
 
 		//gameeventmanager->AddListener( this, "player_team", true );
 
@@ -440,6 +442,13 @@ public:
 			}
 		}
 		// END: spy uncloaked
+		
+		// BEG: ff_restartround
+		if( !Q_strncmp( name, "ff_restartround", Q_strlen( "ff_restartround" ) ) )
+		{
+			UTIL_LogPrintf( "Round restarted\n");
+		}
+		// END: ff_restartround
 
 		// BEG: LUA events
 		if( !Q_strncmp( name, "luaevent", Q_strlen( "luaevent" ) ) )
