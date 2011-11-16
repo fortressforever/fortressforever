@@ -2217,7 +2217,7 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 void CFFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 {
 	//Check for jimmyleg cases on the jump event(and speed) -GreenMushy
-	if( event == PLAYERANIMEVENT_JUMP )
+	if( Q_atoi( engine->GetClientConVarValue( this->entindex(), "cl_jimmyleg_mode" ) ) != 0 && event == PLAYERANIMEVENT_JUMP )
 	{
 		//check convars or speed!
 		Vector vecVelocity = this->GetAbsVelocity();
@@ -2234,7 +2234,6 @@ void CFFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 				m_PlayerAnimState->DoAnimationEvent( event );
 			}
 			break;
-		case 0:
 		default:
 			//Always do the animation event if previous stuff wasnt hit
 			m_PlayerAnimState->DoAnimationEvent( event );
