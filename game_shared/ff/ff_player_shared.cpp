@@ -872,6 +872,15 @@ int CFFPlayer::GetDisguisedClass( void ) const
 	return CLASS_NONE;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+float CFFPlayer::GetMovementSpeed( void ) const
+{
+	Vector vecVelocity = GetAbsVelocity();
+	return FastSqrt(vecVelocity[0] * vecVelocity[0] + vecVelocity[1] * vecVelocity[1]);
+}
+
 /*
 ================
 FireBullets
