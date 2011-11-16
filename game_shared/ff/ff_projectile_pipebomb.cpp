@@ -104,6 +104,7 @@ ConVar ffdev_pipe_friction("ffdev_pipe_friction", "0.375", FCVAR_FF_FFDEV_REPLIC
 		}
 
 		// Detonate!
+		SetDetonated(true);
 		SetThink(&CFFProjectilePipebomb::Detonate);
 		SetNextThink(gpGlobals->curtime);
 	}
@@ -255,7 +256,7 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 	// Detonate any pipes belonging to us
 	while ((pPipe = (CFFProjectilePipebomb *) gEntList.FindEntityByClassT(pPipe, CLASS_PIPEBOMB)) != NULL) 
 	{
-		if (pPipe->GetOwnerEntity() == pOwner) 
+		if (pPipe->GetOwnerEntity() == pOwner && !pPipe->IsDetonated()) 
 			pPipe->DetonatePipe(force);
 	}
 #endif
@@ -289,6 +290,8 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity 
 	pPipebomb->SetDetonateTimerLength(120);
 
 	pPipebomb->SetElasticity(GetGrenadeElasticity());
+
+	pPipebomb->SetDetonated(false);
 #endif
 
 	pPipebomb->SetDamage(iDamage);
