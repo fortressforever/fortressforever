@@ -185,6 +185,19 @@ bool CFFScheduleCallback::Update()
 }
 
 /////////////////////////////////////////////////////////////////////////////
+bool CFFScheduleCallback::IsComplete()
+{
+	if(m_timeLeft <= 0.0f)
+	{
+		// schedule is done
+		if (m_nRepeat == 0)
+			return true;
+	}
+
+	return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // CFFScheduleManager
 /////////////////////////////////////////////////////////////////////////////
 CFFScheduleManager::CFFScheduleManager()
@@ -402,9 +415,16 @@ void CFFScheduleManager::Update()
 		if(isComplete)
 		{
 			// remove and cleanup the schedule callback
-			unsigned int itDeleteMe = it;
+			CRC32_t id = m_schedules.Key(it);
 			it = m_schedules.NextInorder(it);
-			m_schedules.RemoveAt(itDeleteMe);
+			
+			unsigned short itCheck = m_schedules.Find(id);
+			if(m_schedules.IsValidIndex(itCheck))
+			{
+				CFFScheduleCallback* pCallbackCheck = m_schedules.Element(itCheck);
+				if (pCallbackCheck->IsComplete())
+					m_schedules.RemoveAt(itCheck);
+			}
 		}
 		else
 		{
