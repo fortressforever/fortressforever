@@ -4830,6 +4830,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_mathackman.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_mathackman.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_prediction.cpp"
 				>
 			</File>
