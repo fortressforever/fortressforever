@@ -59,6 +59,9 @@ public:
 	// updates. call only once per frame. returns true if the schedule is
 	// complete and should be deleted; otherwise returns false
 	bool Update();
+	
+	// returns true if this schedule is completely done and should be deleted
+	bool IsComplete();
 
 private:
 	// private data
