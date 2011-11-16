@@ -349,6 +349,9 @@ private:
 //public:
 	//float GetCloakSpeed( void ) const { return m_flCloakSpeed; }
 
+public:
+	float GetMovementSpeed() const;
+
 	// Beg: Added by L0ki for grenade stuff
 public:
 	CNetworkVar(int, m_iGrenadeState);

@@ -38,6 +38,7 @@ ConVar developer("developer", "0", 0, "Set developer message level" ); // develo
 
 //Adding ConVars to toggle grenades/pipes colliding with the enemy
 ConVar ffdev_grenade_collidewithenemy("ffdev_grenade_collidewithenemy", "1", FCVAR_FF_FFDEV_REPLICATED, "If set to 0, grenades pass through enemies" );
+ConVar ffdev_softclip_alwaysclippercent("ffdev_softclip_alwaysclippercent", "1.25", FCVAR_REPLICATED | FCVAR_CHEAT, "Above this percentage of max class speed, teammates will always clip (as opposed to being able to stand on a teammates head)");
 
 ConVar ffdev_softclip_asdisguisedteam("ffdev_softclip_asdisguisedteam", "0", FCVAR_FF_FFDEV_REPLICATED, "If set to 1, spies soft clip as though they were on their disguised team");
 
@@ -380,6 +381,28 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 				
 				if( pHandle->IsPlayer() && FFGameRules()->IsTeam1AlliedToTeam2( iPassTeam, iHandleTeam ) == GR_TEAMMATE )
 				{
+					// If either of the entities are moving fast enough, then just ignore teammates entirely
+					if (pPassEnt->IsPlayer())
+					{
+						CFFPlayer *pPlayer = ToFFPlayer( const_cast< CBaseEntity * >(pPassEnt) );
+						if (pPlayer)
+						{
+							float speed = pPlayer->GetMovementSpeed();
+							if (speed > pPlayer->MaxSpeed() * ffdev_softclip_alwaysclippercent.GetFloat())
+								return false;
+						}
+					}
+					if (pHandle->IsPlayer())
+					{
+						CFFPlayer *pPlayer = ToFFPlayer( const_cast< CBaseEntity * >(pPassEnt) );
+						if (pPlayer)
+						{
+							float speed = pPlayer->GetMovementSpeed();
+							if (speed > pPlayer->MaxSpeed() * ffdev_softclip_alwaysclippercent.GetFloat())
+								return false;
+						}
+					}
+
 					// If player lands on top of a team entity make sure they hit
 					Vector vecOrigin = pPassEnt->GetAbsOrigin();
 					Vector vecTeamOrigin = pHandle->GetAbsOrigin();
