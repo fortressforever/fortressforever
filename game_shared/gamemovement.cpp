@@ -68,7 +68,7 @@ static ConVar sv_sharkingfriction("sv_sharkingfriction", "1", FCVAR_REPLICATED |
 #define SV_SHARKINGFRICTION sv_sharkingfriction.GetFloat()
 
 static ConVar ffdev_headcrush_damage("ffdev_headcrush_damage", "108", FCVAR_FF_FFDEV_REPLICATED, "Straight headcrush damage; not used if usefalldamage is on");
-static ConVar ffdev_headcrush_usefalldamage("ffdev_headcrush_usefalldamage", "2.0", FCVAR_FF_FFDEV_REPLICATED, "0 = off, > 0 means take FALLDAMAGE * val damage");
+static ConVar ffdev_headcrush_usefalldamage("ffdev_headcrush_usefalldamage", "4.0", FCVAR_FF_FFDEV_REPLICATED, "0 = off, > 0 means take FALLDAMAGE * val damage");
 
 #ifndef _XBOX
 void COM_Log( char *pszFile, char *fmt, ...)
