@@ -137,7 +137,7 @@ ConVar ffdev_shield_flyreduction( "ffdev_shield_flyreduction", "0.975", FCVAR_RE
 //static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 #define JERKMULTI 0.0004f
 
-ConVar ffdev_gibdamage("ffdev_gibdamage", "100", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_NOTIFY, "If a players health is -(ffdev_gibdamage's value) or less after death, then they will gib instead of ragdoll");
+ConVar ffdev_gibdamage("ffdev_gibdamage", "70", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_NOTIFY, "If a players health is -(ffdev_gibdamage's value) or less after death, then they will gib instead of ragdoll");
 #define FFDEV_GIBDAMAGE ffdev_gibdamage.GetFloat()
 
 extern ConVar sv_maxspeed;
