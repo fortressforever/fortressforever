@@ -164,6 +164,9 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	
 #endif
 
+ConVar ffdev_engi_build_expl_reduce("ffdev_engi_build_expl_reduce", "0.75", FCVAR_FF_FFDEV_REPLICATED);
+#define FFDEV_ENGI_BUILD_EXPL_REDUCE ffdev_engi_build_expl_reduce.GetFloat()
+
 ConVar mp_prematch( "mp_prematch",
 					"0.0",							// trepids finding it annoying so i set it to zero and not .2
 					FCVAR_NOTIFY|FCVAR_REPLICATED,
@@ -1229,7 +1232,7 @@ ConVar mp_prematch( "mp_prematch",
 			CFFBuildableObject *pBuildable = dynamic_cast <CFFBuildableObject *> (info.GetInflictor());
 
 			// Skip objects that are building
-			if(pBuildable && !pBuildable->IsBuilt())
+			if(pBuildable && !pBuildable->IsBuilt()) // This is skipping buildables that are the inflictor, not the victim? Bug? - AfterShock
 				continue;
 
 #ifdef GAME_DLL
@@ -1353,6 +1356,15 @@ ConVar mp_prematch( "mp_prematch",
 			if (pEntity == info.GetAttacker() && !pBuildable)
 				flAdjustedDamage *= 0.66666f;
 
+			// if inflictor is a buildable (e.g. SG or dispenser exploding), engineers take half damage
+			if ((pBuildable) && (pEntity->IsPlayer()))
+			{
+				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+				if ((pPlayer) &&( pPlayer->GetClassSlot() == CLASS_ENGINEER ))
+				{
+					flAdjustedDamage *= FFDEV_ENGI_BUILD_EXPL_REDUCE;
+				}
+			}
 			// If we're stuck inside them, fixup the position and distance
 			// I'm assuming this is done in TFC too
 			if (tr.startsolid) 
