@@ -44,13 +44,14 @@ IFileSystem **pFilesystem = &filesystem;
 //---------------------------------------------------------------------------
 using namespace luabind;
 
+// only allow alphanumeric and underscore
 void ValidateSuffix( const char *suffix, char *valid )
 {
 	int len = Q_strlen( suffix );
 	int validlen = 0;
 	for( int i=0; i<len && validlen<LUADATA_MAXSUFFIXLEN-1; i++ )
 	{
-		if (isalnum( suffix[i] ))
+		if (isalnum( suffix[i] ) || suffix[i] == '_')
 		{
 			valid[validlen] = suffix[i];
 			validlen++;
