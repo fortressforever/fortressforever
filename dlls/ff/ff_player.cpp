@@ -98,8 +98,16 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 #define FFDEV_INFECT_FREQ 2.0f
-ConVar ffdev_infect_damage("ffdev_infect_damage","10",0,"Amount of health a player loses while infected");
+ConVar ffdev_infect_damage("ffdev_infect_damage","25",0,"Damage of the first infection tick (future ticks are modified by the infect_damagepertick_ vars)");
 #define FFDEV_INFECT_DAMAGE ffdev_infect_damage.GetFloat()
+ConVar ffdev_infect_numticks("ffdev_infect_numticks","10",0,"Number of infection ticks before it wears off");
+#define FFDEV_INFECT_NUMTICKS ffdev_infect_numticks.GetFloat()
+ConVar ffdev_infect_damagepertick_mult("ffdev_infect_damagepertick_mult","1",0,"Infection tick damage is multiplied by this number each tick");
+#define FFDEV_INFECT_DAMAGEPERTICK_MULT ffdev_infect_damagepertick_mult.GetFloat()
+ConVar ffdev_infect_damagepertick_exp("ffdev_infect_damagepertick_exp",".75",0,"Infection tick damage is raised to this power each tick");
+#define FFDEV_INFECT_DAMAGEPERTICK_EXP ffdev_infect_damagepertick_exp.GetFloat()
+ConVar ffdev_infect_regaindamage("ffdev_infect_regaindamage","10",0,"Amount of damage that is not regained after infection wears off");
+#define FFDEV_INFECT_REGAINDAMAGE ffdev_infect_regaindamage.GetFloat()
 //ConVar ffdev_regen_freq("ffdev_regen_freq","3",0,"Frequency (in seconds) a player loses health when a medic");
 #define FFDEV_REGEN_FREQ 3.0f
 //ConVar ffdev_regen_health("ffdev_regen_health","2",0,"Amount of health a player gains while a medic");
@@ -552,7 +560,7 @@ CFFPlayer::CFFPlayer()
 	m_bImmune = 0;
 	m_iInfectedTeam = TEAM_UNASSIGNED;
 	m_flImmuneTime = 0.0f;
-	m_flInfectTime = 0.0f; //Green Mushy
+	m_iInfectTick = 0; //Green Mushy
 	m_nNumInfectDamage = 0;
 	m_flLastOverHealthTick = 0.0f;
 	m_iActiveSabotages = 0;
@@ -3943,6 +3951,12 @@ void CFFPlayer::StatusEffectsThink( void )
 			m_bInfected = 0;
 		}
 
+		if( m_iInfectTick >= FFDEV_INFECT_NUMTICKS )// GreenMushy: check to see if the infection should end
+		{
+			//Will heal for the correct amount
+			Cure( NULL );
+		}
+
 		// If we were infected but just became uninfected,
 		// remove hud effect
 		if( bIsInfected && !IsInfected() )
@@ -3964,30 +3978,25 @@ void CFFPlayer::StatusEffectsThink( void )
 			
 			EmitSound( "Player.DrownContinue" );	// |-- Mirv: [TODO] Change to something more suitable
 			m_fLastInfectedTick = gpGlobals->curtime;
+			m_iInfectTick++;
 
-			if( this->GetHealth() > FFDEV_INFECT_DAMAGE )// GreenMushy: dont damage if infection will kill you
-			{
-				CTakeDamageInfo info( pInfector, pInfector, FFDEV_INFECT_DAMAGE, DMG_POISON );
-				m_nNumInfectDamage += FFDEV_INFECT_DAMAGE;
-				info.SetCustomKill(KILLTYPE_INFECTION);
-				info.SetDamagePosition( GetAbsOrigin() );
-				info.SetImpactPosition( GetAbsOrigin() );
-				TakeDamage( info );
-			}
-			else if( this->GetHealth() > 1 )
-			{
-				//Puts u down to 1 hp -GreenMushy
-				CTakeDamageInfo info( pInfector, pInfector, this->GetHealth() - 1, DMG_POISON );
-				m_nNumInfectDamage += ( this->GetHealth() - 1 );
-				info.SetCustomKill(KILLTYPE_INFECTION);
-				TakeDamage( info );
-			}
+			int iInfectDamage = m_fNextInfectedTickDamage;
+			// if infect damage will kill, then bring the player to 1hp instead
+			iInfectDamage = min(iInfectDamage, GetHealth() - 1);
 
-			if( gpGlobals->curtime > m_flInfectTime )// GreenMushy: check to see if the infection should end
-			{
-				//Will heal for the correct amount
-				Cure( NULL );
-			}
+			// calc next tick's damage
+			// multiply tick damage by the mult, raise to the power of the exp, and round to the nearest whole number
+			m_fNextInfectedTickDamage = (int)(pow(m_fNextInfectedTickDamage * FFDEV_INFECT_DAMAGEPERTICK_MULT, FFDEV_INFECT_DAMAGEPERTICK_EXP) + 0.5f);
+
+			m_nNumInfectDamage += iInfectDamage;
+
+			//Msg("Damage done: %d Tick: %d Total damage done: %d\n", iInfectDamage, m_iInfectTick, m_nNumInfectDamage);
+
+			CTakeDamageInfo info( pInfector, pInfector, iInfectDamage, DMG_POISON );
+			info.SetCustomKill(KILLTYPE_INFECTION);
+			info.SetDamagePosition( GetAbsOrigin() );
+			info.SetImpactPosition( GetAbsOrigin() );
+			TakeDamage( info );
 
 			CSingleUserRecipientFilter user((CBasePlayer *)this);
 			user.MakeReliable();
@@ -4551,8 +4560,9 @@ bool CFFPlayer::Infect( CFFPlayer *pInfector )
 
 		// they aren't infected or immune, so go ahead and infect them
 		m_bInfected = 1;
-		m_flInfectTime = gpGlobals->curtime + FFDEV_INFECTION_TIME;
+		m_iInfectTick = 0;
 		m_fLastInfectedTick = gpGlobals->curtime;
+		m_fNextInfectedTickDamage = FFDEV_INFECT_DAMAGE;
 		m_nNumInfectDamage = 0;
 		m_hInfector = pInfector;
 		m_iInfectedTeam = pInfector->GetTeamNumber();
@@ -4588,11 +4598,12 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 		// they are infected, so go ahead and cure them
 		m_bInfected = 0;
 		m_fLastInfectedTick = 0.0f;
+		m_fNextInfectedTickDamage = 0.0f;
 		m_hInfector = NULL;
 		// Bug# 0000503: "Immunity" is not in the mod
 		m_bImmune = 1;
 		m_flImmuneTime = gpGlobals->curtime + FFDEV_IMMUNE_TIME;
-		m_flInfectTime = 0.0f;
+		m_iInfectTick = 0;
 
 		// Send the status icon to the player
 		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
@@ -4602,10 +4613,10 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 			WRITE_FLOAT( 10.0f );
 		MessageEnd();
 
-		// Heal for the ammount lost, minus 1 tick of damage ( only if you have enough taken damage to subtract from )
-		if( m_nNumInfectDamage > FFDEV_INFECT_DAMAGE )
+		// Heal for the ammount lost, minus regain damage ( only if you have enough taken damage to subtract from )
+		if( m_nNumInfectDamage > FFDEV_INFECT_REGAINDAMAGE )
 		{
-			AddHealth( m_nNumInfectDamage - FFDEV_INFECT_DAMAGE ) ;
+			AddHealth( m_nNumInfectDamage - FFDEV_INFECT_REGAINDAMAGE ) ;
 		}
 		
 		//Reset the infect damamge counter
@@ -4626,7 +4637,7 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 		m_bInfected = 0;
 		m_fLastInfectedTick = 0.0f;
 		m_hInfector = NULL;
-		m_flInfectTime = 0.0f;
+		m_iInfectTick = 0;
 		m_nNumInfectDamage = 0;
 	}
 
