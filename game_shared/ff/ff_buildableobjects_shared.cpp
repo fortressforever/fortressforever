@@ -79,15 +79,36 @@ const char *g_pszFFSentryGunModels[] =
 };
 
 // Array of char *'s to gib models
-const char *g_pszFFSentryGunGibModels[] =
+const char *g_pszFFSentryGunGibModelsL1[] =
+{
+	FF_SENTRYGUN_GIB3A_MODEL,
+	FF_SENTRYGUN_GIB3B_MODEL,
+	FF_SENTRYGUN_GIB3D_MODEL, // barrel
+	FF_SENTRYGUN_GIBTRIPOD_MODEL,
+	NULL
+};
+
+const char *g_pszFFSentryGunGibModelsL2[] =
+{
+	FF_SENTRYGUN_GIB3A_MODEL,
+	FF_SENTRYGUN_GIB3B_MODEL,
+	FF_SENTRYGUN_GIB3D_MODEL,
+	FF_SENTRYGUN_GIBTRIPOD_MODEL,
+	NULL
+};
+
+const char *g_pszFFSentryGunGibModelsL3[] =
 {
 	FF_SENTRYGUN_GIB3A_MODEL,
 	FF_SENTRYGUN_GIB3B_MODEL,
 	FF_SENTRYGUN_GIB3C_MODEL,
 	FF_SENTRYGUN_GIB3D_MODEL,
+	FF_SENTRYGUN_GIB3D_MODEL,
 	FF_SENTRYGUN_GIB3E_MODEL,
+	FF_SENTRYGUN_GIBTRIPOD_MODEL,
 	NULL
 };
+
 
 // Array of char *'s to sounds
 const char *g_pszFFSentryGunSounds[] =
@@ -1039,16 +1060,47 @@ void SentryGunGib_Callback(const CEffectData &data)
 
 	// Now spawn a number of gibs
 	int iGib = 0;
-	while (g_pszFFSentryGunGibModels[iGib])
+	if (data.m_nDamageType == 1) //HACK: Using m_nDamageType as SG level
 	{
-		C_Gib *pGib = C_Gib::CreateClientsideGib(g_pszFFSentryGunGibModels[iGib], vecPosition, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), RandomAngularImpulse( -90, 90 ), 10.0f);
-	
-		if (pGib)
+		while (g_pszFFSentryGunGibModelsL1[iGib])
 		{
-			pGib->m_nSkin = nSkin;
-			pGib->LeaveBloodDecal(false);
+			C_Gib *pGib = C_Gib::CreateClientsideGib(g_pszFFSentryGunGibModelsL1[iGib], vecPosition, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 400)), RandomAngularImpulse( -90, 90 ), 4.0f);
+		
+			if (pGib)
+			{
+				pGib->m_nSkin = nSkin;
+				pGib->LeaveBloodDecal(false);
+			}
+			++iGib;
 		}
-		++iGib;
+	}
+	else if (data.m_nDamageType == 2) //HACK: Using m_nDamageType as SG level
+	{
+		while (g_pszFFSentryGunGibModelsL2[iGib])
+		{
+			C_Gib *pGib = C_Gib::CreateClientsideGib(g_pszFFSentryGunGibModelsL2[iGib], vecPosition, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 500)), RandomAngularImpulse( -90, 90 ), 4.0f);
+		
+			if (pGib)
+			{
+				pGib->m_nSkin = nSkin;
+				pGib->LeaveBloodDecal(false);
+			}
+			++iGib;
+		}
+	}
+	else if (data.m_nDamageType == 3) //HACK: Using m_nDamageType as SG level
+	{
+		while (g_pszFFSentryGunGibModelsL3[iGib])
+		{
+			C_Gib *pGib = C_Gib::CreateClientsideGib(g_pszFFSentryGunGibModelsL3[iGib], vecPosition, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 600)), RandomAngularImpulse( -90, 90 ), 4.0f);
+		
+			if (pGib)
+			{
+				pGib->m_nSkin = nSkin;
+				pGib->LeaveBloodDecal(false);
+			}
+			++iGib;
+		}
 	}
 }
 

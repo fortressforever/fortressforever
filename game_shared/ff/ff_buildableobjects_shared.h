@@ -69,6 +69,7 @@
 #define FF_SENTRYGUN_MODEL					"models/buildable/sg/sg_lvl1.mdl"
 #define FF_SENTRYGUN_MODEL_LVL2				"models/buildable/sg/sg_lvl2.mdl"
 #define FF_SENTRYGUN_MODEL_LVL3				"models/buildable/sg/sg_lvl3.mdl"
+#define FF_SENTRYGUN_GIBTRIPOD_MODEL		"models/buildable/sg/gibs/tripod.mdl"
 #define FF_SENTRYGUN_GIB3A_MODEL			"models/buildable/sg/gibs/3a.mdl"
 #define FF_SENTRYGUN_GIB3B_MODEL			"models/buildable/sg/gibs/3b.mdl"
 #define FF_SENTRYGUN_GIB3C_MODEL			"models/buildable/sg/gibs/3c.mdl"

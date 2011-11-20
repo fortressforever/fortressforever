@@ -215,7 +215,9 @@ BEGIN_DATADESC(CFFSentryGun)
 END_DATADESC() 
 
 extern const char *g_pszFFSentryGunModels[];
-extern const char *g_pszFFSentryGunGibModels[];
+extern const char *g_pszFFSentryGunGibModelsL1[];
+extern const char *g_pszFFSentryGunGibModelsL2[];
+extern const char *g_pszFFSentryGunGibModelsL3[];
 extern const char *g_pszFFSentryGunSounds[];
 
 extern const char *g_pszFFGenGibModels[];
@@ -226,7 +228,7 @@ extern const char *g_pszFFGenGibModels[];
 CFFSentryGun::CFFSentryGun() 
 {
 	m_ppszModels = g_pszFFSentryGunModels;
-	m_ppszGibModels = g_pszFFSentryGunGibModels;
+	m_ppszGibModels = g_pszFFSentryGunGibModelsL3;
 	m_ppszSounds = g_pszFFSentryGunSounds;
 
 	// Set lvl1 range
@@ -2023,9 +2025,10 @@ void CFFSentryGun::SpawnGibs()
 	CEffectData data;
 		data.m_nEntIndex = entindex();
 		data.m_vOrigin = GetAbsOrigin();
-		data.m_nMaterial = clamp( pOwner->GetTeamNumber() + 1 - TEAM_BLUE, 0, 4 ); // using this for skin, not sure what it's meant to be used for
+		data.m_nMaterial = clamp( pOwner->GetTeamNumber() - TEAM_BLUE, 0, 4 ); // using this for team colours, to colour it blue/red/yellow/green
+		data.m_nDamageType = m_iLevel; // HACK: using m_nDamageType for SG level so we can use different gibs per level
 	// UNCOMMENT THIS WHEN GIB MODELS ARE FIXED (ORIGINS) - AfterShock
-	//DispatchEffect("SentryGunGib", data);
+	DispatchEffect("SentryGunGib", data);
 }
 
 //-----------------------------------------------------------------------------
