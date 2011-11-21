@@ -27,7 +27,7 @@ CLINK=gcc34
 #CPP_LIB="/usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.5/libstdc++.a /usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.5/libgcc_eh.a"
 #CPP_LIB="/usr/lib/gcc/i386-redhat-linux/3.4.3/libstdc++.a /usr/lib/gcc/i386-redhat-linux/3.4.3/libgcc_eh.a"
 # dexter - FUUUUUUUU here is path to 3.4.6 on CentOS 5
-CPP_LIB="/usr/lib/gcc/i386-redhat-linux/3.4.6/libstdc++.a /usr/lib/gcc/i386-redhat-linux/3.4.6/libgcc_eh.a"
+CPP_LIB="/usr/lib/gcc/i686-redhat-linux/3.4.6/libstdc++.a /usr/lib/gcc/i686-redhat-linux/3.4.6/libgcc_eh.a"
 # put any compiler flags you want passed here
 # DEBUG - USER_CFLAGS=-g
 USER_CFLAGS=
