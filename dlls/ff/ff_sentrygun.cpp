@@ -218,6 +218,7 @@ extern const char *g_pszFFSentryGunModels[];
 extern const char *g_pszFFSentryGunGibModelsL1[];
 extern const char *g_pszFFSentryGunGibModelsL2[];
 extern const char *g_pszFFSentryGunGibModelsL3[];
+extern const char *g_pszFFSentryGunGibModels[];
 extern const char *g_pszFFSentryGunSounds[];
 
 extern const char *g_pszFFGenGibModels[];
@@ -228,7 +229,7 @@ extern const char *g_pszFFGenGibModels[];
 CFFSentryGun::CFFSentryGun() 
 {
 	m_ppszModels = g_pszFFSentryGunModels;
-	m_ppszGibModels = g_pszFFSentryGunGibModelsL3;
+	m_ppszGibModels = g_pszFFSentryGunGibModels;
 	m_ppszSounds = g_pszFFSentryGunSounds;
 
 	// Set lvl1 range
