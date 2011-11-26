@@ -23,10 +23,7 @@
 
 #define INFECTION_EFFECT_MATERIAL "particle/particle_smokegrenade"
 
-ConVar infection_particles	( "ffdev_particles_per_infection", "100", FCVAR_CHEAT, "The number of particles in each infection." );
-ConVar infection_scale		( "ffdev_infection_scale", "20.0", FCVAR_CHEAT, "How big the particles in the infections are." );
-ConVar infection_speed		( "ffdev_infection_speed", "0.2", FCVAR_CHEAT, "Duration of the infections effect." );
-ConVar infection_magnitude	( "ffdev_infection_magnitude", "1000.0", FCVAR_CHEAT, "Speed the infections expand." );
+ConVar ffdev_infection_startingparticles( "ffdev_infection_startingparticles", "7", FCVAR_CHEAT, "Number of particles to start out creating on the first Update()s." );
 
 //========================================================================
 // Client effect precache table
@@ -190,7 +187,7 @@ void CInfectionEmitter::Update( float flTimeDelta )
 	m_flNextParticle = gpGlobals->curtime + 0.1f;
 
 	// Add 5 particles
-	for( int i = 0; i < 5; i++ )
+	for( int i = 0; i < m_iNumParticles; i++ )
 	{
 		InfectionParticle *pParticle = AddInfectionParticle( m_vecOrigin );
 		if( pParticle )

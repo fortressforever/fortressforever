@@ -100,8 +100,8 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 #define FFDEV_INFECT_FREQ 2.0f
 ConVar ffdev_infect_damage("ffdev_infect_damage","25",0,"Damage of the first infection tick (future ticks are modified by the infect_damagepertick_ vars)");
 #define FFDEV_INFECT_DAMAGE ffdev_infect_damage.GetFloat()
-ConVar ffdev_infect_numticks("ffdev_infect_numticks","10",0,"Number of infection ticks before it wears off");
-#define FFDEV_INFECT_NUMTICKS ffdev_infect_numticks.GetFloat()
+extern ConVar ffdev_infect_numticks; // in ff_player_shared.cpp
+#define FFDEV_INFECT_NUMTICKS ffdev_infect_numticks.GetInt()
 ConVar ffdev_infect_damagepertick_mult("ffdev_infect_damagepertick_mult","1",0,"Infection tick damage is multiplied by this number each tick");
 #define FFDEV_INFECT_DAMAGEPERTICK_MULT ffdev_infect_damagepertick_mult.GetFloat()
 ConVar ffdev_infect_damagepertick_exp("ffdev_infect_damagepertick_exp",".75",0,"Infection tick damage is raised to this power each tick");
@@ -457,6 +457,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropEHandle( SENDINFO( m_hActiveSlowfield ) ),
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iInfectTick ) ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloakSmoked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iWithinCloakSmoke ), 1, SPROP_UNSIGNED ),

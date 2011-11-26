@@ -228,6 +228,8 @@ public:
 	// Two girls for every boy?
 	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter1;
 	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter2;
+	
+	int m_iInfectTick;
 
 	bool IsImmune( void ) const		{ return m_bImmune != 0; }
 	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter1;
