@@ -23,8 +23,8 @@
 #include "tier0/memdbgon.h"
 
 static ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
-static ConVar hud_deathnotice_selfonly( "hud_deathnotice_selfonly", "1", FCVAR_ARCHIVE );
-static ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "1", FCVAR_ARCHIVE );
+static ConVar hud_deathnotice_selfonly( "hud_deathnotice_selfonly", "0", FCVAR_ARCHIVE );
+static ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "0", FCVAR_ARCHIVE );
 
 extern ConVar cl_killbeepwav;
 
