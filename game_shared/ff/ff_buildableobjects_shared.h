@@ -69,6 +69,20 @@
 #define FF_SENTRYGUN_MODEL					"models/buildable/sg/sg_lvl1.mdl"
 #define FF_SENTRYGUN_MODEL_LVL2				"models/buildable/sg/sg_lvl2.mdl"
 #define FF_SENTRYGUN_MODEL_LVL3				"models/buildable/sg/sg_lvl3.mdl"
+#define FF_SENTRYGUN_GIBTRIPOD_MODEL		"models/buildable/sg/gibs/tripod.mdl"
+#define FF_SENTRYGUN_GIB1A_MODEL			"models/buildable/sg/gibs/1a.mdl"
+#define FF_SENTRYGUN_GIB1B_MODEL			"models/buildable/sg/gibs/1b.mdl"
+#define FF_SENTRYGUN_GIB1C_MODEL			"models/buildable/sg/gibs/1c.mdl"
+#define FF_SENTRYGUN_GIB1D_MODEL			"models/buildable/sg/gibs/1d.mdl"
+#define FF_SENTRYGUN_GIB2A_MODEL			"models/buildable/sg/gibs/2a.mdl"
+#define FF_SENTRYGUN_GIB2B_MODEL			"models/buildable/sg/gibs/2b.mdl"
+#define FF_SENTRYGUN_GIB2C_MODEL			"models/buildable/sg/gibs/2c.mdl"
+#define FF_SENTRYGUN_GIB2D_MODEL			"models/buildable/sg/gibs/2d.mdl"
+#define FF_SENTRYGUN_GIB3A_MODEL			"models/buildable/sg/gibs/3a.mdl"
+#define FF_SENTRYGUN_GIB3B_MODEL			"models/buildable/sg/gibs/3b.mdl"
+#define FF_SENTRYGUN_GIB3C_MODEL			"models/buildable/sg/gibs/3c.mdl"
+#define FF_SENTRYGUN_GIB3D_MODEL			"models/buildable/sg/gibs/3d.mdl"
+#define FF_SENTRYGUN_GIB3E_MODEL			"models/buildable/sg/gibs/3e.mdl"
 #define FF_SENTRYGUN_BUILD_SOUND			"Sentry.One"
 #define FF_SENTRYGUN_UNBUILD_SOUND			"Sentry.unbuild"
 #define FF_SENTRYGUN_EXPLODE_SOUND			"Sentry.Explode"
@@ -674,7 +688,7 @@ public:
 	float MaxPitchSpeed( void ) const;
 
 	virtual void DoExplosionDamage();
-
+	virtual void SpawnGibs( void );
 	// These are for updating the user
 	virtual void	PhysicsSimulate();
 	float			m_flLastClientUpdate;
