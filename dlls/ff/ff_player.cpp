@@ -97,13 +97,13 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_FF_FFDEV_REP
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 #define FFDEV_INFECT_FREQ 2.0f
-ConVar ffdev_infect_damage("ffdev_infect_damage","25",FCVAR_FF_FFDEV_REPLICATED,"Damage of the first infection tick (future ticks are modified by the infect_damagepertick_ vars)");
+ConVar ffdev_infect_damage("ffdev_infect_damage","30",FCVAR_FF_FFDEV_REPLICATED,"Damage of the first infection tick (future ticks are modified by the infect_damagepertick_ vars)");
 #define FFDEV_INFECT_DAMAGE ffdev_infect_damage.GetFloat()
 extern ConVar ffdev_infect_numticks; // in ff_player_shared.cpp
 #define FFDEV_INFECT_NUMTICKS ffdev_infect_numticks.GetInt()
 ConVar ffdev_infect_damagepertick_mult("ffdev_infect_damagepertick_mult","1",FCVAR_FF_FFDEV_REPLICATED,"Infection tick damage is multiplied by this number each tick");
 #define FFDEV_INFECT_DAMAGEPERTICK_MULT ffdev_infect_damagepertick_mult.GetFloat()
-ConVar ffdev_infect_damagepertick_exp("ffdev_infect_damagepertick_exp",".75",FCVAR_FF_FFDEV_REPLICATED,"Infection tick damage is raised to this power each tick");
+ConVar ffdev_infect_damagepertick_exp("ffdev_infect_damagepertick_exp",".8",FCVAR_FF_FFDEV_REPLICATED,"Infection tick damage is raised to this power each tick");
 #define FFDEV_INFECT_DAMAGEPERTICK_EXP ffdev_infect_damagepertick_exp.GetFloat()
 ConVar ffdev_infect_regaindamage("ffdev_infect_regaindamage","10",FCVAR_FF_FFDEV_REPLICATED,"Amount of damage that is not regained after infection wears off");
 #define FFDEV_INFECT_REGAINDAMAGE ffdev_infect_regaindamage.GetFloat()
