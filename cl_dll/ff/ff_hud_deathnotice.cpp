@@ -23,6 +23,8 @@
 #include "tier0/memdbgon.h"
 
 static ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
+static ConVar hud_deathnotice_selfonly( "hud_deathnotice_selfonly", "1", FCVAR_ARCHIVE );
+static ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "1", FCVAR_ARCHIVE );
 
 extern ConVar cl_killbeepwav;
 
@@ -76,6 +78,9 @@ private:
 	CPanelAnimationVar( bool, m_bRightJustify, "RightJustify", "1" );
 
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudNumbersTimer" );
+
+	CPanelAnimationVar( Color, m_HighlightColor, "HighlightColor", "255 255 255 180" );
+	CPanelAnimationVar( Color, m_ObjectiveNoticeColor, "ObjectiveNoticeColor", "0 0 0 180" );
 
 	// Texture for skull symbol
 	CHudTexture		*m_iconD_skull;
@@ -164,6 +169,11 @@ void CHudDeathNotice::Paint()
 	int iCount = m_DeathNotices.Count();
 	for ( int i = 0; i < iCount; i++ )
 	{
+		bool selfInvolved = m_DeathNotices[i].Victim.iEntIndex == GetLocalPlayerIndex() ||  m_DeathNotices[i].Killer.iEntIndex == GetLocalPlayerIndex();
+		// if we should only draw notices that the local player is involved in and the local player isn't involved, then skip drawing this notice
+		if (hud_deathnotice_selfonly.GetBool() && !selfInvolved)
+			continue;
+
 		CHudTexture *icon = m_DeathNotices[i].iconDeath;
 		if ( !icon )
 		{
@@ -217,7 +227,11 @@ void CHudDeathNotice::Paint()
 			x -= 28;
 			// <--
 			
-			surface()->DrawSetColor( 0,0,0,180 );
+			if (hud_deathnotice_highlightself.GetBool() && selfInvolved)
+				surface()->DrawSetColor( m_HighlightColor );
+			else
+				surface()->DrawSetColor( m_ObjectiveNoticeColor );
+
 			surface()->DrawFilledRect( x - 5, y - (iconTall / 4) - 3, x + iconWide + 5 + len + 10, y + iconTall/2 + 6 );
 
 			Color iconColor( 255, 80, 0, 255 );
@@ -268,6 +282,7 @@ void CHudDeathNotice::Paint()
 
 			// Get the local position for this notice
 			int len = UTIL_ComputeStringWidth( m_hTextFont, victim );
+			int len2 = UTIL_ComputeStringWidth( m_hTextFont, killer );
 			int y = yStart + (m_flLineHeight * i);
 
 			int iconWide;
@@ -323,7 +338,13 @@ void CHudDeathNotice::Paint()
 			y += 16;
 			x -= 28;
 			// <--
-
+			
+			if (hud_deathnotice_highlightself.GetBool() && selfInvolved)
+			{
+				surface()->DrawSetColor( m_HighlightColor );
+				int x_start = (m_DeathNotices[i].iSuicide) ? x - 5 : x - len2 - 5;
+				surface()->DrawFilledRect( x_start, y - (iconTall / 4) - 3, x + 5 + iconWide + 5 + len + 5 + ((iconBuildableWide) ? iconBuildableWide + 5 : 0), y + iconTall/2 + 6 );
+			}
 
 			// Only draw killers name if it wasn't a suicide
 			if ( !m_DeathNotices[i].iSuicide )
@@ -346,7 +367,6 @@ void CHudDeathNotice::Paint()
 			Color iconTeamKillColor(0, 185, 0 , 250);
 			Color iconColor( 255, 80, 0, 255 );
 			
-
 			// Don't include self kills when determining if teamkill
 			//bool bTeamKill = (iKillerTeam == iVictimTeam && m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex);
 			bool bTeamKill = ( ( FFGameRules()->IsTeam1AlliedToTeam2( iKillerTeam, iVictimTeam ) == GR_TEAMMATE ) && ( !m_DeathNotices[i].iSuicide ) );
