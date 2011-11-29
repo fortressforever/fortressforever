@@ -54,6 +54,12 @@ public:
 		m_vecOrigin = vecOrigin;
 		m_vecVelocity = vecVelocity;
 	}
+	void UpdateEmitter( const Vector& vecOrigin, const Vector& vecVelocity, const int& numParticles )
+	{
+		m_vecOrigin = vecOrigin;
+		m_vecVelocity = vecVelocity;
+		m_iNumParticles = numParticles;
+	}
 
 protected:
 	CInfectionEmitter( const char *pDebugName );
@@ -69,6 +75,8 @@ private:
 
 	float	m_flDieTime;
 	float	m_flNextParticle;
+
+	int		m_iNumParticles; // number of particles to add per Update()
 
 };
 

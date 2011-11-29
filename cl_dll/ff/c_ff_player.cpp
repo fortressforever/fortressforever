@@ -121,6 +121,11 @@ static char g_szKillBeepFile[MAX_PATH];
 void KillBeepChange_Callback(ConVar *var, char const *pOldString);
 ConVar cl_killbeepwav("cl_killbeepsound", "deathbeep1", FCVAR_ARCHIVE, "Death beep file to use", KillBeepChange_Callback);
 
+// For decrementing infection effect particles -squeek
+extern ConVar ffdev_infection_startingparticles;
+extern ConVar ffdev_infect_numticks; // in ff_player_shared.cpp
+#define FFDEV_INFECT_NUMTICKS ffdev_infect_numticks.GetInt()
+
 // Get around the ambiguous symbol problem
 extern IFileSystem **pFilesystem;
 
@@ -805,6 +810,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropEHandle( RECVINFO( m_hActiveSlowfield ) ),
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
+	RecvPropInt( RECVINFO( m_iInfectTick ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
 	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
 	RecvPropInt( RECVINFO( m_iActiveSabotages ) ),
@@ -2328,22 +2334,25 @@ void C_FFPlayer::ClientThink( void )
 	{
 		// Player is infected & emitter is NULL, start it up!
 		if( !m_pInfectionEmitter1 )
-			m_pInfectionEmitter1 = CInfectionEmitter::Create( "InfectionEmitter" );				
+			m_pInfectionEmitter1 = CInfectionEmitter::Create( "InfectionEmitter" );
 
 		if( !m_pInfectionEmitter2 )
 			m_pInfectionEmitter2 = CInfectionEmitter::Create( "InfectionEmitter" );
 
-		// Update emitter position & die time
+		// scale the number of particles depending on how close it is to wearing off; make sure there are at least some particles
+		int iNumParticles = max(1, (int)((1 - (float)m_iInfectTick/FFDEV_INFECT_NUMTICKS) * ffdev_infection_startingparticles.GetInt()));
+
+		// Update emitter position, die time, and number of particles
 		if( !!m_pInfectionEmitter1 )
 		{
 			m_pInfectionEmitter1->SetDieTime( gpGlobals->curtime + 5.0f );
-			m_pInfectionEmitter1->UpdateEmitter( GetAbsOrigin() - Vector( 0, 0, 16 ), GetAbsVelocity() );
+			m_pInfectionEmitter1->UpdateEmitter( GetAbsOrigin() - Vector( 0, 0, 16 ), GetAbsVelocity(), iNumParticles );
 		}
 
 		if( !!m_pInfectionEmitter2 )
 		{
 			m_pInfectionEmitter2->SetDieTime( gpGlobals->curtime + 5.0f );
-			m_pInfectionEmitter2->UpdateEmitter( EyePosition() - Vector( 0, 0, 16 ), GetAbsVelocity() );
+			m_pInfectionEmitter2->UpdateEmitter( EyePosition() - Vector( 0, 0, 16 ), GetAbsVelocity(), iNumParticles );
 		}
 	}
 	else

@@ -66,6 +66,8 @@ ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_FF_F
 #define LEGSHOT_TIME 5.0f //ffdev_sniper_legshot_time.GetFloat()
 //AfterShock: radiotag time is in ff_player.cpp under RADIOTAG_DURATION
 
+ConVar ffdev_infect_numticks("ffdev_infect_numticks","10",FCVAR_FF_FFDEV_REPLICATED,"Number of infection ticks before it wears off");
+
 ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1", FCVAR_FF_FFDEV_REPLICATED );
 ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1", FCVAR_FF_FFDEV_REPLICATED );
 ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_FF_FFDEV_REPLICATED );
