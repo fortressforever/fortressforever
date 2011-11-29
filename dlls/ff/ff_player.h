@@ -552,9 +552,10 @@ private:
 	CNetworkVar( unsigned int, m_bImmune );			// Is the player immune
 	CNetworkVar( int, m_iActiveSabotages );			// Jiggles: So the client's sabotage menu knows when to be active
 	CNetworkVar( int, m_iSpyDisguising );			// Jiggles: So the spy HUD can calculate disguise progress
-	float m_flInfectTime;							// infection : time in the future when the infection ends -Green Mushy
+	int m_iInfectTick;								// infection : number of infection ticks that have occured -Green Mushy
 	float m_flImmuneTime;							// Mulch: immunity: time in the future of when the immunity ends
 	int m_iInfectedTeam;							// Mulch: team the medic who infected us was on
+	float m_fNextInfectedTickDamage;				// Infection damage to deal the next tick
     float m_flLastOverHealthTick;					// Mulch: last time we took health cause health > maxhealth
 	int m_nNumInfectDamage;
 	
