@@ -58,47 +58,66 @@ ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Sh
 ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allows spectators to talk to players");
 //ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_FF_FFDEV_REPLICATED);
 //ConVar ffdev_mancannon_commandtime( "ffdev_mancannon_commandtime", "0.3", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_FF_FFDEV_REPLICATED );
+//ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_FF_FFDEV_REPLICATED );
 #define HEADSHOT_MOD 2.0f //ffdev_sniper_headshotmod.GetFloat()
-ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_FF_FFDEV_REPLICATED );
+//ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define LEGSHOT_MOD 1.0f //ffdev_sniper_legshotmod.GetFloat()
-ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_FF_FFDEV_REPLICATED );
+//ConVar ffdev_sniper_legshot_time( "ffdev_sniper_legshot_time", "5.0", FCVAR_FF_FFDEV_REPLICATED );
 #define LEGSHOT_TIME 5.0f //ffdev_sniper_legshot_time.GetFloat()
 //AfterShock: radiotag time is in ff_player.cpp under RADIOTAG_DURATION
 
-ConVar ffdev_infect_numticks("ffdev_infect_numticks","10",FCVAR_FF_FFDEV_REPLICATED,"Number of infection ticks before it wears off");
+//ConVar ffdev_infect_numticks("ffdev_infect_numticks","10",FCVAR_FF_FFDEV_REPLICATED,"Number of infection ticks before it wears off");
+#define INFECT_NUMTICKS 10
 
-ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "8", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "1", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_FF_FFDEV_REPLICATED );
+//ConVar ffdev_overpressure_selfpush_horizontal( "ffdev_overpressure_selfpush_horizontal", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SELFPUSH_HORIZONTAL 1
+//ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertical", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SELFPUSH_VERTICAL 1
+//ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_PUSH_HORIZONTAL 350.0f
+//ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_PUSH_VERTICAL 350.0f
+//ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "8", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_DELAY 8
+//ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_RADIUS 128
+//ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_GROUNDPUSH_MULTIPLIER 1.0f
+//ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SPEED_PERCENT 1.5f
+//ConVar ffdev_overpressure_speed_multiplier_horizontal( "ffdev_overpressure_speed_multiplier_horizontal", ".5", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SPEED_MULTIPLIER_HORIZONTAL 0.5f
+//ConVar ffdev_overpressure_speed_multiplier_vertical( "ffdev_overpressure_speed_multiplier_vertical", ".5", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SPEED_MULTIPLIER_VERTICAL 0.5f
 
-ConVar ffdev_overpressure_slide( "ffdev_overpressure_slide", "1", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_slide_affectsself( "ffdev_overpressure_slide_affectsself", "0", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_slide_duration( "ffdev_overpressure_slide_duration", "1", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_slide_friction( "ffdev_overpressure_slide_friction", "0", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_slide_airaccel( "ffdev_overpressure_slide_airaccel", "1", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_slide_accel( "ffdev_overpressure_slide_accel", "1", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_slide_wearsoff( "ffdev_overpressure_slide_wearsoff", "1", FCVAR_FF_FFDEV_REPLICATED );
-ConVar ffdev_overpressure_slide_wearsoff_bias( "ffdev_overpressure_slide_wearsoff_bias", "0.2", FCVAR_FF_FFDEV_REPLICATED );
+//ConVar ffdev_overpressure_slide( "ffdev_overpressure_slide", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SLIDE true
+//ConVar ffdev_overpressure_slide_affectsself( "ffdev_overpressure_slide_affectsself", "0", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SLIDE_AFFECTSSELF false
+//ConVar ffdev_overpressure_slide_duration( "ffdev_overpressure_slide_duration", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SLIDE_DURATION 1.0f
+//ConVar ffdev_overpressure_slide_friction( "ffdev_overpressure_slide_friction", "0", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SLIDE_FRICTION 0.0f
+//ConVar ffdev_overpressure_slide_airaccel( "ffdev_overpressure_slide_airaccel", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SLIDE_AIRACCEL 1.0f
+//ConVar ffdev_overpressure_slide_accel( "ffdev_overpressure_slide_accel", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SLIDE_ACCEL 1.0f
+//ConVar ffdev_overpressure_slide_wearsoff( "ffdev_overpressure_slide_wearsoff", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SLIDE_WEARSOFF 1.0f
+//ConVar ffdev_overpressure_slide_wearsoff_bias( "ffdev_overpressure_slide_wearsoff_bias", "0.2", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_SLIDE_WEARSOFF_BIAS 0.2f
 
-ConVar ffdev_overpressure_friendlyscale( "ffdev_overpressure_friendlyscale", "1.0", FCVAR_FF_FFDEV_REPLICATED );
-#define OVERPRESSURE_FRIENDLYSCALE ffdev_overpressure_friendlyscale.GetFloat()
-ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED );
-#define OVERPRESSURE_IGNOREFRIENDLY ffdev_overpressure_friendlyignore.GetBool()
+//ConVar ffdev_overpressure_friendlyscale( "ffdev_overpressure_friendlyscale", "1.0", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_FRIENDLYSCALE 1.0f //ffdev_overpressure_friendlyscale.GetFloat()
+//ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_IGNOREFRIENDLY false //ffdev_overpressure_friendlyignore.GetBool()
 
 
-ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
-#define FF_AC_BULLETSIZE ffdev_ac_bulletsize.GetFloat()
+//ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
+#define FF_AC_BULLETSIZE 1.0f //ffdev_ac_bulletsize.GetFloat()
 
-ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_FF_FFDEV_REPLICATED );
-#define FF_AC_NEWSYSTEM ffdev_ac_newsystem.GetBool()
+//ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_FF_FFDEV_REPLICATED );
+#define FF_AC_NEWSYSTEM false //ffdev_ac_newsystem.GetBool()
 
 #define OVERPRESSURE_JERKMULTI 0.0004f
 
@@ -109,9 +128,11 @@ ConVar ffdev_ac_newsystem( "ffdev_ac_newsystem", "0.0", FCVAR_FF_FFDEV_REPLICATE
 //ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_FF_FFDEV_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
 			
 // Time in seconds you have to wait until you can cloak again
-ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "5", FCVAR_FF_FFDEV_REPLICATED, "Time in seconds you have to wait until you can cloak again" );
+//ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "5", FCVAR_FF_FFDEV_REPLICATED, "Time in seconds you have to wait until you can cloak again" );
+#define SPY_NEXTCLOAK 5.0f
 
-ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_FF_FFDEV_REPLICATED, "Spy must be moving at least this slow to scloak." );
+//ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_FF_FFDEV_REPLICATED, "Spy must be moving at least this slow to scloak." );
+#define SPY_SCLOAK_MINSTARTVELOCITY 80.0f
 
 //ConVar sniperrifle_pushmin( "ffdev_sniperrifle_pushmin", "2.5", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_SNIPER_MINPUSH 2.5f // sniperrifle_pushmin.GetFloat()
@@ -640,7 +661,7 @@ void CFFPlayer::ClassSpecificSkill()
 				SwapToWeapon(FF_WEAPON_ASSAULTCANNON);
 			}*/
 			Overpressure();
-			m_flNextClassSpecificSkill = gpGlobals->curtime + ffdev_overpressure_delay.GetFloat();
+			m_flNextClassSpecificSkill = gpGlobals->curtime + OVERPRESSURE_DELAY;
 
 			break;
 
@@ -1258,7 +1279,7 @@ void CFFPlayer::Command_SpyCloak( void )
 	if( IsCloaked() )
 	{
 		// Can only cloak every ffdev_spy_nextcloak seconds
-		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+		m_flNextCloak = gpGlobals->curtime + SPY_NEXTCLOAK;
 		Cloak();
 #ifdef GAME_DLL
 		SpyCloakFadeOut();
@@ -1291,7 +1312,7 @@ void CFFPlayer::Command_SpyCloak( void )
 	}
 
 	// Can only cloak every ffdev_spy_nextcloak seconds
-	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+	m_flNextCloak = gpGlobals->curtime + SPY_NEXTCLOAK;
 
 #ifdef GAME_DLL
 	// Regular cloak
@@ -1314,7 +1335,7 @@ void CFFPlayer::Command_SpySmartCloak( void )
 	if( IsCloaked() )
 	{
 		// Can only cloak every ffdev_spy_nextcloak seconds
-		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+		m_flNextCloak = gpGlobals->curtime + SPY_NEXTCLOAK;
 		Cloak();
 #ifdef GAME_DLL
 		SpyCloakFadeOut();
@@ -1347,12 +1368,12 @@ void CFFPlayer::Command_SpySmartCloak( void )
 	}
 
 	// Can only cloak every ffdev_spy_nextcloak seconds
-	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+	m_flNextCloak = gpGlobals->curtime + SPY_NEXTCLOAK;
 
 	// Silent cloak must be done while not moving! But if we're
 	// already cloaked we'll allow it so the player can uncloak
 	// Jon: adding in minimum allowed speed cvar
-	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
+	if( GetLocalVelocity().Length() > SPY_SCLOAK_MINSTARTVELOCITY )
 	{
 #ifdef GAME_DLL	
 		// normal cloak
@@ -1382,7 +1403,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	if( IsCloaked() )
 	{
 		// Can only cloak every ffdev_spy_nextcloak seconds
-		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+		m_flNextCloak = gpGlobals->curtime + SPY_NEXTCLOAK;
 		Cloak();
 #ifdef GAME_DLL
 		SpyCloakFadeOut();
@@ -1415,12 +1436,12 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	}
 
 	// Can only cloak every ffdev_spy_nextcloak seconds
-	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+	m_flNextCloak = gpGlobals->curtime + SPY_NEXTCLOAK;
 
 	// Silent cloak must be done while not moving! But if we're
 	// already cloaked we'll allow it so the player can uncloak
 	// Jon: adding in minimum allowed speed cvar
-	if( GetLocalVelocity().Length() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
+	if( GetLocalVelocity().Length() > SPY_SCLOAK_MINSTARTVELOCITY )
 	{
 		// Reset next cloak time since player technically didn't cloak yet
 		m_flNextCloak = gpGlobals->curtime + 0.2;
@@ -1605,23 +1626,23 @@ void CFFPlayer::Overpressure( void )
 			Vector vecDir = vecDisplacement;
 			vecDir.NormalizeInPlace();
 
-			if (flDistance > ffdev_overpressure_radius.GetFloat())
+			if (flDistance > OVERPRESSURE_RADIUS)
 				continue;
 
 			// TFC considers a displacement < 16units to be a hh
 			Vector vecResult;
 			if ((pPlayer == this) || (flDistance < 16.0f))
 			{
-				float flSelfLateral = ffdev_overpressure_selfpush_horizontal.GetFloat();
-				float flSelfVertical = ffdev_overpressure_selfpush_vertical.GetFloat();
+				float flSelfLateral = OVERPRESSURE_SELFPUSH_HORIZONTAL;
+				float flSelfVertical = OVERPRESSURE_SELFPUSH_VERTICAL;
 
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 				float flHorizontalSpeed = vecLatVelocity.Length();
 
 #ifdef GAME_DLL
-				if (ffdev_overpressure_slide_affectsself.GetBool())
-					pPlayer->StartSliding( ffdev_overpressure_slide_duration.GetFloat(), ffdev_overpressure_slide_duration.GetFloat() );
+				if (OVERPRESSURE_SLIDE_AFFECTSSELF)
+					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
 #endif
 
 				// apply push force
@@ -1650,8 +1671,8 @@ void CFFPlayer::Overpressure( void )
 				pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
 
 #ifdef GAME_DLL
-				if (ffdev_overpressure_slide.GetBool())
-					pPlayer->StartSliding( ffdev_overpressure_slide_duration.GetFloat(), ffdev_overpressure_slide_duration.GetFloat() );
+				if (OVERPRESSURE_SLIDE)
+					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
 #endif
 
 
@@ -1659,17 +1680,17 @@ void CFFPlayer::Overpressure( void )
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 				float flHorizontalSpeed = vecLatVelocity.Length();
 
-				float flSpeedPercent = ffdev_overpressure_speed_percent.GetFloat();
+				float flSpeedPercent = OVERPRESSURE_SPEED_PERCENT;
 
-				float flLateral = ffdev_overpressure_push_horizontal.GetFloat() * flFriendlyScale;
-				float flVertical = ffdev_overpressure_push_vertical.GetFloat() * flFriendlyScale;
+				float flLateral = OVERPRESSURE_PUSH_HORIZONTAL * flFriendlyScale;
+				float flVertical = OVERPRESSURE_PUSH_VERTICAL * flFriendlyScale;
 
 				if (flHorizontalSpeed > pPlayer->MaxSpeed() * flSpeedPercent)
 				{
 					float flSpeedMultiplier = flHorizontalSpeed / pPlayer->MaxSpeed() - flSpeedPercent + 1;
 
-					float flSpeedMultiplierHorizontal = ffdev_overpressure_speed_multiplier_horizontal.GetFloat() * flSpeedMultiplier;
-					float flSpeedMultiplierVertical = ffdev_overpressure_speed_multiplier_vertical.GetFloat() * flSpeedMultiplier;
+					float flSpeedMultiplierHorizontal = OVERPRESSURE_SPEED_MULTIPLIER_HORIZONTAL * flSpeedMultiplier;
+					float flSpeedMultiplierVertical = OVERPRESSURE_SPEED_MULTIPLIER_VERTICAL * flSpeedMultiplier;
 
 					vecResult = Vector(vecDir.x * flLateral * flSpeedMultiplierHorizontal, vecDir.y * flLateral * flSpeedMultiplierHorizontal, vecDir.z * flVertical * flSpeedMultiplierVertical);
 					DevMsg("[HW attack2] enemy going supersonic (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
@@ -1679,7 +1700,7 @@ void CFFPlayer::Overpressure( void )
 					// apply push force
 					if (pPlayer->GetFlags() & FL_ONGROUND)
 					{
-						float flGroundPush = ffdev_overpressure_groundpush_multiplier.GetFloat();
+						float flGroundPush = OVERPRESSURE_GROUNDPUSH_MULTIPLIER;
 
 						vecResult = Vector(vecDir.x * flLateral * flGroundPush, vecDir.y  * flLateral * flGroundPush, vecDir.z * flVertical);
 						DevMsg("[HW attack2] enemy on ground, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);

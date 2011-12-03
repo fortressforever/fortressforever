@@ -29,12 +29,20 @@
 // Development convers
 //========================================================================
 #ifdef GAME_DLL
+/*
 	extern ConVar gren_radius;
 	extern ConVar gren_grav;
 	extern ConVar gren_fric;
 	extern ConVar gren_elas;
 	extern ConVar gren_fric_conc;
 	extern ConVar gren_elas_conc;
+*/
+	#define GREN_RADIUS 180.0f
+	#define GREN_GRAV 0.8f
+	#define GREN_FRIC 0.25f
+	#define GREN_ELAS 0.4f
+	#define GREN_FRIC_CONC 0.3f
+	#define GREN_ELAS_CONC 0.7f
 #endif
 
 //=============================================================================
@@ -48,9 +56,9 @@ public:
 
 #ifdef GAME_DLL
 	
-	virtual float GetGrenadeGravity()		{ return gren_grav.GetFloat(); }
-	virtual float GetGrenadeFriction()		{ return gren_fric.GetFloat(); }
-	virtual float GetGrenadeElasticity()	{ return gren_elas.GetFloat(); }
+	virtual float GetGrenadeGravity()		{ return GREN_GRAV; }
+	virtual float GetGrenadeFriction()		{ return GREN_FRIC; }
+	virtual float GetGrenadeElasticity()	{ return GREN_ELAS; }
 	virtual float GetGrenadeDamage()		{ return 180.0f; }
 	virtual float GetGrenadeRadius()		{ return GetGrenadeDamage() * 1.5f; }
 	virtual float GetShakeAmplitude()		{ return 2.5f; }

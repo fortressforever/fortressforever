@@ -40,12 +40,18 @@ extern "C"
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		12
-ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_FF_FFDEV );
-ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "1.05", FCVAR_FF_FFDEV );
-ConVar ffdev_flag_float_force2( "ffdev_flag_float_force2", "0.9", FCVAR_FF_FFDEV );
-ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "1.0", FCVAR_FF_FFDEV );
-ConVar ffdev_flag_float_offset( "ffdev_flag_float_offset", "48.0", FCVAR_FF_FFDEV );
-ConVar ffdev_flag_rotation( "ffdev_flag_rotation", "50.0", FCVAR_FF_FFDEV );
+//ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_FF_FFDEV );
+#define FLAG_THROWUP 1.6f
+//ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "1.05", FCVAR_FF_FFDEV );
+#define FLAG_FLOAT_FORCE 1.05f
+//ConVar ffdev_flag_float_force2( "ffdev_flag_float_force2", "0.9", FCVAR_FF_FFDEV );
+#define FLAG_FLOAT_FORCE2 0.9f
+//ConVar ffdev_flag_float_drag( "ffdev_flag_float_drag", "1.0", FCVAR_FF_FFDEV );
+#define FLAG_FLOAT_DRAG 1.0f
+//ConVar ffdev_flag_float_offset( "ffdev_flag_float_offset", "48.0", FCVAR_FF_FFDEV );
+#define FLAG_FLOAT_OFFSET 48.0f
+//ConVar ffdev_flag_rotation( "ffdev_flag_rotation", "50.0", FCVAR_FF_FFDEV );
+#define FLAG_ROTATION 50.0f
 
 int ACT_INFO_RETURNED;
 int ACT_INFO_CARRIED;
@@ -872,7 +878,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 	if( speed )
 	{
 		vel += vecForward * speed;
-		vel += vecUp * (speed / ffdev_flag_throwup.GetFloat());
+		vel += vecUp * (speed / FLAG_THROWUP);
 	}
 	// Mirv: Don't allow a downwards velocity as this will make it float instead
 	if( vel.z < 1.0f )
@@ -937,7 +943,7 @@ void CFFInfoScript::OnThink( void )
 	else
 	{
 		// flag in water
-		if ( UTIL_PointContents( GetAbsOrigin() + Vector( 0.0f, 0.0f, ffdev_flag_float_offset.GetFloat() ) ) & CONTENTS_WATER )
+		if ( UTIL_PointContents( GetAbsOrigin() + Vector( 0.0f, 0.0f, FLAG_FLOAT_OFFSET ) ) & CONTENTS_WATER )
 		{
 			// activate float when flag touches bottom
 			if ( ( GetGroundEntity() != NULL ) && !m_bFloatActive )
@@ -957,7 +963,7 @@ void CFFInfoScript::OnThink( void )
 			if ( m_bFloatActive )
 			{
 				// very simple drag model to stop the flag carrying on accelerating
-				float flFloatForce = ( ffdev_flag_float_force.GetFloat() * sv_gravity.GetFloat() ) - ( ffdev_flag_float_drag.GetFloat() * float( GetAbsVelocity().z ) );
+				float flFloatForce = ( FLAG_FLOAT_FORCE * sv_gravity.GetFloat() ) - ( FLAG_FLOAT_DRAG * float( GetAbsVelocity().z ) );
 				float flFloatSpeed = float( GetAbsVelocity().z ) + flFloatForce * gpGlobals->interval_per_tick;
 				SetAbsVelocity( Vector( 0.0f, 0.0f, flFloatSpeed ) );
 			}
@@ -966,13 +972,13 @@ void CFFInfoScript::OnThink( void )
 		else if ( m_bFloatActive )
 		{
 			// apply a reduced upwards force if float is out of water
-			float flFloatForce = ( ffdev_flag_float_force2.GetFloat() * sv_gravity.GetFloat() ) - ( ffdev_flag_float_drag.GetFloat() * float( GetAbsVelocity().z ) );
+			float flFloatForce = ( FLAG_FLOAT_FORCE2 * sv_gravity.GetFloat() ) - ( FLAG_FLOAT_DRAG * float( GetAbsVelocity().z ) );
 			float flFloatSpeed = float( GetAbsVelocity().z ) + flFloatForce * gpGlobals->interval_per_tick;
 			SetAbsVelocity( Vector( 0.0f, 0.0f, flFloatSpeed ) );
 		}
 
 		// make flag rotate
-		SetAbsAngles(GetAbsAngles() + QAngle(0, ffdev_flag_rotation.GetFloat() * gpGlobals->interval_per_tick, 0));
+		SetAbsAngles(GetAbsAngles() + QAngle(0, FLAG_ROTATION * gpGlobals->interval_per_tick, 0));
 		// think next tick
 		SetNextThink( gpGlobals->curtime + 0.01f );
 	}

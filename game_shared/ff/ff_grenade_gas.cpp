@@ -33,7 +33,8 @@
 
 
 // 0000819: gas gren radius too large
-ConVar ffdev_gasgrenradius("ffdev_gasgrenradius", "125.0", FCVAR_FF_FFDEV_REPLICATED);
+//ConVar ffdev_gasgrenradius("ffdev_gasgrenradius", "125.0", FCVAR_FF_FFDEV_REPLICATED);
+#define FFDEV_GASGRENRADIUS 125.0f
 
 class CFFGrenadeGas : public CFFGrenadeBase
 {
@@ -48,7 +49,7 @@ public:
 	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
 	virtual float GetGrenadeDamage() { return 0.0f; }
 	// 0000819: gas gren radius too large
-	virtual float GetGrenadeRadius() { return ffdev_gasgrenradius.GetFloat(); }
+	virtual float GetGrenadeRadius() { return FFDEV_GASGRENRADIUS; }
 	virtual const char *GetBounceSound() { return "GasGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_GAS; }
 

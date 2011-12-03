@@ -24,9 +24,9 @@
 	#define CFFProjectileGrenade C_FFProjectileGrenade
 #endif
 
-extern ConVar projectile_gren_friction;
-extern ConVar projectile_gren_elasticity;
-extern ConVar projectile_gren_gravity;
+#define FF_PROJECTILE_GREN_FRICTION 0.375f
+#define FF_PROJECTILE_GREN_ELASTICITY 0.5f
+#define FF_PROJECTILE_GREN_GRAVITY 1.0f
 
 //=============================================================================
 // CFFProjectileGrenade
@@ -43,9 +43,9 @@ public:
 	virtual void Precache();
 	void GrenadeThink();
 
-	static inline float GetGrenadeGravity() { return /*0.7f */ projectile_gren_gravity.GetFloat(); }
-	static inline const float GetGrenadeFriction() { return /*0.2f */ projectile_gren_friction.GetFloat(); }
-	static inline const float GetGrenadeElasticity() { return /*0.45f */ projectile_gren_elasticity.GetFloat(); }
+	static inline float GetGrenadeGravity() { return FF_PROJECTILE_GREN_GRAVITY; }
+	static inline const float GetGrenadeFriction() { return FF_PROJECTILE_GREN_FRICTION; }
+	static inline const float GetGrenadeElasticity() { return FF_PROJECTILE_GREN_ELASTICITY; }
 
 	virtual float GetShakeAmplitude() { return 2.5f; }
 

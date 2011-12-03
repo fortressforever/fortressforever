@@ -44,12 +44,20 @@
 //static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_TRIMPTRIGGERSPEEDDOWN 50.0f
 
-extern ConVar ffdev_overpressure_slide_duration;
-extern ConVar ffdev_overpressure_slide_friction;
-extern ConVar ffdev_overpressure_slide_airaccel;
-extern ConVar ffdev_overpressure_slide_accel;
-extern ConVar ffdev_overpressure_slide_wearsoff;
-extern ConVar ffdev_overpressure_slide_wearsoff_bias;
+// from ff_player_shared.cpp
+//extern ConVar ffdev_overpressure_slide_duration;
+//extern ConVar ffdev_overpressure_slide_friction;
+//extern ConVar ffdev_overpressure_slide_airaccel;
+//extern ConVar ffdev_overpressure_slide_accel;
+//extern ConVar ffdev_overpressure_slide_wearsoff;
+//extern ConVar ffdev_overpressure_slide_wearsoff_bias;
+#define OVERPRESSURE_SLIDE_DURATION 1.0f
+#define OVERPRESSURE_SLIDE_FRICTION 0.0f
+#define OVERPRESSURE_SLIDE_AIRACCEL 1.0f
+#define OVERPRESSURE_SLIDE_ACCEL 1.0f
+#define OVERPRESSURE_SLIDE_WEARSOFF 1.0f
+#define OVERPRESSURE_SLIDE_WEARSOFF_BIAS 0.2f
+
 extern bool g_bMovementOptimizations;
 
 #ifdef CLIENT_DLL
@@ -613,13 +621,13 @@ void CFFGameMovement::WalkMove( void )
 	mv->m_vecVelocity[2] = 0;
 	if (pFFPlayer->IsSliding())
 	{
-		float accel = ffdev_overpressure_slide_accel.GetFloat();
-		if (ffdev_overpressure_slide_wearsoff.GetBool())
+		float accel = OVERPRESSURE_SLIDE_ACCEL;
+		if (OVERPRESSURE_SLIDE_WEARSOFF)
 		{
-			float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
-			float percent = clamp(dt / ffdev_overpressure_slide_duration.GetFloat(), 0.0f, 1.0f);
-			percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
-			accel = Lerp( percent, min(ffdev_overpressure_slide_accel.GetFloat(),sv_accelerate.GetFloat()), max(ffdev_overpressure_slide_accel.GetFloat(),sv_accelerate.GetFloat()) );
+			float dt = OVERPRESSURE_SLIDE_DURATION - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
+			float percent = clamp(dt / OVERPRESSURE_SLIDE_DURATION, 0.0f, 1.0f);
+			percent = Bias( percent, OVERPRESSURE_SLIDE_WEARSOFF_BIAS );
+			accel = Lerp( percent, min(OVERPRESSURE_SLIDE_ACCEL,sv_accelerate.GetFloat()), max(OVERPRESSURE_SLIDE_ACCEL,sv_accelerate.GetFloat()) );
 		}
 
 		Accelerate ( wishdir, wishspeed, accel );
@@ -734,13 +742,13 @@ void CFFGameMovement::AirMove( void )
 	
 	if (pFFPlayer->IsSliding())
 	{
-		float accel = ffdev_overpressure_slide_airaccel.GetFloat();
-		if (ffdev_overpressure_slide_wearsoff.GetBool())
+		float accel = OVERPRESSURE_SLIDE_AIRACCEL;
+		if (OVERPRESSURE_SLIDE_WEARSOFF)
 		{
-			float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
-			float percent = clamp(dt / ffdev_overpressure_slide_duration.GetFloat(), 0.0f, 1.0f);
-			percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
-			accel = Lerp( percent, min(ffdev_overpressure_slide_airaccel.GetFloat(),sv_airaccelerate.GetFloat()), max(ffdev_overpressure_slide_airaccel.GetFloat(),sv_airaccelerate.GetFloat()) );
+			float dt = OVERPRESSURE_SLIDE_DURATION - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
+			float percent = clamp(dt / OVERPRESSURE_SLIDE_DURATION, 0.0f, 1.0f);
+			percent = Bias( percent, OVERPRESSURE_SLIDE_WEARSOFF_BIAS );
+			accel = Lerp( percent, min(OVERPRESSURE_SLIDE_AIRACCEL,sv_airaccelerate.GetFloat()), max(OVERPRESSURE_SLIDE_AIRACCEL,sv_airaccelerate.GetFloat()) );
 		}
 
 		AirAccelerate ( wishdir, wishspeed, accel );
@@ -821,13 +829,13 @@ void CFFGameMovement::Friction( void )
 
 		if (pFFPlayer->IsSliding())
 		{
-			friction = ffdev_overpressure_slide_friction.GetFloat();
-			if (ffdev_overpressure_slide_wearsoff.GetBool())
+			friction = OVERPRESSURE_SLIDE_FRICTION;
+			if (OVERPRESSURE_SLIDE_WEARSOFF)
 			{
-				float dt = ffdev_overpressure_slide_duration.GetFloat() - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
-				float percent = clamp(dt / ffdev_overpressure_slide_duration.GetFloat(), 0.0f, 1.0f);
-				percent = Bias( percent, ffdev_overpressure_slide_wearsoff_bias.GetFloat() );
-				friction = Lerp( percent, min(ffdev_overpressure_slide_friction.GetFloat(),sv_friction.GetFloat()), max(ffdev_overpressure_slide_friction.GetFloat(),sv_friction.GetFloat()) );
+				float dt = OVERPRESSURE_SLIDE_DURATION - ( pFFPlayer->m_flSlidingTime - gpGlobals->curtime );
+				float percent = clamp(dt / OVERPRESSURE_SLIDE_DURATION, 0.0f, 1.0f);
+				percent = Bias( percent, OVERPRESSURE_SLIDE_WEARSOFF_BIAS );
+				friction = Lerp( percent, min(OVERPRESSURE_SLIDE_FRICTION,sv_friction.GetFloat()), max(OVERPRESSURE_SLIDE_FRICTION,sv_friction.GetFloat()) );
 			}
 		}
 		else
@@ -910,7 +918,7 @@ void CFFGameMovement::CheckVelocity( void )
 	if( !pPlayer->IsCloaked() )
 		return;
 
-	float flMaxCloakSpeed = ffdev_spy_maxcloakspeed.GetFloat();
+	float flMaxCloakSpeed = SPY_MAXCLOAKSPEED;
 
 	// Going over speed limit, need to clamp so we don't uncloak
 	if( mv->m_vecVelocity.LengthSqr() > ( flMaxCloakSpeed * flMaxCloakSpeed ) )

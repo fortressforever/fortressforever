@@ -67,8 +67,10 @@ bool g_bMovementOptimizations = true;	// |-- Mirv: Changed to false, but not sur
 static ConVar sv_sharkingfriction("sv_sharkingfriction", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_SHARKINGFRICTION sv_sharkingfriction.GetFloat()
 
-static ConVar ffdev_headcrush_damage("ffdev_headcrush_damage", "108", FCVAR_FF_FFDEV_REPLICATED, "Straight headcrush damage; not used if usefalldamage is on");
-static ConVar ffdev_headcrush_usefalldamage("ffdev_headcrush_usefalldamage", "4.0", FCVAR_FF_FFDEV_REPLICATED, "0 = off, > 0 means take FALLDAMAGE * val damage");
+//static ConVar ffdev_headcrush_damage("ffdev_headcrush_damage", "108", FCVAR_FF_FFDEV_REPLICATED, "Straight headcrush damage; not used if usefalldamage is on");
+#define HEADCRUSH_DAMAGE 108.0f
+//static ConVar ffdev_headcrush_usefalldamage("ffdev_headcrush_usefalldamage", "4.0", FCVAR_FF_FFDEV_REPLICATED, "0 = off, > 0 means take FALLDAMAGE * val damage");
+#define HEADCRUSH_USEFALLDAMAGE 4.0f
 
 #ifndef _XBOX
 void COM_Log( char *pszFile, char *fmt, ...)
@@ -1004,7 +1006,7 @@ void CGameMovement::WaterMove( void )
 	// --> Jon: cap swimming speed if cloaked
 	float flMaxSpeed = mv->m_flMaxSpeed;
 	if (ToFFPlayer(player)->IsCloaked())
-		flMaxSpeed = ffdev_spy_maxcloakspeed.GetFloat();
+		flMaxSpeed = SPY_MAXCLOAKSPEED;
 
 	// Cap speed.
 	if (wishspeed > flMaxSpeed)
@@ -3514,14 +3516,14 @@ void CGameMovement::CheckFalling( void )
 					if (pCrushedPlayer && pCrushedPlayer != player)
 					{
 						float flCrushDamage = 0.0f;
-						if (ffdev_headcrush_usefalldamage.GetFloat() > 0)
+						if (HEADCRUSH_USEFALLDAMAGE > 0)
 						{
 							float flFallDamage = g_pGameRules->FlPlayerFallDamage( player );	
-							flCrushDamage = flFallDamage * ffdev_headcrush_usefalldamage.GetFloat();
+							flCrushDamage = flFallDamage * HEADCRUSH_USEFALLDAMAGE;
 						}
 						else
 						{
-							flCrushDamage = ffdev_headcrush_damage.GetFloat();
+							flCrushDamage = HEADCRUSH_DAMAGE;
 						}
 						CTakeDamageInfo info( player, player, flCrushDamage, DMG_DIRECT, KILLTYPE_HEADCRUSH );
 						pCrushedPlayer->TakeDamage(info);

@@ -37,10 +37,12 @@ ConVar r_visualizetraces( "r_visualizetraces", "0", FCVAR_CHEAT );
 ConVar developer("developer", "0", 0, "Set developer message level" ); // developer mode
 
 //Adding ConVars to toggle grenades/pipes colliding with the enemy
-ConVar ffdev_grenade_collidewithenemy("ffdev_grenade_collidewithenemy", "1", FCVAR_FF_FFDEV_REPLICATED, "If set to 0, grenades pass through enemies" );
-ConVar ffdev_softclip_alwaysclippercent("ffdev_softclip_alwaysclippercent", "1.25", FCVAR_REPLICATED | FCVAR_CHEAT, "Above this percentage of max class speed, teammates will always clip (as opposed to being able to stand on a teammates head)");
-
-ConVar ffdev_softclip_asdisguisedteam("ffdev_softclip_asdisguisedteam", "0", FCVAR_FF_FFDEV_REPLICATED, "If set to 1, spies soft clip as though they were on their disguised team");
+//ConVar ffdev_grenade_collidewithenemy("ffdev_grenade_collidewithenemy", "1", FCVAR_FF_FFDEV_REPLICATED, "If set to 0, grenades pass through enemies" );
+#define GRENADE_COLLIDEWITHENEMY true
+//ConVar ffdev_softclip_alwaysclippercent("ffdev_softclip_alwaysclippercent", "1.25", FCVAR_FF_FFDEV_REPLICATED, "Above this percentage of max class speed, teammates will always clip (as opposed to being able to stand on a teammates head)");
+#define SOFTCLIP_ALWAYSCLIPPERCENT 1.25f
+//ConVar ffdev_softclip_asdisguisedteam("ffdev_softclip_asdisguisedteam", "0", FCVAR_FF_FFDEV_REPLICATED, "If set to 1, spies soft clip as though they were on their disguised team");
+#define SOFTCLIP_ASDISGUISEDTEAM false
 
 float UTIL_VecToYaw( const Vector &vec )
 {
@@ -342,7 +344,7 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 				else
 				{
 					//Utilize the convar to toggle enemy collisions
-					if( ffdev_grenade_collidewithenemy.GetBool() )
+					if( GRENADE_COLLIDEWITHENEMY )
 						return true;
 					else
 						return false;
@@ -360,7 +362,7 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 				int iHandleTeam = pHandle->GetTeamNumber();
 
 				// get disguised team if we should
-				if (ffdev_softclip_asdisguisedteam.GetBool())
+				if (SOFTCLIP_ASDISGUISEDTEAM)
 				{
 					if (pPassEnt->IsPlayer())
 					{
@@ -388,7 +390,7 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 						if (pPlayer)
 						{
 							float speed = pPlayer->GetMovementSpeed();
-							if (speed > pPlayer->MaxSpeed() * ffdev_softclip_alwaysclippercent.GetFloat())
+							if (speed > pPlayer->MaxSpeed() * SOFTCLIP_ALWAYSCLIPPERCENT)
 								return false;
 						}
 					}
@@ -398,7 +400,7 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 						if (pPlayer)
 						{
 							float speed = pPlayer->GetMovementSpeed();
-							if (speed > pPlayer->MaxSpeed() * ffdev_softclip_alwaysclippercent.GetFloat())
+							if (speed > pPlayer->MaxSpeed() * SOFTCLIP_ALWAYSCLIPPERCENT)
 								return false;
 						}
 					}

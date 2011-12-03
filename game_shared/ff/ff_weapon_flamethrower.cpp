@@ -32,13 +32,18 @@
 	#include "ilagcompensationmanager.h"
 #endif
 
-ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_FF_FFDEV_REPLICATED, "Flame bbox");
-ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "17.5", FCVAR_FF_FFDEV_REPLICATED, "Force of backwards push when shooting while off ground");
-ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "110.0", FCVAR_FF_FFDEV_REPLICATED, "Force of upwards push when shooting while off ground");
-ConVar ffdev_flame_boostcap("ffdev_flame_boostcap", "850.0", FCVAR_FF_FFDEV_REPLICATED, "Speed at which the flamethrower will stop boosting you");
+//ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_FF_FFDEV_REPLICATED, "Flame bbox");
+#define FLAME_BBOX 24.0f
+//ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "17.5", FCVAR_FF_FFDEV_REPLICATED, "Force of backwards push when shooting while off ground");
+#define FLAME_PUSHFORCE 17.5f
+//ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "110.0", FCVAR_FF_FFDEV_REPLICATED, "Force of upwards push when shooting while off ground");
+#define FLAME_UPPUSHFORCE 110.0f
+//ConVar ffdev_flame_boostcap("ffdev_flame_boostcap", "850.0", FCVAR_FF_FFDEV_REPLICATED, "Speed at which the flamethrower will stop boosting you");
+#define FLAME_BOOSTCAP 850.0f
 
 #ifdef GAME_DLL
-	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_FF_FFDEV, "Show flame trace");
+	//ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_FF_FFDEV, "Show flame trace");
+	#define FLAME_SHOWTRACE false
 	//ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "18", FCVAR_FF_FFDEV );
 #endif
 
@@ -158,13 +163,13 @@ void CFFWeaponFlamethrower::Fire()
 	// Normalize, or we get that weird epsilon assert
 	VectorNormalizeFast( vecForward );
 
-	float flCapSqr = ffdev_flame_boostcap.GetFloat() * ffdev_flame_boostcap.GetFloat();
+	float flCapSqr = FLAME_BOOSTCAP * FLAME_BOOSTCAP;
 
 	// Push them backwards if in air
 	if (!pPlayer->GetGroundEntity() && pPlayer->GetAbsVelocity().LengthSqr() < flCapSqr)
 	{
-		pPlayer->ApplyAbsVelocityImpulse(vecForward * -ffdev_flame_pushforce.GetFloat());
-		pPlayer->ApplyAbsVelocityImpulse(vecForward * Vector(1,1, -ffdev_flame_uppushforce.GetFloat()) );
+		pPlayer->ApplyAbsVelocityImpulse(vecForward * -FLAME_PUSHFORCE);
+		pPlayer->ApplyAbsVelocityImpulse(vecForward * Vector(1,1, -FLAME_UPPUSHFORCE) );
 	}
 	Vector vecShootPos = pPlayer->Weapon_ShootPosition();
 
@@ -197,18 +202,18 @@ void CFFWeaponFlamethrower::Fire()
 	Vector vecEnd = vecStart + ( vecForward * 320.0f ) - GetAbsVelocity() * 0.4f;
 
 	// Visualise trace
-	if (ffdev_flame_showtrace.GetBool())
+	if (FLAME_SHOWTRACE)
 	{
 		NDebugOverlay::Line(vecStart, vecEnd, 255, 255, 0, false, 1.0f);
 		
 		QAngle angDir;
 		VectorAngles(vecForward, angDir);
-		NDebugOverlay::SweptBox(vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), angDir, 200, 100, 0, 100, 0.1f);
+		NDebugOverlay::SweptBox(vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * FLAME_BBOX, Vector( 1.0f, 1.0f, 1.0f ) * FLAME_BBOX, angDir, 200, 100, 0, 100, 0.1f);
 	}
 	
 	// Changed to this to add some "width" to the shot. How much more expensive is this than traceline???
 	trace_t traceHit;
-	UTIL_TraceHull( vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), MASK_SHOT_HULL | MASK_WATER, pPlayer, COLLISION_GROUP_NONE, &traceHit );
+	UTIL_TraceHull( vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * FLAME_BBOX, Vector( 1.0f, 1.0f, 1.0f ) * FLAME_BBOX, MASK_SHOT_HULL | MASK_WATER, pPlayer, COLLISION_GROUP_NONE, &traceHit );
 
 	// Don't hit water
 	if( ( traceHit.contents & CONTENTS_WATER ) || ( traceHit.contents & CONTENTS_SLIME ) )

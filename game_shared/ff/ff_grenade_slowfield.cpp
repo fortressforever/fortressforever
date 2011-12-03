@@ -34,8 +34,8 @@
 
 #define SLOWFIELDGRENADE_MODEL			"models/grenades/gas/gas.mdl"
 
-ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.vmt", FCVAR_FF_FFDEV_REPLICATED, "Sprite texture");
-#define SLOWFIELDGRENADE_GLOW_SPRITE ffdev_slowfield_vmt.GetString()
+//ConVar ffdev_slowfield_vmt("ffdev_slowfield_vmt", "sprites/ff_slowfieldoutline1.vmt", FCVAR_FF_FFDEV_REPLICATED, "Sprite texture");
+#define SLOWFIELDGRENADE_GLOW_SPRITE "sprites/ff_slowfieldoutline1.vmt"
 
 //#define SLOWFIELDGRENADE_GLOW_SPRITE	"sprites/ff_slowfieldoutline1.vmt"
 #define SLOWFIELDGRENADE_SOUND			"Slowfield.Explode"
@@ -68,53 +68,53 @@ ConVar slowfield_glow_size("ffdev_slowfield_glow_size", "0.3", FCVAR_FF_FFDEV_CL
 
 #define GRENADE_BEAM_SPRITE	"sprites/plasma.spr"
 
-ConVar ffdev_slowfield_beam_widthstart("ffdev_slowfield_beam_widthstart", "4", FCVAR_FF_FFDEV_REPLICATED, "Width at the start of the slowfield grenade beam");
-#define SLOWFIELD_BEAM_WIDTHSTART ffdev_slowfield_beam_widthstart.GetFloat()
+//ConVar ffdev_slowfield_beam_widthstart("ffdev_slowfield_beam_widthstart", "4", FCVAR_FF_FFDEV_REPLICATED, "Width at the start of the slowfield grenade beam");
+#define SLOWFIELD_BEAM_WIDTHSTART 4 //ffdev_slowfield_beam_widthstart.GetFloat()
 
-ConVar ffdev_slowfield_beam_widthend("ffdev_slowfield_beam_widthend", "4", FCVAR_FF_FFDEV_REPLICATED, "Width at the end of the slowfield grenade beam");
-#define SLOWFIELD_BEAM_WIDTHEND ffdev_slowfield_beam_widthend.GetFloat()
+//ConVar ffdev_slowfield_beam_widthend("ffdev_slowfield_beam_widthend", "4", FCVAR_FF_FFDEV_REPLICATED, "Width at the end of the slowfield grenade beam");
+#define SLOWFIELD_BEAM_WIDTHEND 4 //ffdev_slowfield_beam_widthend.GetFloat()
 
-ConVar ffdev_slowfield_beam_noise("ffdev_slowfield_beam_noise", "0.5", FCVAR_FF_FFDEV_REPLICATED, "Noise of the slowfield grenade beam");
-#define SLOWFIELD_BEAM_NOISE ffdev_slowfield_beam_noise.GetFloat()
+//ConVar ffdev_slowfield_beam_noise("ffdev_slowfield_beam_noise", "0.5", FCVAR_FF_FFDEV_REPLICATED, "Noise of the slowfield grenade beam");
+#define SLOWFIELD_BEAM_NOISE 0.5f //ffdev_slowfield_beam_noise.GetFloat()
 
-ConVar ffdev_slowfield_shrinktime_stack("ffdev_slowfield_shrinktime_stack", "1", FCVAR_FF_FFDEV_REPLICATED, "If stacked (1) then the slowfiled inner radius shrinks followed by outer");
-#define SLOWFIELD_SHRINKTIME_STACK ffdev_slowfield_shrinktime_stack.GetBool()
+//ConVar ffdev_slowfield_shrinktime_stack("ffdev_slowfield_shrinktime_stack", "1", FCVAR_FF_FFDEV_REPLICATED, "If stacked (1) then the slowfiled inner radius shrinks followed by outer");
+#define SLOWFIELD_SHRINKTIME_STACK 1 //ffdev_slowfield_shrinktime_stack.GetBool()
 
-ConVar ffdev_slowfield_shrinktime_inner("ffdev_slowfield_shrinktime_inner", "0.15", FCVAR_FF_FFDEV_REPLICATED, "Time it takes the slowfiled inner radius to shrink when the slowfield expires");
-#define SLOWFIELD_SHRINKTIME_INNER ffdev_slowfield_shrinktime_inner.GetFloat()
+//ConVar ffdev_slowfield_shrinktime_inner("ffdev_slowfield_shrinktime_inner", "0.15", FCVAR_FF_FFDEV_REPLICATED, "Time it takes the slowfiled inner radius to shrink when the slowfield expires");
+#define SLOWFIELD_SHRINKTIME_INNER 0.15f //ffdev_slowfield_shrinktime_inner.GetFloat()
 
-ConVar ffdev_slowfield_shrinktime_outer("ffdev_slowfield_shrinktime_outer", "0.25", FCVAR_FF_FFDEV_REPLICATED, "Time it takes the slowfiled outer radius to shrink when the slowfield expires");
-#define SLOWFIELD_SHRINKTIME_OUTER ffdev_slowfield_shrinktime_outer.GetFloat()
+//ConVar ffdev_slowfield_shrinktime_outer("ffdev_slowfield_shrinktime_outer", "0.25", FCVAR_FF_FFDEV_REPLICATED, "Time it takes the slowfiled outer radius to shrink when the slowfield expires");
+#define SLOWFIELD_SHRINKTIME_OUTER 0.25f //ffdev_slowfield_shrinktime_outer.GetFloat()
 
-ConVar ffdev_slowfield_radius_outer("ffdev_slowfield_radius_outer", "176", FCVAR_FF_FFDEV_REPLICATED, "Outer radius of slowfield grenade (scales from no effect to full effect at inner radius)");
-#define SLOWFIELD_RADIUS_OUTER ffdev_slowfield_radius_outer.GetFloat()
+//ConVar ffdev_slowfield_radius_outer("ffdev_slowfield_radius_outer", "176", FCVAR_FF_FFDEV_REPLICATED, "Outer radius of slowfield grenade (scales from no effect to full effect at inner radius)");
+#define SLOWFIELD_RADIUS_OUTER 176 //ffdev_slowfield_radius_outer.GetFloat()
 
-ConVar ffdev_slowfield_radius_inner("ffdev_slowfield_radius_inner", "64", FCVAR_FF_FFDEV_REPLICATED, "Inner radius of slowfield grenade (where slowfield has full effect)");
-#define SLOWFIELD_RADIUS_INNER ffdev_slowfield_radius_inner.GetFloat()
+//ConVar ffdev_slowfield_radius_inner("ffdev_slowfield_radius_inner", "64", FCVAR_FF_FFDEV_REPLICATED, "Inner radius of slowfield grenade (where slowfield has full effect)");
+#define SLOWFIELD_RADIUS_INNER 64 //ffdev_slowfield_radius_inner.GetFloat()
 
-ConVar ffdev_slowfield_radius_power("ffdev_slowfield_radius_power", "1", FCVAR_FF_FFDEV_REPLICATED, "Power by which to raise the pecentage that a player is between inner & outer radius of the slowfield grenade (so it ramps up and feels less like a brick wall)");
-#define SLOWFIELD_RADIUS_POWER ffdev_slowfield_radius_power.GetFloat()
+//ConVar ffdev_slowfield_radius_power("ffdev_slowfield_radius_power", "1", FCVAR_FF_FFDEV_REPLICATED, "Power by which to raise the pecentage that a player is between inner & outer radius of the slowfield grenade (so it ramps up and feels less like a brick wall)");
+#define SLOWFIELD_RADIUS_POWER 1 //ffdev_slowfield_radius_power.GetFloat()
 
-ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "7", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
-#define SLOWFIELD_DURATION ffdev_slowfield_duration.GetFloat()
+//ConVar ffdev_slowfield_duration("ffdev_slowfield_duration", "7", FCVAR_FF_FFDEV_REPLICATED, "Duration of slowfield grenade");
+#define SLOWFIELD_DURATION 7 //ffdev_slowfield_duration.GetFloat()
 
-ConVar ffdev_slowfield_multiplier("ffdev_slowfield_multiplier", "28", FCVAR_FF_FFDEV_REPLICATED, "Multiplier to compensate for the effect of the ffdev_slowfield_power cvar");
-#define SLOWFIELD_MULTIPLIER ffdev_slowfield_multiplier.GetFloat()
+//ConVar ffdev_slowfield_multiplier("ffdev_slowfield_multiplier", "28", FCVAR_FF_FFDEV_REPLICATED, "Multiplier to compensate for the effect of the ffdev_slowfield_power cvar");
+#define SLOWFIELD_MULTIPLIER 28 //ffdev_slowfield_multiplier.GetFloat()
 
-ConVar ffdev_slowfield_power("ffdev_slowfield_power", "0.375", FCVAR_FF_FFDEV_REPLICATED, "Lower Power = slow fast players more", true, 0.0f, true, 1.0f);
-#define SLOWFIELD_POWER ffdev_slowfield_power.GetFloat()
+//ConVar ffdev_slowfield_power("ffdev_slowfield_power", "0.375", FCVAR_FF_FFDEV_REPLICATED, "Lower Power = slow fast players more", true, 0.0f, true, 1.0f);
+#define SLOWFIELD_POWER 0.375f //ffdev_slowfield_power.GetFloat()
 
-ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_FF_FFDEV_REPLICATED, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
-#define SLOWFIELD_FRIENDLYIGNORE ffdev_slowfield_friendlyignore.GetBool()
+//ConVar ffdev_slowfield_friendlyignore("ffdev_slowfield_friendlyignore", "1", FCVAR_FF_FFDEV_REPLICATED, "When set to 1 and friendly fire is off, the grenade does not affect teammates");
+#define SLOWFIELD_FRIENDLYIGNORE 1 //ffdev_slowfield_friendlyignore.GetBool()
 
-ConVar ffdev_slowfield_selfignore("ffdev_slowfield_selfignore", "0", FCVAR_FF_FFDEV_REPLICATED, "When set to 1, the grenade does not affect the thrower");
-#define SLOWFIELD_SELFIGNORE ffdev_slowfield_selfignore.GetBool()
+//ConVar ffdev_slowfield_selfignore("ffdev_slowfield_selfignore", "0", FCVAR_FF_FFDEV_REPLICATED, "When set to 1, the grenade does not affect the thrower");
+#define SLOWFIELD_SELFIGNORE 0 //ffdev_slowfield_selfignore.GetBool()
 
-ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", "1", FCVAR_FF_FFDEV_REPLICATED, "When friendly fire is on, modifies the slow amount for teammates", true, 0.0f, true, 1.0f);
-#define SLOWFIELD_FRIENDLYSCALE ffdev_slowfield_friendlyscale.GetFloat()
+//ConVar ffdev_slowfield_friendlyscale("ffdev_slowfield_friendlyscale", "1", FCVAR_FF_FFDEV_REPLICATED, "When friendly fire is on, modifies the slow amount for teammates", true, 0.0f, true, 1.0f);
+#define SLOWFIELD_FRIENDLYSCALE 1 //ffdev_slowfield_friendlyscale.GetFloat()
 
-ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", "1", FCVAR_FF_FFDEV_REPLICATED, "When selfignore is 0, modifies the slow amount for the thrower", true, 0.0f, true, 1.0f);
-#define SLOWFIELD_SELFSCALE ffdev_slowfield_selfscale.GetFloat()
+//ConVar ffdev_slowfield_selfscale("ffdev_slowfield_selfscale", "1", FCVAR_FF_FFDEV_REPLICATED, "When selfignore is 0, modifies the slow amount for the thrower", true, 0.0f, true, 1.0f);
+#define SLOWFIELD_SELFSCALE 1 //ffdev_slowfield_selfscale.GetFloat()
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeSlowfield C_FFGrenadeSlowfield

@@ -66,13 +66,20 @@ LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 //========================================================================
 // Developer ConVars
 //========================================================================
-ConVar gren_grav("ffdev_gren_grav", "0.8", FCVAR_FF_FFDEV_REPLICATED);
-ConVar gren_fric("ffdev_gren_fric", "0.25", FCVAR_FF_FFDEV_REPLICATED);
-ConVar gren_elas("ffdev_gren_elas", "0.4", FCVAR_FF_FFDEV_REPLICATED);
-ConVar gren_fric_conc("ffdev_gren_fric_conc", "0.3", FCVAR_FF_FFDEV_REPLICATED);
-ConVar gren_elas_conc("ffdev_gren_elas_conc", "0.7", FCVAR_FF_FFDEV_REPLICATED);
-ConVar gren_radius("ffdev_gren_radius", "180.0f", FCVAR_FF_FFDEV_REPLICATED, "Radius of grenade explosions");
-ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_FF_FFDEV_REPLICATED);
+//ConVar gren_grav("ffdev_gren_grav", "0.8", FCVAR_FF_FFDEV_REPLICATED);
+#define GREN_GRAV 0.8f
+//ConVar gren_fric("ffdev_gren_fric", "0.25", FCVAR_FF_FFDEV_REPLICATED);
+#define GREN_FRIC 0.25f
+//ConVar gren_elas("ffdev_gren_elas", "0.4", FCVAR_FF_FFDEV_REPLICATED);
+#define GREN_ELAS 0.4f
+//ConVar gren_fric_conc("ffdev_gren_fric_conc", "0.3", FCVAR_FF_FFDEV_REPLICATED);
+#define GREN_FRIC_CONC 0.3f
+//ConVar gren_elas_conc("ffdev_gren_elas_conc", "0.7", FCVAR_FF_FFDEV_REPLICATED);
+#define GREN_ELAS_CONC 0.7f
+//ConVar gren_radius("ffdev_gren_radius", "180.0f", FCVAR_FF_FFDEV_REPLICATED, "Radius of grenade explosions");
+#define GREN_RADIUS 180.0f
+//ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0", FCVAR_FF_FFDEV_REPLICATED);
+#define GREN_WATER_SINK_RATE 64.0f
 //ConVar gren_water_vel_dec("ffdev_gren_water_vel_dec", "0.5", FCVAR_FF_FFDEV_REPLICATED);
 #define GREN_WATER_VEL_DEC 0.5f
 //ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_FF_FFDEV_REPLICATED);

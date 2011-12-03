@@ -28,7 +28,8 @@
 	#define CFFProjectilePipebomb C_FFProjectilePipebomb
 #endif
 
-extern ConVar ffdev_pipe_friction;
+//extern ConVar ffdev_pipe_friction;
+#define PIPE_FRICTION 0.375f
 
 //0001279: Commented out because of the ConVar created for the pipe det delay.
 //#define PIPEBOMB_TIME_TILL_LIVE		0.75f
@@ -56,7 +57,7 @@ public:
 	// drawing
 	virtual void Explode( trace_t *pTrace, int bitsDamageType );
 	
-	static inline const float GetGrenadeFriction() { return /*0.2f */ ffdev_pipe_friction.GetFloat(); }
+	static inline const float GetGrenadeFriction() { return PIPE_FRICTION; }
 
 	//-- Added by L0ki ------------------------------
 	virtual Class_T Classify( void ) { return CLASS_PIPEBOMB; }

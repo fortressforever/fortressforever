@@ -98,13 +98,15 @@ CLIENTEFFECT_REGISTER_END()
 
 //////////////////////////////////////////////////////////////////////////
 // For ghost buildables.
-ConVar ffdev_pulsebuildable("ffdev_pulsebuildable", "0", FCVAR_FF_FFDEV_REPLICATED, "Buildable ghost slow pulse");
-ConVar ffdev_buildabledrawonerror("ffdev_buildabledrawonerror", "1", FCVAR_FF_FFDEV_REPLICATED, "Draw the buildable when it can't be built");
+//ConVar ffdev_pulsebuildable("ffdev_pulsebuildable", "0", FCVAR_FF_FFDEV_REPLICATED, "Buildable ghost slow pulse");
+#define FFDEV_PULSEBUILDABLE false
+//ConVar ffdev_buildabledrawonerror("ffdev_buildabledrawonerror", "1", FCVAR_FF_FFDEV_REPLICATED, "Draw the buildable when it can't be built");
+#define FFDEV_BUILDABLEDRAWONERROR true
 const RenderFx_t g_BuildableRenderFx = kRenderFxPulseSlowWide;
 //////////////////////////////////////////////////////////////////////////
 
-extern ConVar ffdev_mancannon_combatcooldown;
-#define MANCANNON_COMBATCOOLDOWN ffdev_mancannon_combatcooldown.GetFloat()
+//extern ConVar ffdev_mancannon_combatcooldown;
+#define MANCANNON_COMBATCOOLDOWN 3.0f
 
 //=============================================================================
 //
@@ -386,7 +388,7 @@ C_FFDetpack *C_FFDetpack::CreateClientSideDetpack( const Vector& vecOrigin, cons
 	pDetpack->SetRenderMode( kRenderTransAlpha );
 	pDetpack->SetRenderColorA( ( byte )110 );
 
-	if(ffdev_pulsebuildable.GetBool())
+	if(FFDEV_PULSEBUILDABLE)
 		pDetpack->m_nRenderFX = g_BuildableRenderFx;
 
 	//kRenderTransAlphaAdd
@@ -458,7 +460,7 @@ C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin
 	pDispenser->SetRenderMode( kRenderTransAlpha );
 	pDispenser->SetRenderColorA( ( byte )110 );
 	
-	if(ffdev_pulsebuildable.GetBool())
+	if(FFDEV_PULSEBUILDABLE)
 		pDispenser->m_nRenderFX = g_BuildableRenderFx;
 
 	// Since this is client side only, give it an owner just in case
@@ -555,7 +557,7 @@ C_FFSentryGun *C_FFSentryGun::CreateClientSideSentryGun( const Vector& vecOrigin
 	pSentryGun->SetRenderMode( kRenderTransAlpha );
 	pSentryGun->SetRenderColorA( ( byte )110 );
 	
-	if(ffdev_pulsebuildable.GetBool())
+	if(FFDEV_PULSEBUILDABLE)
 		pSentryGun->m_nRenderFX = g_BuildableRenderFx;
 	
 	// Since this is client side only, give it an owner just in case
@@ -684,7 +686,7 @@ C_FFManCannon *C_FFManCannon::CreateClientSideManCannon( const Vector& vecOrigin
 	pManCannon->SetRenderMode( kRenderTransAlpha );
 	pManCannon->SetRenderColorA( ( byte )110 );
 	
-	if( ffdev_pulsebuildable.GetBool() )
+	if( FFDEV_PULSEBUILDABLE )
 		pManCannon->m_nRenderFX = g_BuildableRenderFx;
 
 	// Since this is client side only, give it an owner just in case
