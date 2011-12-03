@@ -24,8 +24,8 @@
 	#include "ff_player.h"
 #endif
 
-ConVar rpg_damage_radius( "ffdev_rpg_damage_radius", "108", FCVAR_FF_FFDEV_REPLICATED, "RPG explosion radius" );
-#define RPG_DAMAGERADIUS rpg_damage_radius.GetFloat() //115.0f
+//ConVar rpg_damage_radius( "ffdev_rpg_damage_radius", "108", FCVAR_FF_FFDEV_REPLICATED, "RPG explosion radius" );
+#define RPG_DAMAGERADIUS 108.0f //rpg_damage_radius.GetFloat()
 
 //=============================================================================
 // CFFWeaponRPG

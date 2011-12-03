@@ -45,18 +45,18 @@ extern const char *g_pszFFManCannonSounds[];
 
 extern const char *g_pszFFGenGibModels[];
 
-ConVar ffdev_mancannon_push_forward( "ffdev_mancannon_push_forward", "1024", FCVAR_FF_FFDEV_REPLICATED );
-#define MANCANNON_PUSH_FORWARD ffdev_mancannon_push_forward.GetInt()
-ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_FF_FFDEV_REPLICATED );
-#define MANCANNON_PUSH_UP ffdev_mancannon_push_up.GetInt()
-ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "150", FCVAR_FF_FFDEV_REPLICATED );
-#define MANCANNON_HEALTH ffdev_mancannon_health.GetInt()
-ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_FF_FFDEV_REPLICATED );
-#define MANCANNON_HEALTH_REGEN ffdev_mancannon_health_regen.GetFloat()
-ConVar ffdev_mancannon_healticklength( "ffdev_mancannon_healticklength", "1", FCVAR_FF_FFDEV_REPLICATED );
-#define MANCANNON_HEALTICKLENGTH ffdev_mancannon_healticklength.GetFloat()
-extern ConVar ffdev_mancannon_combatcooldown;
-#define MANCANNON_COMBATCOOLDOWN ffdev_mancannon_combatcooldown.GetFloat()
+//ConVar ffdev_mancannon_push_forward( "ffdev_mancannon_push_forward", "1024", FCVAR_FF_FFDEV_REPLICATED );
+#define MANCANNON_PUSH_FORWARD 1024 //ffdev_mancannon_push_forward.GetInt()
+//ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_FF_FFDEV_REPLICATED );
+#define MANCANNON_PUSH_UP 512 //ffdev_mancannon_push_up.GetInt()
+//ConVar ffdev_mancannon_health( "ffdev_mancannon_health", "150", FCVAR_FF_FFDEV_REPLICATED );
+#define MANCANNON_HEALTH 150 //ffdev_mancannon_health.GetInt()
+//ConVar ffdev_mancannon_health_regen( "ffdev_mancannon_health_regen", "20", FCVAR_FF_FFDEV_REPLICATED );
+#define MANCANNON_HEALTH_REGEN 20 //ffdev_mancannon_health_regen.GetFloat()
+//ConVar ffdev_mancannon_healticklength( "ffdev_mancannon_healticklength", "1", FCVAR_FF_FFDEV_REPLICATED );
+#define MANCANNON_HEALTICKLENGTH 1 //ffdev_mancannon_healticklength.GetFloat()
+//extern ConVar ffdev_mancannon_combatcooldown;
+#define MANCANNON_COMBATCOOLDOWN 3.0f
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -105,7 +105,7 @@ void CFFManCannon::GoLive( void )
 		pOwner->RemoveAmmo( 1, AMMO_MANCANNON );
 
 	// caes: start health regen
-	if ( ffdev_mancannon_health_regen.GetInt() > 0 )
+	if ( MANCANNON_HEALTH_REGEN > 0 )
 	{
 		// start thinking
 		SetThink( &CFFManCannon::OnJumpPadThink );
@@ -122,9 +122,9 @@ void CFFManCannon::OnJumpPadThink( void )
 	if ( m_iCombatState == JUMPPAD_IDLE )
 	{
 		// heal
-		if ( gpGlobals->curtime >= m_flLastHeal + ffdev_mancannon_healticklength.GetFloat() && m_iHealth < ffdev_mancannon_health.GetInt() )
+		if ( gpGlobals->curtime >= m_flLastHeal + MANCANNON_HEALTICKLENGTH && m_iHealth < MANCANNON_HEALTH )
 		{
-			m_iHealth = min( ( m_iHealth + ffdev_mancannon_health_regen.GetFloat() ), ffdev_mancannon_health.GetInt() );
+			m_iHealth = min( ( m_iHealth + MANCANNON_HEALTH_REGEN ), MANCANNON_HEALTH );
 			DevMsg("[S] Jumppad health regen: %i\n", m_iHealth);
 
 			// This will force an update of this variable for the client
@@ -143,7 +143,7 @@ void CFFManCannon::OnJumpPadThink( void )
 	}
 	else if ( m_iCombatState == JUMPPAD_INCOMBAT )
 	{
-		if ( gpGlobals->curtime >= m_flLastDamage + ffdev_mancannon_combatcooldown.GetFloat() )
+		if ( gpGlobals->curtime >= m_flLastDamage + MANCANNON_COMBATCOOLDOWN )
 		{
 			m_iCombatState = JUMPPAD_IDLE;
 			m_flLastHeal = 0;
@@ -205,7 +205,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	// add an amount to their horizontal + vertical velocity (dont multiply cos slow classes wouldnt go anywhere!)
 	//pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_forward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
 
-	pPlayer->SetAbsVelocity((vecForward * ffdev_mancannon_push_forward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
+	pPlayer->SetAbsVelocity((vecForward * MANCANNON_PUSH_FORWARD) + Vector( 0, 0, MANCANNON_PUSH_UP ) );
 	
 	//Vector vecVelocity = pPlayer->GetAbsVelocity();
 	//Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
@@ -249,7 +249,7 @@ void CFFManCannon::PhysicsSimulate()
 		if (!pPlayer)
 			return;
 
-		int iHealth = (int) (100.0f * GetHealth() / ffdev_mancannon_health.GetInt());
+		int iHealth = (int) (100.0f * GetHealth() / MANCANNON_HEALTH);
 		//int iArmor = (int) ( 100.0f * m_iSGArmor / m_iMaxSGArmor); // no more armor, just reduce max health - shok
 		//int iAmmo = (int) (100.0f * (float) m_iShells / m_iMaxShells);
 

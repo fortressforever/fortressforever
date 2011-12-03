@@ -312,9 +312,12 @@ PRECACHE_REGISTER( ff_miniturret );
 #ifdef GAME_DLL
 
 // Debug visualization
-ConVar	miniturret_debug( "ffdev_miniturret_debug", "0", FCVAR_FF_FFDEV );
-ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "17.0", FCVAR_FF_FFDEV );
-ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0", FCVAR_FF_FFDEV );
+//ConVar	miniturret_debug( "ffdev_miniturret_debug", "0", FCVAR_FF_FFDEV );
+#define MINITURRET_DEBUG false
+//ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "17.0", FCVAR_FF_FFDEV );
+#define MINITURRET_TURNSPEED 17.0f
+//ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0", FCVAR_FF_FFDEV );
+#define MINITURRET_CASTRATE false
 
 // Datatable
 BEGIN_DATADESC( CFFMiniTurret )
@@ -684,7 +687,7 @@ void CFFMiniTurret::OnObjectThink( void )
 //-----------------------------------------------------------------------------
 void CFFMiniTurret::OnAutoSearchThink( void )
 {
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 		DevMsg( "[MiniTurret] OnAutoSearchThink\n" );
 
 	OnObjectThink();
@@ -723,7 +726,7 @@ void CFFMiniTurret::OnAutoSearchThink( void )
 //-----------------------------------------------------------------------------
 void CFFMiniTurret::OnDeploy( void )
 {
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 		DevMsg( "[MiniTurret] OnDeploy\n" );
 
 	OnObjectThink();
@@ -761,7 +764,7 @@ void CFFMiniTurret::OnDeploy( void )
 //-----------------------------------------------------------------------------
 void CFFMiniTurret::OnSearchThink( void )
 {
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 		DevMsg( "[MiniTurret] OnSearchThink\n" );
 
 	OnObjectThink();
@@ -806,7 +809,7 @@ void CFFMiniTurret::OnSearchThink( void )
 //-----------------------------------------------------------------------------
 void CFFMiniTurret::OnActiveThink( void )
 {
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 		DevMsg( "[MiniTurret] OnActiveThink\n" );
 
 	OnObjectThink();
@@ -879,7 +882,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	Vector vecDirToEnemy = vecMidEnemy - vecMuzzle;
 	VectorNormalizeFast( vecDirToEnemy );	
 
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 	{
 		NDebugOverlay::Line( vecMuzzle, vecMuzzle + ( vecDirToEnemy * 256 ), 255, 0, 0, false, 0.25f );
 		NDebugOverlay::Line( vecMuzzle, vecMuzzle + ( vecMuzzleDir * 256 ), 0, 0, 255, false, 0.25f );
@@ -916,7 +919,7 @@ void CFFMiniTurret::OnActiveThink( void )
 //-----------------------------------------------------------------------------
 void CFFMiniTurret::OnRetire( void )
 {
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 		DevMsg( "[MiniTurret] OnRetire\n" );
 
 	OnObjectThink();
@@ -1037,13 +1040,13 @@ bool CFFMiniTurret::UpdateFacing( void )
 	float flDiff = -m_vecGoalAngles.x;
 	SetPoseParameter( m_iPitchPoseParameter, flDiff );
 
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 		DevMsg( "[MiniTurret] Current Pitch: %f, Goal Pitch: %f, pitch val: %f\n", vecAngles.x, m_vecGoalAngles.x, flDiff );
 
 	// Get the current yaw value
 	float flYaw = GetPoseParameter( m_iYawPoseParameter );
 
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 		Warning( "[MiniTurret] Current pose yaw: %f, vecAngles yaw: %f, goal yaw: %f\n", flYaw, vecAngles.y, m_vecGoalAngles.y );
 
 	// Update yaw
@@ -1156,7 +1159,7 @@ void CFFMiniTurret::Ping( void )
 float CFFMiniTurret::MaxYawSpeed( void )
 {
 	if( GetEnemy() )
-		return miniturret_turnspeed.GetFloat();
+		return MINITURRET_TURNSPEED;
 
 	return 3.0f;
 }
@@ -1189,12 +1192,12 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
-	if( miniturret_debug.GetBool() )
+	if( MINITURRET_DEBUG )
 		info.m_iDamage = 0.0f;
 	else
 		info.m_iDamage = 70.0f;
 
-	if( !miniturret_castrate.GetBool() )
+	if( !MINITURRET_CASTRATE )
 	{
 		FireBullets( info );
 

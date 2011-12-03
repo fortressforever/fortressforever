@@ -32,9 +32,8 @@
 
 using namespace vgui;
 
-extern ConVar ffdev_overpressure_delay;
-
-#define OVERPRESSURE_COOLDOWN	ffdev_overpressure_delay.GetFloat()
+//extern ConVar ffdev_overpressure_delay;
+#define OVERPRESSURE_COOLDOWN 8	//ffdev_overpressure_delay.GetFloat()
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current disguised class
@@ -106,7 +105,7 @@ void CHudOverpressure::Paint( void )
 	if ( pPlayer->m_flNextClassSpecificSkill > gpGlobals->curtime )
 	{	
 		//New cloak percent timer -GreenMushy
-		float iProgressPercent = ( ffdev_overpressure_delay.GetFloat() - (pPlayer->m_flNextClassSpecificSkill - gpGlobals->curtime) ) / ( ffdev_overpressure_delay.GetFloat() );
+		float iProgressPercent = ( OVERPRESSURE_COOLDOWN - (pPlayer->m_flNextClassSpecificSkill - gpGlobals->curtime) ) / ( OVERPRESSURE_COOLDOWN );
 	
 		// Paint foreground/background stuff
 		BaseClass::PaintBackground();

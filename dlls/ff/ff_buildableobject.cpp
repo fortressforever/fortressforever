@@ -70,7 +70,8 @@ BEGIN_DATADESC( CFFBuildableFlickerer )
 	DEFINE_THINKFUNC( OnObjectThink ),
 END_DATADESC()
 
-static ConVar flicker_time( "ffdev_flicker_time", "0.1", FCVAR_FF_FFDEV );
+//static ConVar flicker_time( "ffdev_flicker_time", "0.1", FCVAR_FF_FFDEV );
+#define FLICKER_TIME 0.1f
 
 //-----------------------------------------------------------------------------
 // Purpose: Spawn a flickerer
@@ -98,7 +99,7 @@ void CFFBuildableFlickerer::OnObjectThink( void )
 	if( m_pBuildable )
 	{
 		// See if it's time to un-flicker
-		if( ( ( m_flFlicker + flicker_time.GetFloat() ) < gpGlobals->curtime ) /*&& ( m_pBuildable->GetRenderMode() != kRenderNormal )*/ )
+		if( ( ( m_flFlicker + FLICKER_TIME ) < gpGlobals->curtime ) /*&& ( m_pBuildable->GetRenderMode() != kRenderNormal )*/ )
 		{
 			//m_pBuildable->SetRenderMode( kRenderNormal );
 			m_pBuildable->SetBodygroup( 1, 0 );

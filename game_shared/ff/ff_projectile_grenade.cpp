@@ -41,15 +41,19 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_gl);
 // CFFProjectileGrenade implementation
 //=============================================================================
 
-ConVar projectile_gren_friction("ffdev_projectile_gren_friction", "0.375", FCVAR_FF_FFDEV_REPLICATED, "");
-ConVar projectile_gren_elasticity("ffdev_projectile_gren_elasticity", "0.5", FCVAR_FF_FFDEV_REPLICATED, "");
-ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_FF_FFDEV_REPLICATED, "");
+//ConVar projectile_gren_friction("ffdev_projectile_gren_friction", "0.375", FCVAR_FF_FFDEV_REPLICATED, "");
+#define FF_PROJECTILE_GREN_FRICTION 0.375f
+//ConVar projectile_gren_elasticity("ffdev_projectile_gren_elasticity", "0.5", FCVAR_FF_FFDEV_REPLICATED, "");
+#define FF_PROJECTILE_GREN_ELASTICITY 0.5f
+//ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_FF_FFDEV_REPLICATED, "");
+#define FF_PROJECTILE_GREN_GRAVITY 1.0f
 //ConVar projectile_gren_fusetime("ffdev_projectile_gren_fusetime", "1.3", FCVAR_FF_FFDEV_REPLICATED, "");
 #define FF_PROJECTILE_GREN_FUSETIME 1.3f //projectile_gren_fusetime.GetFloat();
-ConVar projectile_gren_bonusdirectdmg("ffdev_projectile_gren_bonusdirectdmg", "28.0", FCVAR_FF_FFDEV_REPLICATED, "");
-#define FF_PROJECTILE_GREN_BONUSDIRECTDMG projectile_gren_bonusdirectdmg.GetFloat()
-ConVar projectile_gren_normaldmg("ffdev_projectile_gren_normaldmg", "80.0", FCVAR_FF_FFDEV_REPLICATED, "");
-#define FF_PROJECTILE_GREN_NORMALDMG projectile_gren_normaldmg.GetFloat()
+//ConVar projectile_gren_bonusdirectdmg("ffdev_projectile_gren_bonusdirectdmg", "28.0", FCVAR_FF_FFDEV_REPLICATED, "");
+#define FF_PROJECTILE_GREN_BONUSDIRECTDMG 28.0f //projectile_gren_bonusdirectdmg.GetFloat()
+//ConVar projectile_gren_normaldmg("ffdev_projectile_gren_normaldmg", "80.0", FCVAR_FF_FFDEV_REPLICATED, "");
+#define FF_PROJECTILE_GREN_NORMALDMG 80.0f //projectile_gren_normaldmg.GetFloat()
+
 #ifdef GAME_DLL
 
 	//----------------------------------------------------------------------------

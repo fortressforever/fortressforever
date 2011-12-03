@@ -21,22 +21,23 @@
 	#include "ilagcompensationmanager.h"
 #endif
 
-ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "32", FCVAR_FF_FFDEV_REPLICATED); //16.0f
-#define MELEE_HULL_DIM	ffdev_melee_hull_dim.GetFloat() //If this is changed, need to change the hardcoded cube root of 2 around line 305
+//ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "32", FCVAR_FF_FFDEV_REPLICATED); //16.0f
+#define MELEE_HULL_DIM 32.0f	//ffdev_melee_hull_dim.GetFloat() //If this is changed, need to change the hardcoded cube root of 2 around line 305
 
-ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "-1", FCVAR_FF_FFDEV_REPLICATED); //1.732f
-#define MELEE_HULL_DIM_BACKOFF	ffdev_melee_hull_backoffradius.GetFloat()
+//ConVar ffdev_melee_hull_backoffradius("ffdev_melee_hull_backoffradius", "-1", FCVAR_FF_FFDEV_REPLICATED); //1.732f
+#define MELEE_HULL_DIM_BACKOFF -1	//ffdev_melee_hull_backoffradius.GetFloat()
 
-ConVar ffdev_melee_maxhitangle("ffdev_melee_maxhitangle", "0.7071", FCVAR_FF_FFDEV_REPLICATED); //0.70721f
-#define MELEE_HIT_MAX_ANGLE	ffdev_melee_maxhitangle.GetFloat()
+//ConVar ffdev_melee_maxhitangle("ffdev_melee_maxhitangle", "0.7071", FCVAR_FF_FFDEV_REPLICATED); //0.70721f
+#define MELEE_HIT_MAX_ANGLE	0.7071f //ffdev_melee_maxhitangle.GetFloat()
 
-ConVar ffdev_melee_softcliphitdist("ffdev_melee_softcliphitdist", "24", FCVAR_FF_FFDEV_REPLICATED, "Distance under which melee attacks always hit, as you are assumed to be inside the player under this distance"); //16
-#define MELEE_HIT_SOFTCLIPHITDIST ffdev_melee_softcliphitdist.GetFloat()
+//ConVar ffdev_melee_softcliphitdist("ffdev_melee_softcliphitdist", "24", FCVAR_FF_FFDEV_REPLICATED, "Distance under which melee attacks always hit, as you are assumed to be inside the player under this distance"); //16
+#define MELEE_HIT_SOFTCLIPHITDIST 24.0f //ffdev_melee_softcliphitdist.GetFloat()
 
-ConVar ffdev_melee_usesphere("ffdev_melee_usesphere", "1", FCVAR_FF_FFDEV_REPLICATED);
-#define MELEE_HIT_USESPHERE	ffdev_melee_usesphere.GetBool()
+//ConVar ffdev_melee_usesphere("ffdev_melee_usesphere", "1", FCVAR_FF_FFDEV_REPLICATED);
+#define MELEE_HIT_USESPHERE true	//ffdev_melee_usesphere.GetBool()
 
-ConVar melee_reach("ffdev_meleereach", "52.0", FCVAR_FF_FFDEV_REPLICATED);
+//ConVar melee_reach("ffdev_meleereach", "52.0", FCVAR_FF_FFDEV_REPLICATED);
+#define MELEE_REACH 52.0f
 
 static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
@@ -81,8 +82,8 @@ void CFFWeaponMeleeBase::Spawn()
 // 0000732: added convar to allow for tweakage
 //	m_fMaxRange1	= wpndata.m_flRange;
 //	m_fMaxRange2	= wpndata.m_flRange;
-	m_fMaxRange1	= melee_reach.GetFloat();
-	m_fMaxRange2	= melee_reach.GetFloat();
+	m_fMaxRange1	= MELEE_REACH;
+	m_fMaxRange2	= MELEE_REACH;
 
 }
 
@@ -311,7 +312,7 @@ void CFFWeaponMeleeBase::Swing()
 		trace_t trHit;
 		float nearestDot = CONE_90_DEGREES;
 
-		for ( CEntitySphereQuery sphere( swingStart, melee_reach.GetFloat() ); ( pObject = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		for ( CEntitySphereQuery sphere( swingStart, MELEE_REACH ); ( pObject = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
 			if ( !pObject )
 				continue;
@@ -380,7 +381,7 @@ void CFFWeaponMeleeBase::Swing()
 		if (pHitEntity == NULL) 
 		{
 			// we missed all things that can take damage, see if we collide with the world using a simple traceline
-			Vector swingEnd = swingStart + forward * (melee_reach.GetFloat());
+			Vector swingEnd = swingStart + forward * (MELEE_REACH);
 			UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &trHit);
 
 			//	still missed
@@ -414,7 +415,7 @@ void CFFWeaponMeleeBase::Swing()
 	else
 	{
 		// 0000732 Vector swingEnd = swingStart + forward * (pWeaponInfo.m_flRange + 20.0f);
-		Vector swingEnd = swingStart + forward * (melee_reach.GetFloat() + 20.0f);
+		Vector swingEnd = swingStart + forward * (MELEE_REACH + 20.0f);
 		UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
 
 		// Like bullets, melee traces have to trace against triggers.
@@ -468,7 +469,7 @@ void CFFWeaponMeleeBase::Swing()
 
 			// We want to test the first swing again
 			// 0000732		Vector testEnd = swingStart + forward * pWeaponInfo.m_flRange;
-			Vector testEnd = swingStart + forward * melee_reach.GetFloat();
+			Vector testEnd = swingStart + forward * MELEE_REACH;
 			// See if we happened to hit water
 			ImpactWater(swingStart, testEnd);
 

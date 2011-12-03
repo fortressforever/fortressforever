@@ -104,7 +104,8 @@ static ConVar concuss_height("cl_concuss_height", "36", FCVAR_ARCHIVE | FCVAR_US
 static ConVar cl_tranq_alwaysOn("cl_tranq_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? (boolean 0 or 1)"); 
 static ConVar concuss_alwaysOn("cl_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "Status always on? (boolean 0 or 1)"); 
 
-extern ConVar ffdev_softclip_asdisguisedteam;
+//extern ConVar ffdev_softclip_asdisguisedteam;
+#define SOFTCLIP_ASDISGUISEDTEAM false // in util_shared.cpp
 
 // *** ELMO
 
@@ -123,8 +124,8 @@ ConVar cl_killbeepwav("cl_killbeepsound", "deathbeep1", FCVAR_ARCHIVE, "Death be
 
 // For decrementing infection effect particles -squeek
 extern ConVar ffdev_infection_startingparticles;
-extern ConVar ffdev_infect_numticks; // in ff_player_shared.cpp
-#define FFDEV_INFECT_NUMTICKS ffdev_infect_numticks.GetInt()
+//extern ConVar ffdev_infect_numticks; // in ff_player_shared.cpp
+#define FFDEV_INFECT_NUMTICKS 10
 
 // Get around the ambiguous symbol problem
 extern IFileSystem **pFilesystem;
@@ -3050,7 +3051,7 @@ C_BaseEntity* C_FFPlayer::FindTeamIntersect( C_Team *pTeam, const Vector& boxMin
 			continue;
 
 		int iAvoidTeam = pAvoidPlayer->GetTeamNumber();
-		if (ffdev_softclip_asdisguisedteam.GetBool() && pAvoidPlayer->IsDisguised())
+		if (SOFTCLIP_ASDISGUISEDTEAM && pAvoidPlayer->IsDisguised())
 			iAvoidTeam = pAvoidPlayer->GetDisguisedTeam();
 
 		if (FFGameRules()->IsTeam1AlliedToTeam2( pTeam->m_iTeamNum, iAvoidTeam ) == GR_NOTTEAMMATE)
@@ -3072,7 +3073,7 @@ void C_FFPlayer::AvoidPlayers( CUserCmd *pCmd )
 		return;
 
 	C_FFTeam *pTeam = (C_FFTeam *)GetGlobalTeam( GetTeamNumber() );
-	if (ffdev_softclip_asdisguisedteam.GetBool() && IsDisguised())
+	if (SOFTCLIP_ASDISGUISEDTEAM && IsDisguised())
 		pTeam = (C_FFTeam *)GetGlobalTeam( GetDisguisedTeam() );
 
 	if ( !pTeam )

@@ -25,7 +25,8 @@
 //#define FF_BETA_TEST_COMPILE
 #define FF_BASTARD_HACKERS true
 
-extern ConVar ffdev_spy_maxcloakspeed;
+//extern ConVar ffdev_spy_maxcloakspeed;
+#define SPY_MAXCLOAKSPEED 220
 
 enum FFPlayerGrenadeState
 {
@@ -145,7 +146,7 @@ enum KillTypes_t
 	KILLTYPE_HEADCRUSH
 };
 
-extern ConVar sniperrifle_chargetime;
-#define FF_SNIPER_MAXCHARGE sniperrifle_chargetime.GetFloat()
+//extern ConVar sniperrifle_chargetime;
+#define FF_SNIPER_MAXCHARGE 5.0f //sniperrifle_chargetime.GetFloat()
 
 #endif // FF_SHAREDDEFS_H

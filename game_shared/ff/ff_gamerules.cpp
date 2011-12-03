@@ -164,8 +164,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	
 #endif
 
-ConVar ffdev_engi_build_expl_reduce("ffdev_engi_build_expl_reduce", "0.75", FCVAR_FF_FFDEV_REPLICATED);
-#define FFDEV_ENGI_BUILD_EXPL_REDUCE ffdev_engi_build_expl_reduce.GetFloat()
+//ConVar ffdev_engi_build_expl_reduce("ffdev_engi_build_expl_reduce", "0.75", FCVAR_FF_FFDEV_REPLICATED);
+#define FFDEV_ENGI_BUILD_EXPL_REDUCE 0.75f //ffdev_engi_build_expl_reduce.GetFloat()
 
 ConVar mp_prematch( "mp_prematch",
 					"0.0",							// trepids finding it annoying so i set it to zero and not .2

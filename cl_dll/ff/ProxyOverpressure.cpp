@@ -20,7 +20,8 @@
 #include "tier0/memdbgon.h"
 
 // Yuck
-extern ConVar ffdev_overpressure_delay;
+//extern ConVar ffdev_overpressure_delay;
+#define OVERPRESSURE_COOLDOWN 8	//ffdev_overpressure_delay.GetFloat()
 
 //-----------------------------------------------------------------------------
 // Returns charge of current weapon
@@ -51,7 +52,7 @@ void CProxyOverpressureCharge::OnBind(void *pC_BaseEntity)
 	// TODO: Stop using this awful global function
 	//float flNextClassSpecificSkill = GetAssaultCannonCharge();
 	// gotta take into account the spinup before we start displaying heat.
-	float flNextClassSpecificSkill = ( ffdev_overpressure_delay.GetFloat() - (pPlayer->m_flNextClassSpecificSkill - gpGlobals->curtime) ) / ( ffdev_overpressure_delay.GetFloat() );
+	float flNextClassSpecificSkill = ( OVERPRESSURE_COOLDOWN - (pPlayer->m_flNextClassSpecificSkill - gpGlobals->curtime) ) / ( OVERPRESSURE_COOLDOWN );
 	
 	flNextClassSpecificSkill = 100 * clamp( flNextClassSpecificSkill, 0.01f, 1.0f );
 	

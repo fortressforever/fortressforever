@@ -38,14 +38,23 @@
 #define MAX_BEAMS 16
 
 //ConVar laser_ng_streams("ffdev_lasergren_ng_streams", "2", FCVAR_FF_FFDEV_REPLICATED, "Number of streams per arm" );
-ConVar laser_ng_offset("ffdev_lasergren_ng_offset", "8", FCVAR_FF_FFDEV_REPLICATED, "Stream offset" );
-ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_FF_FFDEV_REPLICATED );
-ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_FF_FFDEV_REPLICATED );
-ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_FF_FFDEV_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
-ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_FF_FFDEV_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
-ConVar growTime( "ffdev_lasergren_growTime", "0.7", FCVAR_FF_FFDEV_REPLICATED, "Time taken to grow to full length" );
-ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_FF_FFDEV_REPLICATED, "Time taken to shrink to nothing" );
-ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_FF_FFDEV_REPLICATED, "Laser active time");
+#define LASERGREN_NG_STREAMS 2
+//ConVar laser_ng_offset("ffdev_lasergren_ng_offset", "8", FCVAR_FF_FFDEV_REPLICATED, "Stream offset" );
+#define LASERGREN_NG_OFFSET 8.0f
+//ConVar laser_ng_nailspeed("ffdev_lasergren_ng_nailspeed", "1000", FCVAR_FF_FFDEV_REPLICATED );
+#define LASERGREN_NG_NAILSPEED 1000
+//ConVar laser_ng_arms( "ffdev_lasergren_ng_arms", "3", FCVAR_FF_FFDEV_REPLICATED );
+#define LASERGREN_NG_ARMS 3
+//ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_FF_FFDEV_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
+#define LASERGREN_BEAMS 3
+//ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_FF_FFDEV_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
+#define LASERGREN_DISTANCE 256
+//ConVar growTime( "ffdev_lasergren_growTime", "0.7", FCVAR_FF_FFDEV_REPLICATED, "Time taken to grow to full length" );
+#define LASERGREN_GROWTIME 0.7f
+//ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_FF_FFDEV_REPLICATED, "Time taken to shrink to nothing" );
+#define LASERGREN_SHRINKTIME 1
+//ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_FF_FFDEV_REPLICATED, "Laser active time");
+#define LASERGREN_TIME 10
 
 #ifdef CLIENT_DLL
 	ConVar hud_lasergren_customColor_enable( "hud_lasergren_customColor_enable", "0", FCVAR_ARCHIVE, "Use custom laser colors (1 = use custom colour)");
@@ -62,33 +71,49 @@ ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_FF_FFDEV_REPLICATED, "Laser
 
 #ifdef GAME_DLL
 
-	ConVar laserdamage("ffdev_lasergren_damage", "660", FCVAR_FF_FFDEV, "Damage of laser");
-	#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
-	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "0.53", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
-	ConVar laserangv("ffdev_lasergren_angv", "120", FCVAR_FF_FFDEV, "Laser angular increment");
-	#define LASERGREN_ROTATION_PER_TICK laserangv.GetFloat()*gpGlobals->interval_per_tick
-	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_FF_FFDEV, "Laser grenade jump distance" );
-	ConVar laserbob( "ffdev_lasergren_bob", "10", FCVAR_FF_FFDEV, "Laser grenade bob factor" );
-	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_FF_FFDEV, "Laser grenade update time" );
+	//ConVar laserdamage("ffdev_lasergren_damage", "660", FCVAR_FF_FFDEV, "Damage of laser");
+	#define LASERGREN_DAMAGE_PER_TICK 660.0f*gpGlobals->interval_per_tick
+	//ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "0.53", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
+	#define LASERGREN_DAMAGE_BUILDABLEMULT 0.53f
+	//ConVar laserangv("ffdev_lasergren_angv", "120", FCVAR_FF_FFDEV, "Laser angular increment");
+	#define LASERGREN_ROTATION_PER_TICK 120.0f*gpGlobals->interval_per_tick
+	//ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_FF_FFDEV, "Laser grenade jump distance" );
+	#define LASERGREN_JUMP 80
+	//ConVar laserbob( "ffdev_lasergren_bob", "10", FCVAR_FF_FFDEV, "Laser grenade bob factor" );
+	#define LASERGREN_BOB 10
+	//ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_FF_FFDEV, "Laser grenade update time" );
+	#define LASERGREN_BEAMTIME 0.0f
 
-	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_FF_FFDEV, "Use nails instead of lasers" );
-	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_FF_FFDEV, "Bob Frequency");
+	//ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_FF_FFDEV, "Use nails instead of lasers" );
+	#define LASERGREN_USENAILS 0
+	//ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_FF_FFDEV, "Bob Frequency");
+	#define LASERGREN_BOBFREQ 0.5f
 	
-	ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_FF_FFDEV, "Explosion at end of active time");
-	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "90", FCVAR_FF_FFDEV, "Explosion damage at end of active period" );
-	ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_FF_FFDEV, "Explosion radius at end of active period" );
+	//ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_FF_FFDEV, "Explosion at end of active time");
+	#define LASERGREN_EXPLODE 0
+	//ConVar explosiondamage("ffdev_lasergren_explosiondamage", "90", FCVAR_FF_FFDEV, "Explosion damage at end of active period" );
+	#define LASERGREN_EXPLOSIONDAMAGE 90.0f
+	//ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_FF_FFDEV, "Explosion radius at end of active period" );
+	#define LASERGREN_EXPLOSIONRADIUS 180.0f
 
 	/******************************************************************/
-	ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_FF_FFDEV);
-	ConVar laser_ng_naildamage_buildablemult("ffdev_lasergren_ng_naildamage_buildablemult", "1.0", FCVAR_FF_FFDEV);
-	ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.025", FCVAR_FF_FFDEV );
-	ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", FCVAR_FF_FFDEV );
+	//ConVar laser_ng_naildamage("ffdev_lasergren_ng_naildamage", "10", FCVAR_FF_FFDEV);
+	#define LASERGREN_NG_NAILDAMAGE 10.0f
+	//ConVar laser_ng_naildamage_buildablemult("ffdev_lasergren_ng_naildamage_buildablemult", "1.0", FCVAR_FF_FFDEV);
+	#define LASERGREN_NG_NAILDAMAGE_BUILDABLEMULT 1.0f
+	//ConVar laser_ng_spittime( "ffdev_lasergren_ng_spittime", "0.025", FCVAR_FF_FFDEV );
+	#define LASERGREN_NG_SPITTIME 0.025f
+	//ConVar laser_ng_angleoffset( "ffdev_lasergren_ng_angleoffset", "360.0", FCVAR_FF_FFDEV );
+	#define LASERGREN_NG_ANGLEOFFSET 360.0f
 	//ConVar nailspread( "ffdev_nailgren_spread", "5.0", FCVAR_FF_FFDEV );
 	//ConVar ffdev_nailgren_flatten("ffdev_nailgren_flatten", "100", FCVAR_FF_FFDEV);
 
-	ConVar laser_ng_nail_bounds("ffdev_lasergren_ng_nail_bounds", "5.0", FCVAR_FF_FFDEV_REPLICATED, "NG Nails bbox");
-	ConVar laser_ng_visualizenails("ffdev_lasergren_ng_visualizenails", "0", FCVAR_FF_FFDEV, "Show NG nails trace");
-	ConVar laser_ng_nail_length("ffdev_lasergren_ng_nail_length", "5.0", FCVAR_FF_FFDEV, "Length of NG nails");
+	//ConVar laser_ng_nail_bounds("ffdev_lasergren_ng_nail_bounds", "5.0", FCVAR_FF_FFDEV_REPLICATED, "NG Nails bbox");
+	#define LASERGREN_NG_NAIL_BOUNDS 5.0f
+	//ConVar laser_ng_visualizenails("ffdev_lasergren_ng_visualizenails", "0", FCVAR_FF_FFDEV, "Show NG nails trace");
+	#define LASERGREN_NG_VISUALIZENAILS false
+	//ConVar laser_ng_nail_length("ffdev_lasergren_ng_nail_length", "5.0", FCVAR_FF_FFDEV, "Length of NG nails");
+	#define LASERGREN_NG_NAIL_LENGTH 5.0f
 
 
 
@@ -129,14 +154,14 @@ class PseudoNail
 			AngleVectors( m_vecAngles, &vecForward );
 			
 			// Visualise trace
-			if ( laser_ng_visualizenails.GetBool() )
+			if ( LASERGREN_NG_VISUALIZENAILS )
 			{
-				NDebugOverlay::Line(m_vecOrigin, m_vecOrigin + ( vecForward * laser_ng_nail_length.GetInt() ), 255, 255, 0, false, 5.0f);
-				NDebugOverlay::SweptBox(m_vecOrigin, m_vecOrigin + ( vecForward * laser_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * laser_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * laser_ng_nail_bounds.GetFloat(), m_vecAngles, 200, 100, 0, 100, 0.1f);
+				NDebugOverlay::Line(m_vecOrigin, m_vecOrigin + ( vecForward * LASERGREN_NG_NAIL_LENGTH ), 255, 255, 0, false, 5.0f);
+				NDebugOverlay::SweptBox(m_vecOrigin, m_vecOrigin + ( vecForward * LASERGREN_NG_NAIL_LENGTH ), -Vector( 1.0f, 1.0f, 1.0f ) * LASERGREN_NG_NAIL_BOUNDS, Vector( 1.0f, 1.0f, 1.0f ) * LASERGREN_NG_NAIL_BOUNDS, m_vecAngles, 200, 100, 0, 100, 0.1f);
 			}
 
 			trace_t traceHit;
-			UTIL_TraceHull( m_vecOrigin, m_vecOrigin + ( vecForward * laser_ng_nail_length.GetInt() ), -Vector( 1.0f, 1.0f, 1.0f ) * laser_ng_nail_bounds.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * laser_ng_nail_bounds.GetFloat(), MASK_SHOT_HULL, NULL, COLLISION_GROUP_NONE, &traceHit );
+			UTIL_TraceHull( m_vecOrigin, m_vecOrigin + ( vecForward * LASERGREN_NG_NAIL_LENGTH ), -Vector( 1.0f, 1.0f, 1.0f ) * LASERGREN_NG_NAIL_BOUNDS, Vector( 1.0f, 1.0f, 1.0f ) * LASERGREN_NG_NAIL_BOUNDS, MASK_SHOT_HULL, NULL, COLLISION_GROUP_NONE, &traceHit );
 
 			if (traceHit.m_pEnt)
 			{
@@ -155,25 +180,25 @@ class PseudoNail
 						{
 							CFFPlayer *pPlayerTarget = ToFFPlayer ( pTarget );
 							if (pPlayerTarget)
-								pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt(), DMG_BULLET ) );
+								pPlayerTarget->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, LASERGREN_NG_NAILDAMAGE, DMG_BULLET ) );
 						}
 						else if( FF_IsDispenser( pTarget ) )
 						{
 							CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
 							if( pDispenser )
-								pDispenser->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt() * laser_ng_naildamage_buildablemult.GetFloat(), DMG_BULLET ) );
+								pDispenser->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, LASERGREN_NG_NAILDAMAGE * LASERGREN_NG_NAILDAMAGE_BUILDABLEMULT, DMG_BULLET ) );
 						}
 						else if( FF_IsSentrygun( pTarget ) )
 						{
 							CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
 							if( pSentrygun )
-								pSentrygun->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt() * laser_ng_naildamage_buildablemult.GetFloat(), DMG_BULLET ) );
+								pSentrygun->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, LASERGREN_NG_NAILDAMAGE * LASERGREN_NG_NAILDAMAGE_BUILDABLEMULT, DMG_BULLET ) );
 						}
 						else /*if( FF_IsManCannon( pTarget ) )*/
 						{
 							CFFManCannon *pManCannon = FF_ToManCannon( pTarget );
 							if( pManCannon )
-								pManCannon->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, laser_ng_naildamage.GetInt() * laser_ng_naildamage_buildablemult.GetFloat(), DMG_BULLET ) );
+								pManCannon->TakeDamage( CTakeDamageInfo( pNailOwner, pNailGrenOwner, LASERGREN_NG_NAILDAMAGE * LASERGREN_NG_NAILDAMAGE_BUILDABLEMULT, DMG_BULLET ) );
 						}
 					}
 				}
@@ -240,8 +265,8 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual void DoDamage( CBaseEntity *pTarget );
 
-	virtual float GetGrenadeDamage()		{ return explosiondamage.GetFloat(); }
-	virtual float GetGrenadeRadius()		{ return explosionradius.GetFloat(); }
+	virtual float GetGrenadeDamage()		{ return LASERGREN_EXPLOSIONDAMAGE; }
+	virtual float GetGrenadeRadius()		{ return LASERGREN_EXPLOSIONRADIUS; }
 
 
 private:
@@ -301,9 +326,9 @@ void CFFGrenadeLaser::Precache()
 //-----------------------------------------------------------------------------
 float CFFGrenadeLaser::getLengthPercent()
 {
-	float spawnTime = m_flDetonateTime - lasertime.GetFloat();
-	float growTillTime = spawnTime + growTime.GetFloat();
-	float startShrinkTime = m_flDetonateTime - shrinkTime.GetFloat();
+	float spawnTime = m_flDetonateTime - LASERGREN_TIME;
+	float growTillTime = spawnTime + LASERGREN_GROWTIME;
+	float startShrinkTime = m_flDetonateTime - LASERGREN_SHRINKTIME;
 
 	if(gpGlobals->curtime > growTillTime && gpGlobals->curtime < startShrinkTime && m_flDetonateTime > 0)
 	{
@@ -365,12 +390,12 @@ float CFFGrenadeLaser::getLengthPercent()
 			return;
 		}
 
-		SetDetonateTimerLength( lasertime.GetFloat() );
+		SetDetonateTimerLength( LASERGREN_TIME );
 
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);
 
-		if( usenails.GetBool() )
+		if( LASERGREN_USENAILS )
 			SetThink(&CFFGrenadeLaser::NailEmit);
 		else
 		{
@@ -388,7 +413,7 @@ float CFFGrenadeLaser::getLengthPercent()
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
-			if( laserexplode.GetBool() )
+			if( LASERGREN_EXPLODE )
 				Detonate();
 			else
 			{
@@ -401,10 +426,10 @@ float CFFGrenadeLaser::getLengthPercent()
 		float flRisingheight = 0;
 
 		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
-		if (m_flDetonateTime - gpGlobals->curtime > lasertime.GetFloat() - 0.3 && !m_fIsHandheld)
-			flRisingheight = laserjump.GetFloat();
+		if (m_flDetonateTime - gpGlobals->curtime > LASERGREN_TIME - 0.3 && !m_fIsHandheld)
+			flRisingheight = LASERGREN_JUMP;
 
-		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(gpGlobals->curtime * 360 * bobfrequency.GetFloat()))));
+		SetAbsVelocity(Vector(0, 0, flRisingheight + LASERGREN_BOB * sin(DEG2RAD(gpGlobals->curtime * 360 * LASERGREN_BOBFREQ))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, LASERGREN_ROTATION_PER_TICK, 0));
 
 		Vector vecDirection;
@@ -415,15 +440,15 @@ float CFFGrenadeLaser::getLengthPercent()
 		trace_t tr;
 		char i;
 
-		float flDeltaAngle = 360.0f / laserbeams.GetInt();
+		float flDeltaAngle = 360.0f / LASERGREN_BEAMS;
 
-		for( i = 0; i < laserbeams.GetInt(); i++ )
+		for( i = 0; i < LASERGREN_BEAMS; i++ )
 		{
 			AngleVectors(angRadial, &vecDirection);
 			VectorNormalizeFast(vecDirection);
 
 			UTIL_TraceLine( vecOrigin/* + vecDirection * flSize*/, 
-				vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), MASK_SHOT, NULL, COLLISION_GROUP_PLAYER, &tr );
+				vecOrigin + vecDirection * LASERGREN_DISTANCE * getLengthPercent(), MASK_SHOT, NULL, COLLISION_GROUP_PLAYER, &tr );
 
 			if ( tr.m_pEnt )
 				DoDamage( tr.m_pEnt );
@@ -456,19 +481,19 @@ float CFFGrenadeLaser::getLengthPercent()
 				{
 					CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
 					if( pDispenser )
-						pDispenser->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
+						pDispenser->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
 				}
 				else if( FF_IsSentrygun( pTarget ) )
 				{
 					CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
 					if( pSentrygun )
-						pSentrygun->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
+						pSentrygun->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
 				}
 				else /*if( FF_IsManCannon( pTarget ) )*/
 				{
 					CFFManCannon *pManCannon = FF_ToManCannon( pTarget );
 					if( pManCannon )
-						pManCannon->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * laserdamage_buildablemult.GetFloat(), DMG_ENERGYBEAM ) );
+						pManCannon->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
 				}
 			}
 		}
@@ -499,7 +524,7 @@ float CFFGrenadeLaser::getLengthPercent()
 					i++;
 			}
 			else // No hit -- move the nail forward
-				m_NailsVector[i].UpdateNailPosition( laser_ng_nailspeed.GetInt() * ( gpGlobals->curtime - m_flLastThinkTime ) );
+				m_NailsVector[i].UpdateNailPosition( LASERGREN_NG_NAILSPEED * ( gpGlobals->curtime - m_flLastThinkTime ) );
 			//if MAX DISTANCE
 			//	Remove
 		}
@@ -507,7 +532,7 @@ float CFFGrenadeLaser::getLengthPercent()
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
-			if( laserexplode.GetBool() )
+			if( LASERGREN_EXPLODE )
 				Detonate();
 			else
 				UTIL_Remove( this );
@@ -517,10 +542,10 @@ float CFFGrenadeLaser::getLengthPercent()
 		float flRisingheight = 0;
 
 		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
-		if (m_flDetonateTime - gpGlobals->curtime > lasertime.GetFloat() - 0.3 && !m_fIsHandheld)
-			flRisingheight = laserjump.GetFloat();
+		if (m_flDetonateTime - gpGlobals->curtime > LASERGREN_TIME - 0.3 && !m_fIsHandheld)
+			flRisingheight = LASERGREN_JUMP;
 
-		SetAbsVelocity(Vector(0, 0, flRisingheight + laserbob.GetFloat() * sin(DEG2RAD(gpGlobals->curtime * 360 * bobfrequency.GetFloat()))));
+		SetAbsVelocity(Vector(0, 0, flRisingheight + LASERGREN_BOB * sin(DEG2RAD(gpGlobals->curtime * 360 * LASERGREN_BOBFREQ))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, LASERGREN_ROTATION_PER_TICK, 0));
 
 		Vector vecOrigin = GetAbsOrigin();
@@ -528,7 +553,7 @@ float CFFGrenadeLaser::getLengthPercent()
 		// Time to spit out nails again?
 		if( m_flNailSpit < gpGlobals->curtime )
 		{
-			int iArms = laser_ng_arms.GetInt();
+			int iArms = LASERGREN_NG_ARMS;
 			//float flSize = ffdev_nailgren_flatten.GetFloat();
 			float flSize = 20.0f;
 
@@ -538,7 +563,7 @@ float CFFGrenadeLaser::getLengthPercent()
 			//float flOffset = (m_iOffset % laser_ng_streams.GetInt()) - (laser_ng_streams.GetInt() / 2 );
 			//DevMsg("flOffset: %f\n", flOffset);
 			Vector vecDirection, vecOffset;
-			float flOffset = laser_ng_offset.GetFloat();
+			float flOffset = LASERGREN_NG_OFFSET;
 			if( m_iOffset % 2 )
 				flOffset *= -1;
 
@@ -571,7 +596,7 @@ float CFFGrenadeLaser::getLengthPercent()
 
 			m_iOffset++;
 			// Set up next nail spit time
-			m_flNailSpit = gpGlobals->curtime + laser_ng_spittime.GetFloat();
+			m_flNailSpit = gpGlobals->curtime + LASERGREN_NG_SPITTIME;
 		}
 		SetNextThink(gpGlobals->curtime);
 		m_flLastThinkTime = gpGlobals->curtime;
@@ -592,7 +617,7 @@ float CFFGrenadeLaser::getLengthPercent()
 		StopSound("NailGrenade.LaserDeploy");
 
 		int i;
-		for( i = 0; i < laserbeams.GetInt(); i++ )
+		for( i = 0; i < LASERGREN_BEAMS; i++ )
 		{
 			if( pBeam[i] )
 			{
@@ -624,15 +649,15 @@ float CFFGrenadeLaser::getLengthPercent()
 			if (!pgrenOwner)
 				return;
 
-			float flDeltaAngle = 360.0f / laserbeams.GetInt();
+			float flDeltaAngle = 360.0f / LASERGREN_BEAMS;
 		
-			for( i = 0; i < laserbeams.GetInt(); i++ )
+			for( i = 0; i < LASERGREN_BEAMS; i++ )
 			{
 				AngleVectors(angRadial, &vecDirection);
 				VectorNormalizeFast(vecDirection);
 
 				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
-								vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), 
+								vecOrigin + vecDirection * LASERGREN_DISTANCE * getLengthPercent(), 
 								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
 				
 				if( !pBeam[i] )
