@@ -197,8 +197,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeNail, DT_FFGrenadeNail)
 BEGIN_NETWORK_TABLE(CFFGrenadeNail, DT_FFGrenadeNail)
 END_NETWORK_TABLE()
 
-LINK_ENTITY_TO_CLASS(ff_grenade_nail, CFFGrenadeNail);
-PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
+//LINK_ENTITY_TO_CLASS(ff_grenade_nail, CFFGrenadeNail);
+//PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 
 #ifndef CLIENT_DLL
 	//ConVar nailspeed("ffdev_nailspeed", "800", FCVAR_FF_FFDEV_CLIENT);
