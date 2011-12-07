@@ -62,8 +62,8 @@
 	ConVar hud_lasergren_customColor_g( "hud_lasergren_customColor_g", "128", FCVAR_ARCHIVE, "Custom laser color - Green Component(0-255)");
 	ConVar hud_lasergren_customColor_b( "hud_lasergren_customColor_b", "255", FCVAR_ARCHIVE, "Custom laser color - Blue Component(0-255)");
 	ConVar ffdev_lasergren_widthcreate("ffdev_lasergren_widthcreate", "0.5", FCVAR_FF_FFDEV_REPLICATED, "Width given in the constructor; not used");
-	ConVar ffdev_lasergren_widthstart("ffdev_lasergren_widthstart", "6", FCVAR_FF_FFDEV_REPLICATED, "Width at the start of the beam");
-	ConVar ffdev_lasergren_widthend("ffdev_lasergren_widthend", "3", FCVAR_FF_FFDEV_REPLICATED, "Width at the end of the beam");
+	ConVar ffdev_lasergren_widthstart("ffdev_lasergren_widthstart", "8", FCVAR_FF_FFDEV_REPLICATED, "Width at the start of the beam");
+	ConVar ffdev_lasergren_widthend("ffdev_lasergren_widthend", "7", FCVAR_FF_FFDEV_REPLICATED, "Width at the end of the beam");
 	#define LASERGREN_WIDTHCREATE ffdev_lasergren_widthcreate.GetFloat()
 	#define LASERGREN_WIDTHSTART ffdev_lasergren_widthstart.GetFloat()
 	#define LASERGREN_WIDTHEND ffdev_lasergren_widthend.GetFloat()
@@ -83,12 +83,12 @@
 	#define LASERGREN_BOB 10
 	//ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_FF_FFDEV, "Laser grenade update time" );
 	#define LASERGREN_BEAMTIME 0.0f
-
+	//ConVar laserradius( "ffdev_lasergren_laserradius", "8.0", FCVAR_CHEAT, "Laser grenade laser radius" );
+	#define LASERGREN_LASERRADIUS 8.0f
 	//ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_FF_FFDEV, "Use nails instead of lasers" );
 	#define LASERGREN_USENAILS 0
 	//ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_FF_FFDEV, "Bob Frequency");
 	#define LASERGREN_BOBFREQ 0.5f
-	
 	//ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_FF_FFDEV, "Explosion at end of active time");
 	#define LASERGREN_EXPLODE 0
 	//ConVar explosiondamage("ffdev_lasergren_explosiondamage", "90", FCVAR_FF_FFDEV, "Explosion damage at end of active period" );
@@ -432,9 +432,7 @@ float CFFGrenadeLaser::getLengthPercent()
 		SetAbsVelocity(Vector(0, 0, flRisingheight + LASERGREN_BOB * sin(DEG2RAD(gpGlobals->curtime * 360 * LASERGREN_BOBFREQ))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, LASERGREN_ROTATION_PER_TICK, 0));
 
-		Vector vecDirection;
 		Vector vecOrigin = GetAbsOrigin();
-		QAngle angRadial = GetAbsAngles();
 
 		float flSize = 20.0f;
 		trace_t tr;
@@ -442,19 +440,98 @@ float CFFGrenadeLaser::getLengthPercent()
 
 		float flDeltaAngle = 360.0f / LASERGREN_BEAMS;
 
-		for( i = 0; i < LASERGREN_BEAMS; i++ )
+		CBaseEntity *pEntity = NULL;
+		for (CEntitySphereQuery sphere(vecOrigin, LASERGREN_DISTANCE * getLengthPercent() + LASERGREN_LASERRADIUS); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
 		{
-			AngleVectors(angRadial, &vecDirection);
-			VectorNormalizeFast(vecDirection);
+			if (!pEntity)
+				continue;
 
-			UTIL_TraceLine( vecOrigin/* + vecDirection * flSize*/, 
-				vecOrigin + vecDirection * LASERGREN_DISTANCE * getLengthPercent(), MASK_SHOT, NULL, COLLISION_GROUP_PLAYER, &tr );
+			if (pEntity->m_takedamage == DAMAGE_NO) 
+				continue;
 
-			if ( tr.m_pEnt )
-				DoDamage( tr.m_pEnt );
+			// we don't care about weapons, rockets, or projectiles
+			if (pEntity->GetCollisionGroup() == COLLISION_GROUP_WEAPON
+				|| pEntity->GetCollisionGroup() == COLLISION_GROUP_ROCKET
+				|| pEntity->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+				continue;
 
-			angRadial.y += flDeltaAngle;
+			if (pEntity->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+
+				if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+					continue;
+			}
+			if (FF_IsBuildableObject(pEntity))
+			{
+				// Is this a buildable of some sort
+				CFFBuildableObject *pBuildable = FF_ToBuildableObject(pEntity);
+
+				// Skip objects that are building
+				if(pBuildable && !pBuildable->IsBuilt())
+					continue;
+			}
+
+			Vector vecMin = pEntity->WorldAlignMins();
+			Vector vecMax = pEntity->WorldAlignMaxs();
+
+			// check if the entity is below all the lasers
+			if (pEntity->GetAbsOrigin().z + vecMax.z < vecOrigin.z - LASERGREN_LASERRADIUS)
+				continue;
+
+			// check if the entity is above all the lasers
+			if (pEntity->GetAbsOrigin().z + vecMin.z > vecOrigin.z + LASERGREN_LASERRADIUS)
+				continue;
+
+			Vector vecDirection;
+			QAngle angRadial = GetAbsAngles();
+			// check each laser
+			for( i = 0; i < LASERGREN_BEAMS; i++ )
+			{
+				AngleVectors(angRadial, &vecDirection);
+				VectorNormalizeFast(vecDirection);
+
+				Vector vecToEnt = pEntity->GetAbsOrigin() - vecOrigin;
+
+				float dot = DotProduct( vecDirection, vecToEnt );
+
+				// player is behind the laser
+				if (dot < 0)
+				{
+					angRadial.y += flDeltaAngle;
+					continue;
+				}
+
+				Vector vecLaser = vecDirection * LASERGREN_DISTANCE * getLengthPercent();
+				float ratio = DotProduct( vecToEnt, vecLaser ) / DotProduct( vecLaser, vecLaser );
+				Vector vecLaserClosestPoint = vecOrigin + (ratio * vecLaser);
+				
+				Vector point;
+				pEntity->CollisionProp()->CalcNearestPoint( vecLaserClosestPoint, &point );
+				Vector vecDistFromLaser = point - vecLaserClosestPoint;
+				vecDistFromLaser.z = 0;
+
+				//NDebugOverlay::Box(vecLaserClosestPoint, Vector(-2, -2, -2), Vector(2, 2, 2), 0, 0, 255, 127, 4);
+				//NDebugOverlay::Box(point, Vector(-2, -2, -2), Vector(2, 2, 2), 255, 0, 0, 127, 4);
+
+				float dist = vecDistFromLaser.Length();
+
+				// outside of the laser radius
+				if (dist > LASERGREN_LASERRADIUS)
+				{
+					angRadial.y += flDeltaAngle;
+					continue;
+				}
+				
+				DoDamage( pEntity );
+
+				angRadial.y += flDeltaAngle;
+			}
+
+
+
 		}
+
 		SetNextThink( gpGlobals->curtime );
 	}
 
