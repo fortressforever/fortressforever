@@ -294,6 +294,16 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 					CFFDetpack *pDetpack = pPlayer->GetDetpack();
 					if(pDetpack)
 					{
+						Q_snprintf( pszText, iDestLen, "%d", (int)(pDetpack->m_flDetonateTime - gpGlobals->curtime + 1));
+					}
+					return 2;
+				}
+			case 's':
+			case 'S':
+				{
+					CFFDetpack *pDetpack = pPlayer->GetDetpack();
+					if(pDetpack)
+					{
 						Q_snprintf( pszText, iDestLen, "%d", pDetpack->m_iFuseTime);
 					}
 					return 2;
