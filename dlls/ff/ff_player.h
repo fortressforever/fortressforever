@@ -391,6 +391,7 @@ public:
 	bool IsStaticBuilding( void ) const;
 	int GetCurBuild( void ) const;
 	int GetWantBuild( void ) const	{ return m_iWantBuild; }
+	float GetBuildTime( void ) const { return m_flBuildTime; }
 	CFFDetpack *GetDetpack( void ) const;
 	CFFDispenser *GetDispenser( void ) const;
 	CFFSentryGun *GetSentryGun( void ) const;
