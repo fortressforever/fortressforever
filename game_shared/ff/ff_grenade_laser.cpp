@@ -83,8 +83,8 @@
 	#define LASERGREN_BOB 10
 	//ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_FF_FFDEV, "Laser grenade update time" );
 	#define LASERGREN_BEAMTIME 0.0f
-	//ConVar laserradius( "ffdev_lasergren_laserradius", "8.0", FCVAR_CHEAT, "Laser grenade laser radius" );
-	#define LASERGREN_LASERRADIUS 8.0f
+	//ConVar laserradius( "ffdev_lasergren_laserradius", "4.0", FCVAR_CHEAT, "Laser grenade laser radius" );
+	#define LASERGREN_LASERRADIUS 4.0f
 	//ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_FF_FFDEV, "Use nails instead of lasers" );
 	#define LASERGREN_USENAILS 0
 	//ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_FF_FFDEV, "Bob Frequency");
@@ -522,8 +522,15 @@ float CFFGrenadeLaser::getLengthPercent()
 					angRadial.y += flDeltaAngle;
 					continue;
 				}
+
+				//make sure theres nothing in the way
+				trace_t tr;
+				UTIL_TraceLine( vecOrigin, 
+								point, 
+								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
 				
-				DoDamage( pEntity );
+				if (!tr.m_pEnt || tr.m_pEnt == pEntity)
+					DoDamage( pEntity );
 
 				angRadial.y += flDeltaAngle;
 			}
