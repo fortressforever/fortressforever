@@ -294,7 +294,17 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 					CFFDetpack *pDetpack = pPlayer->GetDetpack();
 					if(pDetpack)
 					{
-						Q_snprintf( pszText, iDestLen, "%d", (int)(pDetpack->m_flDetonateTime - gpGlobals->curtime + 1));
+						if (pDetpack->IsBuilt())
+							Q_snprintf( pszText, iDestLen, "%d", (int)(pDetpack->m_flDetonateTime - gpGlobals->curtime + 0.5f) );
+						else
+						{
+							float flBuildTimeLeft = pPlayer->GetBuildTime() - gpGlobals->curtime;
+							Q_snprintf( pszText, iDestLen, "%d", (int)(pDetpack->m_iFuseTime + flBuildTimeLeft + 0.5f) );
+						}
+					}
+					else
+					{
+						Q_snprintf( pszText, iDestLen, "-" );
 					}
 					return 2;
 				}
@@ -305,6 +315,10 @@ inline int FF_ParsePercentCommand( edict_t *pEdict, const char *cCommand, char *
 					if(pDetpack)
 					{
 						Q_snprintf( pszText, iDestLen, "%d", pDetpack->m_iFuseTime);
+					}
+					else
+					{
+						Q_snprintf( pszText, iDestLen, "-" );
 					}
 					return 2;
 				}
