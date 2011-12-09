@@ -70,7 +70,7 @@ ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active t
 	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_NOTIFY, "Laser grenade jump distance" );
 	ConVar laserbob( "ffdev_lasergren_bob", "10", FCVAR_NOTIFY, "Laser grenade bob factor" );
 	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_CHEAT, "Laser grenade update time" );
-	ConVar laserradius( "ffdev_lasergren_laserradius", "8.0", FCVAR_CHEAT, "Laser grenade laser radius" );
+	ConVar laserradius( "ffdev_lasergren_laserradius", "4.0", FCVAR_CHEAT, "Laser grenade laser radius" );
 
 	ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_NOTIFY, "Use nails instead of lasers" );
 	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_NOTIFY, "Bob Frequency");
@@ -498,8 +498,15 @@ float CFFGrenadeLaser::getLengthPercent()
 					angRadial.y += flDeltaAngle;
 					continue;
 				}
+
+				//make sure theres nothing in the way
+				trace_t tr;
+				UTIL_TraceLine( vecOrigin, 
+								point, 
+								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
 				
-				DoDamage( pEntity );
+				if (!tr.m_pEnt || tr.m_pEnt == pEntity)
+					DoDamage( pEntity );
 
 				angRadial.y += flDeltaAngle;
 			}
