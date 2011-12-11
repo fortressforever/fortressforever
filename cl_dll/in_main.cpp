@@ -900,7 +900,7 @@ void CInput::ScaleMovements( CUserCmd *cmd )
 	
 	// SourceTV clients' maxspeed is set to zero, which made it impossible to move in freelook
 	// the commented code below (original SDK code?) has this if check -squeek
-	if (flMaxSpeed == 0)
+	if (pPlayer->IsHLTV() && flMaxSpeed == 0)
 		return;
 
 	if (flSpeed > flMaxSpeed)
