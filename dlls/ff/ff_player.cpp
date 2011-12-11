@@ -1488,6 +1488,12 @@ void CFFPlayer::Spawn( void )
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
 	SetupClassVariables();
+	
+	// equip the HEV suit
+	EquipSuit();
+
+	// Set on ground
+	AddFlag(FL_ONGROUND);
 
 	// Run this after SetupClassVariables in case lua is
 	// manipulating the players' inventory
@@ -1571,15 +1577,6 @@ void CFFPlayer::Spawn( void )
 	CFFLuaSC hFlagInfo;
 	hFlagInfo.Push(this);
 	_scriptman.RunPredicates_LUA(NULL, &hFlagInfo, "flaginfo");
-
-	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
-		RemoveSpeedEffectByIndex( i );
-
-	// equip the HEV suit
-	EquipSuit();
-
-	// Set on ground
-	AddFlag(FL_ONGROUND);
 	
 	// Make sure we don't go running around during the intermission
 	// AfterShock - Commented out to try to prevent mapload respawn frozen
