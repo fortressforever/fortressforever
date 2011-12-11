@@ -25,11 +25,9 @@ bool MathackModelLessFunc( const int &lhs, const int &rhs )
 /////////////////////////////////////////////////////////////////////////////
 // CFFMathackModel
 /////////////////////////////////////////////////////////////////////////////
-CFFMathackModel::CFFMathackModel(int iModelIndex, 
-									studiohdr_t *pStudioPtr)
+CFFMathackModel::CFFMathackModel(int iModelIndex)
 {
 	m_iModelIndex = iModelIndex;
-	m_pStudioPtr = pStudioPtr;
 	m_flLastChecked = 0;
 	m_bIsMathacked = false;
 }
@@ -42,35 +40,41 @@ void CFFMathackModel::CheckForMathack()
 	if (m_bIsMathacked)
 		return;
 
-	if (m_pStudioPtr)
+	const model_t *pModel = modelinfo->GetModel( m_iModelIndex );
+	if (pModel)
 	{
-		for (int i=0; i<m_pStudioPtr->numtextures; i++)
+		studiohdr_t *pStudioPtr = modelinfo->GetStudiomodel( pModel );
+
+		if (pStudioPtr)
 		{
-			mstudiotexture_t *pTex = m_pStudioPtr->pTexture(i);
-			if (pTex)
+			for (int i=0; i<pStudioPtr->numtextures; i++)
 			{
-				// there are way less texture paths (cdtexture) than textures, and there's no way to determine exactly
-				// which cdtexture is associated with which texture
-				// so just loop through all cdtextures for each texture and see if they exist
-				for (int j=0; j<m_pStudioPtr->numcdtextures; j++)
+				mstudiotexture_t *pTex = pStudioPtr->pTexture(i);
+				if (pTex)
 				{
-					char searchPath[MAX_PATH] = "";
-					Q_strcat(searchPath, m_pStudioPtr->pCdtexture(j), MAX_PATH);
-					Q_strcat(searchPath, pTex->pszName(), MAX_PATH);
-					
-					//Msg("[mathack] %s findmaterial: %s\n", m_pStudioPtr->pszName(), searchPath);
-
-					IMaterial *pMat = materials->FindMaterial(searchPath, TEXTURE_GROUP_MODEL);
-					if (pMat)
+					// there are way less texture paths (cdtexture) than textures, and there's no way to determine exactly
+					// which cdtexture is associated with which texture
+					// so just loop through all cdtextures for each texture and see if they exist
+					for (int j=0; j<pStudioPtr->numcdtextures; j++)
 					{
-						//Msg("[mathack] -> material found\n");
-						int ignorezval = (int)(pMat->GetMaterialVarFlag( MATERIAL_VAR_IGNOREZ ));
-						if (ignorezval != 0)
-						{
-							//DevMsg("[mathack] %s -> %s ignorez is true\n", m_pStudioPtr->pszName(), searchPath);
+						char searchPath[MAX_PATH] = "";
+						Q_strcat(searchPath, pStudioPtr->pCdtexture(j), MAX_PATH);
+						Q_strcat(searchPath, pTex->pszName(), MAX_PATH);
+						
+						//Msg("[mathack] %s findmaterial: %s\n", pStudioPtr->pszName(), searchPath);
 
-							m_bIsMathacked = true;
-							ReportMathack();
+						IMaterial *pMat = materials->FindMaterial(searchPath, TEXTURE_GROUP_MODEL);
+						if (pMat)
+						{
+							//Msg("[mathack] -> material found\n");
+							int ignorezval = (int)(pMat->GetMaterialVarFlag( MATERIAL_VAR_IGNOREZ ));
+							if (ignorezval != 0)
+							{
+								//DevMsg("[mathack] %s -> %s ignorez is true\n", pStudioPtr->pszName(), searchPath);
+
+								m_bIsMathacked = true;
+								ReportMathack( pStudioPtr->pszName() );
+							}
 						}
 					}
 				}
@@ -80,7 +84,7 @@ void CFFMathackModel::CheckForMathack()
 	m_flLastChecked = gpGlobals->curtime;
 }
 
-void CFFMathackModel::ReportMathack()
+void CFFMathackModel::ReportMathack( const char *pszModelName )
 {
 	VPROF_BUDGET( "CFFMathackModel::ReportMathack", VPROF_BUDGETGROUP_FF_MATHACKDETECT );
 
@@ -121,7 +125,7 @@ void CFFMathackModel::ReportMathack()
 		"/notifier/mathack.php?steamid=%s&mdl=%s&name=%s&key=donthack",
 
 		sPlayerInfo.guid,
-		m_pStudioPtr->pszName(),
+		pszModelName,
 		pLocalPlayer->GetPlayerName());
 
 	Q_snprintf(buf, sizeof(buf),
@@ -167,7 +171,7 @@ void CFFMathackModel::PrintToConsole()
 	if (m_bIsMathacked)
 		Msg("-> ");
 
-	Msg("%i | %p | %f | %d\n", m_iModelIndex, m_pStudioPtr, m_flLastChecked, m_bIsMathacked);
+	Msg("%i | %f | %d\n", m_iModelIndex, m_flLastChecked, m_bIsMathacked);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -186,8 +190,7 @@ CFFMathackManager::~CFFMathackManager()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void CFFMathackManager::AddMathackModel(int iModelIndex, 
-										studiohdr_t *pStudioPtr)
+void CFFMathackManager::AddMathackModel(int iModelIndex)
 {
 	VPROF_BUDGET( "CFFMathackManager::AddMathackModel", VPROF_BUDGETGROUP_FF_MATHACKDETECT );
 
@@ -195,7 +198,7 @@ void CFFMathackManager::AddMathackModel(int iModelIndex,
 	if(m_models.IsValidIndex(m_models.Find(iModelIndex)))
 		return;
 
-	m_models.Insert( iModelIndex, CFFMathackModel( iModelIndex, pStudioPtr ) );
+	m_models.Insert( iModelIndex, CFFMathackModel( iModelIndex ) );
 }
 
 /////////////////////////////////////////////////////////////////////////////
