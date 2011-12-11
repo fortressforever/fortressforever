@@ -12,21 +12,18 @@ class CFFMathackModel
 {
 public:
 	// 'structors
-	CFFMathackModel(int iModelIndex, studiohdr_t *pStudioPtr);
+	CFFMathackModel(int iModelIndex);
 
 	CFFMathackModel() {}
 	~CFFMathackModel() {}
 
 	void PrintToConsole();
 	void CheckForMathack();
-	void ReportMathack();
+	void ReportMathack( const char *pszModelName );
 	
 	int m_iModelIndex;
 	float m_flLastChecked;
 	bool m_bIsMathacked;
-
-private:
-	studiohdr_t *m_pStudioPtr;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -42,7 +39,7 @@ public:
 	void Update();
 
 	// adds a model
-	void AddMathackModel(int iModelIndex, studiohdr_t *pStudioPtr);
+	void AddMathackModel(int iModelIndex);
 
 	// removes a model
 	void RemoveMathackModel(int iModelIndex);

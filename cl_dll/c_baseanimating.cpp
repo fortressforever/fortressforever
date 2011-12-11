@@ -965,7 +965,7 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 	}
 	
-	_mathackman.AddMathackModel( GetModelIndex(), modelinfo->GetStudiomodel( const_cast<model_t*>(GetModel()) ) );
+	_mathackman.AddMathackModel( GetModelIndex() );
 
 	return hdr;
 }
