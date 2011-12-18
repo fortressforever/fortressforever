@@ -143,7 +143,8 @@ void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
 void CHudBuildState::MsgFunc_SentryMsg(bf_read &msg)
 {
     int iHealth = (int) msg.ReadByte();
-    int iMaxHP = (int) msg.ReadByte();
+    //int iMaxHP = (int) msg.ReadByte();
+	msg.ReadByte();
     //int iArmor = (int) msg.ReadByte();
     //int iAmmo = (int) msg.ReadByte();
 	int iLevel = (int) msg.ReadByte();
