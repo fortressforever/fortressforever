@@ -174,6 +174,10 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 			UTIL_Remove(this);
 			return;
 		}
+#else
+		CFFPlayer *pNadeOwner = ToFFPlayer( GetOwnerEntity() );
+		if (pNadeOwner && pNadeOwner->m_iActiveGrenTimers > 0)
+			pNadeOwner->m_iActiveGrenTimers--;
 #endif
 
 		BaseClass::Detonate();
