@@ -742,7 +742,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 BuildInfoResult_t CFFBuildableInfo::CanBuildOnWall( void ) 
 {
 	Vector vecNormal, vecGround;
-	float flTestDist = 64.0f;
+	//float flTestDist = 64.0f;
 
 	switch( m_iBuildObject )
 	{
