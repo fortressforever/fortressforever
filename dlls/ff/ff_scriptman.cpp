@@ -285,7 +285,7 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 		m_ScriptExists = LoadFile(L, filename);
 	else
 	{
-		Msg("[SCRIPT] File maps\\%s not found! Loaded fallback lua %s\n", filename, default_luafile);
+		Msg("[SCRIPT] File %s not found! Loaded fallback lua %s\n", filename, default_luafile);
 		m_ScriptExists = LoadFile(L, default_luafile);
 	}
 
