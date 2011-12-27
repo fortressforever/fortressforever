@@ -330,10 +330,6 @@ public:
 
 	virtual ShadowType_t ShadowCastType( void );
 
-public:
-	// Dexter: keep track of how many active nade timers we have so we can stop them if needed
-	int m_iActiveGrenTimers;
-
 public:	
 	SpyDisguiseWeapon m_DisguisedWeapons[11];
 	int GetDisguisedClass( void ) const;

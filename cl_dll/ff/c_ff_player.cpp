@@ -403,7 +403,6 @@ void CC_PrimeOne( void )
 
 	//pLocalPlayer->EmitSound( "Grenade.Timer" );
 
-	// grenade.Prime is the click
 	pLocalPlayer->EmitSound("Grenade.Prime");
 
 	CPASAttenuationFilter filter(pLocalPlayer, g_szTimerFile);
@@ -413,6 +412,7 @@ void CC_PrimeOne( void )
 	params.m_flSoundTime = 0.0f;
 	params.m_pflSoundDuration = NULL;
 	params.m_bWarnOnDirectWaveReference = false;
+
 	pLocalPlayer->EmitSound(filter, pLocalPlayer->entindex(), params);
 
 	Assert (g_pGrenade1Timer);
@@ -420,9 +420,7 @@ void CC_PrimeOne( void )
 
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
-	
-	// add to our active nade timers
-	pLocalPlayer->m_iActiveGrenTimers++;
+
 }
 
 void CC_PrimeTwo( void )
@@ -505,8 +503,6 @@ void CC_PrimeTwo( void )
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
 	
-	// add to our active nade timers
-	pLocalPlayer->m_iActiveGrenTimers++;
 }
 void CC_ThrowGren( void )
 {
@@ -1264,8 +1260,6 @@ C_FFPlayer::C_FFPlayer() :
 	
 	m_iHallucinationIndex = 0;
 
-	m_iActiveGrenTimers	= 0;
-
 	for( int i = 0; i < MAX_PLAYERS; i++ )
 	{
 		// -1 = not set
@@ -1518,9 +1512,12 @@ void C_FFPlayer::Spawn( void )
 	// Reset pipebomb counter!
 	GetPipebombCounter()->Reset();
 
+	
+
 	// Stop grenade 1 timers if they're playing
 	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
 	{
+		// TODO: Stop sound
 		if( g_pGrenade1Timer->ActiveTimer() )
 		{
 			g_pGrenade1Timer->ResetTimer();
@@ -1530,28 +1527,12 @@ void C_FFPlayer::Spawn( void )
 	// Stop grenade 2 timers if they're playing
 	if( g_pGrenade2Timer && ( m_iGrenadeState != FF_GREN_PRIMETWO ) )
 	{
+		// TODO: Stop sound
 		if( g_pGrenade2Timer->ActiveTimer() )
 		{
 			g_pGrenade2Timer->ResetTimer();
 		}
 	}
-
-	// Dexter: the grenade timer sound is played as a raw wave on default channel of 0
-	// m_iActiveGrenTimers should always be > 0 if we have a timer still going
-	if (m_iActiveGrenTimers)
-	{
-		const char *timerWavName = cl_timerwav.GetString();
-		char fullTimerWavName[255];
-		Q_snprintf(fullTimerWavName, 255, "timers/%s.wav", timerWavName);
-
-		const int entIndex = entindex();
-		// unsurprisingly, StopSound will only stop one playing sound of hte given name so loop to blast em all.
-		for (int i = 0; i < m_iActiveGrenTimers; i++)
-			StopSound( entIndex, 0, fullTimerWavName);
-	}
-
-	//Now that we've cleared any annoying-ass grenade timer wavs, clear our active count
-	m_iActiveGrenTimers = 0;
 
 	// Jiggles: Start Hint Code
 	// Class Spawn Hints -- Display 7 seconds after spawning

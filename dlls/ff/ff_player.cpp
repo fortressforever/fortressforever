@@ -877,7 +877,7 @@ void CFFPlayer::Precache()
 	PrecacheModel("models/player/civilian/civilian.mdl");
 
 	// Sounds
-	//PrecacheScriptSound("Grenade.Timer");
+	PrecacheScriptSound("Grenade.Timer");
 	PrecacheScriptSound("Grenade.Prime");
 	PrecacheScriptSound("Player.Jump");
 	PrecacheScriptSound("Player.SpyFall");
