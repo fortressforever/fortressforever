@@ -168,6 +168,7 @@ public:
 
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
+	virtual void OnPreDataChanged( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual int  DrawModel( int flags );
 	virtual bool IsOverridingViewmodel( void ) { if( IsCloaked() || IsCloakSmoked() ) return true; else return false; };
@@ -242,6 +243,9 @@ private:
 	//Hold a last weapon?
 	CFFWeaponBase *m_pLastWeaponClient;
 // Called by shared code.
+	// for HUD ammo pickup history
+	int m_iOldPrimary;
+	int m_iOldSecondary;
 public:
 	
 	// IFFPlayerAnimState overrides.

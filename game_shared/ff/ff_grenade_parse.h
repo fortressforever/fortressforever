@@ -46,6 +46,7 @@ public:
 	bool bParsedScript;
 
 	CHudTexture	*iconHud;
+	CHudTexture *iconAmmo;
 };
 
 // The playerclass parse function
