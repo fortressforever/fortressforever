@@ -73,6 +73,7 @@ private:
 	CHudTexture *m_pHudManCannon;
 	CHudTexture *m_pHudDetpack;
 	CHudTexture *m_pHudPipes;
+	CHudTexture *m_pHudMedpacks;
 
 	// Lines of information
 	wchar_t m_szDispenser[128];
@@ -80,17 +81,21 @@ private:
 	wchar_t m_szManCannon[128];
 	wchar_t m_szDetpack[128];
 	wchar_t m_szPipes[128];
+	wchar_t m_szMedpacks[128];
 
 	bool m_bDrawDispenser;
 	bool m_bDrawSentry;
 	bool m_bDrawManCannon;
 	bool m_bDrawDetpack;
 	bool m_bDrawPipes;
+	bool m_bDrawMedpacks;
 
 	int m_iSentryLevel;
     float m_flManCannonTimeoutTime;
     float m_flDetpackDetonateTime;
 	int m_iNumPipes;
+	int m_iNumMedpacks;
+	float m_flMedpackRegenPercent;
 
 	void MsgFunc_DispenserMsg(bf_read &msg);
 	void MsgFunc_SentryMsg(bf_read &msg);

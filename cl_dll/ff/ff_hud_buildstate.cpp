@@ -55,6 +55,10 @@ void CHudBuildState::VidInit()
 	m_pHudPipes = new CHudTexture();
 	m_pHudPipes->textureId = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_pHudPipes->textureId, "vgui/hud_pipe", true, false);
+	
+	m_pHudMedpacks = new CHudTexture();
+	m_pHudMedpacks->textureId = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile(m_pHudMedpacks->textureId, "vgui/hud_medpack", true, false);
 
 	// Precache the strings
 	wchar_t *tempString = vgui::localize()->Find("#FF_HUD_HEALTH");
@@ -113,7 +117,7 @@ void CHudBuildState::OnTick()
 	if (!pPlayer) 
 		return;
 
-	m_bDrawDispenser = m_bDrawSentry = m_bDrawManCannon = m_bDrawDetpack = m_bDrawPipes = false;
+	m_bDrawDispenser = m_bDrawSentry = m_bDrawManCannon = m_bDrawDetpack = m_bDrawPipes = m_bDrawMedpacks = false;
 	m_iSentryLevel = 0;
 
 	C_FFDispenser *pDispenser = pPlayer->GetDispenser();
@@ -122,14 +126,30 @@ void CHudBuildState::OnTick()
 	C_FFDetpack	*pDetpack = pPlayer->GetDetpack();
 
 	m_bDrawDispenser = pDispenser && pDispenser->IsBuilt();
+
 	m_bDrawSentry = pSentryGun && pSentryGun->m_iLevel > 0;
 	if (m_bDrawSentry)
 		m_iSentryLevel = pSentryGun->m_iLevel;
+
 	m_bDrawManCannon = pManCannon && pManCannon->IsBuilt();
+
 	m_bDrawDetpack = pDetpack && pDetpack->IsBuilt();
+
 	if (pPlayer && pPlayer->GetClassSlot() != CLASS_DEMOMAN)
 		m_iNumPipes = 0;
 	m_bDrawPipes = pPlayer && pPlayer->GetClassSlot() == CLASS_DEMOMAN && m_iNumPipes > 0;
+
+	if (pPlayer && pPlayer->GetClassSlot() == CLASS_MEDIC)
+	{
+		m_bDrawMedpacks = true;
+		double numMedpacks;
+		m_flMedpackRegenPercent = modf((double)(pPlayer->GetAmmoCount(AMMO_CELLS) / 10.0f), &numMedpacks);
+		m_iNumMedpacks = (int)numMedpacks;
+	}
+	else
+	{
+		m_bDrawMedpacks = false;
+	}
 }
 
 void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
@@ -199,7 +219,7 @@ void CHudBuildState::MsgFunc_PipeMsg(bf_read &msg)
 
 void CHudBuildState::Paint() 
 {
-	if (!m_bDrawDispenser && !m_bDrawSentry && !m_bDrawManCannon && !m_bDrawDetpack && !m_bDrawPipes) 
+	if (!m_bDrawDispenser && !m_bDrawSentry && !m_bDrawManCannon && !m_bDrawDetpack && !m_bDrawPipes && !m_bDrawMedpacks) 
 		return;
 
 	// Draw icons
@@ -243,6 +263,12 @@ void CHudBuildState::Paint()
 	if (m_bDrawPipes) 
 	{
 		surface()->DrawSetTexture(m_pHudPipes->textureId);
+		surface()->DrawTexturedRect(icon2_xpos, icon2_ypos, icon2_xpos + icon2_width, icon2_ypos + icon2_height);
+	}
+
+	if (m_bDrawMedpacks) 
+	{
+		surface()->DrawSetTexture(m_pHudMedpacks->textureId);
 		surface()->DrawTexturedRect(icon2_xpos, icon2_ypos, icon2_xpos + icon2_width, icon2_ypos + icon2_height);
 	}
 
@@ -295,5 +321,34 @@ void CHudBuildState::Paint()
 
 		for (wchar_t *wch = m_szPipes; *wch != 0; wch++) 
 			surface()->DrawUnicodeChar(*wch);
+	}
+	
+	if (m_bDrawMedpacks) 
+	{
+		surface()->DrawSetTextPos(text2_xpos, text2_ypos);
+
+		_snwprintf(m_szMedpacks, 127, L"%i / %i Tossable Medpacks", m_iNumMedpacks, 5 );
+
+		for (wchar_t *wch = m_szMedpacks; *wch != 0; wch++) 
+			surface()->DrawUnicodeChar(*wch);
+		
+		if( m_flMedpackRegenPercent > 0.0f )
+		{
+			int stringWidth = UTIL_ComputeStringWidth( m_hTextFont, m_szMedpacks );
+			int fontTall = surface()->GetFontTall( m_hTextFont );
+			Color clr = GetFgColor();
+
+			int iWidth = 30;
+			int iLeft = text2_xpos + stringWidth + 10;
+			int iTop = text2_ypos;
+			int iRight = iLeft + (iWidth);
+			int iBottom = iTop + fontTall;
+
+			surface()->DrawSetColor( clr.r(), clr.g(), clr.b(), 150 );
+			surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (m_flMedpackRegenPercent)), iBottom );
+
+			surface()->DrawSetColor( clr.r(), clr.g(), clr.b(), 200 );		
+			surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+		}
 	}
 }
