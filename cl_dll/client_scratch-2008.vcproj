@@ -4943,7 +4943,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\ff\vgui\ff_frame.cpp"
+					RelativePath=".\ff\vgui\ff_frame.h"
 					>
 				</File>
 				<File

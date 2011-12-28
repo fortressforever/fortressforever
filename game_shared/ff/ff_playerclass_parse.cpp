@@ -277,6 +277,8 @@ CFFPlayerClassInfo::CFFPlayerClassInfo()
 	
 	m_iSpeed = 500;
 
+	m_iFirepower = 0;
+
 	m_iNumSkills = m_iNumWeapons = m_iNumAmmos = 0;
 
 	m_szPrimaryClassName[0] = 0;
@@ -317,6 +319,9 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 
 	// Speed
 	m_iSpeed			= pKeyValuesData->GetInt("speed", 0);
+
+	// Firepower
+	m_iFirepower		= pKeyValuesData->GetInt("firepower", 0);
 
 	// Grenade types
 	Q_strncpy(m_szPrimaryClassName, pKeyValuesData->GetString("primary_classname", "None"), MAX_PLAYERCLASS_STRING);

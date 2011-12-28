@@ -3351,11 +3351,11 @@
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
@@ -3679,11 +3679,11 @@
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
@@ -4942,7 +4942,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\ff\vgui\ff_frame.cpp"
+					RelativePath=".\ff\vgui\ff_frame.h"
 					>
 				</File>
 				<File

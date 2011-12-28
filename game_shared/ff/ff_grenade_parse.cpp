@@ -227,6 +227,8 @@ CFFGrenadeInfo::CFFGrenadeInfo()
 	// Added defaults here
 	iconHud = NULL;
 	iconAmmo = NULL;
+
+	Q_strncpy(szPrintName, "None", MAX_GRENADE_STRING);
 }
 
 void FreeHudTextureList(CUtlDict<CHudTexture *, int>& list);
@@ -239,6 +241,8 @@ void CFFGrenadeInfo::Parse(KeyValues *pKeyValuesData, const char *szGrenadeName)
 {
 	// Okay, we tried at least once to look this up...
 	bParsedScript = true;
+
+	Q_strncpy(szPrintName, pKeyValuesData->GetString("printname", GRENADE_PRINTNAME_MISSING), MAX_GRENADE_STRING);
 
 #ifdef CLIENT_DLL
 	char sz[256];
