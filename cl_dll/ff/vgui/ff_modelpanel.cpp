@@ -23,6 +23,8 @@
 #include "ff_playerclass_parse.h"
 #include "ff_weapon_parse.h"
 
+#include "ff_utils.h"
+
 #include <igameresources.h>
 
 extern IFileSystem **pFilesystem;
@@ -262,11 +264,11 @@ void PlayerModelPanel::SetClass(const char *pszClassname)
 		return;
 
 	// Use the last weapon as their primary
-	const char *pszWeapon = pClassInfo->m_aWeapons[pClassInfo->m_iNumWeapons - 1];
+	const char *pszWeapon = FF_GetDefaultWeapon(pszClassname); //pClassInfo->m_aWeapons[pClassInfo->m_iNumWeapons - 1];
 
 	// Now load the weapon info
 	WEAPON_FILE_INFO_HANDLE hWeaponInfo;
-	bReadInfo = ReadWeaponDataFromFileForSlot(*pFilesystem, pszWeapon, &hWeaponInfo, g_pGameRules->GetEncryptionKey());
+	bReadInfo = ReadWeaponDataFromFileForSlot(*pFilesystem, VarArgs("ff_weapon_%s", pszWeapon), &hWeaponInfo, g_pGameRules->GetEncryptionKey());
 
 	if (!bReadInfo)
 		return;

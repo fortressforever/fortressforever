@@ -87,6 +87,9 @@ const char *Class_IntToPrintString( int iClassIndex );
 const char *FF_GetPrimaryName( int iClassIndex );
 const char *FF_GetSecondaryName( int iClassIndex );
 
+const char *FF_GetDefaultWeapon( int iClassIndex );
+const char *FF_GetDefaultWeapon( const char *classname );
+
 void SetColorByTeam( int iTeam, Color& cColor );
 Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor );
 

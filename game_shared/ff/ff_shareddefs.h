@@ -20,6 +20,17 @@
 #define FF_PLAYER_VIEW_OFFSET	Vector( 0, 0, 53.5 )
 #define EXTRA_LOCAL_ORIGIN_ACCURACY
 
+#define DEFAULTWEAPON_SCOUT "jumpdown"
+#define DEFAULTWEAPON_SNIPER "sniperrifle"
+#define DEFAULTWEAPON_SOLDIER "rpg"
+#define DEFAULTWEAPON_DEMOMAN "grenadelauncher"
+#define DEFAULTWEAPON_MEDIC "supernailgun"
+#define DEFAULTWEAPON_HWGUY "assaultcannon"
+#define DEFAULTWEAPON_PYRO "flamethrower"
+#define DEFAULTWEAPON_ENGINEER "railgun"
+#define DEFAULTWEAPON_SPY "hookgun"
+#define DEFAULTWEAPON_CIVILIAN "tommygun"
+
 // Leave this commented out unless you're compiling for the beta testers!
 // Mulch or Mirv should be the only ones messing with this!
 
