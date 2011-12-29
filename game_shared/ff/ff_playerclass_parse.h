@@ -62,6 +62,7 @@ public:
 
 	char					m_szClassName[MAX_PLAYERCLASS_STRING];
 	char					m_szPrintName[MAX_PLAYERCLASS_STRING];
+	char					m_szRole[MAX_PLAYERCLASS_STRING];
 	char					m_szDescription[MAX_PLAYERCLASS_STRING_LONG];
 	char					m_szModel[MAX_PLAYERCLASS_STRING];
 	

@@ -206,6 +206,8 @@ public:
 
 		//SetTextInset(10, 7);
 		SetContentAlignment(a_west);
+		m_pProgressBar->SetSize( GetWide() - 100, GetTall() );
+		m_pProgressBar->SetPos( 100, 0 );
 	}
 
 	void SetMaxValue( float flMaxValue )
@@ -220,13 +222,9 @@ public:
 
 	virtual void Paint()
 	{
-		SetContentAlignment(a_west);
-		m_pProgressBar->SetSize( GetWide() - 100, GetTall() );
-		m_pProgressBar->SetPos( 100, 0 );
 		m_pProgressBar->SetProgress( clamp( m_flValue / m_flMax, 0.0f, 1.0f ) );
-		Color clr = GetFgColor();
 		m_pProgressBar->SetBgColor( Color( 0,0,0, 100 ) );
-		m_pProgressBar->SetFgColor( getIntensityColor((int)(m_flValue/m_flMax * 100), 255, 2, 100, 50, 60, 75, 90, 0) );
+		m_pProgressBar->SetFgColor( getIntensityColor((int)(m_flValue/m_flMax * 100), 255, 2, 100, 25, 50, 70, 90, 0) );
 
 		BaseClass::Paint();
 	}
@@ -316,11 +314,15 @@ CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS)
 	SetTitleBarVisible(false);
 
 	// info window about this class
-	m_pPanel = new Panel(this, "ClassInfo");
-	m_pPanel->SetFgColor(Color(255, 255, 255, 255));
+	m_pClassInfo = new RichText(this, "ClassInfo");
+	m_pClassInfo->SetVerticalScrollbar(false);
+	m_pClassInfo->SetBgColor(Color(0,0,0,50));
+	m_pClassInfo->SetPaintBorderEnabled(true);
+	m_pClassInfo->SetPaintBackgroundEnabled(true);
+	m_pClassInfo->SetPaintBackgroundType(2);
 
 	m_pCancelButton = new FFButton(this, "CancelButton", "#FF_CANCEL");
-	m_pRandomButton = new FFButton(this, "RandomButton", "#FF_RANDOM");
+	m_pRandomButton = new MouseOverButton(this, "RandomButton", "#FF_RANDOM", this, "RandomButton");
 
 	m_pPrimaryGren = new LoadoutLabel(this, "PrimaryGren", "Primary");
 	m_pSecondaryGren = new LoadoutLabel(this, "SecondaryGren", "Secondary");
@@ -328,6 +330,9 @@ CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS)
 	m_pGrenadesSection = new Section( this, "GrenadesSection" );
 	m_pWeaponsSection = new Section( this, "WeaponsSection" );
 	m_pClassInfoSection = new Section( this, "ClassInfoSection" );
+	m_pClassRoleSection = new Section( this, "ClassRoleSection" );
+
+	m_pClassRole = new Label( this, "ClassRole", "" );
 	
 	for(int i=0; i<8; i++)
 	{
@@ -342,7 +347,7 @@ CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS)
 	}
 
 	m_pSpeed = new ClassPropertiesLabel(this, "SpeedLabel", "Speed");
-	m_pSpeed->SetMaxValue( 400 );
+	m_pSpeed->SetMaxValue( 400 - 180 );
 	m_pFirepower = new ClassPropertiesLabel(this, "FirepowerLabel", "Firepower");
 	m_pFirepower->SetMaxValue( 100 );
 	m_pHealth = new ClassPropertiesLabel(this, "HealthLabel", "Health");
@@ -414,7 +419,6 @@ void CClassMenu::ShowPanel(bool bShow)
 	{
 		SetVisible(false);
 		SetMouseInputEnabled(false);
-		m_pModelView->Reset();
 		Reset();
 	}
 }
@@ -429,6 +433,9 @@ void CClassMenu::Reset()
 
 void CClassMenu::SetClassInfoVisible( bool state )
 {
+	if (state == false)
+		m_pModelView->Reset();
+
 	m_pPrimaryGren->SetVisible(state);
 	m_pSecondaryGren->SetVisible(state);
 
@@ -438,10 +445,13 @@ void CClassMenu::SetClassInfoVisible( bool state )
 	m_pSpeed->SetVisible(state);
 	m_pFirepower->SetVisible(state);
 	m_pHealth->SetVisible(state);
+	m_pClassInfo->SetVisible(state);
+	m_pClassRole->SetVisible(state);
 	
 	m_pGrenadesSection->SetVisible(state);
 	m_pWeaponsSection->SetVisible(state);
 	m_pClassInfoSection->SetVisible(state);
+	m_pClassRoleSection->SetVisible(state);
 }
 
 //-----------------------------------------------------------------------------
@@ -554,6 +564,12 @@ void CClassMenu::OnMouseOverMessage(KeyValues *data)
 //-----------------------------------------------------------------------------
 void CClassMenu::UpdateClassInfo(const char *pszClassName)
 {
+	if (Q_stricmp(pszClassName, "randompc") == 0)
+	{
+		SetClassInfoVisible(false);
+		return;
+	}
+
 	m_pModelView->SetClass(pszClassName);
 	SetClassInfoVisible(true);
 	
@@ -574,9 +590,13 @@ void CClassMenu::UpdateClassInfo(const char *pszClassName)
 	if (!pClassInfo)
 		return;
 
-	m_pSpeed->SetValue( pClassInfo->m_iSpeed );
+	m_pSpeed->SetValue( pClassInfo->m_iSpeed - 180 );
 	m_pHealth->SetValue( pClassInfo->m_iHealth + pClassInfo->m_iMaxArmour );
 	m_pFirepower->SetValue( pClassInfo->m_iFirepower );
+
+	m_pClassInfo->SetText( pClassInfo->m_szDescription );
+
+	m_pClassRole->SetText( pClassInfo->m_szRole );
 
 	for (int i=0; i<8; i++)
 		m_WepSlots[i]->SetVisible(false);

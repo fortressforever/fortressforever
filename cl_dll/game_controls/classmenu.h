@@ -36,6 +36,7 @@ namespace vgui
 	class FFButton;
 	class ProgressBar;
 	class Section;
+	class RichText;
 }
 
 //-----------------------------------------------------------------------------
@@ -82,13 +83,13 @@ protected:
 
 	IViewPort		*m_pViewPort;
 
-	vgui::Panel		*m_pPanel;
+	vgui::RichText	*m_pClassInfo;
 
 	float			m_flNextUpdate;
 
 	MouseOverButton	*m_pClassButtons[10];
 	vgui::FFButton	*m_pCancelButton;
-	vgui::FFButton	*m_pRandomButton;
+	MouseOverButton	*m_pRandomButton;
 
 	LoadoutLabel *m_pPrimaryGren;
 	LoadoutLabel *m_pSecondaryGren;
@@ -100,10 +101,13 @@ protected:
 	ClassPropertiesLabel *m_pHealth;
 
 	vgui::PlayerModelPanel	*m_pModelView;
+
+	vgui::Label *m_pClassRole;
 	
 	vgui::Section *m_pGrenadesSection;
 	vgui::Section *m_pWeaponsSection;
 	vgui::Section *m_pClassInfoSection;
+	vgui::Section *m_pClassRoleSection;
 
 	//virtual vgui::Panel *CreateControlByName(const char *controlName);
 	//MouseOverPanelButton * CreateNewMouseOverPanelButton(vgui::Panel *panel);

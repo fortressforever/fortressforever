@@ -306,6 +306,7 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 
 	// Printable name & description
 	Q_strncpy(m_szPrintName, pKeyValuesData->GetString("printname", PLAYERCLASS_PRINTNAME_MISSING), MAX_PLAYERCLASS_STRING);
+	Q_strncpy(m_szRole, pKeyValuesData->GetString("role", PLAYERCLASS_PRINTNAME_MISSING), MAX_PLAYERCLASS_STRING);
 	Q_strncpy(m_szDescription, pKeyValuesData->GetString("description", PLAYERCLASS_PRINTNAME_MISSING), MAX_PLAYERCLASS_STRING_LONG);
 
 	// View model & world model
