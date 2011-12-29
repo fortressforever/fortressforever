@@ -25,6 +25,8 @@
 	#include "ff_player.h"
 #endif
 
+#include "IEffects.h" // DELETE
+
 //=============================================================================
 // CFFWeaponSuperNailgun
 //=============================================================================
@@ -82,12 +84,37 @@ void CFFWeaponSuperNailgun::Fire()
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
-	Vector	vForward, vRight, vUp;
-	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	Vector vecShootOrigin = pPlayer->Weapon_ShootPosition();
 
-	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 4.0f + vUp * -5.0f;
+	Vector vecSpawnOrigin;
+	CBaseViewModel *vm = pPlayer->GetViewModel();
+	vm->GetAttachment(vm->LookupAttachment("1"), vecSpawnOrigin, QAngle());
 
-	CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	// Trace is to check if the gun is sticking out the other side of a thin object, bullets will spawn at the muzzleflash attachment if it's safe.
+	trace_t tr;
+	UTIL_TraceLine(vecShootOrigin, vecSpawnOrigin, MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &tr);
+	if(tr.fraction != 1.0f)
+	{
+		// Nail spawned on other side of object, force the nail to spawn at the weapon shoot position.
+		vecSpawnOrigin = vecShootOrigin;
+	}
+
+	// Another trace to get the point the nail will eventually end.
+	Vector vecForward;
+	pPlayer->EyeVectors(&vecForward);
+	UTIL_TraceLine(vecShootOrigin, vecShootOrigin + (vecForward * 32768), MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+
+	// TODO: Trace a line from the vecSpawnOrigin to tr.endpos, if something is in the way then set vecSpawnOrigin to vecShootOrigin.
+	// TODO: If we moved vecSpawnOrigin to vecShootOrigin in the first trace or this trace, then move the nailgun model so it shoots from that position (sort of like iron sights).
+	// -->
+	// <--
+
+	// Get the angle the nail should be, this also determines the nails end position (since velocity is set based on angle).
+	QAngle nailAngles;
+	VectorAngles((tr.endpos - vecSpawnOrigin), nailAngles);
+
+	CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, vecSpawnOrigin, nailAngles, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 	pNail;
 
 #ifdef GAME_DLL
