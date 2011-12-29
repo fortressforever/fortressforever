@@ -160,6 +160,8 @@ public:
 	virtual void	LevelShutdown( void );
 	
 	virtual void	CreateStandardEntities();
+	
+	virtual void	ClientSettingsChanged( CBasePlayer *pPlayer );
 
 //private:
 //	CFFMapFilter	m_hMapFilter;
