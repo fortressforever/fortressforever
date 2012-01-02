@@ -574,6 +574,33 @@ CBasePlayer* UTIL_PlayerByUserId( int userID )
 	return NULL;
 }
 
+CBasePlayer* UTIL_PlayerBySteamID( const char *steamid )
+{
+	if ( !steamid || !steamid[0] )
+		return NULL;
+
+	for (int i = 1; i<=gpGlobals->maxClients; i++ )
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+		
+		if ( !pPlayer )
+			continue;
+
+		if ( !pPlayer->IsConnected() )
+			continue;
+
+		if( !engine )
+			continue;
+
+		if ( Q_stricmp( engine->GetPlayerNetworkIDString( pPlayer->edict() ), steamid ) == 0 )
+		{
+			return pPlayer;
+		}
+	}
+	
+	return NULL;
+}
+
 //
 // Return the local player.
 // If this is a multiplayer game, return NULL.
