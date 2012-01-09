@@ -167,7 +167,7 @@ void ClientModeFFNormal::FireGameEvent( IGameEvent *pEvent )
 	if( Q_strcmp( "ff_restartround", pszEventName ) == 0 )
 	{
 		// Set up current round offset for client
-		float flCurtime = pEvent->GetFloat( "curtime" );
+		//float flCurtime = pEvent->GetFloat( "curtime" );
 
 		// Recreate all client side physics props
 		C_PhysPropClientside::RecreateAll();
