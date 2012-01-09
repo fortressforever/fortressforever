@@ -143,7 +143,7 @@ public:
 // Functions to verify the single/multiplayer status of a game
 	virtual bool IsMultiplayer( void ) = 0;// is this a multiplayer game? (either coop or deathmatch)
 
-	virtual const unsigned char *GetEncryptionKey() { return NULL; }
+	virtual const unsigned char *GetEncryptionKey() { return (const unsigned char *)"saxEWr5v"; }
 #ifdef CLIENT_DLL
 
 	// --> Mirv: Clientside rules

@@ -251,7 +251,7 @@ void PlayerModelPanel::SetClass(const char *pszClassname)
 		return;
 
 	PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
-	bool bReadInfo = ReadPlayerClassDataFromFileForSlot(*pFilesystem, pszClassname, &hClassInfo, NULL);
+	bool bReadInfo = ReadPlayerClassDataFromFileForSlot(*pFilesystem, pszClassname, &hClassInfo, g_pGameRules->GetEncryptionKey());
 
 	if (!bReadInfo)
 		return;
@@ -266,7 +266,7 @@ void PlayerModelPanel::SetClass(const char *pszClassname)
 
 	// Now load the weapon info
 	WEAPON_FILE_INFO_HANDLE hWeaponInfo;
-	bReadInfo = ReadWeaponDataFromFileForSlot(*pFilesystem, pszWeapon, &hWeaponInfo, NULL);
+	bReadInfo = ReadWeaponDataFromFileForSlot(*pFilesystem, pszWeapon, &hWeaponInfo, g_pGameRules->GetEncryptionKey());
 
 	if (!bReadInfo)
 		return;
