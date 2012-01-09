@@ -37,6 +37,11 @@
 #endif
 
 
+	// Dexter - moved and renamed these from the laser gren stuff 
+	//			.. for some reason the FX was using laser ones for old nail gren still
+	ConVar ffdev_ng_offset("ffdev_ng_offset", "8", FCVAR_REPLICATED | FCVAR_CHEAT, "Stream offset" );
+	ConVar ffdev_ng_nailspeed("ffdev_ng_nailspeed", "1000", FCVAR_REPLICATED | FCVAR_CHEAT );
+	ConVar ffdev_ng_arms( "ffdev_ng_arms", "3", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 #ifdef GAME_DLL
 
@@ -51,7 +56,6 @@
 	ConVar ffdev_ng_nail_bounds("ffdev_ng_nail_bounds", "5.0", FCVAR_FF_FFDEV_REPLICATED, "NG Nails bbox");
 	ConVar ffdev_ng_visualizenails("ffdev_ng_visualizenails", "0", FCVAR_FF_FFDEV, "Show NG nails trace");
 	ConVar ffdev_ng_nail_length("ffdev_ng_nail_length", "5.0", FCVAR_FF_FFDEV, "Length of NG nails");
-
 
 //-------------------------------------------------------------------------------------------------------
 // Simulates a nail as a tracehull moving in a straight line until it hits something
