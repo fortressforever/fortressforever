@@ -61,10 +61,11 @@
 #endif
 
 #ifdef GAME_DLL
-	//ConVar laserdamage("ffdev_lasergren_damage", "660", FCVAR_FF_FFDEV, "Damage of laser");
-	#define LASERGREN_DAMAGE_PER_TICK 660.0f*gpGlobals->interval_per_tick
-	//ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "0.53", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
-	#define LASERGREN_DAMAGE_BUILDABLEMULT 0.53f
+	ConVar laserdamage("ffdev_lasergren_damage", "45", FCVAR_FF_FFDEV, "Damage of laser");
+	#define LASERGREN_DAMAGE laserdamage.GetFloat()
+	#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
+	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "0.53", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
+	#define LASERGREN_DAMAGE_BUILDABLEMULT laserdamage_buildablemult.GetFloat() //0.53f
 	//ConVar laserangv("ffdev_lasergren_angv", "120", FCVAR_FF_FFDEV, "Laser angular increment");
 	#define LASERGREN_ROTATION_PER_TICK 120.0f*gpGlobals->interval_per_tick
 	//ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_FF_FFDEV, "Laser grenade jump distance" );
@@ -85,6 +86,8 @@
 	#define LASERGREN_EXPLOSIONDAMAGE 90.0f
 	//ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_FF_FFDEV, "Explosion radius at end of active period" );
 	#define LASERGREN_EXPLOSIONRADIUS 180.0f
+	ConVar ffdev_lasergren_hitdelay("ffdev_lasergren_hitdelay", "0.15", FCVAR_FF_FFDEV, "Delay between ticks of damage");
+	#define LASERGREN_HITDELAY ffdev_lasergren_hitdelay.GetFloat()
 #endif
 
 class CFFGrenadeLaser : public CFFGrenadeBase
@@ -124,12 +127,16 @@ public:
 	virtual float GetGrenadeDamage()		{ return LASERGREN_EXPLOSIONDAMAGE; }
 	virtual float GetGrenadeRadius()		{ return LASERGREN_EXPLOSIONRADIUS; }
 
+	bool SetNextHitTime( CBaseEntity *pEntity, float flDelay );
+	void ClearHitTimes();
+
 protected:
 	float	m_flBeams;
 	float	m_flNailSpit;
 	float	m_flAngleOffset;
 	int		m_iOffset;
 	float	m_flLastThinkTime;
+	CUtlMap<CBaseEntity*, float>	m_HitEntities;
 
 #endif
 };
@@ -221,7 +228,39 @@ float CFFGrenadeLaser::getLengthPercent()
 		m_iOffset = 0;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
 
+		SetDefLessFunc( m_HitEntities );
+		ClearHitTimes();
 		m_bPlayingDeploySound = 0;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Set the next time a player is able to be damaged
+	//			Doubles as a check if we can hit them
+	//-----------------------------------------------------------------------------
+	bool CFFGrenadeLaser::SetNextHitTime( CBaseEntity *pEntity, float flDelay )
+	{
+		if (!pEntity)
+			return false;
+
+		int index = m_HitEntities.Find(pEntity);
+
+		// already added
+		if (index != m_HitEntities.InvalidIndex())
+		{
+			float flNextHit = m_HitEntities.Element( index );
+
+			// not able to hit yet
+			if (gpGlobals->curtime < flNextHit)
+				return false;
+		}
+		
+		m_HitEntities.InsertOrReplace(pEntity, gpGlobals->curtime + flDelay);
+		return true;
+	}
+
+	void CFFGrenadeLaser::ClearHitTimes( void )
+	{
+		m_HitEntities.RemoveAll();
 	}
 
 	//-----------------------------------------------------------------------------
@@ -260,7 +299,8 @@ float CFFGrenadeLaser::getLengthPercent()
 			else
 			{
 				g_pEffects->EnergySplash(GetAbsOrigin(), Vector(0, 0, 1.0f), true);
-				UTIL_Remove( this );
+				SetThink( &CBaseGrenade::SUB_Remove );
+				SetNextThink( gpGlobals->curtime );
 			}
 			return;
 		}
@@ -274,7 +314,9 @@ float CFFGrenadeLaser::getLengthPercent()
 		SetAbsVelocity(Vector(0, 0, flRisingheight + LASERGREN_BOB * sin(DEG2RAD(gpGlobals->curtime * 360 * LASERGREN_BOBFREQ))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, LASERGREN_ROTATION_PER_TICK, 0));
 
+		Vector vecDirection;
 		Vector vecOrigin = GetAbsOrigin();
+		QAngle angRadial = GetAbsAngles();
 
 		//float flSize = 20.0f;
 		trace_t tr;
@@ -291,17 +333,19 @@ float CFFGrenadeLaser::getLengthPercent()
 			if (pEntity->m_takedamage == DAMAGE_NO) 
 				continue;
 
-			// we don't care about weapons, rockets, or projectiles
-			if (pEntity->GetCollisionGroup() == COLLISION_GROUP_WEAPON
-				|| pEntity->GetCollisionGroup() == COLLISION_GROUP_ROCKET
-				|| pEntity->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+			// only interested in players, dispensers & sentry guns
+			if ( !(pEntity->IsPlayer() || pEntity->Classify() == CLASS_DISPENSER || pEntity->Classify() == CLASS_SENTRYGUN || pEntity->Classify() == CLASS_MANCANNON) )
+				continue;
+
+			// If pTarget can take damage from nails...
+			if ( !g_pGameRules->FCanTakeDamage( pEntity, ToFFPlayer( GetOwnerEntity() ) ) )
 				continue;
 
 			if (pEntity->IsPlayer())
 			{
 				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
 
-				if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+				if( pPlayer && (!pPlayer->IsAlive() || pPlayer->IsObserver()) )
 					continue;
 			}
 			if (FF_IsBuildableObject(pEntity))
@@ -390,6 +434,9 @@ float CFFGrenadeLaser::getLengthPercent()
 	void CFFGrenadeLaser::DoDamage( CBaseEntity *pTarget )
 	{
 		if (!pTarget)
+			return;
+
+		if( !SetNextHitTime( pTarget, LASERGREN_HITDELAY ) )
 			return;
 
 		// only interested in players, dispensers & sentry guns
