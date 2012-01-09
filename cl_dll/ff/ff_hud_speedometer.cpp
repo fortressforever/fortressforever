@@ -12,6 +12,8 @@
 #include "iclientmode.h"
 #include "iclientvehicle.h"
 #include "ammodef.h"
+#include "ff_utils.h"
+#include "ff_shareddefs.h" //added to use colors stored within!
 
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
@@ -25,10 +27,6 @@
 // ELMO *** 
 #define BHOP_CAP_SOFT 1.4f // as defined in ff_gamemovement.cpp
 #define BHOP_CAP_HARD 2.0f // as defined in ff_gamemovement.cpp
-#define SPEEDO_COLOR_RED Color(255,0,0,255)
-#define SPEEDO_COLOR_ORANGE Color(255,128,0,255)
-#define SPEEDO_COLOR_GREEN Color(0,255,0,255)
-#define SPEEDO_COLOR_DEFAULT Color(255,255,255,255)
 // *** ELMO
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -170,19 +168,22 @@ void CHudSpeedometer::Paint()
 	if( hud_speedometer.GetBool() )
 	{
 		if( m_iVelocity > BHOP_CAP_HARD * maxVelocity && hud_speedometer_color.GetInt() > 0) // above hard cap
-			speedColor = SPEEDO_COLOR_RED;
+			speedColor = INTENSITYSCALE_COLOR_RED;
 		else if(m_iVelocity-1  > BHOP_CAP_SOFT * maxVelocity && hud_speedometer_color.GetInt() > 0) // above soft cap
 			if(hud_speedometer_color.GetInt() == 2)
-				speedColor = ColorFade( m_iVelocity, BHOP_CAP_SOFT*maxVelocity, BHOP_CAP_HARD*maxVelocity, SPEEDO_COLOR_ORANGE, SPEEDO_COLOR_RED );
+				speedColor = ColorFade( m_iVelocity, BHOP_CAP_SOFT*maxVelocity, BHOP_CAP_HARD*maxVelocity, INTENSITYSCALE_COLOR_ORANGE, INTENSITYSCALE_COLOR_RED );
 			else
-				speedColor = SPEEDO_COLOR_ORANGE;	
+				speedColor = INTENSITYSCALE_COLOR_ORANGE;	
 		else if( m_iVelocity > maxVelocity && hud_speedometer_color.GetInt() > 0) // above max run speed
 			if(hud_speedometer_color.GetInt() == 2)
-				speedColor = ColorFade( m_iVelocity, maxVelocity, BHOP_CAP_SOFT*maxVelocity, SPEEDO_COLOR_GREEN, SPEEDO_COLOR_ORANGE );
+				if( m_iVelocity > (maxVelocity+3*(BHOP_CAP_SOFT*maxVelocity - maxVelocity)/4) && hud_speedometer_color.GetInt() > 0) // above max run speed
+					speedColor = ColorFade( m_iVelocity, maxVelocity+3*(BHOP_CAP_SOFT*maxVelocity - maxVelocity)/4, BHOP_CAP_SOFT*maxVelocity, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_ORANGE );
+				else
+					speedColor = ColorFade( m_iVelocity, maxVelocity, maxVelocity+3*(BHOP_CAP_SOFT*maxVelocity - maxVelocity)/4, INTENSITYSCALE_COLOR_GREEN, INTENSITYSCALE_COLOR_YELLOW );
 			else
-				speedColor = SPEEDO_COLOR_GREEN;
+				speedColor = INTENSITYSCALE_COLOR_GREEN;
 		else // below max run speed
-			speedColor = SPEEDO_COLOR_DEFAULT;
+			speedColor = INTENSITYSCALE_COLOR_DEFAULT;
 
 		surface()->DrawSetTextFont( m_hSpeedFont );
 		surface()->DrawSetTextColor( speedColor );
@@ -199,19 +200,22 @@ void CHudSpeedometer::Paint()
 	if( hud_speedometer_avg.GetBool() )
 	{
 		if( m_flAvgVelocity > BHOP_CAP_HARD * maxVelocity && hud_speedometer_avg_color.GetInt() > 0) // above hard cap
-			speedColor = SPEEDO_COLOR_RED;
+			speedColor = INTENSITYSCALE_COLOR_RED;
 		else if(m_flAvgVelocity-1  > BHOP_CAP_SOFT * maxVelocity && hud_speedometer_avg_color.GetInt() > 0) // above soft cap
 			if(hud_speedometer_avg_color.GetInt() == 2)
-				speedColor = ColorFade( m_flAvgVelocity, BHOP_CAP_SOFT*maxVelocity, BHOP_CAP_HARD*maxVelocity, SPEEDO_COLOR_ORANGE, SPEEDO_COLOR_RED );
+				speedColor = ColorFade( m_flAvgVelocity, BHOP_CAP_SOFT*maxVelocity, BHOP_CAP_HARD*maxVelocity, INTENSITYSCALE_COLOR_ORANGE, INTENSITYSCALE_COLOR_RED );
 			else
-				speedColor = SPEEDO_COLOR_ORANGE;	
+				speedColor = INTENSITYSCALE_COLOR_ORANGE;	
 		else if( m_flAvgVelocity > maxVelocity && hud_speedometer_avg_color.GetInt() > 0) // above max run speed
 			if(hud_speedometer_avg_color.GetInt() == 2)
-				speedColor = ColorFade( m_flAvgVelocity, maxVelocity, BHOP_CAP_SOFT*maxVelocity, SPEEDO_COLOR_GREEN, SPEEDO_COLOR_ORANGE );
+				if( m_flAvgVelocity > (maxVelocity+3*(BHOP_CAP_SOFT*maxVelocity - maxVelocity)/4) && hud_speedometer_color.GetInt() > 0) // above max run speed
+					speedColor = ColorFade( m_flAvgVelocity, maxVelocity+3*(BHOP_CAP_SOFT*maxVelocity - maxVelocity)/4, BHOP_CAP_SOFT*maxVelocity, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_ORANGE );
+				else
+					speedColor = ColorFade( m_flAvgVelocity, maxVelocity, maxVelocity+3*(BHOP_CAP_SOFT*maxVelocity - maxVelocity)/4, INTENSITYSCALE_COLOR_GREEN, INTENSITYSCALE_COLOR_YELLOW );
 			else
-				speedColor = SPEEDO_COLOR_GREEN;
+				speedColor = INTENSITYSCALE_COLOR_GREEN;
 		else // below max run speed
-			speedColor = SPEEDO_COLOR_DEFAULT;
+			speedColor = INTENSITYSCALE_COLOR_DEFAULT;
 
 		surface()->DrawSetTextFont( m_hAvgSpeedFont );
 		if (hud_speedometer.GetBool())
@@ -236,18 +240,3 @@ void CHudSpeedometer::Paint()
 			surface()->DrawUnicodeChar( *wch );
 	}
 }
-
-// ELMO *** I don't know if there is a function for this already. I would expect so but where?
-Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor )
-{
-	float full, f1, f2;
-	full = maxVal - minVal;
-	f1 = (maxVal - currentVal) / full;
-	f2 = (currentVal - minVal) / full;
-	return Color(
-		(int) (maxColor.r() * f2 + minColor.r() * f1),
-		(int) (maxColor.g() * f2 + minColor.g() * f1),
-		(int) (maxColor.b() * f2 + minColor.b() * f1),
-		255);
-}
-// *** ELMO
