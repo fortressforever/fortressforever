@@ -214,6 +214,39 @@ const char *FF_GetSecondaryName( int iClassIndex )
 	return pPlayerClassInfo->m_szSecondaryClassName;
 }
 
+const char *FF_GetDefaultWeapon( int iClassIndex )
+{
+	switch( iClassIndex )
+	{
+		case CLASS_SCOUT:
+			return DEFAULTWEAPON_SCOUT;
+		case CLASS_SNIPER:
+			return DEFAULTWEAPON_SNIPER;
+		case CLASS_SOLDIER:
+			return DEFAULTWEAPON_SOLDIER;
+		case CLASS_DEMOMAN:
+			return DEFAULTWEAPON_DEMOMAN;
+		case CLASS_MEDIC:
+			return DEFAULTWEAPON_MEDIC;
+		case CLASS_HWGUY:
+			return DEFAULTWEAPON_HWGUY;
+		case CLASS_PYRO:
+			return DEFAULTWEAPON_PYRO;
+		case CLASS_ENGINEER:
+			return DEFAULTWEAPON_ENGINEER;
+		case CLASS_SPY:
+			return DEFAULTWEAPON_SPY;
+		case CLASS_CIVILIAN:
+			return DEFAULTWEAPON_CIVILIAN;
+	}
+	return (const char *)NULL;
+}
+
+const char *FF_GetDefaultWeapon( const char *classname )
+{
+	return FF_GetDefaultWeapon( Class_StringToInt( classname ) );
+}
+
 // ELMO *** 
 //I don't know if there is a function for this already.
 //I put it here from speedometer to use in crosshair info and anything else we wish to colour/color fade!

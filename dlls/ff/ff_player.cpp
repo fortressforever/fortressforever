@@ -148,17 +148,6 @@ extern ConVar sv_maxspeed;
 //ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_FF_FFDEV_REPLICATED );
 #define GREN_THROWSPEED 660.0f
 
-ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "nailgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
-ConVar ff_defaultweapon_sniper("cl_spawnweapon_sniper", "sniperrifle", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Sniper spawn.");
-ConVar ff_defaultweapon_soldier("cl_spawnweapon_soldier", "rpg", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Soldier spawn.");
-ConVar ff_defaultweapon_demoman("cl_spawnweapon_demoman", "grenadelauncher", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Demo-man spawn.");
-ConVar ff_defaultweapon_medic("cl_spawnweapon_medic", "supernailgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Medic.");
-ConVar ff_defaultweapon_hwguy("cl_spawnweapon_hwguy", "assaultcannon", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on HwGuy.");
-ConVar ff_defaultweapon_pyro("cl_spawnweapon_pyro", "flamethrower", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Pyro.");
-ConVar ff_defaultweapon_engineer("cl_spawnweapon_engineer", "railgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Engineer.");
-ConVar ff_defaultweapon_spy("cl_spawnweapon_spy", "tranq", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Spy.");
-ConVar ff_defaultweapon_civy("cl_spawnweapon_civilian", "tommygun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Civilian.");
-
 #ifdef _DEBUG
 	// --------------------------------------------------------------------------------
 	// Purpose: To spawn a model for testing - REMOVE (or disable) for release
@@ -1508,43 +1497,43 @@ void CFFPlayer::Spawn( void )
 		switch(GetClassSlot())
 		{
 		case CLASS_SCOUT:
-			pDefaultWpn = ff_defaultweapon_scout.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_SCOUT;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_scout");
 			break;
 		case CLASS_SNIPER:
-			pDefaultWpn = ff_defaultweapon_sniper.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_SNIPER;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_sniper");
 			break;
 		case CLASS_SOLDIER:
-			pDefaultWpn = ff_defaultweapon_soldier.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_SOLDIER;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_soldier");
 			break;
 		case CLASS_DEMOMAN:
-			pDefaultWpn = ff_defaultweapon_demoman.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_DEMOMAN;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_demoman");
 			break;
 		case CLASS_MEDIC:
-			pDefaultWpn = ff_defaultweapon_medic.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_MEDIC;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_medic");
 			break;
 		case CLASS_HWGUY:
-			pDefaultWpn = ff_defaultweapon_hwguy.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_HWGUY;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_hwguy");
 			break;
 		case CLASS_PYRO:
-			pDefaultWpn = ff_defaultweapon_pyro.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_PYRO;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_pyro");
 			break;
 		case CLASS_ENGINEER:
-			pDefaultWpn = ff_defaultweapon_engineer.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_ENGINEER;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_engineer");
 			break;
 		case CLASS_SPY:
-			pDefaultWpn = ff_defaultweapon_spy.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_SPY;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_spy");
 			break;
 		case CLASS_CIVILIAN:
-			pDefaultWpn = ff_defaultweapon_civy.GetDefault();
+			pDefaultWpn = DEFAULTWEAPON_CIVILIAN;
 			pSpawnWpn = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnweapon_civilian");
 			break;
 		}
