@@ -108,6 +108,17 @@ static ConVar concuss_alwaysOn("cl_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCV
 //extern ConVar ffdev_softclip_asdisguisedteam;
 #define SOFTCLIP_ASDISGUISEDTEAM false // in util_shared.cpp
 
+ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "shotgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
+ConVar ff_defaultweapon_sniper("cl_spawnweapon_sniper", "sniperrifle", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Sniper spawn.");
+ConVar ff_defaultweapon_soldier("cl_spawnweapon_soldier", "rpg", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Soldier spawn.");
+ConVar ff_defaultweapon_demoman("cl_spawnweapon_demoman", "grenadelauncher", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Demo-man spawn.");
+ConVar ff_defaultweapon_medic("cl_spawnweapon_medic", "supernailgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Medic.");
+ConVar ff_defaultweapon_hwguy("cl_spawnweapon_hwguy", "assaultcannon", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on HwGuy.");
+ConVar ff_defaultweapon_pyro("cl_spawnweapon_pyro", "flamethrower", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Pyro.");
+ConVar ff_defaultweapon_engineer("cl_spawnweapon_engineer", "railgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Engineer.");
+ConVar ff_defaultweapon_spy("cl_spawnweapon_spy", "knife", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Spy.");
+ConVar ff_defaultweapon_civy("cl_spawnweapon_civilian", "umbrella", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Civilian.");
+
 // *** ELMO
 
 static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
