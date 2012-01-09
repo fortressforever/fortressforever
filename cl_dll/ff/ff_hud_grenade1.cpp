@@ -113,7 +113,7 @@ void CHudGrenade1::OnTick()
 		};
 
 		PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
-		bool bReadInfo = ReadPlayerClassDataFromFileForSlot( vgui::filesystem(), szClassNames[m_iClass - 1], &hClassInfo, NULL );
+		bool bReadInfo = ReadPlayerClassDataFromFileForSlot( vgui::filesystem(), szClassNames[m_iClass - 1], &hClassInfo, g_pGameRules->GetEncryptionKey() );
 
 		if (!bReadInfo)
 		{
