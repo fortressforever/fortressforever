@@ -410,6 +410,9 @@ void CFFScheduleManager::Update()
 	while(m_schedules.IsValidIndex(it))
 	{
 		CFFScheduleCallback* pCallback = m_schedules.Element(it);
+		if (!pCallback)
+			return;
+
 		bool isComplete = pCallback->Update();
 
 		if(isComplete)
@@ -423,6 +426,9 @@ void CFFScheduleManager::Update()
 			if(m_schedules.IsValidIndex(itCheck))
 			{
 				CFFScheduleCallback* pCallbackCheck = m_schedules.Element(itCheck);
+				if (!pCallbackCheck)
+					return;
+
 				if (pCallbackCheck->IsComplete())
 					m_schedules.RemoveAt(itCheck);
 			}
