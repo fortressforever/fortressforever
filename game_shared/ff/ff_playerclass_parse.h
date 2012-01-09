@@ -73,6 +73,8 @@ public:
 	
 	int						m_iSpeed;
 
+	int						m_iFirepower;
+
 	// std::vector<const char *>		m_vecWeapons;
 	// std::vector<const char *>		m_vecSkills;
 
