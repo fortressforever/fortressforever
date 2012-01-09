@@ -416,7 +416,8 @@ void CFFScheduleManager::Update()
 		{
 			// remove and cleanup the schedule callback
 			CRC32_t id = m_schedules.Key(it);
-			it = m_schedules.NextInorder(it);
+			if (m_schedules.IsValidIndex(it))
+				it = m_schedules.NextInorder(it);
 			
 			unsigned short itCheck = m_schedules.Find(id);
 			if(m_schedules.IsValidIndex(itCheck))
@@ -428,7 +429,8 @@ void CFFScheduleManager::Update()
 		}
 		else
 		{
-			it = m_schedules.NextInorder(it);
+			if (m_schedules.IsValidIndex(it))
+				it = m_schedules.NextInorder(it);
 		}
 	}
 }
