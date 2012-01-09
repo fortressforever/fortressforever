@@ -63,30 +63,33 @@ int Class_StringToInt( const char *szClassName )
 	// Doing case insensitive compares and also
 	// trying to do so in the order of most popular
 	// classes to least popular [eh, kind of...]
-	if( Q_stricmp( szClassName, "soldier" ) == 0 )
-		return 3;
-	else if( Q_stricmp( szClassName, "medic" ) == 0 )
-		return 5;
-	else if( Q_stricmp( szClassName, "engineer" ) == 0 )
-		return 9;
-	else if( Q_stricmp( szClassName, "scout" ) == 0 )
+	
+	if( Q_stricmp( szClassName, "scout" ) == 0 )
 		return 1;
-	else if( Q_stricmp( szClassName, "hwguy" ) == 0 )
-		return 6;
-	else if( Q_stricmp( szClassName, "demoman" ) == 0 )
-		return 4;
-	else if( Q_stricmp( szClassName, "spy" ) == 0 )
-		return 8;
 	else if( Q_stricmp( szClassName, "sniper" ) == 0 )
 		return 2;
+	else if( Q_stricmp( szClassName, "soldier" ) == 0 )
+		return 3;
+	else if( Q_stricmp( szClassName, "demoman" ) == 0 )
+		return 4;
+	else if( Q_stricmp( szClassName, "medic" ) == 0 )
+		return 5;
+	else if( Q_stricmp( szClassName, "hwguy" ) == 0 )
+		return 6;
 	else if( Q_stricmp( szClassName, "pyro" ) == 0 )
 		return 7;
+	else if( Q_stricmp( szClassName, "spy" ) == 0 )
+		return 8;
+	else if( Q_stricmp( szClassName, "engineer" ) == 0 )
+		return 9;
+	else if( Q_stricmp( szClassName, "civilian" ) == 0 )
+		return 10;
 	else if( Q_stricmp( szClassName, "dispenser" ) == 0 )
 		return 11;
 	else if( Q_stricmp( szClassName, "sentrygun" ) == 0 )
 		return 12;
-	else if( Q_stricmp( szClassName, "civilian" ) == 0 )
-		return 10;
+	else if( Q_stricmp( szClassName, "mancannon" ) == 0 )
+		return 13;
 	else
 		Warning( "Class_StringToInt :: No match!\n" );
 
@@ -115,6 +118,7 @@ const char *Class_IntToString( int iClassIndex )
 		case 10: return "civilian"; break;
 		case 11: return "dispenser"; break;
 		case 12: return "sentrygun"; break;
+		case 13: return "mancannon"; break;
 		default: Warning( "Class_IntToString :: No match!\n" ); break;
 	}
 
@@ -137,6 +141,9 @@ const char *Class_IntToResourceString( int iClassIndex )
 		case 8: return "#FF_PLAYER_SPY"; break;
 		case 9: return "#FF_PLAYER_ENGINEER"; break;
 		case 10: return "#FF_PLAYER_CIVILIAN"; break;
+		case 11: return "#FF_PLAYER_DISPENSER"; break;
+		case 12: return "#FF_PLAYER_SENTRYGUN"; break;
+		case 13: return "#FF_PLAYER_MANCANNON"; break;
 	}
 
 	return "#FF_PLAYER_INVALID";
@@ -164,11 +171,83 @@ const char *Class_IntToPrintString( int iClassIndex )
 		case 10: return "Civilian"; break;
 		case 11: return "Dispenser"; break;
 		case 12: return "SentryGun"; break;
+		case 13: return "ManCannon"; break;
 		default: Warning( "Class_IntToPrintString :: No match!\n" ); break;
 	}
 
 	return "\0";
 }
+
+// ELMO *** 
+//I don't know if there is a function for this already.
+//I put it here from speedometer to use in crosshair info and anything else we wish to colour/color fade!
+Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor )
+{
+	float full, f1, f2;
+	full = maxVal - minVal;
+	f1 = (maxVal - currentVal) / full;
+	f2 = (currentVal - minVal) / full;
+	return Color(
+		(int) (maxColor.r() * f2 + minColor.r() * f1),
+		(int) (maxColor.g() * f2 + minColor.g() * f1),
+		(int) (maxColor.b() * f2 + minColor.b() * f1),
+		255);
+}
+
+Color getIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen, bool invertScale )
+{
+	Color innerCol;
+	if(!invertScale) 
+	{
+		if( iAmount <= iRed && iColorSetting > 0)
+			innerCol = INTENSITYSCALE_COLOR_RED;
+		else if(iAmount  <= iOrange && iColorSetting > 0)
+			if(iColorSetting == 2)
+				innerCol = ColorFade( iAmount, iRed, iOrange, INTENSITYSCALE_COLOR_RED, INTENSITYSCALE_COLOR_ORANGE );
+			else
+				innerCol = INTENSITYSCALE_COLOR_ORANGE;	
+		else if(iAmount  <= iYellow && iColorSetting> 0)
+			if(iColorSetting == 2)
+				innerCol = ColorFade( iAmount, iOrange, iYellow, INTENSITYSCALE_COLOR_ORANGE, INTENSITYSCALE_COLOR_YELLOW );
+			else
+				innerCol = INTENSITYSCALE_COLOR_YELLOW;
+		else if(iColorSetting > 0)
+			if(iColorSetting == 2)
+				innerCol = ColorFade( iAmount, iYellow, iGreen, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_GREEN );
+			else
+				innerCol = INTENSITYSCALE_COLOR_GREEN;
+		else
+			innerCol = INTENSITYSCALE_COLOR_DEFAULT;
+
+		return *new Color(innerCol.r(), innerCol.g(), innerCol.b(), iAlpha);
+	}
+	else
+	{
+		//not working
+		if( iAmount > iRed && iColorSetting > 0)
+			innerCol = INTENSITYSCALE_COLOR_RED;
+		else if(iAmount  > iOrange && iColorSetting > 0)
+			if(iColorSetting == 2)
+				innerCol = ColorFade( iAmount, iOrange, iRed, INTENSITYSCALE_COLOR_ORANGE,INTENSITYSCALE_COLOR_RED );
+			else
+				innerCol = INTENSITYSCALE_COLOR_ORANGE;	
+		else if(iAmount  > iYellow && iColorSetting> 0)
+			if(iColorSetting == 2)
+				innerCol = ColorFade( iAmount, iYellow, iOrange, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_ORANGE );
+			else
+				innerCol = INTENSITYSCALE_COLOR_YELLOW;
+		else if(iColorSetting > 0)
+			if(iColorSetting == 2)
+				innerCol = ColorFade( iAmount, iGreen, iYellow, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_GREEN );
+			else
+				innerCol = INTENSITYSCALE_COLOR_GREEN;
+		else
+			innerCol = INTENSITYSCALE_COLOR_DEFAULT;
+
+		return *new Color(innerCol.r(), innerCol.g(), innerCol.b(), iAlpha);
+	}
+}
+// *** ELMO
 
 void SetColorByTeam( int iTeam, Color& cColor )
 {

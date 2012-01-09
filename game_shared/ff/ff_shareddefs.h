@@ -131,6 +131,14 @@ struct SpyDisguiseWeapon
 #define DECAP_LEFT_LEG		( 1 << 3 )
 #define DECAP_RIGHT_LEG		( 1 << 4 )
 
+// ELMO *** 
+#define INTENSITYSCALE_COLOR_RED Color(255,0,0,255)
+#define INTENSITYSCALE_COLOR_YELLOW Color(255,255,0,255)
+#define INTENSITYSCALE_COLOR_ORANGE Color(255,128,0,255)
+#define INTENSITYSCALE_COLOR_GREEN Color(0,255,0,255)
+#define INTENSITYSCALE_COLOR_DEFAULT Color(255,255,255,255)
+// ELMO *** 
+
 // Some kill modifiers.
 enum KillTypes_t
 {
