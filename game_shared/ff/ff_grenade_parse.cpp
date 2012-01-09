@@ -226,6 +226,7 @@ CFFGrenadeInfo::CFFGrenadeInfo()
 
 	// Added defaults here
 	iconHud = NULL;
+	iconAmmo = NULL;
 }
 
 void FreeHudTextureList(CUtlDict<CHudTexture *, int>& list);
@@ -252,6 +253,13 @@ void CFFGrenadeInfo::Parse(KeyValues *pKeyValuesData, const char *szGrenadeName)
 	if (p)
 	{
 		iconHud = gHUD.AddUnsearchableHudIconToList(*p);
+	}
+	
+	// Point our iconHud to this texture
+	p = FindHudTextureInDict(tempList, "ammo");
+	if (p)
+	{
+		iconAmmo = gHUD.AddUnsearchableHudIconToList(*p);
 	}
 
 	// Add a deathnotice that we can search for later
