@@ -392,6 +392,10 @@ void CC_PrimeOne( void )
 
 	//pLocalPlayer->EmitSound( "Grenade.Timer" );
 
+	// dexter: if g_szTimerFile hasnt been set yet, force update to default. this happens first run of a new install etc
+	if (Q_strlen(g_szTimerFile) < 1)
+		TimerChange_Callback(&cl_timerwav, NULL);
+
 	pLocalPlayer->EmitSound("Grenade.Prime");
 
 	CPASAttenuationFilter filter(pLocalPlayer, g_szTimerFile);
@@ -471,6 +475,10 @@ void CC_PrimeTwo( void )
 	}*/
 	
 	//pLocalPlayer->EmitSound( "Grenade.Timer" );
+
+	// dexter: if g_szTimerFile hasnt been set yet, force update to default. this happens first run of a new install etc
+	if (Q_strlen(g_szTimerFile) < 1)
+		TimerChange_Callback(&cl_timerwav, NULL);
 
 	pLocalPlayer->EmitSound("Grenade.Prime");
 
