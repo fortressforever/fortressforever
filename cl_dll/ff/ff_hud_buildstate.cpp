@@ -25,8 +25,6 @@ CHudBuildState::~CHudBuildState()
 
 void CHudBuildState::VidInit()
 {
-	g_pBuildState = this;
-
 	SetPaintBackgroundEnabled(false);
 
 	// Precache the icons
