@@ -26,13 +26,18 @@
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/RichText.h>
+#include <vgui_controls/ProgressBar.h>
 #include "ff_modelpanel.h"
+#include "ff_frame.h"
 
 #include <cl_dll/iviewport.h>
 
+#include "ienginevgui.h"
 #include "IGameUIFuncs.h"
 #include <igameresources.h>
 
+#include "ff_playerclass_parse.h"
+#include "ff_weapon_parse.h"
 #include "ff_utils.h"
 
 #include "ff_button.h"
@@ -52,24 +57,191 @@ const char *szClassButtons[] = { "scoutbutton", "sniperbutton", "soldierbutton",
 								 "pyrobutton", "spybutton", "engineerbutton", 
 								 "civilianbutton" };
 
-//-----------------------------------------------------------------------------
-// Purpose: Create a test menu
-//-----------------------------------------------------------------------------
-//CON_COMMAND(classmenu, "Shows the class menu") 
-//{
-//	if (!gViewPortInterface) 
-//		return;
-//	
-//	IViewPortPanel *panel = gViewPortInterface->FindPanelByName(PANEL_CLASS);
-//
-//	 if (panel) 
-//		 gViewPortInterface->ShowPanel(panel, true);
-//	 else
-//		 Msg("Couldn't find panel.\n");
-//}
-
 using namespace vgui;
 
+//=============================================================================
+// A team button has the following components:
+//		A list of icons
+//		Text
+//=============================================================================
+class LoadoutLabel : public Label
+{
+public:
+	DECLARE_CLASS_SIMPLE(LoadoutLabel, Label);
+
+	LoadoutLabel(Panel *parent, const char *panelName, const char *text) : BaseClass(parent, panelName, text)
+	{
+		RemoveAllIcons();
+	}
+
+	void ApplySchemeSettings(IScheme *pScheme)
+	{
+		BaseClass::ApplySchemeSettings(pScheme);
+
+		//SetTextInset(10, 7);
+		SetContentAlignment(a_south);
+	}
+
+	void AddIcon(CHudTexture *pIcon)
+	{
+		if (!pIcon)
+			return;
+		
+		m_Icons.AddToTail(pIcon);
+		m_IconFonts.AddToTail(pIcon->hFont);
+	}
+
+	void AddIcon(CHudTexture *pIcon, vgui::HFont hFont )
+	{
+		m_Icons.AddToTail(pIcon);
+		m_IconFonts.AddToTail(hFont);
+	}
+	
+	void RemoveAllIcons()
+	{
+		m_Icons.RemoveAll();
+		m_IconFonts.RemoveAll();
+	}
+
+	virtual void Paint()
+	{
+		int gap = 3;
+		int totalWidth = 0;
+		for(int i=0; i<m_Icons.Count(); i++)
+		{
+			CHudTexture *pIcon = m_Icons.Element(i);
+
+			if (!pIcon)
+				continue;
+
+			vgui::HFont hFont = pIcon->hFont;
+
+			if (m_IconFonts.IsValidIndex(i))
+				hFont = m_IconFonts.Element(i);
+
+			int width;
+			if (hFont != pIcon->hFont)
+			{
+				char character = pIcon->cCharacterInFont;
+				width = surface()->GetCharacterWidth(hFont, character);
+			}
+			else
+			{
+				width = pIcon->Width();
+			}
+
+			totalWidth += width;
+
+			if (i>0)
+				totalWidth += gap;
+		}
+		int xpos = (GetWide()/2.0f) - totalWidth/2;
+		for(int i=0; i<m_Icons.Count(); i++)
+		{
+			CHudTexture *pIcon = m_Icons.Element(i);
+
+			if (!pIcon)
+				continue;
+
+			vgui::HFont hFont = pIcon->hFont;
+
+			if (m_IconFonts.IsValidIndex(i))
+				hFont = m_IconFonts.Element(i);
+
+			int width;
+			if (hFont != pIcon->hFont)
+			{
+				char character = pIcon->cCharacterInFont;
+
+				wchar_t unicode[2];
+				swprintf(unicode, L"%c", character);
+
+				surface()->DrawSetTextColor(Color(255, 255, 255, 255));
+				surface()->DrawSetTextFont(hFont);
+				surface()->DrawSetTextPos(xpos, 0);
+				surface()->DrawUnicodeChar(unicode[0]);
+
+				width = surface()->GetCharacterWidth(hFont, character);
+			}
+			else
+			{
+				pIcon->DrawSelf(xpos, 0, Color(255,255,255,255));
+				width = pIcon->Width();
+			}
+
+			xpos += width + gap;
+		}
+
+		BaseClass::Paint();
+	}
+
+private:
+
+	CUtlVector<CHudTexture *> m_Icons;
+	CUtlVector<vgui::HFont> m_IconFonts;
+};
+
+//=============================================================================
+// A team button has the following components:
+//		Text
+//		Progress bar
+//=============================================================================
+class ClassPropertiesLabel : public Label
+{
+public:
+	DECLARE_CLASS_SIMPLE(ClassPropertiesLabel, Label);
+
+	ClassPropertiesLabel(Panel *parent, const char *panelName, const char *text) : BaseClass(parent, panelName, text)
+	{
+		m_flValue = m_flMax = 0;
+		m_pProgressBar = new vgui::ProgressBar( this, "ProgressBar" );
+		m_pProgressBar->SetPos( 20, 1 );
+		m_pProgressBar->SetSize( GetWide() - 20, GetTall() );
+		m_pProgressBar->SetVisible( true );
+	}
+
+	void ApplySchemeSettings(IScheme *pScheme)
+	{
+		BaseClass::ApplySchemeSettings(pScheme);
+
+		//SetTextInset(10, 7);
+		SetContentAlignment(a_west);
+	}
+
+	void SetMaxValue( float flMaxValue )
+	{
+		m_flMax = flMaxValue;
+	}
+
+	void SetValue( float flValue )
+	{
+		m_flValue = flValue;
+	}
+
+	virtual void Paint()
+	{
+		SetContentAlignment(a_west);
+		m_pProgressBar->SetSize( GetWide() - 100, GetTall() );
+		m_pProgressBar->SetPos( 100, 0 );
+		m_pProgressBar->SetProgress( clamp( m_flValue / m_flMax, 0.0f, 1.0f ) );
+		Color clr = GetFgColor();
+		m_pProgressBar->SetBgColor( Color( 0,0,0, 100 ) );
+		m_pProgressBar->SetFgColor( getIntensityColor((int)(m_flValue/m_flMax * 100), 255, 2, 100, 50, 60, 75, 90, 0) );
+
+		BaseClass::Paint();
+	}
+
+private:
+
+	float m_flMax;
+	float m_flValue;
+
+	vgui::ProgressBar *m_pProgressBar;
+};
+
+/////////////////////////////////////////////
+// MouseOverButton
+/////////////////////////////////////////////
 class MouseOverButton : public FFButton
 {
 	DECLARE_CLASS_SIMPLE(MouseOverButton, FFButton);
@@ -105,6 +277,25 @@ public:
 	}
 };
 
+// Mulch: TODO: make this work for pheeeeeeeesh-y
+CON_COMMAND( hud_reloadclassmenu, "hud_reloadclassmenu" )
+{
+	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_CLASS );
+
+	if( !pPanel )
+		return;
+
+	CClassMenu *pClassMenu = dynamic_cast< CClassMenu * >( pPanel );
+	if( !pClassMenu )
+		return;
+
+	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ClientScheme.res", "HudScheme" );
+
+	pClassMenu->SetScheme( scheme );
+	pClassMenu->SetProportional( true );
+	pClassMenu->LoadControlSettings( "Resource/UI/ClassMenu.res" );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -131,12 +322,31 @@ CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS)
 	m_pCancelButton = new FFButton(this, "CancelButton", "#FF_CANCEL");
 	m_pRandomButton = new FFButton(this, "RandomButton", "#FF_RANDOM");
 
+	m_pPrimaryGren = new LoadoutLabel(this, "PrimaryGren", "Primary");
+	m_pSecondaryGren = new LoadoutLabel(this, "SecondaryGren", "Secondary");
+
+	m_pGrenadesSection = new Section( this, "GrenadesSection" );
+	m_pWeaponsSection = new Section( this, "WeaponsSection" );
+	m_pClassInfoSection = new Section( this, "ClassInfoSection" );
+	
+	for(int i=0; i<8; i++)
+	{
+		m_WepSlots[i] = new LoadoutLabel(this, VarArgs("WepSlot%d", i+1), VarArgs("Weapon %d", i+1));
+	}
+
 	char *pszButtons[] = { "ScoutButton", "SniperButton", "SoldierButton", "DemomanButton", "MedicButton", "HwguyButton", "PyroButton", "SpyButton", "EngineerButton", "CivilianButton" };
 
 	for (int iClassIndex = 0; iClassIndex < ARRAYSIZE(pszButtons); iClassIndex++)
 	{
 		m_pClassButtons[iClassIndex] = new MouseOverButton(this, pszButtons[iClassIndex], (const char *) NULL, this, pszButtons[iClassIndex]);
 	}
+
+	m_pSpeed = new ClassPropertiesLabel(this, "SpeedLabel", "Speed");
+	m_pSpeed->SetMaxValue( 400 );
+	m_pFirepower = new ClassPropertiesLabel(this, "FirepowerLabel", "Firepower");
+	m_pFirepower->SetMaxValue( 100 );
+	m_pHealth = new ClassPropertiesLabel(this, "HealthLabel", "Health");
+	m_pHealth->SetMaxValue( 400 );
 
 	m_pModelView = new PlayerModelPanel(this, "ClassPreview");
 
@@ -205,6 +415,7 @@ void CClassMenu::ShowPanel(bool bShow)
 		SetVisible(false);
 		SetMouseInputEnabled(false);
 		m_pModelView->Reset();
+		Reset();
 	}
 }
 
@@ -213,6 +424,24 @@ void CClassMenu::ShowPanel(bool bShow)
 //-----------------------------------------------------------------------------
 void CClassMenu::Reset() 
 {
+	SetClassInfoVisible(false);
+}
+
+void CClassMenu::SetClassInfoVisible( bool state )
+{
+	m_pPrimaryGren->SetVisible(state);
+	m_pSecondaryGren->SetVisible(state);
+
+	for (int i=0; i<8; i++)
+		m_WepSlots[i]->SetVisible(state);
+
+	m_pSpeed->SetVisible(state);
+	m_pFirepower->SetVisible(state);
+	m_pHealth->SetVisible(state);
+	
+	m_pGrenadesSection->SetVisible(state);
+	m_pWeaponsSection->SetVisible(state);
+	m_pClassInfoSection->SetVisible(state);
 }
 
 //-----------------------------------------------------------------------------
@@ -326,4 +555,84 @@ void CClassMenu::OnMouseOverMessage(KeyValues *data)
 void CClassMenu::UpdateClassInfo(const char *pszClassName)
 {
 	m_pModelView->SetClass(pszClassName);
+	SetClassInfoVisible(true);
+	
+	// First get the class
+	CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
+
+	if (pLocalPlayer == NULL)
+		return;
+
+	PLAYERCLASS_FILE_INFO_HANDLE hClassInfo;
+	bool bReadInfo = ReadPlayerClassDataFromFileForSlot(*pFilesystem, pszClassName, &hClassInfo, g_pGameRules->GetEncryptionKey());
+
+	if (!bReadInfo)
+		return;
+
+	const CFFPlayerClassInfo *pClassInfo = GetFilePlayerClassInfoFromHandle(hClassInfo);
+
+	if (!pClassInfo)
+		return;
+
+	m_pSpeed->SetValue( pClassInfo->m_iSpeed );
+	m_pHealth->SetValue( pClassInfo->m_iHealth + pClassInfo->m_iMaxArmour );
+	m_pFirepower->SetValue( pClassInfo->m_iFirepower );
+
+	for (int i=0; i<8; i++)
+		m_WepSlots[i]->SetVisible(false);
+
+	for (int i=0; i<pClassInfo->m_iNumWeapons && i<8; i++)
+	{
+		// Use the last weapon as their primary
+		const char *pszWeapon = pClassInfo->m_aWeapons[i];
+
+		// Now load the weapon info
+		WEAPON_FILE_INFO_HANDLE hWeaponInfo;
+		bReadInfo = ReadWeaponDataFromFileForSlot(*pFilesystem, pszWeapon, &hWeaponInfo, g_pGameRules->GetEncryptionKey());
+
+		if (!bReadInfo)
+			continue;
+
+		const CFFWeaponInfo *pWeaponInfo = (CFFWeaponInfo *) GetFileWeaponInfoFromHandle(hWeaponInfo);
+
+		if (!pWeaponInfo)
+			continue;
+
+		m_WepSlots[i]->SetText(pWeaponInfo->szPrintName);
+		m_WepSlots[i]->RemoveAllIcons();
+		m_WepSlots[i]->AddIcon( pWeaponInfo->iconInactive, vgui::scheme()->GetIScheme(GetScheme())->GetFont( "WeaponIconsClassSelect" ) );
+		m_WepSlots[i]->SetVisible(true);
+	}
+
+	const char *pszPrimaryName = FF_GetPrimaryName( Class_StringToInt( pszClassName ) );
+	m_pPrimaryGren->SetVisible(false);
+
+	GRENADE_FILE_INFO_HANDLE hGrenInfo = LookupGrenadeInfoSlot(pszPrimaryName);
+	if (hGrenInfo)
+	{
+		CFFGrenadeInfo *pGrenInfo = GetFileGrenadeInfoFromHandle(hGrenInfo);
+		if (pGrenInfo)
+		{
+			m_pPrimaryGren->RemoveAllIcons();
+			m_pPrimaryGren->AddIcon( pGrenInfo->iconAmmo );
+			m_pPrimaryGren->SetText( pGrenInfo->szPrintName );
+			m_pPrimaryGren->SetVisible(true);
+		}
+	}
+
+	const char *pszSecondaryName = FF_GetSecondaryName( Class_StringToInt( pszClassName ) );
+	m_pSecondaryGren->SetVisible(false);
+
+	hGrenInfo = LookupGrenadeInfoSlot(pszSecondaryName);
+	if (hGrenInfo)
+	{
+		CFFGrenadeInfo *pGrenInfo = GetFileGrenadeInfoFromHandle(hGrenInfo);
+		if (pGrenInfo)
+		{
+			m_pSecondaryGren->RemoveAllIcons();
+			m_pSecondaryGren->AddIcon( pGrenInfo->iconAmmo );
+			m_pSecondaryGren->SetText( pGrenInfo->szPrintName );
+			m_pSecondaryGren->SetVisible(true);
+		}
+	}
 }

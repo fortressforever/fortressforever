@@ -3965,7 +3965,7 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 					RelativePath=".\ff\vgui\ff_buttons.h">
 				</File>
 				<File
-					RelativePath=".\ff\vgui\ff_frame.cpp">
+					RelativePath=".\ff\vgui\ff_frame.h">
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_gamemodes.cpp">

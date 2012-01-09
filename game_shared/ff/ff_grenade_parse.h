@@ -27,7 +27,7 @@ typedef unsigned short GRENADE_FILE_INFO_HANDLE;
 #define MAX_GRENADE_STRING_LONG		512
 #define MAX_WEAPONS_PER_CLASS			32 //lol
 
-#define GRENADE_PRINTNAME_MISSING "!!! Missing printname on playerclass"
+#define GRENADE_PRINTNAME_MISSING "!!! Missing printname on grenade"
 
 class KeyValues;
 
@@ -47,6 +47,8 @@ public:
 
 	CHudTexture	*iconHud;
 	CHudTexture *iconAmmo;
+
+	char szPrintName[MAX_GRENADE_STRING];
 };
 
 // The playerclass parse function

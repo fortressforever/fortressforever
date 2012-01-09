@@ -26,12 +26,16 @@
 #include "mouseoverpanelbutton.h"
 
 class MouseOverButton;
+class LoadoutLabel;
+class ClassPropertiesLabel;
 
 namespace vgui
 {
 	class TextEntry;
 	class PlayerModelPanel;
 	class FFButton;
+	class ProgressBar;
+	class Section;
 }
 
 //-----------------------------------------------------------------------------
@@ -74,6 +78,7 @@ protected:
 	virtual void OnCommand(const char *command);
 
 	void UpdateClassInfo(const char *pszClassName);
+	void SetClassInfoVisible( bool state );
 
 	IViewPort		*m_pViewPort;
 
@@ -85,7 +90,20 @@ protected:
 	vgui::FFButton	*m_pCancelButton;
 	vgui::FFButton	*m_pRandomButton;
 
+	LoadoutLabel *m_pPrimaryGren;
+	LoadoutLabel *m_pSecondaryGren;
+
+	LoadoutLabel *m_WepSlots[8];
+
+	ClassPropertiesLabel *m_pSpeed;
+	ClassPropertiesLabel *m_pFirepower;
+	ClassPropertiesLabel *m_pHealth;
+
 	vgui::PlayerModelPanel	*m_pModelView;
+	
+	vgui::Section *m_pGrenadesSection;
+	vgui::Section *m_pWeaponsSection;
+	vgui::Section *m_pClassInfoSection;
 
 	//virtual vgui::Panel *CreateControlByName(const char *controlName);
 	//MouseOverPanelButton * CreateNewMouseOverPanelButton(vgui::Panel *panel);
