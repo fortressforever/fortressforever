@@ -11,115 +11,13 @@
 *********************************************************************/
 
 #include "cbase.h"
-#include "ff_hud_hint.h"
-#include "hudelement.h"
-#include "hud_macros.h"
+#include "ff_hud_buildstate.h"
 
-#include <KeyValues.h>
-#include <vgui/ISurface.h>
-#include <vgui/ISystem.h>
-#include <vgui_controls/AnimationController.h>
-#include <vgui/IVGui.h>
-
-#include <vgui/ILocalize.h>
-
-#include "c_ff_buildableobjects.h"
-#include "ff_buildableobjects_shared.h"
-
-using namespace vgui;
-
-enum {
-	RESET_PIPES=0,
-	INCREMENT_PIPES,
-	DECREMENT_PIPES
-};
-
-class CHudBuildState : public CHudElement, public vgui::Panel
+CHudBuildState::CHudBuildState(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildState") 
 {
-private:
-	DECLARE_CLASS_SIMPLE(CHudBuildState, vgui::Panel);
-
-	// Stuff we need to know
-	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "ChatFont");
-
-	CPanelAnimationVarAliasType(float, text1_xpos, "text1_xpos", "8", "proportional_float");
-	CPanelAnimationVarAliasType(float, text1_ypos, "text1_ypos", "20", "proportional_float");
-	CPanelAnimationVarAliasType(float, text2_xpos, "text2_xpos", "8", "proportional_float");
-	CPanelAnimationVarAliasType(float, text2_ypos, "text2_ypos", "20", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon1_xpos, "icon1_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon1_ypos, "icon1_ypos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon1_width, "icon1_width", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon1_height, "icon1_height", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon2_xpos, "icon2_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon2_ypos, "icon2_ypos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon2_width, "icon2_width", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon2_height, "icon2_height", "1", "proportional_float");
-
-	CHudTexture	*m_pHudElementTexture;
-
-	// Results of localising strings
-	wchar_t m_szHealth[32];
-	wchar_t m_szAmmo[32];
-	wchar_t m_szNoRockets[32];
-
-	// Icons
-	CHudTexture *m_pHudSentryLevel1;
-	CHudTexture *m_pHudSentryLevel2;
-	CHudTexture *m_pHudSentryLevel3;
-	CHudTexture *m_pHudDispenser;
-	CHudTexture *m_pHudManCannon;
-	CHudTexture *m_pHudDetpack;
-	CHudTexture *m_pHudPipes;
-
-	// Lines of information
-	wchar_t m_szDispenser[128];
-	wchar_t m_szSentry[128];
-	wchar_t m_szManCannon[128];
-	wchar_t m_szDetpack[128];
-	wchar_t m_szPipes[128];
-
-	bool m_bDrawDispenser;
-	bool m_bDrawSentry;
-	bool m_bDrawManCannon;
-	bool m_bDrawDetpack;
-	bool m_bDrawPipes;
-
-	int m_iSentryLevel;
-    float m_flManCannonTimeoutTime;
-    float m_flDetpackDetonateTime;
-	int m_iNumPipes;
-
-	void MsgFunc_DispenserMsg(bf_read &msg);
-	void MsgFunc_SentryMsg(bf_read &msg);
-	void MsgFunc_ManCannonMsg(bf_read &msg);
-	void MsgFunc_DetpackMsg(bf_read &msg);
-	void MsgFunc_PipeMsg(bf_read &msg);
-
-public:
-	CHudBuildState(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudBuildState") 
-	{
-		SetParent(g_pClientMode->GetViewport());
-		SetHiddenBits( 0 );
-	}
-
-	~CHudBuildState();
-
-	void	Init();
-	void	VidInit();
-	void	Paint();
-
-	void	OnTick();
-};
-
-CHudBuildState *g_pBuildState = NULL;
-
-DECLARE_HUDELEMENT(CHudBuildState);
-DECLARE_HUD_MESSAGE(CHudBuildState, DispenserMsg);
-DECLARE_HUD_MESSAGE(CHudBuildState, SentryMsg);
-DECLARE_HUD_MESSAGE(CHudBuildState, ManCannonMsg);
-DECLARE_HUD_MESSAGE(CHudBuildState, DetpackMsg);
-DECLARE_HUD_MESSAGE(CHudBuildState, PipeMsg);
-
+	SetParent(g_pClientMode->GetViewport());
+	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+}
 
 CHudBuildState::~CHudBuildState()
 {
@@ -159,6 +57,10 @@ void CHudBuildState::VidInit()
 	m_pHudPipes = new CHudTexture();
 	m_pHudPipes->textureId = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_pHudPipes->textureId, "vgui/hud_pipe", true, false);
+	
+	m_pHudMedpacks = new CHudTexture();
+	m_pHudMedpacks->textureId = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile(m_pHudMedpacks->textureId, "vgui/hud_medpack", true, false);
 
 	// Precache the strings
 	wchar_t *tempString = vgui::localize()->Find("#FF_HUD_HEALTH");
@@ -199,17 +101,17 @@ void CHudBuildState::Init()
 
 void CHudBuildState::OnTick() 
 {
-	m_bDrawDispenser = m_bDrawSentry = m_bDrawManCannon = m_bDrawDetpack = m_bDrawPipes = false;
-	m_iSentryLevel = 0;
-
 	if (!engine->IsInGame()) 
 		return;
 
 	// Get the local player
 	C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
-	
+
 	if (!pPlayer) 
 		return;
+
+	m_bDrawDispenser = m_bDrawSentry = m_bDrawManCannon = m_bDrawDetpack = m_bDrawPipes = m_bDrawMedpacks = false;
+	m_iSentryLevel = 0;
 
 	C_FFDispenser *pDispenser = pPlayer->GetDispenser();
 	C_FFSentryGun *pSentryGun = pPlayer->GetSentryGun();
@@ -217,14 +119,30 @@ void CHudBuildState::OnTick()
 	C_FFDetpack	*pDetpack = pPlayer->GetDetpack();
 
 	m_bDrawDispenser = pDispenser && pDispenser->IsBuilt();
+
 	m_bDrawSentry = pSentryGun && pSentryGun->m_iLevel > 0;
 	if (m_bDrawSentry)
 		m_iSentryLevel = pSentryGun->m_iLevel;
+
 	m_bDrawManCannon = pManCannon && pManCannon->IsBuilt();
+
 	m_bDrawDetpack = pDetpack && pDetpack->IsBuilt();
+
 	if (pPlayer && pPlayer->GetClassSlot() != CLASS_DEMOMAN)
 		m_iNumPipes = 0;
 	m_bDrawPipes = pPlayer && pPlayer->GetClassSlot() == CLASS_DEMOMAN && m_iNumPipes > 0;
+
+	if (pPlayer && pPlayer->GetClassSlot() == CLASS_MEDIC)
+	{
+		m_bDrawMedpacks = true;
+		double numMedpacks;
+		m_flMedpackRegenPercent = modf((double)(pPlayer->GetAmmoCount(AMMO_CELLS) / 10.0f), &numMedpacks);
+		m_iNumMedpacks = (int)numMedpacks;
+	}
+	else
+	{
+		m_bDrawMedpacks = false;
+	}
 }
 
 void CHudBuildState::MsgFunc_DispenserMsg(bf_read &msg)
@@ -289,7 +207,7 @@ void CHudBuildState::MsgFunc_PipeMsg(bf_read &msg)
 
 void CHudBuildState::Paint() 
 {
-	if (!m_bDrawDispenser && !m_bDrawSentry && !m_bDrawManCannon && !m_bDrawDetpack && !m_bDrawPipes) 
+	if (!m_bDrawDispenser && !m_bDrawSentry && !m_bDrawManCannon && !m_bDrawDetpack && !m_bDrawPipes && !m_bDrawMedpacks) 
 		return;
 
 	// Draw icons
@@ -333,6 +251,12 @@ void CHudBuildState::Paint()
 	if (m_bDrawPipes) 
 	{
 		surface()->DrawSetTexture(m_pHudPipes->textureId);
+		surface()->DrawTexturedRect(icon2_xpos, icon2_ypos, icon2_xpos + icon2_width, icon2_ypos + icon2_height);
+	}
+
+	if (m_bDrawMedpacks) 
+	{
+		surface()->DrawSetTexture(m_pHudMedpacks->textureId);
 		surface()->DrawTexturedRect(icon2_xpos, icon2_ypos, icon2_xpos + icon2_width, icon2_ypos + icon2_height);
 	}
 
@@ -385,5 +309,34 @@ void CHudBuildState::Paint()
 
 		for (wchar_t *wch = m_szPipes; *wch != 0; wch++) 
 			surface()->DrawUnicodeChar(*wch);
+	}
+	
+	if (m_bDrawMedpacks) 
+	{
+		surface()->DrawSetTextPos(text2_xpos, text2_ypos);
+
+		_snwprintf(m_szMedpacks, 127, L"%i / %i Tossable Medpacks", m_iNumMedpacks, 5 );
+
+		for (wchar_t *wch = m_szMedpacks; *wch != 0; wch++) 
+			surface()->DrawUnicodeChar(*wch);
+		
+		if( m_flMedpackRegenPercent > 0.0f )
+		{
+			int stringWidth = UTIL_ComputeStringWidth( m_hTextFont, m_szMedpacks );
+			int fontTall = surface()->GetFontTall( m_hTextFont );
+			Color clr = GetFgColor();
+
+			int iWidth = 30;
+			int iLeft = text2_xpos + stringWidth + 10;
+			int iTop = text2_ypos;
+			int iRight = iLeft + (iWidth);
+			int iBottom = iTop + fontTall;
+
+			surface()->DrawSetColor( clr.r(), clr.g(), clr.b(), 150 );
+			surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (m_flMedpackRegenPercent)), iBottom );
+
+			surface()->DrawSetColor( clr.r(), clr.g(), clr.b(), 200 );		
+			surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+		}
 	}
 }
