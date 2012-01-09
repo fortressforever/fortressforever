@@ -521,6 +521,29 @@ ConVar mp_prematch( "mp_prematch",
 		BaseClass::CreateStandardEntities();
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: send name changes to lua
+	//-----------------------------------------------------------------------------
+	void CFFGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
+	{
+		const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
+
+		const char *pszOldName = pPlayer->GetPlayerName();
+
+		// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
+		// Note, not using FStrEq so that this is case sensitive
+		if ( pszOldName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
+		{
+			CFFLuaSC func;
+			func.Push( ToFFPlayer( pPlayer ) );
+			func.Push( pszOldName );
+			func.Push( pszName );
+			func.CallFunction( "player_namechange" );
+		}
+
+		BaseClass::ClientSettingsChanged( pPlayer );
+	}
+
 
 	//-----------------------------------------------------------------------------
 	// Purpose: 
