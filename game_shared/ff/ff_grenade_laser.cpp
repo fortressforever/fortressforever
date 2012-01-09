@@ -502,6 +502,12 @@ float CFFGrenadeLaser::getLengthPercent()
 					continue;
 				}
 
+				// don't allow dividing by zero
+				if (getLengthPercent() == 0.0f)
+				{
+					angRadial.y += flDeltaAngle;
+					continue;
+				}
 				Vector vecLaser = vecDirection * LASERGREN_DISTANCE * getLengthPercent();
 				float ratio = DotProduct( vecToEnt, vecLaser ) / DotProduct( vecLaser, vecLaser );
 				Vector vecLaserClosestPoint = vecOrigin + (ratio * vecLaser);
