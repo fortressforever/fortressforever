@@ -1357,7 +1357,6 @@ namespace FFLib
 		}
 	}
 
-
 	CFFPlayer *GetPlayerByID( int player_id )
 	{
 		CBaseEntity *pEntity = UTIL_EntityByIndex( player_id );
@@ -1367,6 +1366,12 @@ namespace FFLib
 	CFFPlayer *GetPlayerByName( const char *_name )
 	{
 		CBaseEntity *pEntity = UTIL_PlayerByName( _name );
+		return GetPlayer( pEntity );
+	}
+	
+	CFFPlayer *GetPlayerBySteamID( const char *steamid )
+	{
+		CBaseEntity *pEntity = UTIL_PlayerBySteamID( steamid );
 		return GetPlayer( pEntity );
 	}
 
@@ -2677,6 +2682,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("GetPlayer",				&FFLib::GetPlayer),
 		def("GetPlayerByID",			&FFLib::GetPlayerByID),	// TEMPORARY
 		def("GetPlayerByName",			&FFLib::GetPlayerByName),		
+		def("GetPlayerBySteamID",		&FFLib::GetPlayerBySteamID),
 		def("GetServerTime",			&FFLib::GetServerTime),
 		def("GetSteamID",				&FFLib::GetSteamID),
 		def("GetTeam",					&FFLib::GetTeam),
