@@ -14,6 +14,7 @@
 #include "vgui_controls/AnimationController.h"
 #include "ammodef.h"
 #include "ff_hud_boxes.h"
+#include "ff_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -151,10 +152,9 @@ void CHudHistoryResource::AddToHistory( int iType, int iId, int iCount )
 		if ( !iCount )
 			return;
 
-		// HACK HACK HACK Hide the addition of cells...
+		/*// HACK HACK HACK Hide the addition of cells...
 		if (iId == 4 && iCount == 3)
-			return;
-
+			return;*/
 
 		// clear out any ammo pickup denied icons, since we can obviously pickup again
 		for ( int i = 0; i < m_PickupHistory.Count(); i++ )
@@ -170,7 +170,10 @@ void CHudHistoryResource::AddToHistory( int iType, int iId, int iCount )
 		}
 	}
 
-	AddIconToHistory( iType, iId, NULL, iCount, NULL );
+	// Get the item's icon
+	CHudTexture *icon = gHUD.GetIcon( FF_GetAmmoName(iId) );
+
+	AddIconToHistory( iType, iId, NULL, iCount, icon );
 }
 
 //-----------------------------------------------------------------------------
@@ -364,7 +367,10 @@ void CHudHistoryResource::Paint( void )
 			{
 			case HISTSLOT_AMMO:
 				{
-					itemIcon = gWR.GetAmmoIconFromWeapon( m_PickupHistory[i].iId );
+					if (!m_PickupHistory[i].icon)
+						itemIcon = gWR.GetAmmoIconFromWeapon( m_PickupHistory[i].iId );
+					else
+						itemIcon = m_PickupHistory[i].icon;
 					iAmount = m_PickupHistory[i].iCount;
 				}
 				break;
@@ -418,13 +424,32 @@ void CHudHistoryResource::Paint( void )
 			}
 
 			// We don't have a weapon for this item, so just show a generic one
-			if (!itemIcon)
+			if (!itemIcon && m_PickupHistory[i].iId >= 0)
 				itemIcon = m_pHudAmmoTypes[m_PickupHistory[i].iId];
 
-			int ypos = tall - (m_flHistoryGap * (i + 1));
-			int xpos = wide - itemIcon->Width() /*m_iIconWidth*/ - m_flIconInset;
+			// these will get changed later if there is an icon
+			int iconTall = surface()->GetFontTall( m_hNumberFont );
+			int iconWide = 0;
 
-			itemIcon->DrawSelf(xpos, ypos, clr);
+			int ypos = tall - (m_flHistoryGap * (i + 1));
+
+			if (itemIcon)
+			{
+				if (itemIcon->bRenderUsingFont)
+				{
+					iconTall = itemIcon->Height();
+					iconWide = itemIcon->Width();
+				}
+				else
+				{
+					float ratio = (float)itemIcon->Width() / (float)itemIcon->Height();
+					iconWide = iconTall * ratio;
+				}
+
+				int xpos = wide - iconWide - m_flIconInset;
+
+				itemIcon->DrawSelf(xpos, ypos, iconWide, iconTall, clr);
+			}
 			// <-- Mirv: Draw proper icons
 
 			if ( iAmount )
@@ -433,7 +458,7 @@ void CHudHistoryResource::Paint( void )
 				_snwprintf( text, sizeof( text ) / sizeof(wchar_t), L"%i", m_PickupHistory[i].iCount );
 
 				// offset the number to sit properly next to the icon
-				ypos -= ( surface()->GetFontTall( m_hNumberFont ) - itemIcon->Height() ) / 2;
+				ypos -= ( surface()->GetFontTall( m_hNumberFont ) - iconTall ) / 2;
 
 				vgui::surface()->DrawSetTextFont( m_hNumberFont );
 				vgui::surface()->DrawSetTextColor( clr );
@@ -443,7 +468,7 @@ void CHudHistoryResource::Paint( void )
 			else if ( bUseAmmoFullMsg )
 			{
 				// offset the number to sit properly next to the icon
-				ypos -= ( surface()->GetFontTall( m_hTextFont ) - itemIcon->Height() ) / 2;
+				ypos -= ( surface()->GetFontTall( m_hTextFont ) - iconTall ) / 2;
 
 				vgui::surface()->DrawSetTextFont( m_hTextFont );
 				vgui::surface()->DrawSetTextColor( clr );

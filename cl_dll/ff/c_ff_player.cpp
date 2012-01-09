@@ -9,6 +9,7 @@
 #include "c_ff_player.h"
 #include "ff_weapon_base.h"
 #include "ff_playerclass_parse.h"
+#include "ff_grenade_parse.h" //for parseing ff gren txts
 #include "c_basetempentity.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_utils.h"
@@ -45,7 +46,7 @@
 #include "ff_hud_chat.h"
 
 #include "collisionutils.h" // hlstriker: For player avoidance
-
+#include "history_resource.h" // squeek: For adding grens to the ammo pickups on the right
 #include "ff_mathackman.h" // squeek: For mathack manager update in ClientThink
 
 #if defined( CFFPlayer )
@@ -2269,6 +2270,18 @@ void C_FFPlayer::PostDataUpdate( DataUpdateType_t updateType )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Store original ammo data to see what has changed
+// Input  : bnewentity - 
+//-----------------------------------------------------------------------------
+void C_FFPlayer::OnPreDataChanged( DataUpdateType_t updateType )
+{
+	m_iOldPrimary = m_iPrimary;
+	m_iOldSecondary = m_iSecondary;
+
+	BaseClass::OnPreDataChanged( updateType );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
@@ -2290,6 +2303,52 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		//	SetStealMouseForCloak( true );
 		//else
         //    SetStealMouseForCloak( false );
+		
+		if ( m_iPrimary > m_iOldPrimary )
+		{
+			const char *grenade_name = FF_GetPrimaryName( GetClassSlot() );
+			CHudTexture *pIcon = NULL;
+
+			GRENADE_FILE_INFO_HANDLE hGrenInfo = LookupGrenadeInfoSlot(grenade_name);
+			if (hGrenInfo)
+			{
+				CFFGrenadeInfo *pGrenInfo = GetFileGrenadeInfoFromHandle(hGrenInfo);
+				if (pGrenInfo)
+				{
+					pIcon = pGrenInfo->iconAmmo;
+				}
+			}
+
+			// We got more grenades. Add it to the ammo history
+			CHudHistoryResource *pHudHR = GET_HUDELEMENT( CHudHistoryResource );
+			if( pHudHR )
+			{
+				pHudHR->AddIconToHistory( HISTSLOT_AMMO, -1, NULL, abs(m_iPrimary - m_iOldPrimary), pIcon );
+			}
+		}
+		
+		if ( m_iSecondary > m_iOldSecondary )
+		{
+			const char *grenade_name = FF_GetSecondaryName( GetClassSlot() );
+			CHudTexture *pIcon = NULL;
+
+			GRENADE_FILE_INFO_HANDLE hGrenInfo = LookupGrenadeInfoSlot(grenade_name);
+			if (hGrenInfo)
+			{
+				CFFGrenadeInfo *pGrenInfo = GetFileGrenadeInfoFromHandle(hGrenInfo);
+				if (pGrenInfo)
+				{
+					pIcon = pGrenInfo->iconAmmo;
+				}
+			}
+
+			// We got more grenades. Add it to the ammo history
+			CHudHistoryResource *pHudHR = GET_HUDELEMENT( CHudHistoryResource );
+			if( pHudHR )
+			{
+				pHudHR->AddIconToHistory( HISTSLOT_AMMO, -1, NULL, abs(m_iSecondary - m_iOldSecondary), pIcon );
+			}
+		}
 
 		// Sometimes the server changes our weapon for us (eg. if we run out of ammo).
 		// The client doesn't pick up on this and so weapons' holster and deploy aren't run.

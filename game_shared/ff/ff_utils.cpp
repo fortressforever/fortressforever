@@ -43,6 +43,8 @@
 	#include "ff_team.h"
 #endif
 
+#include "ff_playerclass_parse.h" //for parseing ff player txts
+#include "ff_grenade_parse.h" //for parseing ff gren txts
 
 // This function takes a class name like "scout"
 // and returns its integer value
@@ -176,6 +178,40 @@ const char *Class_IntToPrintString( int iClassIndex )
 	}
 
 	return "\0";
+}
+
+// get gren name for the given class
+const char *FF_GetPrimaryName( int iClassIndex )
+{
+	IFileSystem **pFilesystem = &filesystem;
+	PLAYERCLASS_FILE_INFO_HANDLE PlayerClassInfo;
+
+	if (!ReadPlayerClassDataFromFileForSlot(*pFilesystem, Class_IntToString(iClassIndex), &PlayerClassInfo, g_pGameRules->GetEncryptionKey()))
+		return NULL;
+
+	CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(PlayerClassInfo);
+
+	if (!pPlayerClassInfo)
+		return NULL;
+	
+	return pPlayerClassInfo->m_szPrimaryClassName;
+}
+
+// get gren name for the given class
+const char *FF_GetSecondaryName( int iClassIndex )
+{
+	IFileSystem **pFilesystem = &filesystem;
+	PLAYERCLASS_FILE_INFO_HANDLE PlayerClassInfo;
+
+	if (!ReadPlayerClassDataFromFileForSlot(*pFilesystem, Class_IntToString(iClassIndex), &PlayerClassInfo, g_pGameRules->GetEncryptionKey()))
+		return NULL;
+
+	CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(PlayerClassInfo);
+
+	if (!pPlayerClassInfo)
+		return NULL;
+	
+	return pPlayerClassInfo->m_szSecondaryClassName;
 }
 
 // ELMO *** 

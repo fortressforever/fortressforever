@@ -163,6 +163,7 @@ public:
 
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
+	virtual void OnPreDataChanged( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual int  DrawModel( int flags );
 	virtual bool IsOverridingViewmodel( void ) { return IsCloaked(); };
@@ -235,6 +236,9 @@ private:
 	int m_iActiveSabotages;
 	int m_iSpyDisguising;
 // Called by shared code.
+	// for HUD ammo pickup history
+	int m_iOldPrimary;
+	int m_iOldSecondary;
 public:
 	
 	// IFFPlayerAnimState overrides.
