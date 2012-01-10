@@ -169,7 +169,7 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 	{
 #ifdef GAME_DLL
 		// Remove if not allowed by Lua 
-		if (FFScriptRunPredicates(this, "onexplode", true) == false)
+ 		if (FFScriptRunPredicates(this, "onexplode", true) == false)
 		{
 			UTIL_Remove(this);
 			return;

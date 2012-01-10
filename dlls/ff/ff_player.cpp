@@ -5141,6 +5141,9 @@ void CFFPlayer::RemovePrimedGrenades( void )
 		m_flServerPrimeTime = 0.0f;
 		m_iGrenadeState = FF_GREN_NONE;
 		m_bEngyGrenWarned = false;
+
+		// dexter: stop all the timers beepin' away man
+		FF_SendStopGrenTimerMessage(this);
 	}
 }
 

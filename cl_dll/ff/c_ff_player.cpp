@@ -405,14 +405,17 @@ void CC_PrimeOne( void )
 
 	pLocalPlayer->m_flPrimeTime = engine->Time();
 
-/*	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
+	// dexter: uncomment this timer - use to to manage our number of active grenade sounds fuck
+	/* JUST KIDDING IT DOESNT WORK
+	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 3.81f);
 	if (pTimer)
 	{
 		pTimer->m_bRemoveWhenExpired = true;
+		pTimer->SetExpiredCallback(&C_FFPlayer::AGrenadeTimerExpired, true);
 		pTimer->StartTimer();				
-	}*/
+	}*/ 
 
-	//pLocalPlayer->EmitSound( "Grenade.Timer" );
+	//pLocalPlayer->EmitSound( "Grenade.Timer" );	
 
 	// dexter: if g_szTimerFile hasnt been set yet, force update to default. this happens first run of a new install etc
 	if (Q_strlen(g_szTimerFile) < 1)
@@ -432,6 +435,9 @@ void CC_PrimeOne( void )
 
 	Assert (g_pGrenade1Timer);
 	g_pGrenade1Timer->SetTimer(3.81f);
+
+	// dexter: increase their active nade sound
+	//pLocalPlayer->m_iActiveGrenTimers++;
 
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
@@ -1297,6 +1303,9 @@ C_FFPlayer::C_FFPlayer() :
 	
 	m_bMathackDetected = false;
 
+	// dexter - hook up a lua client relevent message
+	usermessages->HookMessage("FFStopGrenTimers", &StopGrenTimersListener);
+
 	//Loop through all classes.
 	for (int i=1; i < 11; i++)
 	{
@@ -1530,8 +1539,6 @@ void C_FFPlayer::Spawn( void )
 
 	// Reset pipebomb counter!
 	GetPipebombCounter()->Reset();
-
-	
 
 	// Stop grenade 1 timers if they're playing
 	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
@@ -3530,3 +3537,36 @@ void Gib_Callback(const CEffectData &data)
 }
 
 DECLARE_CLIENT_EFFECT("Gib", Gib_Callback);
+
+void C_FFPlayer::StopGrenTimersListener(bf_read &msg)
+{
+	msg.ReadByte();
+	
+	int totalTimersActive = 0;
+	
+	if (g_pGrenade1Timer)
+	{
+		totalTimersActive += g_pGrenade1Timer->ActiveTimerCount();
+		g_pGrenade1Timer->ResetTimer();
+	}
+
+	if (g_pGrenade2Timer)
+	{
+		totalTimersActive += g_pGrenade2Timer->ActiveTimerCount();
+		g_pGrenade2Timer->ResetTimer();
+	}
+
+	// have to do this cuz static context :(
+	C_FFPlayer *pPlayer = GetLocalFFPlayer();
+	if (!pPlayer)
+		return;
+
+	const char *timerWavName = cl_timerwav.GetString();
+	char fullTimerWavName[255];
+	Q_snprintf(fullTimerWavName, 255, "timers/%s.wav", timerWavName);
+
+	const int entIndex = pPlayer->entindex();
+	// unsurprisingly, StopSound will only stop one playing sound of the given name so loop to blast em all.
+	for (int i = 0; i < totalTimersActive; i++)
+		pPlayer->StopSound(entIndex, 0, fullTimerWavName);
+}

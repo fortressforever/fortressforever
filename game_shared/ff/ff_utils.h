@@ -317,4 +317,9 @@ public:
 	int GetBool() const { return m_iValue != 0; }
 };
 
+#ifdef GAME_DLL
+// dexter: send the client a message saying yo, stop your primed nade timers (visual and sound)
+void FF_SendStopGrenTimerMessage(CFFPlayer *target);
+#endif
+
 #endif // FF_UTILS_H

@@ -1365,3 +1365,23 @@ int UTIL_GetIntermissionData( Vector *pPosition, QAngle *pAngles )
 }
 
 #endif
+
+
+#ifdef GAME_DLL
+
+void FF_SendStopGrenTimerMessage(CFFPlayer *target)
+{
+	if (!target)
+		return;
+
+	CSingleUserRecipientFilter dood((CBasePlayer *)target);
+	if (!dood.IsReliable())
+		dood.MakeReliable();
+
+	UserMessageBegin(dood, "FFStopGrenTimers");
+		WRITE_BYTE(0xFF);
+	MessageEnd();	
+}
+
+#endif
+

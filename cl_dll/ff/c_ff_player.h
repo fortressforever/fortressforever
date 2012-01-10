@@ -623,6 +623,11 @@ private:
 	CNetworkHandle( CBaseEntity, m_hObjectiveEntity );
 	// Location of player's current objective (also set by Lua)
 	CNetworkVector( m_vecObjectiveOrigin );
+
+	// Dexter: grenade timer killin' shit
+	static void C_FFPlayer::StopGrenTimersListener(bf_read &msg);
+//public:
+//	void C_FFPlayer::GrenadeTimerExpired(C_FFTimer *pTimer);
 };
 
 // Just straight up copying the server version. Tired

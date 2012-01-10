@@ -54,6 +54,8 @@ public:
 
 	// Callback functions for setting
 	void	MsgFunc_FF_Grenade1Timer(bf_read &msg);
+
+	int ActiveTimerCount( void ) const;
 };
 
 #endif

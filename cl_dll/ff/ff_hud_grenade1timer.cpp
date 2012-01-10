@@ -74,6 +74,12 @@ bool CHudGrenade1Timer::ActiveTimer( void ) const
 	return m_Timers.Count() > 0;
 }
 
+// dexter: we wanna know how many are going. we should have about that many sounds playing too
+int CHudGrenade1Timer::ActiveTimerCount( void ) const
+{
+	return m_Timers.Count();
+}
+
 void CHudGrenade1Timer::MsgFunc_FF_Grenade1Timer(bf_read &msg) 
 {
 	float duration = msg.ReadFloat();
