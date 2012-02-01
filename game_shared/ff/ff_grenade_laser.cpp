@@ -38,9 +38,12 @@
 
 ConVar laserbeams( "ffdev_lasergren_beams", "3", FCVAR_REPLICATED, "Number of laser beams", true, 1, true, MAX_BEAMS);
 ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
-ConVar growTime( "ffdev_lasergren_growTime", "0.7", FCVAR_REPLICATED, "Time taken to grow to full length" );
+ConVar growTime( "ffdev_lasergren_growTime", "1", FCVAR_REPLICATED, "Time taken to grow to full length" );
 ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_REPLICATED, "Time taken to shrink to nothing" );
-ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active time");
+ConVar lasertime("ffdev_lasergren_time", "7", FCVAR_REPLICATED, "Laser active time");
+
+ConVar ffdev_lasergren_centergap("ffdev_lasergren_centergap", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Gap between the center and the laser startpoint");
+#define LASERGREN_CENTERGAP ffdev_lasergren_centergap.GetFloat()
 
 #ifdef CLIENT_DLL
 	ConVar hud_lasergren_customColor_enable( "hud_lasergren_customColor_enable", "0", FCVAR_ARCHIVE, "Use custom laser colors (1 = use custom colour)");
@@ -60,17 +63,17 @@ ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_REPLICATED, "Laser active t
 	#define LASERGREN_DAMAGE laserdamage.GetFloat()
 	#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
 	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "0.53", FCVAR_NOTIFY, "Damage multiplier of laser against buildables");
-	ConVar laserangv("ffdev_lasergren_angv", "120", FCVAR_NOTIFY, "Laser angular increment");
+	ConVar laserangv("ffdev_lasergren_angv", "100", FCVAR_NOTIFY, "Laser angular increment");
 	#define LASERGREN_ROTATION_PER_TICK laserangv.GetFloat()*gpGlobals->interval_per_tick
 	ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_NOTIFY, "Laser grenade jump distance" );
 	ConVar laserbob( "ffdev_lasergren_bob", "10", FCVAR_NOTIFY, "Laser grenade bob factor" );
 	ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_CHEAT, "Laser grenade update time" );
-	ConVar laserradius( "ffdev_lasergren_laserradius", "4.0", FCVAR_CHEAT, "Laser grenade laser radius" );
+	ConVar laserradius( "ffdev_lasergren_laserradius", "3.0", FCVAR_CHEAT, "Laser grenade laser radius" );
 	ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_NOTIFY, "Bob Frequency");
 	ConVar laserexplode("ffdev_lasergren_explode", "0", FCVAR_NOTIFY, "Explosion at end of active time");
 	ConVar explosiondamage("ffdev_lasergren_explosiondamage", "90", FCVAR_NOTIFY, "Explosion damage at end of active period" );
 	ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_NOTIFY, "Explosion radius at end of active period" );
-	ConVar ffdev_lasergren_hitdelay("ffdev_lasergren_hitdelay", "0.15", FCVAR_NOTIFY, "Delay between ticks of damage");
+	ConVar ffdev_lasergren_hitdelay("ffdev_lasergren_hitdelay", "0.25", FCVAR_NOTIFY, "Delay between ticks of damage");
 	#define LASERGREN_HITDELAY ffdev_lasergren_hitdelay.GetFloat()
 #endif
 
@@ -379,6 +382,24 @@ float CFFGrenadeLaser::getLengthPercent()
 					continue;
 				}
 				
+				// check if inside the center gap
+				if (LASERGREN_CENTERGAP > 0)
+				{
+					Vector vecLaserGap = vecDirection * LASERGREN_CENTERGAP;
+					float gapratio = DotProduct( vecToEnt, vecLaserGap ) / DotProduct( vecLaserGap, vecLaserGap );
+					Vector vecLaserGapClosestPoint = vecOrigin + (gapratio * vecLaserGap);
+					
+					Vector gappoint;
+					pEntity->CollisionProp()->CalcNearestPoint( vecLaserGapClosestPoint, &gappoint );
+					Vector DistFromOrigin = gappoint - vecOrigin;
+
+					if (DistFromOrigin.Length() < LASERGREN_CENTERGAP - laserradius.GetFloat())
+					{
+						angRadial.y += flDeltaAngle;
+						continue;
+					}
+				}
+				
 				Vector vecLaser = vecDirection * laserdistance.GetFloat() * getLengthPercent();
 				float ratio = DotProduct( vecToEnt, vecLaser ) / DotProduct( vecLaser, vecLaser );
 				Vector vecLaserClosestPoint = vecOrigin + (ratio * vecLaser);
@@ -510,7 +531,7 @@ float CFFGrenadeLaser::getLengthPercent()
 				AngleVectors(angRadial, &vecDirection);
 				VectorNormalizeFast(vecDirection);
 
-				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
+				UTIL_TraceLine( vecOrigin, 
 								vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), 
 								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
 				
@@ -537,7 +558,12 @@ float CFFGrenadeLaser::getLengthPercent()
 					else // just in case
 						pBeam[i]->SetColor( 204, 204, 204 );
 				}
-				pBeam[i]->PointsInit( vecOrigin, tr.endpos );
+				Vector startpos = vecOrigin + vecDirection * LASERGREN_CENTERGAP;
+
+				if (LASERGREN_CENTERGAP/laserdistance.GetFloat() > getLengthPercent())
+					continue;
+
+				pBeam[i]->PointsInit( startpos, tr.endpos );
 
 				angRadial.y += flDeltaAngle;
 
