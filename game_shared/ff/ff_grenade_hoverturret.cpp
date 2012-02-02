@@ -28,7 +28,7 @@
 	#include "c_te_effect_dispatch.h"
 #endif
 
-#define GRENADE_BEAM_SPRITE			"effects/bluelaser1.vmt"
+#define GRENADE_BEAM_SPRITE2			"sprites/plasma.spr"
 #define HOVERGRENADE_MODEL			"models/grenades/nailgren/nailgren.mdl"
 
 #ifdef CLIENT_DLL
@@ -41,7 +41,7 @@ ConVar ffdev_hovergren_lifetime("ffdev_hovergren_lifetime", "7", FCVAR_REPLICATE
 #define FFDEV_HOVERGREN_LIFETIME ffdev_hovergren_lifetime.GetFloat()
 ConVar ffdev_hovergren_risetime("ffdev_hovergren_risetime", "0.3", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade: time it takes to rise to full height ");
 #define FFDEV_HOVERGREN_RISETIME ffdev_hovergren_risetime.GetFloat()
-ConVar ffdev_hovergren_risespeed("ffdev_hovergren_risespeed", "140", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: speed it rises to off the floor ");
+ConVar ffdev_hovergren_risespeed("ffdev_hovergren_risespeed", "236", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: speed it rises to off the floor ");
 #define FFDEV_HOVERGREN_RISESPEED ffdev_hovergren_risespeed.GetFloat()
 ConVar ffdev_hovergren_bulletdamage("ffdev_hovergren_bulletdamage", "6", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Bullet damage ");
 #define FFDEV_HOVERGREN_BULLETDAMAGE ffdev_hovergren_bulletdamage.GetFloat()
@@ -64,7 +64,18 @@ ConVar ffdev_hovergren_bagspawndist("ffdev_hovergren_bagspawndist", "1", FCVAR_R
 ConVar ffdev_hovergren_bagthrowforceup("ffdev_hovergren_bagthrowforceup", "400", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: vertical throw force on bags ");
 #define FFDEV_HOVERGREN_BAGTHROWFORCEUP ffdev_hovergren_bagthrowforceup.GetFloat()
 
-
+#ifdef CLIENT_DLL
+	ConVar hud_hovergren_customColor_enable( "hud_hovergren_customColor_enable", "0", FCVAR_ARCHIVE, "Use custom laser colors (1 = use custom colour)");
+	ConVar hud_hovergren_customColor_r( "hud_hovergren_customColor_r", "255", FCVAR_ARCHIVE, "Custom laser color - Red Component (0-255)");
+	ConVar hud_hovergren_customColor_g( "hud_hovergren_customColor_g", "128", FCVAR_ARCHIVE, "Custom laser color - Green Component(0-255)");
+	ConVar hud_hovergren_customColor_b( "hud_hovergren_customColor_b", "255", FCVAR_ARCHIVE, "Custom laser color - Blue Component(0-255)");
+	ConVar ffdev_hovergren_widthcreate("ffdev_hovergren_widthcreate", "0.5", FCVAR_REPLICATED, "Width given in the constructor; not used");
+	ConVar ffdev_hovergren_widthstart("ffdev_hovergren_widthstart", "4", FCVAR_REPLICATED, "Width at the start of the beam");
+	ConVar ffdev_hovergren_widthend("ffdev_hovergren_widthend", "4", FCVAR_REPLICATED, "Width at the end of the beam");
+	#define HOVERGREN_WIDTHCREATE ffdev_hovergren_widthcreate.GetFloat()
+	#define HOVERGREN_WIDTHSTART ffdev_hovergren_widthstart.GetFloat()
+	#define HOVERGREN_WIDTHEND ffdev_hovergren_widthend.GetFloat()
+#endif
 
 
 class CFFGrenadeHoverTurret : public CFFGrenadeBase
@@ -83,6 +94,13 @@ public:
 #ifdef CLIENT_DLL
 	CFFGrenadeHoverTurret() {}
 	CFFGrenadeHoverTurret(const CFFGrenadeHoverTurret&) {}
+	virtual void ClientThink();
+	virtual void OnDataChanged(DataUpdateType_t updateType);
+	virtual void UpdateOnRemove( void );
+protected:
+	CBeam		*pBeam[1];
+	IMaterial	*m_pMaterial;
+
 //	virtual int DrawModel(int flags);
 #else
 	DECLARE_DATADESC(); // Since we're adding new thinks etc
@@ -131,7 +149,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_hoverturret);
 void CFFGrenadeHoverTurret::Precache() 
 {
 	PrecacheModel(HOVERGRENADE_MODEL);
-	PrecacheModel(GRENADE_BEAM_SPRITE);
+	PrecacheModel(GRENADE_BEAM_SPRITE2);
 	PrecacheScriptSound( "HoverTurret.Shoot" );
 	PrecacheScriptSound( "HoverTurret.Scan" );
 
@@ -418,7 +436,7 @@ void CFFGrenadeHoverTurret::Precache()
 			UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
 				vecOrigin + vecDirection * laserdistance.GetFloat(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
 			
-			pBeam[i]->PointsInit( vecOrigin, tr.endpos );
+			pBeam[0]->PointsInit( vecOrigin, tr.endpos );
 
 			if ( tr.m_pEnt )
 				DoDamage( tr.m_pEnt );
@@ -430,87 +448,108 @@ void CFFGrenadeHoverTurret::Precache()
 		SetNextThink( gpGlobals->curtime + 0.01f );
 	}
 
+#else 
 
-/*
-#else // client only drawing stuff here
-// this was a (failed) attempt to put the grenade halos around the model even after it went live
-
-	int CFFGrenadeHoverTurret::DrawModel(int flags)
+	//-----------------------------------------------------------------------------
+	// Purpose: Emit gas.
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeHoverTurret::ClientThink()
 	{
-		int ret = BaseClass::DrawModel(flags);
-
-		if (ret == 0)
-			return 0;
-
-		if (grenadetargets.GetBool() == false)
-			return ret;
-
-		float flSpeed = GetAbsVelocity().Length();
-		
-		float speed_max = target_speed_max.GetFloat();
-		float speed_min = target_speed_min.GetFloat();
-
-		// Safety check...
-		if (speed_max == speed_min)
-			speed_max += 0.1f;
-
-		if (flSpeed > speed_max)
-			return ret;
-
-		color32 col = GetColour();
-
-		if (m_flModelSize == 0.0f)
+		if ( m_bIsOn )
 		{
-			const model_t *pModel = GetModel();
+			//EmitSound("NailGrenade.LaserLoop");
 
-			if (pModel)
+			Vector vecDirection;
+			Vector vecOrigin = GetAbsOrigin();
+			//QAngle angRadial = GetAbsAngles();
+
+			float flSize = 20.0f;
+			trace_t tr;
+			//char i;
+
+			CFFPlayer *pgrenOwner = ToFFPlayer( this->GetOwnerEntity() );
+		
+			if (!pgrenOwner)
+				return;
+
+			//float flDeltaAngle = 360.0f;
+
+			//for( i = 0; i < laserbeams.GetInt(); i++ )
+			//{
+				//AngleVectors(angRadial, &vecDirection);
+				//VectorNormalizeFast(vecDirection);
+				vecDirection = Vector(0,0,-1);
+
+				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
+								vecOrigin + vecDirection * 2000.0f, 
+								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
+
+				if( !pBeam[0] )
+		{
+					pBeam[0] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE2, HOVERGREN_WIDTHCREATE );
+					if (pBeam[0])
 			{
-				studiohdr_t *pStudio = modelinfo->GetStudiomodel(pModel);
+						pBeam[0]->SetWidth( HOVERGREN_WIDTHSTART );
+						pBeam[0]->SetEndWidth( HOVERGREN_WIDTHEND );
+						pBeam[0]->LiveForTime( 1  );
+						pBeam[0]->SetBrightness( 255 );
+						if(hud_hovergren_customColor_enable.GetBool() == true)
+							pBeam[0]->SetColor( hud_hovergren_customColor_r.GetInt(), hud_hovergren_customColor_g.GetInt(), hud_hovergren_customColor_b.GetInt() );						
+						else if(pgrenOwner->GetTeamNumber() == TEAM_RED)
+							pBeam[0]->SetColor( 255, 64, 64 );
+						else if(pgrenOwner->GetTeamNumber() == TEAM_BLUE)
+							pBeam[0]->SetColor( 64, 128, 255 );
+						else if(pgrenOwner->GetTeamNumber() == TEAM_GREEN)
+							pBeam[0]->SetColor( 153, 255, 153 );
+						else if(pgrenOwner->GetTeamNumber() == TEAM_YELLOW)
+							pBeam[0]->SetColor( 255, 178, 0 );
+						else // just in case
+							pBeam[0]->SetColor( 204, 204, 204 ); 
+					}
+				}
+				if (pBeam[0])
+					pBeam[0]->PointsInit( vecOrigin, tr.endpos );
 
-				if (pStudio)
-				{
-					Vector vecDimensions = pStudio->hull_max - pStudio->hull_min;
+				if ( tr.fraction == 1.0f )
+					g_pEffects->MetalSparks( tr.endpos, vecDirection );
+				g_pEffects->
+				else
+					g_pEffects->MetalSparks( tr.endpos, -vecDirection );
 
-					// We could be cunning and project these with our projection matrix
-					// in order to be more accurate, but lets try like this first
-					m_flModelSize = vecDimensions.Length();
+			//}
 				}
 			}
-		}
 
-		// Need to scale somewhere between speed_min and speed_max...
-		if (flSpeed > speed_min)
+	void CFFGrenadeHoverTurret::UpdateOnRemove( void )
 		{
-			float flScale = (flSpeed - speed_min) / (speed_max - speed_min);
-			col.a *= 1.0f - flScale;
-		}
+		//StopSound("NailGrenade.LaserLoop");
+		//StopSound("NailGrenade.LaserDeploy");
 
-		float flRemaining = target_time_remaining.GetFloat() - (gpGlobals->curtime - m_flSpawnTime);
-
-		if (flRemaining < -0.1f)
+		if( pBeam[0] )
 		{
-			flRemaining = target_time_remaining.GetFloat() - (gpGlobals - m_flDetonateTime);
+			delete pBeam[0];
 		}
 
-		float flSize = m_flModelSize * target_size_base.GetFloat() + target_size_multiplier.GetFloat() * flRemaining;
-		flSize = clamp(flSize, target_clamp_min.GetFloat(), target_clamp_max.GetFloat());
-
-		// The blur graphic now has everything all in one
-		// TODO: Stop doing this every frame.
-		//IMaterial *pMaterial = materials->FindMaterial("sprites/ff_target", TEXTURE_GROUP_CLIENT_EFFECTS);
-		IMaterial *pMaterialBlur = materials->FindMaterial("sprites/ff_target_blur", TEXTURE_GROUP_CLIENT_EFFECTS);
-
-//		float flRotation = gpGlobals->curtime * target_rotation.GetFloat() - anglemod(m_flSpawnTime);
-		float flRotation = anglemod(gpGlobals->curtime  - m_flSpawnTime) * target_rotation.GetFloat();
-
-		// Just display the blur material as that has all the stuff in one
-		if (pMaterialBlur)
-		{
-			materials->Bind(pMaterialBlur);
-			DrawSpriteRotated(GetAbsOrigin(), flSize, flSize, col, flRotation);
-		}
-
-		return ret;
+		//BaseClass::UpdateOnRemove();
 	}
-*/
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Called when data changes on the server
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeHoverTurret::OnDataChanged(DataUpdateType_t updateType)
+	{
+		// NOTE: We MUST call the base classes' implementation of this function
+//		BaseClass::OnDataChanged(updateType);
+
+		// Setup our entity's particle system on creation
+		if (updateType == DATA_UPDATE_CREATED)
+		{
+			m_pMaterial = materials->FindMaterial("effects/blueblacklargebeam", TEXTURE_GROUP_CLIENT_EFFECTS);
+			m_pMaterial->IncrementReferenceCount();
+
+			// Call our ClientThink() function once every client frame
+			SetNextClientThink(CLIENT_THINK_ALWAYS);
+		}
+	}
+
 #endif
