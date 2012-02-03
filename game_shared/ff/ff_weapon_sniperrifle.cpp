@@ -467,7 +467,8 @@ void CFFWeaponSniperRifle::Fire()
 	//QAngle angAiming;
 	//VectorAngles(pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES), angAiming);
 
-	FX_FireBullets(
+	
+	FX_FireBullets( // NOTE: THIS ACTUALLY DOES THE DAMAGE
 		pPlayer->entindex(), 
 		pPlayer->Weapon_ShootPosition(), 
 		pPlayer->EyeAngles(), 
