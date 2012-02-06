@@ -53,6 +53,8 @@ ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED |
 #define FFDEV_HOOK_ROPE_HANGDISTANCE 2.2f //ffdev_hook_rope_hangdistance.GetFloat() //2.0f
 ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATED );
 #define FFDEV_HOOK_ROPE_SEGMENTS ffdev_hook_rope_segments.GetInt()
+ConVar ffdev_hook_spark_freq("ffdev_hook_spark_freq", "2", FCVAR_REPLICATED, "How many seconds between sparking when hooked" );
+#define FFDEV_HOOK_SPARK_FREQ ffdev_hook_spark_freq.GetFloat()
 
 // caes: testing
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "0", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
@@ -71,6 +73,7 @@ ConVar ffdev_hook_pitch2( "ffdev_hook_pitch2", "100", FCVAR_REPLICATED, "pitch o
 
 ConVar ffdev_hook_swing2_elasticity( "ffdev_hook_swing2_elasticity", "1.2", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook swing2 system elasticity - lower numbers will snap the rope easier if you pull on it" );
 #define FFDEV_HOOK_SWING2_ELASTICITY ffdev_hook_swing2_elasticity.GetFloat()
+
 // caes
 
 //#define PREDICTED_ROCKETS
@@ -127,6 +130,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_hook);
 	{
 #ifdef GAME_DLL
 		m_hRope				= NULL;
+		m_fNextSparkTime	= 0.0f;
 #endif
 	}
 
@@ -281,7 +285,8 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 	}
 
 	// Play body "thwack" sound
-	EmitSound("Nail.HitBody");
+	EmitSound("Rail.hitworld");
+	StopSound( "rocket.fly" );
 
 	if ( UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER)
 	{
@@ -308,9 +313,6 @@ void CFFProjectileHook::HookThink()
 {
 #ifdef GAME_DLL
 	//DevMsg("Hook think!!  ");
-
-
-	SetNextThink(gpGlobals->curtime + 1.0f);
 
 	// Remove if we're nolonger in the world
 	if (!IsInWorld())
@@ -543,12 +545,16 @@ void CFFProjectileHook::HookThink()
 			}
 		}
 		// caes
+
+		if ( m_fNextSparkTime <= gpGlobals->curtime )
+		{
+			g_pEffects->Sparks( GetAbsOrigin() ); 
+			m_fNextSparkTime = gpGlobals->curtime + FFDEV_HOOK_SPARK_FREQ;
+		}
 	}
 
-#ifdef GAME_DLL
 	if ( m_hRope )
 		m_hRope->RecalculateLength();
-#endif
 
 #endif
 	// Next think straight away
