@@ -11,7 +11,6 @@
 /// Dec 21, 2004 Mirv: First creation logged
 /// Jan 16, 2005 Mirv: Moved all repeated code to base class
 
-
 #include "cbase.h"
 
 #include "ff_weapon_hookgun.h"
@@ -57,22 +56,25 @@ void CFFWeaponHookGun::Fire()
 		return;
 	//const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
-	Vector	vForward, vRight, vUp;
-	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+	if (!m_pHook)
+	{
+		Vector	vForward, vRight, vUp;
+		pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 
-	//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
-	Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
+		//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
+		Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
 
-	CFFProjectileHook *pHook = CFFProjectileHook::CreateHook(this, vecSrc, pPlayer->EyeAngles(), pPlayer);
-	pHook->SetLocalAngularVelocity(QAngle(0, 0, -500)); // spin!
-	// TODO: if we want, we should delete any old hook so player can only have 1 active.
-	// to do this we'd just have a pointer to the current hook, then RemoveHook that one and set it to pHook here
+		CFFProjectileHook *pHook = CFFProjectileHook::CreateHook(this, vecSrc, pPlayer->EyeAngles(), pPlayer);
+		pHook->SetLocalAngularVelocity(QAngle(0, 0, -500)); // spin!
+		// TODO: if we want, we should delete any old hook so player can only have 1 active.
+		// to do this we'd just have a pointer to the current hook, then RemoveHook that one and set it to pHook here
 
-	m_pHook = pHook;
+		m_pHook = pHook;
 
 #ifdef GAME_DLL
-	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_HOOKGUN, pHook);
+		Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_HOOKGUN, pHook);
 #endif
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -119,35 +121,49 @@ void CFFWeaponHookGun::ItemPostFrame()
 		}
 	}
 
+	// Stopped pressing fire, so remove hook
+	//if ( FFDEV_HOOKGUN_HOLDFIRETOSTAYHOOKED )
+	if ( true )
+	{
+		if (!(pOwner->m_nButtons & IN_ATTACK) && m_pHook)
+		{
+			RemoveHook();
+		}
+	}
+
+	// If holding attack and some time has elapsed since it was fired
 	if ((pOwner->m_nButtons & IN_ATTACK) && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		RemoveHook();
+		//if ( !FFDEV_HOOKGUN_HOLDFIRETOSTAYHOOKED && m_pHook)
+		if ( !true && m_pHook)
+			RemoveHook();
 
-		/*else*/ if ((m_iClip1 <= 0 && UsesClipsForAmmo1()) || (!UsesClipsForAmmo1() && !pOwner->GetAmmoCount(m_iPrimaryAmmoType)))
+		if  (!m_pHook)
 		{
-			if (!pOwner->GetAmmoCount(m_iPrimaryAmmoType))
+			// If no ammo in clip
+			if (m_iClip1 <= 0)
 			{
-				DryFire();
-			}
-			else if (!m_bInReload)
-			{
-				if (!m_pHook)
+				if (!pOwner->GetAmmoCount(m_iPrimaryAmmoType)) // No ammo at all
+				{
+					DryFire();
+				}
+				else if (!m_bInReload) // Have ammo but none in clip
 				{
 					StartReload();
 				}
 			}
-		}
-		else
-		{
-			 // create a hook and dont allow firing until they release the attack key
-			// If the firing button was just pressed, reset the firing time
-			CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-			if (pPlayer && pPlayer->m_afButtonPressed & IN_ATTACK)
+			else
 			{
-				m_flNextPrimaryAttack = gpGlobals->curtime;
+				 // create a hook and dont allow firing until they release the attack key
+				// If the firing button was just pressed, reset the firing time
+				CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+				if (pPlayer && pPlayer->m_afButtonPressed & IN_ATTACK) // Only create a hook when he presses attack for the first time
+				{
+					m_flNextPrimaryAttack = gpGlobals->curtime; // pretty sure the PrimaryAttack function below does this anyway? TODO: Check/change
+					PrimaryAttack();
+				}
+				//m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f;
 			}
-			PrimaryAttack();
-			//m_flNextPrimaryAttack = gpGlobals->curtime + 999.0f;
 		}
 	}
 	/* Commenting this because it makes u fire when you spawn - shok
@@ -156,29 +172,31 @@ void CFFWeaponHookGun::ItemPostFrame()
 		m_flNextPrimaryAttack = 0.0f; // enable firing again if they release the attack key
 	}*/
 
-	if (pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload)
+	// If pressing reload and not already reloading
+	if (pOwner->m_nButtons & IN_RELOAD && !m_bInReload)
 	{
-		// reload when reload is pressed, or if no buttons are down and weapon is empty.
+		// Only reload when not hooking
 		if (!m_pHook)
 		{
 			StartReload();
 		}
 	}
-	else 
+	else  // not pressing reload
 	{
-		// no fire buttons down
+		
 		m_bFireOnEmpty = false;
 
-		if (!HasAnyAmmo() && m_flNextPrimaryAttack < gpGlobals->curtime)
+		// If we don't have any ammo
+		if (!HasAnyAmmo() && m_flNextPrimaryAttack < gpGlobals->curtime && !m_pHook)
 		{
 			// weapon isn't useable, switch.
 			if (! (GetWeaponFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) && pOwner->SwitchToNextBestWeapon(this))
 			{
-				m_flNextPrimaryAttack = gpGlobals->curtime + 0.3;
+				m_flNextPrimaryAttack = gpGlobals->curtime + 0.3; // AfterShock: This is a weird arbitrary number.. Should we be taking pre / post fire times here instead?
 				return;
 			}
 		}
-		else
+		else // we have ammo and/or hooking
 		{
 			// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
 			if (m_iClip1 <= 0 && m_flTimeWeaponIdle < gpGlobals->curtime && m_flNextPrimaryAttack < gpGlobals->curtime)
