@@ -73,6 +73,9 @@ ConVar ffdev_hovergren_bagspawndist("ffdev_hovergren_bagspawndist", "1", FCVAR_R
 ConVar ffdev_hovergren_bagthrowforceup("ffdev_hovergren_bagthrowforceup", "400", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: vertical throw force on bags ");
 #define FFDEV_HOVERGREN_BAGTHROWFORCEUP ffdev_hovergren_bagthrowforceup.GetFloat()
 
+ConVar ffdev_hovergren_canbeshot("ffdev_hovergren_canbeshot", "0", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Can you shoot it to destroy it? ");
+#define FFDEV_HOVERGREN_CANBESHOT ffdev_hovergren_canbeshot.GetBool()
+
 #ifdef CLIENT_DLL
 	ConVar hud_hovergren_customColor_enable( "hud_hovergren_customColor_enable", "0", FCVAR_ARCHIVE, "Use custom laser colors (1 = use custom colour)");
 	ConVar hud_hovergren_customColor_r( "hud_hovergren_customColor_r", "255", FCVAR_ARCHIVE, "Custom laser color - Red Component (0-255)");
@@ -181,7 +184,12 @@ void CFFGrenadeHoverTurret::Precache()
 		m_flLastFireTime = 0.0f;
 		m_flScanTime = 0.0f;
 		m_iDamageDone = 0;
-		m_takedamage = DAMAGE_YES;
+
+		if ( FFDEV_HOVERGREN_CANBESHOT )
+			m_takedamage = DAMAGE_YES;
+		else
+			m_takedamage = DAMAGE_NO;
+
 		m_iHealth = m_iMaxHealth = 1;
 		SetSize( -Vector(10,10,10), Vector(10,10,10) );
 		SetCollisionGroup( COLLISION_GROUP_PLAYER );
@@ -271,6 +279,12 @@ void CFFGrenadeHoverTurret::Precache()
 				m_pTarget = NULL;
 				DevMsg("Target dead\n");
 			}
+			else if ( m_pTarget->IsCloaked() )
+			{
+				m_pTarget = NULL;
+				DevMsg("Target cloaked\n");
+			}
+			
 		}
 
 		if ( m_pTarget )
@@ -407,6 +421,9 @@ void CFFGrenadeHoverTurret::Precache()
 				//	continue;
 
 				if ( g_pGameRules->PlayerRelationship( ToFFPlayer(GetOwnerEntity()), pPlayer ) == GR_TEAMMATE )
+					continue;
+
+				if ( pPlayer->IsCloaked() )
 					continue;
 
 				//if ( !FVisible( pPlayer ) )
