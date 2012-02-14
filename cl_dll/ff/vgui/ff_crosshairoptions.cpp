@@ -589,7 +589,7 @@ void CFFCrosshairOptions::OnUpdateSliders(KeyValues *data)
 //-----------------------------------------------------------------------------
 // Purpose: Catch checkbox updating
 //-----------------------------------------------------------------------------
-void CFFCrosshairOptions::OnUpdateCheckbox(KeyValues *data)
+void CFFCrosshairOptions::OnUpdateCheckButton(KeyValues *data)
 {
 	UpdateCrosshairs();
 }

@@ -116,7 +116,7 @@ private:
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch checkbox updating
 	//-----------------------------------------------------------------------------
-	MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data);
+	MESSAGE_FUNC_PARAMS(OnUpdateCheckButton, "CheckButtonChecked", data);
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Update the crosshair
