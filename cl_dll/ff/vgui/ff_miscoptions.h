@@ -48,13 +48,6 @@ public:
 	int GetComboBoxOption(ComboBox *cb, const char *value, const char *keyname = "value");
 private:
 
-	//-----------------------------------------------------------------------------
-	// Purpose: Catch checkbox updating -- not needed, yet
-	//-----------------------------------------------------------------------------
-	//MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data)
-	//{
-	//}
-
 	CheckButton		*m_pHints;			// The enable/disable hints check box
 	ConVar			*m_pHintsConVar;	// Pointer to the cl_hints convar
 
