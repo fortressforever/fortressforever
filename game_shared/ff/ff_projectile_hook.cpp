@@ -24,7 +24,7 @@
 
 ConVar ffdev_hook_range( "ffdev_hook_range", "1000.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook range" );
 #define HOOK_RANGE ffdev_hook_range.GetFloat()
-ConVar ffdev_hook_closerange( "ffdev_hook_closerange", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook close range" );
+ConVar ffdev_hook_closerange( "ffdev_hook_closerange", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook close range - will snap when this close" );
 #define HOOK_CLOSERANGE ffdev_hook_closerange.GetFloat()
 ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1500.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook fire speed" );
 #define HOOK_FIRESPEED ffdev_hook_firespeed.GetFloat()
@@ -53,8 +53,14 @@ ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED |
 #define FFDEV_HOOK_ROPE_HANGDISTANCE 2.2f //ffdev_hook_rope_hangdistance.GetFloat() //2.0f
 ConVar ffdev_hook_rope_segments("ffdev_hook_rope_segments", "3", FCVAR_REPLICATED );
 #define FFDEV_HOOK_ROPE_SEGMENTS ffdev_hook_rope_segments.GetInt()
-ConVar ffdev_hook_spark_freq("ffdev_hook_spark_freq", "2", FCVAR_REPLICATED, "How many seconds between sparking when hooked" );
+ConVar ffdev_hook_spark_freq("ffdev_hook_spark_freq", "2", FCVAR_REPLICATED, "How many seconds between sparks when hooked" );
 #define FFDEV_HOOK_SPARK_FREQ ffdev_hook_spark_freq.GetFloat()
+
+ConVar ffdev_hook_attachtoplayers("ffdev_hook_attachtoplayers", "1", FCVAR_REPLICATED, "Should hooks attach to other players?" );
+#define FFDEV_HOOK_ATTACHTOPLAYERS ffdev_hook_attachtoplayers.GetBool()
+
+ConVar ffdev_hook_slowpulldist("ffdev_hook_slowpulldist", "60", FCVAR_REPLICATED, "Under this distance the hook begins pulling slower to allow player to hang" );
+#define FFDEV_HOOK_SLOWPULLDIST ffdev_hook_slowpulldist.GetFloat()
 
 // caes: testing
 ConVar ffdev_hook_end_on_jump( "ffdev_hook_end_on_jump", "0", FCVAR_REPLICATED, "end hook if pressing jump and have ever had jump not pressed since last on ground" );
@@ -201,7 +207,7 @@ void CFFProjectileHook::Spawn()
 	SetSize(Vector(-(FFDEV_HOOKSIZE), -(FFDEV_HOOKSIZE), -(FFDEV_HOOKSIZE)), Vector((FFDEV_HOOKSIZE), (FFDEV_HOOKSIZE), (FFDEV_HOOKSIZE))); // smaller, cube bounding box so we rest on the ground
 	SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 	SetSolidFlags(FSOLID_NOT_STANDABLE);
-	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+	SetCollisionGroup( COLLISION_GROUP_PLAYER );
 
 	// Set the correct think & touch for the nail
 	SetTouch(&CFFProjectileHook::HookTouch); // No we're going to explode when we touch something
@@ -274,6 +280,16 @@ void CFFProjectileHook::HookTouch(CBaseEntity *pOther)
 			dmgInfo.SetDamage( 5.0f );
 		//}
 
+		if (pOther->IsPlayer() && FFDEV_HOOK_ATTACHTOPLAYERS)
+		{
+  			m_pAttachedEntity = pOther;
+
+				SetSize(Vector(0, 0, 0), Vector(0, 0, 0)); // smaller, cube bounding box so we rest on the ground
+				SetSolid(SOLID_NONE);	// So it will collide with physics props!
+	//SetSolidFlags(FSOLID_NOT_STANDABLE);
+				SetCollisionGroup( COLLISION_GROUP_NONE );
+		}
+
 		pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
 
 		ApplyMultiDamage();
@@ -313,6 +329,16 @@ void CFFProjectileHook::HookThink()
 {
 #ifdef GAME_DLL
 	//DevMsg("Hook think!!  ");
+
+	if ( FFDEV_HOOK_ATTACHTOPLAYERS && m_pAttachedEntity )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( m_pAttachedEntity );
+
+		if ( pPlayer && pPlayer->IsAlive() )
+			SetAbsOrigin( pPlayer->GetAbsOrigin() );
+		else
+			RemoveHook();
+	}
 
 	// Remove if we're nolonger in the world
 	if (!IsInWorld())
@@ -372,6 +398,7 @@ void CFFProjectileHook::HookThink()
 	// hook attached
 	if ( bHooked )
 	{
+
 		// caes: end hook if pressing jump and have ever had jump not pressed since last on ground
 		if ( ffdev_hook_end_on_jump.GetBool() )
 		{
@@ -398,7 +425,6 @@ void CFFProjectileHook::HookThink()
 			}
 		}
 		// caes
-
 
 		// caes: testing different movement systems
 		if ( ffdev_hook_swing.GetInt() == 0 )
@@ -510,8 +536,14 @@ void CFFProjectileHook::HookThink()
 				}
 			}
 
+			if ( flDistance < FFDEV_HOOK_SLOWPULLDIST)
+			{
+				flPullSpeed *= flDistance / FFDEV_HOOK_SLOWPULLDIST;
+			}
+			
 			// rope can only do tension, so don't decrease player's radial speed
 			flPullSpeed = max( flPullSpeed, flRadialSpeed );
+			
 			// set resultant velocity (gravity is applied by the game later)
 			Vector vecNewVel = vecPullDir*flPullSpeed + vecSwingDir*flSwingSpeed;
 
@@ -576,6 +608,8 @@ void CFFProjectileHook::RemoveHook()
 		UTIL_Remove( m_hRope );
 		m_hRope = NULL;
 	}
+
+	m_pAttachedEntity = NULL;
 #endif
 
 	
@@ -583,6 +617,7 @@ void CFFProjectileHook::RemoveHook()
 	if ( pOwnerGun )
 		pOwnerGun->m_pHook = NULL;
 		
+
 	Remove();
 }
 //----------------------------------------------------------------------------

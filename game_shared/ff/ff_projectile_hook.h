@@ -67,6 +67,7 @@ public:
 #ifdef GAME_DLL
 	CHandle<CRopeKeyframe>		m_hRope;
 	float m_fNextSparkTime;
+	CBaseEntity * m_pAttachedEntity;
 #endif
 
 	//void CreateSmokeTrail();
