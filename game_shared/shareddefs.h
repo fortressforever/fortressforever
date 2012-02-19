@@ -125,18 +125,19 @@ public:
 #define	HIDEHUD_CROSSHAIR			( 1<<8 )	// Hide crosshairs
 #define	HIDEHUD_VEHICLE_CROSSHAIR	( 1<<9 )	// Hide vehicle crosshair
 #define HIDEHUD_INVEHICLE			( 1<<10 )
-#define HIDEHUD_NOTSCOUT			( 1<<11 )
-#define HIDEHUD_NOTSNIPER			( 1<<12 )
-#define HIDEHUD_NOTSOLDIER			( 1<<13 )
-#define HIDEHUD_NOTDEMOMAN			( 1<<14 )
-#define HIDEHUD_NOTMEDIC			( 1<<15 )
-#define HIDEHUD_NOTHWGUY			( 1<<16 )
-#define HIDEHUD_NOTPYRO				( 1<<17 )
-#define HIDEHUD_NOTSPY				( 1<<18 )
-#define HIDEHUD_NOTENGINEER			( 1<<19 )
-#define HIDEHUD_NOTCIVILIAN			( 1<<20 )
+#define HIDEHUD_NOTSCOUT			( 1<<11 )	// Hide when not a scout
+#define HIDEHUD_NOTSNIPER			( 1<<12 )	// Hide when not a sniper
+#define HIDEHUD_NOTSOLDIER			( 1<<13 )	// Hide when not a soldier
+#define HIDEHUD_NOTDEMOMAN			( 1<<14 )	// Hide when not a demoman
+#define HIDEHUD_NOTMEDIC			( 1<<15 )	// Hide when not a medic
+#define HIDEHUD_NOTHWGUY			( 1<<16 )	// Hide when not a HWguy
+#define HIDEHUD_NOTPYRO				( 1<<17 )	// Hide when not a pryo
+#define HIDEHUD_NOTSPY				( 1<<18 )	// Hide when not a spy
+#define HIDEHUD_NOTENGINEER			( 1<<19 )	// Hide when not a engineer
+#define HIDEHUD_NOTCIVILIAN			( 1<<20 )	// Hide when not a civilian
+#define HIDEHUD_ALWAYS				( 1<<21 )	// HIDEHUD_ALL didnt seem to work?!
 
-#define HIDEHUD_BITCOUNT			21
+#define HIDEHUD_BITCOUNT			22
 
 //===================================================================================================================
 // suit usage bits
