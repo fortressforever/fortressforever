@@ -1938,7 +1938,7 @@ void C_FFPlayer::DrawPlayerIcons()
 	// --------------------------------
 	// Check for "concussed"
 	// --------------------------------
-	if(cl_concuss.GetBool() && (IsConcussed() || concuss_alwaysOn.GetBool()))
+	if(cl_concuss.GetBool() && (IsConcussed() || concuss_alwaysOn.GetBool()) && !IsCloaked())
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_concussed", TEXTURE_GROUP_CLIENT_EFFECTS );
 		if( pMaterial )
@@ -2030,7 +2030,7 @@ void C_FFPlayer::DrawPlayerIcons()
 	// --------------------------------
 	// Check for "tranquilized"
 	// --------------------------------
-	if( cl_tranq.GetBool() && (IsTranqed() || cl_tranq_alwaysOn.GetBool()) )
+	if( cl_tranq.GetBool() && (IsTranqed() || cl_tranq_alwaysOn.GetBool()) && !IsCloaked())
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_tranquilized", TEXTURE_GROUP_CLIENT_EFFECTS );
 		if( pMaterial )
