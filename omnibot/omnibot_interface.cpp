@@ -854,7 +854,7 @@ namespace Omnibot
 					{
 						if(pPlayer->IsBuilding())
 						{
-							switch(pPlayer->GetCurBuild())
+							switch(pPlayer->GetCurrentBuild())
 							{
 							case FF_BUILD_DISPENSER: pPlayer->Command_BuildDispenser(); break;
 							case FF_BUILD_SENTRYGUN: pPlayer->Command_BuildSentryGun(); break;
@@ -1354,7 +1354,7 @@ namespace Omnibot
 							
 							if(pffPlayer->IsBuilding())
 							{
-								switch(pffPlayer->GetCurBuild())
+								switch(pffPlayer->GetCurrentBuild())
 								{
 								case FF_BUILD_DISPENSER:
 									_flags.SetFlag(TF_ENT_FLAG_BUILDING_DISP);

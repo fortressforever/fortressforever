@@ -733,7 +733,7 @@ void CFFEntity_Collection::GetInSphere( CBaseEntity *pObject, float flRadius, co
 		Vector vecOrigin = pObject->GetAbsOrigin();
 
 		if( pObject->IsPlayer() )
-			vecOrigin = ToFFPlayer( pObject )->GetLegacyAbsOrigin();
+			vecOrigin = ToFFPlayer( pObject )->GetAbsOrigin();
 
 		CBaseEntity *pEntity = NULL;
 		for( CEntitySphereQuery sphere( vecOrigin, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )

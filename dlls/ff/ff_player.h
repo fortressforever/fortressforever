@@ -389,7 +389,7 @@ public:
 	
 	bool IsBuilding( void ) const;
 	bool IsStaticBuilding( void ) const;
-	int GetCurBuild( void ) const;
+	int GetCurrentBuild( void ) const;
 	int GetWantBuild( void ) const	{ return m_iWantBuild; }
 	float GetBuildTime( void ) const { return m_flBuildTime; }
 	CFFDetpack *GetDetpack( void ) const;
@@ -957,8 +957,6 @@ public:
 
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
-	Vector GetLegacyAbsOrigin();
-	Vector GetWaistOrigin( void );
 	Vector GetFeetOrigin( void );
 
 	virtual void Touch(CBaseEntity *pOther);

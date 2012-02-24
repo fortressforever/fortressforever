@@ -548,7 +548,7 @@ void CFFSentryGun::OnActiveThink( void )
 
 	// Enemy is no longer targettable // hlstriker: Crashing bug when sg loses sight of enemy buildable is somewhere in this if statement/nest
 	if( !enemy 
-			|| ( !FVisible( enemy ) && ( pFFPlayer && !FVisible( pFFPlayer->GetLegacyAbsOrigin() ) ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
+			|| ( !FVisible( enemy ) && ( pFFPlayer && !FVisible( pFFPlayer->GetAbsOrigin() ) ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
 			|| !enemy->IsAlive()
 			|| ( pFFPlayer && pFFPlayer->IsCloaked() )
 			|| ( pFFPlayer && ( SG_TARGET_CLOAKSMOKERS == 0 && pFFPlayer->IsCloakSmoked() ) )
@@ -918,7 +918,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 
 		/*
 		// Check a couple more locations to check as technically they could be visible whereas others wouldn't be
-		if( ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) && ( vecOrigin.DistTo( pPlayer->GetAbsOrigin() ) <= SG_RANGE ) ) 
+		if( ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) && ( vecOrigin.DistTo( pPlayer->GetAbsOrigin() ) <= SG_RANGE ) ) 
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
 		// Add sentry guns
