@@ -159,7 +159,7 @@ void CFFGrenadeVert::Precache()
 				continue;
 
 			// Some useful things to know
-			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
+			Vector vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
 			float flDistance = vecDisplacement.Length();
 			Vector vecDir = vecDisplacement / flDistance;
 			

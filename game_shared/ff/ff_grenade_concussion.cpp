@@ -254,7 +254,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				continue;
 
 			// Some useful things to know
-			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
+			Vector vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
 			float flDistance = vecDisplacement.Length();
 			Vector vecDir = vecDisplacement / flDistance;
 
@@ -350,8 +350,8 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			pPlayer->SetAbsVelocity(vecResult);
 
 			//AfterShock: If we ever want to play effects on whoever got hit, we can do it like this
-			//g_pEffects->EnergySplash( pPlayer->GetLegacyAbsOrigin() , Vector(0, 0, 1.0f), true);
-			//g_pEffects->Sparks(pPlayer->GetLegacyAbsOrigin());
+			//g_pEffects->EnergySplash( pPlayer->GetAbsOrigin() , Vector(0, 0, 1.0f), true);
+			//g_pEffects->Sparks(pPlayer->GetAbsOrigin());
 
 		}
 

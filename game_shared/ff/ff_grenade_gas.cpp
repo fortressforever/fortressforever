@@ -236,7 +236,7 @@ END_NETWORK_TABLE()
 				pPlayer->Gas(7.5f, 7.5f, pGasser);
 
 				// Concuss the player
-				Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
+				Vector vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
 				float flDistance = vecDisplacement.Length();
 				Vector vecDir = vecDisplacement / flDistance;
 

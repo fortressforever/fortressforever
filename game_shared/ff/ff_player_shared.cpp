@@ -681,7 +681,7 @@ void CFFPlayer::ClassSpecificSkill()
 					vForward.z = 1.0f;
 
 				pHealthDrop->SetAbsVelocity(vForward + Vector(0,0,250));
-				pHealthDrop->SetAbsOrigin(GetLegacyAbsOrigin());
+				pHealthDrop->SetAbsOrigin(GetAbsOrigin());
 
 				// Play a sound
 				EmitSound("Item.Toss");
@@ -756,7 +756,7 @@ void CFFPlayer::ClassSpecificSkill()
 			EyeVectors(&vForward, &vRight, &vUp);
 
 			//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
-			Vector vecSrc = GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
+			Vector vecSrc = GetAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
 
 			//CFFProjectileHook *pHook = (CFFProjectileHook *) CREATE_PREDICTED_ENTITY("ff_projectile_hook");
 			//pHook->SetPlayerSimulated(ToBasePlayer(pentOwner));
@@ -800,17 +800,6 @@ void CFFPlayer::ClassSpecificSkill_Post()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: TFC style man!
-//			UNDONE: We've shifted the player's abs origins now. Remove
-//					this later.
-//-----------------------------------------------------------------------------
-Vector CFFPlayer::GetLegacyAbsOrigin()
-{
-	return GetAbsOrigin();
-	//return GetAbsOrigin() + (FBitSet(GetFlags(), FL_DUCKING) ? Vector(0, 0, 16.0f) : Vector(0, 0, 36.0f));
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Get our feet position
 //-----------------------------------------------------------------------------
 Vector CFFPlayer::GetFeetOrigin( void )
@@ -821,14 +810,6 @@ Vector CFFPlayer::GetFeetOrigin( void )
 		return GetAbsOrigin() - Vector( 0, 0, 18 );
 	else
 		return GetAbsOrigin() - Vector( 0, 0, 36 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get our waist position
-//-----------------------------------------------------------------------------
-Vector CFFPlayer::GetWaistOrigin( void )
-{
-	return GetAbsOrigin();
 }
 
 //-----------------------------------------------------------------------------
@@ -868,7 +849,7 @@ bool CFFPlayer::IsStaticBuilding( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: What's the player currently buildng
 //-----------------------------------------------------------------------------
-int CFFPlayer::GetCurBuild( void ) const
+int CFFPlayer::GetCurrentBuild( void ) const
 {
 	return m_iCurBuild;
 }
@@ -878,9 +859,6 @@ int CFFPlayer::GetCurBuild( void ) const
 //-----------------------------------------------------------------------------
 CFFDetpack *CFFPlayer::GetDetpack( void ) const
 {
-//#ifdef _DEBUG
-//	Assert( dynamic_cast< CFFDetpack * >( m_hDetpack.Get() ) != 0 );
-//#endif
 	return static_cast< CFFDetpack * >( m_hDetpack.Get() );
 }
 
@@ -889,9 +867,6 @@ CFFDetpack *CFFPlayer::GetDetpack( void ) const
 //-----------------------------------------------------------------------------
 CFFDispenser *CFFPlayer::GetDispenser( void ) const
 {
-//#ifdef _DEBUG
-//	Assert( dynamic_cast<CFFDispenser *>( m_hDispenser.Get() ) != 0 );
-//#endif
 	return static_cast< CFFDispenser * >( m_hDispenser.Get() );
 }
 
@@ -900,9 +875,6 @@ CFFDispenser *CFFPlayer::GetDispenser( void ) const
 //-----------------------------------------------------------------------------
 CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 {
-//#ifdef _DEBUG
-//	Assert( dynamic_cast<CFFSentryGun *>( m_hSentryGun.Get() ) != 0 );
-//#endif
 	return static_cast< CFFSentryGun * >( m_hSentryGun.Get() );
 }
 
@@ -911,9 +883,6 @@ CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
 //-----------------------------------------------------------------------------
 CFFManCannon *CFFPlayer::GetManCannon( void ) const
 {
-//#ifdef _DEBUG
-//	Assert( dynamic_cast<CFFManCannon *>( m_hManCannon.Get() ) != 0 );
-//#endif
 	return static_cast<CFFManCannon *>( m_hManCannon.Get() );
 }
 
@@ -1693,7 +1662,7 @@ else
 
 		CEffectData data;
 
-		data.m_vOrigin = GetLegacyAbsOrigin();
+		data.m_vOrigin = GetAbsOrigin();
 		
 		DispatchEffect(OVERPRESSURE_EFFECT, data);
 
@@ -1726,7 +1695,7 @@ else
 				continue;
 
 			// Some useful things to know
-			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetLegacyAbsOrigin();
+			Vector vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
 			float flDistance = vecDisplacement.Length();
 			Vector vecDir = vecDisplacement;
 			vecDir.NormalizeInPlace();

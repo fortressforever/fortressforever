@@ -286,7 +286,7 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 			return;
 		}
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurrentBuild() == FF_BUILD_SENTRYGUN ) )
 		{
 			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTAIMSENTRYWHENBUILDINGIT");
 			return;
@@ -330,7 +330,7 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		}
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurrentBuild() == FF_BUILD_SENTRYGUN ) )
 		{
 			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD" );
 			return;
@@ -388,7 +388,7 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		}
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurrentBuild() == FF_BUILD_SENTRYGUN ) )
 		{
 			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDETMIDBUILD" );
 			return;
@@ -425,7 +425,7 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 		}
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurrentBuild() == FF_BUILD_SENTRYGUN ) )
 		{
 			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDETMIDBUILD" );
 			return;

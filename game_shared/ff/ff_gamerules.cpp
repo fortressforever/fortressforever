@@ -1268,7 +1268,7 @@ ConVar mp_prematch( "mp_prematch",
 			if (pEntity->IsPlayer())
 			{
 				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
-				float flBodyTargetOffset = vecSpot.z - pPlayer->GetLegacyAbsOrigin().z;
+				float flBodyTargetOffset = vecSpot.z - pPlayer->GetAbsOrigin().z;
 
                 float dH = vecDisplacement.Length2D() - 16.0f;	// Half of model width
 				float dV = fabs(vecDisplacement.z - flBodyTargetOffset) - 36.0f; // Half of model height

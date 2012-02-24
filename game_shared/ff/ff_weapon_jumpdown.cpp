@@ -386,7 +386,7 @@ void CFFWeaponJumpdown::Fire( void )
 	horizPush *= JUMPDOWN_HORIZONTALPUSH;
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	//Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vecForward * 8.0f + vecRight * 5.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 22.0f);
+	//Vector vecSrc = pPlayer->GetAbsOrigin() + vecForward * 8.0f + vecRight * 5.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 22.0f);
 
 	float flPercent = m_flClampedChargeTime / JUMPDOWN_CHARGEUPTIME;
 
@@ -447,7 +447,7 @@ void CFFWeaponJumpdown::Fire( void )
 	te->BeamRingPoint( 
 		filter, 
 		0,										//delay
-		pPlayer->GetLegacyAbsOrigin() + Vector(JUMPDOWN_EFFECT_X_OFFSET, JUMPDOWN_EFFECT_Y_OFFSET, JUMPDOWN_EFFECT_Z_OFFSET + ((pPlayer->GetFlags() & FL_DUCKING) ? 16.0f : 0.0f)),					//origin
+		pPlayer->GetAbsOrigin() + Vector(JUMPDOWN_EFFECT_X_OFFSET, JUMPDOWN_EFFECT_Y_OFFSET, JUMPDOWN_EFFECT_Z_OFFSET + ((pPlayer->GetFlags() & FL_DUCKING) ? 16.0f : 0.0f)),					//origin
 		1.0f,									//start radius
 		flPercent * JUMPDOWN_EFFECT_RADIUS,		//end radius
 		m_iShockwaveTexture,					//texture

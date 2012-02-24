@@ -203,7 +203,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_armorstrip );
 					if (ARMORSTRIP_DAMAGE_FALLOFF)
 					{
 						// Some useful things to know
-						Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
+						Vector vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
 						float flDistance = vecDisplacement.Length();
 						Vector vecDir = vecDisplacement / flDistance;
 
@@ -224,7 +224,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_armorstrip );
 					
 					if (armortaken)
 					{
-						g_pEffects->Sparks(pPlayer->GetLegacyAbsOrigin(), 10, 5, &vecUp);
+						g_pEffects->Sparks(pPlayer->GetAbsOrigin(), 10, 5, &vecUp);
 					}
 				}
 			}
