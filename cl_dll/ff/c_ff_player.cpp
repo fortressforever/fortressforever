@@ -3492,21 +3492,36 @@ void Gib_Callback(const CEffectData &data)
 {
 	C_FFPlayer *pPlayer = ToFFPlayer(data.GetEntity());
 
-	Vector vecPosition = data.m_vOrigin;
-	Vector vecOffset;
 	const char *pszGibModel;
+
+	Vector vecDamageOrigin = data.m_vOrigin;
+	Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
+	Vector vecPlayerVelocity = pPlayer->GetAbsVelocity();
+
+	Vector vecDamageToPlayer;
+	VectorSubtract(vecPlayerOrigin, vecDamageOrigin, vecDamageToPlayer);
+
+	Vector vecDamageToPlayerNormalized = vecDamageToPlayer;
+	VectorNormalize(vecDamageToPlayerNormalized);
+	
+	Vector vecForce;
+	float distance = VectorLength(vecDamageToPlayer);
+	VectorMultiply(vecDamageToPlayerNormalized, data.m_flMagnitude, vecForce);
+	//VectorMultiply(vecDamageToPlayerNormalized, 16.0f / distance, vecForce);
+	//Add some of the players speed too.
+	VectorAdd(vecForce, vecPlayerVelocity * 0.1f, vecForce);
 
 	// We can use the player origin here
 	if (pPlayer && !pPlayer->IsDormant())
 	{
-		vecPosition = pPlayer->GetAbsOrigin();
-
 		// We can also use this player to create a weapon model
 		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
 
 		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
-			C_Gib * pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), pPlayer->GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+			Vector gibVector;
+			VectorAdd(vecForce, Vector(random->RandomFloat(-10,10),random->RandomFloat(-10,10),random->RandomFloat(-10,10)), gibVector);
+			C_Gib * pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), gibVector, Vector(0, 0, 0), 10.0f);
 
 			if (pGib)
 			{
@@ -3518,21 +3533,23 @@ void Gib_Callback(const CEffectData &data)
 	// Now spawn a number of gibs
 	for (int i = 0; i < gibcount.GetInt(); i++)
 	{
-		vecOffset = vecPosition + Vector(0, 0, random->RandomFloat(-12, 12));
-
 		// The first 3 gibs should be done only once, those after should be random
 		int iGibNumber = (i < 3 ? i + 1 : random->RandomInt(4, 8));
 
 		pszGibModel = VarArgs("models/gibs/gib%d.mdl", iGibNumber);
+		Vector vecGibSpawn;
+		VectorAdd(vecPlayerOrigin, Vector(random->RandomFloat(-4,4),random->RandomFloat(-4,4),random->RandomFloat(-12,12)),vecGibSpawn);
 
-		C_Gib *pGib = C_Gib::CreateClientsideGib(pszGibModel, vecOffset, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), Vector(0, 0, 0), 10.0f);
+		Vector vecGibForce;
+		VectorAdd(vecForce, Vector(random->RandomFloat(-20,20),random->RandomFloat(-20,20),random->RandomFloat(-20,20)), vecGibForce);
+		C_Gib *pGib = C_Gib::CreateClientsideGib(pszGibModel, vecGibSpawn, vecGibForce, Vector(0, 0, 0), 10.0f);
 
 		if (pGib)
 		{
 			pGib->LeaveBloodDecal(true);
 		}
 
-		UTIL_BloodImpact(vecOffset, Vector(0, 0, 0), BLOOD_COLOR_RED, 512);
+		UTIL_BloodImpact(vecGibSpawn, Vector(0, 0, 0), BLOOD_COLOR_RED, 512);
 	}
 }
 

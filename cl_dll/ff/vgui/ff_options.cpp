@@ -109,6 +109,7 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		m_pMiscOptions1->Apply();
 		m_pMiscOptions2->Apply();
 		m_pMiscOptions3->Apply();
+		m_pMiscOptions4->Apply();
 		m_pDLightOptions->Apply();
 		m_pCustomHudOptions->Apply();
 
@@ -126,6 +127,7 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		m_pMiscOptions1->Reset();
 		m_pMiscOptions2->Reset();
 		m_pMiscOptions3->Reset();
+		m_pMiscOptions4->Reset();
 		m_pDLightOptions->Reset();
 		m_pCustomHudOptions->Reset();
 	}
@@ -147,6 +149,7 @@ void CFFOptionsPanel::SetVisible(bool state)
 		m_pMiscOptions1->Load();
 		m_pMiscOptions2->Load();
 		m_pMiscOptions3->Load();
+		m_pMiscOptions4->Load();
 		m_pDLightOptions->Load();
 		m_pCustomHudOptions->Load();
 

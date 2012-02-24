@@ -31,9 +31,9 @@
 
 static ConVar cam_command( "cam_command", "0", FCVAR_CHEAT );	 // tells camera to go to thirdperson
 static ConVar cam_snapto( "cam_snapto", "0", FCVAR_ARCHIVE );	 // snap to thirdperson view
-static ConVar cam_idealyaw( "cam_idealyaw", "90", FCVAR_ARCHIVE );	 // thirdperson yaw
-static ConVar cam_idealpitch( "cam_idealpitch", "0", FCVAR_ARCHIVE );	 // thirperson pitch
-static ConVar cam_idealdist( "cam_idealdist", "64", FCVAR_ARCHIVE );	 // thirdperson distance
+static ConVar cam_idealyaw( "cam_idealyaw", "0", FCVAR_ARCHIVE );	 // thirdperson yaw
+static ConVar cam_idealpitch( "cam_idealpitch", "15", FCVAR_ARCHIVE );	 // thirperson pitch4
+static ConVar cam_idealdist( "cam_idealdist", "128", FCVAR_ARCHIVE );	 // thirdperson distance
 
 static ConVar c_maxpitch( "c_maxpitch", "90", FCVAR_ARCHIVE );
 static ConVar c_minpitch( "c_minpitch", "0", FCVAR_ARCHIVE );
