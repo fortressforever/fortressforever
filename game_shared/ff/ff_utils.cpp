@@ -1269,41 +1269,119 @@ int UTIL_PickRandomClass(int _curteam)
 }
 
 int UTIL_PickRandomTeam()
-{
-	int iBestTeam = -1;
-	float flBestCapacity = 9999.0f;
+{				
+	//{players on team, fullness, score
+	int iPlayersOnTeam[4] = {-1};
+	float flFullnessOfTeam[4] = {-1.0f};
+	int iScoreOfteam[4] = {-1};
 
-	int iTeamNumbers[8] = {0};
-
-	// Count the number of people each team
+	// Count the number of people on each team
 	for( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
 
 		if( pPlayer )
-			iTeamNumbers[pPlayer->GetTeamNumber()]++;
-	}
-
-	for( int iTeamToCheck = FF_TEAM_BLUE; iTeamToCheck <= FF_TEAM_GREEN; iTeamToCheck++ )
-	{
-		CFFTeam *pTeam = GetGlobalFFTeam(iTeamToCheck);
-
-		// Don't bother with non-existant teams
-		if( !pTeam )
-			continue;
-
-		// Take team limits into account when calculating the best team to join
-		float flTeamCapacity = (float)iTeamNumbers[iTeamToCheck] / ( pTeam->GetTeamLimits() == 0 ? 32 : pTeam->GetTeamLimits() );
-
-		//DevMsg( "Team %d: %d (%f)\n", iTeamToCheck, iTeamNumbers[iTeamToCheck], flTeamCapacity );
-
-		// Is this the best team to join so far (and there is space on it)
-		if( flTeamCapacity < flBestCapacity && ( pTeam->GetTeamLimits() == 0 || iTeamNumbers[iTeamToCheck] < pTeam->GetTeamLimits() ) )
 		{
-			flBestCapacity = flTeamCapacity;
-			iBestTeam = iTeamToCheck;
+			int teamNumber = pPlayer->GetTeamNumber();
+			//dont count spectators
+			if(teamNumber >= FF_TEAM_BLUE)
+			{
+				if(iPlayersOnTeam[teamNumber - FF_TEAM_BLUE] == -1)
+				{
+					iPlayersOnTeam[teamNumber - FF_TEAM_BLUE] = 1;
+				}
+				else
+				{
+					++iPlayersOnTeam[teamNumber - FF_TEAM_BLUE];
+				}
+			}
 		}
 	}
+
+	bool bLowestScoreMatched = false;
+	bool bEmptiestTeamMatched = false;
+
+	int iTeamWithLowestScore = -1;
+	int iEmptiestTeam = -1;
+
+	for( int iTeamToCheck = FF_TEAM_BLUE; iTeamToCheck <= FF_TEAM_GREEN; ++iTeamToCheck )
+	{
+		CFFTeam *pFFTeam = GetGlobalFFTeam(iTeamToCheck);
+		CTeam *pTeam = GetGlobalTeam(iTeamToCheck);
+
+		// Don't bother with non-existant teams
+		if( !pFFTeam )
+			continue;
+
+		// Getthe percentage of the team filled
+		flFullnessOfTeam[iTeamToCheck - FF_TEAM_BLUE] = iPlayersOnTeam[iTeamToCheck - FF_TEAM_BLUE] / ( pFFTeam->GetTeamLimits() == 0 ? 32 : pFFTeam->GetTeamLimits() );
+
+		//if we haven't set an emptiest team or this is the emptiest team so far
+		if(iEmptiestTeam == -1 || flFullnessOfTeam[iTeamToCheck - FF_TEAM_BLUE] < flFullnessOfTeam[iEmptiestTeam - FF_TEAM_BLUE])
+		{
+			//set it
+			iEmptiestTeam = iTeamToCheck;
+
+			//reset matched flag
+			bEmptiestTeamMatched = false;
+		}
+
+		//if this is just as empty as the emptiest team
+		else if(flFullnessOfTeam[iEmptiestTeam - FF_TEAM_BLUE] == flFullnessOfTeam[iTeamToCheck - FF_TEAM_BLUE])
+		{
+			bEmptiestTeamMatched = true;
+		}
+
+		//get the score
+		iScoreOfteam[iTeamToCheck - FF_TEAM_BLUE] = pTeam->GetScore();
+
+
+		if(iTeamWithLowestScore == -1 || iScoreOfteam[iTeamToCheck - FF_TEAM_BLUE] < iScoreOfteam[iTeamWithLowestScore - FF_TEAM_BLUE])
+		{
+			//set it
+			iTeamWithLowestScore = iTeamToCheck;
+
+			bLowestScoreMatched = false;
+		}
+		else if(iScoreOfteam[iTeamWithLowestScore - FF_TEAM_BLUE] == iScoreOfteam[iTeamToCheck - FF_TEAM_BLUE])
+		{
+			bLowestScoreMatched = true;
+		}
+	}
+
+	int iBestTeam = -1;
+
+	//if the emptiest team wasn't full
+	if(flFullnessOfTeam[iEmptiestTeam - FF_TEAM_BLUE] < 1)
+	{
+		//if the emptiest wasn't matched
+		if(!bEmptiestTeamMatched)
+		{
+			//the best team is the emptiest
+			iBestTeam = iEmptiestTeam;
+		}
+		else if(bLowestScoreMatched)
+		{
+			//if the team with the lowest score matched the size of the emptiest team 
+			if(flFullnessOfTeam[iTeamWithLowestScore - FF_TEAM_BLUE] == flFullnessOfTeam[iEmptiestTeam - FF_TEAM_BLUE])
+			{
+				iBestTeam = iTeamWithLowestScore;
+			}
+			else
+			{
+				iBestTeam = iEmptiestTeam;
+			}
+		}
+		else
+		{
+			iBestTeam = iTeamWithLowestScore;
+		}
+	}
+	else
+	{
+		//all teams full...
+	}
+
 	return iBestTeam;
 }
 
