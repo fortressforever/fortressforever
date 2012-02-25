@@ -4971,6 +4971,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\ff\vgui\ff_luabox.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_luabox.h"
+					>
+				</File>
+				<File
 					RelativePath=".\ff\vgui\ff_menu_panel.cpp"
 					>
 				</File>
