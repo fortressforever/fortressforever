@@ -1,44 +1,3 @@
-// =============== Fortress Forever ==============
-// ======== A modification for Half-Life 2 =======
-//
-// @file ff_sentrygun.cpp
-// @author Patrick O'Leary(Mulchman) 
-// @date 12/28/2005
-// @brief SentryGun class
-//
-// REVISIONS
-// ---------
-//	12/28/2005, Mulchman: 
-//		First created
-//
-//	05/09/2005, Mulchman:
-//		Tons of little updates here and there
-//
-//	05/17/2005, Mulchman:
-//		Starting to make it animated and such
-//
-//	06/01/2005, Mulchman:
-//		Noticed I had dates wrong... *cough * and
-//		still working on making the SG animated
-//		and such.
-//
-//	06/08/2005, Mulchman:
-//		Decided the SG needs to inherit from the
-//		AI base class and not the buildable class.
-//		Some easy stuff will give it the same base
-//		buildable attributes while inheriting all
-//		of the AI stuff that it so desperately needs!
-//
-// 22/01/2006, Mirv:
-//		Sentry now has ground pos & angles pre-stored for when it goes live
-//
-// 26/01/2006 Mirv:
-//		A lot of this has been rewritten so support some future stuff. I've not yet
-//		finished all of it but its in a state where it can be committed now.
-//
-//	05/10/2006, Mulchman:
-//		Cleaned this up A LOT. SG still doesn't factor in radiotagged targets, though.
-
 #include "cbase.h"
 #include "ammodef.h"
 #include "ff_sentrygun.h"
@@ -121,6 +80,16 @@ ConVar ffdev_sg_bulletdamage_lvl2("ffdev_sg_bulletdamage_lvl12", "14", FCVAR_REP
 #define SG_BULLETDAMAGE_LVL2 ffdev_sg_bulletdamage_lvl2.GetInt()
 ConVar ffdev_sg_bulletdamage_lvl3("ffdev_sg_bulletdamage_lvl3", "17", FCVAR_REPLICATED, "SG bullet damage for level 3");
 #define SG_BULLETDAMAGE_LVL3 ffdev_sg_bulletdamage_lvl3.GetInt()
+
+
+ConVar ffdev_sg_barrelrotation_speed_max("ffdev_sg_barrelrotation_speed_max", "30.0", FCVAR_REPLICATED, "Barrel max speed");
+#define SG_BARRELROTATION_SPEED_MAX ffdev_sg_barrelrotation_speed_max.GetFloat()
+ConVar ffdev_sg_barrelrotation_speed_min("ffdev_sg_barrelrotation_speed_min", "20.0", FCVAR_REPLICATED, "Barrel min speed");
+#define SG_BARRELROTATION_SPEED_MIN ffdev_sg_barrelrotation_speed_min.GetFloat()
+ConVar ffdev_sg_barrelrotation_spinup("ffdev_sg_barrelrotation_spinup", "0.5", FCVAR_REPLICATED, "Barrel spin up time");
+#define SG_BARRELROTATION_SPINUP ffdev_sg_barrelrotation_spinup.GetFloat()
+ConVar ffdev_sg_barrelrotation_spindown("ffdev_sg_barrelrotation_spindown", "3", FCVAR_REPLICATED, "Barrel spin down time");
+#define SG_BARRELROTATION_SPINDOWN ffdev_sg_barrelrotation_spindown.GetFloat()
 
 ConVar ffdev_emp_disabletime("ffdev_emp_disabletime", "2.5", FCVAR_REPLICATED, "SG disable time when getting EMPd");
 #define FFDEV_EMP_DISABLETIME ffdev_emp_disabletime.GetFloat()
@@ -449,6 +418,43 @@ void CFFSentryGun::OnSearchThink( void )
 
 	SetNextThink( gpGlobals->curtime + 0.029f ); // Just less than 1 tick (33 tickrate) or just less than 2 ticks (66 tick) or just less than 3 (100 tick)
 
+	if(m_iLevel > 1)
+	{
+		float flLastThinkTime = GetLastThink();
+		// the barrel just started spinning down
+		if (flLastThinkTime == m_flSpinDownStartTime)
+		{
+			// so get the current rotation
+			m_flBarrelRotationValue = GetPoseParameter( SG_BC_BARREL_ROTATE );
+		}
+
+		//time elapsed since we started spinning down
+		float flSpinDownTimeElapsed = gpGlobals->curtime - m_flSpinDownStartTime;
+
+		// the barrel is still spinning down
+		if (flSpinDownTimeElapsed <= SG_BARRELROTATION_SPINDOWN)
+		{
+			m_flBarrelRotationDelta = SG_BARRELROTATION_SPEED_MIN * pow(1 - (flSpinDownTimeElapsed / SG_BARRELROTATION_SPINDOWN), 2);
+		}
+		else
+		{
+			//just making sure it's fully spun down!
+			m_flBarrelRotationDelta = 0;
+		}
+	
+		// smoothness...good
+		SimpleSpline(m_flBarrelRotationDelta);
+
+		m_flBarrelRotationValue += m_flBarrelRotationDelta;
+		SetPoseParameter( SG_BC_BARREL_ROTATE, m_flBarrelRotationValue);
+	}
+	else
+	{
+		m_flBarrelRotationValue = 0;
+		//just making sure it's fully spun down!
+		m_flBarrelRotationDelta = 0;
+	}
+
 	if ( IsDisabled() )
 		return;
 
@@ -665,6 +671,38 @@ void CFFSentryGun::OnActiveThink( void )
 	AngleVectors( m_angAiming, &vecAiming );
 	AngleVectors( m_angGoal, &vecGoal );
 
+	if(m_iLevel > 1)
+	{
+		float flLastThinkTime = GetLastThink();
+		// the barrel just started spinning up
+		if (flLastThinkTime == m_flSpinUpStartTime)
+		{
+			// so get the current rotation
+			m_flBarrelRotationValue = GetPoseParameter( SG_BC_BARREL_ROTATE );
+		}
+
+		//time elapsed since we started spinning up
+		float flSpinUpTimeElapsed = gpGlobals->curtime - m_flSpinUpStartTime;
+
+		// the barrel is still spinning up
+		if (flSpinUpTimeElapsed <= SG_BARRELROTATION_SPINUP)
+		{
+			m_flBarrelRotationDelta = SG_BARRELROTATION_SPEED_MIN * (1 - pow(1 - (flSpinUpTimeElapsed / SG_BARRELROTATION_SPINUP), 3));
+			DevMsg(0, "%f\n", (1 - pow(1 - (flSpinUpTimeElapsed / SG_BARRELROTATION_SPINUP), 3)));
+		}
+		else
+		{
+			//just making sure it's smooth and fully spun up!
+			m_flBarrelRotationDelta = SG_BARRELROTATION_SPEED_MIN;
+		}
+	}
+
+	// smoothing
+	SimpleSpline(m_flBarrelRotationDelta);
+
+	m_flBarrelRotationValue += m_flBarrelRotationDelta;
+	SetPoseParameter( SG_BC_BARREL_ROTATE, m_flBarrelRotationValue);
+
 	// Are we rotated enough to where we can fire?
 	bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_5DEGREE; 
 
@@ -678,7 +716,6 @@ void CFFSentryGun::OnActiveThink( void )
 
 	if( bCanFire )
 	{
-		// get the current rotation
 		float flBarrelRotationValue = GetPoseParameter( SG_BC_BARREL_ROTATE );
 
 		if(flBarrelRotationValue >= 180)
@@ -1360,7 +1397,20 @@ void CFFSentryGun::SpinUp( void )
 {
 	VPROF_BUDGET( "CFFSentryGun::SpinUp", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	m_flStartLockTime = gpGlobals->curtime;
+	//if it hadn't finished spinning down
+	if(gpGlobals->curtime < m_flSpinDownStartTime + SG_BARRELROTATION_SPINDOWN)
+	{
+		//how far through spinning down were we?
+		float flSpinDownPercent = (gpGlobals->curtime - m_flSpinDownStartTime) / SG_BARRELROTATION_SPINDOWN;
+
+		//set the spin up time as if it was part way through spinning up already (no jumps in rotation speed I hope)
+		m_flSpinUpStartTime = gpGlobals->curtime - ((1 - flSpinDownPercent) * SG_BARRELROTATION_SPINUP);
+	}
+	else
+	{
+		//set the spin up start time as now
+		m_flSpinUpStartTime = gpGlobals->curtime;
+	}
 
 	EmitSound("Sentry.Spot");
 
@@ -1382,6 +1432,21 @@ void CFFSentryGun::SpinUp( void )
 void CFFSentryGun::SpinDown( void ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::SpinDown", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	//if it hadn't finished spinning up
+	if(gpGlobals->curtime < m_flSpinUpStartTime + SG_BARRELROTATION_SPINUP)
+	{
+		//how far through spinning up were we?
+		float flSpinUpPercent = (gpGlobals->curtime - m_flSpinUpStartTime) / SG_BARRELROTATION_SPINUP;
+
+		//set the spin down time as if it was part way through spinning down already (no jumps in rotation speed I hope)
+		m_flSpinDownStartTime = gpGlobals->curtime - ((1 - flSpinUpPercent) * SG_BARRELROTATION_SPINDOWN);
+	}
+	else
+	{
+		//set the spin down start time as now
+		m_flSpinDownStartTime = gpGlobals->curtime;
+	}
 }
 
 //-----------------------------------------------------------------------------
