@@ -3792,6 +3792,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath=".\ff\ff_mapfilter.h">
 			</File>
 			<File
+				RelativePath=".\ff\ff_menuman.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_menuman.h">
+			</File>
+			<File
 				RelativePath=".\ff\ff_minecart.cpp">
 			</File>
 			<File
@@ -3835,6 +3841,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 			</File>
 			<File
 				RelativePath=".\ff\ff_team.h">
+			</File>
+			<File
+				RelativePath=".\ff\ff_timerman.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_timerman.h">
 			</File>
 			<File
 				RelativePath=".\ff\ff_vehicle_jeep.cpp">
@@ -3905,13 +3917,22 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath="..\game_shared\ff\ff_gamerules.h">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_armorstrip.cpp">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_base.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_base.h">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_cloaksmoke.cpp">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_concussion.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_disable.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_emp.cpp">
@@ -3923,8 +3944,10 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath="..\game_shared\ff\ff_grenade_gas.cpp">
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_grenade_hoverturret.cpp"
-				>
+				RelativePath="..\game_shared\ff\ff_grenade_hoverturret.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_mirv.cpp">
@@ -3934,9 +3957,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_nail.cpp">
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_napalm.cpp">
@@ -3949,6 +3969,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_parse.h">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_slowfield.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_vert.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_info_script.cpp">
@@ -4008,10 +4034,22 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath="..\game_shared\ff\ff_projectile_dart.h">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_projectile_goop.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_goop.h">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_projectile_grenade.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_projectile_grenade.h">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_hook.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_hook.h">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_projectile_incendiaryrocket.cpp">
@@ -4125,27 +4163,34 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 				RelativePath="..\game_shared\ff\ff_weapon_deployshield.cpp">
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_weapon_shield.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\game_shared\ff\ff_weapon_flag.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_flamethrower.cpp">
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_weapon_laserrifle.cpp"
-				>
+				RelativePath="..\game_shared\ff\ff_weapon_goopgun.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_grenadelauncher.cpp">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_hookgun.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_hookgun.h">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_ic.cpp">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_jumpdown.cpp">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_knife.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_laserrifle.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_medkit.cpp">
@@ -4167,6 +4212,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_rpg.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_shield.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_shotgun.cpp">

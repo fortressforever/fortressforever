@@ -3688,6 +3688,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_fx_bloodstream.h">
 			</File>
 			<File
+				RelativePath=".\ff\ff_fx_cloaksmoke_emitter.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_fx_cloaksmoke_emitter.h">
+			</File>
+			<File
 				RelativePath=".\ff\ff_fx_conc_emitter.cpp">
 			</File>
 			<File
@@ -3745,6 +3751,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_fx_napalm_emitter.h">
 			</File>
 			<File
+				RelativePath=".\ff\ff_fx_overpressure.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_fx_overpressure.h">
+			</File>
+			<File
 				RelativePath=".\ff\ff_fx_railbeam.cpp">
 			</File>
 			<File
@@ -3763,6 +3775,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_fx_tracer.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_fx_vert.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_fx_weaponfx.cpp">
 			</File>
 			<File
@@ -3770,6 +3785,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 			</File>
 			<File
 				RelativePath=".\ff\ff_glyph.h">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_addarmor.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_addhealth.cpp">
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_ammo.cpp">
@@ -3793,13 +3814,28 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_hud_buildstate.h">
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_buildstate_base.cpp">
+				RelativePath=".\ff\ff_hud_buildstate_detpack.cpp">
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_buildstate_base.h">
+				RelativePath=".\ff\ff_hud_buildstate_detpack.h">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_dispenser.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_dispenser.h">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_mancannon.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_mancannon.h">
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_buildstate_sentry.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_buildstate_sentry.h">
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_buildtimer.cpp">
@@ -3859,8 +3895,7 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_hud_HintCenter.h">
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_hitindicator.cpp"
-				>
+				RelativePath=".\ff\ff_hud_hitindicator.cpp">
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_location.cpp">
@@ -3884,13 +3919,7 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_hud_objectiveicon.cpp">
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_quantitybar.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_quantitybar.h">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_radar.cpp">
+				RelativePath=".\ff\ff_hud_overpressure.cpp">
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_radiotag.cpp">
@@ -3980,9 +4009,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 					RelativePath=".\ff\vgui\ff_button.h">
 				</File>
 				<File
-					RelativePath=".\ff\vgui\ff_buttons.h">
-				</File>
-				<File
 					RelativePath=".\ff\vgui\ff_frame.h">
 				</File>
 				<File
@@ -3993,6 +4019,15 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_gameui.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_inputslider.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_irc.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_irc.h">
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_luabox.cpp">
@@ -4013,16 +4048,16 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 					RelativePath=".\ff\vgui\ff_modelpanel.h">
 				</File>
 				<File
-					RelativePath=".\ff\vgui\ff_options.cpp">
-				</File>
-				<File
-					RelativePath=".\ff\vgui\ff_options.h">
-				</File>
-				<File
 					RelativePath=".\ff\vgui\ff_panel.cpp">
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_panel.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitybar.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_quantitybar.h">
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_quantitypanel.cpp">
@@ -4060,25 +4095,123 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				<File
 					RelativePath=".\ff\vgui\vgui_rootpanel_ff.h">
 				</File>
+				<Filter
+					Name="fortressoptions">
+					<File
+						RelativePath=".\ff\vgui\ff_crosshairoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_crosshairoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_arrangementpresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_arrangementpresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_preview.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_preview.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_stylepresets.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions_stylepresets.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_dlightoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_dlightoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_miscoptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_miscoptions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_options.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_options.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_optionspage.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_optionspresetpage.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_optionspresetpage.h"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_timeroptions.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\ff\vgui\ff_timeroptions.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
-				Name="irc"
-				>
+				Name="irc">
 				<File
-					RelativePath=".\ff\irc\ff_irc_thread.cpp"
-					>
+					RelativePath=".\ff\irc\ff_irc_thread.cpp">
 				</File>
 				<File
-					RelativePath=".\ff\irc\ff_irc_thread.h"
-					>
+					RelativePath=".\ff\irc\ff_irc_thread.h">
 				</File>
 				<File
-					RelativePath=".\ff\irc\ff_socks.cpp"
-					>
+					RelativePath=".\ff\irc\ff_socks.cpp">
 				</File>
 				<File
-					RelativePath=".\ff\irc\ff_socks.h"
-					>
+					RelativePath=".\ff\irc\ff_socks.h">
 				</File>
 			</Filter>
 		</Filter>
@@ -4110,13 +4243,22 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath="..\game_shared\ff\ff_gamerules.h">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_armorstrip.cpp">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_base.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_base.h">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_cloaksmoke.cpp">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_concussion.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_disable.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_emp.cpp">
@@ -4128,8 +4270,10 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath="..\game_shared\ff\ff_grenade_gas.cpp">
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_grenade_hoverturret.cpp"
-				>
+				RelativePath="..\game_shared\ff\ff_grenade_hoverturret.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_mirv.cpp">
@@ -4139,9 +4283,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_nail.cpp">
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_napalm.cpp">
@@ -4154,6 +4295,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_parse.h">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_slowfield.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_vert.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_info_script.cpp">
@@ -4213,10 +4360,22 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath="..\game_shared\ff\ff_projectile_dart.h">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_projectile_goop.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_goop.h">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_projectile_grenade.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_projectile_grenade.h">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_hook.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_hook.h">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_projectile_incendiaryrocket.cpp">
@@ -4336,17 +4495,28 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath="..\game_shared\ff\ff_weapon_flamethrower.cpp">
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_weapon_laserrifle.cpp"
-				>
+				RelativePath="..\game_shared\ff\ff_weapon_goopgun.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_grenadelauncher.cpp">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_hookgun.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_hookgun.h">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_ic.cpp">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_jumpdown.cpp">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_knife.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_laserrifle.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_medkit.cpp">
@@ -4368,6 +4538,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_rpg.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_shield.cpp">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_shotgun.cpp">
