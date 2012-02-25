@@ -26,6 +26,7 @@
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/Label.h>
+#include "vgui/ff_luabox.h"
 #include "vgui/ff_vgui_timer.h"
 
 #define MAX_HUD_ELEMENTS	128
@@ -58,22 +59,13 @@ public:
 	Panel	*GetHudElement(const char *pszIdentifier, HudElementType_t iType);
 	void	RemoveElement(const char *pszIdentifier);
 
-	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight);
-	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlign);
 	void	HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY);
-	void	HudIcon(ImagePanel *pImagePanel, const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY);
-
-	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText);
-	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlign);
-	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY);
-	void	HudText(Label *pLabel, const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY);
+	void	HudBox(const char *pszIdentifier, int iX, int iY, int iWidth, int iHeight, Color clr, Color clrBorder, int iBorderWidth, int iAlignX, int iAlignY);
+	void	HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY, int iSize);
 
 	bool	TranslateKeyCommand( const char *szMessage, char *szTranslated, int iBufferSizeInBytes );
 
-	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed);
-	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlign);
-	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY);
-	void	HudTimer(Timer *pTimer, const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY);
+	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY, int iSize);
 
 	void	FireGameEvent( IGameEvent *pEvent );
 

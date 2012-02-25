@@ -60,15 +60,10 @@
 enum HudElementType_t
 {
 	HUD_ICON = 0,
+	HUD_BOX,
 	HUD_TEXT,
 	HUD_TIMER,
 	HUD_REMOVE,
-	HUD_ICON_ALIGN,
-	HUD_ICON_ALIGNXY,
-	HUD_TEXT_ALIGN,
-	HUD_TEXT_ALIGNXY,
-	HUD_TIMER_ALIGN,
-	HUD_TIMER_ALIGNXY,
 };
 
 enum HudMessageType_t
@@ -113,15 +108,10 @@ bool IsPlayerRadioTagTarget( CFFPlayer *pPlayer, int iTeamDoingTargetting );
 void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalName );
 
 #ifdef GAME_DLL
-void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight);
-void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlign);
-void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlignX, int iAlignY); // added y alignment
-void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText);
-void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText, int iAlign);
-void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText, int iAlignX, int iAlignY);
-void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed);
-void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed, int iAlign);
-void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed, int iAlignX, int iAlignY);
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlignX = -1, int iAlignY = -1);
+void FF_LuaHudBox(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, Color clr, Color clrBorder, int iBorderWidth, int iAlignX = -1, int iAlignY = -1);
+void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText, int iAlignX = -1, int iAlignY = -1, int iSize = -1);
+void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, float flStartValue, float flSpeed, int iAlignX = -1, int iAlignY = -1, int iSize = -1);
 void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier);
 
 int UTIL_PickRandomClass(int _curteam);

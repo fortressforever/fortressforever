@@ -716,32 +716,11 @@ bool FF_IsGrenade( CBaseEntity *pEntity )
 }
 
 #ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: Set an icon on the hud - default alignment
-//-----------------------------------------------------------------------------
-void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight)
-{
-	if (!pPlayer)
-		return;
 
-	CSingleUserRecipientFilter user(pPlayer);
-	user.MakeReliable();
-
-	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(HUD_ICON);	// HUD_ICON
-	WRITE_STRING(pszIdentifier);
-	WRITE_SHORT(x);
-	WRITE_SHORT(y);
-	WRITE_STRING(pszImage);
-	WRITE_SHORT(iWidth);
-	WRITE_SHORT(iHeight);
-
-	MessageEnd();
-}
 //-----------------------------------------------------------------------------
 // Purpose: Set an icon on the hud
 //-----------------------------------------------------------------------------
-void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlign)
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlignX/* = -1*/, int iAlignY/* = -1*/)
 {
 	if (!pPlayer)
 		return;
@@ -750,31 +729,7 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(HUD_ICON_ALIGN);	// HUD_ICON_ALIGN
-	WRITE_STRING(pszIdentifier);
-	WRITE_SHORT(x);
-	WRITE_SHORT(y);
-	WRITE_STRING(pszImage);
-	WRITE_SHORT(iWidth);
-	WRITE_SHORT(iHeight);
-	WRITE_SHORT(iAlign);
-
-	MessageEnd();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Set an icon on the hud (added y alignment)
-//-----------------------------------------------------------------------------
-void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlignX, int iAlignY)
-{
-	if (!pPlayer)
-		return;
-
-	CSingleUserRecipientFilter user(pPlayer);
-	user.MakeReliable();
-
-	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(HUD_ICON_ALIGNXY);	// HUD_ICON_ALIGNXY
+		WRITE_BYTE(HUD_ICON);
 		WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
@@ -787,9 +742,9 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Set some text on the hud
+// Purpose: Set a box on the hud
 //-----------------------------------------------------------------------------
-void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText)
+void FF_LuaHudBox(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, Color clr, Color clrBorder, int iBorderWidth, int iAlignX/* = -1*/, int iAlignY/* = -1*/)
 {
 	if (!pPlayer)
 		return;
@@ -798,18 +753,30 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(HUD_TEXT);	// HUD_TEXT
+		WRITE_BYTE(HUD_BOX);
 		WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
-		WRITE_STRING(pszText);
+		WRITE_SHORT(iWidth);
+		WRITE_SHORT(iHeight);
+		WRITE_SHORT(clr.r());
+		WRITE_SHORT(clr.g());
+		WRITE_SHORT(clr.b());
+		WRITE_SHORT(clr.a());
+		WRITE_SHORT(clrBorder.r());
+		WRITE_SHORT(clrBorder.g());
+		WRITE_SHORT(clrBorder.b());
+		WRITE_SHORT(clrBorder.a());
+		WRITE_SHORT(iBorderWidth);
+		WRITE_SHORT(iAlignX);
+		WRITE_SHORT(iAlignY);
 	MessageEnd();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Set some text on the hud
 //-----------------------------------------------------------------------------
-void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText, int iAlign)
+void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText, int iAlignX/* = -1*/, int iAlignY/* = -1*/, int iSize/* = -1*/)
 {
 	if (!pPlayer)
 		return;
@@ -818,41 +785,21 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(HUD_TEXT_ALIGN);	// HUD_TEXT_ALIGN
-	WRITE_STRING(pszIdentifier);
-	WRITE_SHORT(x);
-	WRITE_SHORT(y);
-	WRITE_STRING(pszText);
-	WRITE_SHORT(iAlign);
-	MessageEnd();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Set some text on the hud
-//-----------------------------------------------------------------------------
-void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText, int iAlignX, int iAlignY)
-{
-	if (!pPlayer)
-		return;
-
-	CSingleUserRecipientFilter user(pPlayer);
-	user.MakeReliable();
-
-	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(HUD_TEXT_ALIGNXY);	// HUD_TEXT_ALIGNXY
+	WRITE_BYTE(HUD_TEXT);
 	WRITE_STRING(pszIdentifier);
 	WRITE_SHORT(x);
 	WRITE_SHORT(y);
 	WRITE_STRING(pszText);
 	WRITE_SHORT(iAlignX);
 	WRITE_SHORT(iAlignY);
+	WRITE_SHORT(iSize);
 	MessageEnd();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Set a timer on the hud
 //-----------------------------------------------------------------------------
-void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed)
+void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, float flStartValue, float flSpeed, int iAlignX/* = -1*/, int iAlignY/* = -1*/, int iSize/* = -1*/)
 {
 	if (!pPlayer)
 		return;
@@ -861,57 +808,15 @@ void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y,
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(HUD_TIMER);	// HUD_TIMER
-		WRITE_STRING(pszIdentifier);
-		WRITE_SHORT(x);
-		WRITE_SHORT(y);
-		WRITE_SHORT(iStartValue);
-		WRITE_FLOAT(flSpeed);
-	MessageEnd();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Set a timer on the hud
-//-----------------------------------------------------------------------------
-void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed, int iAlign)
-{
-	if (!pPlayer)
-		return;
-
-	CSingleUserRecipientFilter user(pPlayer);
-	user.MakeReliable();
-
-	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(HUD_TIMER_ALIGN);	// HUD_TIMER_ALIGN
+	WRITE_BYTE(HUD_TIMER);
 	WRITE_STRING(pszIdentifier);
 	WRITE_SHORT(x);
 	WRITE_SHORT(y);
-	WRITE_SHORT(iStartValue);
-	WRITE_FLOAT(flSpeed);
-	WRITE_SHORT(iAlign);
-	MessageEnd();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Set a timer on the hud
-//-----------------------------------------------------------------------------
-void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed, int iAlignX, int iAlignY)
-{
-	if (!pPlayer)
-		return;
-
-	CSingleUserRecipientFilter user(pPlayer);
-	user.MakeReliable();
-
-	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(HUD_TIMER_ALIGNXY);	// HUD_TIMER_ALIGNXY
-	WRITE_STRING(pszIdentifier);
-	WRITE_SHORT(x);
-	WRITE_SHORT(y);
-	WRITE_SHORT(iStartValue);
+	WRITE_FLOAT(flStartValue);
 	WRITE_FLOAT(flSpeed);
 	WRITE_SHORT(iAlignX);
 	WRITE_SHORT(iAlignY);
+	WRITE_SHORT(iSize);
 	MessageEnd();
 }
 
