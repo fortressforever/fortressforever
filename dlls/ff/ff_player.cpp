@@ -5832,11 +5832,20 @@ bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
 	SetThink(&CBasePlayer::PlayerDeathThink);
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
+	Vector vecDamageOrigin = info.GetInflictor()->GetAbsOrigin();
+	Vector vecPlayerOrigin = this->GetAbsOrigin();
+	//Vector vecPlayerVelocity = GetAbsVelocity();
+
+	Vector vecDamageToPlayer;
+	VectorSubtract(vecPlayerOrigin, vecDamageOrigin, vecDamageToPlayer);
+	VectorNormalize(vecDamageToPlayer);
+
+	Vector vecForce;
+	VectorMultiply(vecDamageToPlayer, info.GetDamageForce().Length(), vecForce);
+
 	CEffectData data;
-	data.m_nEntIndex = entindex();
   	data.m_vOrigin = GetAbsOrigin();
-	Vector vecDamageForce = info.GetDamageForce();
-	data.m_flMagnitude = VectorLength(vecDamageForce);
+	data.m_vStart = vecForce;
 	DispatchEffect("Gib", data);
 
 	return true;
