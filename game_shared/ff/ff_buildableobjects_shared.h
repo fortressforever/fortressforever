@@ -805,8 +805,10 @@ public:
 	float	m_flPitchSpeed;
 	float	m_flLockTime;
 
-	//float	m_flDamageTaken;
-
+	float m_flBarrelRotationDelta;
+	float m_flBarrelRotationValue;
+	float m_flSpinDownStartTime;
+	float m_flSpinUpStartTime;
 
 	// Ammo definition for shells
 	int		m_iAmmoType;

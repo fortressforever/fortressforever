@@ -688,7 +688,6 @@ void CFFSentryGun::OnActiveThink( void )
 		if (flSpinUpTimeElapsed <= SG_BARRELROTATION_SPINUP)
 		{
 			m_flBarrelRotationDelta = SG_BARRELROTATION_SPEED_MIN * (1 - pow(1 - (flSpinUpTimeElapsed / SG_BARRELROTATION_SPINUP), 3));
-			DevMsg(0, "%f\n", (1 - pow(1 - (flSpinUpTimeElapsed / SG_BARRELROTATION_SPINUP), 3)));
 		}
 		else
 		{
@@ -1448,7 +1447,6 @@ void CFFSentryGun::SpinDown( void )
 		m_flSpinDownStartTime = gpGlobals->curtime;
 	}
 }
-
 //-----------------------------------------------------------------------------
 // Purpose: Causes the turret to face its desired angles
 //-----------------------------------------------------------------------------
