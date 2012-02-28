@@ -95,6 +95,9 @@ ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_REPLICATED, 
 //static ConVar location_update_frequency( "ffdev_location_update_frequency", "0.5" );
 #define LOCATION_UPDATE_FREQUENCY 0.5f
 
+//ConVar ffdev_changeclass_graceperiod( "ffdev_changeclass_graceperiod", "", "5", FCVAR_CHEATS | FCVAR_NOTIFY, "You can only change class once per grace period without getting a 5 second respawn delay" );
+#define CHANGECLASS_GRACEPERIOD 5.0f
+
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 #define FFDEV_INFECT_FREQ 2.0f
@@ -597,6 +600,8 @@ CFFPlayer::CFFPlayer()
 	m_iSpawnInterpCounter = 0;
 
 	m_fl_LuaSet_PlayerRespawnDelay = 0.0f;
+
+	m_flLastClassSwitch = 0.0f;
 
 	m_SpawnPointOverride = 0;
 
@@ -2555,6 +2560,20 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOSPACE" );
 		return;
 	}
+	
+	// check if Lua wants to allow it
+	CFFLuaSC hPlayerSwitchClass;
+	hPlayerSwitchClass.Push(this);
+	hPlayerSwitchClass.Push(GetClassSlot());
+	hPlayerSwitchClass.Push(iClass);
+	if(_scriptman.RunPredicates_LUA( NULL, &hPlayerSwitchClass, "player_switchclass" ))
+	{
+		if(hPlayerSwitchClass.GetBool() == false)
+		{
+			ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_CANTSWITCHCLASS" );
+			return;
+		}
+	}
 
 	// Yup it is okay to change
 	// We don't change class instantly, only when we spawn
@@ -2564,6 +2583,12 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	if (fInstantSwitch || GetClassSlot() == 0)
 	{
 		bool bAlive = IsAlive();
+		
+		// if we're changing class twice in 5 seconds, then add a respawn delay as if they typed kill in console
+		if (gpGlobals->curtime - m_flLastClassSwitch <= CHANGECLASS_GRACEPERIOD)
+			SetRespawnDelay( 5.0f );
+
+		m_flLastClassSwitch = gpGlobals->curtime;
 
 		// But for now we do have instant switching
 		KillAndRemoveItems();

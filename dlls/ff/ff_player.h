@@ -454,8 +454,12 @@ public:
 
 	// Only for LUA to use to set player specific spawn delays
 	void LUA_SetPlayerRespawnDelay( float flDelay ) { m_fl_LuaSet_PlayerRespawnDelay = max( 0.0f, flDelay ); SetRespawnDelay(); }
+
 private:
 	float m_fl_LuaSet_PlayerRespawnDelay;
+	
+	// time of the last class switch
+	float m_flLastClassSwitch;
 
 
 
