@@ -42,7 +42,7 @@ ConVar growTime( "ffdev_lasergren_growTime", "1", FCVAR_REPLICATED, "Time taken 
 ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_REPLICATED, "Time taken to shrink to nothing" );
 ConVar lasertime("ffdev_lasergren_time", "7", FCVAR_REPLICATED, "Laser active time");
 
-ConVar ffdev_lasergren_centergap("ffdev_lasergren_centergap", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Gap between the center and the laser startpoint");
+ConVar ffdev_lasergren_centergap("ffdev_lasergren_centergap", "64", FCVAR_NOTIFY | FCVAR_REPLICATED, "Gap between the center and the laser startpoint");
 #define LASERGREN_CENTERGAP ffdev_lasergren_centergap.GetFloat()
 
 #ifdef CLIENT_DLL
@@ -312,7 +312,7 @@ float CFFGrenadeLaser::getLengthPercent()
 		float flDeltaAngle = 360.0f / laserbeams.GetInt();
 
 		CBaseEntity *pEntity = NULL;
-		for (CEntitySphereQuery sphere(vecOrigin, laserdistance.GetFloat() * getLengthPercent() + laserradius.GetFloat()); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
+		for (CEntitySphereQuery sphere(vecOrigin, laserdistance.GetFloat() * getLengthPercent()); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
 		{
 			if (!pEntity)
 				continue;
@@ -365,6 +365,12 @@ float CFFGrenadeLaser::getLengthPercent()
 				VectorNormalizeFast(vecDirection);
 
 				Vector vecToEnt = pEntity->GetAbsOrigin() - vecOrigin;
+
+				if (vecToEnt.Length2D() > laserdistance.GetFloat() * getLengthPercent() + 2*laserradius.GetFloat())
+				{
+					angRadial.y += flDeltaAngle;
+					continue;
+				}
 
 				float dot = DotProduct( vecDirection, vecToEnt );
 
@@ -541,6 +547,7 @@ float CFFGrenadeLaser::getLengthPercent()
 					if (!pBeam[i])
 						continue;
 
+					pBeam[i]->SetBeamFlags(SF_BEAM_SHADEOUT | SF_BEAM_DECALS);
 					pBeam[i]->SetWidth( LASERGREN_WIDTHSTART );
 					pBeam[i]->SetEndWidth( LASERGREN_WIDTHEND );
 					pBeam[i]->LiveForTime( 1  );
@@ -561,7 +568,13 @@ float CFFGrenadeLaser::getLengthPercent()
 				Vector startpos = vecOrigin + vecDirection * LASERGREN_CENTERGAP;
 
 				if (LASERGREN_CENTERGAP/laserdistance.GetFloat() > getLengthPercent())
-					continue;
+				{
+					pBeam[i]->SetBrightness( 50 );
+				}
+				else
+				{
+					pBeam[i]->SetBrightness( 255 );
+				}
 
 				pBeam[i]->PointsInit( startpos, tr.endpos );
 
