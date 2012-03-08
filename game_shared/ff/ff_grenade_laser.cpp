@@ -427,9 +427,11 @@ float CFFGrenadeLaser::getLengthPercent()
 					continue;
 				}
 
+				Vector startpos = vecOrigin + vecDirection * LASERGREN_CENTERGAP;
+
 				//make sure theres nothing in the way
 				trace_t tr;
-				UTIL_TraceLine( vecOrigin, 
+				UTIL_TraceLine( startpos, 
 								point, 
 								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
 				
@@ -537,7 +539,9 @@ float CFFGrenadeLaser::getLengthPercent()
 				AngleVectors(angRadial, &vecDirection);
 				VectorNormalizeFast(vecDirection);
 
-				UTIL_TraceLine( vecOrigin, 
+				Vector startpos = vecOrigin + vecDirection * LASERGREN_CENTERGAP;
+
+				UTIL_TraceLine( startpos, 
 								vecOrigin + vecDirection * laserdistance.GetFloat() * getLengthPercent(), 
 								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
 				
@@ -565,7 +569,6 @@ float CFFGrenadeLaser::getLengthPercent()
 					else // just in case
 						pBeam[i]->SetColor( 204, 204, 204 );
 				}
-				Vector startpos = vecOrigin + vecDirection * LASERGREN_CENTERGAP;
 
 				if (LASERGREN_CENTERGAP/laserdistance.GetFloat() > getLengthPercent())
 				{
