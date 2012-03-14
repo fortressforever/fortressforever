@@ -2988,7 +2988,7 @@ void CFFPlayer::LockPlayerInPlace( void )
 void CFFPlayer::UnlockPlayer( void )
 {
 	SetMoveType( MOVETYPE_WALK );
-	SetAbsVelocity( Vector( 0, 0, 0 ) );
+	//SetAbsVelocity( Vector( 0, 0, 0 ) );
 }
 
 void CFFPlayer::FindRadioTaggedPlayers( void )
