@@ -1146,7 +1146,6 @@ void CHLClient::LevelInitPostEntity( )
    // Show the class menu selection every time we start a level
    //gViewPortInterface->ShowPanel( PANEL_CLASS, true );
 
-   gViewPortInterface->ShowPanel( PANEL_INFO, true );
    // Pop the info panel back up above the team change menu
    // --> Mirv: Don't show this panel anymore
    //IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
@@ -1206,7 +1205,6 @@ void CHLClient::LevelShutdown( void )
 
 	//-- Added by L0ki --
 	// Hide these panels so the game doesnt crash on us
-	gViewPortInterface->ShowPanel( PANEL_INFO, false );
 	gViewPortInterface->ShowPanel( PANEL_TEAM, false );
 	gViewPortInterface->ShowPanel( PANEL_CLASS, false );
 	gViewPortInterface->ShowPanel( PANEL_MAP, false );

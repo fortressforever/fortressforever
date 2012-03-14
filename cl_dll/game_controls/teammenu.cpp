@@ -212,12 +212,10 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM)
 
 	// ServerInfo elements
 	m_pServerInfoText = new RichText(this, "ServerInfoText");
-	m_pServerInfoText->SetDrawOffsets( 10, 0 );
 
 	// MapDescription elements
 	m_pMapDescriptionHead = new Label(this, "MapDescriptionHead", "");
 	m_pMapDescriptionText = new RichText(this, "MapDescriptionText");
-	m_pMapDescriptionText->SetDrawOffsets( 10, 0 );
 
 	char *pszButtons[] = { "BlueTeamButton", "RedTeamButton", "YellowTeamButton", "GreenTeamButton" };
 	
@@ -329,9 +327,6 @@ void CTeamMenu::OnKeyCodePressed(KeyCode code)
 		m_pViewPort->ShowPanel( this, false );
 		engine->ClientCmd( "changeclass" );
 	}
-	
-	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("serverinfo"))
-		engine->ClientCmd( "serverinfo" );
 
 	BaseClass::OnKeyCodePressed(code);
 }

@@ -571,16 +571,6 @@ void IN_ChangeClass( void )
 }
 // END: Added by Mulchman for team change & class change
 
-void IN_ServerInfo( void )
-{
-	if( gViewPortInterface )
-	{
-		IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
-		if( pPanel )
-			gViewPortInterface->ShowPanel( PANEL_INFO, true );
-	}
-}
-
 extern void HudContextShowCalls(bool visible);
 
 // BEG: Mulch: For medic & engy hud radial style menu
@@ -1481,8 +1471,6 @@ static ConCommand startgrenade2( "+grenade2", IN_Grenade2Down );
 static ConCommand changeteam( "changeteam", IN_ChangeTeam );
 static ConCommand changeclass( "changeclass", IN_ChangeClass );
 // END: Added by Mulchman for team & class changing
-
-static ConCommand serverinfo( "serverinfo", IN_ServerInfo );
 
 // BEG: Mulch: For medic & engy hud radial style menu
 static ConCommand startMedEngyMenu( "+medengymenu", IN_MedEngyMenuDown );

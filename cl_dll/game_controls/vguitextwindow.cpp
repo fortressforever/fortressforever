@@ -23,8 +23,6 @@
 
 #include <cl_dll/iviewport.h>
 
-#include "ff_button.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -88,12 +86,10 @@ CTextWindow::CTextWindow(IViewPort *pViewPort) : Frame(NULL, PANEL_INFO	)
 	m_pTextMessage = new TextEntry(this, "TextMessage");
 	m_pHTMLMessage = new HTML(this,"HTMLMessage");;
 	m_pTitleLable  = new Label( this, "MessageTitle", "Message Title" );
-	m_pOK		   = new FFButton(this, "ok", "#PropertyDialog_OK");
+	m_pOK		   = new Button(this, "ok", "#PropertyDialog_OK");
 
 	m_pOK->SetCommand("okay");
 	m_pTextMessage->SetMultiline( true );
-	m_pTextMessage->SetVerticalScrollbar(true);
-	m_pHTMLMessage->SetScrollbarsEnabled(false);
 	
 	LoadControlSettings("Resource/UI/TextWindow.res");
 	
@@ -288,9 +284,6 @@ void CTextWindow::ShowPanel( bool bShow )
 	{
 		Activate();
 		SetMouseInputEnabled( true );
-		SetEnabled(true);
-
-		MoveToFront();
 	}
 	else
 	{

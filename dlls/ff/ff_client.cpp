@@ -64,7 +64,7 @@ void FinishClientPutInServer( CFFPlayer *pPlayer )
 	// --> Mirv: Various connectiong things
 	
 	// Bring up the MOTD in front of the team menu
-	const ConVar *hostname = cvar->FindVar( "hostname" );
+/*	const ConVar *hostname = cvar->FindVar( "hostname" );
 	const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";
 
 	// open info panel on client showing MOTD:
@@ -75,7 +75,7 @@ void FinishClientPutInServer( CFFPlayer *pPlayer )
 	
 	pPlayer->ShowViewPortPanel( PANEL_INFO, true, data );
 
-	data->deleteThis();
+	data->deleteThis();*/
 
 	// Invisible when we connect
 	pPlayer->AddEffects( EF_NODRAW );
