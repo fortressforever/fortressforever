@@ -21,9 +21,6 @@
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 
-#include "IGameUIFuncs.h"
-#include "ienginevgui.h"
-
 #include <cl_dll/iviewport.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -65,24 +62,6 @@ CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command>]
 	 {
 		 Msg("Couldn't find info panel.\n" );
 	 }
-}
-
-CON_COMMAND( hud_reloadserverinfo, "hud_reloadserverinfo" )
-{
-	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
-
-	if( !pPanel )
-		return;
-
-	CTextWindow *pServerInfo = dynamic_cast< CTextWindow * >( pPanel );
-	if( !pServerInfo )
-		return;
-
-	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ClientScheme.res", "HudScheme" );
-
-	pServerInfo->SetScheme( scheme );
-	pServerInfo->SetProportional( true );
-	pServerInfo->LoadControlSettings( "Resource/UI/TextWindow.res" );
 }
 
 //-----------------------------------------------------------------------------
@@ -129,38 +108,10 @@ CTextWindow::~CTextWindow()
 void CTextWindow::Reset( void )
 {
 	Q_strcpy( m_szTitle, "This could be your Title." );
-	Q_strcpy( m_szMessage, "motd" );
+	Q_strcpy( m_szMessage, "Just for 10 Euros a week!" );
 	m_szExitCommand[0] = 0;
-	m_nContentType = TYPE_INDEX;
+	m_nContentType = TYPE_TEXT;
 	Update();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Give them some key control too
-//-----------------------------------------------------------------------------
-void CTextWindow::OnKeyCodePressed(KeyCode code) 
-{
-	// Show the scoreboard over this if needed
-	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores"))
-		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
-
-	// Support hiding the motd by hitting your serverinfo button again
-	// 0001232: Or if the user presses escape, kill the menu
-	if ((engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("serverinfo")) ||
-		(engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("cancelselect"))) 
-		gViewPortInterface->ShowPanel(this, false);
-	
-	BaseClass::OnKeyCodePressed(code);
-}
-
-void CTextWindow::OnKeyCodeReleased(KeyCode code)
-{
-	// Bug #0000524: Scoreboard gets stuck with the class menu up when you first join
-	// Hide the scoreboard now
-	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores"))
-		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
-
-	BaseClass::OnKeyCodeReleased(code);
 }
 
 void CTextWindow::ShowText( const char *text)
@@ -178,9 +129,6 @@ void CTextWindow::ShowURL( const char *URL)
 
 void CTextWindow::ShowIndex( const char *entry)
 {
-	if (g_pStringTableInfoPanel == NULL)
-		return;
-
 	const char *data = NULL;
 	int length = 0;
 	int index = g_pStringTableInfoPanel->FindStringIndex( m_szMessage );
@@ -189,10 +137,7 @@ void CTextWindow::ShowIndex( const char *entry)
 		data = (const char *)g_pStringTableInfoPanel->GetStringUserData( index, &length );
 
 	if ( !data || !data[0] )
-	{
-		ShowURL( "http://www.fortress-forever.com/defaultmotd/" );
-		return; // show default
-	}
+		return; // nothing to show
 
 	// is this a web URL ?
 	if ( !Q_strncmp( data, "http://", 7 ) )
@@ -261,12 +206,6 @@ void CTextWindow::ShowFile( const char *filename )
 void CTextWindow::Update( void )
 {
 	SetTitle( m_szTitle, false );
-
-	const ConVar *pHostname = cvar->FindVar("hostname");
-	const char *pszTitle = (pHostname) ? pHostname->GetString() : "Fortress Forever";
-
-	if (pszTitle)
-		Q_strncpy(m_szTitle, pszTitle, 255);
 
 	m_pTitleLable->SetText( m_szTitle );
 
@@ -345,15 +284,10 @@ void CTextWindow::ShowPanel( bool bShow )
 	{
 		Activate();
 		SetMouseInputEnabled( true );
-		SetKeyBoardInputEnabled( true );
-		SetEnabled(true);
-
-		MoveToFront();
 	}
 	else
 	{
 		SetVisible( false );
 		SetMouseInputEnabled( false );
-		SetKeyBoardInputEnabled( false );
 	}
 }
