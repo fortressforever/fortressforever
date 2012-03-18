@@ -211,11 +211,14 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM)
 	SetSizeable(false);
 
 	// ServerInfo elements
-	m_pServerInfoText = new RichText(this, "ServerInfoText");
+	m_pServerInfoHost = new HTML(this, "ServerInfoHost");
+	m_pServerInfoHost->SetScrollbarsEnabled(false);
+	m_pServerInfoButton = new FFButton(this, "ServerInfoButton", (const char *) NULL, this, "serverinfo");
 
 	// MapDescription elements
 	m_pMapDescriptionHead = new Label(this, "MapDescriptionHead", "");
 	m_pMapDescriptionText = new RichText(this, "MapDescriptionText");
+	m_pMapDescriptionText->SetDrawOffsets( 10, 0 );
 
 	char *pszButtons[] = { "BlueTeamButton", "RedTeamButton", "YellowTeamButton", "GreenTeamButton" };
 	
@@ -251,7 +254,7 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	m_pMapDescriptionText->SetBorder(NULL);
-	m_pServerInfoText->SetBorder(NULL);
+	//m_pServerInfoHost->SetBorder(NULL);
 }
 
 //-----------------------------------------------------------------------------
@@ -276,6 +279,9 @@ void CTeamMenu::OnCommand(const char *command)
 
 	// Run the command
 	engine->ClientCmd(command);
+	
+	if (Q_strcmp(command, "serverinfo") == 0) 
+		return;
 
 	if (Q_strcmp(command, "jpeg") == 0)
 	{
@@ -327,6 +333,9 @@ void CTeamMenu::OnKeyCodePressed(KeyCode code)
 		m_pViewPort->ShowPanel( this, false );
 		engine->ClientCmd( "changeclass" );
 	}
+	
+	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("serverinfo"))
+		engine->ClientCmd( "serverinfo" );
 
 	BaseClass::OnKeyCodePressed(code);
 }
@@ -495,26 +504,32 @@ void CTeamMenu::UpdateTeamButtons()
 
 void CTeamMenu::UpdateServerInfo()
 {
-	//const ConVar *pHostname = cvar->FindVar("hostname");
-	//const char *pszTitle = (pHostname) ? pHostname->GetString() : "#FF_DEFAULT_MOTD";
-
 	//m_pServerInfoText->SetText(pszTitle);
 
 	if (g_pStringTableInfoPanel == NULL)
 		return;
 
-	int iIndex = g_pStringTableInfoPanel->FindStringIndex("motd");
+	int x,y;
+	m_pServerInfoButton->GetPos(x,y);
+	m_pServerInfoButton->SetPos( x, scheme()->GetProportionalScaledValue(34) );
+
+	int iIndex = g_pStringTableInfoPanel->FindStringIndex("host");
 
 	if (iIndex == ::INVALID_STRING_INDEX)
 	{
-		m_pServerInfoText->SetText("#FF_DEFAULT_MOTD");
+		const ConVar *pHostname = cvar->FindVar("hostname");
+		const char *pszTitle = (pHostname) ? pHostname->GetString() : "Fortress Forever";
+
+		if (pszTitle)
+			m_pServerInfoHost->OpenURL( VarArgs("http://www.fortress-forever.com/defaulthost/index.php?name=%s", pszTitle) );
+
 		return;
 	}
 
 	int nLength = 0;
 	const char *pszMotd = (const char *) g_pStringTableInfoPanel->GetStringUserData(iIndex, &nLength);
 
-	m_pServerInfoText->SetText(pszMotd);
+	m_pServerInfoHost->OpenURL(pszMotd);
 }
 
 void CTeamMenu::UpdateMapDescriptionText()

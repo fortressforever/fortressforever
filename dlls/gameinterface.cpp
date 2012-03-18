@@ -1601,11 +1601,13 @@ static void ValidateMOTDFilename( ConVar *var, const char *oldValue )
 }
 
 static ConVar motdfile( "motdfile", "motd.txt", 0, "The MOTD file to load.", ValidateMOTDFilename );
+static ConVar hostfile( "hostfile", "host.txt", 0, "The host file to load.", ValidateMOTDFilename );
 void CServerGameDLL::LoadMessageOfTheDay()
 {
 #ifndef _XBOX
 	char data[2048];
 
+	// add motd.txt
 	int length = filesystem->Size( motdfile.GetString(), "GAME" );
 
 	if ( length <= 0 || length >= (sizeof(data)-1) )
@@ -1625,6 +1627,27 @@ void CServerGameDLL::LoadMessageOfTheDay()
 	data[length] = 0;
 
 	g_pStringTableInfoPanel->AddString( "motd", length+1, data );
+	
+	// add host.txt
+	length = filesystem->Size( hostfile.GetString(), "GAME" );
+
+	if ( length <= 0 || length >= (sizeof(data)-1) )
+	{
+		DevMsg("Invalid file size for %s\n", hostfile.GetString() );
+		return;
+	}
+
+	hFile = filesystem->Open( hostfile.GetString(), "rb", "GAME" );
+
+	if ( hFile == FILESYSTEM_INVALID_HANDLE )
+		return;
+
+	filesystem->Read( data, length, hFile );
+	filesystem->Close( hFile );
+
+	data[length] = 0;
+	
+	g_pStringTableInfoPanel->AddString( "host", length+1, data );
 #endif
 }
 
