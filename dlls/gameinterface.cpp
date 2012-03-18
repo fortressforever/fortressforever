@@ -1601,7 +1601,6 @@ static void ValidateMOTDFilename( ConVar *var, const char *oldValue )
 }
 
 static ConVar motdfile( "motdfile", "motd.txt", 0, "The MOTD file to load.", ValidateMOTDFilename );
-static ConVar hostfile( "hostfile", "host.txt", 0, "The host file to load.", ValidateMOTDFilename );
 void CServerGameDLL::LoadMessageOfTheDay()
 {
 #ifndef _XBOX

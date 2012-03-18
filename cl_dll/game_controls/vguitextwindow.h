@@ -16,7 +16,6 @@
 #include <vgui_controls/HTML.h>
 
 #include <cl_dll/iviewport.h>
-#include <vgui/KeyCode.h>
 
 namespace vgui
 {
@@ -51,9 +50,6 @@ public:
 	virtual bool NeedsUpdate( void ) { return false; }
 	virtual bool HasInputElements( void ) { return true; }
 	virtual void ShowPanel( bool bShow );
-	
-	virtual void OnKeyCodePressed(vgui::KeyCode code);
-	virtual void OnKeyCodeReleased(vgui::KeyCode code);
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }

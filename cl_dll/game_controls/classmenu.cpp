@@ -512,9 +512,6 @@ void CClassMenu::OnKeyCodePressed(KeyCode code)
 	// Show the scoreboard over this if needed
 	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores")) 
 		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
-	
-	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("serverinfo"))
-		engine->ClientCmd( "serverinfo" );
 
 	// Support hiding the class menu by hitting your changeclass button again like TFC
 	// 0001232: Or if the user presses escape, kill the menu

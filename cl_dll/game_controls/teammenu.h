@@ -82,8 +82,7 @@ namespace vgui
 		IViewPort	*m_pViewPort;
 
 		// ServerInfo elements
-		FFButton		*m_pServerInfoButton;
-		HTML			*m_pServerInfoHost;
+		RichText		*m_pServerInfoText;
 
 		// MapDescription elements
 		Label			*m_pMapDescriptionHead;
