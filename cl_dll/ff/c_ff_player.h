@@ -225,19 +225,19 @@ public:
 	// Gets the origin of player's current objective (set by Lua)
 	Vector GetCurrObjectiveOrigin( void ) { return m_vecObjectiveOrigin.Get(); }
 
-	bool IsInfected( void ) const	{ return m_bInfected != 0; }
+	bool IsInfected( void ) const	{ return m_bInfected; }
 	// Two girls for every boy?
 	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter1;
 	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter2;
 	
 	int m_iInfectTick;
 
-	bool IsImmune( void ) const		{ return m_bImmune != 0; }
+	bool IsImmune( void ) const		{ return m_bImmune; }
 	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter1;
 	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter2;
 private:
-	unsigned int m_bInfected;
-	unsigned int m_bImmune;
+	bool m_bInfected;
+	bool m_bImmune;
 	int m_iActiveSabotages;
 	int m_iSpyDisguising;
 	//Hold a last weapon?
@@ -342,9 +342,9 @@ public:
 
 public:
 	// Returns true if the player can disguise
-	bool IsDisguisable( void ) const	{ return m_bDisguisable != 0; }
+	bool IsDisguisable( void ) const	{ return m_bDisguisable; }
 private:
-	unsigned int m_bDisguisable;
+	bool m_bDisguisable;
 	// <-- mulch
 
 private:
@@ -566,12 +566,12 @@ private:
 
 public:
 	// Returns true if the player can cloak
-	bool IsCloakable( void ) const		{ return m_bCloakable != 0; }
+	bool IsCloakable( void ) const		{ return m_bCloakable; }
 	//Returns the time the cloak started -GreenMushy
 	float GetCloakTime( void ) const    { return m_flCloakTime; }
 	float GetCloakPercent( void ) { 	return (gpGlobals->curtime - GetCloakTime()) / ffdev_cloaktime.GetFloat(); }
 private:
-	unsigned int m_bCloakable;
+	bool m_bCloakable;
 	// ----------------------------------
 
 	// ----------------------------------

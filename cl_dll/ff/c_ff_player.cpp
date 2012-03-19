@@ -814,8 +814,8 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 
 	// Radiotag information the local client needs to know
 	RecvPropEHandle( RECVINFO( m_hRadioTagData ) ),
-	RecvPropInt( RECVINFO( m_bCloakable ) ),
-	RecvPropInt( RECVINFO( m_bDisguisable ) ),
+	RecvPropBool( RECVINFO( m_bCloakable ) ),
+	RecvPropBool( RECVINFO( m_bDisguisable ) ),
 	RecvPropQAngles( RECVINFO( m_vecInfoIntermission ) ),
 	// Entity at player's current objective (set by Lua)
 	RecvPropEHandle( RECVINFO( m_hObjectiveEntity ) ),
@@ -852,8 +852,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropBool( RECVINFO( m_bTranqed ) ),
 	RecvPropBool( RECVINFO( m_bSliding ) ),
 	RecvPropEHandle( RECVINFO( m_hActiveSlowfield ) ),
-	RecvPropInt( RECVINFO( m_bInfected ) ),
-	RecvPropInt( RECVINFO( m_bImmune ) ),
+	RecvPropBool( RECVINFO( m_bInfected ) ),
+	RecvPropBool( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iInfectTick ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
 	RecvPropInt( RECVINFO( m_iCloakSmoked ) ),
