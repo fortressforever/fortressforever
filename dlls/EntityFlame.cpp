@@ -125,14 +125,16 @@ CEntityFlame *CEntityFlame::Create( CBaseEntity *pTarget, bool useHitboxes, floa
 
 	float size = ( xSize + ySize ) * 0.5f;
 
-	size = size * flameSize;
-	/*
-	if ( size < 1.0f )
+	if( size != 0 )
 	{
-		size = 1.0f;
-	}*/
+		size = size * flameSize;
+	}
+	else
+	{
+		size = flameSize;
+	}
 
-//DevMsg("Flame created, size: %0.2f... ", size);
+
 	UTIL_SetOrigin( pFlame, pTarget->GetAbsOrigin() );
 
 	pFlame->m_flSize = size;
