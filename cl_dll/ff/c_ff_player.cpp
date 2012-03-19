@@ -1066,26 +1066,6 @@ void C_FFRagdoll::CreateRagdoll()
 			Interp_Reset( varMap );
 		}
 
-		/*
-		// Now set the corpse alight if needed
-		if (pPlayer->GetEffectEntity())
-		{
-			IgniteRagdoll(pPlayer);
-			SetNextClientThink(gpGlobals->curtime + 1.0f);
-
-			// This is giving the CL_CopyExistingEntity error
-#if 0
-			C_EntityFlame *pFlame = (C_EntityFlame *) pPlayer->GetEffectEntity();
-
-			// Now make sure we kill our own flame
-			if (pFlame)
-			{
-				pFlame->Remove();
-			}
-#endif
-		}
-		*/
-
 		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
 
 		// We can also spawn a valid weapon
@@ -3526,11 +3506,15 @@ void Gib_Callback(const CEffectData &data)
 		int iGibNumber = (i < 3 ? i + 1 : random->RandomInt(4, 8));
 
 		pszGibModel = VarArgs("models/gibs/gib%d.mdl", iGibNumber);
+
+		//spawn at different locations around the player
 		Vector vecGibSpawn;
 		VectorAdd(vecPlayerOrigin, Vector(random->RandomFloat(-4, 4),random->RandomFloat(-4, 4),random->RandomFloat(-12, 12)),vecGibSpawn);
 
+		//spread different amounts
 		Vector vecGibForce;
 		VectorAdd(vecForce, Vector(random->RandomFloat(-40, 40), random->RandomFloat(-40, 40), random->RandomFloat(-20, 20)), vecGibForce);
+
 		C_Gib *pGib = C_Gib::CreateClientsideGib(pszGibModel, vecGibSpawn, vecGibForce, Vector(0, 0, 0), 10.0f);
 
 		if (pGib)
