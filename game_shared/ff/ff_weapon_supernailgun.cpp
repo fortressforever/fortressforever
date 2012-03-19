@@ -112,8 +112,7 @@ void CFFWeaponSuperNailgun::Fire()
 	QAngle nailAngles;
 	VectorAngles((tr.endpos - vecSpawnOrigin), nailAngles);
 
-	CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, vecSpawnOrigin, nailAngles, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
-	pNail;
+	CFFProjectileNail::CreateNail(this, vecSpawnOrigin, nailAngles, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
 #ifdef GAME_DLL
 	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_SUPERNAILGUN, pNail);
