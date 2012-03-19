@@ -254,7 +254,7 @@ namespace vgui
 		int m_iIntensityOrange;
 		int m_iIntensityYellow;
 		int m_iIntensityGreen;
-		int m_bIntensityInvertScale;
+		bool m_bIntensityInvertScale;
 
 		Color m_ColorBarCustom;
 		Color m_ColorBarBorderCustom;
