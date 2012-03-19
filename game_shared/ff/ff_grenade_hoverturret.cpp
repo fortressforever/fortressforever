@@ -331,16 +331,13 @@ void CFFGrenadeHoverTurret::Precache()
 					QAngle vecAngles;
 					VectorAngles( vecDir, vecAngles );
 
-					CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, GetAbsOrigin() + vecDir * 20, vecAngles,  ToFFPlayer(GetOwnerEntity()), FFDEV_HOVERGREN_NAILDAMAGE, FFDEV_HOVERGREN_NAILSPEED);
+					CFFProjectileNail::CreateNail(this, GetAbsOrigin() + vecDir * 20, vecAngles,  ToFFPlayer(GetOwnerEntity()), FFDEV_HOVERGREN_NAILDAMAGE, FFDEV_HOVERGREN_NAILSPEED);
 					//CFFProjectileDart *pDart = CFFProjectileDart::CreateDart(this, GetAbsOrigin() + vecDir * 20, vecAngles,  ToFFPlayer(GetOwnerEntity()), FFDEV_HOVERGREN_NAILDAMAGE, FFDEV_HOVERGREN_NAILSPEED);
 				}
 
 				EmitSound( "HoverTurret.Shoot" );
 
 				m_flLastFireTime = gpGlobals->curtime;
-
-
-				
 
 				//int iAttachment = GetLevel() > 2 ? (m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment) : m_iMuzzleAttachment;
 
