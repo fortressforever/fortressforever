@@ -165,6 +165,8 @@ class CHudChat;
 class CViewRender;
 extern CViewRender g_DefaultViewRender;
 
+extern ConVar sv_motd_enable;
+
 extern void StopAllRumbleEffects( void );
 
 static C_BaseEntityClassList *s_pClassLists = NULL;
@@ -1139,20 +1141,21 @@ void CHLClient::LevelInitPostEntity( )
 	C_PhysPropClientside::RecreateAll();
 	internalCenterPrint->Clear();
 
-   // BEG: Added by Mulchman for team menu
-   // Show the team menu selection every time we start a level
-   gViewPortInterface->ShowPanel( PANEL_TEAM, true );
+	// BEG: Added by Mulchman for team menu
+	// Show the team menu selection every time we start a level
+	gViewPortInterface->ShowPanel( PANEL_TEAM, true );
 
-   // Show the class menu selection every time we start a level
-   //gViewPortInterface->ShowPanel( PANEL_CLASS, true );
+	// Show the class menu selection every time we start a level
+	//gViewPortInterface->ShowPanel( PANEL_CLASS, true );
 
-   gViewPortInterface->ShowPanel( PANEL_INFO, true );
-   // Pop the info panel back up above the team change menu
-   // --> Mirv: Don't show this panel anymore
-   //IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
-   //if( pPanel )
-   //   pPanel->ShowPanel( true );
-   // <-- Mirv
+	if (sv_motd_enable.GetBool())
+		gViewPortInterface->ShowPanel( PANEL_INFO, true );
+	// Pop the info panel back up above the team change menu
+	// --> Mirv: Don't show this panel anymore
+	//IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
+	//if( pPanel )
+	//   pPanel->ShowPanel( true );
+	// <-- Mirv
 }
 
 
