@@ -47,6 +47,8 @@
 #define DEFAULT_FIRE_CROUCH_WALK_NAME "crouch_walk_shoot_"
 #define DEFAULT_FIRE_WALK_NAME "walk_shoot_"
 #define DEFAULT_FIRE_RUN_NAME "run_shoot_"
+#define DEFAULT_FIRE_SWIM_IDLE_NAME "swim_idle_shoot_"
+#define DEFAULT_FIRE_SWIM_NAME "swim_shoot_"
 
 
 #define FIRESEQUENCE_LAYER		(AIMSEQUENCE_LAYER+NUM_AIMSEQUENCE_LAYERS)
@@ -388,6 +390,12 @@ int CFFPlayerAnimState::CalcFireLayerSequence(PlayerAnimEvent_t event)
 		case ACT_PLAYER_CROUCH_WALK_FIRE:
 		case ACT_RUN_CROUCH:
 			return CalcSequenceIndex( "%s%s", DEFAULT_FIRE_CROUCH_WALK_NAME, pSuffix );
+			
+		case ACT_SWIM:
+			return CalcSequenceIndex( "%s%s", DEFAULT_FIRE_SWIM_NAME, pSuffix );
+			
+		case ACT_HOVER:
+			return CalcSequenceIndex( "%s%s", DEFAULT_FIRE_SWIM_IDLE_NAME, pSuffix );
 
 		default:
 		case ACT_PLAYER_IDLE_FIRE:
