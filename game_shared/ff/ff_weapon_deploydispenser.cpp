@@ -275,7 +275,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		}
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurrentBuild() == FF_BUILD_DISPENSER ) )
 		{
 			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD");			
 			return;
@@ -341,7 +341,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		}
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurrentBuild() == FF_BUILD_DISPENSER ) )
 		{
 			ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDETMIDBUILD" );
 			return;
@@ -379,7 +379,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		}
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurrentBuild() == FF_BUILD_DISPENSER ) )
 		{
             ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_ENGY_CANTDISMANTLEMIDBUILD" );
 			return;

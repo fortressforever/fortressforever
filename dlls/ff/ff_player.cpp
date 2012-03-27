@@ -3834,7 +3834,7 @@ void CFFPlayer::Command_Discard( void )
 			vForward.z = 1.0f;
 
 		pBackpack->SetAbsVelocity(vForward);
-		pBackpack->SetAbsOrigin(GetLegacyAbsOrigin());
+		pBackpack->SetAbsOrigin(GetAbsOrigin());
 
 		// Play a sound
 		EmitSound("Item.Toss");
@@ -4071,7 +4071,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			/*
 			// Bug #0000504: No infection visible effect
 			CEffectData data;
-			data.m_vOrigin = GetLegacyAbsOrigin() - Vector( 0, 0, 16.0f );
+			data.m_vOrigin = GetAbsOrigin() - Vector( 0, 0, 16.0f );
 			data.m_vStart = GetAbsVelocity();
 			data.m_flScale = 1.0f;
 			DispatchEffect( "FF_InfectionEffect", data );
@@ -5133,7 +5133,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		EyeVectors(&vecForward);
 
 		// Mirv: Grenade should always come from the waist, tfc-style
-		vecSrc = GetLegacyAbsOrigin();
+		vecSrc = GetAbsOrigin();
 
 		VectorAngles( vecForward, angAngles );
 		angAngles.x -= GREN_SPAWN_ANG_X;
@@ -7542,11 +7542,11 @@ Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 
 	if (bNoisy)
 	{
-		return GetLegacyAbsOrigin() + (Vector(0, 0, 28) * random->RandomFloat(0.5f, 1.1f));
+		return GetAbsOrigin() + (Vector(0, 0, 28) * random->RandomFloat(0.5f, 1.1f));
 	}
 	else
 	{
-		return GetLegacyAbsOrigin(); //return EyePosition(); 
+		return GetAbsOrigin(); //return EyePosition(); 
 	}
 };
 

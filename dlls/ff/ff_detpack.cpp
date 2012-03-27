@@ -350,7 +350,7 @@ void CFFDetpack::DoExplosionDamage( void )
 		if( pEntity->IsPlayer() )
 		{
 			pPlayer = ToFFPlayer( pEntity );
-			vecTarget = pPlayer->GetLegacyAbsOrigin();
+			vecTarget = pPlayer->GetAbsOrigin();
 		}
 		else if( pEntity->Classify() == CLASS_DISPENSER )
 		{

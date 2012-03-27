@@ -423,7 +423,7 @@ void CFFGrenadeSlowfield::UpdateOnRemove()
 			if( !pPlayer || pPlayer->IsObserver() || !pSlower)
 				continue;
 
-			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - vecOrigin;
+			Vector vecDisplacement = pPlayer->GetAbsOrigin() - vecOrigin;
 			float flDistance = vecDisplacement.Length();
 
 			// inside the radius of the gren
@@ -504,7 +504,7 @@ void CFFGrenadeSlowfield::UpdateOnRemove()
 					pBeam->SetColor( 255, 178, 0 );
 				else // just in case
 					pBeam->SetColor( 204, 204, 204 );
-				pBeam->PointsInit( vecOrigin, pPlayer->GetLegacyAbsOrigin() );
+				pBeam->PointsInit( vecOrigin, pPlayer->GetAbsOrigin() );
 			}
 			// outside the radius of the gren
 			else if (pPlayer->GetActiveSlowfield() == this)
