@@ -2134,9 +2134,6 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 		// create a new one
 		pRagdoll = dynamic_cast< CFFRagdoll* >( CreateEntityByName( "ff_ragdoll" ) );
 
-		//add this flag so the fire doen't try to apply flame damage to the ragdoll
-		//pRagdoll->AddFlag( FL_RAGDOLL );
-
 		pRagdoll->m_hPlayer = this;
 	}
 	else
@@ -5853,20 +5850,9 @@ bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
 	SetThink(&CBasePlayer::PlayerDeathThink);
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
-	Vector vecDamageOrigin = info.GetInflictor()->GetAbsOrigin();
-	Vector vecPlayerOrigin = this->GetAbsOrigin();
-	//Vector vecPlayerVelocity = GetAbsVelocity();
-
-	Vector vecDamageToPlayer;
-	VectorSubtract(vecPlayerOrigin, vecDamageOrigin, vecDamageToPlayer);
-	VectorNormalize(vecDamageToPlayer);
-
-	Vector vecForce;
-	VectorMultiply(vecDamageToPlayer, info.GetDamageForce().Length(), vecForce);
-
 	CEffectData data;
   	data.m_vOrigin = GetAbsOrigin();
-	data.m_vStart = vecForce;
+	data.m_vStart = info.GetDamageForce();
 	DispatchEffect("Gib", data);
 
 	return true;
