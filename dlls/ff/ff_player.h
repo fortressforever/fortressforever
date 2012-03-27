@@ -500,6 +500,13 @@ public:
 	{
 		return ( GetFlags() & FL_FROZEN ) ? true : false;
 	}
+	void LuaLockPlayerInPlace( bool _lock )
+	{
+		if (_lock)
+			LockPlayerInPlace();
+		else
+			UnlockPlayer();
+	}
 
 	void ReloadClips( void );
  
