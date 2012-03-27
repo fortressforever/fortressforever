@@ -3344,22 +3344,9 @@ void Gib_Callback(const CEffectData &data)
 
 	const char *pszGibModel;
 
-	Vector vecDamageOrigin = data.m_vOrigin;
-	Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
-	Vector vecPlayerVelocity = pPlayer->GetAbsVelocity();
-
-	Vector vecDamageToPlayer;
-	VectorSubtract(vecPlayerOrigin, vecDamageOrigin, vecDamageToPlayer);
-
-	Vector vecDamageToPlayerNormalized = vecDamageToPlayer;
-	VectorNormalize(vecDamageToPlayerNormalized);
-	
-	Vector vecForce;
-	float distance = VectorLength(vecDamageToPlayer);
-	VectorMultiply(vecDamageToPlayerNormalized, data.m_flMagnitude, vecForce);
-	//VectorMultiply(vecDamageToPlayerNormalized, 16.0f / distance, vecForce);
+	Vector vecForce = data.m_vStart;
+	Vector vecPlayerOrigin = data.m_vOrigin;
 	//Add some of the players speed too.
-	VectorAdd(vecForce, vecPlayerVelocity * 0.1f, vecForce);
 
 	// We can use the player origin here
 	if (pPlayer && !pPlayer->IsDormant())
@@ -3370,7 +3357,7 @@ void Gib_Callback(const CEffectData &data)
 		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
 			Vector gibVector;
-			VectorAdd(vecForce, Vector(random->RandomFloat(-10,10),random->RandomFloat(-10,10),random->RandomFloat(-10,10)), gibVector);
+			VectorAdd(vecForce, Vector(random->RandomFloat(-20, 20), random->RandomFloat(-20, 20), random->RandomFloat(-10, 0)), gibVector);
 			C_Gib * pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), gibVector, Vector(0, 0, 0), 10.0f);
 
 			if (pGib)
@@ -3388,10 +3375,10 @@ void Gib_Callback(const CEffectData &data)
 
 		pszGibModel = VarArgs("models/gibs/gib%d.mdl", iGibNumber);
 		Vector vecGibSpawn;
-		VectorAdd(vecPlayerOrigin, Vector(random->RandomFloat(-4,4),random->RandomFloat(-4,4),random->RandomFloat(-12,12)),vecGibSpawn);
+		VectorAdd(vecPlayerOrigin, Vector(random->RandomFloat(-4, 4),random->RandomFloat(-4, 4),random->RandomFloat(-12, 12)),vecGibSpawn);
 
 		Vector vecGibForce;
-		VectorAdd(vecForce, Vector(random->RandomFloat(-20,20),random->RandomFloat(-20,20),random->RandomFloat(-20,20)), vecGibForce);
+		VectorAdd(vecForce, Vector(random->RandomFloat(-40, 40), random->RandomFloat(-40, 40), random->RandomFloat(-20, 20)), vecGibForce);
 		C_Gib *pGib = C_Gib::CreateClientsideGib(pszGibModel, vecGibSpawn, vecGibForce, Vector(0, 0, 0), 10.0f);
 
 		if (pGib)
