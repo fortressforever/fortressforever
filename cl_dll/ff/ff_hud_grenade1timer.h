@@ -40,6 +40,8 @@ private:
 	CPanelAnimationVar( Color, icon_color, "icon_color", "HUD_Tone_Default" );
 
 public:
+	int CHudGrenade1Timer::ActiveTimerCount( void ) const;
+
 	CHudGrenade1Timer(const char *pElementName);
 
 	~CHudGrenade1Timer();

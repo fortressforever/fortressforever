@@ -89,5 +89,8 @@ void RegisterUserMessages()
 	usermessages->Register("ManCannonMsg", -1);
 	usermessages->Register("DetpackMsg", -1);
 	usermessages->Register("PipeMsg", -1);
+
+	// dexter: tell client it can stop any grenade timers
+	usermessages->Register("FFStopGrenTimers", 1);
 }
 
