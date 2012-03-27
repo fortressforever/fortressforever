@@ -378,8 +378,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 
 	// Radiotag information the local client needs to know
 	SendPropEHandle( SENDINFO( m_hRadioTagData ) ),
-	SendPropInt( SENDINFO( m_bCloakable ), 1, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_bDisguisable ), 1, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bCloakable ) ),
+	SendPropBool( SENDINFO( m_bDisguisable ) ),
 	SendPropQAngles( SENDINFO( m_vecInfoIntermission ), 13 ),
 	// Entity at player's current objective (set by Lua)
 	SendPropEHandle( SENDINFO( m_hObjectiveEntity ) ),
@@ -424,8 +424,8 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropBool( SENDINFO( m_bTranqed ) ),
 	SendPropBool( SENDINFO( m_bSliding ) ),
 	SendPropEHandle( SENDINFO( m_hActiveSlowfield ) ),
-	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bInfected ) ),
+	SendPropBool( SENDINFO( m_bImmune ) ),
 	SendPropInt( SENDINFO( m_iInfectTick ) ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
@@ -512,7 +512,7 @@ CFFPlayer::CFFPlayer()
 	m_bACDamageHint = true;  // For triggering the "Pyro takes damage from HWGuy" hint only once
 	m_bSGDamageHint = true;	 // For triggering the "Spy takes damage from SG while cloaked" hint only once
 
-	m_bDisguisable = 1;
+	m_bDisguisable = true;
 
 	m_flNextJumpTimeForDouble = 0;
 
@@ -526,9 +526,9 @@ CFFPlayer::CFFPlayer()
 	}
 	m_fLastHealTick = 0.0f;
 	m_fLastInfectedTick = 0.0f;
-	m_bInfected = 0;
+	m_bInfected = false;
 	m_hInfector = NULL;
-	m_bImmune = 0;
+	m_bImmune = false;
 	m_iInfectedTeam = TEAM_UNASSIGNED;
 	m_flImmuneTime = 0.0f;
 	m_iInfectTick = 0; //Green Mushy
@@ -1328,9 +1328,9 @@ void CFFPlayer::Spawn( void )
 	m_flBurningDamage	= 0.0f;
 	m_fLastHealTick		= 0.0f;
 	m_fLastInfectedTick = 0.0f;
-	m_bInfected			= 0;
+	m_bInfected			= false;
 	m_hInfector			= NULL;
-	m_bImmune			= 0;
+	m_bImmune			= false;
 	m_iInfectedTeam		= TEAM_UNASSIGNED;
 	m_hRagdoll			= NULL;
 	m_flConcTime		= 0.0f;
@@ -1974,7 +1974,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_fLastInfectedTick = 0.0f;
 
 	// Stop infection
-	m_bInfected = 0;
+	m_bInfected = false;
 
 	m_iActiveSabotages = 0;
 	m_iSabotagedSentries = 0;
@@ -4048,19 +4048,19 @@ void CFFPlayer::StatusEffectsThink( void )
 				if( pInfector->GetTeamNumber() != m_iInfectedTeam || !pInfector->GetClassSlot() || pInfector->GetClassSlot() != CLASS_MEDIC )
 				{
 					//DevMsg("Removing infection from %s because infector %s changed class or team\n", this->m_szNetname, pInfector->m_szNetname);
-					m_bInfected = 0;
+					m_bInfected = false;
 				}
 			}
 			else
 			{
 				// dexter - this is a ghetto catch all incase the EHANDLE is good but isnt CFFPlayer (how the fuck)
-				m_bInfected = 0;
+				m_bInfected = false;
 			}
 		}
 		else
 		{
 			// Player dropped
-			m_bInfected = 0;
+			m_bInfected = false;
 		}
 
 		if( m_iInfectTick >= FFDEV_INFECT_NUMTICKS )// GreenMushy: check to see if the infection should end
@@ -4071,7 +4071,7 @@ void CFFPlayer::StatusEffectsThink( void )
 
 		// If we were infected but just became uninfected,
 		// remove hud effect
-		if( bIsInfected && !IsInfected() )
+		if( bIsInfected && !m_bInfected )
 		{
 			CSingleUserRecipientFilter user( ( CBasePlayer * )this );
 			user.MakeReliable();
@@ -4191,9 +4191,8 @@ void CFFPlayer::StatusEffectsThink( void )
 		// TODO: Dispatch immune effect!
 
 		if( gpGlobals->curtime > m_flImmuneTime )
-			m_bImmune = 0;
+			m_bImmune = false;
 	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -4657,7 +4656,7 @@ bool CFFPlayer::Infect( CFFPlayer *pInfector )
 			return false;
 
 		// they aren't infected or immune, so go ahead and infect them
-		m_bInfected = 1;
+		m_bInfected = true;
 		m_iInfectTick = 0;
 		m_fLastInfectedTick = gpGlobals->curtime;
 		m_fNextInfectedTickDamage = FFDEV_INFECT_DAMAGE;
@@ -4694,12 +4693,12 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 	if( IsInfected() )
 	{
 		// they are infected, so go ahead and cure them
-		m_bInfected = 0;
+		m_bInfected = false;
 		m_fLastInfectedTick = 0.0f;
 		m_fNextInfectedTickDamage = 0.0f;
 		m_hInfector = NULL;
 		// Bug# 0000503: "Immunity" is not in the mod
-		m_bImmune = 1;
+		m_bImmune = true;
 		m_flImmuneTime = gpGlobals->curtime + FFDEV_IMMUNE_TIME;
 		m_iInfectTick = 0;
 
@@ -4732,7 +4731,7 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 	// Hack-ish - removing infection effect
 	if( !pCurer )
 	{
-		m_bInfected = 0;
+		m_bInfected = false;
 		m_fLastInfectedTick = 0.0f;
 		m_hInfector = NULL;
 		m_iInfectTick = 0;
@@ -6163,7 +6162,7 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth, bool healToFull)
 	if (IsInfected())
 	{
 		//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatInfectCures, 1);
-		m_bInfected = 0;
+		m_bInfected = false;
 
 		// Icon thing, give it just long enough to fade
 		CSingleUserRecipientFilter user(this);

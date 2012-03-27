@@ -542,8 +542,8 @@ protected:
 	CNetworkVar( bool, m_bSliding );
 
 public:	
-	bool IsInfected( void ) const		{ return m_bInfected != 0; }
-	bool IsImmune( void ) const			{ return m_bImmune != 0; }
+	bool IsInfected( void ) const		{ return m_bInfected; }
+	bool IsImmune( void ) const			{ return m_bImmune; }
 	CBaseEntity *GetInfector( void )	{ return ( m_hInfector == NULL ) ? NULL : ( CBaseEntity * )m_hInfector; }
 	int GetInfectorTeam( void ) const	{ return IsInfected() ? m_iInfectedTeam : TEAM_UNASSIGNED; }
 	
@@ -560,8 +560,8 @@ private:
 	// Mulch: wrapping in EHANDLE
 	EHANDLE m_hInfector;							// Who infected this player
 	//bool m_bInfected;								// if this player is infected
-	CNetworkVar( unsigned int, m_bInfected );		// Is the player infected?
-	CNetworkVar( unsigned int, m_bImmune );			// Is the player immune
+	CNetworkVar( bool, m_bInfected );		// Is the player infected?
+	CNetworkVar( bool, m_bImmune );			// Is the player immune
 	CNetworkVar( int, m_iActiveSabotages );			// Jiggles: So the client's sabotage menu knows when to be active
 	CNetworkVar( int, m_iSpyDisguising );			// Jiggles: So the spy HUD can calculate disguise progress
 	CNetworkVar( int, m_iInfectTick );				// infection : number of infection ticks that have occured -Green Mushy
@@ -720,23 +720,20 @@ public:
 	// Stuffs Lua can interface with
 public:
 	// Returns true if the player can cloak
-	bool IsCloakable( void ) const		{ return m_bCloakable != 0; }
+	bool IsCloakable( void ) const		{ return m_bCloakable; }
 	// Update whether the player can cloak or not due to Lua stuff
-	void SetCloakable( bool bValue )
+	void SetCloakable( bool bCloakable )
 	{
 		// Update value
-		if( bValue )
-			m_bCloakable = 1;
-		else
-			m_bCloakable = 0;
+		m_bCloakable = bCloakable;
 
 		// If setting it so the player can't cloak
 		// and we're already cloaked, uncloak immediately!
-		if( IsCloaked() && !bValue )
+		if( IsCloaked() && !bCloakable )
 			Uncloak( true );
 	}	
 private:
-	CNetworkVar( unsigned int, m_bCloakable );
+	CNetworkVar( bool, m_bCloakable );
 	// END: Spy cloak stuff
 
 public:
@@ -821,17 +818,16 @@ protected:
 public:
 	void SetDisguisable( bool bDisguisable ) 
 	{
-		if( bDisguisable )
-			m_bDisguisable = 1;
-		else
+		if( !bDisguisable && IsDisguised() )
 		{
-			m_bDisguisable = 0;
 			ResetDisguise();
 		}
+
+		m_bDisguisable = bDisguisable;
 	}
 	bool GetDisguisable( void ) const	{ return m_bDisguisable != 0; }
 private:
-	CNetworkVar( unsigned int, m_bDisguisable );
+	CNetworkVar( bool, m_bDisguisable );
 
 public:	
 	int GetDisguisedClass( void ) const;
