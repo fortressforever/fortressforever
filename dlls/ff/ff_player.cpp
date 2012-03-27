@@ -2537,6 +2537,11 @@ void CFFPlayer::ChangeTeam(int iTeamNum)
 	// clear the random player class flag, so player doesnt
 	// immediately spawn when changing classes
 	m_fRandomPC = false;
+
+	// if we're changing to/from spec, count it as a class change so people can't use that to avoid the suicide respawn delay
+	if (iTeamNum == FF_TEAM_SPEC || GetTeamNumber() == FF_TEAM_SPEC)
+		m_flLastClassSwitch = gpGlobals->curtime;
+
 	BaseClass::ChangeTeam(iTeamNum);
 }
 
@@ -2566,6 +2571,14 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		// This one handles spectators joining a new team
 		if( ! bAlive )
 		{
+			// if we're changing class twice in 5 seconds, then add a respawn delay as if they typed kill in console
+			if (gpGlobals->curtime - m_flLastClassSwitch <= CHANGECLASS_GRACEPERIOD)
+			{
+				SetRespawnDelay( CHANGECLASS_GRACEPERIOD - (gpGlobals->curtime - m_flLastClassSwitch) );
+			}
+
+			m_flLastClassSwitch = gpGlobals->curtime;
+
 			// Need to run KillAndRemoveItems() to set the DeathThink properly so you can actually spawn
             KillAndRemoveItems();
 			return;
@@ -2573,6 +2586,14 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		
 		if( fInstantSwitch )
 		{
+			// if we're changing class twice in 5 seconds, then add a respawn delay as if they typed kill in console
+			if (gpGlobals->curtime - m_flLastClassSwitch <= CHANGECLASS_GRACEPERIOD)
+			{
+				SetRespawnDelay( CHANGECLASS_GRACEPERIOD - (gpGlobals->curtime - m_flLastClassSwitch) );
+			}
+
+			m_flLastClassSwitch = gpGlobals->curtime;
+
 			KillAndRemoveItems();
 			if( bAlive && (GetClassSlot() != 0) )
 			{
@@ -2659,7 +2680,9 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		
 		// if we're changing class twice in 5 seconds, then add a respawn delay as if they typed kill in console
 		if (gpGlobals->curtime - m_flLastClassSwitch <= CHANGECLASS_GRACEPERIOD)
-			SetRespawnDelay( 5.0f );
+		{
+			SetRespawnDelay( CHANGECLASS_GRACEPERIOD - (gpGlobals->curtime - m_flLastClassSwitch) );
+		}
 
 		m_flLastClassSwitch = gpGlobals->curtime;
 
