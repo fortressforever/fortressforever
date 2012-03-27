@@ -3261,10 +3261,22 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 			switch( m_iWantBuild )
 			{
-				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO" ); break;
-				case FF_BUILD_SENTRYGUN: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_NOTENOUGHAMMO" ); break;
-				case FF_BUILD_DETPACK: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_NOTENOUGHAMMO" ); break;
-				case FF_BUILD_MANCANNON: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_NOTENOUGHAMMO" ); break;
+				case FF_BUILD_DISPENSER: 			
+					char szDispenserBuildCost[3];
+					Q_snprintf( szDispenserBuildCost, sizeof( szDispenserBuildCost ), "%i", FF_BUILDCOST_DISPENSER );
+					ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO", szDispenserBuildCost ); 
+					break;
+				case FF_BUILD_SENTRYGUN: 
+					char szSentryBuildCost[3];
+					Q_snprintf( szSentryBuildCost, sizeof( szSentryBuildCost ), "%i", FF_BUILDCOST_SENTRYGUN );
+					ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_NOTENOUGHAMMO", szSentryBuildCost ); 
+					break;
+				case FF_BUILD_DETPACK: 
+					ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_NOTENOUGHAMMO" ); 
+					break;
+				case FF_BUILD_MANCANNON: 
+					ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MANCANNON_NOTENOUGHAMMO" ); 
+					break;
 			}
 			
 			// Re-initialize
