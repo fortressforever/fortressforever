@@ -22,6 +22,17 @@ CFFWeaponInfo::CFFWeaponInfo()
 
 void CFFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 {
+	// we only want to validate scripts that have ff_ in front
+	if (szWeaponName[0] && szWeaponName[0] == 'f' && szWeaponName[1] == 'f' && szWeaponName[2] == '_')
+	{
+		// this is a secret key value so that scripts without it will be rejected and not loaded
+		if (pKeyValuesData->GetInt("ffencrypted", 0) != 1)
+		{
+			Warning("WeaponInfo: Invalid script format for %s\n", szWeaponName);
+			return;
+		}
+	}
+
 	BaseClass::Parse( pKeyValuesData, szWeaponName );
 
 	m_flCycleTime		= pKeyValuesData->GetFloat( "CycleTime", 0.15f );
