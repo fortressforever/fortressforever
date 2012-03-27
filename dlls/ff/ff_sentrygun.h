@@ -43,6 +43,7 @@
 
 #define SG_BC_YAW			"aim_yaw"
 #define SG_BC_PITCH			"aim_pitch"
+#define SG_BC_BARREL_ROTATE	"barrel_rotate"
 //#define	SG_RANGE			1200
 #define	SG_MAX_WAIT			5
 #define SG_SHORT_WAIT		2.0		// Used for FAST_RETIRE spawnflag

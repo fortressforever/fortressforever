@@ -644,6 +644,19 @@ void CFFSentryGun::OnActiveThink( void )
 
 	if( bCanFire )
 	{
+		// get the current rotation
+		float flBarrelRotationValue = GetPoseParameter( SG_BC_BARREL_ROTATE );
+
+		if(flBarrelRotationValue >= 180)
+		{
+			flBarrelRotationValue = SetPoseParameter( SG_BC_BARREL_ROTATE, -180 );
+		}
+		else
+		{
+			flBarrelRotationValue += 20;
+			flBarrelRotationValue = SetPoseParameter( SG_BC_BARREL_ROTATE, flBarrelRotationValue );
+		}
+
 		// Fire rockets
 		if( GetLevel() >= 3 )
 		{
