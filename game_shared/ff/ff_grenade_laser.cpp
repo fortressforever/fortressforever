@@ -536,7 +536,6 @@ float CFFGrenadeLaser::getLengthPercent()
 			Vector vecOrigin = GetAbsOrigin();
 			QAngle angRadial = GetAbsAngles();
 
-			float flSize = 20.0f;
 			trace_t tr;
 			char i;
 
