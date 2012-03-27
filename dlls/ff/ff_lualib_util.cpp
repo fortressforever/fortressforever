@@ -443,6 +443,8 @@ public:
 	CFFEntity_Collection( void );
 	CFFEntity_Collection( const luabind::adl::object& table );
 
+	~CFFEntity_Collection( void );
+
 	void AddItem( CBaseEntity *pItem = NULL );
 	void AddItem( const luabind::adl::object& table );
 	
@@ -490,6 +492,14 @@ CFFEntity_Collection::CFFEntity_Collection( void )
 CFFEntity_Collection::CFFEntity_Collection( const luabind::adl::object& table )
 {
 	AddItem( table );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Destructor
+//-----------------------------------------------------------------------------
+CFFEntity_Collection::~CFFEntity_Collection( void )
+{
+	RemoveAllItems();
 }
 
 //-----------------------------------------------------------------------------
