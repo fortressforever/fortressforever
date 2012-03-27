@@ -60,6 +60,8 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 #define GREN_SPAWN_ANG_X 18.5f
 //ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");
 
+
+#define BURN_TICK_INTERVAL 1.25f
 //ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
 //ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
 //ConVar burn_damage_ft("ffdev_burn_damage_ft","15.0",0,"Burn damage of the Flamethrower (per tick)");
@@ -74,9 +76,9 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
 #define FFDEV_FLAMESIZE_BURN1 0.015f //ffdev_flamesize_burn1.GetFloat()
 //ConVar ffdev_flamesize_burn2("ffdev_flamesize_burn2","0.04", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 2");
-#define FFDEV_FLAMESIZE_BURN2 0.04f //ffdev_flamesize_burn2.GetFloat()
+#define FFDEV_FLAMESIZE_BURN2 0.03f //ffdev_flamesize_burn2.GetFloat()
 //ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 3");
-#define FFDEV_FLAMESIZE_BURN3 0.055f //ffdev_flamesize_burn3.GetFloat()
+#define FFDEV_FLAMESIZE_BURN3 0.045f //ffdev_flamesize_burn3.GetFloat()
 
 // [integer] Max distance a player can be from us to be shown
 //static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
@@ -1859,20 +1861,6 @@ void CFFPlayer::Command_SpySilentCloak( void )
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
-#ifdef FF_BETA_TEST_COMPILE
-	// Crash
-	CFFPlayer *p = NULL;
-	p->Spawn();
-#endif
-
-#ifndef FF_BETA_TEST_COMPILE
-	/*
-	if( m_hSaveMe )
-	{
-		// This will kill it
-		m_hSaveMe->SetLifeTime( gpGlobals->curtime );
-	}
-	*/
 	if( m_bSaveMe )
 		m_bSaveMe = false;
 
@@ -1966,10 +1954,11 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_bBurnFlagIC = false;
 	m_bBurnFlagFT = false;
 
-	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 	{
 		RemoveSpeedEffectByIndex( i );
 	}
+
 	m_fLastHealTick = 0.0f;
 	m_fLastInfectedTick = 0.0f;
 
@@ -2037,9 +2026,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Reset the tag...
 	m_bRadioTagged = false;
 
-	// Get rid of fire
-	Extinguish();	
-
 	// EDIT: Let's not use strings if we don't have to...
 	// Find any items that we are in control of and drop them
 	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
@@ -2054,7 +2040,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	// Kill infection sound
-	// Bug #0000461: Infect sound plays eventhough you are dead
+
 	StopSound( "Player.DrownContinue" );
 
 	// Stop the saveme sounds upon death
@@ -2114,21 +2100,16 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			m_hMyWeapons[i]->SetTouch( NULL ); //touching other peoples private parts is naughty.
 	}
 
-	BaseClass::Event_Killed( info );
-
-	// Jiggles: We're not doing the death view change here now -- see C_FFPlayer::CalcView() instead
-	//SetViewOffset(VEC_DEAD_VIEWHEIGHT);
-	//AddFlag(FL_DUCKING);
-	//QAngle eyeAngles = EyeAngles();
-	//eyeAngles.z = 50.0f;
-	//SnapEyeAngles(eyeAngles);
-
 	if (!ShouldGib(info))
 	{
 		CreateRagdollEntity(&info);
 		CreateLimbs(m_fBodygroupState);
 	}
-#endif // FF_BETA_TEST_COMPILE
+
+	// Get rid of fire (after gibbing!)
+	Extinguish();
+
+	BaseClass::Event_Killed( info );
 }
 
 //-----------------------------------------------------------------------------
@@ -2152,64 +2133,66 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 	{
 		// create a new one
 		pRagdoll = dynamic_cast< CFFRagdoll* >( CreateEntityByName( "ff_ragdoll" ) );
+
+		//add this flag so the fire doen't try to apply flame damage to the ragdoll
+		//pRagdoll->AddFlag( FL_RAGDOLL );
+
+		pRagdoll->m_hPlayer = this;
 	}
-
-	if ( pRagdoll )
+	else
 	{
-		// Kill existing ragdoll flame stuff stuff
-		if( pRagdoll->GetFlags() & FL_ONFIRE )
-			RemoveFlag( FL_ONFIRE );
-
-		// If our ragdoll is already on fire, kill that fire
+		// If our ragdoll is already on fire extinguish it
 		CEntityFlame *pPrevRagdollFlame = dynamic_cast< CEntityFlame * >( pRagdoll->GetEffectEntity() );
 		if( pPrevRagdollFlame )
 			pPrevRagdollFlame->Extinguish();
-
-		pRagdoll->m_hPlayer = this;
-		pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
-		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
-		pRagdoll->m_nModelIndex = m_nModelIndex;
-		pRagdoll->m_nForceBone = m_nForceBone;
-		pRagdoll->m_vecForce = Vector(0, 0, 0);
-
-		// Create flames on ragdoll if player has flames
-		CEntityFlame *pPlayerFlame = dynamic_cast< CEntityFlame * >( GetEffectEntity() );
-		if( pPlayerFlame )
-		{
-			// "Copy" flame over to ragdoll
-			CEntityFlame *pRagdollFlame = CEntityFlame::Create( pRagdoll );
-			if( pRagdollFlame )
-			{
-				pRagdollFlame->SetLifetime( 10.0f );
-				pRagdollFlame->AttachToEntity( pRagdoll );
-
-				pRagdoll->SetEffectEntity( pRagdollFlame );
-				pRagdoll->AddFlag( FL_ONFIRE );
-			}
-		}
-
-		if ( info ) // crash fix: cloaking spy has no "info"
-		{
-			if ( info->GetDamageType() & DMG_BLAST )
-				pRagdoll->m_vecForce = 100.0f * info->GetDamageForce();
-			else // bullet
-			{
-				DevMsg("Vector damage force is %i,%i,%i", info->GetDamageForce().x , info->GetDamageForce().y , info->GetDamageForce().z );
-				pRagdoll->m_vecForce = 256.0f * info->GetDamageForce();
-			}
-		}
-
-		// remove it after a time
-		pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
-		pRagdoll->SetNextThink( gpGlobals->curtime + 30.0f );
-
-		// Allows decapitation to continue into ragdoll state
-		//DevMsg( "Createragdoll: %d\n", LastHitGroup() );
-		pRagdoll->m_fBodygroupState = m_fBodygroupState;
-
-		// Bugfix: #0000574: On death, ragdolls change to the blue team's skin
-		pRagdoll->m_nSkinIndex = m_nSkin;
 	}
+
+	pRagdoll->m_fBodygroupState = m_fBodygroupState; // Allows decapitation
+	pRagdoll->m_nSkinIndex = m_nSkin;
+	pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
+	pRagdoll->m_nModelIndex = m_nModelIndex;
+	pRagdoll->m_nForceBone = m_nForceBone;
+
+	//get flame entity of the player
+	CEntityFlame *pPlayerFlame = dynamic_cast< CEntityFlame * >( GetEffectEntity() );
+	
+	//if the player has flames
+	if( pPlayerFlame )
+	{
+		//set players effect entity to none
+		SetEffectEntity( NULL );
+
+		pPlayerFlame->Extinguish();
+
+		CEntityFlame *pRagdollFlame = CEntityFlame::Create(pRagdoll, true, 0.8f);
+
+		//attach the flame to the ragdoll instead
+		pRagdollFlame->AttachToEntity( pRagdoll );
+
+		//set the ragdoll's effect entity to the flame
+		pRagdoll->SetEffectEntity( pRagdollFlame );
+
+		//set the same lifetime the same as the ragdoll itself!
+		pRagdollFlame->SetLifetime( 15.0f );
+	}
+
+	// not everything that gets here has an info
+	// when we change class we dont have an inflictor either
+	if ( info ) 
+	{
+		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
+		pRagdoll->m_vecForce = info->GetDamageForce();
+	}
+	else
+	{
+		//use whatever the players velocity was
+		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
+		pRagdoll->m_vecForce = Vector(0, 0, 0);
+	}
+
+	// remove the ragdoll after a time
+	pRagdoll->SetNextThink( gpGlobals->curtime + 15.0f );
+	pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
 
 	// ragdolls will be removed on round restart automatically
 	m_hRagdoll = pRagdoll;
@@ -4766,7 +4749,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	
 	// set them on fire
 	if (!m_iBurnTicks)
-		m_flNextBurnTick = gpGlobals->curtime + 1.25;
+		m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
 	// multiply damage left to burn by number of remaining ticks, then divide it out among the new 8 ticks
 	// This prevents damage being incorrectly multiplied - shok
 	// ignore this now - instead we use burn levels and simply reset the timer
@@ -4782,6 +4765,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		++oldburnlevel;
 	if (m_bBurnFlagIC == true) 
 		++oldburnlevel;
+
 	switch (BurnType)
 	{
 		case BURNTYPE_NALPALMGRENADE: m_bBurnFlagNG = true; break;
@@ -5969,7 +5953,6 @@ void CFFPlayer::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool
 {
 	AddFlag( FL_ONFIRE );
 
-
 	SetFlameSpritesLifetime(flFlameLifetime, flSize);
 
 	m_OnIgnite.FireOutput( this, this );
@@ -6024,8 +6007,7 @@ void CFFPlayer::Extinguish( void )
 	m_bBurnFlagNG = false;
 	m_bBurnFlagIC = false;
 	m_bBurnFlagFT = false;
-
-	SetFlameSpritesLifetime(-1.0f);
+	SetFlameSpritesLifetime( -1.0f );
 
 	StopSound( "General.BurningFlesh" );
 	StopSound( "General.BurningObject" );
@@ -7816,11 +7798,13 @@ void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime, float flFlameSize)
 {
 	CEntityFlame *pFlame = dynamic_cast <CEntityFlame *> (GetEffectEntity());
 
-	// If there is no flame then only create one if necessary
+	// if no flame currently exists
 	if (!pFlame )
 	{
 		if (flLifeTime <= 0.0f)
+		{
 			return;
+		}
 
 		pFlame = CEntityFlame::Create(this, true, flFlameSize);
 		SetEffectEntity(pFlame);
