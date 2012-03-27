@@ -15,6 +15,8 @@
 #include <vgui_controls/Button.h>
 #include <vgui_controls/HTML.h>
 
+#include <igameevents.h>
+
 #include <cl_dll/iviewport.h>
 #include <vgui/KeyCode.h>
 
@@ -35,7 +37,7 @@ enum
 	TYPE_FILE,		// show this local file
 } ;
 
-class CTextWindow : public vgui::Frame, public IViewPortPanel
+class CTextWindow : public vgui::Frame, public IViewPortPanel, public IGameEventListener2
 {
 private:
 	DECLARE_CLASS_SIMPLE( CTextWindow, vgui::Frame );
@@ -54,6 +56,8 @@ public:
 	
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
 	virtual void OnKeyCodeReleased(vgui::KeyCode code);
+	
+	virtual void FireGameEvent( IGameEvent *event);
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
