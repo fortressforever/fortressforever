@@ -236,6 +236,9 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM)
 
 	// Mulch: Removed this
 	//new Button(this, "screenshot", "screenshot", this, "jpeg");
+	
+	// to get server name
+	gameeventmanager->AddListener(this, "server_spawn", false );
 
 	LoadControlSettings("Resource/UI/TeamMenu.res");
 	
@@ -308,6 +311,23 @@ void CTeamMenu::OnCommand(const char *command)
 //-----------------------------------------------------------------------------
 void CTeamMenu::SetData(KeyValues *data) 
 {
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the server name
+//-----------------------------------------------------------------------------
+void CTeamMenu::FireGameEvent( IGameEvent *event )
+{
+	const char * type = event->GetName();
+
+	if ( Q_strcmp(type, "server_spawn") == 0 )
+	{
+		Q_strncpy( m_szServerName, event->GetString("hostname"), 255 );
+	}
+
+	if( IsVisible() )
+		Update();
 }
 
 //-----------------------------------------------------------------------------
@@ -384,6 +404,7 @@ void CTeamMenu::ShowPanel(bool bShow)
 //-----------------------------------------------------------------------------
 void CTeamMenu::Reset() 
 {
+	Q_strcpy( m_szServerName, "Fortress Forever" );
 }
 
 //-----------------------------------------------------------------------------
@@ -517,12 +538,7 @@ void CTeamMenu::UpdateServerInfo()
 
 	if (iIndex == ::INVALID_STRING_INDEX)
 	{
-		const ConVar *pHostname = cvar->FindVar("hostname");
-		const char *pszTitle = (pHostname) ? pHostname->GetString() : "Fortress Forever";
-
-		if (pszTitle)
-			m_pServerInfoHost->OpenURL( VarArgs("http://www.fortress-forever.com/defaulthost/index.php?name=%s", pszTitle) );
-
+		m_pServerInfoHost->OpenURL( VarArgs("http://www.fortress-forever.com/defaulthost/index.php?name=%s", m_szServerName) );
 		return;
 	}
 

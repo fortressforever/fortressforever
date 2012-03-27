@@ -20,6 +20,8 @@
 #include <vgui_controls/Button.h>
 #include <vgui_controls/HTML.h>
 
+#include <igameevents.h>
+
 #include <cl_dll/iviewport.h>
 #include <vgui/KeyCode.h>
 
@@ -38,7 +40,7 @@ namespace vgui
 	// Purpose: displays the team menu
 	//-----------------------------------------------------------------------------
 
-	class CTeamMenu : public Frame, public IViewPortPanel
+	class CTeamMenu : public Frame, public IViewPortPanel, public IGameEventListener2
 	{
 	private:
 		DECLARE_CLASS_SIMPLE(CTeamMenu, Frame);
@@ -63,6 +65,7 @@ namespace vgui
 
 		virtual void ApplySchemeSettings(IScheme *pScheme);
 
+		virtual void FireGameEvent( IGameEvent *event);
 
 		// both Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 		VPANEL GetVPanel() 					{ return BaseClass::GetVPanel(); }
@@ -98,6 +101,8 @@ namespace vgui
 		FFButton		*m_pFlythroughButton;
 
 		FFButton		*m_pMapScreenshotButton;			// Click to display the map screenshot
+		
+		char			m_szServerName[255];
 	};
 }
 

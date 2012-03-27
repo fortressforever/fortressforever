@@ -116,6 +116,9 @@ CTextWindow::CTextWindow(IViewPort *pViewPort) : Frame(NULL, PANEL_INFO	)
 	m_pTextMessage->SetVerticalScrollbar(true);
 	m_pHTMLMessage->SetScrollbarsEnabled(false);
 	
+	// to get server name
+	gameeventmanager->AddListener(this, "server_spawn", false );
+	
 	LoadControlSettings("Resource/UI/TextWindow.res");
 	
 	Reset();
@@ -137,6 +140,22 @@ void CTextWindow::Reset( void )
 	m_szExitCommand[0] = 0;
 	m_nContentType = TYPE_INDEX;
 	Update();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the server name
+//-----------------------------------------------------------------------------
+void CTextWindow::FireGameEvent( IGameEvent *event )
+{
+	const char * type = event->GetName();
+
+	if ( Q_strcmp(type, "server_spawn") == 0 )
+	{
+		Q_strncpy( m_szTitle, event->GetString("hostname"), 255 );
+	}
+
+	if( IsVisible() )
+		Update();
 }
 
 //-----------------------------------------------------------------------------
@@ -265,12 +284,6 @@ void CTextWindow::ShowFile( const char *filename )
 void CTextWindow::Update( void )
 {
 	SetTitle( m_szTitle, false );
-
-	const ConVar *pHostname = cvar->FindVar("hostname");
-	const char *pszTitle = (pHostname) ? pHostname->GetString() : "Fortress Forever";
-
-	if (pszTitle)
-		Q_strncpy(m_szTitle, pszTitle, 255);
 
 	m_pTitleLable->SetText( m_szTitle );
 
