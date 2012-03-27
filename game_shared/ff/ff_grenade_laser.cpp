@@ -48,7 +48,7 @@
 #define LASERGREN_TIME 7
 
 //ConVar ffdev_lasergren_centergap("ffdev_lasergren_centergap", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Gap between the center and the laser startpoint");
-#define LASERGREN_CENTERGAP 0 //ffdev_lasergren_centergap.GetFloat()
+#define LASERGREN_CENTERGAP 64 //ffdev_lasergren_centergap.GetFloat()
 
 #ifdef CLIENT_DLL
 	ConVar hud_lasergren_customColor_enable( "hud_lasergren_customColor_enable", "0", FCVAR_ARCHIVE, "Use custom laser colors (1 = use custom colour)");
@@ -328,7 +328,7 @@ float CFFGrenadeLaser::getLengthPercent()
 		float flDeltaAngle = 360.0f / LASERGREN_BEAMS;
 
 		CBaseEntity *pEntity = NULL;
-		for (CEntitySphereQuery sphere(vecOrigin, LASERGREN_DISTANCE * getLengthPercent() + LASERGREN_LASERRADIUS); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
+		for (CEntitySphereQuery sphere(vecOrigin, LASERGREN_DISTANCE * getLengthPercent()); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
 		{
 			if (!pEntity)
 				continue;
@@ -381,6 +381,12 @@ float CFFGrenadeLaser::getLengthPercent()
 				VectorNormalizeFast(vecDirection);
 
 				Vector vecToEnt = pEntity->GetAbsOrigin() - vecOrigin;
+
+				if (vecToEnt.Length2D() > LASERGREN_DISTANCE * getLengthPercent() + 2*LASERGREN_LASERRADIUS)
+				{
+					angRadial.y += flDeltaAngle;
+					continue;
+				}
 
 				float dot = DotProduct( vecDirection, vecToEnt );
 
@@ -553,6 +559,7 @@ float CFFGrenadeLaser::getLengthPercent()
 					if (!pBeam[i])
 						continue;
 
+					pBeam[i]->SetBeamFlags(SF_BEAM_SHADEOUT | SF_BEAM_DECALS);
 					pBeam[i]->SetWidth( LASERGREN_WIDTHSTART );
 					pBeam[i]->SetEndWidth( LASERGREN_WIDTHEND );
 					pBeam[i]->LiveForTime( 1  );
@@ -573,7 +580,13 @@ float CFFGrenadeLaser::getLengthPercent()
 				Vector startpos = vecOrigin + vecDirection * LASERGREN_CENTERGAP;
 
 				if (LASERGREN_CENTERGAP/LASERGREN_DISTANCE > getLengthPercent())
-					continue;
+				{
+					pBeam[i]->SetBrightness( 50 );
+				}
+				else
+				{
+					pBeam[i]->SetBrightness( 255 );
+				}
 
 				pBeam[i]->PointsInit( startpos, tr.endpos );
 
