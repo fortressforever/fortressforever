@@ -35,6 +35,16 @@ void CFFLuaLib::InitMisc(lua_State* L)
 	[
 		// CBeam
 		class_<CBeam, CBaseEntity>("Beam")
-			.def("SetColor",			&CBeam::SetColor)
+			.def("SetColor",			&CBeam::SetColor),
+			
+		class_<Color>("CustomColor")
+			.def(constructor<>())
+			.def(constructor<int, int, int>())
+			.def(constructor<int, int, int, int>())
+			.property("r", &Color::r)
+			.property("g", &Color::g)
+			.property("b", &Color::b)
+			.property("a", &Color::a)
+			.def("SetColor",			&Color::SetColor)
 	];
 };
