@@ -299,6 +299,17 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 	// Okay, we tried at least once to look this up...
 	bParsedScript = true;
 
+	// we only want to validate scripts that have ff_ in front
+	if (szPlayerClassName[0] && szPlayerClassName[0] == 'f' && szPlayerClassName[1] == 'f' && szPlayerClassName[2] == '_')
+	{
+		// this is a secret key value so that scripts without it will be rejected and not loaded
+		if (pKeyValuesData->GetInt("ffencrypted", 0) != 1)
+		{
+			Warning("PlayerClassInfo: Invalid script format for %s\n", szPlayerClassName);
+			return;
+		}
+	}
+
 	// Player number / selection slot
 	m_iSlot = pKeyValuesData->GetInt("slot", 0);
 
