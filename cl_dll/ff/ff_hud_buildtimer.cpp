@@ -17,6 +17,8 @@ extern C_PlayerResource *g_PR;
 
 extern ConVar cl_teamcolourhud;
 
+ConVar hud_buildtimers("hud_buildtimers", "1", FCVAR_ARCHIVE, "Turns visual build timers on or off");
+
 using namespace vgui;
 
 DECLARE_HUDELEMENT(CHudBuildTimer);
@@ -114,6 +116,12 @@ void CHudBuildTimer::MsgFunc_FF_BuildTimer(bf_read &msg)
 void CHudBuildTimer::OnTick()
 {
 	BaseClass::OnTick();
+
+	if (!hud_buildtimers.GetBool())
+	{
+		Reset();
+		return;
+	}
 
 	if ( gpGlobals->curtime > m_flStartTime + m_flDuration ) 
 	{

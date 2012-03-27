@@ -134,6 +134,7 @@ static char g_szKillBeepFile[MAX_PATH];
 void KillBeepChange_Callback(ConVar *var, char const *pOldString);
 ConVar cl_killbeepwav("cl_killbeepsound", "deathbeep1", FCVAR_ARCHIVE, "Death beep file to use", KillBeepChange_Callback);
 
+ConVar hud_grenadetimers("hud_grenadetimers", "1", FCVAR_ARCHIVE, "Turns visual grenade timers on or off");
 // For decrementing infection effect particles -squeek
 extern ConVar ffdev_infection_startingparticles;
 //extern ConVar ffdev_infect_numticks; // in ff_player_shared.cpp

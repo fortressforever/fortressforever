@@ -17,6 +17,8 @@ extern C_PlayerResource *g_PR;
 
 extern ConVar cl_teamcolourhud;
 
+extern ConVar hud_grenadetimers;
+
 using namespace vgui;
 
 CHudGrenade1Timer *g_pGrenade1Timer = NULL;
@@ -92,6 +94,13 @@ void CHudGrenade1Timer::OnTick()
 	BaseClass::OnTick();
 
 	if (!m_pFFPlayer) 
+	{
+		SetPaintEnabled(false);
+		SetPaintBackgroundEnabled(false);
+		return;
+	}
+	
+	if (!hud_grenadetimers.GetBool()) 
 	{
 		SetPaintEnabled(false);
 		SetPaintBackgroundEnabled(false);
