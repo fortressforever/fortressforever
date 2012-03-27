@@ -58,7 +58,7 @@ namespace vgui
 
 		virtual bool IsVisible() 						{ return BaseClass::IsVisible(); }
   		virtual void SetParent(VPANEL parent) 	{ BaseClass::SetParent(parent); }
-		virtual bool NeedsUpdate() 				{ return true; }
+		virtual bool NeedsUpdate() 				{ return false; }
 		virtual bool HasInputElements() 			{ return true; }
 
 		virtual void ApplySchemeSettings(IScheme *pScheme);
