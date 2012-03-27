@@ -40,12 +40,15 @@
 #define LASERGREN_BEAMS 3
 //ConVar laserdistance( "ffdev_lasergren_distance", "256", FCVAR_FF_FFDEV_REPLICATED, "Laser beam max radius",true, 0, true, 4096 );
 #define LASERGREN_DISTANCE 256
-//ConVar growTime( "ffdev_lasergren_growTime", "0.7", FCVAR_FF_FFDEV_REPLICATED, "Time taken to grow to full length" );
-#define LASERGREN_GROWTIME 0.7f
+//ConVar growTime( "ffdev_lasergren_growTime", "1", FCVAR_FF_FFDEV_REPLICATED, "Time taken to grow to full length" );
+#define LASERGREN_GROWTIME 1
 //ConVar shrinkTime( "ffdev_lasergren_shrinkTime", "1", FCVAR_FF_FFDEV_REPLICATED, "Time taken to shrink to nothing" );
 #define LASERGREN_SHRINKTIME 1
-//ConVar lasertime("ffdev_lasergren_time", "10", FCVAR_FF_FFDEV_REPLICATED, "Laser active time");
-#define LASERGREN_TIME 10
+//ConVar lasertime("ffdev_lasergren_time", "7", FCVAR_FF_FFDEV_REPLICATED, "Laser active time");
+#define LASERGREN_TIME 7
+
+//ConVar ffdev_lasergren_centergap("ffdev_lasergren_centergap", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Gap between the center and the laser startpoint");
+#define LASERGREN_CENTERGAP 0 //ffdev_lasergren_centergap.GetFloat()
 
 #ifdef CLIENT_DLL
 	ConVar hud_lasergren_customColor_enable( "hud_lasergren_customColor_enable", "0", FCVAR_ARCHIVE, "Use custom laser colors (1 = use custom colour)");
@@ -74,8 +77,8 @@
 	#define LASERGREN_BOB 10
 	//ConVar laserbeamtime( "ffdev_lasergren_beamtime", "0.0", FCVAR_FF_FFDEV, "Laser grenade update time" );
 	#define LASERGREN_BEAMTIME 0.0f
-	//ConVar laserradius( "ffdev_lasergren_laserradius", "4.0", FCVAR_CHEAT, "Laser grenade laser radius" );
-	#define LASERGREN_LASERRADIUS 4.0f
+	//ConVar laserradius( "ffdev_lasergren_laserradius", "3.0", FCVAR_CHEAT, "Laser grenade laser radius" );
+	#define LASERGREN_LASERRADIUS 3.0f
 	//ConVar usenails( "ffdev_lasergren_usenails", "0", FCVAR_FF_FFDEV, "Use nails instead of lasers" );
 	#define LASERGREN_USENAILS 0
 	//ConVar bobfrequency( "ffdev_lasergren_bobfreq", "0.5", FCVAR_FF_FFDEV, "Bob Frequency");
@@ -394,6 +397,25 @@ float CFFGrenadeLaser::getLengthPercent()
 					angRadial.y += flDeltaAngle;
 					continue;
 				}
+				
+				// check if inside the center gap
+				if (LASERGREN_CENTERGAP > 0)
+				{
+					Vector vecLaserGap = vecDirection * LASERGREN_CENTERGAP;
+					float gapratio = DotProduct( vecToEnt, vecLaserGap ) / DotProduct( vecLaserGap, vecLaserGap );
+					Vector vecLaserGapClosestPoint = vecOrigin + (gapratio * vecLaserGap);
+					
+					Vector gappoint;
+					pEntity->CollisionProp()->CalcNearestPoint( vecLaserGapClosestPoint, &gappoint );
+					Vector DistFromOrigin = gappoint - vecOrigin;
+
+					if (DistFromOrigin.Length() < LASERGREN_CENTERGAP - LASERGREN_LASERRADIUS)
+					{
+						angRadial.y += flDeltaAngle;
+						continue;
+					}
+				}
+				
 				Vector vecLaser = vecDirection * LASERGREN_DISTANCE * getLengthPercent();
 				float ratio = DotProduct( vecToEnt, vecLaser ) / DotProduct( vecLaser, vecLaser );
 				Vector vecLaserClosestPoint = vecOrigin + (ratio * vecLaser);
@@ -521,7 +543,7 @@ float CFFGrenadeLaser::getLengthPercent()
 				AngleVectors(angRadial, &vecDirection);
 				VectorNormalizeFast(vecDirection);
 
-				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
+				UTIL_TraceLine( vecOrigin, 
 								vecOrigin + vecDirection * LASERGREN_DISTANCE * getLengthPercent(), 
 								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
 				
@@ -548,7 +570,12 @@ float CFFGrenadeLaser::getLengthPercent()
 					else // just in case
 						pBeam[i]->SetColor( 204, 204, 204 );
 				}
-				pBeam[i]->PointsInit( vecOrigin, tr.endpos );
+				Vector startpos = vecOrigin + vecDirection * LASERGREN_CENTERGAP;
+
+				if (LASERGREN_CENTERGAP/LASERGREN_DISTANCE > getLengthPercent())
+					continue;
+
+				pBeam[i]->PointsInit( startpos, tr.endpos );
 
 				angRadial.y += flDeltaAngle;
 
