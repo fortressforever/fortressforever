@@ -227,3 +227,10 @@ void CHudGrenade2Timer::Paint()
 	if (timer_to_remove > -1) 
 		m_Timers.Remove(timer_to_remove);
 }
+
+
+// dexter: we wanna know how many are going. we should have about that many sounds playing too
+int CHudGrenade2Timer::ActiveTimerCount( void ) const
+{
+	return m_Timers.Count();
+}

@@ -175,7 +175,7 @@ LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 	{
 #ifdef GAME_DLL
 		// Remove if not allowed by Lua 
-		if (FFScriptRunPredicates(this, "onexplode", true) == false)
+ 		if (FFScriptRunPredicates(this, "onexplode", true) == false)
 		{
 			UTIL_Remove(this);
 			return;
