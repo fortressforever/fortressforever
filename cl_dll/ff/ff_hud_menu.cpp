@@ -161,7 +161,7 @@ ADD_MENU_OPTION(builddispenser, "#FF_CM_BUILDDISPENSER", 'Q', "qdispenser")
 		return MENU_DIM;
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( ff->IsBuilding() && ( ff->GetCurBuild() == FF_BUILD_DISPENSER ) )
+	if( ff->IsBuilding() && ( ff->GetCurrentBuild() == FF_BUILD_DISPENSER ) )
 		return MENU_DIM;
 
 	if (ff->GetDispenser())
@@ -179,7 +179,7 @@ ADD_MENU_OPTION(detdispenser, "#FF_CM_DETDISPENSER", 'P', "detdispenser")
 		return MENU_DIM;
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( ff->IsBuilding() && ( ff->GetCurBuild() == FF_BUILD_DISPENSER ) )
+	if( ff->IsBuilding() && ( ff->GetCurrentBuild() == FF_BUILD_DISPENSER ) )
 		return MENU_DIM;
 
 	if (!ff->GetDispenser())
@@ -197,7 +197,7 @@ ADD_MENU_OPTION(dismantledispenser, "#FF_CM_DISMANTLEDISPENSER", 'Q', "dismantle
 		return MENU_DIM;
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( ff->IsBuilding() && ( ff->GetCurBuild() == FF_BUILD_DISPENSER ) )
+	if( ff->IsBuilding() && ( ff->GetCurrentBuild() == FF_BUILD_DISPENSER ) )
 		return MENU_DIM;
 
 	if (!ff->GetDispenser())
@@ -215,7 +215,7 @@ ADD_MENU_OPTION(buildsentry, "#FF_CM_BUILDSENTRY", 'S', "qsentry")
 		return MENU_DIM;
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( ff->IsBuilding() && ( ff->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+	if( ff->IsBuilding() && ( ff->GetCurrentBuild() == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
 	if (ff->GetSentryGun())
@@ -233,7 +233,7 @@ ADD_MENU_OPTION(detsentry, "#FF_CM_DETSENTRY", 'R', "detsentry")
 		return MENU_DIM;
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( ff->IsBuilding() && ( ff->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+	if( ff->IsBuilding() && ( ff->GetCurrentBuild() == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
 	if (!ff->GetSentryGun())
@@ -251,7 +251,7 @@ ADD_MENU_OPTION(dismantlesentry, "#FF_CM_DISMANTLESENTRY", 'S', "dismantlesentry
 		return MENU_DIM;
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( ff->IsBuilding() && ( ff->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+	if( ff->IsBuilding() && ( ff->GetCurrentBuild() == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
 	if (!ff->GetSentryGun())
@@ -269,7 +269,7 @@ ADD_MENU_OPTION(aimsentry, "#FF_CM_AIMSENTRY", 'O', "aimsentry")
 		return MENU_DIM;
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( ff->IsBuilding() && ( ff->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
+	if( ff->IsBuilding() && ( ff->GetCurrentBuild() == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
 	if (!ff->GetSentryGun())

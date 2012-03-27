@@ -53,7 +53,7 @@ class CFFPlayer;
 	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
 	if( pFFPlayer && pFFPlayer->IsStaticBuilding() ) \
 	{ \
-		switch( pFFPlayer->GetCurBuild() ) \
+		switch( pFFPlayer->GetCurrentBuild() ) \
 		{ \
 			case FF_BUILD_DISPENSER: pFFPlayer->Command_BuildDispenser(); break; \
 			case FF_BUILD_SENTRYGUN: pFFPlayer->Command_BuildSentryGun(); break; \

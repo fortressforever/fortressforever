@@ -851,7 +851,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	{
 		// Enemy is a player
 		CFFPlayer *pPlayer = ToFFPlayer( GetEnemy() );
-		bEnemyVisible = GetEnemy()->IsAlive() && ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) );		
+		bEnemyVisible = GetEnemy()->IsAlive() && ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) );		
 	}
 	else
 	{
@@ -1177,7 +1177,7 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	Vector vecDir, vecOrigin;
 	
 	if( GetEnemy()->IsPlayer() )
-		vecOrigin = ToFFPlayer( GetEnemy() )->GetLegacyAbsOrigin();
+		vecOrigin = ToFFPlayer( GetEnemy() )->GetAbsOrigin();
 	else
 		vecOrigin = GetEnemy()->GetAbsOrigin() + Vector( 0, 0, 48.0f );
 

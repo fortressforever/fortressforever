@@ -61,7 +61,7 @@ void CProxySlowfieldSlow::OnBind(void *pC_BaseEntity)
 	if (!pSlowfield)
 		return;
 
-	Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - pSlowfield->GetAbsOrigin();
+	Vector vecDisplacement = pPlayer->GetAbsOrigin() - pSlowfield->GetAbsOrigin();
 	float flDistance = vecDisplacement.Length();
 
 	float flResultVar = 1.0f;

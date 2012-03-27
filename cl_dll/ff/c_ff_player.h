@@ -207,7 +207,7 @@ public:
 
 	bool IsBuilding( void ) const;
 	bool IsStaticBuilding( void ) const;
-	int GetCurBuild( void ) const;
+	int GetCurrentBuild( void ) const;
 	C_FFDetpack *GetDetpack( void ) const;
 	C_FFDispenser *GetDispenser( void ) const;
 	C_FFSentryGun *GetSentryGun( void ) const;
@@ -428,8 +428,6 @@ public:
 
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
-	Vector GetLegacyAbsOrigin();
-	Vector GetWaistOrigin( void );
 	Vector GetFeetOrigin( void );
 
 	virtual void FireBullets(const FireBulletsInfo_t &info);
