@@ -5824,7 +5824,9 @@ bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
 
 	CEffectData data;
 	data.m_nEntIndex = entindex();
-	data.m_vOrigin = GetAbsOrigin();
+  	data.m_vOrigin = GetAbsOrigin();
+	Vector vecDamageForce = info.GetDamageForce();
+	data.m_flMagnitude = VectorLength(vecDamageForce);
 	DispatchEffect("Gib", data);
 
 	return true;

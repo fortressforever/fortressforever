@@ -8,6 +8,7 @@ extern IFileSystem **pFilesystem;
 
 #include <vgui_controls/CheckButton.h>
 #include <vgui_controls/ComboBox.h>
+#include <vgui/ILocalize.h>
 /*
 #include "ff_inputslider.h"
 #include <vgui_controls/PropertyPage.h>
@@ -27,120 +28,6 @@ CFFMiscOptions::CFFMiscOptions(Panel *parent, char const *panelName, const char 
 	LoadControlSettings("resource/ui/FFOptionsSubMisc.res");
 
 	Q_strncpy(m_szSourceFile, pszSourceFile, 127);
-
-	int iYCoords = TITLE_SPACER;
-
-	// Put all our options stuff in a keyfile now
-	KeyValues *kvOptions = new KeyValues("Options");
-	kvOptions->LoadFromFile(*pFilesystem, m_szSourceFile);
-
-	// Loop through creating new options for each one
-	for (KeyValues *kvOption = kvOptions->GetFirstSubKey(); kvOption != NULL; kvOption = kvOption->GetNextKey())
-	{
-		const char *pszType = kvOption->GetString("type", "boolean");
-
-		const char *pszName = kvOption->GetName();
-		const char *pszCaption = kvOption->GetString("caption");
-
-		// A little separator
-		if (Q_strncmp(pszName, "heading", 7) == 0)
-		{
-			Label *l = new Label(this, "label", pszCaption);
-
-			if (l)
-			{
-				l->SetPos(25, iYCoords + TITLE_SPACER);
-				l->SetSize(250, ROW_HEIGHT);
-				iYCoords += ROW_HEIGHT + TITLE_SPACER;	// Add extra bit on
-			}
-		}
-
-		// Boolean is just a simple checkbox
-		else if (Q_strncmp(pszType, "boolean", 7) == 0)
-		{
-			CheckButton *cb = new CheckButton(this, pszName, pszCaption);
-
-			if (!cb)
-				continue;
-
-			cb->SetPos(30, iYCoords);
-			cb->SetSize(450, ROW_HEIGHT);
-
-			iYCoords += ROW_HEIGHT;
-		}
-		// Discrete is a combobox with a label
-		else if (Q_strncmp(pszType, "discrete", 8) == 0)
-		{
-			KeyValues *kvValues = kvOption->FindKey("values", false);
-			int nValues = 0;
-
-			if (!kvValues)
-				continue;
-
-			// First count all the values so we know how many lines are
-			// needed for the combobox
-			nValues = 0;
-			KeyValues *kvValue = kvValues->GetFirstSubKey();
-			while (kvValue)
-			{
-				nValues++;
-				kvValue = kvValue->GetNextKey();
-			}
-
-			ComboBox *cb = new ComboBox(this, pszName, nValues, false);
-
-			if (!cb)
-				continue;
-
-			kvValues = kvOption->FindKey("values", false);
-
-			if (!kvValues)
-				continue;
-
-			// Now go through all the values and add them to the combobox
-			kvValue = kvValues->GetFirstSubKey();
-			while (kvValue)
-			{
-				const char *pszValue = kvValue->GetName();
-				const char *pszCaption = kvValues->GetString(pszValue);
-				kvValue = kvValue->GetNextKey();
-
-				KeyValues *kvItem = new KeyValues("kvItem");
-				kvItem->SetString("value", pszValue);
-				cb->AddItem(pszCaption, kvItem);
-				kvItem->deleteThis();
-			}
-
-			cb->SetPos(30, iYCoords);
-			cb->SetSize(80, ROW_HEIGHT - 4);
-			cb->ActivateItemByRow(0);
-
-			// Create a handy label too so we know what this is
-			Label *l = new Label(this, "label", pszCaption);
-
-			if (l)
-			{
-				l->SetPos(120, iYCoords);
-				l->SetSize(450, ROW_HEIGHT);
-			}
-
-			iYCoords += ROW_HEIGHT;
-		}
-	}
-
-	/*m_pHints = new CheckButton( this, "HintCheck", "Enable Hints" );
-	m_pHintsConVar = NULL;
-
-	m_pARCheck = new CheckButton( this, "ARCheck", "Enable Auto-Reload" );
-	m_pAutoRLConVar = NULL;
-
-	m_pAutoKillCheck = new CheckButton( this, "AKCheck", "Change Class Instantly" );
-	m_pAutoKillConVar = NULL;
-
-	m_pBlurCheck = new CheckButton( this, "BlurCheck", "Enable Motion Blur" );
-	m_pBlurConVar = NULL;
-
-	LoadControlSettings("resource/ui/FFOptionsSubMisc.res");*/
 }
 
 //-----------------------------------------------------------------------------
@@ -208,8 +95,126 @@ void CFFMiscOptions::Reset()
 //-----------------------------------------------------------------------------
 void CFFMiscOptions::Load()
 {
+	//remove all exisiting specific options
+	for(int i = GetChildCount() - 1; i >= 0; --i)
+	//count backwards cause we're removing stuff (counting forwards will FAIL EPICLY!!)
+	{
+		Panel* childPanel = GetChild(i);
+		childPanel->DeletePanel();
+	}
+
+	int iYCoords = TITLE_SPACER;
+
+	// Put all our options stuff in a keyfile now
 	KeyValues *kvOptions = new KeyValues("Options");
 	kvOptions->LoadFromFile(*pFilesystem, m_szSourceFile);
+
+	// Loop through creating new options for each one
+	for (KeyValues *kvOption = kvOptions->GetFirstSubKey(); kvOption != NULL; kvOption = kvOption->GetNextKey())
+	{
+		const char *pszType = kvOption->GetString("type", "boolean");
+
+		const char* pszName = kvOption->GetName();
+		const char* pszCaption = kvOption->GetString("caption");
+		wchar_t* wszCaption = vgui::localize()->Find(pszCaption);
+		char szCaption[128];
+		if(wszCaption)
+			vgui::localize()->ConvertUnicodeToANSI(wszCaption, szCaption, sizeof(szCaption));
+		else
+			Q_strcpy(szCaption, pszCaption);
+
+		// A little separator
+		if (Q_strncmp(pszName, "heading", 7) == 0)
+		{
+			Label *l = new Label(this, "label", szCaption);
+
+			if (l)
+			{
+				l->SetPos(25, iYCoords + TITLE_SPACER);
+				l->SetSize(250, ROW_HEIGHT);
+				iYCoords += ROW_HEIGHT + TITLE_SPACER;	// Add extra bit on
+			}
+		}
+
+		// Boolean is just a simple checkbox
+		else if (Q_strncmp(pszType, "boolean", 7) == 0)
+		{
+			CheckButton *cb = new CheckButton(this, pszName, szCaption);
+
+			if (!cb)
+				continue;
+
+			cb->SetPos(30, iYCoords);
+			cb->SetSize(450, ROW_HEIGHT);
+
+			iYCoords += ROW_HEIGHT;
+		}
+		// Discrete is a combobox with a label
+		else if (Q_strncmp(pszType, "discrete", 8) == 0)
+		{
+			KeyValues *kvValues = kvOption->FindKey("values", false);
+			int nValues = 0;
+
+			if (!kvValues)
+				continue;
+
+			// First count all the values so we know how many lines are
+			// needed for the combobox
+			nValues = 0;
+			KeyValues *kvValue = kvValues->GetFirstSubKey();
+			while (kvValue)
+			{
+				nValues++;
+				kvValue = kvValue->GetNextKey();
+			}
+
+			ComboBox *cb = new ComboBox(this, pszName, nValues, false);
+
+			if (!cb)
+				continue;
+
+			kvValues = kvOption->FindKey("values", false);
+
+			if (!kvValues)
+				continue;
+
+			// Now go through all the values and add them to the combobox
+			kvValue = kvValues->GetFirstSubKey();
+			while (kvValue)
+			{
+				const char *pszValue = kvValue->GetName();
+				const char *pszItemCaption = kvValues->GetString(pszValue);
+				wchar_t* wszItemCaption = vgui::localize()->Find(pszItemCaption);
+				char szItemCaption[128];
+				if(wszItemCaption)
+					vgui::localize()->ConvertUnicodeToANSI(wszItemCaption, szItemCaption, sizeof(szItemCaption));
+				else
+					Q_strcpy(szItemCaption, pszItemCaption);
+
+				kvValue = kvValue->GetNextKey();
+
+				KeyValues *kvItem = new KeyValues("kvItem");
+				kvItem->SetString("value", pszValue);
+				cb->AddItem(szItemCaption, kvItem);
+				kvItem->deleteThis();
+			}
+
+			cb->SetPos(30, iYCoords);
+			cb->SetSize(80, ROW_HEIGHT - 4);
+			cb->ActivateItemByRow(0);
+
+			// Create a handy label too so we know what this is
+			Label *l = new Label(this, "label", szCaption);
+
+			if (l)
+			{
+				l->SetPos(120, iYCoords);
+				l->SetSize(450, ROW_HEIGHT);
+			}
+
+			iYCoords += ROW_HEIGHT;
+		}
+	}
 
 	// Loop through creating new options for each one
 	for (KeyValues *kvOption = kvOptions->GetFirstSubKey(); kvOption != NULL; kvOption = kvOption->GetNextKey())
