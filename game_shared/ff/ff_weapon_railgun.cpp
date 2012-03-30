@@ -95,9 +95,6 @@ extern unsigned char g_uchRailColors[3][3];
 //ConVar ffdev_railgun_resupply_cells("ffdev_railgun_resupply_cells", "40", FCVAR_FF_FFDEV_REPLICATED, "Resupply X cells on overcharge");
 #define RAILGUN_RESUPPLY_CELLS 40 // ffdev_railgun_resupply_cells.GetInt()
 
-ConVar ffdev_railgun_simplesystem("ffdev_railgun_simplesystem", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Use a simple system for railgun - either charged or not. 1 bullet to fire.");
-#define FFDEV_RAILGUN_SIMPLESYSTEM ffdev_railgun_simplesystem.GetBool()
-
 #ifdef GAME_DLL
 #else
 

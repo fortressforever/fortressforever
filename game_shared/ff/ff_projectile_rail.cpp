@@ -18,12 +18,6 @@
 #include "IEffects.h"
 #include "iefx.h"
 
-#ifdef CLIENT_DLL
-	#include "c_ff_player.h"
-#else
-	#include "ff_player.h"
-#endif
-
 class CRecvProxyData;
 extern void RecvProxy_LocalVelocityX(const CRecvProxyData *pData, void *pStruct, void *pOut);
 extern void RecvProxy_LocalVelocityY(const CRecvProxyData *pData, void *pStruct, void *pOut);
@@ -61,27 +55,16 @@ PRECACHE_WEAPON_REGISTER( ff_projectile_rail );
 unsigned char g_uchRailColors[3][3] = { {64, 128, 192}, {32, 192, 160}, {0, 255, 128} };
 
 //ConVar ffdev_rail_maxbounceangle( "ffdev_rail_maxbounceangle", "45.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum angle for a rail to bounce" );
-#define RAIL_MAXBOUNCEANGLE 90.0f // ffdev_rail_maxbounceangle.GetFloat()
+#define RAIL_MAXBOUNCEANGLE 45.0f // ffdev_rail_maxbounceangle.GetFloat()
 //ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Damage multiplier per bounce" );
 #define RAIL_BOUNCEDAMAGEFACTOR 1.4f // ffdev_rail_bouncedamagefactor.GetFloat()
-ConVar ffdev_rail_bounceuppushfactor( "ffdev_rail_bounceuppushfactor", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT, "Upwards push multiplier per bounce" );
-#define RAIL_BOUNCEUPPUSHFACTOR ffdev_rail_bounceuppushfactor.GetFloat()
 ConVar ffdev_rail_maxtraveldistance( "ffdev_rail_maxtraveldistance", "0", FCVAR_REPLICATED, "Distance before the rail fizzles out" );
 #define RAIL_MAXTRAVELDISTANCE ffdev_rail_maxtraveldistance.GetFloat()
 
-
-ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "40.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a half-charge shot." );
-#define RAIL_EXPLODEDAMAGE_MIN ffdev_rail_explodedamage_min.GetFloat()
-ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a full-charge shot." );
-#define RAIL_EXPLODEDAMAGE_MAX ffdev_rail_explodedamage_max.GetFloat()
-
-extern ConVar ffdev_railgun_simplesystem;
-#define FFDEV_RAILGUN_SIMPLESYSTEM ffdev_railgun_simplesystem.GetBool()
-ConVar ffdev_railgun_impactuppush( "ffdev_railgun_impactuppush", "450.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Upwards impact caused by hitting player with railgun." );
-#define FFDEV_RAILGUN_IMPACTUPPUSH ffdev_railgun_impactuppush.GetFloat()
-
-extern short g_sModelIndexFireball;
-extern short g_sModelIndexWExplosion;
+//ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a half-charge shot." );
+#define RAIL_EXPLODEDAMAGE_MIN 20.0f // ffdev_rail_explodedamage_min.GetFloat()
+//ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Explosion damage caused from a full-charge shot." );
+#define RAIL_EXPLODEDAMAGE_MAX 40.0f // ffdev_rail_explodedamage_max.GetFloat()
 
 #ifdef CLIENT_DLL
 
@@ -183,11 +166,10 @@ void CFFProjectileRail::Spawn( void )
 	// Setup
 	SetModel(RAIL_MODEL);
 	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
-	SetSize(-Vector(6.0, 6.0, 6.0), Vector(6.0, 6.0, 6.0));
+	SetSize(-Vector(0.5, 0.5, 0.5), Vector(0.5, 0.5, 0.5));
 	SetSolid(SOLID_BBOX);
 	SetGravity(0.01f);
 
-	flSpawnTime = gpGlobals->curtime;
 	m_vecStartOrigin = GetAbsOrigin();
 
 	// Oh really we're invisible
@@ -307,20 +289,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 			if (m_iNumBounces > 0)
 				m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
-			// throw player up in the air a bit
-			if ( pOther->IsPlayer() )
-			{
-				CFFPlayer *pPlayer = ToFFPlayer( pOther );
-				if ( pPlayer )
-				{
-					float push = FFDEV_RAILGUN_IMPACTUPPUSH;
-					for (int i = 0; i < m_iNumBounces; i++)
-						push *= RAIL_BOUNCEUPPUSHFACTOR;
-					pPlayer->ApplyAbsVelocityImpulse( Vector(0, 0, push) );
-				}
-			}
-
-			Detonate(); // We never get here on the simple system since maxbounces is always 2
+			Detonate();
 		}
 		// full charge
 		else if ( m_iMaxBounces == 2 )
@@ -332,46 +301,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 			for (int i = 0; i < m_iNumBounces; i++)
 				m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
-
-			if ( pOther->IsPlayer() )
-			{
-				CFFPlayer *pPlayer = ToFFPlayer( pOther );
-				if ( pPlayer )
-				{
-					float push = FFDEV_RAILGUN_IMPACTUPPUSH; // Turn this off by setting impactpush to 0
-					for (int i = 0; i < m_iNumBounces; i++)
-						push *= RAIL_BOUNCEUPPUSHFACTOR;
-					pPlayer->ApplyAbsVelocityImpulse( Vector(0, 0, push) );
-				}
-			}
-
-			if ( FFDEV_RAILGUN_SIMPLESYSTEM )  
-			{
-				// Do damage directly, not through the explosion
-				if ( pOther == GetOwnerEntity() )
-					pOther->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), m_flDamage * 0.4 , DMG_BULLET | DMG_NEVERGIB ) ); // deal dmg directly. Railjumping takes less dmg
-				else
-					pOther->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), m_flDamage , DMG_BULLET | DMG_NEVERGIB ) ); // deal dmg directly
-				m_flDamage = 0; // Set this to prevent the explosion doing any further damage or pushing the player
-
-				// Fake explosion (just the visuals)
-				// Copied from basegrenade_shared as we want to do the explosion visuals but not the damage
-				Vector vecAbsOrigin = GetAbsOrigin();
-				Vector vecNormal = Vector(0,0,1);
-				int contents = UTIL_PointContents ( vecAbsOrigin );
-				CPASFilter filter( vecAbsOrigin );
-
-				te->Explosion( filter, -1.0, // don't apply cl_interp delay
-					&vecAbsOrigin,
-					!( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
-					/*m_DmgRadius * .03*/ 6.5f / 128.0f, //m_flDamage / 128.0f, // scale
-					25, //framerate
-					TE_EXPLFLAG_NONE,
-					0,//m_DmgRadius, //radius
-					0 );//m_flDamage, //magnitude
-			}
-			else
-				Detonate();
+			Detonate();
 		}
 		SetupEnd(tr.endpos);
 	}
@@ -467,8 +397,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 					for (int i = 0; i < m_iNumBounces; i++)
 						m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
-					if( !FFDEV_RAILGUN_SIMPLESYSTEM )
-						Detonate();
+					Detonate();
 				}
 				SetupEnd(tr.endpos);
 			}
@@ -500,8 +429,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				for (int i = 0; i < m_iNumBounces; i++)
 					m_flDamage *= RAIL_BOUNCEDAMAGEFACTOR;
 
-				if( !FFDEV_RAILGUN_SIMPLESYSTEM )
-					Detonate();
+				Detonate();
 			}
 			SetupEnd(tr.endpos);
 
@@ -547,10 +475,6 @@ void CFFProjectileRail::RailThink( void )
 		SetupEnd(GetAbsOrigin());
 		return;
 	}
-
-	// after short break, allow collision with owner for rail jumping
-	if (gpGlobals->curtime - flSpawnTime > 0.05f)
-		AddSolidFlags( FSOLID_COLLIDE_WITH_OWNER );
 
 	float flDistance = abs(Vector(GetAbsOrigin() - m_vecSameOriginCheck).Length());
 	if (flDistance < 2)
