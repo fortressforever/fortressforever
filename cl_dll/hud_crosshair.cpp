@@ -107,8 +107,8 @@ bool CHudCrosshair::ShouldDraw( void )
 	C_FFPlayer *pFFPlayer = ToFFPlayer( pPlayer );
 
 	// Dunno about this... specs might want a crosshair drawn?
-	if( FF_IsPlayerSpec( pFFPlayer ) || !FF_HasPlayerPickedClass( pFFPlayer ) )
-		return false;
+	/*if( FF_IsPlayerSpec( pFFPlayer ) || !FF_HasPlayerPickedClass( pFFPlayer ) )
+		return false;*/
 
 	// draw a crosshair only if alive or spectating in eye
 	if ( IsXbox() )
@@ -149,6 +149,18 @@ void CHudCrosshair::Paint( void )
 
 	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 
+	if (!pPlayer)
+		return;
+
+	C_FFPlayer *pActivePlayer = pPlayer;
+
+	// if we're speccing someone, then treat them as the player
+	if (pPlayer->IsObserver() && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+		pActivePlayer = ToFFPlayer(pPlayer->GetObserverTarget());
+
+	if (!pActivePlayer)	
+		return;
+
 	m_curViewAngles = CurrentViewAngles();
 	m_curViewOrigin = CurrentViewOrigin();
 
@@ -183,7 +195,7 @@ void CHudCrosshair::Paint( void )
 	}
 
 	// AfterShock: Conc aim -> plot crosshair properly
-	if ( ( FFDEV_CONCAIM_SHOWTRUEAIM ) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	if ( ( FFDEV_CONCAIM_SHOWTRUEAIM ) && ( (pActivePlayer->m_flConcTime > gpGlobals->curtime) || (pActivePlayer->m_flConcTime < 0) ) )
 	{
 		QAngle angles;
 		Vector forward;
@@ -191,7 +203,7 @@ void CHudCrosshair::Paint( void )
 
 		// this code is wrong
 		// AfterShock: No, the code is now right!
-		angles = pPlayer->EyeAngles();
+		angles = pActivePlayer->EyeAngles();
 		AngleVectors( angles, &forward );
 		forward *= 10000.0f;
 		VectorAdd( m_curViewOrigin, forward, point );
@@ -203,16 +215,16 @@ void CHudCrosshair::Paint( void )
 		y_chargebar = y;
 	}
 	// hide crosshair
-	else if ( ( FFDEV_CONCAIM == 2) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	else if ( ( FFDEV_CONCAIM == 2) && ( (pActivePlayer->m_flConcTime > gpGlobals->curtime) || (pActivePlayer->m_flConcTime < 0) ) )
 	{
 		x = -1;
 		y = -1;
 	}
 	// flash crosshair
-	else if ( ( FFDEV_CONCAIM == 1) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	else if ( ( FFDEV_CONCAIM == 1) && ( (pActivePlayer->m_flConcTime > gpGlobals->curtime) || (pActivePlayer->m_flConcTime < 0) ) )
 	{
 		// if should be flashing
-		if (gpGlobals->curtime < pPlayer->m_flTrueAimTime + FFDEV_CONCAIM_FADETIME)
+		if (gpGlobals->curtime < pActivePlayer->m_flTrueAimTime + FFDEV_CONCAIM_FADETIME)
 		{
 			QAngle angles;
 			Vector forward;
@@ -220,7 +232,7 @@ void CHudCrosshair::Paint( void )
 
 			// this code is wrong
 			// AfterShock: No, the code is now right!
-			angles = pPlayer->EyeAngles();
+			angles = pActivePlayer->EyeAngles();
 			AngleVectors( angles, &forward );
 			forward *= 10000.0f;
 			VectorAdd( m_curViewOrigin, forward, point );
@@ -243,17 +255,14 @@ void CHudCrosshair::Paint( void )
 	//		x - 0.5f * m_pCrosshair->Width(), 
 	//		y - 0.5f * m_pCrosshair->Height(),
 	//		m_clrCrosshair );
-	
-	if (!pPlayer)
-		return;
 
-	C_FFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+	C_FFWeaponBase *pWeapon = pActivePlayer->GetActiveFFWeapon();
 
 	// No crosshair for no weapon
 	if (!pWeapon)
 		return;
 
-	FFWeaponID weaponID = pPlayer->GetActiveFFWeapon()->GetWeaponID();
+	FFWeaponID weaponID = pWeapon->GetWeaponID();
 
 	// Weapons other than these don't get crosshairs
 	if (weaponID <= FF_WEAPON_NONE || weaponID > FF_WEAPON_TOMMYGUN)
@@ -272,7 +281,7 @@ void CHudCrosshair::Paint( void )
 	GetCrosshair(weaponID, innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 
 	// concaim 1 = flash xhair when shooting
-	if ( ( FFDEV_CONCAIM == 1) && ( (pPlayer->m_flConcTime > gpGlobals->curtime) || (pPlayer->m_flConcTime < 0) ) )
+	if ( ( FFDEV_CONCAIM == 1) && ( (pActivePlayer->m_flConcTime > gpGlobals->curtime) || (pActivePlayer->m_flConcTime < 0) ) )
 	{
 		//Get the weapon and see if you should draw the crosshair while conced
 		if( weaponID == FF_WEAPON_ASSAULTCANNON || 
@@ -286,7 +295,7 @@ void CHudCrosshair::Paint( void )
 		}
 
 		// calculate alphas
-		float flFlashAlpha = clamp(1.0f - (gpGlobals->curtime - pPlayer->m_flTrueAimTime)/FFDEV_CONCAIM_FADETIME, 0.0f, 1.0f);
+		float flFlashAlpha = clamp(1.0f - (gpGlobals->curtime - pActivePlayer->m_flTrueAimTime)/FFDEV_CONCAIM_FADETIME, 0.0f, 1.0f);
 		// set alphas
 		outerCol[3] *= flFlashAlpha;
 		innerCol[3] *= flFlashAlpha;
@@ -323,15 +332,15 @@ void CHudCrosshair::Paint( void )
 	if( (weaponID == FF_WEAPON_HOOKGUN) )
 	{
 		Vector vecForward;
-		pPlayer->EyeVectors( &vecForward );
+		pActivePlayer->EyeVectors( &vecForward );
 
 		VectorNormalize( vecForward );
 
 		// Get eye position
-		Vector vecOrigin = pPlayer->EyePosition();
+		Vector vecOrigin = pActivePlayer->EyePosition();
 
 		trace_t tr;
-		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1000.0f ), MASK_SOLID, pPlayer, COLLISION_GROUP_DEBRIS, &tr );
+		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1000.0f ), MASK_SOLID, pActivePlayer, COLLISION_GROUP_DEBRIS, &tr );
 
 		// If we hit something...
 		if( tr.DidHit() )
