@@ -80,8 +80,8 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 #define OVERPRESSURE_PUSH_HORIZONTAL 350.0f
 //ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_PUSH_VERTICAL 350.0f
-//ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "8", FCVAR_FF_FFDEV_REPLICATED );
-#define OVERPRESSURE_DELAY 8
+//ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "12", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_DELAY 12
 //ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_RADIUS 128
 //ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "1", FCVAR_FF_FFDEV_REPLICATED );
