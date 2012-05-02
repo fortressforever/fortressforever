@@ -131,9 +131,21 @@ void C_SlowfieldEffect::ClientThink( void )
 	
 	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
 
+	if (!pPlayer)
+		return;
+
+	C_BasePlayer *pActivePlayer = pPlayer;
+
+	// if we're speccing someone, then treat them as the player
+	if ((pPlayer->IsObserver() && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE))
+		pActivePlayer = ToBasePlayer(pPlayer->GetObserverTarget());
+
+	if (!pActivePlayer)	
+		return;
+
 	// We need to keep the correct part of the shader oriented towards the player
 	// The bit we want is on the top, so rotate around x axis by 90
-	Vector vecDir = GetAbsOrigin() - pPlayer->EyePosition();
+	Vector vecDir = GetAbsOrigin() - pActivePlayer->EyePosition();
 
 	QAngle angFace;
 	VectorAngles(vecDir, angFace);
