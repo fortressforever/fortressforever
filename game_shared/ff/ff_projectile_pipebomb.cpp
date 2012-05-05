@@ -143,7 +143,7 @@ ConVar ffdev_pipebomb_activation_speed( "ffdev_pipebomb_activation_speed", "4.0f
 		{
 			m_hGlowTrail->FollowEntity( this );
 			m_hGlowTrail->SetAttachment( this, nAttachment );
-			m_hGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
+			m_hGlowTrail->SetTransparency( kRenderTransAdd, 180, 88, 0, 255, kRenderFxNone );
 			m_hGlowTrail->SetStartWidth( 10.0f );
 			m_hGlowTrail->SetEndWidth( 5.0f );
 			m_hGlowTrail->SetLifeTime( 0.5f );
