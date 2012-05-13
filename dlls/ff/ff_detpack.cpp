@@ -262,6 +262,7 @@ int CFFDetpack::TakeEmp( void )
 {
 	VPROF_BUDGET( "CFFDetpack::TakeEmp", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
+	/* no reason that EMPs should make the fuselength of detpacks shorten to 5 seconds
 	if( ( m_flDetonateTime - gpGlobals->curtime ) >= 5.0f )
 	{
 		m_flThinkTime = 0.001f;	// immediate
@@ -270,6 +271,7 @@ int CFFDetpack::TakeEmp( void )
 		// Return something so an explosion goes off from the emp
 		return 1;
 	}
+	*/
 
 	return 0;
 }
