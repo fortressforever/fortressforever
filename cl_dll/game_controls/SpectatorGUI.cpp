@@ -393,12 +393,6 @@ void CSpectatorGUI::OnThink()
 				gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, m_bSpecScoreboard );
 			}
 		}
-
-		// Update the timer
-		UpdateTimer();
-
-		// Update scores
-		UpdateScores();
 	}
 }
 
@@ -475,10 +469,8 @@ bool CSpectatorGUI::ShouldShowPlayerLabel( int specmode )
 void CSpectatorGUI::Update()
 {
 	int wide, tall;
-	int bx, by, bwide, btall;
 
 	GetHudSize(wide, tall);
-	m_pTopBar->GetBounds( bx, by, bwide, btall );
 
 	IGameResources *gr = GameResources();
 	int specmode = GetSpectatorMode();
@@ -488,30 +480,9 @@ void CSpectatorGUI::Update()
 
 	if ( overview && overview->IsVisible() )
 	{
-		int mx, my, mwide, mtall;
-
-		VPANEL p = overview->GetVPanel();
-		vgui::ipanel()->GetPos( p, mx, my );
-		vgui::ipanel()->GetSize( p, mwide, mtall );
-				
-		if ( my < btall )
-		{
-			// reduce to bar 
-			m_pTopBar->SetSize( wide - (mx + mwide), btall );
-			m_pTopBar->SetPos( (mx + mwide), 0 );
-		}
-		else
-		{
-			// full top bar
-			m_pTopBar->SetSize( wide , btall );
-			m_pTopBar->SetPos( 0, 0 );
-		}
 	}
 	else
 	{
-		// full top bar
-		m_pTopBar->SetSize( wide , btall ); // change width, keep height
-		m_pTopBar->SetPos( 0, 0 );
 	}
 
 	m_pPlayerLabel->SetVisible( ShouldShowPlayerLabel(specmode) );
@@ -557,6 +528,9 @@ void CSpectatorGUI::Update()
 
 	if ( engine->IsHLTV() )
 	{
+		// show top bar
+		m_pTopBar->SetVisible(true);
+
 		// set spectator number and HLTV title
 		Q_snprintf(tempstr,sizeof(tempstr),"Spectators : %d", HLTVCamera()->GetNumSpectators() );
 		localize()->ConvertANSIToUnicode(tempstr,szEtxraInfo,sizeof(szEtxraInfo));
@@ -566,75 +540,23 @@ void CSpectatorGUI::Update()
 	}
 	else
 	{
-		// otherwise show map name
+		// hide top bar
+		m_pTopBar->SetVisible(true);
+
+		/*// otherwise show map name
 		Q_FileBase( engine->GetLevelName(), tempstr, sizeof(tempstr) );
 
 		wchar_t wMapName[64];
 		localize()->ConvertANSIToUnicode(tempstr,wMapName,sizeof(wMapName));
 		localize()->ConstructString( szEtxraInfo,sizeof( szEtxraInfo ), localize()->Find("#Spec_Map" ),1, wMapName );
+		*/
 
-		localize()->ConvertANSIToUnicode( "" ,szTitleLabel,sizeof(szTitleLabel));
+		localize()->ConvertANSIToUnicode( "test" ,szEtxraInfo,sizeof(szEtxraInfo));
+		localize()->ConvertANSIToUnicode( "test2" ,szTitleLabel,sizeof(szTitleLabel));
 	}
 
 	SetLabelText("extrainfo", szEtxraInfo );
 	SetLabelText("titlelabel", szTitleLabel );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::UpdateScores( void )
-{
-	IGameResources *pGR = GameResources();
-
-	if( !pGR )
-		return;
-
-	// Draw team scores up top-ish
-
-	for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
-	{
-		int iLabelNum = i - TEAM_BLUE + 1;
-
-		char szLabel[ 32 ];
-		Q_snprintf( szLabel, sizeof( szLabel ), "team%ilabel", iLabelNum );
-
-		char szLabelScore[ 32 ];
-		Q_snprintf( szLabelScore, sizeof( szLabel ), "team%iscorelabel", iLabelNum );
-
-		wchar_t szTeam[ MAX_TEAM_NAME_LENGTH + 1 ];
-		wchar_t szTeamScore[ MAX_TEAM_NAME_LENGTH + 1 ];
-
-		// Grab valid teams where team limit isn't -1
-		if( GetGlobalTeam( i ) && ( pGR->GetTeamLimits( i ) != -1 ) )
-		{
-			wchar_t *szName = localize()->Find( pGR->GetTeamName( i ) );
-			if( szName )
-			{
-				_snwprintf( szTeam, sizeof( szTeam ), L"%s", szName );
-			}
-			else
-			{
-				wchar_t szTemp[ MAX_TEAM_NAME_LENGTH + 1 ];
-				
-				localize()->ConvertANSIToUnicode( pGR->GetTeamName( i ), szTemp, sizeof( szTemp ) );
-				_snwprintf( szTeam, sizeof( szTeam ), L"%s", szTemp );				
-			}
-
-			_snwprintf( szTeamScore, sizeof( szTeam ), L"%i", pGR->GetTeamScore( i ) );
-		}
-		else
-		{
-			// Team limit -1 or getglobalteam failed
-			_snwprintf( szTeam, sizeof( szTeam ), L"" );
-			_snwprintf( szTeamScore, sizeof( szTeamScore ), L"" );
-		}
-
-		// Team
-		SetLabelText( szLabel, szTeam );
-		// Team score
-		SetLabelText( szLabelScore, szTeamScore );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -753,22 +675,6 @@ void CSpectatorMenu::OnThink()
 			}
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Updates the timer label if one exists
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::UpdateTimer()
-{
-	wchar_t szText[ 63 ];
-
-	int timer = gpGlobals->curtime - FFGameRules()->GetRoundStart();
-	_snwprintf ( szText, sizeof( szText ), L"%d:%02d", (timer / 60), (timer % 60) );
-
-	szText[63] = 0;
-
-
-	SetLabelText("timerlabel", szText );
 }
 
 static void ForwardSpecCmdToServer()

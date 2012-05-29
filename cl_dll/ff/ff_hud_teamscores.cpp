@@ -107,18 +107,18 @@ void CHudTeamScores::VidInit( void )
 //-----------------------------------------------------------------------------
 bool CHudTeamScores::ShouldDraw() 
 { 
-   if( !engine->IsInGame() ) 
-      return false; 
+	if( !engine->IsInGame() ) 
+		return false; 
 
-   C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
 
-   if( !pPlayer ) 
-      return false; 
+	if( !pPlayer ) 
+		return false; 
 
-   if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) ) 
-      return false; 
+	if( pPlayer->GetTeamNumber() == TEAM_UNASSIGNED || (!FF_HasPlayerPickedClass( pPlayer ) && !FF_IsPlayerSpec( pPlayer )) )
+		return false; 
 
-   return true; 
+	return true; 
 } 
 
 //-----------------------------------------------------------------------------
