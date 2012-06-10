@@ -6826,7 +6826,7 @@ CFFMapGuide *CFFPlayer::FindMapGuide(string_t targetname)
 void CFFPlayer::MoveTowardsMapGuide()
 {
 	// Cancel now if we're no longer eligable
-	if (GetTeamNumber() > TEAM_SPECTATOR)
+	if (IsHLTV() || GetTeamNumber() > TEAM_SPECTATOR)
 	{
 		m_hNextMapGuide = NULL;
 		return;
