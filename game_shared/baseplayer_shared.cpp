@@ -280,7 +280,7 @@ Vector CBasePlayer::EyePosition( )
 #ifdef CLIENT_DLL
 		if ( IsObserver() )
 		{
-			if ( m_iObserverMode == OBS_MODE_CHASE )
+			if ( GetObserverMode() == OBS_MODE_CHASE )
 			{
 				if ( IsLocalPlayer() )
 				{
