@@ -51,7 +51,7 @@ CHudLua::CHudLua(const char *pElementName) : CHudElement(pElementName), vgui::Pa
 {
 	SetParent(g_pClientMode->GetViewport());
 
-	SetHiddenBits(0);
+	SetHiddenBits( HIDEHUD_PLAYERDEAD );
 	m_nHudElements = 0;
 }
 
@@ -748,3 +748,22 @@ void CHudLua::FireGameEvent( IGameEvent *pEvent )
 		VidInit();
 	}
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Should we draw? (Are we ingame? have we picked a class, etc)
+//-----------------------------------------------------------------------------
+bool CHudLua::ShouldDraw() 
+{ 
+	if( !engine->IsInGame() ) 
+		return false; 
+
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
+
+	if( !pPlayer ) 
+		return false; 
+
+	if( pPlayer->GetTeamNumber() == TEAM_UNASSIGNED || (!FF_HasPlayerPickedClass( pPlayer ) && !FF_IsPlayerSpec( pPlayer )) )
+		return false; 
+
+	return true; 
+} 

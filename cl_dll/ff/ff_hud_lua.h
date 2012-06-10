@@ -53,6 +53,7 @@ public:
 
 	void	Init();
 	void	VidInit();
+	virtual bool ShouldDraw( void );
 
 	void	MsgFunc_FF_HudLua(bf_read &msg);
 
