@@ -8,6 +8,8 @@ extern IFileSystem **pFilesystem;
 
 #include <vgui_controls/CheckButton.h>
 #include <vgui_controls/ComboBox.h>
+#include "ff_inputslider.h"
+#include <vgui_controls/Slider.h>
 #include <vgui/ILocalize.h>
 /*
 #include "ff_inputslider.h"
@@ -78,6 +80,10 @@ void CFFMiscOptions::Apply()
 			const char *pszValue = cb->GetActiveItemUserData()->GetString("value");
 			if (Q_strncmp(pszValue, "custom", 6) != 0)
 				pCvar->SetValue(pszValue);
+		}
+		else if (CFFInputSlider *slider = dynamic_cast <CFFInputSlider *> (pChild))
+		{
+			pCvar->SetValue(slider->GetValue());
 		}
 	}
 }
@@ -214,6 +220,34 @@ void CFFMiscOptions::Load()
 
 			iYCoords += ROW_HEIGHT;
 		}
+		// Slider is a slider with a label
+		else if (Q_strncmp(pszType, "slider", 6) == 0)
+		{
+			CFFInputSlider *slider = new CFFInputSlider(this, pszName, VarArgs("%sInput", pszName));
+
+			if (!slider)
+				continue;
+			
+			int minval = kvOption->GetInt("minval");
+			int maxval = kvOption->GetInt("maxval");
+
+			slider->SetRange(minval,maxval);
+			slider->SetValue(minval);
+
+			slider->SetSize(80, ROW_HEIGHT - 4);
+			slider->SetPos(30, iYCoords);
+
+			// Create a handy label too so we know what this is
+			Label *l = new Label(this, "label", szCaption);
+
+			if (l)
+			{
+				l->SetPos(180, iYCoords);
+				l->SetSize(250, ROW_HEIGHT);
+			}
+
+			iYCoords += ROW_HEIGHT;
+		}
 	}
 
 	// Loop through creating new options for each one
@@ -280,6 +314,10 @@ void CFFMiscOptions::Load()
 					break;
 				}
 			}*/
+		}
+		else if (CFFInputSlider *slider = dynamic_cast <CFFInputSlider *> (pChild))
+		{
+			slider->SetValue(pCvar->GetInt());
 		}
 	}
 
