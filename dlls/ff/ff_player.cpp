@@ -1372,6 +1372,11 @@ void CFFPlayer::Spawn( void )
 
 	// Get rid of any fire
 	Extinguish();
+	
+	//AfterShock - flaginfo on spawn (connect doesnt work)
+	CFFLuaSC hFlagInfo;
+	hFlagInfo.Push(this);
+	_scriptman.RunPredicates_LUA(NULL, &hFlagInfo, "flaginfo");
 
 	// Tried to spawn while unassigned (and not in a map guide)
 	// Bug #0001767 -- Improved camera stuff when speccing / changing teams / etc.
@@ -1568,11 +1573,6 @@ void CFFPlayer::Spawn( void )
 		break;
 	}
 	//////////////////////////////////////////////////////////////////////////
-
-	//AfterShock - flaginfo on spawn (connect doesnt work)
-	CFFLuaSC hFlagInfo;
-	hFlagInfo.Push(this);
-	_scriptman.RunPredicates_LUA(NULL, &hFlagInfo, "flaginfo");
 	
 	// Make sure we don't go running around during the intermission
 	// AfterShock - Commented out to try to prevent mapload respawn frozen
