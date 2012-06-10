@@ -111,14 +111,10 @@ bool CHudRoundInfo::ShouldDraw( void )
 	if( !pPlayer )
 		return false;
 
-	// Specs have their own timer and stuff
-	if( FF_IsPlayerSpec( pPlayer ) )
-		return false;
-
 	// Don't want to draw this over the class selection panel
 	// so we'll wait until they select a class (unless guys
 	// want it regardless)
-	if( !FF_HasPlayerPickedClass( pPlayer ) )
+	if( pPlayer->GetTeamNumber() == TEAM_UNASSIGNED || (!FF_HasPlayerPickedClass( pPlayer ) && !FF_IsPlayerSpec( pPlayer )) )
 		return false;
 
 	// Convert to minutes
