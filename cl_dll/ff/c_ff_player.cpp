@@ -1694,7 +1694,7 @@ void C_FFPlayer::Death()
 void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 {
 	// Mapguides
-	if (GetTeamNumber() == TEAM_SPECTATOR && m_hNextMapGuide)
+	if (!IsHLTV() && GetTeamNumber() == TEAM_SPECTATOR && m_hNextMapGuide)
 	{
 		pCmd->buttons = 0;
 		pCmd->forwardmove = 0;
@@ -2100,7 +2100,7 @@ const QAngle &C_FFPlayer::EyeAngles()
 		return m_angEyeAngles;
 
 	// Mapguides
-	if (GetTeamNumber() < TEAM_BLUE && m_hNextMapGuide)
+	if (!IsHLTV() && GetTeamNumber() < TEAM_BLUE && m_hNextMapGuide)
 	{
 		float t = clamp((m_flNextMapGuideTime - gpGlobals->curtime) / m_hLastMapGuide->m_flTime, 0, 1.0f);
 		t = SimpleSpline(t);
