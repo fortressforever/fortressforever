@@ -2621,7 +2621,8 @@ bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 	if( player == this )
 		return false; // We can't observe ourselves.
 
-	if ( player->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
+	// gibbed players have EF_NODRAW effect active, so make an exception for LIFE_DEAD players
+	if ( player->m_lifeState != LIFE_DEAD && player->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
 		return false;
 
 	// 0001670: Player you are spectating changes when they die
