@@ -747,7 +747,7 @@ public:
 
 private:
 	bool IsTargetInAimingEllipse( const Vector& vecTarget ) const;
-	bool IsTargetVisible( CBaseEntity *pTarget );
+	bool IsTargetVisible( CBaseEntity *pTarget, int iSightDistance );
 	bool IsTargetClassTValid( Class_T cT ) const;
 
 public:
