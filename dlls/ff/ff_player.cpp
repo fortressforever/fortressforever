@@ -65,13 +65,13 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
 //ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
 //ConVar burn_damage_ft("ffdev_burn_damage_ft","15.0",0,"Burn damage of the Flamethrower (per tick)");
-#define BURN_DAMAGE_FT 15.0f
+#define BURN_DAMAGE_BASE 13.0f
 //ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
 #define BURN_TICKS 6
 //ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","5",0,"Burn damage multiplier for all 3 burn types.");
 #define BURN_MULTIPLIER_3BURNS 5.0f
 //ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
-#define BURN_MULTIPLIER_2BURNS 2.5f
+#define BURN_MULTIPLIER_2BURNS 2.0f
 
 //ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
 #define FFDEV_FLAMESIZE_BURN1 0.015f //ffdev_flamesize_burn1.GetFloat()
@@ -4792,7 +4792,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		m_flBurningDamage += burn_damage_ic.GetFloat();
 	*/
 	// Else use this single value (from flamethrower) and multiply it by the burn multipliers
-	m_flBurningDamage = BURN_DAMAGE_FT * newburnlevel;
+	m_flBurningDamage = BURN_DAMAGE_BASE * newburnlevel;
 	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
 	
 	// if we're on fire from all 3 flame weapons, holy shit BURN! - shok
