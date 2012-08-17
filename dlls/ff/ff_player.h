@@ -738,6 +738,12 @@ public:
 	float m_flOverpressureTime;
 	Vector m_vecOverpressurePosition;
 
+public:
+	// jetpack mode stuff
+	void Jetpack( void );
+	void JetpackEnd( void );
+	void JetpackThink ( void );
+
 public:	
 	// Will uncloak you (w/o going the Command_ route)
 	void Uncloak( bool bInstant = false )

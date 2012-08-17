@@ -713,9 +713,8 @@ void CFFPlayer::ClassSpecificSkill()
 
 			break;
 
-#ifdef CLIENT_DLL
-
 		case CLASS_PYRO:
+			/* 
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_IC) )
 			{
 				SwapToWeapon(FF_WEAPON_FLAMETHROWER);
@@ -723,9 +722,13 @@ void CFFPlayer::ClassSpecificSkill()
 			else 
 			{
 				SwapToWeapon(FF_WEAPON_IC);
-			}
+			} */
+
+			// jetpack mode
+			Jetpack( );
 			break;
 
+#ifdef CLIENT_DLL		
 		case CLASS_SOLDIER:
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_RPG) )
 			{
@@ -792,18 +795,20 @@ void CFFPlayer::ClassSpecificSkill()
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post()
 {
-#ifdef CLIENT_DLL
 	switch (GetClassSlot())
 	{
+#ifdef CLIENT_DLL
 		case CLASS_ENGINEER:
 		case CLASS_SPY:
 			HudContextShow(false);
+			break;				
+#endif
+		case CLASS_PYRO:
+			JetpackEnd();
 			break;
-
 		default:
 			break;
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1971,4 +1976,90 @@ void CFFPlayer::OverpressureThink( void )
 	{
 		SetNextThink( gpGlobals->curtime + 0.01f );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: pyro alt attack 
+//-----------------------------------------------------------------------------
+void CFFPlayer::Jetpack( void )
+{
+	if (!IsAlive())
+		return;
+
+#ifdef GAME_DLL
+	DevMsg( "[Server] CFFPlayer::Jetpack\n" );
+#else
+	DevMsg( "[Client] CFFPlayer::Jetpack\n" );
+#endif
+	SetThink( &CFFPlayer::JetpackThink );
+	SetNextThink( gpGlobals->curtime );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: pyro alt attack ending
+//-----------------------------------------------------------------------------
+void CFFPlayer::JetpackEnd( void )
+{
+#ifdef GAME_DLL
+	DevMsg( "[Server] CFFPlayer::JetpackEnd\n" );
+#else
+	DevMsg( "[Client] CFFPlayer::JetpackEnd\n" );
+#endif
+
+	SetNextThink( NULL );
+}
+
+
+void CFFPlayer::JetpackThink( void )
+{
+#ifdef GAME_DLL
+	DevMsg( "[Server] CFFPlayer::JetpackThink\n");
+#else
+	DevMsg( "[Client] CFFPlayer::JetpackThink\n ");
+#endif
+
+	CFFWeaponBase *flamethrower = dynamic_cast<CFFWeaponBase *>(GetWeapon(3));
+	
+	int currentFuel;
+	// no fuel to jump 
+	if (!flamethrower || (currentFuel = GetAmmoCount(flamethrower->m_iPrimaryAmmoType)) <= 0)
+	{
+		SetNextThink(0);
+		return;
+	}
+
+	const CFFWeaponInfo &weapInfo = flamethrower->GetFFWpnData();
+	int fuelUsed = min(weapInfo.m_iCycleDecrement, currentFuel);
+	RemoveAmmo(fuelUsed, flamethrower->m_iPrimaryAmmoType);
+
+	//Vector vecVelocity = GetAbsVelocity();
+	//SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 10));
+	//SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 50));
+	Vector vecForward;
+	EyeVectors(&vecForward);
+
+	// Normalize, or we get that weird epsilon assert
+	VectorNormalizeFast(vecForward);
+	
+	// trying slightly slower than doing things manually with the flamethrower, so it still has a small advantage
+	float flCapSqr = 650 * 650;
+
+	float flVecLen = GetAbsVelocity().LengthSqr();
+	// TODO: if the player is falling fast, this wont work, so determine if they're dropping cuz we wanna jetpack the fuck up
+
+	if (flVecLen < flCapSqr)
+	{
+		ApplyAbsVelocityImpulse(Vector(0, 0, 75));
+	}
+	
+	//CFFWeapon *flamethrower = static_cast< GetWeapon(FF_WEAPON_FLAMETHROWER);
+	/*
+	Vector vecVelocity = pPlayer->GetAbsVelocity();
+	if (vecVelocity.LengthSqr() < flCapSqr)
+	{
+		SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 100));
+	}*/
+	
+	SetNextThink(gpGlobals->curtime + (weapInfo.m_flCycleTime/2));
 }
