@@ -1060,10 +1060,6 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget, int iSightDistance )
 	if( flDistToTarget > iSightDistance )
 		return false;
 
-	// Use FVisible to check visibility, no use using any other method
-	if( !FVisible( pTarget, MASK_SHOT ) )
-		return false;
-
 	// Check PVS for early out
 	if(SG_USEPVS)
 	{
@@ -1073,6 +1069,14 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget, int iSightDistance )
 		if(!engine->CheckOriginInPVS(vecTarget, pvs, iPVSLength))
 			return false;
 	}
+
+	// Can we trace to the target?
+	trace_t tr;
+	// Using MASK_SHOT instead of MASK_PLAYERSOLID so SGs track through anything they can actually shoot through
+	UTIL_TraceLine( vecOrigin, vecTarget, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+
+	if ((tr.fraction != 1.0 || tr.startsolid) && tr.m_pEnt != pTarget )
+		return false;// Line of sight is not established
 
 	/*if ( SG_DEBUG )
 	{
