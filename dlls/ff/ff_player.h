@@ -147,7 +147,6 @@ public:
 	DECLARE_CLASS( CFFPlayer, CBasePlayer );
 	DECLARE_SERVERCLASS();
 	DECLARE_PREDICTABLE();
-
 	CFFPlayer();
 	~CFFPlayer();
 
@@ -743,6 +742,8 @@ public:
 	void Jetpack( void );
 	void JetpackEnd( void );
 	void JetpackThink ( void );
+	bool m_bJetpackIsActive;
+	int m_iJetpackTickCount;
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)

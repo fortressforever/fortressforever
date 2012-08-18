@@ -156,6 +156,12 @@ extern ConVar ffdev_pipebomb_mode;
 #define PIPE_MODE ffdev_pipebomb_mode.GetInt()
 extern ConVar ai_debug_shoot_positions;
 
+
+// convars for jetpack
+ConVar ffdev_jetpack_push("ffdev_jetpack_pushamount", "145", FCVAR_REPLICATED, "vertical push amount (scaled to fuel ratio ticks)");
+ConVar ffdev_jetpack_maxSpeed("ffdev_jetpack_maxspeed", "650", FCVAR_REPLICATED, "Max speed before jetpack caps out");
+ConVar ffdev_jetpack_fuelRatio("ffdev_jetpack_fuelratio", "3", FCVAR_REPLICATED, "Number of push vec ticks per ammo amount (lower smoother)");
+
 #ifdef CLIENT_DLL
 void DispatchEffect(const char *pName, const CEffectData &data);
 #endif
@@ -1985,14 +1991,16 @@ void CFFPlayer::Jetpack( void )
 {
 	if (!IsAlive())
 		return;
+	// check we even have some petrol to burn before creating a think anyway! gulf war etc
+	// TODO: hardcoded to slot 3.. could iterate MAX_WEAPONS and go by weapon id but this works for now
+	CFFWeaponBase *flamethrower = dynamic_cast<CFFWeaponBase *>(GetWeapon(3));
+	if (GetAmmoCount(flamethrower->m_iPrimaryAmmoType) <= 0)
+		return;
+	
+	m_bJetpackIsActive = true;
 
-#ifdef GAME_DLL
-	DevMsg( "[Server] CFFPlayer::Jetpack\n" );
-#else
-	DevMsg( "[Client] CFFPlayer::Jetpack\n" );
-#endif
-	SetThink( &CFFPlayer::JetpackThink );
-	SetNextThink( gpGlobals->curtime );
+	SetThink(&CFFPlayer::JetpackThink);
+	SetNextThink(gpGlobals->curtime);
 }
 
 
@@ -2001,24 +2009,13 @@ void CFFPlayer::Jetpack( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::JetpackEnd( void )
 {
-#ifdef GAME_DLL
-	DevMsg( "[Server] CFFPlayer::JetpackEnd\n" );
-#else
-	DevMsg( "[Client] CFFPlayer::JetpackEnd\n" );
-#endif
-
-	SetNextThink( NULL );
+	m_bJetpackIsActive = false;
+	SetNextThink(NULL);
 }
 
 
 void CFFPlayer::JetpackThink( void )
 {
-#ifdef GAME_DLL
-	DevMsg( "[Server] CFFPlayer::JetpackThink\n");
-#else
-	DevMsg( "[Client] CFFPlayer::JetpackThink\n ");
-#endif
-
 	CFFWeaponBase *flamethrower = dynamic_cast<CFFWeaponBase *>(GetWeapon(3));
 	
 	int currentFuel;
@@ -2028,29 +2025,50 @@ void CFFPlayer::JetpackThink( void )
 		SetNextThink(0);
 		return;
 	}
+	
+	int fuelRatio				= ffdev_jetpack_fuelRatio.GetInt();
+	float jetpackPushAmount		= ffdev_jetpack_push.GetFloat();
+	float maxJetpackSpeed		= ffdev_jetpack_maxSpeed.GetFloat();
 
 	const CFFWeaponInfo &weapInfo = flamethrower->GetFFWpnData();
-	int fuelUsed = min(weapInfo.m_iCycleDecrement, currentFuel);
-	RemoveAmmo(fuelUsed, flamethrower->m_iPrimaryAmmoType);
+	if (m_iJetpackTickCount < fuelRatio)
+		m_iJetpackTickCount++;
+	else 
+	{
+
+		m_iJetpackTickCount = 0;
+		int fuelUsed = min(weapInfo.m_iCycleDecrement, currentFuel);
+		RemoveAmmo(fuelUsed, flamethrower->m_iPrimaryAmmoType);
+	}
 
 	//Vector vecVelocity = GetAbsVelocity();
 	//SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 10));
 	//SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 50));
-	Vector vecForward;
-	EyeVectors(&vecForward);
-
+	//Vector vecForward;
+	//EyeVectors(&vecForward);
 	// Normalize, or we get that weird epsilon assert
-	VectorNormalizeFast(vecForward);
+	//VectorNormalizeFast(vecForward);
 	
 	// trying slightly slower than doing things manually with the flamethrower, so it still has a small advantage
-	float flCapSqr = 650 * 650;
-
+	float flCapSqr = maxJetpackSpeed * maxJetpackSpeed;
 	float flVecLen = GetAbsVelocity().LengthSqr();
+
 	// TODO: if the player is falling fast, this wont work, so determine if they're dropping cuz we wanna jetpack the fuck up
+#ifdef GAME_DLL
+	if (IsOnGround())
+	{
+		// pop the player off the ground barely, so they can get goin'
+		//http://www.threadbombing.com/data/media/29/AbandonThread.gif
+		Vector vecVelocity = GetAbsVelocity();
+		//SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 159));
+		//ApplyAbsVelocityImpulse(Vector(0, 0, 65));
+		SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 135));
+	}
+#endif
 
 	if (flVecLen < flCapSqr)
 	{
-		ApplyAbsVelocityImpulse(Vector(0, 0, 75));
+		ApplyAbsVelocityImpulse(Vector(0, 0, jetpackPushAmount / fuelRatio));
 	}
 	
 	//CFFWeapon *flamethrower = static_cast< GetWeapon(FF_WEAPON_FLAMETHROWER);
@@ -2061,5 +2079,5 @@ void CFFPlayer::JetpackThink( void )
 		SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 100));
 	}*/
 	
-	SetNextThink(gpGlobals->curtime + (weapInfo.m_flCycleTime/2));
+	SetNextThink(gpGlobals->curtime + (weapInfo.m_flCycleTime / fuelRatio));
 }

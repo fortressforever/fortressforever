@@ -597,6 +597,8 @@ public:
 	void Jetpack ( void );
 	void JetpackEnd ( void );
 	void JetpackThink ( void );
+	bool m_bJetpackIsActive;
+	int m_iJetpackTickCount;
 
 private:
 	C_FFPlayer( const C_FFPlayer & );
