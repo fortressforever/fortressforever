@@ -521,34 +521,27 @@ void CFFSentryGun::OnActiveThink( void )
 		enemy = NULL;
 
 	// Enemy is no longer targettable // hlstriker: Crashing bug when sg loses sight of enemy buildable is somewhere in this if statement/nest
-	if( !enemy 
-			|| ( !FVisible( enemy ) && ( pFFPlayer && !FVisible( pFFPlayer->GetAbsOrigin() ) ) /*&& !FVisible( pFFPlayer->GetAbsOrigin() ) && !FVisible( pFFPlayer->EyePosition() )*/  )
-			|| !enemy->IsAlive()
-			|| ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > SG_RANGE_UNTARGET ) )
-			// || ( WorldSpaceCenter().DistTo( enemy->GetAbsOrigin() ) > ( SG_RANGE_UNTARGET * SG_RANGE_CLOAKMULTI ) && pFFPlayer && pFFPlayer->IsCloaked() ) )
+	if( !IsTargetVisible( enemy, SG_RANGE_UNTARGET ) )
 	{
-		if ( enemy && enemy->IsAlive() )
+		// AfterShock: if we lost track of our target, and they are still alive, 
+		// and we're looking the right way, then pause to see if our target comes back
+		Vector vecAiming, vecGoal;
+		AngleVectors( m_angAiming, &vecAiming );
+		AngleVectors( m_angGoal, &vecGoal );
+		bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_7DEGREE;
+		if ( bCanFire )			
+			m_flEndLockTime = gpGlobals->curtime; 
+
+		// Tell player they aren't locked on any more, and remove the status icon
+		if ( enemy->IsPlayer() )
 		{
-			// AfterShock: if we lost track of our target, and they are still alive, 
-			// and we're looking the right way, then pause to see if our target comes back
-			Vector vecAiming, vecGoal;
-			AngleVectors( m_angAiming, &vecAiming );
-			AngleVectors( m_angGoal, &vecGoal );
-			bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_7DEGREE;
-			if ( bCanFire )			
-				m_flEndLockTime = gpGlobals->curtime; 
+			CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+			user.MakeReliable();
 
-			// Tell player they aren't locked on any more, and remove the status icon
-			if ( enemy->IsPlayer() )
-			{
-				CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
-				user.MakeReliable();
-
-				UserMessageBegin(user, "StatusIconUpdate");
-					WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-					WRITE_FLOAT(0.0);
-				MessageEnd();
-			}
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+				WRITE_FLOAT(0.0);
+			MessageEnd();
 		}
 
 		SetEnemy( NULL );
@@ -848,7 +841,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		bool bIsSentryVisible = false;
 		bool bIsSentryMaliciouslySabotaged = false;
 		CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
-		if( IsTargetVisible( pSentryGun ) ) //Yes this does null pointer check
+		if( IsTargetVisible( pSentryGun, SG_RANGE ) ) //Yes this does null pointer check
 		{
 				bIsSentryVisible = true;
 				if ( pSentryGun->IsMaliciouslySabotaged() && g_pGameRules->PlayerRelationship( pOwner, pSentryGun->m_hSaboteur ) != GR_TEAMMATE )
@@ -877,7 +870,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		if ( pPlayer->IsCloaked() )
 		{
 			// the player won't be visible, but m_flCloakDistance may change and cause the sonar sound to emit
-			IsTargetVisible( pPlayer );
+			IsTargetVisible( pPlayer, SG_RANGE );
 			continue;
 		}
 
@@ -896,7 +889,7 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 
 		// IsTargetVisible checks for NULL so these are all safe...
 
-		if( IsTargetVisible( pPlayer ) && !bIsSentryMaliciouslySabotaged )
+		if( IsTargetVisible( pPlayer, SG_RANGE ) && !bIsSentryMaliciouslySabotaged )
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
 		if( bIsSentryVisible )
@@ -906,14 +899,14 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 		}
 
 		CFFDispenser *pDispenser = pPlayer->GetDispenser();
-		if( IsTargetVisible( pDispenser ) && !bIsSentryMaliciouslySabotaged )
+		if( IsTargetVisible( pDispenser, SG_RANGE ) && !bIsSentryMaliciouslySabotaged )
 		{
 			if ( !( pDispenser->IsMaliciouslySabotaged() && g_pGameRules->PlayerRelationship( pDispenser->m_hSaboteur, m_hSaboteur ) == GR_TEAMMATE ) )
 				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
 		
 		CFFManCannon *pManCannon = pPlayer->GetManCannon();
-		if( IsTargetVisible( pManCannon ) && !bIsSentryMaliciouslySabotaged )
+		if( IsTargetVisible( pManCannon, SG_RANGE ) && !bIsSentryMaliciouslySabotaged )
 		{
 			target = SG_IsBetterTarget( target, pManCannon, ( pManCannon->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
@@ -1044,7 +1037,7 @@ float CFFSentryGun::MaxPitchSpeed( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: See if a target is visible
 //-----------------------------------------------------------------------------
-bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
+bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget, int iSightDistance )
 {
 	if( !pTarget )
 		return false;
@@ -1064,7 +1057,11 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 	float flDistToTarget = vecOrigin.DistTo( vecTarget );
 
 	// Check for out of range
-	if( flDistToTarget > SG_RANGE )
+	if( flDistToTarget > iSightDistance )
+		return false;
+
+	// Use FVisible to check visibility, no use using any other method
+	if( !FVisible( pTarget, MASK_SHOT ) )
 		return false;
 
 	// Check PVS for early out
@@ -1077,12 +1074,6 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 			return false;
 	}
 
-	// Can we trace to the target?
-	trace_t tr;
-	// Using MASK_SHOT instead of MASK_PLAYERSOLID so SGs track through anything they can actually shoot through
-	UTIL_TraceLine( vecOrigin, vecTarget, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-	//UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
-
 	/*if ( SG_DEBUG )
 	{
 		int r = 0, g = 0, b = 0;
@@ -1092,17 +1083,6 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget )
 			g = 255;
 		debugoverlay->AddLineOverlay(vecOrigin, vecTarget, r, g, b, false, 0.1f);
 	}*/
-
-	// What did our trace hit?
-	if( tr.startsolid || /*( tr.fraction != 1.0f ) ||*/ !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
-		return false;
-
-	if(tr.m_pEnt != pTarget)
-		return false;
-
-	// Is the trace hit entity a valid sg target
-	if( !IsTargetClassTValid( tr.m_pEnt->Classify() ) )
-		return false;
 
 	if ( pFFPlayer && pFFPlayer->IsCloaked() )
 	{
