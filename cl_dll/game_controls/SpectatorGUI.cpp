@@ -541,7 +541,7 @@ void CSpectatorGUI::Update()
 	else
 	{
 		// hide top bar
-		m_pTopBar->SetVisible(true);
+		m_pTopBar->SetVisible(false);
 
 		/*// otherwise show map name
 		Q_FileBase( engine->GetLevelName(), tempstr, sizeof(tempstr) );
@@ -551,8 +551,8 @@ void CSpectatorGUI::Update()
 		localize()->ConstructString( szEtxraInfo,sizeof( szEtxraInfo ), localize()->Find("#Spec_Map" ),1, wMapName );
 		*/
 
-		localize()->ConvertANSIToUnicode( "test" ,szEtxraInfo,sizeof(szEtxraInfo));
-		localize()->ConvertANSIToUnicode( "test2" ,szTitleLabel,sizeof(szTitleLabel));
+		localize()->ConvertANSIToUnicode( "" ,szEtxraInfo,sizeof(szEtxraInfo));
+		localize()->ConvertANSIToUnicode( "" ,szTitleLabel,sizeof(szTitleLabel));
 	}
 
 	SetLabelText("extrainfo", szEtxraInfo );
