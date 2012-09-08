@@ -1997,10 +1997,25 @@ void CFFPlayer::Jetpack( void )
 	if (GetAmmoCount(flamethrower->m_iPrimaryAmmoType) <= 0)
 		return;
 	
-	m_bJetpackIsActive = true;
+	//m_bJetpackIsActive = true;
 
 	SetThink(&CFFPlayer::JetpackThink);
 	SetNextThink(gpGlobals->curtime);
+
+#ifdef GAME_DLL
+	// Flamejet entity doesn't exist yet, so make it now
+	if (!m_hFlameJet)
+	{
+		QAngle angAiming;
+		VectorAngles(GetAutoaimVector(0), angAiming);
+		// Create a flamejet emitter
+		// TODO: make aim down, not weaponpos
+		m_hFlameJet = dynamic_cast<CFFFlameJet *> (CBaseEntity::Create("env_flamejet", Weapon_ShootPosition(), angAiming, this));
+		// Should inherit it's angles & position from the player for now
+		m_hFlameJet->SetOwnerEntity(this);
+		m_hFlameJet->FollowEntity(this);
+	}
+#endif
 }
 
 
@@ -2009,7 +2024,14 @@ void CFFPlayer::Jetpack( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::JetpackEnd( void )
 {
-	m_bJetpackIsActive = false;
+	//m_bJetpackIsActive = false;
+#ifdef GAME_DLL
+	if (m_hFlameJet)
+	{
+		m_hFlameJet->FlameEmit(false);
+		CleanupFlameJet();
+	}
+#endif
 	SetNextThink(NULL);
 }
 
@@ -2023,23 +2045,32 @@ void CFFPlayer::JetpackThink( void )
 	if (!flamethrower || (currentFuel = GetAmmoCount(flamethrower->m_iPrimaryAmmoType)) <= 0)
 	{
 		SetNextThink(0);
+		//m_bJetpackIsActive = false;
+#ifdef GAME_DLL
+		if (m_hFlameJet)
+		{
+			m_hFlameJet->FlameEmit(false);
+			CleanupFlameJet();
+		}
+#endif
 		return;
 	}
-	
-	int fuelRatio				= ffdev_jetpack_fuelRatio.GetInt();
-	float jetpackPushAmount		= ffdev_jetpack_push.GetFloat();
-	float maxJetpackSpeed		= ffdev_jetpack_maxSpeed.GetFloat();
 
-	const CFFWeaponInfo &weapInfo = flamethrower->GetFFWpnData();
+	const CFFWeaponInfo &weapInfo	= flamethrower->GetFFWpnData();
+	int fuelRatio					= ffdev_jetpack_fuelRatio.GetInt();
+	float jetpackPushAmount			= ffdev_jetpack_push.GetFloat();
+	float maxJetpackSpeed			= ffdev_jetpack_maxSpeed.GetFloat();
+
+#ifdef GAME_DLL
 	if (m_iJetpackTickCount < fuelRatio)
 		m_iJetpackTickCount++;
 	else 
 	{
-
 		m_iJetpackTickCount = 0;
 		int fuelUsed = min(weapInfo.m_iCycleDecrement, currentFuel);
 		RemoveAmmo(fuelUsed, flamethrower->m_iPrimaryAmmoType);
 	}
+#endif
 
 	//Vector vecVelocity = GetAbsVelocity();
 	//SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 10));
@@ -2048,13 +2079,11 @@ void CFFPlayer::JetpackThink( void )
 	//EyeVectors(&vecForward);
 	// Normalize, or we get that weird epsilon assert
 	//VectorNormalizeFast(vecForward);
-	
 	// trying slightly slower than doing things manually with the flamethrower, so it still has a small advantage
 	float flCapSqr = maxJetpackSpeed * maxJetpackSpeed;
 	float flVecLen = GetAbsVelocity().LengthSqr();
-
-	// TODO: if the player is falling fast, this wont work, so determine if they're dropping cuz we wanna jetpack the fuck up
 #ifdef GAME_DLL
+	// TODO: if the player is falling fast, this wont work, so determine if they're dropping cuz we wanna jetpack the fuck up
 	if (IsOnGround())
 	{
 		// pop the player off the ground barely, so they can get goin'
@@ -2063,21 +2092,12 @@ void CFFPlayer::JetpackThink( void )
 		//SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 159));
 		//ApplyAbsVelocityImpulse(Vector(0, 0, 65));
 		SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 135));
+		if (m_hFlameJet)
+			m_hFlameJet->FlameEmit(true);
 	}
-#endif
-
+#endif 
+	
 	if (flVecLen < flCapSqr)
-	{
-		ApplyAbsVelocityImpulse(Vector(0, 0, jetpackPushAmount / fuelRatio));
-	}
-	
-	//CFFWeapon *flamethrower = static_cast< GetWeapon(FF_WEAPON_FLAMETHROWER);
-	/*
-	Vector vecVelocity = pPlayer->GetAbsVelocity();
-	if (vecVelocity.LengthSqr() < flCapSqr)
-	{
-		SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 100));
-	}*/
-	
+		ApplyAbsVelocityImpulse(Vector(0, 0, jetpackPushAmount / fuelRatio));	
 	SetNextThink(gpGlobals->curtime + (weapInfo.m_flCycleTime / fuelRatio));
 }

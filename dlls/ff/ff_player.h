@@ -26,6 +26,7 @@
 #include "ff_modelglyph.h"
 #include "in_buttons.h"
 #include "ff_radiotagdata.h"
+#include "ff_env_flamejet.h"
 
 class CFFBuildableObject;
 class CFFDetpack;
@@ -741,10 +742,11 @@ public:
 	// jetpack mode stuff
 	void Jetpack( void );
 	void JetpackEnd( void );
-	void JetpackThink ( void );
-	bool m_bJetpackIsActive;
+	void JetpackThink( void );
+	//bool m_bJetpackIsActive;
 	int m_iJetpackTickCount;
-
+	CNetworkHandle( CFFFlameJet, m_hFlameJet );
+	void CleanupFlameJet( void );
 public:	
 	// Will uncloak you (w/o going the Command_ route)
 	void Uncloak( bool bInstant = false )

@@ -8072,3 +8072,14 @@ void CFFPlayer::UpdateCamera( bool bUnassigned )
 		}				
 	}
 }
+
+
+// cleans up flame jet created from jetpacking
+void CFFPlayer::CleanupFlameJet( void )
+{
+	if( m_hFlameJet )
+	{
+		m_hFlameJet->FlameEmit( false );
+		UTIL_Remove( m_hFlameJet );
+	}
+}
