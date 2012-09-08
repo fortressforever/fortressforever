@@ -743,10 +743,10 @@ public:
 	void Jetpack( void );
 	void JetpackEnd( void );
 	void JetpackThink( void );
-	//bool m_bJetpackIsActive;
+	void JetpackSetFlame ( bool bEmitting );
 	int m_iJetpackTickCount;
 	CNetworkHandle( CFFFlameJet, m_hFlameJet );
-	void CleanupFlameJet( void );
+
 public:	
 	// Will uncloak you (w/o going the Command_ route)
 	void Uncloak( bool bInstant = false )

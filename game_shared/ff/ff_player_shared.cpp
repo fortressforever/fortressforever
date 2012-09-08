@@ -1990,7 +1990,12 @@ void CFFPlayer::OverpressureThink( void )
 void CFFPlayer::Jetpack( void )
 {
 	if (!IsAlive())
+	{
+#ifdef GAME_DLL
+		JetpackSetFlame(false);
+#endif
 		return;
+	}
 	// check we even have some petrol to burn before creating a think anyway! gulf war etc
 	// TODO: hardcoded to slot 3.. could iterate MAX_WEAPONS and go by weapon id but this works for now
 	CFFWeaponBase *flamethrower = dynamic_cast<CFFWeaponBase *>(GetWeapon(3));
@@ -2003,18 +2008,7 @@ void CFFPlayer::Jetpack( void )
 	SetNextThink(gpGlobals->curtime);
 
 #ifdef GAME_DLL
-	// Flamejet entity doesn't exist yet, so make it now
-	if (!m_hFlameJet)
-	{
-		QAngle angAiming;
-		VectorAngles(GetAutoaimVector(0), angAiming);
-		// Create a flamejet emitter
-		// TODO: make aim down, not weaponpos
-		m_hFlameJet = dynamic_cast<CFFFlameJet *> (CBaseEntity::Create("env_flamejet", Weapon_ShootPosition(), angAiming, this));
-		// Should inherit it's angles & position from the player for now
-		m_hFlameJet->SetOwnerEntity(this);
-		m_hFlameJet->FollowEntity(this);
-	}
+	JetpackSetFlame(true);
 #endif
 }
 
@@ -2026,11 +2020,7 @@ void CFFPlayer::JetpackEnd( void )
 {
 	//m_bJetpackIsActive = false;
 #ifdef GAME_DLL
-	if (m_hFlameJet)
-	{
-		m_hFlameJet->FlameEmit(false);
-		CleanupFlameJet();
-	}
+	JetpackSetFlame(false);
 #endif
 	SetNextThink(NULL);
 }
@@ -2044,14 +2034,10 @@ void CFFPlayer::JetpackThink( void )
 	// no fuel to jump 
 	if (!flamethrower || (currentFuel = GetAmmoCount(flamethrower->m_iPrimaryAmmoType)) <= 0)
 	{
-		SetNextThink(0);
+		SetNextThink(NULL);
 		//m_bJetpackIsActive = false;
 #ifdef GAME_DLL
-		if (m_hFlameJet)
-		{
-			m_hFlameJet->FlameEmit(false);
-			CleanupFlameJet();
-		}
+		JetpackSetFlame(false);
 #endif
 		return;
 	}
@@ -2092,9 +2078,9 @@ void CFFPlayer::JetpackThink( void )
 		//SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 159));
 		//ApplyAbsVelocityImpulse(Vector(0, 0, 65));
 		SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, 135));
-		if (m_hFlameJet)
-			m_hFlameJet->FlameEmit(true);
 	}
+
+	JetpackSetFlame(true);
 #endif 
 	
 	if (flVecLen < flCapSqr)

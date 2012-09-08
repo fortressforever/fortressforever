@@ -8073,13 +8073,31 @@ void CFFPlayer::UpdateCamera( bool bUnassigned )
 	}
 }
 
-
-// cleans up flame jet created from jetpacking
-void CFFPlayer::CleanupFlameJet( void )
+void CFFPlayer::JetpackSetFlame(bool bEmitting)
 {
-	if( m_hFlameJet )
+	if (bEmitting)
 	{
-		m_hFlameJet->FlameEmit( false );
-		UTIL_Remove( m_hFlameJet );
+		// Flamejet entity doesn't exist yet, so make it now
+		if (!m_hFlameJet)
+		{
+			QAngle angAiming;
+			VectorAngles(GetAutoaimVector(0), angAiming);
+			// Create a flamejet emitter
+			// TODO: make aim down, not weaponpos
+			m_hFlameJet = dynamic_cast<CFFFlameJet *> (CBaseEntity::Create("env_flamejet", Weapon_ShootPosition(), angAiming, this));
+			// Should inherit it's angles & position from the player for now
+			m_hFlameJet->SetOwnerEntity(this);
+			m_hFlameJet->FollowEntity(this);
+		}
+
+		m_hFlameJet->FlameEmit(true);
+	}
+	else
+	{
+		if (m_hFlameJet)
+		{
+			m_hFlameJet->FlameEmit( false );
+			UTIL_Remove( m_hFlameJet );
+		}
 	}
 }
