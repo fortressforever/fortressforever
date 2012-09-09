@@ -26,7 +26,7 @@
 #include "ff_modelglyph.h"
 #include "in_buttons.h"
 #include "ff_radiotagdata.h"
-#include "ff_env_flamejet.h"
+#include "ff_env_jetpackflame.h"
 
 class CFFBuildableObject;
 class CFFDetpack;
@@ -745,7 +745,7 @@ public:
 	void JetpackThink( void );
 	void JetpackSetFlame ( bool bEmitting );
 	int m_iJetpackTickCount;
-	CNetworkHandle( CFFFlameJet, m_hFlameJet );
+	CNetworkHandle( CFFJetpackFlame, m_hJetpackFlame );
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)

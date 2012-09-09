@@ -3352,11 +3352,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
@@ -3680,11 +3680,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
@@ -4445,6 +4445,14 @@
 			</File>
 			<File
 				RelativePath=".\ff\c_ff_env_flamejet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\c_ff_env_jetpackflame.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\c_ff_env_jetpackflame.h"
 				>
 			</File>
 			<File
