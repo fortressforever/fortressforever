@@ -1,0 +1,1277 @@
+Index: cl_dll/client_scratch-2005.vcproj
+===================================================================
+--- cl_dll/client_scratch-2005.vcproj	(revision 13599)
++++ cl_dll/client_scratch-2005.vcproj	(working copy)
+@@ -86,7 +86,7 @@
+ 				IgnoreImportLibrary="true"
+ 				LinkLibraryDependencies="false"
+ 				AdditionalDependencies="winmm.lib"
+-				OutputFile="$(IntDir)/client.dll"
++				OutputFile="D:\Steam\steamapps\sourcemods\ff_dev\bin\client.dll"
+ 				LinkIncremental="2"
+ 				SuppressStartupBanner="true"
+ 				AdditionalLibraryDirectories="..\lib\public;..\g15lcd\Lib\x86"
+Index: cl_dll/client_scratch-2008.vcproj
+===================================================================
+--- cl_dll/client_scratch-2008.vcproj	(revision 13599)
++++ cl_dll/client_scratch-2008.vcproj	(working copy)
+@@ -88,7 +88,7 @@
+ 				IgnoreImportLibrary="true"
+ 				LinkLibraryDependencies="false"
+ 				AdditionalDependencies="winmm.lib"
+-				OutputFile="$(IntDir)/client.dll"
++				OutputFile="D:\Steam\steamapps\sourcemods\ff_dev\bin\client.dll"
+ 				LinkIncremental="2"
+ 				SuppressStartupBanner="true"
+ 				AdditionalLibraryDirectories="..\lib\public;..\g15lcd\Lib\x86"
+Index: cl_dll/ff/c_ff_player.cpp
+===================================================================
+--- cl_dll/ff/c_ff_player.cpp	(revision 13599)
++++ cl_dll/ff/c_ff_player.cpp	(working copy)
+@@ -125,9 +125,10 @@
+ ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
+ static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Change class instantly");
+ 
+-static char g_szTimerFile[MAX_PATH];
+-void TimerChange_Callback(ConVar *var, char const *pOldString);
+-ConVar cl_timerwav("cl_grenadetimer", "default", FCVAR_ARCHIVE, "Timer file to use", TimerChange_Callback);
++// dexter - moved to shared code
++//static char g_szTimerFile[MAX_PATH];
++//void TimerChange_Callback(ConVar *var, char const *pOldString);
++//ConVar cl_timerwav("cl_grenadetimer", "default", FCVAR_ARCHIVE, "Timer file to use", TimerChange_Callback);
+ 
+ static char g_szKillBeepFile[MAX_PATH];
+ void KillBeepChange_Callback(ConVar *var, char const *pOldString);
+@@ -394,6 +395,10 @@
+ 	if( pLocalPlayer->IsCloaked() )
+ 		return;
+ 	*/
++	
++	/* dexter ** commented all this shit out - use shared func*/
++	pLocalPlayer->Command_PrimeOne();
++#if 0
+ 	// Make sure we can't insta-prime on the client either
+ 	// This can be anything really so long as it's less than the real delay
+ 	// This should be okay up to about ~400ms for the moment
+@@ -435,7 +440,7 @@
+ 
+ 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
+ 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
+-
++#endif
+ }
+ 
+ void CC_PrimeTwo( void )
+@@ -480,6 +485,10 @@
+ 	if( pLocalPlayer->IsCloaked() )
+ 		return;
+ 	*/
++
++	pLocalPlayer->Command_PrimeTwo();
++	// dexter: removed below!! shit!! use the shared code above like a sane person
++#if 0
+ 	// Make sure we can't insta-prime on the client either
+ 	// This can be anything really so long as it's less than the real delay
+ 	// This should be okay up to about ~400ms for the moment
+@@ -521,7 +530,7 @@
+ 
+ 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
+ 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
+-	
++#endif	
+ }
+ void CC_ThrowGren( void )
+ {
+@@ -538,6 +547,11 @@
+ 		return;
+ 	}
+ 	
++	pLocalPlayer->Command_ThrowGren();
++
++	pLocalPlayer->m_iGrenadeState = FF_GREN_NONE;
++	// dexter - remove below, moved to shared code!!! shit! fuck
++#if 0
+ 	// Jiggles: Hint Code
+ 	// Let's see if the player is throwing an "unprimed" grenade
+ 	if( ( gpGlobals->curtime - pLocalPlayer->m_flGrenPrimeTime ) < 0.5f )
+@@ -554,8 +568,11 @@
+ 		pLocalPlayer->m_iUnprimedGrenCount = 0;
+ 	// End hint code
+ 
+-	pLocalPlayer->m_iGrenadeState = 0;
++	// dexter - removed because shared
++	//pLocalPlayer->m_iGrenadeState = 0;
++#endif
+ }
++
+ /* Jiggles: Doesn't seem to be used for anything
+ void CC_TestTimers( void )
+ {
+@@ -748,11 +765,13 @@
+ 	if(pLocalPlayer)
+ 	{
+ 		pLocalPlayer->m_flServerPrimeTime = pData->m_Value.m_Float;
+-		if(pLocalPlayer->m_flServerPrimeTime != 0.0f)
+-			pLocalPlayer->m_flLatency = engine->Time() - pLocalPlayer->m_flPrimeTime;
++		// dexter, removed the latency shit as its now clientside predicted
++		//if(pLocalPlayer->m_flServerPrimeTime != 0.0f)
++		//	pLocalPlayer->m_flLatency = engine->Time() - pLocalPlayer->m_flPrimeTime;
+ 	}
+ }
+ 
++
+ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
+ 
+ #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+@@ -783,8 +802,8 @@
+ 	// Beg: Added by L0ki - Grenade related
+ 	RecvPropInt( RECVINFO( m_iPrimary ) ),
+ 	RecvPropInt( RECVINFO( m_iSecondary ) ),
+-	RecvPropInt( RECVINFO( m_iGrenadeState ) ),
+-	RecvPropFloat( RECVINFO( m_flServerPrimeTime ), 0, RecvProxy_PrimeTime ),
++	RecvPropInt( RECVINFO( m_iGrenadeState ) ),	// dexter: predicted as well, might need proxy
++	//RecvPropFloat( RECVINFO( m_flServerPrimeTime ), 0, RecvProxy_PrimeTime ),	// dexter: predicted as well
+ 	// End: Added by L0ki
+ 
+ 	// Beg: Added by FryGuy - Status Effects related
+@@ -853,6 +872,10 @@
+ 	RecvPropFloat( RECVINFO( m_flCloakSmokeTempRevealTime ) ),
+ 	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
+ 	RecvPropInt( RECVINFO( m_iActiveSabotages ) ),
++
++	// dexter: last primed grenade handles
++	RecvPropEHandle( RECVINFO( m_hLastPrimaryGren ) ),
++	RecvPropEHandle( RECVINFO( m_hLastSecondaryGren ) ),
+ END_RECV_TABLE( )
+ 
+ BEGIN_PREDICTION_DATA( C_FFPlayer )
+@@ -862,6 +885,10 @@
+ 	DEFINE_PRED_FIELD( m_iCloakSmoked, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+ 	DEFINE_PRED_FIELD( m_iWithinCloakSmoke, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+ 	DEFINE_PRED_FIELD( m_flCloakSmokeTempRevealTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
++
++	// dexter - add client side prediction for nade stuff
++	DEFINE_PRED_FIELD( m_iGrenadeState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ), // 
++	//DEFINE_PRED_FIELD_TOL( m_flServerPrimeTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ), // TODO: check if 1ms works ok for this
+ END_PREDICTION_DATA()
+ 
+ class C_FFRagdoll : public C_BaseAnimatingOverlay
+@@ -1466,6 +1493,11 @@
+ 		m_iHallucinationIndex = 0;
+ 	}
+ 
++	// dexter: run shared grenade code yeah!
++	// update the grenade status if needed
++	if( IsGrenadePrimed() )
++		GrenadeThink();
++
+ 	BaseClass::PreThink();
+ }
+ 
+@@ -2808,6 +2840,7 @@
+ //			and find the timer and ensure everything is okay.
+ //			HANDILY this is also called when the game first loads up
+ //-----------------------------------------------------------------------------
++/* dexter - moved to shared.. kinda sux i know
+ void TimerChange_Callback(ConVar *var, char const *pOldString)
+ {
+ 	const char	*pszTimerString = var->GetString();
+@@ -2861,7 +2894,7 @@
+ 	Q_snprintf(g_szTimerFile, MAX_PATH - 1, "timers/%s", pFilename);
+ 
+ 	(*pFilesystem)->FindClose(findHandle);
+-}
++}*/
+ 
+ //-----------------------------------------------------------------------------
+ // Purpose: When the player selects a timer by changing this cvar, validate
+Index: cl_dll/ff/c_ff_player.h
+===================================================================
+--- cl_dll/ff/c_ff_player.h	(revision 13599)
++++ cl_dll/ff/c_ff_player.h	(working copy)
+@@ -246,7 +246,15 @@
+ 	// for HUD ammo pickup history
+ 	int m_iOldPrimary;
+ 	int m_iOldSecondary;
++
+ public:
++	// dexter: shared code will give us prediction info we want to hang on to
++	// if the entity spawns. We need to temporarly hang on to it because server lua
++	// might disable it. we only keep one record
++	//struct grenade_predict_info m_sGrenPredictionInfo;
++	float m_flGrenadePrimaryDetTimerPredicted;
++	float m_flGrenadeSecondaryDetTimerPredicted;
++public:
+ 	
+ 	// IFFPlayerAnimState overrides.
+ 	CFFWeaponBase* GetLastFFWeaponClient(){ return m_pLastWeaponClient; }
+@@ -368,14 +376,15 @@
+ 	float GetMovementSpeed() const;
+ 
+ 	// Beg: Added by L0ki for grenade stuff
++	// dexter - removed most stuff as moved to shared and predicted
+ public:
+-	CNetworkVar(int, m_iGrenadeState);
+-	CNetworkVar(float, m_flServerPrimeTime);
++	//CNetworkVar(int, m_iGrenadeState);
++	//CNetworkVar(float, m_flServerPrimeTime);
+ 	CNetworkVar(int, m_iPrimary);
+ 	CNetworkVar(int, m_iSecondary);
+ 
+ 	float m_flPrimeTime;
+-	float m_flLatency;
++	//float m_flLatency; removed this since we are predicting some stuff now
+ 	// End: Added by L0ki for grenade stuff
+ 
+ 	// squeek: If the player has been detected as attempting to mathack
+@@ -590,10 +599,18 @@
+ public:	
+ 	C_FFGrenadeBase *GetActiveSlowfield( void )	{ return m_hActiveSlowfield.Get(); }
+ 	bool IsInSlowfield( void )	{ return (m_hActiveSlowfield != NULL); }
++
++	// dexter: 
++	C_FFGrenadeBase *GetLastPrimaryGren( void )		{ return m_hLastPrimaryGren.Get(); } 
++	C_FFGrenadeBase *GetLastSecondaryGren( void )	{ return m_hLastSecondaryGren.Get(); } 
+ private:
+ 	CNetworkHandle( C_FFGrenadeBase, m_hActiveSlowfield );
+ 	// ----------------------------------
+ 
++	// dexter: since we have to rely on server for grenade creation (lua rules), keep a handle so we can update our prediction
++	//			once spawned
++	CNetworkHandle( C_FFGrenadeBase, m_hLastPrimaryGren );
++	CNetworkHandle( C_FFGrenadeBase, m_hLastSecondaryGren );
+ private:
+ 	C_FFPlayer( const C_FFPlayer & );
+ 
+@@ -623,6 +640,31 @@
+ 	CNetworkHandle( CBaseEntity, m_hObjectiveEntity );
+ 	// Location of player's current objective (also set by Lua)
+ 	CNetworkVector( m_vecObjectiveOrigin );
++	
++	// dexter: moved nade stuff to shared
++public:
++	// commands wootz
++	void Command_PrimeOne( void ); // prime primary grenade
++	void Command_PrimeTwo( void ); // prime secondary grenade
++	void Command_ThrowGren( void ); // throw currently primed grenade
++	void Command_ToggleOne( void );
++	void Command_ToggleTwo( void );	
++
++	// priming junk
++	bool IsGrenade1Primed();
++	bool IsGrenade2Primed();
++	bool IsGrenadePrimed();	
++
++	// public because used by hud and shit
++	// dexter - no longer networked on client! they are predicted.
++	FFPlayerGrenadeState m_iGrenadeState;
++	float m_flServerPrimeTime; // maybe rename this since shared?
++
++	// added here too so we can predict the toss
++	bool m_bWantToThrowGrenade;			// does the client want to throw this grenade as soon as possible?
++private:
++	void GrenadeThink(void);
++	void ThrowGrenade(float fTimer, float speed = 630.0f);		// |-- Mirv: So we can drop grens
+ };
+ 
+ // Just straight up copying the server version. Tired
+Index: dlls/ff/ff_player.cpp
+===================================================================
+--- dlls/ff/ff_player.cpp	(revision 13599)
++++ dlls/ff/ff_player.cpp	(working copy)
+@@ -53,12 +53,13 @@
+ 
+ // grenade information
+ //ConVar gren_timer("ffdev_gren_timer","3.81",0,"Timer length for all grenades.");
+-#define GREN_TIMER 3.81f
++// dexter - moved gren stuff to shared
++//#define GREN_TIMER 3.81f
+ //ConVar gren_throw_delay("ffdev_throw_delay","0.5",0,"Delay before primed grenades can be thrown.");
+-#define GREN_THROW_DELAY 0.5f
++//#define GREN_THROW_DELAY 0.5f
+ //ConVar gren_speed("ffdev_gren_speed","500.0",0,"Speed grenades are thrown at.");
+ //ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at.");
+-#define GREN_SPAWN_ANG_X 18.5f
++//#define GREN_SPAWN_ANG_X 18.5f
+ //ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");
+ 
+ //ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
+@@ -169,7 +170,8 @@
+ ConVar ffdev_cloaksmoke_reveal_damage_mod( "ffdev_cloaksmoke_reveal_damage_mod", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Percentage of damage to convert to raw added reveal time" );
+ #define CLOAKSMOKE_REVEAL_DAMAGE_MOD ffdev_cloaksmoke_reveal_damage_mod.GetFloat()
+ 
+-ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
++// dexter: moved to shared
++//ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
+ 
+ #ifdef _DEBUG
+ 	// --------------------------------------------------------------------------------
+@@ -379,10 +381,10 @@
+ 	SendPropInt(SENDINFO(m_iSkiState)),
+ 
+ 	// Grenade Related
+-	SendPropInt( SENDINFO( m_iGrenadeState ), 2, SPROP_UNSIGNED ),
++	SendPropInt( SENDINFO( m_iGrenadeState ), 2, SPROP_UNSIGNED ),		// dexter: now also clientside predicted
+ 	SendPropInt( SENDINFO( m_iPrimary ), 4 ),		// Not unsigned because can be -1
+ 	SendPropInt( SENDINFO( m_iSecondary ), 4 ),
+-	SendPropFloat( SENDINFO( m_flServerPrimeTime ) ),
++	//SendPropFloat( SENDINFO( m_flServerPrimeTime ) ),					// dexter: now also clientside predicted
+ 
+ 	// Map guide
+ 	SendPropEHandle( SENDINFO( m_hNextMapGuide ) ),
+@@ -452,6 +454,10 @@
+ 	SendPropInt( SENDINFO( m_iWithinCloakSmoke ), 1, SPROP_UNSIGNED ),
+ 	SendPropFloat( SENDINFO( m_flCloakSmokeTempRevealTime ) ),
+ 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
++
++	//dexter: nade handles
++	SendPropEHandle( SENDINFO( m_hLastPrimaryGren ) ),
++	SendPropEHandle( SENDINFO( m_hLastSecondaryGren ) ),
+ END_SEND_TABLE( )
+ 
+ LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
+@@ -582,6 +588,9 @@
+ 
+ 	m_hActiveSlowfield = NULL;
+ 
++	m_hLastPrimaryGren = NULL;
++	m_hLastSecondaryGren = NULL;
++
+ 	//Shield
+ 	m_bRiotShieldActive = false;
+ 
+@@ -4778,6 +4787,7 @@
+ 	m_hIgniter = hIgniter;
+ }
+ 
++/* dexter - moved to shared! left here temporarly tho
+ // Toggle grenades (requested by defrag)
+ void CFFPlayer::Command_ToggleOne( void )
+ {
+@@ -4943,6 +4953,8 @@
+ 	m_bEngyGrenWarned = false;
+ }
+ 
++*/
++
+ int CFFPlayer::GetPrimaryGrenades( void )
+ {
+ 	return m_iPrimary;
+@@ -4981,6 +4993,8 @@
+ 	return ret;
+ }
+ 
++/* dexter - moved to shared
++
+ bool CFFPlayer::IsGrenade1Primed()
+ {
+ 	return ( ( m_iGrenadeState == FF_GREN_PRIMEONE ) );
+@@ -4994,6 +5008,10 @@
+ 	return IsGrenade1Primed() || IsGrenade2Primed();
+ }
+ 
++*/
++
++// dexter - moved to shared!
++#if 0
+ void CFFPlayer::GrenadeThink(void)
+ {
+ 	if (!IsGrenadePrimed())
+@@ -5028,6 +5046,8 @@
+ 	}
+ }
+ 
++
++
+ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
+ {
+ 	if (!IsGrenadePrimed())
+@@ -5119,6 +5139,8 @@
+ 	}
+ }
+ 
++// dexter: end #if 0 comment block
++#endif
+ //-----------------------------------------------------------------------------
+ const char* CFFPlayer::GetActiveWeaponName() const
+ {
+Index: dlls/ff/ff_player.h
+===================================================================
+--- dlls/ff/ff_player.h	(revision 13599)
++++ dlls/ff/ff_player.h	(working copy)
+@@ -340,11 +340,12 @@
+ 	void Command_BuildDetpack( void );
+ 	void Command_BuildManCannon( void );
+ 	void Command_DispenserText( void );	// to set custom dispenser text messages on the server
+-	void Command_PrimeOne(void); // prime primary grenade
+-	void Command_PrimeTwo(void); // prime secondary grenade
+-	void Command_ThrowGren(void); // throw currently primed grenade
+-	void Command_ToggleOne( void );
+-	void Command_ToggleTwo( void );	
++	// dexter - moved to shared :d
++	//void Command_PrimeOne(void); // prime primary grenade
++	//void Command_PrimeTwo(void); // prime secondary grenade
++	//void Command_ThrowGren(void); // throw currently primed grenade
++	//void Command_ToggleOne( void );
++	//void Command_ToggleTwo( void );	
+ 	void Command_FlagInfo( void ); // flaginfo
+ 	void Command_DropItems( void );
+ 	void Command_DetPipes( void );
+@@ -457,8 +458,6 @@
+ private:
+ 	float m_fl_LuaSet_PlayerRespawnDelay;
+ 
+-
+-
+ 	//-- Added by L0ki -------------------------------------------------------
+ 	// Grenade related
+ public:
+@@ -468,18 +467,19 @@
+ 	void SetSecondaryGrenades( int iNewCount );
+ 	int AddPrimaryGrenades( int iNewCount );
+ 	int AddSecondaryGrenades( int iNewCount );
+-
+-	bool IsGrenade1Primed();
+-	bool IsGrenade2Primed();
+-	bool IsGrenadePrimed();	
+-private:	
+-	void GrenadeThink(void);
+-	void ThrowGrenade(float fTimer, float speed = 630.0f);		// |-- Mirv: So we can drop grens
++	// dexter - moved grenade priming stuff to shared
++	//bool IsGrenade1Primed();
++	//bool IsGrenade2Primed();
++	//bool IsGrenadePrimed();	
++//private:	
++	//void GrenadeThink(void);
++	//void ThrowGrenade(float fTimer, float speed = 630.0f);		// |-- Mirv: So we can drop grens
+ public:
+ 	void RemovePrimedGrenades( void );
+ private:
+ 	CNetworkVar(FFPlayerGrenadeState, m_iGrenadeState);
+-	CNetworkVar(float, m_flServerPrimeTime);
++	//CNetworkVar(float, m_flServerPrimeTime);
++	float m_flServerPrimeTime;
+ 	CNetworkVar(int, m_iPrimary);
+ 	CNetworkVar(int, m_iSecondary);
+ 	bool m_bWantToThrowGrenade;			// does the client want to throw this grenade as soon as possible?
+@@ -668,9 +668,19 @@
+ 	void SetActiveSlowfield( CFFGrenadeBase *pActiveSlowfield ) { m_hActiveSlowfield = pActiveSlowfield; };
+ 	bool IsInSlowfield( void ) const { return (m_hActiveSlowfield != NULL); }
+ 
++	// dexter:
++	CFFGrenadeBase *GetLastPrimaryGren( void ) const { return m_hLastPrimaryGren.Get(); }
++	CFFGrenadeBase *GetLastSecondaryGren( void ) const { return m_hLastSecondaryGren.Get(); }
++	void SetLastPrimaryGren( CFFGrenadeBase *pLastPrimary ) { m_hLastPrimaryGren = pLastPrimary; };
++	void SetLastSecondaryGren( CFFGrenadeBase *pLastSecondary ) { m_hLastSecondaryGren = pLastSecondary; };
+ private:
+ 	CNetworkHandle( CFFGrenadeBase, m_hActiveSlowfield );
+ 
++	// dexter: since we have to rely on server for grenade creation (lua rules), keep a handle so we can update our prediction
++	//			once spawned
++	CNetworkHandle( CFFGrenadeBase, m_hLastPrimaryGren );
++	CNetworkHandle( CFFGrenadeBase, m_hLastSecondaryGren );
++
+ public:
+ 	// --> Mirv: Various things
+ 	void Command_SetChannel( void );
+@@ -714,7 +724,24 @@
+ 	void CloakSmokeShootReveal( void );
+ 	void CloakSmoke( bool _bSameTeam );	//Specifically for the smoke grenade cloaking
+ 	void RemoveCloakSmoke( void ); // removing smoke grenade cloaking
++
++	// dexter: moved nade stuff to shared
++	// commands wootz
++	void Command_PrimeOne( void ); // prime primary grenade
++	void Command_PrimeTwo( void ); // prime secondary grenade
++	void Command_ThrowGren( void ); // throw currently primed grenade
++	void Command_ToggleOne( void );
++	void Command_ToggleTwo( void );	
++
++	// priming junk
++	bool IsGrenade1Primed();
++	bool IsGrenade2Primed();
++	bool IsGrenadePrimed();	
+ private:
++	void GrenadeThink(void);
++	void ThrowGrenade(float fTimer, float speed = 630.0f);		// |-- Mirv: So we can drop grens
++
++private:
+ 	void Cloak( void );	
+ 	//unsigned int m_iCloaked;
+ 	CNetworkVar( unsigned int, m_iCloaked ); //gotta network this since lots of serverside-only code calls it, e.g. when touching a scout
+Index: dlls/server_scratch-2005.vcproj
+===================================================================
+--- dlls/server_scratch-2005.vcproj	(revision 13599)
++++ dlls/server_scratch-2005.vcproj	(working copy)
+@@ -202,7 +202,7 @@
+ 				IgnoreImportLibrary="true"
+ 				LinkLibraryDependencies="true"
+ 				AdditionalDependencies="winmm.lib user32.lib lua80D.lib luabind80D.lib"
+-				OutputFile="$(IntDir)/server.dll"
++				OutputFile="D:\Steam\steamapps\sourcemods\ff_dev\bin\server.dll"
+ 				LinkIncremental="2"
+ 				SuppressStartupBanner="true"
+ 				AdditionalLibraryDirectories="..\lib\public;..\external\lua\lib;..\external\luabind\lib"
+Index: dlls/server_scratch-2008.vcproj
+===================================================================
+--- dlls/server_scratch-2008.vcproj	(revision 13599)
++++ dlls/server_scratch-2008.vcproj	(working copy)
+@@ -202,7 +202,7 @@
+ 				IgnoreImportLibrary="true"
+ 				LinkLibraryDependencies="true"
+ 				AdditionalDependencies="winmm.lib user32.lib lua80D.lib luabind80D.lib"
+-				OutputFile="$(IntDir)/server.dll"
++				OutputFile="D:\Steam\steamapps\sourcemods\ff_dev\bin\server.dll"
+ 				LinkIncremental="2"
+ 				SuppressStartupBanner="true"
+ 				AdditionalLibraryDirectories="..\lib\public;..\external\lua\lib;..\external\luabind\lib"
+Index: game_shared/ff/ff_grenade_base.cpp
+===================================================================
+--- game_shared/ff/ff_grenade_base.cpp	(revision 13599)
++++ game_shared/ff/ff_grenade_base.cpp	(working copy)
+@@ -49,11 +49,11 @@
+ BEGIN_NETWORK_TABLE(CFFGrenadeBase, DT_FFGrenadeBase)
+ #ifdef CLIENT_DLL
+ 	RecvPropFloat(RECVINFO(m_flSpawnTime)),
+-	RecvPropFloat(RECVINFO(m_flDetonateTime)),
++	//RecvPropFloat(RECVINFO(m_flDetonateTime)),
+ 	RecvPropBool(RECVINFO(m_bIsOn)),
+ #else
+ 	SendPropFloat(SENDINFO(m_flSpawnTime)),
+-	SendPropFloat(SENDINFO(m_flDetonateTime)),
++	//SendPropFloat(SENDINFO(m_flDetonateTime)),
+ 	SendPropBool(SENDINFO(m_bIsOn)),
+ #endif
+ END_NETWORK_TABLE()
+@@ -83,6 +83,26 @@
+ // CFFGrenadeBase implementation
+ //=============================================================================
+ 
++//dexter: enable prediction
++#ifdef CLIENT_DLL
++//BEGIN_PREDICTION_DATA( CFFGrenadeBase )
++//	DEFINE_PRED_FIELD_TOL( m_flDetonateTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
++//END_PREDICTION_DATA()
++
++/*
++bool CFFGrenadeBase::ShouldPredict()
++{
++	
++	if ( GetOwner() && GetOwner() == C_BasePlayer::GetLocalPlayer() )
++		return true;
++	else
++		return BaseClass::ShouldPredict();
++	
++	return true;
++}
++*/
++#endif
++
+ #ifdef GAME_DLL
+ 	extern short g_sModelIndexFireball;
+ 	extern short g_sModelIndexWExplosion;
+@@ -131,10 +151,52 @@
+ #endif
+ 
+ #ifdef CLIENT_DLL
+-		SetNextClientThink(gpGlobals->curtime);
++		
++		// dexter: this code is stupid, just like me
++		CFFPlayer *pLocalPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
++
++		if( !pLocalPlayer || !pLocalPlayer->IsAlive() || pLocalPlayer->IsObserver() )
++			return;
++
++		CFFGrenadeBase *pNewGrenade;
++		
++		pNewGrenade = pLocalPlayer->GetLastPrimaryGren();
++
++		//pGrenade->m_flSpawnTime = gpGlobals->curtime;
++		//pGrenade->m_flSpawnTime = gpGlobals->curtime;
++		// primary nade
++		if (this == pNewGrenade && pLocalPlayer->m_flGrenadePrimaryDetTimerPredicted)
++		{
++			float difference = gpGlobals->curtime - pLocalPlayer->m_flGrenadePrimaryDetTimerPredicted;
++			if (difference > 0)
++			{
++				// a lag between the two, reduce timer by that much
++				AdjustDetonateTimerLength(difference);
++			}
++			//pNewGrenade->SetDetonateTimerLength(pLocalPlayer->m_flGrenadePrimaryDetTimerPredicted);
++			pLocalPlayer->m_flGrenadePrimaryDetTimerPredicted = 0.0f;
++		}
++		else
++		{				
++			pNewGrenade = pLocalPlayer->GetLastSecondaryGren();
++			if (this == pNewGrenade && pLocalPlayer->m_flGrenadeSecondaryDetTimerPredicted)
++			{
++				// our secondary nade
++				//pNewGrenade->SetDetonateTimerLength(pLocalPlayer->m_flGrenadeSecondaryDetTimerPredicted);
++				pLocalPlayer->m_flGrenadeSecondaryDetTimerPredicted = 0.0f;
++			}
++		}
++		SetThink(&CFFGrenadeBase::ClientThink);
++		// Next think straight away
++		SetNextThink(gpGlobals->curtime);
+ #endif
+ 	}	
+ 
++	void CFFGrenadeBase::AdjustDetonateTimerLength(float adjustAmount)
++	{
++		m_flDetonateTime -= adjustAmount;
++	}
++
+ #ifdef GAME_DLL
+ 	void CFFGrenadeBase::CreateTrail()
+ 	{
+@@ -151,16 +213,20 @@
+ 		m_pTrail->SetStartWidth(10.0f);
+ 		m_pTrail->SetEndWidth(5.0f);
+ 		m_pTrail->SetLifeTime(0.5f);
+-	}
++	}	
+ 
+ 	//-----------------------------------------------------------------------------
+ 	// Purpose: This'll be called once the grenade is actually thrown
+ 	//-----------------------------------------------------------------------------
++	// dexter: made shared
++	
+ 	void CFFGrenadeBase::SetDetonateTimerLength(float timer)
+ 	{
+ 		m_flDetonateTime = gpGlobals->curtime + timer;
+ 	}
++	
+ #endif
++	
+ 
+ 	//-----------------------------------------------------------------------------
+ 	// Purpose: If we're trying to detonate, run through Lua first to check allowed
+@@ -461,7 +527,11 @@
+ 	//-----------------------------------------------------------------------------
+ 	void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
+ 	{
+-#ifdef GAME_DLL
++#ifdef CLIENT_DLL
++		DevMsg("CFFGrenadeBase::Explode CLIENT\n\n");
++#else
++		DevMsg("CFFGrenadeBase::Explode SERVER\n\n");
++//#ifdef GAME_DLL
+ 		SetModelName( NULL_STRING );//invisible
+ 		AddSolidFlags( FSOLID_NOT_SOLID );
+ 
+Index: game_shared/ff/ff_grenade_base.h
+===================================================================
+--- game_shared/ff/ff_grenade_base.h	(revision 13599)
++++ game_shared/ff/ff_grenade_base.h	(working copy)
+@@ -64,9 +64,15 @@
+ #endif
+ 
+ #ifdef CLIENT_DLL
++	//DECLARE_PREDICTABLE();
++	//virtual bool ShouldPredict();
++
+ 	CFFGrenadeBase()
+ 	{
+ 		m_flModelSize = 0.0f;
++		// dexter: we want to predict this
++		//SetPredictionEligible(true);
++		m_flDetonateTime = 0.0f;
+ 	}
+ #endif
+ 
+@@ -74,8 +80,10 @@
+ 	virtual void	Spawn();
+ 	virtual void	Detonate();
+ 	virtual void	Explode(trace_t *pTrace, int bitsDamageType);
+-	void SetDetonateTimerLength(float timer);
+ 	
++	
++	void AdjustDetonateTimerLength(float adjustAmount);
++
+ 	virtual Class_T		Classify( void ) { return CLASS_GREN; }
+ 	Class_T	GetGrenId() { return Classify(); }
+ 	virtual color32 CFFGrenadeBase::GetColour();
+@@ -84,7 +92,7 @@
+ 	CNetworkVar( bool, m_bIsOn );
+ 
+ #ifdef GAME_DLL
+-
++	void SetDetonateTimerLength(float timer);
+ 	DECLARE_DATADESC();
+ 
+ 	virtual void	GrenadeThink();
+@@ -102,8 +110,9 @@
+ 	//Custom collision to allow for constant elasticity on hit surfaces
+ 	virtual void ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
+ 
+-	CNetworkVar(float, m_flDetonateTime);
+-
++	//CNetworkVar(float, m_flDetonateTime);
++	// Dexter: set this to derived only since only a few things use it- 
++	CNetworkVarForDerived(float, m_flDetonateTime);
+ 	bool	m_bHitwater;
+ 	float	m_flHitwaterTimer;
+ 
+@@ -129,6 +138,7 @@
+ 
+ private:
+ 	CHandle<CSpriteTrail>	m_pTrail;
++
+ };
+ 
+ #endif //FF_GRENADE_BASE_H
+Index: game_shared/ff/ff_player_shared.cpp
+===================================================================
+--- game_shared/ff/ff_player_shared.cpp	(revision 13599)
++++ game_shared/ff/ff_player_shared.cpp	(working copy)
+@@ -21,10 +21,27 @@
+ #ifdef CLIENT_DLL
+ 	
+ 	#include "c_ff_player.h"
++
++	// dexter: for shared gren priming
++	#include "ff_hud_grenade1timer.h"
++	#include "ff_hud_grenade2timer.h"
++	#include "ff_grenade_base.h"		// for grenade_predict_info struct
++	#include "filesystem.h"				// for our gren timer file callback
++	// Get around the ambiguous symbol problem
++	extern IFileSystem **pFilesystem;	// also for gren timer callback, jesus :(
++
+ 	#define CRecipientFilter C_RecipientFilter	// |-- For PlayJumpSound
+ 
+ 	extern void HudContextShow(bool visible);
+ 
++	// dexter: for shared grenade priming code
++	extern CHudGrenade1Timer *g_pGrenade1Timer;
++	extern CHudGrenade2Timer *g_pGrenade2Timer;
++
++	static char g_szTimerFile[MAX_PATH];
++	void TimerChange_Callback(ConVar *var, char const *pOldString);
++	ConVar cl_timerwav("cl_grenadetimer", "default", FCVAR_ARCHIVE, "Timer file to use", TimerChange_Callback);
++
+ #else
+ 
+ 	#include "ff_player.h"
+@@ -38,6 +55,8 @@
+ 	#include "ff_scriptman.h"
+ 	#include "ff_luacontext.h"
+ 
++	#include "ff_grenade_emp.h"		// dexter: for server grenade spawning
++
+ 	#include "omnibot_interface.h"
+ #endif
+ 
+@@ -156,6 +175,9 @@
+ // Used to decide whether effects are allowed
+ static float g_flNextEffectAllowed[MAX_PLAYERS + 1];
+ 
++// dexter: moved grenade to shared
++ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
++
+ bool AllowEffects(int iEntityIndex, float flNewDelay)
+ {
+ 	if (iEntityIndex < 1 || iEntityIndex > MAX_PLAYERS)
+@@ -2003,3 +2025,484 @@
+ 		SetNextThink( gpGlobals->curtime + 0.01f );
+ 	}
+ }
++
++
++// dexter: begin shared nade code!
++
++void CFFPlayer::Command_PrimeOne( void ) 
++{
++	// re-wrote this a little bit so the shared code updates predicted things
++
++#ifdef GAME_DLL
++	if (IsGrenadePrimed())
++		return;
++
++	// this is already checked on client
++	if( GetFlags() & FL_FROZEN )
++		return;
++#endif
++	// Can't throw grenade while building
++	if( m_bStaticBuilding )
++		return;
++
++	// Bug #0000366: Spy's cloaking & grenade quirks
++	// Spy shouldn't be able to prime grenades when Cloaked
++	//if (IsCloaked())
++	//	return;
++
++	if (m_iPrimary < 1)
++		return;
++
++#ifdef GAME_DLL
++	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
++
++	// we have a primary grenade type
++	if ( strcmp( pPlayerClassInfo.m_szPrimaryClassName, "None" ) != 0 )
++	{	
++		// Jiggles: Added lua callback for squeek's training map
++		CFFLuaSC hContext( 1, this );
++		_scriptman.RunPredicates_LUA( NULL, &hContext, "player_onprimegren1" );
++		// End callback
++	}
++#endif
++
++#ifdef GAME_DLL
++	EmitSoundShared("Grenade.Prime"); // This is mirrored in CC_PrimeOne for client
++#else
++
++	// TODO: client priming here
++	//C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();	
++
++	DevMsg("client side primeone: %f\n", m_flPrimeTime);
++
++	if (engine->Time() < m_flPrimeTime + (GREN_THROW_DELAY - 0.1f))
++	{
++		DevMsg("filtering client prime < delay\n");
++		return;
++	}
++
++	m_flPrimeTime = engine->Time();
++	// dexter: if g_szTimerFile hasnt been set yet, force update to default. this happens first run of a new install etc
++	if (Q_strlen(g_szTimerFile) < 1)
++		TimerChange_Callback(&cl_timerwav, NULL);
++
++	EmitSound("Grenade.Prime");
++
++	CPASAttenuationFilter filter(this, g_szTimerFile);
++
++	EmitSound_t params;
++	params.m_pSoundName = g_szTimerFile;
++	params.m_flSoundTime = 0.0f;
++	params.m_pflSoundDuration = NULL;
++	params.m_bWarnOnDirectWaveReference = false;
++
++	EmitSound(filter, entindex(), params);
++
++	Assert (g_pGrenade1Timer);
++	g_pGrenade1Timer->SetTimer(GREN_TIMER);		// since I had to throw shit into shared defs, we can do this correctly hooray
++
++	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
++	m_flGrenPrimeTime = gpGlobals->curtime;
++#endif
++
++	m_iGrenadeState		= FF_GREN_PRIMEONE;
++	m_flServerPrimeTime = gpGlobals->curtime;
++
++#ifndef _DEBUG
++	m_iPrimary--;
++#endif	
++	// note I removed the stupid you're out of ammo dev msg :(
++}
++
++void CFFPlayer::Command_PrimeTwo( void ) 
++{
++		// re-wrote this a little bit so the shared code updates predicted things
++
++#ifdef GAME_DLL
++	if (IsGrenadePrimed())
++		return;
++
++	// this is already checked on client
++	if( GetFlags() & FL_FROZEN )
++		return;
++#endif
++	// Can't throw grenade while building
++	if( m_bStaticBuilding )
++		return;
++
++	// Bug #0000366: Spy's cloaking & grenade quirks
++	// Spy shouldn't be able to prime grenades when Cloaked
++	//if (IsCloaked())
++	//	return;
++
++	if (m_iSecondary < 1)
++		return;
++
++#ifdef GAME_DLL
++	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
++
++	// we have a primary grenade type
++	if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "None" ) != 0 )
++	{	
++		// Jiggles: Added lua callback for squeek's training map
++		CFFLuaSC hContext( 1, this );
++		_scriptman.RunPredicates_LUA( NULL, &hContext, "player_onprimegren2" );
++		// End callback
++
++		// Hint Code
++			//Msg("\nSecondary Class Name: %s\n", pPlayerClassInfo.m_szSecondaryClassName );
++			//if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_nail" ) == 0 )
++			//	FF_SendHint( this, SOLDIER_NAILGREN, 4, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_NAILGREN" );
++			//else if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_concussion" ) == 0 )
++			//	FF_SendHint( this, SCOUT_CONC1, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_CONC1" );
++
++			// Jiggles: Let's try it this way to avoid the above string compares
++			switch( GetClassSlot() )
++			{
++				case CLASS_SOLDIER: 
++					FF_SendHint( this, SOLDIER_LASERGREN, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_LASERGREN" );
++					break;
++				case CLASS_MEDIC:
++				case CLASS_SCOUT:
++					FF_SendHint( this, SCOUT_CONC1, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_CONC1" );
++					break;
++			}
++			// End hint code
++	}
++
++#endif
++
++#ifdef GAME_DLL
++	EmitSoundShared("Grenade.Prime"); // This is mirrored in CC_PrimeTwo for client
++#else
++
++	// TODO: client priming here
++	//C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();	
++
++	DevMsg("client side primetwo: %f\n", m_flPrimeTime);
++
++	if (engine->Time() < m_flPrimeTime + (GREN_THROW_DELAY - 0.1f))
++	{
++		DevMsg("filtering client prime < delay\n");
++		return;
++	}
++
++	m_flPrimeTime = engine->Time();
++	// dexter: if g_szTimerFile hasnt been set yet, force update to default. this happens first run of a new install etc
++	if (Q_strlen(g_szTimerFile) < 1)
++		TimerChange_Callback(&cl_timerwav, NULL);
++
++	EmitSound("Grenade.Prime");
++
++	CPASAttenuationFilter filter(this, g_szTimerFile);
++
++	EmitSound_t params;
++	params.m_pSoundName = g_szTimerFile;
++	params.m_flSoundTime = 0.0f;
++	params.m_pflSoundDuration = NULL;
++	params.m_bWarnOnDirectWaveReference = false;
++
++	EmitSound(filter, entindex(), params);
++
++	Assert (g_pGrenade1Timer);
++	g_pGrenade1Timer->SetTimer(GREN_TIMER);		// since I had to throw shit into shared defs, we can do this correctly hooray
++
++	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
++	m_flGrenPrimeTime = gpGlobals->curtime;
++#endif
++
++	m_iGrenadeState		= FF_GREN_PRIMETWO;
++	m_flServerPrimeTime = gpGlobals->curtime;
++
++#ifndef _DEBUG
++	m_iSecondary--;
++#endif	
++	// note I removed the stupid you're out of ammo dev msg :(
++}
++
++void CFFPlayer::Command_ThrowGren( void ) 
++{
++	if (!IsGrenadePrimed())
++		return;
++
++	// ted_maul: 0000614: Grenade timer issues
++	// release delay
++	if(gpGlobals->curtime - m_flServerPrimeTime < GREN_THROW_DELAY)
++	{
++		// release this grenade at the earliest opportunity
++		m_bWantToThrowGrenade = true;
++		return;
++	}
++
++	float fPrimeTimer = GREN_TIMER - (gpGlobals->curtime - m_flServerPrimeTime);
++#ifdef GAME_DLL
++	bool bThrowGrenade = true;
++	// Give lua the chance to override grenade throwing.
++	// It should return false to avoid throwing the grenade
++	CFFLuaSC hContext( 1, this );
++	hContext.Push(1.0f - (fPrimeTimer / GREN_TIMER));
++	
++	const char *pLuaFn = 0;
++	if(m_iGrenadeState == FF_GREN_PRIMEONE)
++		pLuaFn = "player_onthrowgren1";
++	else if(m_iGrenadeState == FF_GREN_PRIMETWO)
++		pLuaFn = "player_onthrowgren2";	
++	if( pLuaFn && _scriptman.RunPredicates_LUA( NULL, &hContext, pLuaFn ) )
++		bThrowGrenade = hContext.GetBool();
++
++	// actually throw the nade
++	if(bThrowGrenade)
++		ThrowGrenade(fPrimeTimer);
++
++	m_bEngyGrenWarned = false;
++#else
++	// client cant know if lua will allow it .. the ONLY thing we want to happen is to update prediction values really
++	ThrowGrenade(fPrimeTimer);
++#endif
++	m_bWantToThrowGrenade = false;
++	m_iGrenadeState = FF_GREN_NONE;
++	m_flServerPrimeTime = 0.0f;
++	
++}
++
++void CFFPlayer::Command_ToggleOne( void ) 
++{
++}
++
++void CFFPlayer::Command_ToggleTwo( void ) 
++{
++}
++
++bool CFFPlayer::IsGrenade1Primed()
++{
++	return ( ( m_iGrenadeState == FF_GREN_PRIMEONE ) );
++}
++bool CFFPlayer::IsGrenade2Primed()
++{
++	return ( ( m_iGrenadeState == FF_GREN_PRIMETWO ) );
++}
++bool CFFPlayer::IsGrenadePrimed()
++{
++	return IsGrenade1Primed() || IsGrenade2Primed();
++}
++
++void CFFPlayer::GrenadeThink( void ) 
++{
++	if (!IsGrenadePrimed())
++		return;
++
++	// Bug #0000993: Holding(HHing) an emp bugs the pre-det sound
++	// Because the grenade doesn't actually exist yet for the bug,
++	// we've gotta play the sound here if applicable
++	/*
++	if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_iGrenadeState == FF_GREN_PRIMETWO ) )
++	{
++		if( !m_bEngyGrenWarned && ( gpGlobals->curtime > ( m_flServerPrimeTime + GREN_TIMER - 0.685f ) ) )
++		{
++			m_bEngyGrenWarned = true;
++			EmitSound( EMP_SOUND );
++		}
++	}	
++	*/
++
++	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= GREN_THROW_DELAY)
++	{
++		Command_ThrowGren();
++		return;
++	}
++
++	if ( (m_flServerPrimeTime != 0 ) && ( ( gpGlobals->curtime - m_flServerPrimeTime ) >= GREN_TIMER ) )
++	{
++		ThrowGrenade(0); // "throw" a grenade that immediately explodes at the player's origin
++		m_iGrenadeState = FF_GREN_NONE;
++		m_flServerPrimeTime = 0;
++#ifdef GAME_DLL
++		m_bEngyGrenWarned = false;
++#endif
++	}
++}
++
++
++void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
++{
++	if (!IsGrenadePrimed())
++		return;
++
++#ifdef CLIENT_DLL
++	DevMsg("CFFPlayer::ThrowGrenade(client) timer=%f speed=%f\n", fTimer, flSpeed);
++
++	// there is a possibility the grenade mgiht not actually get spawned! cuz lua rules or whatever
++	// so we dont make a cent here, just accept not being able to predict the model tossing.
++
++	// update the next predicted det timer so we can update it if and when we see the model actuallly spawned
++	//float m_flGrenadePrimaryDetTimerPredicted;
++	//float m_flGrenadeSecondaryDetTimerPredicted;
++	switch (m_iGrenadeState)
++	{
++	case FF_GREN_PRIMEONE:
++		{
++		m_flGrenadePrimaryDetTimerPredicted = gpGlobals->curtime;
++		//m_flGrenadePrimaryDetTimerPredicted = fTimer;
++		break;
++		}
++	case FF_GREN_PRIMETWO:
++		//gpGlobals->curtime
++		//m_flGrenadeSecondaryDetTimerPredicted = fTimer;
++		break;
++	}
++
++#else
++	DevMsg("CFFPlayer::ThrowGrenade(server) timer=%f speed=%f\n", fTimer, flSpeed);
++
++	// This is our player details
++	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
++
++	// For if we make a grenade
++	CFFGrenadeBase *pGrenade = NULL;
++
++	// Check which grenade we have to do
++	switch (m_iGrenadeState)
++	{
++		case FF_GREN_PRIMEONE:
++			
++			// They don't actually have a primary grenade
++			if( Q_strcmp( pPlayerClassInfo.m_szPrimaryClassName, "None" ) == 0 )
++				return;
++
++			// Make the grenade
++			pGrenade = (CFFGrenadeBase *) CreateEntityByName(pPlayerClassInfo.m_szPrimaryClassName);
++			break;
++
++		case FF_GREN_PRIMETWO:
++
++			// They don't actually have a secondary grenade
++			if (Q_strcmp( pPlayerClassInfo.m_szSecondaryClassName, "None") == 0)
++				return;
++
++			// Make the grenade
++			pGrenade = (CFFGrenadeBase *) CreateEntityByName(pPlayerClassInfo.m_szSecondaryClassName);			
++			break;
++	}
++
++	// So we made a grenade
++	if (pGrenade != NULL)
++	{
++		Vector vecForward, vecSrc, vecVelocity;
++		QAngle angAngles;
++
++		EyeVectors(&vecForward);
++
++		// Mirv: Grenade should always come from the waist, tfc-style
++		vecSrc = GetLegacyAbsOrigin();
++
++		VectorAngles( vecForward, angAngles );
++		angAngles.x -= GREN_SPAWN_ANG_X;
++
++		UTIL_SetOrigin(pGrenade, vecSrc);
++
++		// Stationary
++		if (fTimer != 0)
++		{
++			AngleVectors(angAngles, &vecVelocity);
++			VectorNormalize(vecVelocity);
++			if (flSpeed > 0)
++				vecVelocity *= ffdev_gren_throwspeed.GetFloat(); // flSpeed;
++			else
++				vecVelocity *= flSpeed; // |-- Mirv: So we can drop grenades
++		}
++		else
++			vecVelocity = Vector(0, 0, 0);
++
++		// dexter - moved stuff before Spawn - spawn expects team to be set for createtrail if they're teamcolored
++		pGrenade->ChangeTeam(GetTeamNumber());
++		pGrenade->SetOwnerEntity(this);		
++		pGrenade->SetThrower(this);
++		pGrenade->Spawn();
++
++		if (m_iGrenadeState == FF_GREN_PRIMEONE)
++			SetLastPrimaryGren(pGrenade);
++		else 
++			SetLastSecondaryGren(pGrenade);
++
++
++		pGrenade->SetAbsVelocity(vecVelocity);				
++
++		pGrenade->SetDetonateTimerLength( fTimer );
++		//pGrenade->m_flSpawnTime = gpGlobals->curtime - (3.0f - fTimer);	// This shold be done in a neater way!!
++		pGrenade->m_flSpawnTime = gpGlobals->curtime;// - (3.0f - fTimer);	// This shold be done in a neater way!!
++		pGrenade->SetupInitialTransmittedVelocity(vecVelocity);
++
++		// Special case for emps since their explode sound starts before it actually explodes
++		if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_bEngyGrenWarned ) && ( pGrenade->Classify() == CLASS_GREN_EMP ) )
++			dynamic_cast< CFFGrenadeEmp * >( pGrenade )->SetWarned();
++
++		if (fTimer > 0)
++			pGrenade->m_fIsHandheld = false;
++	}
++#endif
++}
++
++
++#ifdef CLIENT_DLL
++
++//-----------------------------------------------------------------------------
++// Purpose: When the player selects a timer by changing this cvar, validate
++//			and find the timer and ensure everything is okay.
++//			HANDILY this is also called when the game first loads up
++//-----------------------------------------------------------------------------
++void TimerChange_Callback(ConVar *var, char const *pOldString)
++{
++	const char	*pszTimerString = var->GetString();
++	int			nTimerStringChars = strlen(pszTimerString);
++
++	// No need to do any checking if it's default because it should always
++	// be there
++	if (Q_strcmp(pszTimerString, "default") == 0)
++	{
++		Q_strcpy(g_szTimerFile, "timers/default.wav");
++		return;
++	}
++
++	if (nTimerStringChars > 28)
++	{
++		Msg("Timer filename too large, must be 14 characters or less!\n");
++		var->SetValue("default");
++		return;
++	}
++
++	for (int i = 0; i < nTimerStringChars; i++)	
++	{
++		// Not valid alphanumeric (better way to check anyone?)
++		if (!((pszTimerString[i] >= '0' && pszTimerString[i] <= '9') ||
++			  (pszTimerString[i] >= 'A' && pszTimerString[i] <= 'Z') ||
++			  (pszTimerString[i] >= 'a' && pszTimerString[i] <= 'z')))
++		{
++			Msg("Timer filename must only contain alphanumeric characters (0-9a-Z). Remember that file extension is not needed!\n");
++			var->SetValue("default");
++			return;
++		}
++	}
++	
++	// We've got this far so should be safe now
++	char buf[MAX_PATH];
++	Q_snprintf(buf, MAX_PATH - 1, "sound/timers/%s.*", var->GetString());
++
++	// Find the file (extension will be found)
++	FileFindHandle_t findHandle;
++	const char *pFilename = (*pFilesystem)->FindFirstEx(buf, "MOD", &findHandle);
++
++	(*pFilesystem)->FindClose(findHandle);
++	
++	// Timer not found so return to default
++	if (!pFilename)
++	{
++		Msg("Timer not found.\n");
++		var->SetValue("default");
++	}
++
++	Q_snprintf(g_szTimerFile, MAX_PATH - 1, "timers/%s", pFilename);
++
++	(*pFilesystem)->FindClose(findHandle);
++}
++
++#endif
+\ No newline at end of file
+Index: game_shared/ff/ff_shareddefs.h
+===================================================================
+--- game_shared/ff/ff_shareddefs.h	(revision 13599)
++++ game_shared/ff/ff_shareddefs.h	(working copy)
+@@ -165,4 +165,13 @@
+ extern ConVar sniperrifle_chargetime;
+ #define FF_SNIPER_MAXCHARGE sniperrifle_chargetime.GetFloat()
+ 
++// dexter - moved nade defitions to shared
++#define GREN_TIMER 3.81f
++//ConVar gren_throw_delay("ffdev_throw_delay","0.5",0,"Delay before primed grenades can be thrown.");
++#define GREN_THROW_DELAY 0.5f
++//ConVar gren_speed("ffdev_gren_speed","500.0",0,"Speed grenades are thrown at.");
++//ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at.");
++#define GREN_SPAWN_ANG_X 18.5f
++
++
+ #endif // FF_SHAREDDEFS_H
