@@ -1682,6 +1682,7 @@ else
 
 		CEffectData data;
 		data.m_vOrigin = GetAbsOrigin();
+		data.m_nEntIndex = entindex();
 
 		CRecipientFilter filter;
 		filter.AddRecipientsByPAS(data.m_vOrigin);
