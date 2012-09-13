@@ -728,12 +728,12 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 			if ( bTeamKill )
 			{
-				params.m_nPitch = 70;
+				params.m_nPitch = 88;
 				params.m_flVolume = VOL_NORM;
 			}
 			else if ( deathMsg.iSuicide )
 			{
-				params.m_nPitch = 70;
+				params.m_nPitch = 94;
 				params.m_flVolume = 0.5f;
 			}
 			else if ( bBuildableKilled )
