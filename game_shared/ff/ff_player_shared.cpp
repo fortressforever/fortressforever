@@ -19,6 +19,7 @@
 	
 	#include "c_ff_player.h"
 	#define CRecipientFilter C_RecipientFilter	// |-- For PlayJumpSound
+	#include "effect_dispatch_data.h"
 
 	extern void HudContextShow(bool visible);
 
@@ -29,18 +30,19 @@
 	#include "decals.h"
 	#include "ilagcompensationmanager.h"
 	#include "EntityFlame.h"
+	#include "te_effect_dispatch.h"
 
 	#include "ff_item_flag.h"
 	#include "ff_entity_system.h"	// Entity system
 	#include "ff_scriptman.h"
 	#include "ff_luacontext.h"
 
+
 	#include "omnibot_interface.h"
 #endif
 
 #include "gamevars_shared.h"
 #include "takedamageinfo.h"
-#include "effect_dispatch_data.h"
 #include "engine/ivdebugoverlay.h"
 
 // Wrapper CVAR for letting sv_shadows alter r_shadows_gamecontrol
@@ -149,7 +151,9 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 #define PIPE_DET_DELAY 0.55 // this is mirrored in ff_projectile_pipebomb.cpp and ff_player.cpp
 extern ConVar ai_debug_shoot_positions;
 
+#ifdef CLIENT_DLL
 void DispatchEffect(const char *pName, const CEffectData &data);
+#endif
 
 // Used to decide whether effects are allowed
 static float g_flNextEffectAllowed[MAX_PLAYERS + 1];
@@ -1558,22 +1562,22 @@ void CFFPlayer::Overpressure( void )
 {
 	if (IsAlive())
 	{
-		CEffectData data;
+#ifdef GAME_DLL
 
+		CEffectData data;
 		data.m_vOrigin = GetAbsOrigin();
-		
-		DispatchEffect(OVERPRESSURE_EFFECT, data);
+
+		CRecipientFilter filter;
+		filter.AddRecipientsByPAS(data.m_vOrigin);
+		filter.AddRecipient(this);
+		filter.MakeReliable();
+		filter.SetIgnorePredictionCull( true );
+
+		te->DispatchEffect(filter, 0.0f, data.m_vOrigin, OVERPRESSURE_EFFECT, data);
 
 		// Play a sound
-		EmitSoundShared("overpressure.explode");
+		EmitSound("overpressure.explode");
 		
-#ifdef GAME_DLL
-	CFFPlayer *pLocalPlayer = ToFFPlayer(this);
-
-	// Move other players back to history positions based on local player's lag
-	lagcompensation->StartLagCompensation(pLocalPlayer, pLocalPlayer->GetCurrentCommand());
-#endif
-
 		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
 			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
@@ -1612,10 +1616,8 @@ void CFFPlayer::Overpressure( void )
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 				float flHorizontalSpeed = vecLatVelocity.Length();
 
-#ifdef GAME_DLL
 				if (OVERPRESSURE_SLIDE_AFFECTSSELF)
 					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
-#endif
 
 				// apply push force
 				if (pPlayer->GetFlags() & FL_ONGROUND)
@@ -1642,10 +1644,8 @@ void CFFPlayer::Overpressure( void )
 
 				pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
 
-#ifdef GAME_DLL
 				if (OVERPRESSURE_SLIDE)
 					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
-#endif
 
 
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
@@ -1685,7 +1685,6 @@ void CFFPlayer::Overpressure( void )
 				}
 			}
 
-#ifdef GAME_DLL
 			// cap mancannon + overpressure speed
 			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
 			{
@@ -1695,13 +1694,11 @@ void CFFPlayer::Overpressure( void )
 					vecResult *= 1700.0f;
 				}
 			}
-#endif
 			pPlayer->SetAbsVelocity(vecResult);
+
 		}
 		
-#ifdef GAME_DLL
-	lagcompensation->FinishLagCompensation(pLocalPlayer);
-#endif
+#endif // GAME_DLL
 
 	}
 }
