@@ -231,15 +231,24 @@ void FF_FX_OverpressureEffect_Callback( const CEffectData &data )
 {
 	CSmartPtr< COverpressureEmitter > overpressureEffect = COverpressureEmitter::Create( "OverpressureEffect" );
 
+	C_BaseEntity *pPlayer = data.GetEntity();
+	
+	if (!pPlayer)
+	{
+		AssertMsg(0, "No player for this overpressure");
+		return;
+	}
+	Vector vOrigin = pPlayer->GetAbsOrigin();
+
 	//float offset = 0.0f;
 
 	// Add smoke
 	for( int i = 0; i < overpressure_particles.GetInt(); i++ )
 	{
-		OverpressureParticle *pParticle = overpressureEffect->AddOverpressureParticle( data.m_vOrigin );
+		OverpressureParticle *pParticle = overpressureEffect->AddOverpressureParticle( vOrigin );
 		if( pParticle )
 		{
-			pParticle->m_vOrigin = data.m_vOrigin;
+			pParticle->m_vOrigin = vOrigin;
 
 			// get a random point on a unit sphere
 			float ptZ = 2.0 * random->RandomFloat() - 1.0;
@@ -260,10 +269,10 @@ void FF_FX_OverpressureEffect_Callback( const CEffectData &data )
 	// Add smoke
 	for( int i = 0; i < overpressure_particles2.GetInt(); i++ )
 	{
-		OverpressureParticle *pParticle = overpressureEffect->AddOverpressureParticle2( data.m_vOrigin );
+		OverpressureParticle *pParticle = overpressureEffect->AddOverpressureParticle2( vOrigin );
 		if( pParticle )
 		{
-			pParticle->m_vOrigin = data.m_vOrigin;
+			pParticle->m_vOrigin = vOrigin;
 
 			// get a random point on a unit sphere
 			float ptZ = 2.0 * random->RandomFloat() - 1.0;
