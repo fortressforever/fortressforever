@@ -126,16 +126,32 @@ void PrecacheFilePlayerClassInfoDatabase(IFileSystem *filesystem, const unsigned
 		return;
 
 	FileFindHandle_t findHandle;
-	const char *pFilename = filesystem->FindFirstEx("scripts/ff_playerclass_*.txt", "MOD", &findHandle);
-	while (pFilename != NULL) 
+	if (!pICEKey)
 	{
-		char fileBase[512];
-		Q_FileBase(pFilename, fileBase, sizeof(fileBase));
-		PLAYERCLASS_FILE_INFO_HANDLE tmp;
-		ReadPlayerClassDataFromFileForSlot(filesystem, fileBase, &tmp, pICEKey);
-		pFilename = filesystem->FindNext(findHandle);
+		const char *pFilename = filesystem->FindFirstEx("scripts/ff_playerclass_*.txt", "MOD", &findHandle);
+		while (pFilename != NULL) 
+		{
+			char fileBase[512];
+			Q_FileBase(pFilename, fileBase, sizeof(fileBase));
+			PLAYERCLASS_FILE_INFO_HANDLE tmp;
+			ReadPlayerClassDataFromFileForSlot(filesystem, fileBase, &tmp, pICEKey);
+			pFilename = filesystem->FindNext(findHandle);
+		}
+		filesystem->FindClose(findHandle);
 	}
-	filesystem->FindClose(findHandle);
+	else
+	{
+		const char *pFilename = filesystem->FindFirstEx("scripts/ff_playerclass_*.ctx", "MOD", &findHandle);
+		while (pFilename != NULL) 
+		{
+			char fileBase[512];
+			Q_FileBase(pFilename, fileBase, sizeof(fileBase));
+			PLAYERCLASS_FILE_INFO_HANDLE tmp;
+			ReadPlayerClassDataFromFileForSlot(filesystem, fileBase, &tmp, pICEKey);
+			pFilename = filesystem->FindNext(findHandle);
+		}
+		filesystem->FindClose(findHandle);
+	}
 }
 
 //----------------------------------------------------------------------------
@@ -156,47 +172,48 @@ KeyValues * ReadEncryptedKVPlayerClassFile(IFileSystem *filesystem, const char *
 	// Open the playerclass data file, and abort if we can't
 	KeyValues *pKV = new KeyValues("PlayerClassDatafile");
 
-	Q_snprintf(szFullName, sizeof(szFullName), "%s.txt", szFilenameWithoutExtension);
-
-	if (!pKV->LoadFromFile(filesystem, szFullName, pSearchPath)) // try to load the normal .txt file first
+	// if given an ICE key, then use encrypted scripts
+	if (pICEKey) 
 	{
-		if (pICEKey) 
+		Q_snprintf(szFullName, sizeof(szFullName), "%s.ctx", szFilenameWithoutExtension); 
+
+		FileHandle_t f = filesystem->Open(szFullName, "rb", pSearchPath);
+
+		if (!f) 
 		{
-			Q_snprintf(szFullName, sizeof(szFullName), "%s.ctx", szFilenameWithoutExtension); // fall back to the .ctx file
-
-			FileHandle_t f = filesystem->Open(szFullName, "rb", pSearchPath);
-
-			if (!f) 
-			{
-				pKV->deleteThis();
-				return NULL;
-			}
-			// load file into a null-terminated buffer
-			int fileSize = filesystem->Size(f);
-			char *buffer = (char *) MemAllocScratch(fileSize + 1);
-		
-			Assert(buffer);
-		
-			filesystem->Read(buffer, fileSize, f); // read into local buffer
-			buffer[fileSize] = 0; // null terminate file as EOF
-			filesystem->Close(f);	// close file after reading
-
-			UTIL_DecodeICE((unsigned char *) buffer, fileSize, pICEKey);
-
-			bool retOK = pKV->LoadFromBuffer(szFullName, buffer, filesystem);
-
-			MemFreeScratch();
-
-			if (!retOK) 
-			{
-				pKV->deleteThis();
-				return NULL;
-			}
+			pKV->deleteThis();
+			return NULL;
 		}
-		else
+		// load file into a null-terminated buffer
+		int fileSize = filesystem->Size(f);
+		char *buffer = (char *) MemAllocScratch(fileSize + 1);
+	
+		Assert(buffer);
+	
+		filesystem->Read(buffer, fileSize, f); // read into local buffer
+		buffer[fileSize] = 0; // null terminate file as EOF
+		filesystem->Close(f);	// close file after reading
+
+		UTIL_DecodeICE((unsigned char *) buffer, fileSize, pICEKey);
+
+		bool retOK = pKV->LoadFromBuffer(szFullName, buffer, filesystem);
+
+		MemFreeScratch();
+
+		if (!retOK) 
 		{
-				pKV->deleteThis();
-				return NULL;
+			pKV->deleteThis();
+			return NULL;
+		}
+	}
+	else // otherwise try to load the normal .txt file
+	{
+		Q_snprintf(szFullName, sizeof(szFullName), "%s.txt", szFilenameWithoutExtension);
+
+		if (!pKV->LoadFromFile(filesystem, szFullName, pSearchPath)) 
+		{
+			pKV->deleteThis();
+			return NULL;
 		}
 	}
 
