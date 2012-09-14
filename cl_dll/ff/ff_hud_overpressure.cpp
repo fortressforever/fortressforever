@@ -33,7 +33,7 @@
 using namespace vgui;
 
 //extern ConVar ffdev_overpressure_delay;
-#define OVERPRESSURE_COOLDOWN 8	//ffdev_overpressure_delay.GetFloat()
+#define OVERPRESSURE_COOLDOWN 16	//ffdev_overpressure_delay.GetFloat()
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current disguised class
