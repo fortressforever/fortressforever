@@ -1,18 +1,3 @@
-/// =============== Fortress Forever ==============
-/// ======== A modification for Half-Life 2 =======
-///
-/// @file ff_grenade_hoverturret.cpp
-/// @author David "Mervaka" Cook
-/// @date March 18, 2010
-/// @brief The FF laser grenade code.
-///
-/// REVISIONS
-/// ---------
-/// Mar 29, 2005	Mervaka: First created, based on ff_grenade_nail.cpp by Mirvin_Monkey
-
-//========================================================================
-// Required includes
-//========================================================================
 #include "cbase.h"
 #include "ff_grenade_base.h"
 #include "ff_utils.h"
@@ -36,7 +21,7 @@
 	#define CFFGrenadeHoverTurret C_FFGrenadeHoverTurret
 #endif
 
-ConVar ffdev_hovergren_range("ffdev_hovergren_range", "500", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade range ");
+ConVar ffdev_hovergren_range("ffdev_hovergren_range", "800", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade range ");
 #define FFDEV_HOVERGREN_RANGE ffdev_hovergren_range.GetFloat()
 ConVar ffdev_hovergren_lifetime("ffdev_hovergren_lifetime", "7", FCVAR_REPLICATED /*  | FCVAR_CHEAT */, "Hover turret grenade: life time ");
 #define FFDEV_HOVERGREN_LIFETIME ffdev_hovergren_lifetime.GetFloat()
@@ -56,6 +41,10 @@ ConVar ffdev_hovergren_naildamage("ffdev_hovergren_naildamage", "6", FCVAR_REPLI
 ConVar ffdev_hovergren_nailspeed("ffdev_hovergren_nailspeed", "1500", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Nail speed ");
 #define FFDEV_HOVERGREN_FIRENAILS ffdev_hovergren_firenails.GetBool()
 ConVar ffdev_hovergren_firenails("ffdev_hovergren_firenails", "1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Firenails? If not, use bullets. ");
+#define FFDEV_HOVERGREN_NAILPREDICTIONMULT_XY ffdev_hovergren_nailpredictionmult_xy.GetFloat()
+ConVar ffdev_hovergren_nailpredictionmult_xy("ffdev_hovergren_nailpredictionmult_xy", "0.001", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Firenails? If not, use bullets. ");
+#define FFDEV_HOVERGREN_NAILPREDICTIONMULT_Z ffdev_hovergren_nailpredictionmult_z.GetFloat()
+ConVar ffdev_hovergren_nailpredictionmult_z("ffdev_hovergren_nailpredictionmult_z", "0.0004", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Firenails? If not, use bullets. ");
 
 #define FFDEV_HOVERGREN_ROF ffdev_hovergren_rof.GetFloat()
 ConVar ffdev_hovergren_endcells("ffdev_hovergren_endcells", "50", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Cells to drop on expiry ");
@@ -112,29 +101,35 @@ public:
 protected:
 	CBeam		*pBeam[1];
 	IMaterial	*m_pMaterial;
+private:
+	void CreateLaserAndSparksEffects();
+	void CreateNewHoverTurretLaser();
+	Color GetTeamColorForLaser(CFFPlayer* pgrenOwner); 	
+	void CreateNewHoverTurretLaser(Color laserColor);
 
-//	virtual int DrawModel(int flags);
 #else
-	DECLARE_DATADESC(); // Since we're adding new thinks etc
+	DECLARE_DATADESC();
 	virtual void Spawn();
 	virtual void HoverThink();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 
 private:
 	void ShootNail( const Vector& vecOrigin, const QAngle& vecAngles );
+	bool IsTargetStillValid();
+	void GetNewPlayerTarget();
+	void FireAtPlayerTarget();
+	void IncrementDamageDoneForBagCreation();
+	void CreateBagAwayFromTarget(Vector vecDirectionToTarget);
+	void FireNailInDirection(Vector vecDirectionToTarget);
+	void FireNailAtPredictedTarget();
+	FireBulletsInfo_t MakeFireBulletsInfo(Vector vecDirectionToTarget);
 
 protected:
-	//float	m_flNailSpit;
-	//float	m_flAngleOffset;
-	//CBeam	*pBeam[MAX_BEAMS];
-
-	//CUtlVector< PseudoNail > m_NailsVector;
-
-	//float	m_flLastThinkTime;
 	CFFPlayer*	m_pTarget;
 	float		m_flLastFireTime;
 	float		m_flScanTime;
 	int			m_iDamageDone;
+	bool		m_bPredictedNail;
 
 #endif
 };
@@ -155,9 +150,6 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_hoverturret);
 
 #define NAIL_BBOX 2.0f
 
-//-----------------------------------------------------------------------------
-// Purpose: Various precache things
-//-----------------------------------------------------------------------------
 void CFFGrenadeHoverTurret::Precache() 
 {
 	PrecacheModel(HOVERGRENADE_MODEL);
@@ -169,21 +161,16 @@ void CFFGrenadeHoverTurret::Precache()
 }
 
 #ifdef GAME_DLL
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Various spawny flag things
-	//-----------------------------------------------------------------------------
 	void CFFGrenadeHoverTurret::Spawn() 
 	{
 		SetModel(HOVERGRENADE_MODEL);
 		BaseClass::Spawn();
 
-		//m_flAngleOffset = 0.0f;
-		//SetLocalAngularVelocity(QAngle(0, 15, 0));
 		m_pTarget = NULL;
 		m_flLastFireTime = 0.0f;
 		m_flScanTime = 0.0f;
 		m_iDamageDone = 0;
+		m_bPredictedNail = false;
 
 		if ( FFDEV_HOVERGREN_CANBESHOT )
 			m_takedamage = DAMAGE_YES;
@@ -200,15 +187,11 @@ void CFFGrenadeHoverTurret::Precache()
 		//CreateVPhysics();
 	}
 
-	//-----------------------------------------------------------------------------
-	// Purpose: Instead of exploding, change to 
-	//-----------------------------------------------------------------------------
 	void CFFGrenadeHoverTurret::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		// Clumsy, will do for now
-		if (GetMoveType() == MOVETYPE_FLY)
+		if (GetMoveType() == MOVETYPE_FLY) // If m_bIsOn?
 		{
-
 			// AfterShock: Create bag when detonate
 			CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", (GetAbsOrigin() + Vector(0.0f, 0.0f, 20.0f) ), QAngle(0, random->RandomFloat(0.0f, 359.0f), 0) );
 			if( pBackpack )
@@ -232,13 +215,8 @@ void CFFGrenadeHoverTurret::Precache()
 		SetNextThink(gpGlobals->curtime);
 	}
 
-	//-----------------------------------------------------------------------------
-	// Purpose: Spin round emitting lasers
-	//-----------------------------------------------------------------------------
 	void CFFGrenadeHoverTurret::HoverThink() 
 	{
-
-		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
 			Detonate(); // this should release bags etc
@@ -252,289 +230,338 @@ void CFFGrenadeHoverTurret::Precache()
 			flRisingspeed = FFDEV_HOVERGREN_RISESPEED;
 		}
 		SetAbsVelocity(Vector(0, 0, flRisingspeed));
-		
-		//SetAbsAngles(GetAbsAngles() + QAngle(0, laserangv.GetFloat(), 0));
-
-		//SetAbsAngles( QAngle((GetAbsAngles().x + 30), 0, 90) ); // this spins and faces the player
 		SetAbsAngles( QAngle(0, (GetAbsAngles().y + 50), 90) );
 
 		if ( m_pTarget )
 		{
-			//fire at existingtarget
-
-	// is this target still valid
-			if ( !FVisible( m_pTarget ) )
+			if ( !IsTargetStillValid() )
 			{
 				m_pTarget = NULL;
-				DevMsg("Cant see target\n");
 			}
-			else if( WorldSpaceCenter().DistTo( m_pTarget->GetAbsOrigin() ) > FFDEV_HOVERGREN_RANGE)
-			{
-				m_pTarget = NULL;
-				DevMsg("Target gone out of range\n");
-			}
-
-			else if ( !m_pTarget->IsAlive() )
-			{
-				m_pTarget = NULL;
-				DevMsg("Target dead\n");
-			}
-			else if ( m_pTarget->IsCloaked() )
-			{
-				m_pTarget = NULL;
-				DevMsg("Target cloaked\n");
-			}
-			
 		}
 
 		if ( m_pTarget )
 		{
-			// fire !
-
 			if ( gpGlobals->curtime > m_flLastFireTime + FFDEV_HOVERGREN_ROF )
 			{
-
-				Vector vecDir = m_pTarget->GetAbsOrigin() - GetAbsOrigin();
-				VectorNormalize( vecDir );
-
-				if (!FFDEV_HOVERGREN_FIRENAILS) // fire bullets
-				{
-					FireBulletsInfo_t info;
-					
-					info.m_vecSrc = GetAbsOrigin();
-					info.m_vecDirShooting = vecDir;
-					info.m_iTracerFreq = 0;	// Mirv: Doing tracers down below now
-					info.m_iShots = 1;
-					// Jiggles: We want to fire more than 1 shot if the SG's think rate is too slow to keep up with the cycle time value
-					//			Since we can't fire partial bullets, we have to accumulate them
-					// But don't do it if it has been longer than the SG's think time
-
-					//info.m_pAttacker = this;
-					info.m_pAttacker = GetOwnerEntity();
-					info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
-					info.m_flDistance = MAX_COORD_RANGE;
-					info.m_iAmmoType = GetAmmoDef()->Index( AMMO_SHELLS );
-					info.m_iDamage = FFDEV_HOVERGREN_BULLETDAMAGE;
-					info.m_flDamageForceScale = FFDEV_HOVERGREN_BULLETPUSH;
-
-
-					// Jiggles: A HACK to address the fact that it takes a lot more force to push players around on the ground than in the air
-					if ( m_pTarget && (m_pTarget->GetFlags() & FL_ONGROUND) )
-					{
-							info.m_flDamageForceScale *= 5.0f; // see ff_sentrygun.cpp for updated numbers, 5 is correct at time of writing
-					}
-
-					FireBullets( info );
-				}
-				else // fire nails
-				{
-					QAngle vecAngles;
-					VectorAngles( vecDir, vecAngles );
-
-					CFFProjectileNail::CreateNail(this, GetAbsOrigin() + vecDir * 20, vecAngles,  ToFFPlayer(GetOwnerEntity()), FFDEV_HOVERGREN_NAILDAMAGE, FFDEV_HOVERGREN_NAILSPEED);
-					//CFFProjectileDart *pDart = CFFProjectileDart::CreateDart(this, GetAbsOrigin() + vecDir * 20, vecAngles,  ToFFPlayer(GetOwnerEntity()), FFDEV_HOVERGREN_NAILDAMAGE, FFDEV_HOVERGREN_NAILSPEED);
-				}
-
-				EmitSound( "HoverTurret.Shoot" );
-
-				m_flLastFireTime = gpGlobals->curtime;
-
-				//int iAttachment = GetLevel() > 2 ? (m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment) : m_iMuzzleAttachment;
-
-				trace_t tr;
-				UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + vecDir * (FFDEV_HOVERGREN_RANGE * 1.5), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
-
-				/* Couldnt get the muzzle flash working
-				CEffectData data;
-				data.m_vStart = GetAbsOrigin() + vecDir * 20;
-				data.m_vOrigin = data.m_vStart;
-				data.m_nEntIndex = GetBaseAnimating()->entindex();
-				data.m_flScale = 4.0f;
-				//data.m_nAttachmentIndex = iAttachment;
-				data.m_fFlags = MUZZLEFLASH_TYPE_DEFAULT;
-
-				DispatchEffect("MuzzleFlash", data);
-	*/
-/* Temporary commenting out of the tracer for hitscan shots
-				CEffectData data2;
-				data2.m_vStart = GetAbsOrigin();
-				data2.m_vOrigin = tr.endpos;
-				//data2.m_nEntIndex = GetBaseAnimating()->entindex();
-				data2.m_flScale = 0.0f;
-				//data2.m_nAttachmentIndex = iAttachment;
-				DispatchEffect("AR2Tracer", data2);
-				*/ 
-
-				// Bags!
-
-				if (FFDEV_HOVERGREN_FIRENAILS)
-					m_iDamageDone += FFDEV_HOVERGREN_NAILDAMAGE; // Well technically we cant say that all nails have hit, so in this case it's more how many nails have been fired
-				else
-					m_iDamageDone += FFDEV_HOVERGREN_BULLETDAMAGE;
-
-				if (m_iDamageDone >= FFDEV_HOVERGREN_DAMAGETODROPBAG)
-				{
-					// AfterShock: Create bag when enough damage is dealt
-					CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", ( (GetAbsOrigin() - vecDir *0.1) + Vector(0.0f, 0.0f, -FFDEV_HOVERGREN_BAGSPAWNDIST) ), QAngle(0, random->RandomFloat(0.0f, 359.0f), 0) );
-					if( pBackpack )
-					{
-						pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_HOVERGREN_BAGCELLS );
-						//pBackpack->SetAbsVelocity( Vector( random->RandomFloat(-100.0f, 0.0f), random->RandomFloat(-100.0f, 100.0f), random->RandomFloat(20.0f, 100.0f) ) );
-						pBackpack->SetAbsVelocity( Vector(-vecDir.x, -vecDir.y, FFDEV_HOVERGREN_BAGTHROWFORCEUP) * FFDEV_HOVERGREN_BAGTHROWFORCE );
-					}
-					m_iDamageDone -= FFDEV_HOVERGREN_DAMAGETODROPBAG;
-				}
+				FireAtPlayerTarget();
 			}
 		}
 		else
 		{
-			// get a new target (players only)
-
-			m_pTarget = NULL;
-
-			if ( m_flScanTime < gpGlobals->curtime )
-			{
-				EmitSound( "HoverTurret.Scan" );
-				m_flScanTime = gpGlobals->curtime + FFDEV_HOVERGREN_SCANSOUNDTIME;
-			}
-
-			float currentTargetDistance = 1000.0f;
-			CBaseEntity *pEntity = NULL;
-			for( CEntitySphereQuery sphere( GetAbsOrigin(), FFDEV_HOVERGREN_RANGE ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-			{
-				if( !pEntity )
-					continue;
-
-				if( !pEntity->IsPlayer() )
-					continue;
-
-				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-				//CFFPlayer *pSlower = ToFFPlayer( GetOwnerEntity() );
-
-				if( !pPlayer || pPlayer->IsObserver() )
-					continue;
-
-				//if( !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
-				//	continue;
-
-				if ( g_pGameRules->PlayerRelationship( ToFFPlayer(GetOwnerEntity()), pPlayer ) == GR_TEAMMATE )
-					continue;
-
-				if ( pPlayer->IsCloaked() )
-					continue;
-
-				//if ( !FVisible( pPlayer ) )
-				//	continue;
-					
-				Vector vecTarget = pPlayer->BodyTarget( WorldSpaceCenter(), false );
-
-				if( WorldSpaceCenter().DistTo( vecTarget ) > FFDEV_HOVERGREN_RANGE)
-					continue;
-
-				if ( WorldSpaceCenter().DistTo( vecTarget ) < currentTargetDistance )
-				{
-					// Ok now do the more expensive check to see if we can actually hit them
-
-					// Get our aiming position
-					Vector vecOrigin = WorldSpaceCenter();
-
-					// Can we trace to the target?
-					trace_t tr;
-					UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
-
-					// What did our trace hit?
-					if( tr.startsolid || /*( tr.fraction != 1.0f ) ||*/ !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
-						continue;
-
-					if(tr.m_pEnt != pPlayer)
-						continue;
-					
-					// Ok we can hit them!
-					m_pTarget = pPlayer;
-					currentTargetDistance = WorldSpaceCenter().DistTo( vecTarget );
-				}
-			}
+			GetNewPlayerTarget();
 		}
 		
 		SetNextThink( gpGlobals->curtime + 0.01f );
+	} 
+
+	bool CFFGrenadeHoverTurret::IsTargetStillValid()
+	{
+		if ( !FVisible( m_pTarget ) )
+		{
+			DevMsg("Cant see target\n");
+			return false;
+		}
+		else if( WorldSpaceCenter().DistTo( m_pTarget->GetAbsOrigin() ) > FFDEV_HOVERGREN_RANGE)
+		{
+			DevMsg("Target gone out of range\n");
+			return false;
+		}
+
+		else if ( !m_pTarget->IsAlive() )
+		{
+			DevMsg("Target dead\n");
+			return false;
+		}
+		else if ( m_pTarget->IsCloaked() )
+		{
+			DevMsg("Target cloaked\n");
+			return false;
+		}
+		return true;
+	}
+
+	void CFFGrenadeHoverTurret::FireAtPlayerTarget()
+	{
+		Vector vecDirectionToTarget = m_pTarget->GetAbsOrigin() - GetAbsOrigin();
+		VectorNormalize( vecDirectionToTarget );
+
+		if ( FFDEV_HOVERGREN_FIRENAILS )
+		{
+			if ( m_bPredictedNail )
+			{
+				FireNailAtPredictedTarget();
+			}
+			else
+			{
+				FireNailInDirection(vecDirectionToTarget);
+			}
+			m_bPredictedNail = !m_bPredictedNail;
+		}
+		else
+		{
+			FireBulletsInfo_t info = MakeFireBulletsInfo(vecDirectionToTarget);
+			FireBullets( info );
+		}
+
+		EmitSound( "HoverTurret.Shoot" );
+
+		m_flLastFireTime = gpGlobals->curtime;
+
+		trace_t tr;
+		UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + vecDirectionToTarget * (FFDEV_HOVERGREN_RANGE * 1.5), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr);
+
+		/* Couldnt get the muzzle flash working
+		CEffectData data;
+		data.m_vStart = GetAbsOrigin() + vecDir * 20;
+		data.m_vOrigin = data.m_vStart;
+		data.m_nEntIndex = GetBaseAnimating()->entindex();
+		data.m_flScale = 4.0f;
+		//data.m_nAttachmentIndex = iAttachment;
+		data.m_fFlags = MUZZLEFLASH_TYPE_DEFAULT;
+
+		DispatchEffect("MuzzleFlash", data);
+*/
+/* Temporary commenting out of the tracer for hitscan shots
+		CEffectData data2;
+		data2.m_vStart = GetAbsOrigin();
+		data2.m_vOrigin = tr.endpos;
+		//data2.m_nEntIndex = GetBaseAnimating()->entindex();
+		data2.m_flScale = 0.0f;
+		//data2.m_nAttachmentIndex = iAttachment;
+		DispatchEffect("AR2Tracer", data2);
+		*/ 
+
+		IncrementDamageDoneForBagCreation();
+		
+		if (m_iDamageDone >= FFDEV_HOVERGREN_DAMAGETODROPBAG)
+		{
+			CreateBagAwayFromTarget(vecDirectionToTarget);
+		}
+	}
+
+	void CFFGrenadeHoverTurret::FireNailAtPredictedTarget()
+	{
+		// To predict where target will be:
+		// take his position, add on his movement direction * speed * distance
+		// This isn't perfect, ideally it should be something complex using distance that he'll end up being, 
+		// rather than the distance he is when you start firing
+		// Not sure what to do about vertical movement, so put it on a cvar!
+
+		Vector targetPosition = m_pTarget->GetAbsOrigin();
+		float distanceToTarget = WorldSpaceCenter().DistTo( targetPosition );
+		Vector targetVelocityXY = m_pTarget->GetAbsVelocity() * Vector(1,1,0);
+		Vector targetVelocityZ = m_pTarget->GetAbsVelocity() * Vector(0,0,1);
+		Vector predictedTargetPosition = targetPosition 
+			+ targetVelocityXY * distanceToTarget * FFDEV_HOVERGREN_NAILPREDICTIONMULT_XY
+			+ targetVelocityZ * distanceToTarget * FFDEV_HOVERGREN_NAILPREDICTIONMULT_Z;
+		Vector vecDirectionToTarget = predictedTargetPosition - GetAbsOrigin();
+
+		VectorNormalize( vecDirectionToTarget );
+		FireNailInDirection(vecDirectionToTarget);
+	}
+
+	void CFFGrenadeHoverTurret::FireNailInDirection(Vector vecDirectionToTarget)
+	{
+		QAngle angleToFireAt;
+		VectorAngles( vecDirectionToTarget, angleToFireAt );
+		Vector vecNailOrigin = GetAbsOrigin() + vecDirectionToTarget * 20;
+
+		CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, 
+			vecNailOrigin, 
+			angleToFireAt,  
+			ToFFPlayer(GetOwnerEntity()), 
+			FFDEV_HOVERGREN_NAILDAMAGE, 
+			FFDEV_HOVERGREN_NAILSPEED);
+	}
+
+	void CFFGrenadeHoverTurret::IncrementDamageDoneForBagCreation()
+	{
+		if (FFDEV_HOVERGREN_FIRENAILS)
+			m_iDamageDone += FFDEV_HOVERGREN_NAILDAMAGE; // Well technically we cant say that all nails have hit, so in this case it's more how many nails have been fired
+		else
+			m_iDamageDone += FFDEV_HOVERGREN_BULLETDAMAGE;
+	}
+
+	void CFFGrenadeHoverTurret::CreateBagAwayFromTarget(Vector vecDirectionToTarget)
+	{
+		CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create( "ff_item_backpack", ( (GetAbsOrigin() - vecDirectionToTarget *0.1) + Vector(0.0f, 0.0f, -FFDEV_HOVERGREN_BAGSPAWNDIST) ), QAngle(0, random->RandomFloat(0.0f, 359.0f), 0) );
+		if( pBackpack )
+		{
+			pBackpack->SetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ), FFDEV_HOVERGREN_BAGCELLS );
+			pBackpack->SetAbsVelocity( Vector(-vecDirectionToTarget.x, -vecDirectionToTarget.y, FFDEV_HOVERGREN_BAGTHROWFORCEUP) * FFDEV_HOVERGREN_BAGTHROWFORCE );
+			pBackpack->SetOwnerEntity( GetOwnerEntity() );
+		}
+		m_iDamageDone -= FFDEV_HOVERGREN_DAMAGETODROPBAG;
+	}
+
+	void CFFGrenadeHoverTurret::GetNewPlayerTarget()
+	{
+		m_pTarget = NULL;
+
+		if ( m_flScanTime < gpGlobals->curtime )
+		{
+			EmitSound( "HoverTurret.Scan" );
+			m_flScanTime = gpGlobals->curtime + FFDEV_HOVERGREN_SCANSOUNDTIME;
+		}
+
+		float currentTargetDistance = 1000.0f;
+		CBaseEntity *pEntity = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), FFDEV_HOVERGREN_RANGE ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( !pEntity )
+				continue;
+
+			if( !pEntity->IsPlayer() )
+				continue;
+
+			CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+			//CFFPlayer *pSlower = ToFFPlayer( GetOwnerEntity() );
+
+			if( !pPlayer || pPlayer->IsObserver() )
+				continue;
+
+			//if( !g_pGameRules->FCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+			//	continue;
+
+			if ( g_pGameRules->PlayerRelationship( ToFFPlayer(GetOwnerEntity()), pPlayer ) == GR_TEAMMATE )
+				continue;
+
+			if ( pPlayer->IsCloaked() )
+				continue;
+
+			//if ( !FVisible( pPlayer ) )
+			//	continue;
+				
+			Vector vecTarget = pPlayer->BodyTarget( WorldSpaceCenter(), false );
+
+			if( WorldSpaceCenter().DistTo( vecTarget ) > FFDEV_HOVERGREN_RANGE)
+				continue;
+
+			if ( WorldSpaceCenter().DistTo( vecTarget ) < currentTargetDistance )
+			{
+				// Ok now do the more expensive check to see if we can actually hit them
+
+				// Get our aiming position
+				Vector vecOrigin = WorldSpaceCenter();
+
+				// Can we trace to the target?
+				trace_t tr;
+				UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+
+				// What did our trace hit?
+				if( tr.startsolid || /*( tr.fraction != 1.0f ) ||*/ !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
+					continue;
+
+				if(tr.m_pEnt != pPlayer)
+					continue;
+				
+				// Ok we can hit them!
+				m_pTarget = pPlayer;
+				currentTargetDistance = WorldSpaceCenter().DistTo( vecTarget );
+			}
+		}
+	}
+
+	FireBulletsInfo_t CFFGrenadeHoverTurret::MakeFireBulletsInfo(Vector vecDirectionToTarget)
+	{
+		FireBulletsInfo_t info;	
+		info.m_vecSrc = GetAbsOrigin();
+		info.m_vecDirShooting = vecDirectionToTarget;
+		info.m_iTracerFreq = 0;
+		info.m_iShots = 1;
+
+		info.m_pAttacker = GetOwnerEntity();
+		info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
+		info.m_flDistance = MAX_COORD_RANGE;
+		info.m_iAmmoType = GetAmmoDef()->Index( AMMO_SHELLS );
+		info.m_iDamage = FFDEV_HOVERGREN_BULLETDAMAGE;
+		info.m_flDamageForceScale = FFDEV_HOVERGREN_BULLETPUSH;
+
+		// Jiggles: A HACK to address the fact that it takes a lot more force to push players around on the ground than in the air
+		if ( m_pTarget && (m_pTarget->GetFlags() & FL_ONGROUND) )
+		{
+				info.m_flDamageForceScale *= 5.0f; // see ff_sentrygun.cpp for updated numbers, 5 is correct at time of writing
+		}
+		
+		return info;
 	}
 
 #else 
 
-	//-----------------------------------------------------------------------------
-	// Purpose: Emit gas.
-	//-----------------------------------------------------------------------------
 	void CFFGrenadeHoverTurret::ClientThink()
 	{
 		if ( m_bIsOn )
 		{
-			//EmitSound("NailGrenade.LaserLoop");
+			CreateLaserAndSparksEffects();
+		}
+	}
 
-			Vector vecDirection;
-			Vector vecOrigin = GetAbsOrigin();
-			//QAngle angRadial = GetAbsAngles();
+	void CFFGrenadeHoverTurret::CreateLaserAndSparksEffects() 
+	{
+		CFFPlayer *pgrenOwner = ToFFPlayer( this->GetOwnerEntity() );
+		if (!pgrenOwner)
+			return;
 
-			float flSize = 20.0f;
-			trace_t tr;
-			//char i;
-
-			CFFPlayer *pgrenOwner = ToFFPlayer( this->GetOwnerEntity() );
+		const float flSizeOfGrenade = 20.0f;
+		const float flMaxTraceDistance = 2000.0f;
 		
-			if (!pgrenOwner)
-				return;
-
-			//float flDeltaAngle = 360.0f;
-
-			//for( i = 0; i < laserbeams.GetInt(); i++ )
-			//{
-				//AngleVectors(angRadial, &vecDirection);
-				//VectorNormalizeFast(vecDirection);
-				vecDirection = Vector(0,0,-1);
-
-				UTIL_TraceLine( vecOrigin + vecDirection * flSize, 
-								vecOrigin + vecDirection * 2000.0f, 
-								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
-
-				if( !pBeam[0] )
+		Vector vecDirection = Vector(0,0,-1);
+		Vector vecOrigin = GetAbsOrigin();
+		
+		Vector laserTraceStartPosition = vecOrigin + vecDirection * flSizeOfGrenade;
+		Vector laserTraceEndPosition = vecOrigin + vecDirection * flMaxTraceDistance;
+		trace_t tr;
+		UTIL_TraceLine( laserTraceStartPosition, 
+						laserTraceEndPosition, 
+						MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
+		
+		if( !pBeam[0] )
 		{
-					pBeam[0] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE2, HOVERGREN_WIDTHCREATE );
-					if (pBeam[0])
-			{
-						pBeam[0]->SetWidth( HOVERGREN_WIDTHSTART );
-						pBeam[0]->SetEndWidth( HOVERGREN_WIDTHEND );
-						pBeam[0]->LiveForTime( 1  );
-						pBeam[0]->SetBrightness( 255 );
-						if(hud_hovergren_customColor_enable.GetBool() == true)
-							pBeam[0]->SetColor( hud_hovergren_customColor_r.GetInt(), hud_hovergren_customColor_g.GetInt(), hud_hovergren_customColor_b.GetInt() );						
-						else if(pgrenOwner->GetTeamNumber() == TEAM_RED)
-							pBeam[0]->SetColor( 255, 64, 64 );
-						else if(pgrenOwner->GetTeamNumber() == TEAM_BLUE)
-							pBeam[0]->SetColor( 64, 128, 255 );
-						else if(pgrenOwner->GetTeamNumber() == TEAM_GREEN)
-							pBeam[0]->SetColor( 153, 255, 153 );
-						else if(pgrenOwner->GetTeamNumber() == TEAM_YELLOW)
-							pBeam[0]->SetColor( 255, 178, 0 );
-						else // just in case
-							pBeam[0]->SetColor( 204, 204, 204 ); 
-					}
-				}
-				if (pBeam[0])
-					pBeam[0]->PointsInit( vecOrigin, tr.endpos );
+			Color laserColor = GetTeamColorForLaser(pgrenOwner);
+			CreateNewHoverTurretLaser(laserColor);
+		}
+		if (pBeam[0])
+			pBeam[0]->PointsInit( vecOrigin, tr.endpos );
 
-				if ( tr.fraction == 1.0f )
-					g_pEffects->MetalSparks( tr.endpos, vecDirection );
-				else
-					g_pEffects->MetalSparks( tr.endpos, -vecDirection );
+		if ( tr.fraction == 1.0f )
+			g_pEffects->MetalSparks( tr.endpos, vecDirection );
+		else
+			g_pEffects->MetalSparks( tr.endpos, -vecDirection );
+	}
+		
+	Color CFFGrenadeHoverTurret::GetTeamColorForLaser(CFFPlayer* pgrenOwner) 
+	{
+		if(hud_hovergren_customColor_enable.GetBool() == true)
+			return Color( hud_hovergren_customColor_r.GetInt(), hud_hovergren_customColor_g.GetInt(), hud_hovergren_customColor_b.GetInt() );
 
-			//}
+		if(pgrenOwner->GetTeamNumber() == TEAM_RED)
+			return Color( 255, 64, 64 );
+		if(pgrenOwner->GetTeamNumber() == TEAM_BLUE)
+			return Color( 64, 128, 255 );
+		if(pgrenOwner->GetTeamNumber() == TEAM_GREEN)
+			return Color( 153, 255, 153 );
+		if(pgrenOwner->GetTeamNumber() == TEAM_YELLOW)
+			return Color( 255, 178, 0 );
+
+		return Color( 204, 204, 204 ); 
+	}
+
+	void CFFGrenadeHoverTurret::CreateNewHoverTurretLaser(Color laserColor)
+	{
+		pBeam[0] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE2, HOVERGREN_WIDTHCREATE );
+		if (pBeam[0])
+		{
+			pBeam[0]->SetWidth( HOVERGREN_WIDTHSTART );
+			pBeam[0]->SetEndWidth( HOVERGREN_WIDTHEND );
+			pBeam[0]->LiveForTime( 1  );
+			pBeam[0]->SetBrightness( 255 );
+			pBeam[0]->SetColor( laserColor.r(), laserColor.g(), laserColor.b() );
 				}
 			}
 
 	void CFFGrenadeHoverTurret::UpdateOnRemove( void )
 		{
-		//StopSound("NailGrenade.LaserLoop");
-		//StopSound("NailGrenade.LaserDeploy");
-
 		if( pBeam[0] )
 		{
 			delete pBeam[0];
