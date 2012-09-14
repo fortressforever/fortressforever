@@ -156,23 +156,46 @@ void PrecacheFileWeaponInfoDatabase( IFileSystem *filesystem, const unsigned cha
 
 #if !defined( _XBOX )
 	FileFindHandle_t findHandle;
-	const char *pFilename = filesystem->FindFirstEx( "scripts/weapon_*.txt", IsXbox() ? "XGAME" : "GAME", &findHandle );
-	while ( pFilename != NULL )
+	if (!pICEKey)
 	{
-		char fileBase[512];
-		Q_FileBase( pFilename, fileBase, sizeof(fileBase) );
-		WEAPON_FILE_INFO_HANDLE tmp;
-#ifdef CLIENT_DLL
-		if ( ReadWeaponDataFromFileForSlot( filesystem, fileBase, &tmp, pICEKey ) )
+		const char *pFilename = filesystem->FindFirstEx( "scripts/weapon_*.txt", IsXbox() ? "XGAME" : "GAME", &findHandle );
+		while ( pFilename != NULL )
 		{
-			gWR.LoadWeaponSprites( tmp );
-		}
+			char fileBase[512];
+			Q_FileBase( pFilename, fileBase, sizeof(fileBase) );
+			WEAPON_FILE_INFO_HANDLE tmp;
+#ifdef CLIENT_DLL
+			if ( ReadWeaponDataFromFileForSlot( filesystem, fileBase, &tmp, pICEKey ) )
+			{
+				gWR.LoadWeaponSprites( tmp );
+			}
 #else
-		ReadWeaponDataFromFileForSlot( filesystem, fileBase, &tmp, pICEKey );
+			ReadWeaponDataFromFileForSlot( filesystem, fileBase, &tmp, pICEKey );
 #endif
-		pFilename = filesystem->FindNext( findHandle );
+			pFilename = filesystem->FindNext( findHandle );
+		}
+		filesystem->FindClose( findHandle );
 	}
-	filesystem->FindClose( findHandle );
+	else
+	{
+		const char *pFilename = filesystem->FindFirstEx( "scripts/weapon_*.ctx", IsXbox() ? "XGAME" : "GAME", &findHandle );
+		while ( pFilename != NULL )
+		{
+			char fileBase[512];
+			Q_FileBase( pFilename, fileBase, sizeof(fileBase) );
+			WEAPON_FILE_INFO_HANDLE tmp;
+#ifdef CLIENT_DLL
+			if ( ReadWeaponDataFromFileForSlot( filesystem, fileBase, &tmp, pICEKey ) )
+			{
+				gWR.LoadWeaponSprites( tmp );
+			}
+#else
+			ReadWeaponDataFromFileForSlot( filesystem, fileBase, &tmp, pICEKey );
+#endif
+			pFilename = filesystem->FindNext( findHandle );
+		}
+		filesystem->FindClose( findHandle );
+	}
 #else
 #define WEAPON_SCRIPT_MANIFEST_FILE		"scripts/_weapon_manifest.txt"
 
@@ -221,54 +244,53 @@ KeyValues* ReadEncryptedKVFile( IFileSystem *filesystem, const char *szFilenameW
 	// Open the weapon data file, and abort if we can't
 	KeyValues *pKV = new KeyValues( "WeaponDatafile" );
 
-	Q_snprintf(szFullName,sizeof(szFullName), "%s.txt", szFilenameWithoutExtension);
-
-	if ( !pKV->LoadFromFile( filesystem, szFullName, pSearchPath ) ) // try to load the normal .txt file first
-	{
 #ifndef _XBOX
-		if ( pICEKey )
-		{
-			Q_snprintf(szFullName,sizeof(szFullName), "%s.ctx", szFilenameWithoutExtension); // fall back to the .ctx file
+	Q_snprintf(szFullName,sizeof(szFullName), "%s.ctx", szFilenameWithoutExtension); // try to use the .ctx file
 
-			FileHandle_t f = filesystem->Open( szFullName, "rb", pSearchPath );
+	if ( pICEKey && filesystem->FileExists( szFullName, pSearchPath ) )
+	{
+		FileHandle_t f = filesystem->Open( szFullName, "rb", pSearchPath );
 
-			if (!f)
-			{
-				pKV->deleteThis();
-				return NULL;
-			}
-			// load file into a null-terminated buffer
-			int fileSize = filesystem->Size(f);
-			char *buffer = (char*)MemAllocScratch(fileSize + 1);
-		
-			Assert(buffer);
-		
-			filesystem->Read(buffer, fileSize, f); // read into local buffer
-			buffer[fileSize] = 0; // null terminate file as EOF
-			filesystem->Close( f );	// close file after reading
-
-			UTIL_DecodeICE( (unsigned char*)buffer, fileSize, pICEKey );
-
-			bool retOK = pKV->LoadFromBuffer( szFullName, buffer, filesystem );
-
-			MemFreeScratch();
-
-			if ( !retOK )
-			{
-				pKV->deleteThis();
-				return NULL;
-			}
-		}
-		else
+		if (!f)
 		{
 			pKV->deleteThis();
 			return NULL;
 		}
-#else
-		pKV->deleteThis();
-		return NULL;
-#endif
+		// load file into a null-terminated buffer
+		int fileSize = filesystem->Size(f);
+		char *buffer = (char*)MemAllocScratch(fileSize + 1);
+	
+		Assert(buffer);
+	
+		filesystem->Read(buffer, fileSize, f); // read into local buffer
+		buffer[fileSize] = 0; // null terminate file as EOF
+		filesystem->Close( f );	// close file after reading
+
+		UTIL_DecodeICE( (unsigned char*)buffer, fileSize, pICEKey );
+
+		bool retOK = pKV->LoadFromBuffer( szFullName, buffer, filesystem );
+
+		MemFreeScratch();
+
+		if ( !retOK )
+		{
+			pKV->deleteThis();
+			return NULL;
+		}
 	}
+	else
+	{
+#endif
+		Q_snprintf(szFullName,sizeof(szFullName), "%s.txt", szFilenameWithoutExtension);
+
+		if ( !pKV->LoadFromFile( filesystem, szFullName, pSearchPath ) ) // try to load the normal .txt
+		{
+			pKV->deleteThis();
+			return NULL;
+		}
+#ifndef _XBOX
+	}
+#endif
 
 	return pKV;
 }
