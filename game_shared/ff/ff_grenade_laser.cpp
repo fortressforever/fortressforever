@@ -282,7 +282,7 @@ float CFFGrenadeLaser::getLengthPercent()
 
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);
-		SetCollisionGroup(COLLISION_GROUP_NONE);
+		//SetCollisionGroup(COLLISION_GROUP_NONE);
 	
 		m_bIsOn = true;
 		SetThink(&CFFGrenadeLaser::BeamEmit);
