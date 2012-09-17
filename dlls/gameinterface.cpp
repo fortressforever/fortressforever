@@ -1613,20 +1613,21 @@ void CServerGameDLL::LoadMessageOfTheDay()
 	if ( length <= 0 || length >= (sizeof(data)-1) )
 	{
 		DevMsg("Invalid file size for %s\n", motdfile.GetString() );
-		return;
 	}
+	else
+	{
+		FileHandle_t hFile = filesystem->Open( motdfile.GetString(), "rb", "GAME" );
 
-	FileHandle_t hFile = filesystem->Open( motdfile.GetString(), "rb", "GAME" );
+		if ( hFile != FILESYSTEM_INVALID_HANDLE )
+		{
+			filesystem->Read( data, length, hFile );
+			filesystem->Close( hFile );
 
-	if ( hFile == FILESYSTEM_INVALID_HANDLE )
-		return;
+			data[length] = 0;
 
-	filesystem->Read( data, length, hFile );
-	filesystem->Close( hFile );
-
-	data[length] = 0;
-
-	g_pStringTableInfoPanel->AddString( "motd", length+1, data );
+			g_pStringTableInfoPanel->AddString( "motd", length+1, data );
+		}
+	}
 	
 	// add host.txt
 	length = filesystem->Size( hostfile.GetString(), "GAME" );
@@ -1634,20 +1635,21 @@ void CServerGameDLL::LoadMessageOfTheDay()
 	if ( length <= 0 || length >= (sizeof(data)-1) )
 	{
 		DevMsg("Invalid file size for %s\n", hostfile.GetString() );
-		return;
 	}
+	else
+	{
+		hFile = filesystem->Open( hostfile.GetString(), "rb", "GAME" );
 
-	hFile = filesystem->Open( hostfile.GetString(), "rb", "GAME" );
+		if ( hFile != FILESYSTEM_INVALID_HANDLE )
+		{
+			filesystem->Read( data, length, hFile );
+			filesystem->Close( hFile );
 
-	if ( hFile == FILESYSTEM_INVALID_HANDLE )
-		return;
-
-	filesystem->Read( data, length, hFile );
-	filesystem->Close( hFile );
-
-	data[length] = 0;
-	
-	g_pStringTableInfoPanel->AddString( "host", length+1, data );
+			data[length] = 0;
+			
+			g_pStringTableInfoPanel->AddString( "host", length+1, data );
+		}
+	}
 #endif
 }
 
