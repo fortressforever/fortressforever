@@ -368,21 +368,20 @@ ConVar mp_prematch( "mp_prematch",
 
 		if( FFGameRules()->HasGameStarted() )
 		{
+			// reset HasGameStarted to false witout restarting the round
 			FFGameRules()->Precache();
 		}
 		float flElapsedTime = ( gpGlobals->curtime - FFGameRules()->GetRoundStart() );
-		if( engine->Cmd_Argc() > 1 )
-		{
-			float flTargetTime = atof( engine->Cmd_Argv( 1 ) );
+		float flTargetTime = (engine->Cmd_Argc() > 1) ? atof( engine->Cmd_Argv( 1 ) ) : 15.0f;
 
-			// TODO: Check flTime a number?
-			mp_prematch.SetValue( (flTargetTime + flElapsedTime) / 60.0f );
-		}
-		else
-		{
-			// Default 15 seconds
-			mp_prematch.SetValue( (15.0f + flElapsedTime) / 60.0f );
-		}
+		if (flTargetTime < 0)
+			flTargetTime = 0;
+
+		// TODO: Check flTime a number?
+		mp_prematch.SetValue( (flTargetTime + flElapsedTime) / 60.0f );
+
+		// announce what happened
+		UTIL_SayTextAll( UTIL_VarArgs( "Prematch has been set to end in %d seconds\n", (int)flTargetTime ) );
 	}
 	static ConCommand ff_setprematch( "ff_setprematch", CC_FF_SetPrematch, "Sets premtach so that the given time remains before it ends." );
 
