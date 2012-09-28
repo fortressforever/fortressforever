@@ -349,6 +349,42 @@ ConVar mp_prematch( "mp_prematch",
 		}
 	}
 	static ConCommand ff_restartround( "ff_restartround", CC_FF_RestartRound, "Restarts the round in progress." );
+	
+	// --------------------------------------------------------------------------------
+	// Purpose: Sets prematch so that the given time remains
+	// --------------------------------------------------------------------------------
+	void CC_FF_SetPrematch( void )
+	{
+		if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		{
+			Msg( "You must be a server admin to use ff_restartround\n" );
+			return;
+		}
+		if (!FFGameRules())
+		{
+			Warning( "Gamerules error!\n" );
+			return;
+		}
+
+		if( FFGameRules()->HasGameStarted() )
+		{
+			FFGameRules()->Precache();
+		}
+		float flElapsedTime = ( gpGlobals->curtime - FFGameRules()->GetRoundStart() );
+		if( engine->Cmd_Argc() > 1 )
+		{
+			float flTargetTime = atof( engine->Cmd_Argv( 1 ) );
+
+			// TODO: Check flTime a number?
+			mp_prematch.SetValue( (flTargetTime + flElapsedTime) / 60.0f );
+		}
+		else
+		{
+			// Default 15 seconds
+			mp_prematch.SetValue( (15.0f + flElapsedTime) / 60.0f );
+		}
+	}
+	static ConCommand ff_setprematch( "ff_setprematch", CC_FF_SetPrematch, "Sets premtach so that the given time remains before it ends." );
 
 	// --> Mirv: Extra gamerules stuff
 	CFFGameRules::CFFGameRules()
