@@ -24,8 +24,14 @@
 	#include "ff_player.h"
 #endif
 
-//ConVar rpg_damage_radius( "ffdev_rpg_damage_radius", "108", FCVAR_FF_FFDEV_REPLICATED, "RPG explosion radius" );
-#define RPG_DAMAGERADIUS 108.0f //rpg_damage_radius.GetFloat()
+//ConVar rpg_damage_radius( "ffdev_rpg_damage_radius", "100", FCVAR_FF_FFDEV_REPLICATED, "RPG explosion radius" );
+#define RPG_DAMAGERADIUS 100.0f //rpg_damage_radius.GetFloat()
+
+//ConVar rpg_speed( "ffdev_rpg_speed", "1000", FCVAR_REPLICATED, "RPG explosion radius" );
+#define RPG_SPEED 1000 //rpg_speed.GetFloat()
+
+//ConVar rpg_spawnpos_forward( "ffdev_rpg_spawnpos_forward", "16", FCVAR_REPLICATED, "RPG spawn position in the forward direction" );
+#define RPG_SPAWNPOS_FORWARD 16.0f //rpg_spawnpos_forward.GetFloat()
 
 //=============================================================================
 // CFFWeaponRPG
@@ -89,7 +95,7 @@ void CFFWeaponRPG::Fire()
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 
 	//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
-	Vector vecSrc = pPlayer->GetAbsOrigin() + vForward * 16.0f + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
+	Vector vecSrc = pPlayer->GetAbsOrigin() + vForward * RPG_SPAWNPOS_FORWARD + vRight * 8.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
 
 	CFFProjectileRocket *pRocket = CFFProjectileRocket::CreateRocket(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, RPG_DAMAGERADIUS/*pWeaponInfo.m_iDamageRadius*/, pWeaponInfo.m_iSpeed);
 	pRocket;
