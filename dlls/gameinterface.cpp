@@ -1638,7 +1638,7 @@ void CServerGameDLL::LoadMessageOfTheDay()
 	}
 	else
 	{
-		hFile = filesystem->Open( hostfile.GetString(), "rb", "GAME" );
+		FileHandle_t hFile = filesystem->Open( hostfile.GetString(), "rb", "GAME" );
 
 		if ( hFile != FILESYSTEM_INVALID_HANDLE )
 		{
