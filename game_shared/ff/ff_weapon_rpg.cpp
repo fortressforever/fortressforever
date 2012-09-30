@@ -30,8 +30,8 @@
 //ConVar rpg_speed( "ffdev_rpg_speed", "1000", FCVAR_REPLICATED, "RPG explosion radius" );
 #define RPG_SPEED 1000 //rpg_speed.GetFloat()
 
-//ConVar rpg_spawnpos_forward( "ffdev_rpg_spawnpos_forward", "16", FCVAR_REPLICATED, "RPG spawn position in the forward direction" );
-#define RPG_SPAWNPOS_FORWARD 16.0f //rpg_spawnpos_forward.GetFloat()
+//ConVar rpg_spawnpos_forward( "ffdev_rpg_spawnpos_forward", "0", FCVAR_REPLICATED, "RPG spawn position in the forward direction" );
+#define RPG_SPAWNPOS_FORWARD 0.0f //rpg_spawnpos_forward.GetFloat()
 
 //=============================================================================
 // CFFWeaponRPG
