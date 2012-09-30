@@ -79,7 +79,7 @@ ConVar ffdev_overpressure_selfpush_vertical( "ffdev_overpressure_selfpush_vertic
 ConVar ffdev_overpressure_push_horizontal( "ffdev_overpressure_push_horizontal", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 // for release code: need to update ff_hud_overpressure.cpp #define 
-ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "16", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "13", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "1", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
 ConVar ffdev_overpressure_speed_percent( "ffdev_overpressure_speed_percent", "1.5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
