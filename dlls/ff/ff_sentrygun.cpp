@@ -61,7 +61,7 @@
 #define SG_BULLETPUSH 7.0f //ffdev_sg_bulletpush.GetFloat() // 7.0f
 // Jiggles: NOT a cheat for now so the betas can test it, but make it a cheat before release!!!
 //ConVar ffdev_sg_groundpush_multiplier_lvl1("ffdev_sg_groundpush_multiplier_lvl1", "8.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 1 ground bullet push multiplier");
-#define SG_GROUNDPUSH_MULTIPLIER_LVL1 8.0f //ffdev_sg_groundpush_multiplier_lvl1.GetFloat() // 7.0f
+#define SG_GROUNDPUSH_MULTIPLIER_LVL1 7.0f //ffdev_sg_groundpush_multiplier_lvl1.GetFloat() // 7.0f
 //ConVar ffdev_sg_groundpush_multiplier_lvl2("ffdev_sg_groundpush_multiplier_lvl2", "7.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 2 ground bullet push multiplier");
 #define SG_GROUNDPUSH_MULTIPLIER_LVL2 7.0f //ffdev_sg_groundpush_multiplier_lvl2.GetFloat() // SG_GROUNDPUSH_MULTIPLIER_LVL1
 //ConVar ffdev_sg_groundpush_multiplier_lvl3("ffdev_sg_groundpush_multiplier_lvl3", "7.0", FCVAR_FF_FFDEV_REPLICATED, "SG level 3 ground bullet push multiplier");
