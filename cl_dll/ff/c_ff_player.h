@@ -592,15 +592,6 @@ private:
 	CNetworkHandle( C_FFGrenadeBase, m_hActiveSlowfield );
 	// ----------------------------------
 
-	// jetpack stuff
-public:
-	void Jetpack ( void );
-	void JetpackEnd ( void );
-	void JetpackThink ( void );
-	//bool m_bJetpackIsActive;
-	//int m_iJetpackTickCount;
-	//CNetworkHandle( C_FFFlameJet, m_hFlameJet );
-
 private:
 	C_FFPlayer( const C_FFPlayer & );
 

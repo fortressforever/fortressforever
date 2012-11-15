@@ -26,7 +26,6 @@
 #include "ff_modelglyph.h"
 #include "in_buttons.h"
 #include "ff_radiotagdata.h"
-#include "ff_env_jetpackflame.h"
 
 class CFFBuildableObject;
 class CFFDetpack;
@@ -737,15 +736,6 @@ public:
 	void OverpressureThink( void );
 	float m_flOverpressureTime;
 	Vector m_vecOverpressurePosition;
-
-public:
-	// jetpack mode stuff
-	void Jetpack( void );
-	void JetpackEnd( void );
-	void JetpackThink( void );
-	void JetpackSetFlame ( bool bEmitting );
-	int m_iJetpackTickCount;
-	CNetworkHandle( CFFJetpackFlame, m_hJetpackFlame );
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)

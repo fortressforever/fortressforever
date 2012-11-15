@@ -4474,14 +4474,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff_env_jetpackflame.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ff_env_jetpackflame.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ff\ff_env_message.cpp"
 				>
 			</File>
