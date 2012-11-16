@@ -64,11 +64,11 @@
 #endif
 
 #ifdef GAME_DLL
-	ConVar laserdamage("ffdev_lasergren_damage", "45", FCVAR_FF_FFDEV, "Damage of laser");
-	#define LASERGREN_DAMAGE laserdamage.GetFloat()
-	#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
-	ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "0.53", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
-	#define LASERGREN_DAMAGE_BUILDABLEMULT laserdamage_buildablemult.GetFloat() //0.53f
+	//ConVar laserdamage("ffdev_lasergren_damage", "45", FCVAR_FF_FFDEV, "Damage of laser");
+	#define LASERGREN_DAMAGE 45 //laserdamage.GetFloat()
+	//#define LASERGREN_DAMAGE_PER_TICK laserdamage.GetFloat()*gpGlobals->interval_per_tick
+	//ConVar laserdamage_buildablemult("ffdev_lasergren_damage_buildablemult", "0.53", FCVAR_FF_FFDEV, "Damage multiplier of laser against buildables");
+	#define LASERGREN_DAMAGE_BUILDABLEMULT 0.53f //laserdamage_buildablemult.GetFloat() //0.53f
 	//ConVar laserangv("ffdev_lasergren_angv", "120", FCVAR_FF_FFDEV, "Laser angular increment");
 	#define LASERGREN_ROTATION_PER_TICK 120.0f*gpGlobals->interval_per_tick
 	//ConVar laserjump( "ffdev_lasergren_jump", "80", FCVAR_FF_FFDEV, "Laser grenade jump distance" );
@@ -89,8 +89,8 @@
 	#define LASERGREN_EXPLOSIONDAMAGE 90.0f
 	//ConVar explosionradius("ffdev_lasergren_explosionradius", "180", FCVAR_FF_FFDEV, "Explosion radius at end of active period" );
 	#define LASERGREN_EXPLOSIONRADIUS 180.0f
-	ConVar ffdev_lasergren_hitdelay("ffdev_lasergren_hitdelay", "0.15", FCVAR_FF_FFDEV, "Delay between ticks of damage");
-	#define LASERGREN_HITDELAY ffdev_lasergren_hitdelay.GetFloat()
+	//ConVar ffdev_lasergren_hitdelay("ffdev_lasergren_hitdelay", "0.15", FCVAR_FF_FFDEV, "Delay between ticks of damage");
+	#define LASERGREN_HITDELAY 0.15f //ffdev_lasergren_hitdelay.GetFloat()
 #endif
 
 class CFFGrenadeLaser : public CFFGrenadeBase
@@ -482,25 +482,25 @@ float CFFGrenadeLaser::getLengthPercent()
 					if (!pPlayerTarget)
 						return;
 					
-					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK, DMG_ENERGYBEAM ) );
+					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE, DMG_ENERGYBEAM ) );
 				}
 				else if( FF_IsDispenser( pTarget ) )
 				{
 					CFFDispenser *pDispenser = FF_ToDispenser( pTarget );
 					if( pDispenser )
-						pDispenser->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
+						pDispenser->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
 				}
 				else if( FF_IsSentrygun( pTarget ) )
 				{
 					CFFSentryGun *pSentrygun = FF_ToSentrygun( pTarget );
 					if( pSentrygun )
-						pSentrygun->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
+						pSentrygun->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
 				}
 				else /*if( FF_IsManCannon( pTarget ) )*/
 				{
 					CFFManCannon *pManCannon = FF_ToManCannon( pTarget );
 					if( pManCannon )
-						pManCannon->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE_PER_TICK * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
+						pManCannon->TakeDamage( CTakeDamageInfo( this, ToFFPlayer( GetOwnerEntity() ), LASERGREN_DAMAGE * LASERGREN_DAMAGE_BUILDABLEMULT, DMG_ENERGYBEAM ) );
 				}
 			}
 		}
