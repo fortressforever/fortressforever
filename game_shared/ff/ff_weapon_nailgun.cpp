@@ -13,7 +13,7 @@
 
 
 #include "cbase.h"
-#include "ff_weapon_baseclip.h"
+#include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
 #include "ff_projectile_nail.h"
 
@@ -29,10 +29,10 @@
 // CFFWeaponNailgun
 //=============================================================================
 
-class CFFWeaponNailgun : public CFFWeaponBaseClip
+class CFFWeaponNailgun : public CFFWeaponBase
 {
 public:
-	DECLARE_CLASS(CFFWeaponNailgun, CFFWeaponBaseClip);
+	DECLARE_CLASS(CFFWeaponNailgun, CFFWeaponBase);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
