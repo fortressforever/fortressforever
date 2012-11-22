@@ -530,6 +530,10 @@ ConVar mp_prematch( "mp_prematch",
 		// Special stuff for beta!
 		g_FFBetaList.Shutdown();
 #endif
+		
+		// Let lua run levelshutdown if it wants to
+		CFFLuaSC hShutdown;
+		_scriptman.RunPredicates_LUA(NULL, &hShutdown, "shutdown");
 
 		BaseClass::LevelShutdown();
 	}
