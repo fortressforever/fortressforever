@@ -81,8 +81,8 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 //ConVar ffdev_overpressure_push_vertical( "ffdev_overpressure_push_vertical", "350", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_PUSH_VERTICAL 350.0f
 // for release code: need to update ff_hud_overpressure.cpp #define 
-//ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "13", FCVAR_FF_FFDEV_REPLICATED );
-#define OVERPRESSURE_DELAY 13
+//ConVar ffdev_overpressure_delay( "ffdev_overpressure_delay", "16", FCVAR_FF_FFDEV_REPLICATED );
+#define OVERPRESSURE_DELAY 16
 //ConVar ffdev_overpressure_radius( "ffdev_overpressure_radius", "128", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_RADIUS 128
 //ConVar ffdev_overpressure_groundpush_multiplier( "ffdev_overpressure_groundpush_multiplier", "1", FCVAR_FF_FFDEV_REPLICATED );
