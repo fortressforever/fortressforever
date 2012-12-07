@@ -279,7 +279,7 @@ void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *psz
 	}
 
 	pImagePanel->SetImage(pszSource);
-	pImagePanel->MoveToFront();
+	//pImagePanel->MoveToFront();
 	pImagePanel->SetVisible(true);
 }
 
@@ -377,7 +377,7 @@ void CHudLua::HudBox(const char *pszIdentifier, int iX, int iY, int iWidth, int 
 	pLabel->SetPaintBackgroundEnabled(true);
 	pLabel->SetPaintEnabled( true );
 
-	pLabel->MoveToFront();
+	//pLabel->MoveToFront();
 	pLabel->SetVisible(true);
 }
 
@@ -472,7 +472,7 @@ void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *psz
 
 	pLabel->SetPos( iProperXPosition, iProperYPosition );
 
-	pLabel->MoveToFront();
+	//pLabel->MoveToFront();
 	pLabel->SetVisible(true);
 }
 
@@ -631,7 +631,7 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 	// Now set this label up
 	pTimer->SetPos( iProperXPosition, iProperYPosition );
 
-	pTimer->MoveToFront();
+	//pTimer->MoveToFront();
 	pTimer->SetVisible(true);
 }
 
