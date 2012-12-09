@@ -5929,14 +5929,17 @@ void CFFPlayer::UnConcuss( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::Concuss(float flDuration, float flIconDuration, const QAngle *viewjerk, float flDistance)
 {
-	m_bConcussed = true; //ELMO
-
+	// dexter: note Concuss will now be called on specs! network conc time for specs, also apply the status icon
 	if( flDuration == -1 )
 		m_flConcTime = flDuration;
 	else
 		m_flConcTime = gpGlobals->curtime + flDuration;
 
-    // Send the status icon here... makes sense.
+	// dont do the effect on specs
+	if ( !IsObserver() )
+		m_bConcussed = true; //ELMO
+
+	// Send the status icon here... makes sense.
 	// send the concussion icon to be displayed
 
 	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
@@ -5945,7 +5948,8 @@ void CFFPlayer::Concuss(float flDuration, float flIconDuration, const QAngle *vi
 	UserMessageBegin( user, "StatusIconUpdate" );
 		WRITE_BYTE( FF_STATUSICON_CONCUSSION );
 		WRITE_FLOAT( flIconDuration );
-	MessageEnd();
+	MessageEnd();		
+	
 
 	if (viewjerk)
 	{

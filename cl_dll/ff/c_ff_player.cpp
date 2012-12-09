@@ -2632,7 +2632,8 @@ void C_FFPlayer::Simulate()
 		if( m_flConcTime > 0 )
 			flConcAmount *= (m_flConcTime - gpGlobals->curtime) / flLength;
 
-		if (IsAlive())
+		// dexter - draw the conc effect for specs who are in eye view and concd as well
+		if ( IsAlive() || ( IsObserver() && GetObserverMode() == OBS_MODE_IN_EYE ) )
 		{
 			// Our conc angles, this is also quite slow for now
 			m_angConced = QAngle( flConcAmount * CONC_VERT_MAG * sin(CONC_VERT_SPEED * gpGlobals->curtime), flConcAmount * CONC_HORIZ_MAG * sin(CONC_HORIZ_SPEED * gpGlobals->curtime), 0 );

@@ -2599,6 +2599,28 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 		JumptoPosition( tr.endpos, target->EyeAngles() );
 	}
 	
+	// Dexter: always set our conc time to new observer. 
+	// reason is, if we switch obs mode from in eye or to a new target
+	// update conc status appropriately (remove/update).
+	// (should set conc status icon here too? not sure its worth the effort)
+	
+	CFFPlayer *pFFSelf = ToFFPlayer( this );
+	if ( pFFSelf )
+	{
+		if ( m_iObserverMode == OBS_MODE_IN_EYE )
+		{
+			// we are still in eye, so update conc status to match this dude
+			CFFPlayer *pFFNewSpecTarget = ToFFPlayer( target );
+			if ( pFFNewSpecTarget )			
+				pFFSelf->m_flConcTime = pFFNewSpecTarget->m_flConcTime;
+		}
+		else 
+		{
+			// clear conc time if we went to roaming etc
+			pFFSelf->UnConcuss();			
+		}
+	}
+
 	return true;
 }
 
