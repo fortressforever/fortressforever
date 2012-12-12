@@ -2602,7 +2602,6 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 	// Dexter: always set our conc time to new observer. 
 	// reason is, if we switch obs mode from in eye or to a new target
 	// update conc status appropriately (remove/update).
-	// (should set conc status icon here too? not sure its worth the effort)
 	
 	CFFPlayer *pFFSelf = ToFFPlayer( this );
 	if ( pFFSelf )
@@ -2611,8 +2610,21 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 		{
 			// we are still in eye, so update conc status to match this dude
 			CFFPlayer *pFFNewSpecTarget = ToFFPlayer( target );
-			if ( pFFNewSpecTarget )			
+			if ( pFFNewSpecTarget )
+			{
 				pFFSelf->m_flConcTime = pFFNewSpecTarget->m_flConcTime;
+				if ( pFFSelf->m_flConcTime )
+				{
+					// if we still have conc time update the icon for remaining time
+					CSingleUserRecipientFilter user( this );
+					user.MakeReliable();
+
+					UserMessageBegin( user, "StatusIconUpdate" );
+						WRITE_BYTE( FF_STATUSICON_CONCUSSION );
+						WRITE_FLOAT( pFFSelf->m_flConcTime );
+					MessageEnd();	
+				}
+			}
 		}
 		else 
 		{
