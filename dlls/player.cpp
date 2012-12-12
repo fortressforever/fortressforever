@@ -2613,24 +2613,18 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 			if ( pFFNewSpecTarget )
 			{
 				pFFSelf->m_flConcTime = pFFNewSpecTarget->m_flConcTime;
-				float timeRemaining = pFFSelf->m_flConcTime - gpGlobals->curtime;
-				if ( timeRemaining )
-				{
-					// if we still have conc time update the icon for remaining time
-					CSingleUserRecipientFilter user( this );
-					user.MakeReliable();
-
-					UserMessageBegin( user, "StatusIconUpdate" );
-						WRITE_BYTE( FF_STATUSICON_CONCUSSION );
-						WRITE_FLOAT( timeRemaining );
-					MessageEnd();	
-				}
+				float timeRemaining = pFFNewSpecTarget->m_flConcTime - gpGlobals->curtime;
+				
+				if ( timeRemaining > gpGlobals->curtime || timeRemaining == -1 )
+					pFFSelf->Concuss( timeRemaining, timeRemaining );
+				else 
+					pFFSelf->UnConcuss( ); // be sure to clear concussion icon
 			}
 		}
 		else 
 		{
 			// clear conc time if we went to roaming etc
-			pFFSelf->UnConcuss();			
+			pFFSelf->UnConcuss();
 		}
 	}
 
