@@ -56,7 +56,7 @@ public:
 
 		m_vecCrossHairOffsetAngle.Init();
 
-		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR );
+		SetHiddenBits( HIDEHUD_CROSSHAIR );
 	}
 
 	void			SetCrosshairAngle( const QAngle& angle );
