@@ -394,9 +394,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hLastMapGuide ) ),
 	SendPropFloat( SENDINFO( m_flNextMapGuideTime ) ),
 
-	SendPropFloat(SENDINFO(m_flConcTime)),
 	SendPropFloat(SENDINFO(m_flSlidingTime)),
-
 	SendPropFloat(SENDINFO(m_flSpeedModifier)),
 
 	SendPropInt( SENDINFO( m_iSpyDisguising ), 4 ),
@@ -441,6 +439,8 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iSpyDisguise ), 8, SPROP_UNSIGNED ),   // AfterShock: this only uses the last 2 hex digits, bits 1-4 for team, 5-8 for class
 
 	SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
+	
+	SendPropFloat(SENDINFO(m_flConcTime)),
 
 	SendPropBool( SENDINFO( m_bSaveMe ) ),
 	SendPropBool( SENDINFO( m_bEngyMe ) ),
