@@ -2613,7 +2613,7 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 			if ( pFFNewSpecTarget )
 			{
 				pFFSelf->m_flConcTime = pFFNewSpecTarget->m_flConcTime;
-				float timeRemaining =  pFFNewSpecTarget->m_flConcTime == -1 ? -1 : pFFNewSpecTarget->m_flConcTime - gpGlobals->curtime;
+				float timeRemaining =  pFFNewSpecTarget->m_flConcTime == -1 ? -1 : (pFFNewSpecTarget->m_flConcTime > gpGlobals->curtime ? pFFNewSpecTarget->m_flConcTime - gpGlobals->curtime : 0);
 
 				if ( timeRemaining > 0 || timeRemaining == -1 )
 					pFFSelf->Concuss( timeRemaining, timeRemaining );
