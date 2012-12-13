@@ -1141,21 +1141,25 @@ void CHLClient::LevelInitPostEntity( )
 	C_PhysPropClientside::RecreateAll();
 	internalCenterPrint->Clear();
 
-	// BEG: Added by Mulchman for team menu
-	// Show the team menu selection every time we start a level
-	gViewPortInterface->ShowPanel( PANEL_TEAM, true );
-
-	// Show the class menu selection every time we start a level
-	//gViewPortInterface->ShowPanel( PANEL_CLASS, true );
-
-	if (sv_motd_enable.GetBool())
-		gViewPortInterface->ShowPanel( PANEL_INFO, true );
-	// Pop the info panel back up above the team change menu
-	// --> Mirv: Don't show this panel anymore
-	//IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
-	//if( pPanel )
-	//   pPanel->ShowPanel( true );
-	// <-- Mirv
+	if (!engine->IsHLTV())
+	{
+		// BEG: Added by Mulchman for team menu
+		// Show the team menu selection every time we start a level
+		gViewPortInterface->ShowPanel( PANEL_TEAM, true );
+	}
+		// Show the class menu selection every time we start a level
+		//gViewPortInterface->ShowPanel( PANEL_CLASS, true );
+	if (!engine->IsHLTV() || (engine->IsHLTV() && !engine->IsPlayingDemo()))
+	{
+		if (sv_motd_enable.GetBool())
+			gViewPortInterface->ShowPanel( PANEL_INFO, true );
+		// Pop the info panel back up above the team change menu
+		// --> Mirv: Don't show this panel anymore
+		//IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
+		//if( pPanel )
+		//   pPanel->ShowPanel( true );
+		// <-- Mirv
+	}
 }
 
 
