@@ -1205,7 +1205,7 @@ void CBaseEntity::TakeDamage( const CTakeDamageInfo &inputInfo )
 		return;
 	}
 
-	if( !g_pGameRules->AllowDamage(this, inputInfo) )
+	if( g_pGameRules && !g_pGameRules->AllowDamage(this, inputInfo) )
 	{
 		return;
 	}
