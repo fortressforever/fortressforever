@@ -1786,8 +1786,8 @@ void C_FFPlayer::DrawPlayerIcons()
 
 	C_FFPlayer *pPlayer = GetLocalFFPlayer();
 
-	// if we're specing in first person, don't draw
-	if (pPlayer->IsObserver() && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+	// if we're specing this player in first person, don't draw their icons
+	if (pPlayer->IsObserver() && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pPlayer->GetObserverTarget() == this)
 		return;
 
 	float flOffset = 0.0f;
