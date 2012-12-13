@@ -1780,23 +1780,22 @@ RenderGroup_t C_FFPlayer::GetRenderGroup()
 //-----------------------------------------------------------------------------
 void C_FFPlayer::DrawPlayerIcons()
 {
-	// No point putting these on self even in 3rd person mode
-	if (IsLocalPlayer() && !ShouldDraw())
+	// ShouldDraw will handle being dead, being in third person, etc
+	if (!ShouldDraw())
 		return;
 
 	C_FFPlayer *pPlayer = GetLocalFFPlayer();
 
-	// Don't show if observing either
-	// Mulch: Or dead
-	if (pPlayer->IsObserver() || !pPlayer->IsAlive())
+	// if we're specing in first person, don't draw
+	if (pPlayer->IsObserver() && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
 		return;
 
 	float flOffset = 0.0f;
 
 	// --------------------------------
-	// Check for team mate
+	// Check for team mate, never drawn for self or observers
 	// --------------------------------
-	if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
+	if( !IsLocalPlayer() && !pPlayer->IsObserver() && FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
 	{
 		// The guy's deemed a teammate, but if he's cloaked and an enemy we don't want to show him
 
