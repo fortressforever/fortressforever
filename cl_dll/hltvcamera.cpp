@@ -442,10 +442,20 @@ void C_HLTVCamera::SetMode(int iMode)
     Assert( iMode > OBS_MODE_NONE && iMode <= OBS_MODE_ROAMING );
 
 	m_nCameraMode = iMode;
+	
+	// update spectator name when you change mode
+	IViewPortPanel *spectator = gViewPortInterface->FindPanelByName( PANEL_SPECGUI );
+	if ( spectator && spectator->IsVisible() )
+	{
+		spectator->Update();
+	}
 }
 
 void C_HLTVCamera::SetPrimaryTarget( int nEntity ) 
 {
+	if (!IsValidObserverTarget( nEntity ))
+		return;
+
  	if ( m_iTraget1 == nEntity )
 		return;
 
@@ -474,6 +484,48 @@ void C_HLTVCamera::SetPrimaryTarget( int nEntity )
 
 	m_flLastDistance = m_flDistance;
 	m_flLastAngleUpdateTime = -1;
+	
+	// update spectator name when you change target
+	IViewPortPanel *spectator = gViewPortInterface->FindPanelByName( PANEL_SPECGUI );
+	if ( spectator && spectator->IsVisible() )
+	{
+		spectator->Update();
+	}
+}
+
+bool C_HLTVCamera::IsValidObserverTarget( int nEntity )
+{
+	if ( nEntity <= 0 || nEntity > gpGlobals->maxClients )
+		return false;
+
+	C_BasePlayer *pPlayer =	UTIL_PlayerByIndex( nEntity );
+
+	if ( !pPlayer )
+		return false;
+
+	// only follow living players 
+	if ( pPlayer->IsObserver() )
+		return false;
+
+	/* Don't spec observers or players who haven't picked a class yet
+ 	if ( player->IsObserver() )
+		return false;	*/
+
+	if( pPlayer == C_BasePlayer::GetLocalPlayer() )
+		return false; // We can't observe ourselves.
+
+	// gibbed players have EF_NODRAW effect active, so make an exception for LIFE_DEAD players
+	if ( pPlayer->m_lifeState != LIFE_DEAD && pPlayer->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
+		return false;
+
+	// 0001670: Player you are spectating changes when they die
+	// Commenting out the death check as dead players are actually valid targets (since they respawn almost instantly anyway...)
+	// Might want to alter this to be controllable by lua in future as certain game types may not allow respawning  -> Defrag
+	
+	//if ( player->m_lifeState == LIFE_RESPAWNABLE ) // target is dead, waiting for respawn
+	//	return false;
+	
+	return true;	// passed all test
 }
 
 void C_HLTVCamera::SpecNextPlayer( bool bInverse )
@@ -502,13 +554,7 @@ void C_HLTVCamera::SpecNextPlayer( bool bInverse )
 		if ( index == start )
 			break; // couldn't find a new valid player
 
-		C_BasePlayer *pPlayer =	UTIL_PlayerByIndex( index );
-
-		if ( !pPlayer )
-			continue;
-
-		// only follow living players 
-		if ( pPlayer->IsObserver() )
+		if (!IsValidObserverTarget( index ))
 			continue;
 
 		break; // found a new player
