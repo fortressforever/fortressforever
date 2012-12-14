@@ -79,6 +79,21 @@ int GetLocalPlayerIndex( void )
 		return  0;	// game not started yet
 }
 
+int GetLocalPlayerOrObserverTargetIndex( void )
+{
+	C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
+
+	if ( player )
+	{
+		if (player->IsObserver() && player->GetObserverMode() == OBS_MODE_IN_EYE)
+			return GetSpectatorTarget();
+		else
+			return player->entindex();
+	}
+	else
+		return  0;	// game not started yet
+}
+
 bool IsLocalPlayerSpectator( void )
 {
 	C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
