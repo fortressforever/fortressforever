@@ -21,6 +21,7 @@
 #include "fx_explosion.h"
 #include "tempent.h"
 #include "materialsystem/imaterialsystemhardwareconfig.h"
+#include "c_ff_player.h"
 
 #define FF_SLOWFIELD_MATERIAL "effects/slowfield"
 #define FF_SLOWFIELD_MATERIAL_BLUE "effects/slowfield_blue"
@@ -129,23 +130,14 @@ void C_SlowfieldEffect::ClientThink( void )
 		return;
 	}
 	
-	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+	C_BasePlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 
 	if (!pPlayer)
 		return;
 
-	C_BasePlayer *pActivePlayer = pPlayer;
-
-	// if we're speccing someone, then treat them as the player
-	if ((pPlayer->IsObserver() && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE))
-		pActivePlayer = ToBasePlayer(pPlayer->GetObserverTarget());
-
-	if (!pActivePlayer)	
-		return;
-
 	// We need to keep the correct part of the shader oriented towards the player
 	// The bit we want is on the top, so rotate around x axis by 90
-	Vector vecDir = GetAbsOrigin() - pActivePlayer->EyePosition();
+	Vector vecDir = GetAbsOrigin() - pPlayer->EyePosition();
 
 	QAngle angFace;
 	VectorAngles(vecDir, angFace);

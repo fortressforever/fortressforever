@@ -147,16 +147,7 @@ void CHudCrosshair::Paint( void )
 	if ( !IsCurrentViewAccessAllowed() )
 		return;
 
-	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
-
-	if (!pPlayer)
-		return;
-
-	C_FFPlayer *pActivePlayer = pPlayer;
-
-	// if we're speccing someone, then treat them as the player
-	if (pPlayer->IsObserver() && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
-		pActivePlayer = ToFFPlayer(pPlayer->GetObserverTarget());
+	C_FFPlayer *pActivePlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 
 	if (!pActivePlayer)	
 		return;
