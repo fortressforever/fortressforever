@@ -421,7 +421,7 @@ public:
 	void ClassSpecificSkill_Post();
 	// <-- Mirv: Hold some class info on the player side
 
-	float m_flNextClassSpecificSkill;
+	CNetworkVar( float, m_flNextClassSpecificSkill );
 
 	int	  m_iSpawnInterpCounter;
 	int	  m_iSpawnInterpCounterCache;

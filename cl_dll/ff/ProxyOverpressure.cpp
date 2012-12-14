@@ -39,7 +39,7 @@ void CProxyOverpressureCharge::OnBind(void *pC_BaseEntity)
 	if (!pC_BaseEntity)
 		return;
 
-	C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 	Assert(pPlayer);
 
 	if (!pPlayer)

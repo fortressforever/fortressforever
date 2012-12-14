@@ -441,6 +441,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
 	
 	SendPropFloat(SENDINFO(m_flConcTime)),
+	SendPropFloat(SENDINFO(m_flNextClassSpecificSkill)),
 
 	SendPropBool( SENDINFO( m_bSaveMe ) ),
 	SendPropBool( SENDINFO( m_bEngyMe ) ),
