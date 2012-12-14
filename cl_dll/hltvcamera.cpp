@@ -515,7 +515,7 @@ bool C_HLTVCamera::IsValidObserverTarget( int nEntity )
 		return false; // We can't observe ourselves.
 
 	// gibbed players have EF_NODRAW effect active, so make an exception for LIFE_DEAD players
-	if ( pPlayer->m_lifeState != LIFE_DEAD && pPlayer->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
+	if ( pPlayer->m_lifeState != LIFE_DEAD && pPlayer->m_lifeState != LIFE_RESPAWNABLE && pPlayer->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
 		return false;
 
 	// 0001670: Player you are spectating changes when they die

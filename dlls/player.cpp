@@ -2651,7 +2651,7 @@ bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 		return false; // We can't observe ourselves.
 
 	// gibbed players have EF_NODRAW effect active, so make an exception for LIFE_DEAD players
-	if ( player->m_lifeState != LIFE_DEAD && player->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
+	if ( player->m_lifeState != LIFE_DEAD && player->m_lifeState != LIFE_RESPAWNABLE && player->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
 		return false;
 
 	// 0001670: Player you are spectating changes when they die
@@ -7225,8 +7225,6 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 #endif
 
 		SendPropFloat		( SENDINFO(m_flFriction),		8,	SPROP_ROUNDDOWN,	0.0f,	4.0f),
-
-		SendPropArray3		( SENDINFO_ARRAY3(m_iAmmo), SendPropInt( SENDINFO_ARRAY(m_iAmmo), 10, SPROP_UNSIGNED ) ),
 			
 		SendPropInt			( SENDINFO( m_fOnTarget ), 2, SPROP_UNSIGNED ),
 
@@ -7272,6 +7270,9 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_iMaxHealth), 10 ), //AfterShock: we should work this out from class
 		SendPropInt		(SENDINFO(m_iArmor), 10 ),
 		SendPropInt		(SENDINFO(m_iMaxArmor), 10 ), //AfterShock: we should work this out from class
+		
+		SendPropArray3		( SENDINFO_ARRAY3(m_iAmmo), SendPropInt( SENDINFO_ARRAY(m_iAmmo), 10, SPROP_UNSIGNED ) ),
+
 		// Added by Mulch for testing
 		SendPropInt		(SENDINFO(m_lifeState), 3, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flMaxspeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),  // CL
