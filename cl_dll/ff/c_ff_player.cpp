@@ -827,12 +827,19 @@ BEGIN_RECV_TABLE_NOBASE(C_FFPlayer, DT_NonLocalOrigin)
 END_RECV_TABLE()
 #endif
 
+BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFPlayerObserver )
+	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
+END_RECV_TABLE()
+
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropDataTable( "fflocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFLocalPlayerExclusive) ),
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 	RecvPropDataTable("fforigin", 0, 0, &REFERENCE_RECV_TABLE(DT_NonLocalOrigin)),
 #endif
+	
+	// Data that only gets sent to the player as well as observers of the player
+	RecvPropDataTable( "ffplayerobserverdata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFPlayerObserver) ),
 
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
@@ -842,7 +849,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_iSpyDisguise ) ),
 	
 	RecvPropFloat(RECVINFO(m_flConcTime)),
-	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
 
 	RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
 	

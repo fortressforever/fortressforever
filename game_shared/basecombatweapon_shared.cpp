@@ -2576,6 +2576,9 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_ObserverWeaponData )
 #if !defined( CLIENT_DLL )
 	SendPropIntWithMinusOneFlag( SENDINFO(m_iClip1 ), 8 ),
 	SendPropIntWithMinusOneFlag( SENDINFO(m_iClip2 ), 8 ),
+#else
+	RecvPropIntWithMinusOneFlag( RECVINFO(m_iClip1 )),
+	RecvPropIntWithMinusOneFlag( RECVINFO(m_iClip2 )),
 #endif
 END_NETWORK_TABLE()
 
@@ -2592,11 +2595,10 @@ BEGIN_NETWORK_TABLE(CBaseCombatWeapon, DT_BaseCombatWeapon)
 #else
 	RecvPropDataTable("LocalWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalWeaponData)),
 	RecvPropDataTable("LocalActiveWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalActiveWeaponData)),
+	RecvPropDataTable( "ObserverWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_ObserverWeaponData)),
 	RecvPropInt( RECVINFO(m_iViewModelIndex)),
 	RecvPropInt( RECVINFO(m_iWorldModelIndex)),
 	RecvPropInt( RECVINFO(m_iState )),
 	RecvPropEHandle( RECVINFO(m_hOwner ) ),
-	RecvPropIntWithMinusOneFlag( RECVINFO(m_iClip1 )),
-	RecvPropIntWithMinusOneFlag( RECVINFO(m_iClip2 )),
 #endif
 END_NETWORK_TABLE()
