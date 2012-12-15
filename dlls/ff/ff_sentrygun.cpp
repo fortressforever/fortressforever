@@ -553,27 +553,30 @@ void CFFSentryGun::OnActiveThink( void )
 		enemy = NULL;
 
 	// Enemy is no longer targettable // hlstriker: Crashing bug when sg loses sight of enemy buildable is somewhere in this if statement/nest
-	if( enemy && !IsTargetVisible( enemy, SG_RANGE_UNTARGET ) )
+	if( !enemy || !IsTargetVisible( enemy, SG_RANGE_UNTARGET ) )
 	{
-		// AfterShock: if we lost track of our target, and they are still alive, 
-		// and we're looking the right way, then pause to see if our target comes back
-		Vector vecAiming, vecGoal;
-		AngleVectors( m_angAiming, &vecAiming );
-		AngleVectors( m_angGoal, &vecGoal );
-		bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_7DEGREE;
-		if ( bCanFire )			
-			m_flEndLockTime = gpGlobals->curtime; 
-
-		// Tell player they aren't locked on any more, and remove the status icon
-		if ( enemy->IsPlayer() )
+		if (enemy && enemy->IsAlive())
 		{
-			CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
-			user.MakeReliable();
+			// AfterShock: if we lost track of our target, and they are still alive, 
+			// and we're looking the right way, then pause to see if our target comes back
+			Vector vecAiming, vecGoal;
+			AngleVectors( m_angAiming, &vecAiming );
+			AngleVectors( m_angGoal, &vecGoal );
+			bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_7DEGREE;
+			if ( bCanFire )			
+				m_flEndLockTime = gpGlobals->curtime; 
 
-			UserMessageBegin(user, "StatusIconUpdate");
-				WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-				WRITE_FLOAT(0.0);
-			MessageEnd();
+			// Tell player they aren't locked on any more, and remove the status icon
+			if ( enemy->IsPlayer() )
+			{
+				CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+				user.MakeReliable();
+
+				UserMessageBegin(user, "StatusIconUpdate");
+					WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+					WRITE_FLOAT(0.0);
+				MessageEnd();
+			}
 		}
 
 		SetEnemy( NULL );
