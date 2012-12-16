@@ -666,10 +666,7 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 
 	pPlayer->FireBullets(info);
 
-#ifdef CLIENT_DLL
 	pPlayer->m_flTrueAimTime = gpGlobals->curtime;
-#endif
-
 
 	//m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
 

@@ -790,6 +790,9 @@ public:
 	CNetworkVar( float, m_flConcTime );
 	void UnConcuss( void );
 	void Concuss(float flDuration, float flIconDuration, const QAngle *viewjerk = NULL, float flDistance = 0.0f);
+	
+	CNetworkVar( float, m_flTrueAimTime );
+	CNetworkVar( float, m_flHitTime );
 
 	CNetworkVar( int, m_iClassStatus );
 	int GetClassForClient() const { return (0x0000000F & m_iClassStatus); }

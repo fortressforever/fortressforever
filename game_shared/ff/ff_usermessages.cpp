@@ -35,7 +35,6 @@ void RegisterUserMessages()
 
 	//usermessages->Register( "BarTime", -1 );	// For the C4 progress bar.
 	usermessages->Register( "Damage", -1 );		// for HUD damage indicators
-	usermessages->Register( "Hit", -1 );		// for HUD/crosshair hit indicators
 	usermessages->Register( "RadioText", -1 );		// for HUD damage indicators
 	usermessages->Register( "HintText", -1 );	// Displays hint text display
 	

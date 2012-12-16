@@ -233,9 +233,7 @@ void CFFWeaponBaseClip::PrimaryAttack()
 	// Fire bullets
 	Fire();
 	
-#ifdef CLIENT_DLL
 	pPlayer->m_flTrueAimTime = gpGlobals->curtime;
-#endif
 
 	// Do view punch from recoil
 	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));

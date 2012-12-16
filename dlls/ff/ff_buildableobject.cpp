@@ -1116,10 +1116,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 		CFFPlayer *pAttacker = ToFFPlayer( adjustedDamage.GetAttacker() );
 		if( pAttacker )
 		{
-			CSingleUserRecipientFilter filter(pAttacker);
-			UserMessageBegin(filter, "Hit");
-				WRITE_FLOAT(info.GetDamage());
-			MessageEnd();
+			pAttacker->m_flHitTime = gpGlobals->curtime;
 		}
 	}
 
