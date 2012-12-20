@@ -2480,6 +2480,7 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		return;
 
 	bool fInstantSwitch = strcmp(engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_classautokill"), "0") != 0;
+	bool bWasRandom = m_fRandomPC;
 
 	// They are picking the randompc slot
 	if( FStrEq( szNewClassName, "randompc" ) )
@@ -2547,7 +2548,7 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	//	return;
 
 	// If they're already this class, no class change needed. Just inform the player.
-	if (iClass == m_iNextClass)
+	if (iClass == m_iNextClass && !bWasRandom)
 	{
 		ClientPrint(this, HUD_PRINTNOTIFY, "#FF_CHANGECLASS_LATER", Class_IntToString(iClass));
 		return;
