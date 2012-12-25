@@ -388,6 +388,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropBool( SENDINFO ( m_fRandomPC ) ),
 
 	SendPropInt(SENDINFO(m_iSkiState)),
+	
+	SendPropInt( SENDINFO( m_iLastSpyDisguise ), 8, SPROP_UNSIGNED ),   // AfterShock: this only uses the last 2 hex digits, bits 1-4 for team, 5-8 for class
 
 	// Grenade Related
 	SendPropInt( SENDINFO( m_iGrenadeState ), 2, SPROP_UNSIGNED ),
@@ -571,6 +573,8 @@ CFFPlayer::CFFPlayer()
 	m_iActiveSabotages = 0;
 	m_iSabotagedSentries = 0;
 	m_iSabotagedDispensers = 0;
+	
+	m_iLastSpyDisguise = 0;
 
 	// Map guide stuff
 	m_hNextMapGuide = NULL;
@@ -6321,8 +6325,7 @@ bool CFFPlayer::TakeNamedItem(const char* pszName)
 
 void CFFPlayer::Command_Disguise()
 {
-	if(engine->Cmd_Argc( ) < 3)
-		return;
+	int iTeam = 0, iClass = 0;
 
 	if (!GetDisguisable()) 
 	{
@@ -6330,105 +6333,127 @@ void CFFPlayer::Command_Disguise()
 		return;
 	}
 
-	const char *szTeam = engine->Cmd_Argv( 1 );
-	const char *szClass = engine->Cmd_Argv( 2 );
-	int iTeam = 0, iClass = 0;
-
-	// Allow either specify enemy/friendly or an actual team
-	if (FStrEq(szTeam, "enemy") || FStrEq(szTeam, "e"))
+	// if the format is "disguise team class"
+	if(engine->Cmd_Argc( ) >= 3)
 	{
-		int iMyTeam = GetTeamNumber();
+		const char *szTeam = engine->Cmd_Argv( 1 );
+		const char *szClass = engine->Cmd_Argv( 2 );
 
-		// TODO: Check friendliness of the other team (do a loop methinks)
-		//iTeam = ( ( GetTeamNumber() == TEAM_BLUE ) ? TEAM_RED : TEAM_BLUE );
-
-		int iEnemyTeams[8] = {0};
-		int iNumTeams = 0;
-		for(int i = TEAM_BLUE; i <= TEAM_GREEN; ++i)
+		// Allow either specify enemy/friendly or an actual team
+		if (FStrEq(szTeam, "enemy") || FStrEq(szTeam, "e"))
 		{
-			if(i==iMyTeam)
-				continue;
+			int iMyTeam = GetTeamNumber();
 
-			CFFTeam *pTeam = GetGlobalFFTeam(i);
-			if(pTeam && pTeam->GetTeamLimits() != -1)
+			// TODO: Check friendliness of the other team (do a loop methinks)
+			//iTeam = ( ( GetTeamNumber() == TEAM_BLUE ) ? TEAM_RED : TEAM_BLUE );
+
+			int iEnemyTeams[8] = {0};
+			int iNumTeams = 0;
+			for(int i = TEAM_BLUE; i <= TEAM_GREEN; ++i)
 			{
-				if(!(pTeam->GetAllies() & iMyTeam))
+				if(i==iMyTeam)
+					continue;
+
+				CFFTeam *pTeam = GetGlobalFFTeam(i);
+				if(pTeam && pTeam->GetTeamLimits() != -1)
 				{
-					iEnemyTeams[iNumTeams++] = i;
+					if(!(pTeam->GetAllies() & iMyTeam))
+					{
+						iEnemyTeams[iNumTeams++] = i;
+					}
 				}
 			}
+
+			if(iNumTeams>0)
+				iTeam = iEnemyTeams[RandomInt(0,iNumTeams-1)];
 		}
-
-		if(iNumTeams>0)
-			iTeam = iEnemyTeams[RandomInt(0,iNumTeams-1)];
-	}
-	else if (FStrEq(szTeam, "friendly") || FStrEq(szTeam, "f"))
-	{
-		iTeam = GetTeamNumber();
-	}
-	else
-	{
-		// iTeam = atoi(szTeam) + (TEAM_BLUE - 1);
-
-		// Since players can enter an integer or string for
-		// the team we need to account for both methods.
-
-		if( strlen( szTeam ) == 1 ) // Single character
+		else if (FStrEq(szTeam, "friendly") || FStrEq(szTeam, "f"))
 		{
-			if( ( szTeam[ 0 ] >= '1' ) && ( szTeam[ 0 ] <= '4' ) ) // Number from 1-4
-				iTeam = atoi( szTeam ) + 1; // TEAM_BLUE = 2
-			else
-			{
-				switch( szTeam[ 0 ] ) // Single letter like b, r, y, g
-				{
-					case 'b':
-					case 'B': iTeam = TEAM_BLUE; break;
-
-					case 'r':
-					case 'R': iTeam = TEAM_RED; break;
-
-					case 'y':
-					case 'Y': iTeam = TEAM_YELLOW; break;
-
-					case 'g':
-					case 'G': iTeam = TEAM_GREEN; break;
-
-					default:
-						Warning( "[Disguise] Disguise command must be in the proper format!\n" );
-						return;
-					break;
-
-				}
-			}
+			iTeam = GetTeamNumber();
 		}
 		else
 		{
-			// Some kind of string
-			if( !Q_stricmp( szTeam, "blue" ) )
-				iTeam = TEAM_BLUE;
-			else if( !Q_stricmp( szTeam, "red" ) )
-				iTeam = TEAM_RED;
-			else if( !Q_stricmp( szTeam, "yellow" ) )
-				iTeam = TEAM_YELLOW;
-			else if( !Q_stricmp( szTeam, "green" ) )
-				iTeam = TEAM_GREEN;
+			// iTeam = atoi(szTeam) + (TEAM_BLUE - 1);
+
+			// Since players can enter an integer or string for
+			// the team we need to account for both methods.
+
+			if( strlen( szTeam ) == 1 ) // Single character
+			{
+				if( ( szTeam[ 0 ] >= '1' ) && ( szTeam[ 0 ] <= '4' ) ) // Number from 1-4
+					iTeam = atoi( szTeam ) + 1; // TEAM_BLUE = 2
+				else
+				{
+					switch( szTeam[ 0 ] ) // Single letter like b, r, y, g
+					{
+						case 'b':
+						case 'B': iTeam = TEAM_BLUE; break;
+
+						case 'r':
+						case 'R': iTeam = TEAM_RED; break;
+
+						case 'y':
+						case 'Y': iTeam = TEAM_YELLOW; break;
+
+						case 'g':
+						case 'G': iTeam = TEAM_GREEN; break;
+
+						default:
+							Warning( "[Disguise] Disguise command must be in the proper format!\n" );
+							return;
+						break;
+
+					}
+				}
+			}
+			else
+			{
+				// Some kind of string
+				if( !Q_stricmp( szTeam, "blue" ) )
+					iTeam = TEAM_BLUE;
+				else if( !Q_stricmp( szTeam, "red" ) )
+					iTeam = TEAM_RED;
+				else if( !Q_stricmp( szTeam, "yellow" ) )
+					iTeam = TEAM_YELLOW;
+				else if( !Q_stricmp( szTeam, "green" ) )
+					iTeam = TEAM_GREEN;
+			}
+		}
+		
+		// Now for the class. Allow numbers 1-9 and strings like "soldier".
+		// Not allowing single characters representing the first letter of the class.
+		if( ( strlen( szClass ) == 1 ) && ( szClass[ 0 ] >= '1' ) && ( szClass[ 0 ] <= '9' ) )
+			iClass = atoi( szClass );
+		else
+			iClass = Class_StringToInt( szClass );
+		
+	}
+	// else if the format is "disguise command"
+	else if (engine->Cmd_Argc( ) == 2)
+	{
+		const char *szCmd = engine->Cmd_Argv( 1 );
+		// "disguise last" / "disguise l"
+		if ( FStrEq(szCmd, "last") || FStrEq(szCmd, "l") )
+		{
+			if (HasLastDisguise())
+			{
+				iTeam = GetLastDisguisedTeam();
+				iClass = GetLastDisguisedClass();
+			}
+			else
+			{
+				Warning( "[Disguise] No last disguise found\n" );
+				return;
+			}
 		}
 	}
-	
+
 	// Bail if we don't have a team yet
 	if( !iTeam )
 	{
 		Warning( "[Disguise] Disguise command must be in the proper format!\n" );
 		return;
 	}
-
-
-	// Now for the class. Allow numbers 1-9 and strings like "soldier".
-	// Not allowing single characters representing the first letter of the class.
-	if( ( strlen( szClass ) == 1 ) && ( szClass[ 0 ] >= '1' ) && ( szClass[ 0 ] <= '9' ) )
-		iClass = atoi( szClass );
-	else
-		iClass = Class_StringToInt( szClass );
 
 	// Bail if we don't have a class yet
 	if( !iClass )
@@ -6579,6 +6604,9 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 
 	m_iNewSpyDisguise = iTeam;
 	m_iNewSpyDisguise += iClass << 4;
+
+	// set last spy disguise here
+	m_iLastSpyDisguise = m_iNewSpyDisguise;
 
 	m_iSpyDisguising++;	// Jiggles: For the client HUD disguise progress bar
 	

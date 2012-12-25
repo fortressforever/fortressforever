@@ -340,6 +340,11 @@ public:
 	//	However, it DOESN'T match up with the actual class (b/c it needs to change if the same class disguise is picked again)
 	int IsDisguising( void ) const { return m_iSpyDisguising; } 
 	CNetworkVar( int, m_iSpyDisguise );
+	
+	int GetLastDisguisedClass( void ) const;
+	int GetLastDisguisedTeam( void ) const;
+	bool HasLastDisguise( void ) const;
+	CNetworkVar( int, m_iLastSpyDisguise );
 
 public:
 	// Returns true if the player can disguise
