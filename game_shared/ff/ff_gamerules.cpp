@@ -92,6 +92,15 @@ char *GetModVersion()
 	buffer[MAX_MOD_VERSION_LENGTH] = 0;
 	filesystem->Close(hFile);
 
+	for (int i=0; buffer[i]; i++)
+	{
+		if (buffer[i] == '\r' || buffer[i] == '\n')
+		{
+			buffer[i] = 0;
+			break;
+		}
+	}
+
 	if ( buffer[0] )
 	{
 		Q_snprintf( MOD_VERSION, sizeof(MOD_VERSION), "%s", buffer );

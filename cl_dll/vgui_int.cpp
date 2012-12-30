@@ -191,7 +191,6 @@ void VGui_CreateGlobalPanels( void )
 	ffoptions->Create(uiParent);
 	ffcustomhudpreview->Create(uiParent);
 	ffgamemodes->Create(uiParent);
-	ffsplash->Create(uiParent);
 	ffirc->Create(uiParent);
 	ffircconnect->Create(uiParent);
 	ffirchost->Create(uiParent);
@@ -224,7 +223,6 @@ void VGui_Shutdown()
 	ffoptions->Destroy();
 	ffcustomhudpreview->Destroy();
 	ffgamemodes->Destroy();
-	ffsplash->Destroy();
 	ffirc->Destroy();
 	ffircconnect->Destroy();
 	ffirchost->Destroy();
