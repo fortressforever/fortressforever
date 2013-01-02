@@ -1456,9 +1456,9 @@ ConVar mp_prematch( "mp_prematch",
 					switch ( pInflictor->Classify() )
 					{
 						case CLASS_IC_ROCKET:
-							flPushClamp = 350.0f;
+							//flPushClamp = 350.0f;
 							// lower the push because of the increased damage needed
-							flCalculatedForce /= 3;
+							//flCalculatedForce /= 3;
 							if (pEntity == info.GetAttacker() && !pBuildable)
 							{
 								flAdjustedDamage *= IC_SELFDAMAGEMULTIPLIER;
@@ -1467,9 +1467,9 @@ ConVar mp_prematch( "mp_prematch",
 							break;
 
 						case CLASS_RAIL_PROJECTILE:
-							flPushClamp = 300.0f;
+							//flPushClamp = 300.0f;
 							// Don't want people jumpin' real high with the Rail Gun :)
-							flCalculatedForce /= 3;
+							//flCalculatedForce /= 3;
 							break;
 
 						case CLASS_GREN_EMP:
@@ -1479,7 +1479,7 @@ ConVar mp_prematch( "mp_prematch",
 					}
 				}	
 
-				if (flCalculatedForce < flPushClamp)
+				if (flCalculatedForce > flPushClamp)
 					flCalculatedForce = flPushClamp;
 
 				CFFPlayer *pPlayer = NULL;
