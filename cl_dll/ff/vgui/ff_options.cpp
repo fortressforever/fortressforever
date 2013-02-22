@@ -70,7 +70,6 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pMiscOptions3 = new CFFMiscOptions(this, "MiscOptions", "resource/Options3.vdf");
 	m_pMiscOptions4 = new CFFMiscOptions(this, "MiscOptions", "resource/Options4.vdf");
 	m_pDLightOptions = new CFFDLightOptions(this, "DLightOptions");
-	m_pCustomHudOptions = new CFFCustomHudOptions(this, "CustomHudOptions");
 
 	m_pPropertyPages = new PropertySheet(this, "OptionsPages", true);
 	m_pPropertyPages->AddPage(m_pCrosshairOptions, "#GameUI_Crosshairs");
@@ -80,7 +79,6 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pPropertyPages->AddPage(m_pMiscOptions3, "#GameUI_Misc3");
 	m_pPropertyPages->AddPage(m_pMiscOptions4, "#GameUI_Misc4");
 	m_pPropertyPages->AddPage(m_pDLightOptions, "#GameUI_DLights");
-	m_pPropertyPages->AddPage(m_pCustomHudOptions, "#GameUI_CustomHud");
 	m_pPropertyPages->SetActivePage(m_pCrosshairOptions);
 	m_pPropertyPages->SetDragEnabled(false);
 
@@ -110,7 +108,6 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		m_pMiscOptions2->Apply();
 		m_pMiscOptions3->Apply();
 		m_pDLightOptions->Apply();
-		m_pCustomHudOptions->Apply();
 
 		// Apply doesn't quit the menu
 		if (pszCommand[0] == 'A')
@@ -127,7 +124,6 @@ void CFFOptionsPanel::OnButtonCommand(KeyValues *data)
 		m_pMiscOptions2->Reset();
 		m_pMiscOptions3->Reset();
 		m_pDLightOptions->Reset();
-		m_pCustomHudOptions->Reset();
 	}
 
 	// Now make invisible
@@ -148,7 +144,6 @@ void CFFOptionsPanel::SetVisible(bool state)
 		m_pMiscOptions2->Load();
 		m_pMiscOptions3->Load();
 		m_pDLightOptions->Load();
-		m_pCustomHudOptions->Load();
 
 		RequestFocus();
 		MoveToFront();

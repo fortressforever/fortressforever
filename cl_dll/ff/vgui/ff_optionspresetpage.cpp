@@ -31,8 +31,10 @@ namespace vgui {
 
 		m_bLoaded = false;
 		m_bIsLoading = false;
-		m_bPresetLoading = false;
 		
+		m_bCopy = false;
+		m_bRename = false;
+
 		char comboBoxName[128];
 		Q_strncpy( comboBoxName, m_szPresetTypeName, 127 );
 		Q_strncat( comboBoxName, "PresetSelectionCombo", 127, COPY_ALL_CHARACTERS );
@@ -51,12 +53,14 @@ namespace vgui {
 		m_kvUpdates->deleteThis();
 		m_kvUpdates = NULL;
 	}
+
 	void CFFOptionsPresetPage::Load()
 	{
-		if(m_bIsLoading)
+		if(m_bLoaded || m_bIsLoading)
 			return;
 
 		m_bIsLoading = true;
+		m_pPresets->RemoveActionSignalTarget(this);
 
 		m_pPresets->RemoveAll();
 		KeyValues *kvPresets = new KeyValues("Presets");
@@ -64,7 +68,7 @@ namespace vgui {
 
 		if(kvPresets->GetFirstSubKey() == NULL)
 		//if no presets were in the file (or file not found)
-		{			
+		{
 			m_pDeletePreset->SetEnabled(false);
 			m_pRenamePreset->SetEnabled(false);
 			m_pCopyPreset->SetEnabled(false);
@@ -88,15 +92,16 @@ namespace vgui {
 			m_pPresets->ActivateItemByRow(0);
 
 			ApplyPresetToControls(m_pPresets->GetActiveItemUserData());
-		}	
-
+		}
+ 
 		kvPresets->deleteThis();
 		kvPresets = NULL;
-
+ 
 		RegisterSelfForPresetAssignment();
 
-		m_bIsLoading = false;
+		m_pPresets->AddActionSignalTarget(this);
 		m_bLoaded = true;
+		m_bIsLoading = false;
 	}
 
 	void CFFOptionsPresetPage::Reset()
@@ -107,24 +112,30 @@ namespace vgui {
 
 	void CFFOptionsPresetPage::Apply()
 	{
-		for (int i = 0; i < m_kvChanges->GetInt("Count",0); ++i)
+		for (int i = 0; i <= m_kvChanges->GetInt("Count",0); ++i)
 		{
 			char item[5];
 			Q_snprintf( item, 5, "%i", i );
-			KeyValues *kvCommand = m_kvChanges->FindKey(item, true);
+			KeyValues *kvCommand = m_kvChanges->FindKey(item);
 			
+			if(!kvCommand)
+			{
+				//TODO ASSERT;
+				continue;
+			}
+
 			KeyValues *kvRename = kvCommand->FindKey("Rename");
 			if( kvRename )
 			{
-				SendRenamedPresetNameToPresetAssignment(kvRename->GetString("OldName"), kvRename->GetString("NewName"));
+				SendRenamedPresetToPresetAssignment(kvRename->GetString("OldName"), kvRename->GetString("NewName"));
 			}
 			else if( Q_stricmp(kvCommand->GetString("New"), "") != 0 )
 			{
-				SendNewPresetNameToPresetAssignment( kvCommand->GetString("New"), GetPresetDataByName( kvCommand->GetString("New") ) );
+				SendNewPresetToPresetAssignment( kvCommand->GetString("New"), GetPresetDataByName( kvCommand->GetString("New") ) );
 			}
 			else if( Q_stricmp(kvCommand->GetString("Delete"), "") != 0 )
 			{
-				SendDeletedPresetNameToPresetAssignment(kvCommand->GetString("Delete"));
+				SendDeletedPresetToPresetAssignment(kvCommand->GetString("Delete"));
 			}
 		}
 		m_kvChanges->deleteThis();
@@ -133,7 +144,7 @@ namespace vgui {
 
 		for (KeyValues *kvPreset = m_kvUpdates->GetFirstSubKey(); kvPreset != NULL; kvPreset = kvPreset->GetNextKey())
 		{
-			SendUpdatedPresetNameToPresetAssignment(kvPreset->GetName());
+			SendUpdatedPresetToPresetAssignment(kvPreset->GetName());
 		}
 		m_kvUpdates->deleteThis();
 		m_kvUpdates = NULL;
@@ -155,6 +166,8 @@ namespace vgui {
 		{
 			m_kvUpdates->AddSubKey(new KeyValues(kvPreset->GetName()));
 		}
+
+		SendUpdatedPresetPreviewToPresetAssignment(kvPreset->GetName(), kvPreset);
 	}
 
 	//-----------------------------------------------------------------------------
@@ -173,9 +186,13 @@ namespace vgui {
 				return m_pPresets->GetItemUserData(i)->MakeCopy();
 			}
 		}
+
 		//if we got here then it wasn't found so return null
 		return NULL;
 	}
+ 
+	//-----------------------------------------------------------------------------
+	// Purpose: Give the keyvalue data associated with the given name
 	//-----------------------------------------------------------------------------
 	KeyValues *CFFOptionsPresetPage::GetPresetData()
 	{
@@ -190,6 +207,7 @@ namespace vgui {
 		}
 		return kvPresets;
 	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the comboboxs changing their selection
 	//-----------------------------------------------------------------------------
@@ -200,6 +218,7 @@ namespace vgui {
 			ApplyPresetToControls(m_pPresets->GetActiveItemUserData());
 		}
 	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch name input dialog's okay button and process the text
 	//-----------------------------------------------------------------------------
@@ -217,12 +236,12 @@ namespace vgui {
 		}
 
 		//get localisation of default
-		wchar_t *pszDefault = vgui::localize()->Find("#GameUI_Default");
-		char szDefault[30];
-		Q_snprintf( szDefault, sizeof( szDefault ), "%s", pszDefault );
+		wchar_t *wszDefault = vgui::localize()->Find("#GameUI_Default");
+		char szDefault[32];
+		localize()->ConvertUnicodeToANSI( wszDefault, szDefault, sizeof( szDefault ) );
 
 		//if name is default (a reserved name) or equal to the localization of GameUI_Default
-		if(Q_stricmp(data->GetString("text"), "Default") == 0 || Q_stricmp(data->GetString("text"), szDefault) == 0)
+		if(Q_stricmp(data->GetString("text"), szDefault) == 0 || Q_stricmp(data->GetString("text"), szDefault) == 0)
 		{
 			//tell the user what's wrong
 			m_pPresetNameInputError = new MessageBox("#GameUI_ErrorPresetNameTitle","#GameUI_ErrorPresetNameReserved", this);
@@ -249,6 +268,7 @@ namespace vgui {
 				return;
 			}
 		}
+
 		if(m_bRename)
 		{
 			const char* szOldName = m_pPresets->GetActiveItemUserData()->GetName();
@@ -271,15 +291,17 @@ namespace vgui {
 			kvRename->SetString("OldName", szOldName);
 			kvCommand->AddSubKey(kvRename);
 			m_kvChanges->AddSubKey(kvCommand);
+			m_bRename = false;
 		}
 		else
 		{
 			KeyValues *kvPreset = new KeyValues(data->GetString("text"));
 			if(m_bCopy)
 			//copy
-			{	
+			{
 				//copy from current
 				m_pPresets->GetActiveItemUserData()->CopySubkeys(kvPreset);
+				m_bCopy = false;
 			}
 			else
 			//new
@@ -294,7 +316,7 @@ namespace vgui {
 				else
 				{
 					//get the control defaults an make a preset out of them
-					kvPreset = RemoveNonEssentialValues(new KeyValues("newPreset"));
+					kvPreset = RemoveNonEssentialValues(new KeyValues(data->GetString("text")));
 				}
 			}
 			AddPreset(kvPreset);
@@ -353,17 +375,10 @@ namespace vgui {
 			if(Q_strcmp(pszCommand, "CopyPreset") == 0)
 			{
 				m_bCopy = true;
-				m_bRename = false;
 			}
 			else if(Q_strcmp(pszCommand, "RenamePreset") == 0)
 			{
-				m_bCopy = false;
 				m_bRename = true;
-			}
-			else
-			{
-				m_bCopy = false;
-				m_bRename = false;
 			}
 
 			if(m_bRename)

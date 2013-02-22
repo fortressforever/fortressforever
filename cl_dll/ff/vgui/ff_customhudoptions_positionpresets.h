@@ -24,10 +24,12 @@ namespace vgui
 		virtual void ApplyPresetToControls(KeyValues *kvPreset);
 		virtual void RegisterSelfForPresetAssignment();
 		virtual KeyValues* RemoveNonEssentialValues(KeyValues *kvPreset);
-		virtual void SendUpdatedPresetNameToPresetAssignment(const char *pszPresetName);
-		virtual void SendRenamedPresetNameToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName);
-		virtual void SendDeletedPresetNameToPresetAssignment(const char *pszDeletedPresetName);
-		virtual void SendNewPresetNameToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset);
+		
+		virtual void SendUpdatedPresetPreviewToPresetAssignment(const char *pszPresetName, KeyValues *kvPresetPreview);
+		virtual void SendUpdatedPresetToPresetAssignment(const char *pszPresetName);
+		virtual void SendRenamedPresetToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName);
+		virtual void SendDeletedPresetToPresetAssignment(const char *pszDeletedPresetName);
+		virtual void SendNewPresetToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset);
 
 		//-----------------------------------------------------------------------------
 		// Purpose: Catch the comboboxs changing their selection

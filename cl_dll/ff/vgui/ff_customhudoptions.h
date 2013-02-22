@@ -1,15 +1,20 @@
 #ifndef FF_CUSTOMHUDOPTIONS_H
 #define FF_CUSTOMHUDOPTIONS_H
 
-#include "ff_optionspage.h"
+#ifdef _WIN32
+	#pragma once
+#endif
 
-#include <vgui_controls/PropertyPage.h>
 #include <vgui_controls/PropertySheet.h>
+#include <vgui_controls/Frame.h>
+#include <vgui_controls/Button.h>
+#include "vstdlib/icommandline.h"
+#include "ff_gameui.h"
 
 #include "ff_customhudoptions_assignpresets.h"
 #include "ff_customhudoptions_positionpresets.h"
-#include "ff_customhudoptions_arrangementpresets.h"
-#include "ff_customhudoptions_stylepresets.h"
+#include "ff_customhudoptions_panelstylepresets.h"
+#include "ff_customhudoptions_itemstylepresets.h"
 
 #include "KeyValues.h"
 
@@ -18,14 +23,14 @@ using namespace vgui;
 //=============================================================================
 // Our quantitypanel options page. This also is massive - like my penis.
 //=============================================================================
-class CFFCustomHudOptions : public CFFOptionsPage
+class CFFCustomHudOptionsPanel : public Frame
 {
-	DECLARE_CLASS_SIMPLE(CFFCustomHudOptions, CFFOptionsPage);
+	DECLARE_CLASS_SIMPLE(CFFCustomHudOptionsPanel, Frame);
 	
 public:
-	CFFCustomHudOptions(Panel *parent, char const *panelName);
+	CFFCustomHudOptionsPanel( VPANEL parent );
 
-	virtual void AllowChanges(bool state);
+	void SetVisible(bool state);
 	void Apply();
 	void Load();
 	void Reset();
@@ -33,23 +38,28 @@ public:
 	void SetActivePage(Panel *page);
 
 	void ActivatePositionPresetPage();
-	void ActivateArrangementPresetPage();
-	void ActivateStylePresetPage();
+	void ActivatePanelStylePresetPage();
+	void ActivateItemStylePresetPage();
 
 private:
+	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 	MESSAGE_FUNC_PARAMS( OnActivatePositionPage, "ActivatePositionPage", data );
-	MESSAGE_FUNC_PARAMS( OnActivateArrangmentPage, "ActivateArrangementPage", data );
-	MESSAGE_FUNC_PARAMS( OnActivateStylePage, "ActivateStylePage", data );
-	MESSAGE_FUNC_PARAMS( OnActivatePage, "ActivatePage", data );
+	MESSAGE_FUNC_PARAMS( OnActivatePanelStylePage, "ActivatePanelStylePage", data );
+	MESSAGE_FUNC_PARAMS( OnActivateItemStylePage, "ActivateItemStylePage", data );
 	
-
 	void UpdateSliders();
 
 	PropertySheet					*m_pPropertyPages;
 	CFFCustomHudAssignPresets		*m_pAssignPresets;
 	CFFCustomHudPositionPresets		*m_pPositionPresets;
-	CFFCustomHudArrangementPresets	*m_pArrangementPresets;
-	CFFCustomHudStylePresets		*m_pStylePresets;
+	CFFCustomHudPanelStylePresets	*m_pPanelStylePresets;
+	CFFCustomHudItemStylePresets	*m_pItemStylePresets;
+
+	Button					*m_pOKButton;
+	Button					*m_pCancelButton;
+	Button					*m_pApplyButton;
 };
+
+DECLARE_GAMEUI(CFFCustomHudOptions, CFFCustomHudOptionsPanel, ffcustomhudoptions);
 
 #endif

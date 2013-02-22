@@ -178,6 +178,12 @@ public:
 #define MAX_TEAMS				32	// Max number of teams in a game
 #define MAX_TEAM_NAME_LENGTH	32	// Max length of a team's name
 
+#define TEAM_COLOR_SPECTATOR Color( 128, 255, 255, 255 )
+#define TEAM_COLOR_BLUE Color( 56,100, 171, 255 )
+#define TEAM_COLOR_RED Color( 188, 0, 0, 255 )
+#define TEAM_COLOR_YELLOW Color( 202, 173, 33, 255 )
+#define TEAM_COLOR_GREEN Color( 68, 144, 65, 255 )
+
 // Weapon m_iState
 #define WEAPON_IS_ONTARGET				0x40
 

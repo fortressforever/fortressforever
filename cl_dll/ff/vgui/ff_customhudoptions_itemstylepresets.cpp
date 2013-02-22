@@ -1,11 +1,11 @@
 #include "cbase.h"
-#include "ff_customhudoptions_stylepresets.h"
+#include "ff_customhudoptions_itemstylepresets.h"
 
-#define STYLEPRESET_FILE "HudStylePresets.vdf"
+#define ITEMSTYLEPRESET_FILE "HudItemStylePresets.vdf"
 
 //this is defined in the quantitybar page too, keep it in sync
-#define QUANTITYBARFONTSIZES 10
-#define QUANTITYBARICONSIZES 15
+#define QUANTITYBARFONTSIZES 15
+#define QUANTITYBARICONSIZES 20
 
 #include "ff_customhudoptions.h"
 
@@ -13,8 +13,14 @@ extern CFFCustomHudAssignPresets *g_AP;
 
 namespace vgui
 {
-	CFFCustomHudStylePresets::CFFCustomHudStylePresets(Panel *parent, char const *panelName, char const *pszComboBoxName) : BaseClass(parent, panelName, pszComboBoxName, STYLEPRESET_FILE)
+	CFFCustomHudItemStylePresets::CFFCustomHudItemStylePresets(Panel *parent, char const *panelName, char const *pszComboBoxName) : BaseClass(parent, panelName, pszComboBoxName, ITEMSTYLEPRESET_FILE)
 	{
+		m_pColor = new FFColorPicker(this, "Color", this, true);
+		m_pColor->SetRedComponentValue(255);
+		m_pColor->SetGreenComponentValue(255);
+		m_pColor->SetBlueComponentValue(255);
+		m_pColor->SetAlphaComponentValue(255);
+		
 		m_pBarWidth = new CFFInputSlider(this, "BarWidth", "BarWidthInput");
 		m_pBarWidth->SetRange(0, 120);
 		m_pBarWidth->SetValue(0);
@@ -41,12 +47,13 @@ namespace vgui
 
 		m_pSizeLabel = new Label(this, "SizeLabel", "#GameUI_Size");
 		m_pTextLabel = new Label(this, "TextLabel", "#GameUI_Text");
-		m_pOffsetXLabel = new Label(this, "OffsetXLabel", "##GameUI_X");
+		m_pOffsetXLabel = new Label(this, "OffsetXLabel", "#GameUI_X");
 		m_pOffsetYLabel = new Label(this, "OffsetYLabel", "#GameUI_Y");
-		m_pOffsetLabel = new Label(this, "OffsetLabel", "#GameUI_Offset");
+		m_pOffsetLabel = new Label(this, "PositionOffsetLabel", "#GameUI_PositionOffset");
 		m_pAlignHLabel = new Label(this, "AlignHorizontallyLabel", "#GameUI_Horizontal");
 		m_pAlignVLabel = new Label(this, "AlignVerticallyLabel", "#GameUI_Vertical");
 		m_pAlignLabel = new Label(this, "AlignmentLabel", "#GameUI_Alignment");
+		m_pAnchorPositionLabel = new Label(this, "AnchorPositionLabel", "#GameUI_Position");
 
 		m_pOffsetX = new CFFInputSlider(this, "OffsetX", "OffsetXInput");
 		m_pOffsetX->SetRange(-120, 120);
@@ -60,90 +67,67 @@ namespace vgui
 		m_pSize->SetRange(1, QUANTITYBARFONTSIZES);
 		m_pSize->SetValue(2);
 		
-		m_pRed = new CFFInputSlider(this, "Red", "RedInput");
-		m_pRed->SetRange(0, 255);
-		m_pRed->SetValue(255);
-		
-		m_pGreen = new CFFInputSlider(this, "Green", "GreenInput");
-		m_pGreen->SetRange(0, 255);
-		m_pGreen->SetValue(255);
-		
-		m_pBlue = new CFFInputSlider(this, "Blue", "BlueInput");
-		m_pBlue->SetRange(0, 255);
-		m_pBlue->SetValue(255);
-		
-		m_pAlpha = new CFFInputSlider(this, "Alpha", "AlphaInput");
-		m_pAlpha->SetRange(0, 255);
-		m_pAlpha->SetValue(255);
-
 		m_pShadow = new CheckButton(this, "Shadow", "#GameUI_DropShadow");
 		m_pShow = new CheckButton(this, "Show", "#GameUI_Show");
 		m_pFontTahoma = new CheckButton(this, "FontTahoma", "#GameUI_UseTahomaFont");
 
-		m_pColorMode = new ComboBox(this, "ColorModeCombo", 4, false);
-		KeyValues *kv = new KeyValues("Custom");
-		kv->SetInt("Custom", 0);
-		m_pColorMode->AddItem("#GameUI_Custom", kv);
-		kv->deleteThis();
-		kv = new KeyValues("Stepped");
-		kv->SetInt("Stepped", 1);
-		m_pColorMode->AddItem("#GameUI_Stepped", kv);
-		kv->deleteThis();
-		kv = new KeyValues("Faded");
-		kv->SetInt("Faded", 2);
-		m_pColorMode->AddItem("#GameUI_Faded", kv);
-		kv->deleteThis();
-		kv = new KeyValues("TeamColored");
-		kv->SetInt("TeamColored", 3);
-		m_pColorMode->AddItem("#GameUI_TeamColored", kv);
-		kv->deleteThis();
-		m_pColorMode->ActivateItemByRow(0);
+		m_pAnchorPositionTopLeft = new CheckButton(this, "AnchorPositionTopLeft", "");
+		m_pAnchorPositionTopCenter = new CheckButton(this, "AnchorPositionTopCenter", "");
+		m_pAnchorPositionTopRight = new CheckButton(this, "AnchorPositionTopRight", "");
+		m_pAnchorPositionMiddleLeft = new CheckButton(this, "AnchorPositionMiddleLeft", "");
+		m_pAnchorPositionMiddleCenter = new CheckButton(this, "AnchorPositionMiddleCenter", "");
+		m_pAnchorPositionMiddleRight = new CheckButton(this, "AnchorPositionMiddleRight", "");
+		m_pAnchorPositionBottomLeft = new CheckButton(this, "AnchorPositionBottomLeft", "");
+		m_pAnchorPositionBottomCenter = new CheckButton(this, "AnchorPositionBottomCenter", "");
+		m_pAnchorPositionBottomRight = new CheckButton(this, "AnchorPositionBottomRight", "");
+
+		KeyValues *kv;
 
 		m_pAlignH = new ComboBox(this, "AlignHorizontallyCombo", 3, false);
 		kv = new KeyValues("AH");
-		kv->SetInt("Left", 0);
+		kv->SetInt("Left", FFQuantityItem::ALIGN_LEFT);
 		m_pAlignH->AddItem("#GameUI_Left", kv);
 		kv->deleteThis();
 		kv = new KeyValues("AH");
-		kv->SetInt("Center", 1);
+		kv->SetInt("Center", FFQuantityItem::ALIGN_CENTER);
 		m_pAlignH->AddItem("#GameUI_Center", kv);
 		kv->deleteThis();
 		kv = new KeyValues("AH");
-		kv->SetInt("Right", 2);
+		kv->SetInt("Right", FFQuantityItem::ALIGN_RIGHT);
 		m_pAlignH->AddItem("#GameUI_Right", kv);
 		kv->deleteThis();
 		m_pAlignH->ActivateItemByRow(0);
 		
 		m_pAlignV = new ComboBox(this, "AlignVerticallyCombo", 3, false);
 		kv = new KeyValues("AV");
-		kv->SetInt("Top", 0);
+		kv->SetInt("Top", FFQuantityItem::ALIGN_TOP);
 		m_pAlignV->AddItem("#GameUI_Top", kv);
 		kv->deleteThis();
 		kv = new KeyValues("AV");
-		kv->SetInt("Middle", 1);
+		kv->SetInt("Middle", FFQuantityItem::ALIGN_MIDDLE);
 		m_pAlignV->AddItem("#GameUI_Middle", kv);
 		kv->deleteThis();
 		kv = new KeyValues("AV");
-		kv->SetInt("Bottom", 2);
+		kv->SetInt("Bottom", FFQuantityItem::ALIGN_BOTTOM);
 		m_pAlignV->AddItem("#GameUI_Bottom", kv);
 		kv->deleteThis();
 		m_pAlignV->ActivateItemByRow(0);
 
 		m_pBarOrientation = new ComboBox(this, "BarOrientationCombo", 4, false);
 		kv = new KeyValues("BO");
-		kv->SetInt("Horizontal", 0);
+		kv->SetInt("Horizontal", FFQuantityItem::ORIENTATION_HORIZONTAL);
 		m_pBarOrientation->AddItem("#GameUI_Horizontal", kv);
 		kv->deleteThis();
 		kv = new KeyValues("BO");
-		kv->SetInt("Vertical", 1);
+		kv->SetInt("Vertical", FFQuantityItem::ORIENTATION_VERTICAL);
 		m_pBarOrientation->AddItem("#GameUI_Vertical", kv);
 		kv->deleteThis();
 		kv = new KeyValues("BO");
-		kv->SetInt("InvertHorizontal", 2);
+		kv->SetInt("InvertHorizontal", FFQuantityItem::ORIENTATION_HORIZONTAL_INVERTED);
 		m_pBarOrientation->AddItem("#GameUI_InvertHorizontal", kv);
 		kv->deleteThis();
 		kv = new KeyValues("BO");
-		kv->SetInt("InvertVertical", 3);
+		kv->SetInt("InvertVertical", FFQuantityItem::ORIENTATION_VERTICAL_INVERTED);
 		m_pBarOrientation->AddItem("#GameUI_InvertVertical", kv);
 		kv->deleteThis();
 		m_pBarOrientation->ActivateItemByRow(0);
@@ -151,18 +135,18 @@ namespace vgui
 		m_pComponentSelection = new ComboBox(this, "ComponentSelectionCombo", 6, false);
 		//we add these in ApplyPresetToControls
 		
-		LoadControlSettings("resource/ui/FFOptionsSubCustomHudStylePresets.res");
+		LoadControlSettings("resource/ui/FFCustomHudOptionsItemStylePresets.res");
 
 		kv = NULL;
 	}
 
-	void CFFCustomHudStylePresets::ActivatePresetPage()
+	void CFFCustomHudItemStylePresets::ActivatePresetPage()
 	{
-		KeyValues *kvAction = new KeyValues("ActivateStylePage");
+		KeyValues *kvAction = new KeyValues("ActivateItemStylePage");
 		PostActionSignal ( kvAction );
 	}
 	
-	void CFFCustomHudStylePresets::SetControlsEnabled(bool bEnabled)
+	void CFFCustomHudItemStylePresets::SetControlsEnabled(bool bEnabled)
 	{
 		m_pItemColumns->SetEnabled( bEnabled );
 		m_pBarWidth->SetEnabled( bEnabled );
@@ -174,8 +158,7 @@ namespace vgui
 
 		m_pComponentSelection->SetEnabled( bEnabled );
 		m_pShow->SetEnabled( bEnabled );
-		m_pColorMode->SetEnabled( bEnabled );
-		m_pAlpha->SetEnabled( bEnabled );
+		m_pColor->SetEnabled( bEnabled );
 
 		//if we're disabling
 		if(!bEnabled)
@@ -184,13 +167,19 @@ namespace vgui
 			m_pOffsetX->SetEnabled( bEnabled );
 			m_pOffsetY->SetEnabled( bEnabled );
 			m_pSize->SetEnabled( bEnabled );
-			m_pRed->SetEnabled( bEnabled );
-			m_pGreen->SetEnabled( bEnabled );
-			m_pBlue->SetEnabled( bEnabled );
 			m_pShadow->SetEnabled( bEnabled );
 			m_pFontTahoma->SetEnabled( bEnabled );
 			m_pAlignH->SetEnabled( bEnabled );
 			m_pAlignV->SetEnabled( bEnabled );
+			m_pAnchorPositionTopLeft->SetEnabled( bEnabled );
+			m_pAnchorPositionTopCenter->SetEnabled( bEnabled );
+			m_pAnchorPositionTopRight->SetEnabled( bEnabled );
+			m_pAnchorPositionMiddleLeft->SetEnabled( bEnabled );
+			m_pAnchorPositionMiddleCenter->SetEnabled( bEnabled );
+			m_pAnchorPositionMiddleRight->SetEnabled( bEnabled );
+			m_pAnchorPositionBottomLeft->SetEnabled( bEnabled );
+			m_pAnchorPositionBottomCenter->SetEnabled( bEnabled );
+			m_pAnchorPositionBottomRight->SetEnabled( bEnabled );
 		}
 		//else we're enabling
 		else
@@ -199,31 +188,25 @@ namespace vgui
 			if(m_pComponentSelection->GetItemCount() > 0)
 			{			
 				int activeItem = m_pComponentSelection->GetActiveItem();
-				//TODO: bit hacky.. maybe we should put the code this runs into a function... probably
-				//this only works if it wasn't already selected I think.. so we might have a problem here ^^
 				m_pComponentSelection->ActivateItem(activeItem);
 			}
-					
-			int activeItem = m_pColorMode->GetActiveItem();
-			//TODO: bit hacky.. maybe we should put the code this runs into a function... probably
-			//this only works if it wasn't already selected I think.. so we might have a problem here ^^
-			m_pColorMode->ActivateItem(activeItem);
 		}
 	}
+
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Tells the assignment class that this preset class is loaded
 	//-----------------------------------------------------------------------------	
-	void CFFCustomHudStylePresets::RegisterSelfForPresetAssignment()
+	void CFFCustomHudItemStylePresets::RegisterSelfForPresetAssignment()
 	{
 		if(g_AP != NULL)
-			g_AP->OnStylePresetsClassLoaded();
+			g_AP->OnItemStylePresetsClassLoaded();
 	}
 	
 	//-----------------------------------------------------------------------------
 	// Purpose: Cleans up preset.. we might add remove alter values in the future
 	//-----------------------------------------------------------------------------	
-	KeyValues* CFFCustomHudStylePresets::RemoveNonEssentialValues(KeyValues *kvPreset)
+	KeyValues* CFFCustomHudItemStylePresets::RemoveNonEssentialValues(KeyValues *kvPreset)
 	{
 		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
 
@@ -347,9 +330,10 @@ namespace vgui
 			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
 			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
 			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
-			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", 2));
-			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", 1));
-			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", 2));
+			kvTempComponent->SetInt("anchorPosition", kvComponent->GetInt("anchorPosition", FFQuantityItem::ANCHORPOS_MIDDLELEFT));
+			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", FFQuantityItem::ALIGN_RIGHT));
+			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", FFQuantityItem::ALIGN_MIDDLE));
+			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", -2));
 			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 0));
 
 			kvTemp->AddSubKey(kvTempComponent);
@@ -366,9 +350,10 @@ namespace vgui
 			kvComponent->SetInt("alpha", 255);
 			kvComponent->SetInt("shadow", 0);
 			kvComponent->SetInt("size", 4);
-			kvComponent->SetInt("alignH", 2);
-			kvComponent->SetInt("alignV", 1);
-			kvComponent->SetInt("offsetX", 2);
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_MIDDLELEFT);
+			kvComponent->SetInt("alignH", FFQuantityItem::ALIGN_RIGHT);
+			kvComponent->SetInt("alignV", FFQuantityItem::ALIGN_MIDDLE);
+			kvComponent->SetInt("offsetX", -2);
 			kvComponent->SetInt("offsetY", 0);
 			
 			//also add component data to the preset
@@ -391,9 +376,10 @@ namespace vgui
 			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
 			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
 			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
-			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", 0));
-			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", 1));
-			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", -2));
+			kvTempComponent->SetInt("anchorPosition", kvComponent->GetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPLEFT));
+			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", FFQuantityItem::ALIGN_LEFT));
+			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", FFQuantityItem::ALIGN_BOTTOM));
+			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", 0));
 			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 0));
 			kvTempComponent->SetInt("fontTahoma", kvComponent->GetInt("fontTahoma", 0));
 
@@ -411,9 +397,10 @@ namespace vgui
 			kvComponent->SetInt("alpha", 255);
 			kvComponent->SetInt("shadow", 0);
 			kvComponent->SetInt("size", 4);
-			kvComponent->SetInt("alignH", 0);
-			kvComponent->SetInt("alignV", 1);
-			kvComponent->SetInt("offsetX", -2);
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPLEFT);
+			kvComponent->SetInt("alignH", FFQuantityItem::ALIGN_LEFT);
+			kvComponent->SetInt("alignV", FFQuantityItem::ALIGN_BOTTOM);
+			kvComponent->SetInt("offsetX", 0);
 			kvComponent->SetInt("offsetY", 0);
 			kvComponent->SetInt("fontTahoma", 0);
 			
@@ -437,10 +424,11 @@ namespace vgui
 			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
 			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
 			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
-			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", 1));
-			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", 1));
+			kvTempComponent->SetInt("anchorPosition", kvComponent->GetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPRIGHT));
+			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", FFQuantityItem::ALIGN_RIGHT));
+			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", FFQuantityItem::ALIGN_BOTTOM));
 			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", 0));
-			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 1));
+			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 0));
 			kvTempComponent->SetInt("fontTahoma", kvComponent->GetInt("fontTahoma", 0));
 
 			kvTemp->AddSubKey(kvTempComponent);
@@ -457,10 +445,11 @@ namespace vgui
 			kvComponent->SetInt("alpha", 255);
 			kvComponent->SetInt("shadow", 0);
 			kvComponent->SetInt("size", 4);
-			kvComponent->SetInt("alignH", 1);
-			kvComponent->SetInt("alignV", 1);
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPRIGHT);
+			kvComponent->SetInt("alignH", FFQuantityItem::ALIGN_RIGHT);
+			kvComponent->SetInt("alignV", FFQuantityItem::ALIGN_BOTTOM);
 			kvComponent->SetInt("offsetX", 0);
-			kvComponent->SetInt("offsetY", 1);
+			kvComponent->SetInt("offsetY", 0);
 			kvComponent->SetInt("fontTahoma", 0);
 			
 			//also add component data to the preset
@@ -473,18 +462,21 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	// Purpose: Update the currently selected preset from the controls
 	//-----------------------------------------------------------------------------	
-	void CFFCustomHudStylePresets::UpdatePresetFromControls(KeyValues *kvPreset)
+	void CFFCustomHudItemStylePresets::UpdatePresetFromControls(KeyValues *kvPreset)
 	{
-		BaseClass::UpdatePresetFromControls(kvPreset);
 		//update the selected component (bar,barBorder,icon,label) with the current values
 		KeyValues *kvComponent = m_pComponentSelection->GetActiveItemUserData();
 		
 		kvComponent->SetInt("show", m_pShow->IsSelected());
-		kvComponent->SetInt("colorMode", m_pColorMode->GetActiveItem());
-		kvComponent->SetInt("red", m_pRed->GetValue());
-		kvComponent->SetInt("green", m_pGreen->GetValue());
-		kvComponent->SetInt("blue", m_pBlue->GetValue());
-		kvComponent->SetInt("alpha", m_pAlpha->GetValue());
+		kvComponent->SetInt("colorMode", m_pColor->GetColorMode());
+
+		int iRed, iGreen, iBlue, iAlpha;
+		m_pColor->GetValue( iRed, iGreen, iBlue, iAlpha );
+
+		kvComponent->SetInt("red", iRed );
+		kvComponent->SetInt("green", iGreen );
+		kvComponent->SetInt("blue", iBlue );
+		kvComponent->SetInt("alpha", iAlpha );
 
 		if(m_pShadow->IsEnabled())
 			kvComponent->SetInt("shadow", m_pShadow->IsSelected());
@@ -500,6 +492,25 @@ namespace vgui
 			kvComponent->SetInt("offsetY", m_pOffsetY->GetValue());
 		if(m_pFontTahoma->IsEnabled())
 			kvComponent->SetInt("fontTahoma", m_pFontTahoma->IsSelected());
+
+		if(m_pAnchorPositionTopLeft->IsEnabled() && m_pAnchorPositionTopLeft->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPLEFT);
+		else if(m_pAnchorPositionTopCenter->IsEnabled() && m_pAnchorPositionTopCenter->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPCENTER);
+		else if(m_pAnchorPositionTopRight->IsEnabled() && m_pAnchorPositionTopRight->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPRIGHT);
+		else if(m_pAnchorPositionMiddleLeft->IsEnabled() && m_pAnchorPositionMiddleLeft->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_MIDDLELEFT);
+		else if(m_pAnchorPositionMiddleCenter->IsEnabled() && m_pAnchorPositionMiddleCenter->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_MIDDLECENTER);
+		else if(m_pAnchorPositionMiddleRight->IsEnabled() && m_pAnchorPositionMiddleRight->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_MIDDLERIGHT);
+		else if(m_pAnchorPositionBottomLeft->IsEnabled() && m_pAnchorPositionBottomLeft->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_BOTTOMLEFT);
+		else if(m_pAnchorPositionBottomCenter->IsEnabled() && m_pAnchorPositionBottomCenter->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_BOTTOMCENTER);
+		else if(m_pAnchorPositionBottomRight->IsEnabled() && m_pAnchorPositionBottomRight->IsSelected())
+			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_BOTTOMRIGHT);
 
 		//update the main preset, damn thing copies rather than keeping the same pointer
 		//
@@ -526,16 +537,23 @@ namespace vgui
 			kvPreset->SetInt("itemColumns", m_pItemColumns->GetValue());
 		}
 
-		//TODO: send preset to preview
+		BaseClass::UpdatePresetFromControls(kvPreset);
 	}
 	
 	//-----------------------------------------------------------------------------
 	// Purpose: Apply the selected preset to the contols
 	//-----------------------------------------------------------------------------	
-	void CFFCustomHudStylePresets::ApplyPresetToControls(KeyValues *kvPreset)
+	void CFFCustomHudItemStylePresets::ApplyPresetToControls(KeyValues *kvPreset)
 	{
-		m_bPresetLoading = true;
 		//this disables the preset options from registering these changes as a preset update!
+		m_pBarWidth->RemoveActionSignalTarget(this);
+		m_pBarHeight->RemoveActionSignalTarget(this);
+		m_pBarBorderWidth->RemoveActionSignalTarget(this);
+		m_pBarOrientation->RemoveActionSignalTarget(this);
+		m_pItemMarginHorizontal->RemoveActionSignalTarget(this);
+		m_pItemMarginVertical->RemoveActionSignalTarget(this);
+		m_pItemColumns->RemoveActionSignalTarget(this);
+		m_pComponentSelection->RemoveActionSignalTarget(this);
 
 		m_pBarWidth->SetValue(kvPreset->GetInt("barWidth", 60));
 		m_pBarHeight->SetValue(kvPreset->GetInt("barHeight", 10));
@@ -731,26 +749,83 @@ namespace vgui
 			kvPreset->AddSubKey(kvComponent);	
 		}
 
+		if(m_pComponentSelection->GetActiveItem() == iMenuItemToShow)
+		{
+			m_pOffsetX->RemoveActionSignalTarget(this);
+			m_pOffsetY->RemoveActionSignalTarget(this);
+			m_pSize->RemoveActionSignalTarget(this);
+
+			m_pColor->RemoveActionSignalTarget(this);
+			
+			m_pAlignH->RemoveActionSignalTarget(this);
+			m_pAlignV->RemoveActionSignalTarget(this);
+			
+			m_pShadow->RemoveActionSignalTarget(this);
+			m_pShow->RemoveActionSignalTarget(this);
+			m_pFontTahoma->RemoveActionSignalTarget(this);
+			
+			m_pAnchorPositionTopLeft->RemoveActionSignalTarget(this);
+			m_pAnchorPositionTopCenter->RemoveActionSignalTarget(this);
+			m_pAnchorPositionTopRight->RemoveActionSignalTarget(this);
+			m_pAnchorPositionMiddleLeft->RemoveActionSignalTarget(this);
+			m_pAnchorPositionMiddleCenter->RemoveActionSignalTarget(this);
+			m_pAnchorPositionMiddleRight->RemoveActionSignalTarget(this);
+			m_pAnchorPositionBottomLeft->RemoveActionSignalTarget(this);
+			m_pAnchorPositionBottomCenter->RemoveActionSignalTarget(this);
+			m_pAnchorPositionBottomRight->RemoveActionSignalTarget(this);
+
+			//force an update of component controls because the dropdown won't register a change to do it itself
+			UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
+			
+			m_pColor->AddActionSignalTarget(this);
+
+			m_pOffsetX->AddActionSignalTarget(this);
+			m_pOffsetY->AddActionSignalTarget(this);
+			m_pSize->AddActionSignalTarget(this);
+			
+			m_pAlignH->AddActionSignalTarget(this);
+			m_pAlignV->AddActionSignalTarget(this);
+			
+			m_pShadow->AddActionSignalTarget(this);
+			m_pShow->AddActionSignalTarget(this);
+			m_pFontTahoma->AddActionSignalTarget(this);
+
+			m_pAnchorPositionTopLeft->AddActionSignalTarget(this);
+			m_pAnchorPositionTopCenter->AddActionSignalTarget(this);
+			m_pAnchorPositionTopRight->AddActionSignalTarget(this);
+			m_pAnchorPositionMiddleLeft->AddActionSignalTarget(this);
+			m_pAnchorPositionMiddleCenter->AddActionSignalTarget(this);
+			m_pAnchorPositionMiddleRight->AddActionSignalTarget(this);
+			m_pAnchorPositionBottomLeft->AddActionSignalTarget(this);
+			m_pAnchorPositionBottomCenter->AddActionSignalTarget(this);
+			m_pAnchorPositionBottomRight->AddActionSignalTarget(this);
+		}
 		//select the item which was previously selected (might be default 0)
 		m_pComponentSelection->ActivateItemByRow(iMenuItemToShow);
-
-		UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
-
-		m_bPresetLoading = false;
-		//this enables the preset options to register following changes as a preset update!
+		
+		m_pBarWidth->AddActionSignalTarget(this);
+		m_pBarHeight->AddActionSignalTarget(this);
+		m_pBarBorderWidth->AddActionSignalTarget(this);
+		m_pBarOrientation->AddActionSignalTarget(this);
+		m_pItemMarginHorizontal->AddActionSignalTarget(this);
+		m_pItemMarginVertical->AddActionSignalTarget(this);
+		m_pItemColumns->AddActionSignalTarget(this);
+		m_pComponentSelection->AddActionSignalTarget(this);
 	}
 	
 	//-----------------------------------------------------------------------------
 	// Purpose: Update the component controls from the selected Component
 	//-----------------------------------------------------------------------------	
-	void CFFCustomHudStylePresets::UpdateComponentControls(KeyValues *kvComponent)
+	void CFFCustomHudItemStylePresets::UpdateComponentControls(KeyValues *kvComponent)
 	{
 		m_pShow->SetSelected(kvComponent->GetInt("show", 1));
-		m_pColorMode->ActivateItemByRow(kvComponent->GetInt("colorMode", 0));
-		m_pRed->SetValue(kvComponent->GetInt("red", 255));
-		m_pGreen->SetValue(kvComponent->GetInt("green", 255));
-		m_pBlue->SetValue(kvComponent->GetInt("blue", 255));
-		m_pAlpha->SetValue(kvComponent->GetInt("alpha", 255));
+		m_pColor->SetColorMode(kvComponent->GetInt("colorMode", 0));
+
+		m_pColor->SetValue(
+			kvComponent->GetInt("red", 255), 
+			kvComponent->GetInt("green", 255),
+			kvComponent->GetInt("blue", 255),
+			kvComponent->GetInt("alpha", 255) );
 
 		if(m_pShadow->IsEnabled())
 			m_pShadow->SetSelected(kvComponent->GetInt("shadow", 0));
@@ -786,124 +861,298 @@ namespace vgui
 			m_pFontTahoma->SetSelected(kvComponent->GetInt("fontTahoma", 0));
 		else
 			m_pFontTahoma->SetSelected(false);
+
+		if(m_pAnchorPositionTopLeft->IsEnabled())
+			m_pAnchorPositionTopLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPLEFT);
+		else
+			m_pAnchorPositionTopLeft->SetSelected(false);
+
+		if(m_pAnchorPositionTopCenter->IsEnabled())
+			m_pAnchorPositionTopCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPCENTER);
+		else
+			m_pAnchorPositionTopCenter->SetSelected(false);
+
+		if(m_pAnchorPositionTopRight->IsEnabled())
+			m_pAnchorPositionTopRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPRIGHT);
+		else
+			m_pAnchorPositionTopRight->SetSelected(false);
+
+		if(m_pAnchorPositionMiddleLeft->IsEnabled())
+			m_pAnchorPositionMiddleLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLELEFT);
+		else
+			m_pAnchorPositionMiddleLeft->SetSelected(false);
+
+		if(m_pAnchorPositionMiddleCenter->IsEnabled())
+			m_pAnchorPositionMiddleCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLECENTER);
+		else
+			m_pAnchorPositionMiddleCenter->SetSelected(false);
+
+		if(m_pAnchorPositionMiddleRight->IsEnabled())
+			m_pAnchorPositionMiddleRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLERIGHT);
+		else
+			m_pAnchorPositionMiddleRight->SetSelected(false);
+
+		if(m_pAnchorPositionBottomLeft->IsEnabled())
+			m_pAnchorPositionBottomLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMLEFT);
+		else
+			m_pAnchorPositionBottomLeft->SetSelected(false);
+
+		if(m_pAnchorPositionBottomCenter->IsEnabled())
+			m_pAnchorPositionBottomCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMCENTER);
+		else
+			m_pAnchorPositionBottomCenter->SetSelected(false);
+
+		if(m_pAnchorPositionBottomRight->IsEnabled())
+			m_pAnchorPositionBottomRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMRIGHT);
+		else
+			m_pAnchorPositionBottomRight->SetSelected(false);
 	}
 	
+	void CFFCustomHudItemStylePresets::OnUpdateComponentSelection()
+	{
+		m_pOffsetX->RemoveActionSignalTarget(this);
+		m_pOffsetY->RemoveActionSignalTarget(this);
+		m_pSize->RemoveActionSignalTarget(this);
+
+		m_pColor->RemoveActionSignalTarget(this);
+		
+		m_pAlignH->RemoveActionSignalTarget(this);
+		m_pAlignV->RemoveActionSignalTarget(this);
+		
+		m_pShadow->RemoveActionSignalTarget(this);
+		m_pShow->RemoveActionSignalTarget(this);
+		m_pFontTahoma->RemoveActionSignalTarget(this);
+		
+		m_pAnchorPositionTopLeft->RemoveActionSignalTarget(this);
+		m_pAnchorPositionTopCenter->RemoveActionSignalTarget(this);
+		m_pAnchorPositionTopRight->RemoveActionSignalTarget(this);
+		m_pAnchorPositionMiddleLeft->RemoveActionSignalTarget(this);
+		m_pAnchorPositionMiddleCenter->RemoveActionSignalTarget(this);
+		m_pAnchorPositionMiddleRight->RemoveActionSignalTarget(this);
+		m_pAnchorPositionBottomLeft->RemoveActionSignalTarget(this);
+		m_pAnchorPositionBottomCenter->RemoveActionSignalTarget(this);
+		m_pAnchorPositionBottomRight->RemoveActionSignalTarget(this);
+
+		const char* m_szName = m_pComponentSelection->GetActiveItemUserData()->GetName();
+		if(!(Q_stricmp(m_szName, "Bar") == 0 || Q_stricmp(m_szName, "BarBorder") == 0 || Q_stricmp(m_szName, "BarBackground") == 0))
+		{
+			if(Q_stricmp(m_szName, "Icon") == 0)
+			{
+				m_pFontTahoma->SetEnabled(false);
+				m_pSize->SetRange(1, QUANTITYBARICONSIZES);
+			}
+			else
+			{
+				m_pFontTahoma->SetEnabled(true);
+				m_pSize->SetRange(1, QUANTITYBARFONTSIZES);
+			}
+
+			m_pShadow->SetEnabled(true);
+			m_pSize->SetEnabled(true);
+			m_pSizeLabel->SetEnabled(true);
+			m_pOffsetX->SetEnabled(true);
+			m_pOffsetXLabel->SetEnabled(true);
+			m_pOffsetY->SetEnabled(true);
+			m_pOffsetYLabel->SetEnabled(true);
+			m_pOffsetLabel->SetEnabled(true);
+			m_pTextLabel->SetEnabled(true);
+			m_pAlignH->SetEnabled(true);
+			m_pAlignHLabel->SetEnabled(true);
+			m_pAlignV->SetEnabled(true);
+			m_pAlignVLabel->SetEnabled(true);
+			m_pAlignLabel->SetEnabled(true);
+			m_pAnchorPositionLabel->SetEnabled(true);
+			m_pAnchorPositionTopLeft->SetEnabled(true);
+			m_pAnchorPositionTopCenter->SetEnabled(true);
+			m_pAnchorPositionTopRight->SetEnabled(true);
+			m_pAnchorPositionMiddleLeft->SetEnabled(true);
+			m_pAnchorPositionMiddleCenter->SetEnabled(true);
+			m_pAnchorPositionMiddleRight->SetEnabled(true);
+			m_pAnchorPositionBottomLeft->SetEnabled(true);
+			m_pAnchorPositionBottomCenter->SetEnabled(true);
+			m_pAnchorPositionBottomRight->SetEnabled(true);
+		}
+		else
+		{
+			m_pFontTahoma->SetEnabled(false);
+			m_pShadow->SetEnabled(false);
+			m_pSize->SetEnabled(false);
+			m_pSizeLabel->SetEnabled(false);
+			m_pOffsetX->SetEnabled(false);
+			m_pOffsetXLabel->SetEnabled(false);
+			m_pOffsetY->SetEnabled(false);
+			m_pOffsetYLabel->SetEnabled(false);
+			m_pOffsetLabel->SetEnabled(false);
+			m_pTextLabel->SetEnabled(false);
+			m_pAlignH->SetEnabled(false);
+			m_pAlignHLabel->SetEnabled(false);
+			m_pAlignV->SetEnabled(false);
+			m_pAlignVLabel->SetEnabled(false);
+			m_pAlignLabel->SetEnabled(false);
+			m_pAnchorPositionLabel->SetEnabled(false);
+			m_pAnchorPositionTopLeft->SetEnabled(false);
+			m_pAnchorPositionTopCenter->SetEnabled(false);
+			m_pAnchorPositionTopRight->SetEnabled(false);
+			m_pAnchorPositionMiddleLeft->SetEnabled(false);
+			m_pAnchorPositionMiddleCenter->SetEnabled(false);
+			m_pAnchorPositionMiddleRight->SetEnabled(false);
+			m_pAnchorPositionBottomLeft->SetEnabled(false);
+			m_pAnchorPositionBottomCenter->SetEnabled(false);
+			m_pAnchorPositionBottomRight->SetEnabled(false);
+		}
+
+		UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
+
+		m_pColor->AddActionSignalTarget(this);
+
+		m_pOffsetX->AddActionSignalTarget(this);
+		m_pOffsetY->AddActionSignalTarget(this);
+		m_pSize->AddActionSignalTarget(this);
+		
+		m_pAlignH->AddActionSignalTarget(this);
+		m_pAlignV->AddActionSignalTarget(this);
+		
+		m_pShadow->AddActionSignalTarget(this);
+		m_pShow->AddActionSignalTarget(this);
+		m_pFontTahoma->AddActionSignalTarget(this);
+
+		m_pAnchorPositionTopLeft->AddActionSignalTarget(this);
+		m_pAnchorPositionTopCenter->AddActionSignalTarget(this);
+		m_pAnchorPositionTopRight->AddActionSignalTarget(this);
+		m_pAnchorPositionMiddleLeft->AddActionSignalTarget(this);
+		m_pAnchorPositionMiddleCenter->AddActionSignalTarget(this);
+		m_pAnchorPositionMiddleRight->AddActionSignalTarget(this);
+		m_pAnchorPositionBottomLeft->AddActionSignalTarget(this);
+		m_pAnchorPositionBottomCenter->AddActionSignalTarget(this);
+		m_pAnchorPositionBottomRight->AddActionSignalTarget(this);
+	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the comboboxs changing their selection
 	//-----------------------------------------------------------------------------
-	void CFFCustomHudStylePresets::OnUpdateCombos(KeyValues *data)
+	void CFFCustomHudItemStylePresets::OnUpdateCombos(KeyValues *data)
 	{
-		if(m_bLoaded && !m_bPresetLoading && data->GetPtr("panel") == m_pComponentSelection)
+		if(m_bLoaded && data->GetPtr("panel") == m_pComponentSelection)
 		//if we're changing component selection box (bar, barBorder, barBackground, icon, label, amount)
 		{
-			const char* m_szName = m_pComponentSelection->GetActiveItemUserData()->GetName();
-			if(!(Q_stricmp(m_szName, "Bar") == 0 || Q_stricmp(m_szName, "BarBorder") == 0 || Q_stricmp(m_szName, "BarBackground") == 0))
-			{
-				if(Q_stricmp(m_szName, "Icon") == 0)
-				{
-					m_pFontTahoma->SetEnabled(false);
-					m_pSize->SetRange(1, QUANTITYBARICONSIZES);
-				}
-				else
-				{
-					m_pFontTahoma->SetEnabled(true);
-					m_pSize->SetRange(1, QUANTITYBARFONTSIZES);
-				}
-
-				m_pShadow->SetEnabled(true);
-				m_pSize->SetEnabled(true);
-				m_pSizeLabel->SetEnabled(true);
-				m_pOffsetX->SetEnabled(true);
-				m_pOffsetXLabel->SetEnabled(true);
-				m_pOffsetY->SetEnabled(true);
-				m_pOffsetYLabel->SetEnabled(true);
-				m_pOffsetLabel->SetEnabled(true);
-				m_pTextLabel->SetEnabled(true);
-				m_pAlignH->SetEnabled(true);
-				m_pAlignHLabel->SetEnabled(true);
-				m_pAlignV->SetEnabled(true);
-				m_pAlignVLabel->SetEnabled(true);
-				m_pAlignLabel->SetEnabled(true);
-			}
-			else
-			{
-				m_pFontTahoma->SetEnabled(false);
-				m_pShadow->SetEnabled(false);
-				m_pSize->SetEnabled(false);
-				m_pSizeLabel->SetEnabled(false);
-				m_pOffsetX->SetEnabled(false);
-				m_pOffsetXLabel->SetEnabled(false);
-				m_pOffsetY->SetEnabled(false);
-				m_pOffsetYLabel->SetEnabled(false);
-				m_pOffsetLabel->SetEnabled(false);
-				m_pTextLabel->SetEnabled(false);
-				m_pAlignH->SetEnabled(false);
-				m_pAlignHLabel->SetEnabled(false);
-				m_pAlignV->SetEnabled(false);
-				m_pAlignVLabel->SetEnabled(false);
-				m_pAlignLabel->SetEnabled(false);
-			}
-			UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
+			OnUpdateComponentSelection();
 		}
-		else if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pColorMode))
+		else if (m_bLoaded && (data->GetPtr("panel") == m_pAlignV))
 		{
-			const char* m_szName = m_pColorMode->GetActiveItemUserData()->GetName();
-			if(Q_stricmp(m_szName, "Custom") == 0)
-			{
-				m_pRed->SetEnabled(true);
-				m_pGreen->SetEnabled(true);
-				m_pBlue->SetEnabled(true);
-			}
-			else
-			{
-				m_pRed->SetEnabled(false);
-				m_pGreen->SetEnabled(false);
-				m_pBlue->SetEnabled(false);
-			}
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 		}
-		else if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pAlignV))
+		else if (m_bLoaded && (data->GetPtr("panel") == m_pAlignH))
+		{
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
-		else if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pAlignH))
+		}
+		else if (m_bLoaded && (data->GetPtr("panel") == m_pBarOrientation))
+		{
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
-		else if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pBarOrientation))
-			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
+		}
 		else
+		{
 			BaseClass::OnUpdateCombos(data);
+		}
 	}
 	
+	void CFFCustomHudItemStylePresets::RefreshAnchorPositionCheckButtons(CheckButton *pCheckButton)
+	{
+		if(pCheckButton == m_pAnchorPositionTopLeft 
+			|| pCheckButton == m_pAnchorPositionTopCenter
+			|| pCheckButton == m_pAnchorPositionTopRight
+			|| pCheckButton == m_pAnchorPositionMiddleLeft
+			|| pCheckButton == m_pAnchorPositionMiddleCenter
+			|| pCheckButton == m_pAnchorPositionMiddleRight
+			|| pCheckButton == m_pAnchorPositionBottomLeft
+			|| pCheckButton == m_pAnchorPositionBottomCenter
+			|| pCheckButton == m_pAnchorPositionBottomRight)
+		{	
+			m_pAnchorPositionTopLeft->RemoveActionSignalTarget(this);
+			m_pAnchorPositionTopCenter->RemoveActionSignalTarget(this);
+			m_pAnchorPositionTopRight->RemoveActionSignalTarget(this);
+			m_pAnchorPositionMiddleLeft->RemoveActionSignalTarget(this);
+			m_pAnchorPositionMiddleCenter->RemoveActionSignalTarget(this);
+			m_pAnchorPositionMiddleRight->RemoveActionSignalTarget(this);
+			m_pAnchorPositionBottomLeft->RemoveActionSignalTarget(this);
+			m_pAnchorPositionBottomCenter->RemoveActionSignalTarget(this);
+			m_pAnchorPositionBottomRight->RemoveActionSignalTarget(this);
+
+			if(!pCheckButton->IsSelected())
+			{
+				pCheckButton->SetSelected(true);
+			}
+
+			m_pAnchorPositionTopLeft->SetSelected(pCheckButton == m_pAnchorPositionTopLeft);
+			m_pAnchorPositionTopCenter->SetSelected(pCheckButton == m_pAnchorPositionTopCenter);
+			m_pAnchorPositionTopRight->SetSelected(pCheckButton == m_pAnchorPositionTopRight);
+			m_pAnchorPositionMiddleLeft->SetSelected(pCheckButton == m_pAnchorPositionMiddleLeft);
+			m_pAnchorPositionMiddleCenter->SetSelected(pCheckButton == m_pAnchorPositionMiddleCenter);
+			m_pAnchorPositionMiddleRight->SetSelected(pCheckButton == m_pAnchorPositionMiddleRight);
+			m_pAnchorPositionBottomLeft->SetSelected(pCheckButton == m_pAnchorPositionBottomLeft);
+			m_pAnchorPositionBottomCenter->SetSelected(pCheckButton == m_pAnchorPositionBottomCenter);
+			m_pAnchorPositionBottomRight->SetSelected(pCheckButton == m_pAnchorPositionBottomRight);
+
+			m_pAnchorPositionTopLeft->AddActionSignalTarget(this);
+			m_pAnchorPositionTopCenter->AddActionSignalTarget(this);
+			m_pAnchorPositionTopRight->AddActionSignalTarget(this);
+			m_pAnchorPositionMiddleLeft->AddActionSignalTarget(this);
+			m_pAnchorPositionMiddleCenter->AddActionSignalTarget(this);
+			m_pAnchorPositionMiddleRight->AddActionSignalTarget(this);
+			m_pAnchorPositionBottomLeft->AddActionSignalTarget(this);
+			m_pAnchorPositionBottomCenter->AddActionSignalTarget(this);
+			m_pAnchorPositionBottomRight->AddActionSignalTarget(this);
+		}
+	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the checkboxes changing their state
 	//-----------------------------------------------------------------------------
-	void CFFCustomHudStylePresets::OnUpdateCheckbox(KeyValues *data)
+	void CFFCustomHudItemStylePresets::OnUpdateCheckButton(KeyValues *data)
 	{
-		if(m_bLoaded && !m_bPresetLoading)
+		RefreshAnchorPositionCheckButtons(reinterpret_cast<CheckButton*>(data->GetPtr("panel")));
+
+		if(m_bLoaded)
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 	}
 	
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the sliders moving
 	//-----------------------------------------------------------------------------
-	void CFFCustomHudStylePresets::OnUpdateSliders(KeyValues *data)
+	void CFFCustomHudItemStylePresets::OnUpdateSliders(KeyValues *data)
 	{
-		if(m_bLoaded && !m_bPresetLoading)
+		if(m_bLoaded)
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 	}
 
-	void CFFCustomHudStylePresets::SendUpdatedPresetNameToPresetAssignment(const char *pszPresetName)
+	void CFFCustomHudItemStylePresets::OnColorChanged(KeyValues *data)
 	{
-		g_AP->StylePresetUpdated(pszPresetName);
+		if(m_bLoaded)
+			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 	}
-	void CFFCustomHudStylePresets::SendRenamedPresetNameToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName)
+	void CFFCustomHudItemStylePresets::OnColorModeChanged(KeyValues *data)
 	{
-		g_AP->StylePresetRenamed(pszOldPresetName, pszNewPresetName);
+		if(m_bLoaded)
+			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 	}
-	void CFFCustomHudStylePresets::SendDeletedPresetNameToPresetAssignment(const char *pszDeletedPresetName)
+
+	void CFFCustomHudItemStylePresets::SendUpdatedPresetPreviewToPresetAssignment(const char *pszPresetName, KeyValues *kvPresetPreview)
 	{
-		g_AP->StylePresetDeleted(pszDeletedPresetName);
+		g_AP->ItemStylePresetPreviewUpdated(pszPresetName, kvPresetPreview);
 	}
-	void CFFCustomHudStylePresets::SendNewPresetNameToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset)
+	void CFFCustomHudItemStylePresets::SendUpdatedPresetToPresetAssignment(const char *pszPresetName)
 	{
-		g_AP->StylePresetAdded(pszPresetName, kvPreset);
+		g_AP->ItemStylePresetUpdated(pszPresetName);
+	}
+	void CFFCustomHudItemStylePresets::SendRenamedPresetToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName)
+	{
+		g_AP->ItemStylePresetRenamed(pszOldPresetName, pszNewPresetName);
+	}
+	void CFFCustomHudItemStylePresets::SendDeletedPresetToPresetAssignment(const char *pszDeletedPresetName)
+	{
+		g_AP->ItemStylePresetDeleted(pszDeletedPresetName);
+	}
+	void CFFCustomHudItemStylePresets::SendNewPresetToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset)
+	{
+		g_AP->ItemStylePresetAdded(pszPresetName, kvPreset);
 	}
 };

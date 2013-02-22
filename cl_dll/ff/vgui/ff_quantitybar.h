@@ -1,20 +1,20 @@
 /********************************************************************
 	created:	2006/02/04
 	created:	4:2:2006   15:58
-	filename: 	F:\cvs\code\cl_dll\ff\ff_hud_quantitybar.h
+	filename: 	F:\cvs\code\cl_dll\ff\ff_hud_quantityitem.h
 	file path:	F:\cvs\code\cl_dll\ff
-	file base:	ff_hud_quantitybar
+	file base:	ff_hud_quantityitem
 	file ext:	h
 	author:		Elmo
 	
 	purpose:	Customisable Quanitity indicator
 *********************************************************************/
 
-#ifndef FF_QUANTITYBAR_H
-#define FF_QUANTITYBAR_H
+#ifndef FF_QUANTITYITEM_H
+#define FF_QUANTITYITEM_H
 
-#define QUANTITYBARFONTSIZES 10
-#define QUANTITYBARICONSIZES 15
+#define QUANTITYBARFONTSIZES 15
+#define QUANTITYBARICONSIZES 20
 
 #include "cbase.h"
 
@@ -29,18 +29,30 @@
 #include <vgui/ILocalize.h>
 namespace vgui
 {
-	class FFQuantityBar : public Panel
+	class FFQuantityItem : public Panel
 	{
 	private:
-		DECLARE_CLASS_SIMPLE( FFQuantityBar, Panel );
+		DECLARE_CLASS_SIMPLE( FFQuantityItem, Panel );
 	public:
-		FFQuantityBar( Panel *parent, const char *pElementName );
+		FFQuantityItem( Panel *parent, const char *pElementName );
 
 		enum ColorMode {
-			COLOR_MODE_CUSTOM=0,
-			COLOR_MODE_STEPPED,
-			COLOR_MODE_FADED,
-			COLOR_MODE_TEAMCOLORED
+			ITEM_COLOR_MODE_CUSTOM=0,
+			ITEM_COLOR_MODE_STEPPED,
+			ITEM_COLOR_MODE_FADED,
+			ITEM_COLOR_MODE_TEAMCOLORED
+		};
+		
+		enum Position {
+			ANCHORPOS_TOPLEFT=0,
+			ANCHORPOS_TOPCENTER,
+			ANCHORPOS_TOPRIGHT,
+			ANCHORPOS_MIDDLELEFT,
+			ANCHORPOS_MIDDLECENTER,
+			ANCHORPOS_MIDDLERIGHT,
+			ANCHORPOS_BOTTOMLEFT,
+			ANCHORPOS_BOTTOMCENTER,
+			ANCHORPOS_BOTTOMRIGHT
 		};
 
 		enum AlignmentHorizontal {
@@ -55,60 +67,79 @@ namespace vgui
 			ALIGN_BOTTOM
 		};
 
-		enum OrientationMode {
+		enum Orientation {
 			ORIENTATION_HORIZONTAL=0,
 			ORIENTATION_VERTICAL,
 			ORIENTATION_HORIZONTAL_INVERTED,
 			ORIENTATION_VERTICAL_INVERTED
 		};
 
-		bool GetChildDimentionsChanged();
-		void SetChildDimentionsChanged( bool bChildDimentionsChanged );
+		bool GetItemDimentionsChanged();
+		void SetItemDimentionsChanged( bool bItemDimentionsChanged );
 
 		void GetPanelPositioningData( int& iWidth, int& iHeight, int& iBarOffsetX, int&  iBarOffsetY );
+		virtual void SetPos( int iLeft, int iTop );
 		void SetPosOffset( int iLeft, int iTop );
+		void SetPaintOffset( int iLeft, int iTop );
 		void SetStyle(KeyValues *kvStyleData, KeyValues *kvDefaultStyleData );
 
 		void SetAmount( int iAmount );
-		void SetAmountMax( int iAmountMax, bool bRecalculateBarPositioningOffset  = true );
+		void SetAmountMax( int iAmountMax, bool bRecalculatePaintOffset = true );
 
-		void SetIconChar(char *newIconChar, bool bRecalculateBarPositioningOffset  = true );
-		void SetLabelText(char *newLabelText, bool bRecalculateBarPositioningOffset  = true );
-		void SetLabelText(wchar_t *newLabelText, bool bRecalculateBarPositioningOffset  = true );
+		void SetIconChar(char *newIconChar, bool bRecalculatePaintOffset = true );
+		void SetLabelText(char *newLabelText, bool bRecalculatePaintOffset = true );
+		void SetLabelText(wchar_t *newLabelText, bool bRecalculatePaintOffset = true );
 
-		void SetAmountSize( int newAmountSize, bool bRecalculateBarPositioningOffset  = true );
-		void SetIconSize( int newIconSize, bool bRecalculateBarPositioningOffset  = true );
-		void SetLabelSize( int newLabelSize, bool bRecalculateBarPositioningOffset  = true );
+		void SetAmountSize( int newAmountSize, bool bRecalculatePaintOffset = true );
+		void SetIconSize( int newIconSize, bool bRecalculatePaintOffset = true );
+		void SetLabelSize( int newLabelSize, bool bRecalculatePaintOffset = true );
 
 		void SetAmountFontShadow( bool bHasShadow );
 		void SetIconFontShadow( bool bHasShadow );
 		void SetLabelFontShadow( bool bHasShadow );
-		void SetIconFontGlyph( bool bIconIsGlyph, bool bRecalculateBarPositioningOffset  = true );
-		void SetLabelFontTahoma( bool bLabelFontTahoma, bool bRecalculateBarPositioningOffset  = true );
-		void SetAmountFontTahoma( bool bAmountFontTahoma, bool bRecalculateBarPositioningOffset  = true );
 
-		void SetBarWidth( int iBarWidth, bool bRecalculateBarPositioningOffset  = true );
-		void SetBarHeight( int iBarHeight, bool bRecalculateBarPositioningOffset  = true );
-		void SetBarSize( int iBarWidth, int iBarHeight, bool bRecalculateBarPositioningOffset  = true );
-		void SetBarBorderWidth( int iBarBorderWidth, bool bRecalculateBarPositioningOffset  = true );
-		void SetBarOrientation( int iOrientation );
+		void SetIconFontGlyph( bool bIconIsGlyph, bool bRecalculatePaintOffset = true );
 
-		void SetLabelAlignmentHorizontal( int iAlignHLabel, bool bRecalculateBarPositioningOffset  = true );
-		void SetAmountAlignmentHorizontal( int iAlignHAmount, bool bRecalculateBarPositioningOffset  = true );
-		void SetIconAlignmentHorizontal( int iAlignHIcon, bool bRecalculateBarPositioningOffset  = true );
-		void SetLabelAlignmentVertical( int iAlignVLabel, bool bRecalculateBarPositioningOffset  = true );
-		void SetAmountAlignmentVertical( int iAlignVAmount, bool bRecalculateBarPositioningOffset  = true );
-		void SetIconAlignmentVertical( int iAlignVIcon, bool bRecalculateBarPositioningOffset  = true );
+		void SetAmountFontTahoma( bool bAmountFontTahoma, bool bRecalculatePaintOffset = true );
+		void SetLabelFontTahoma( bool bLabelFontTahoma, bool bRecalculatePaintOffset = true );
 
-		void ShowBar( bool bShowBar, bool bRecalculateBarPositioningOffset  = true );
-		void ShowBarBorder( bool bShowBarBorder, bool bRecalculateBarPositioningOffset  = true );
-		void ShowBarBackground( bool bShowBarBackground, bool bRecalculateBarPositioningOffset  = true );
-		void ShowAmount( bool bShowAmount, bool bRecalculateBarPositioningOffset  = true );
-		void ShowIcon( bool bShowIcon, bool bRecalculateBarPositioningOffset  = true );
-		void ShowLabel( bool bShowLabel, bool bRecalculateBarPositioningOffset  = true );
-		void ShowAmountMax( bool bShowAmountMax, bool bRecalculateBarPositioningOffset  = true );
+		void SetBarWidth( int iBarWidth, bool bRecalculatePaintOffset = true );
+		void SetBarHeight( int iBarHeight, bool bRecalculatePaintOffset = true );
+		void SetBarSize( int iBarWidth, int iBarHeight, bool bRecalculatePaintOffset = true );
+		void SetBarBorderWidth( int iBarBorderWidth, bool bRecalculatePaintOffset = true );
+		void SetBarOrientation( int iBarOrientation );
 
-		void SetBarColor( Color newColorBar  );
+		void SetAmountAnchorPosition( int iAmountAnchorPosition, bool bRecalculatePaintOffset = true );
+		void SetIconAnchorPosition( int iIconAnchorPosition, bool bRecalculatePaintOffset = true );
+		void SetLabelAnchorPosition( int iLabelAnchorPosition, bool bRecalculatePaintOffset = true );
+
+		void SetAmountAlignmentHorizontal( int iAmountAlignHoriz, bool bRecalculatePaintOffset = true );
+		void SetIconAlignmentHorizontal( int iIconAlignHoriz, bool bRecalculatePaintOffset = true );
+		void SetLabelAlignmentHorizontal( int iLabelAlignHoriz, bool bRecalculatePaintOffset = true );
+
+		void SetAmountAlignmentVertical( int iAmountAlignVert, bool bRecalculatePaintOffset = true );
+		void SetIconAlignmentVertical( int iIconAlignVert, bool bRecalculatePaintOffset = true );
+		void SetLabelAlignmentVertical( int iLabelAlignVert, bool bRecalculatePaintOffset = true );
+
+		void SetAmountPositionOffsetX( int iAmountPositionOffsetX, bool bRecalculatePaintOffset = true );
+		void SetAmountPositionOffsetY( int iAmountPositionOffsetY, bool bRecalculatePaintOffset = true );
+		void SetAmountPositionOffset( int iAmountPositionOffsetX, int iAmountPositionOffsetY, bool bRecalculatePaintOffset = true );
+		void SetIconPositionOffsetX( int iIconPositionOffsetX, bool bRecalculatePaintOffset = true );
+		void SetIconPositionOffsetY( int iIconPositionOffsetY, bool bRecalculatePaintOffset = true );
+		void SetIconPositionOffset( int iIconPositionOffsetX, int iIconPositionOffsetY, bool bRecalculatePaintOffset = true );
+		void SetLabelPositionOffsetX( int iLabelPositionOffsetX, bool bRecalculatePaintOffset = true );
+		void SetLabelPositionOffsetY( int iLabelPositionOffsetY, bool bRecalculatePaintOffset = true );
+		void SetLabelPositionOffset( int iLabelPositionOffsetX, int iLabelPositionOffsetY, bool bRecalculatePaintOffset = true );
+
+		void ShowBar( bool bShowBar, bool bRecalculatePaintOffset = true );
+		void ShowBarBorder( bool bShowBarBorder, bool bRecalculatePaintOffset = true );
+		void ShowBarBackground( bool bShowBarBackground, bool bRecalculatePaintOffset = true );
+		void ShowAmount( bool bShowAmount, bool bRecalculatePaintOffset = true );
+		void ShowAmountMax( bool bShowAmountMax, bool bRecalculatePaintOffset = true );
+		void ShowIcon( bool bShowIcon, bool bRecalculatePaintOffset = true );
+		void ShowLabel( bool bShowLabel, bool bRecalculatePaintOffset = true );
+
+		void SetBarColor( Color newBarColor  );
 		void SetBarBorderColor( Color newBarBorderColor  );
 		void SetBarBackgroundColor( Color newBarBorderColor  );
 		void SetAmountColor( Color newAmountColor  );
@@ -116,22 +147,12 @@ namespace vgui
 		void SetLabelColor( Color newLabelColor  );
 		void SetTeamColor( Color newTeamColor  );
 
-		void SetIconOffsetX( int iconOffsetX, bool bRecalculateBarPositioningOffset  = true );
-		void SetIconOffsetY( int iconOffsetY, bool bRecalculateBarPositioningOffset  = true );
-		void SetIconOffset( int iconOffsetX, int iconOffsetY, bool bRecalculateBarPositioningOffset  = true );
-		void SetLabelOffsetX( int labelOffsetX, bool bRecalculateBarPositioningOffset  = true );
-		void SetLabelOffsetY( int labelOffsetY, bool bRecalculateBarPositioningOffset  = true );
-		void SetLabelOffset( int labelOffsetX, int labelOffsetY, bool bRecalculateBarPositioningOffset  = true );
-		void SetAmountOffsetX( int amountOffsetX, bool bRecalculateBarPositioningOffset  = true );
-		void SetAmountOffsetY( int amountOffsetY, bool bRecalculateBarPositioningOffset  = true );
-		void SetAmountOffset( int amountOffsetX, int amountOffsetY, bool bRecalculateBarPositioningOffset  = true );
-
-		void SetBarColorMode( int iColorModeBar  );
-		void SetBarBorderColorMode( int iColorModeBarBorder  );
-		void SetBarBackgroundColorMode( int iColorModeBarBorder  );
-		void SetAmountColorMode( int iColorModeAmount  );
-		void SetIconColorMode( int iColorModeIcon  );
-		void SetLabelColorMode( int iColoModerLabel  );
+		void SetBarColorMode( int iBarColorMode );
+		void SetBarBorderColorMode( int iBarBorderColorMode );
+		void SetBarBackgroundColorMode( int iBarBorderColorMode );
+		void SetAmountColorMode( int iAmountColorMode );
+		void SetIconColorMode( int iIconColorMode );
+		void SetLabelColorMode( int iLabelColoModer );
 		
 		void SetIntensityControl( int iRed, int iOrange,int iYellow, int iGreen, bool bInvertScale = false );
 		void SetIntensityAmountScaled( bool bAmountScaled );
@@ -139,65 +160,61 @@ namespace vgui
 		bool IsIntensityValuesFixed( );
 
 		int GetAmount( );
+		int GetMaxAmount( );
 
 		virtual void Paint( );
 		virtual void OnTick( );
+		
+		void SetDisabled(bool bState);
+		bool IsDisabled( );
 
 	protected:
-		void CalculateTextAlignmentOffset( int &outX, int &outY, int &iWide, int &iTall, int iAlignH, int iAlignV, HFont hfFont, wchar_t* wszString );
+		void CalculateTextPositionOffset( int &outX, int &outY, int iPos );
+		void CalculateTextAlignmentOffset( int &outX, int &outY, int &iWide, int &iTall, int iAlignHoriz, int iAlignVert, HFont hfFont, wchar_t* wszString );
 		void RecalculateQuantity( );
-		void RecalculateIconPosition( bool bRecalculateBarPositioningOffset  = true );
-		void RecalculateLabelPosition( bool bRecalculateBarPositioningOffset  = true );
+		void RecalculateIconPosition( bool bRecalculatePaintOffset = true );
+		void RecalculateLabelPosition( bool bRecalculatePaintOffset = true );
 		void RecalculateAmountPosition( );
-		void RecalculateAmountMaxPosition( bool bRecalculateBarPositioningOffset  = true );
-		void RecalculateBarPositioningOffset( );
-
+		void RecalculateAmountMaxPosition( bool bRecalculatePaintOffset = true );
+		void RecalculatePaintOffset( );
 		void RecalculateColor( int colorMode, Color &color, Color &colorCustom );
 
-		bool m_bChildDimentionsChanged;
+		bool m_bItemDimentionsChanged;
 
 		virtual void ApplySchemeSettings( IScheme *pScheme  );
 		
-		HFont m_hfQuantityBarText[QUANTITYBARFONTSIZES * 3];
-		HFont m_hfQuantityBarTahomaText[QUANTITYBARFONTSIZES * 3];
-		HFont m_hfQuantityBarIcon[QUANTITYBARICONSIZES * 3];
-		HFont m_hfQuantityBarGlyph[QUANTITYBARICONSIZES * 3];
+		HFont m_hfQuantityItemText[QUANTITYBARFONTSIZES * 3];
+		HFont m_hfQuantityItemTahomaText[QUANTITYBARFONTSIZES * 3];
+		HFont m_hfQuantityItemIcon[QUANTITYBARICONSIZES * 3];
+		HFont m_hfQuantityItemGlyph[QUANTITYBARICONSIZES * 3];
 
-		bool m_bAmountFontShadow;
-		bool m_bLabelFontShadow;
-		bool m_bIconFontShadow;
-
-		bool m_bIconFontGlyph;
-
-		bool m_bLabelFontTahoma;
-		bool m_bAmountFontTahoma;
+		bool m_bDisabled;
 
 		float m_flScale;
 		float m_flScaleX;
 		float m_flScaleY;
 
+	// *** QuantityItem size and paint position offsets ::
 		int m_iWidth;
 		int m_iHeight;
-		int m_iOffsetX;
-		int m_iOffsetY;
-		int m_iOffsetOverrideX;
-		int m_iOffsetOverrideY;
+		int m_iPositionTop;
+		int m_iPositionLeft;
+		int m_iPositionOffsetTop;
+		int m_iPositionOffsetLeft;
 
-		int m_iOffsetXIcon;
-		int m_iOffsetYIcon;
-		int m_iOffsetXLabel;
-		int m_iOffsetYLabel;
-		int m_iOffsetXAmount;
-		int m_iOffsetYAmount;
-		// *** These get calculated ::
-		int m_iIconPosX;
-		int m_iIconPosY;
-		int m_iIconWidth;
-		int m_iIconHeight;
-		int m_iLabelPosX;
-		int m_iLabelPosY;
-		int m_iLabelWidth;
-		int m_iLabelHeight;
+		//offset determined internally for positioning components around the bar
+		//bar is initially considered at 0,0 icon is at -12,-12 so paint offset for all items is set to 12,12
+		int m_iPaintOffsetX;
+		int m_iPaintOffsetY;
+
+		//offset override is determined by quantity panel positioning so that all bars are inline
+		//IF using 1 bar per row: item 1 paint offset: 12,12 *** bar 2: 13,12 *** bar 3: 18,12
+		//position override would be 13,12 for all 3 bars
+		int m_iPaintOffsetOverrideX;
+		int m_iPaintOffsetOverrideY;
+	// *** QuantityItem size and paint position offsets ^^
+		
+	// *** These get calculated ::
 		int m_iAmountPosX;
 		int m_iAmountPosY;
 		int m_iAmountWidth;
@@ -206,29 +223,76 @@ namespace vgui
 		int m_iAmountMaxPosY;
 		int m_iAmountMaxWidth;
 		int m_iAmountMaxHeight;
-		// *** These get calculated ^^
+		int m_iIconPosX;
+		int m_iIconPosY;
+		int m_iIconWidth;
+		int m_iIconHeight;
+		int m_iLabelPosX;
+		int m_iLabelPosY;
+		int m_iLabelWidth;
+		int m_iLabelHeight;
 
+		int m_iIconAlignmentOffsetX;
+		int m_iIconAlignmentOffsetY;
+		int m_iLabelAlignmentOffsetX;
+		int m_iLabelAlignmentOffsetY;
+		int m_iAmountAlignmentOffsetX;
+		int m_iAmountAlignmentOffsetY;
+		int m_iAmountMaxAlignmentOffsetX;
+		int m_iAmountMaxAlignmentOffsetY;
+
+		int m_iIconAnchorPositionX;
+		int m_iIconAnchorPositionY;
+		int m_iLabelAnchorPositionX;
+		int m_iLabelAnchorPositionY;
+		int m_iAmountAnchorPositionX;
+		int m_iAmountAnchorPositionY;
+		int m_iAmountMaxAnchorPositionX;
+		int m_iAmountMaxAnchorPositionY;
+
+		//Altered depending on the orienatation of the bar
 		int m_iBarX0QuantityOffset;
 		int m_iBarY0QuantityOffset;
 		int m_iBarX1QuantityOffset;
 		int m_iBarY1QuantityOffset;
 
+		Color m_ColorBarBorder;
+		Color m_ColorBarBackground;	
+		Color m_ColorBar;	
+		Color m_ColorIcon;
+		Color m_ColorLabel;
+		Color m_ColorAmount;
+	// *** These get calculated ^^
+
 		int m_iAmount;
 		int m_iMaxAmount;
 
+	// *** Style Settings ::
 		int m_iBarWidth;
 		int m_iBarHeight;
 		int m_iBarBorderWidth;
 		int m_iBarOrientation;
 
-		int m_iAlignHLabel;
-		int m_iAlignHAmount;
-		int m_iAlignHIcon;
+		int m_iAmountAnchorPosition;
+		int m_iIconAnchorPosition;
+		int m_iLabelAnchorPosition;
 
-		int m_iAlignVLabel;
-		int m_iAlignVAmount;
-		int m_iAlignVIcon;
+		int m_iAmountAlignHoriz;
+		int m_iIconAlignHoriz;
+		int m_iLabelAlignHoriz;
 
+		int m_iAmountAlignVert;
+		int m_iIconAlignVert;
+		int m_iLabelAlignVert;
+
+		int m_iAmountPositionOffsetX;
+		int m_iAmountPositionOffsetY;
+		int m_iIconPositionOffsetX;
+		int m_iIconPositionOffsetY;
+		int m_iLabelPositionOffsetX;
+		int m_iLabelPositionOffsetY;
+
+		//TEXT/FONT ::
 		wchar_t m_wszAmount[ 5 ];
 		wchar_t m_wszAmountMax[ 5 ];
 		wchar_t m_wszIcon[ 2 ];
@@ -239,6 +303,16 @@ namespace vgui
 		int m_iSizeAmount;
 		int m_iSizeIcon;
 		int m_iSizeLabel;
+		
+		bool m_bAmountFontShadow;
+		bool m_bIconFontShadow;
+		bool m_bLabelFontShadow;
+
+		bool m_bIconFontGlyph;
+
+		bool m_bAmountFontTahoma;
+		bool m_bLabelFontTahoma;
+		//TEXT/FONT ^^
 
 		bool m_bShowBar;
 		bool m_bShowBarBackground;
@@ -256,30 +330,24 @@ namespace vgui
 		int m_iIntensityGreen;
 		int m_bIntensityInvertScale;
 
-		Color m_ColorBarCustom;
-		Color m_ColorBarBorderCustom;
-		Color m_ColorBarBackgroundCustom;
-		Color m_ColorIconCustom;
-		Color m_ColorLabelCustom;
-		Color m_ColorAmountCustom;
+		Color m_clrBarCustomColor;
+		Color m_clrBarBorderCustomColor;
+		Color m_clrBarBackgroundCustomColor;
+		Color m_clrAmountCustomColor;
+		Color m_clrIconCustomColor;
+		Color m_clrLabelCustomColor;
+
+		int m_iBarColorMode;
+		int m_iBarBorderColorMode;
+		int m_iBarBackgroundColorMode;
+		int m_iAmountColorMode;
+		int m_iIconColorMode;
+		int m_iLabelColorMode;
+	// *** Style Settings ^^
 
 		Color m_ColorTeam;
 		Color m_ColorIntensityFaded;
 		Color m_ColorIntensityStepped;
-
-		Color m_ColorBarBorder;
-		Color m_ColorBarBackground;	
-		Color m_ColorBar;	
-		Color m_ColorIcon;
-		Color m_ColorLabel;
-		Color m_ColorAmount;
-
-		int m_ColorModeBar;
-		int m_ColorModeBarBorder;
-		int m_ColorModeBarBackground;
-		int m_ColorModeIcon;
-		int m_ColorModeLabel;
-		int m_ColorModeAmount;
 	};
 }
 #endif

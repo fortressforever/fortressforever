@@ -15,30 +15,44 @@
 
 using namespace vgui;
 
+
 class CHudBuildStateSentry : public CHudElement, public FFQuantityPanel
 {
 private:
 	DECLARE_CLASS_SIMPLE( CHudBuildStateSentry, FFQuantityPanel );
 
-	FFQuantityBar *m_qbSentryHealth;
-	FFQuantityBar *m_qbSentryLevel;
-	FFQuantityBar *m_qbCellCounter;
+	FFQuantityItem *m_qiSentryHealth;
+	FFQuantityItem *m_qiSentryLevel;
+	FFQuantityItem *m_qiCellCounter;
 
 	bool	m_bBuilt;
 	bool	m_bBuilding;
 	int		m_iMaxCells;
 	wchar_t* m_wszNotBuiltText;
 	wchar_t* m_wszBuildingText;
+	int		m_iHideCells;
+	int		m_iHideLevel;
+	int		m_iShowPanel;
+
+	enum displayOptions
+	{
+		NEVER = 0,
+		ALWAYS,
+		IF_BUILT
+	};
 public:
 	CHudBuildStateSentry(const char *pElementName);
 	~CHudBuildStateSentry();
 
+	KeyValues* AddPanelSpecificOptions(KeyValues *kvOptions);
 	KeyValues* GetDefaultStyleData();
 
 	void Init( void );
 	void VidInit( void );
 	void OnTick( void );
 	void Paint( void );
+
+	void OnStyleDataRecieved( KeyValues *kvStyleData );
 
 	void	MsgFunc_SentryMsg(bf_read &msg);
 };

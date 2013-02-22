@@ -86,7 +86,7 @@ const char *Class_IntToPrintString( int iClassIndex );
 void SetColorByTeam( int iTeam, Color& cColor );
 Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor );
 
-Color getIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen, bool invertScale  );
+Color GetIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen, bool invertScale  );
 
 int FF_NumPlayersOnTeam( int iTeam );
 int FF_GetPlayerOnTeam( int iTeam, int iNum );

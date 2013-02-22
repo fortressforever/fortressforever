@@ -20,7 +20,7 @@ class CHudBuildStateDetpack : public CHudElement, public FFQuantityPanel
 private:
 	DECLARE_CLASS_SIMPLE( CHudBuildStateDetpack, FFQuantityPanel );
 
-	FFQuantityBar *m_qbDetpackTimeLeft;
+	FFQuantityItem *m_qiDetpackTimeLeft;
 
 	bool	m_bBuilt;
 	bool	m_bBuilding;

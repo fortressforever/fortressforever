@@ -538,7 +538,7 @@ void CFFCrosshairOptions::UpdateCrosshairs()
 void CFFCrosshairOptions::UpdateSliders()
 {
 	int iCurrentWeapon = m_pWeapon->GetActiveItem();
-	Assert(iCurrentWeapon >= 0 && iCurrentWeapon <= FF_WEAPON_TOMMYGUN);
+	Assert(iCurrentWeapon >= 0 && iCurrentWeapon <= (FF_WEAPON_TOMMYGUN + 1));
 
 	const WeaponCrosshair_t &cinfo = m_sCrosshairInfo[iCurrentWeapon];
 
