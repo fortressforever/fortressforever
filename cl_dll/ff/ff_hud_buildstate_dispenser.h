@@ -18,9 +18,9 @@ class CHudBuildStateDispenser : public CHudElement, public FFQuantityPanel
 private:
 	DECLARE_CLASS_SIMPLE( CHudBuildStateDispenser, FFQuantityPanel );
 
-	FFQuantityBar *m_qbDispenserHealth;
-	FFQuantityBar *m_qbDispenserAmmo;
-	FFQuantityBar *m_qbCellCounter;
+	FFQuantityItem *m_qiDispenserHealth;
+	FFQuantityItem *m_qiDispenserAmmo;
+	FFQuantityItem *m_qiCellCounter;
 
 	bool	m_bBuilt;
 	bool	m_bBuilding;

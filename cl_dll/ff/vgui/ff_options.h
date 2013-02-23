@@ -27,7 +27,6 @@
 #include "ff_miscoptions.h"
 #include "ff_crosshairoptions.h"
 #include "ff_dlightoptions.h"
-#include "ff_customhudoptions.h"
 
 #include "ff_gameui.h"
 
@@ -56,7 +55,6 @@ private:
 	CFFOptionsPage			*m_pMiscOptions3;
 	CFFOptionsPage			*m_pMiscOptions4;
 	CFFOptionsPage			*m_pDLightOptions;
-	CFFOptionsPage			*m_pCustomHudOptions;
 
 	Button					*m_pOKButton;
 	Button					*m_pCancelButton;

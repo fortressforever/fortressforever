@@ -23,7 +23,7 @@
 #include <KeyValues.h>
 #include "FileSystem.h"
 #include "ff_options.h"
-#include "ff_customhudoptions_preview.h"
+#include "ff_customhudoptions.h"
 #include "ff_gamemodes.h"
 #include "ff_irc.h"
 #include "ff_training.h"
@@ -189,13 +189,13 @@ void VGui_CreateGlobalPanels( void )
 
 	// --> Mirv: Create extra gameui panels
 	ffoptions->Create(uiParent);
-	ffcustomhudpreview->Create(uiParent);
 	ffgamemodes->Create(uiParent);
 	ffirc->Create(uiParent);
 	ffircconnect->Create(uiParent);
 	ffirchost->Create(uiParent);
 	fftraining->Create(uiParent);
 	ffupdates->Create(uiParent);
+	ffcustomhudoptions->Create(uiParent);
 	// <-- Mirv
 }
 
@@ -221,13 +221,13 @@ void VGui_Shutdown()
 
 	// --> Mirv: Destroy extra gameui panels
 	ffoptions->Destroy();
-	ffcustomhudpreview->Destroy();
 	ffgamemodes->Destroy();
 	ffirc->Destroy();
 	ffircconnect->Destroy();
 	ffirchost->Destroy();
 	fftraining->Destroy();
 	ffupdates->Destroy();
+	ffcustomhudoptions->Destroy();
 	// <-- Mirv
 
 	if ( g_pClientMode )

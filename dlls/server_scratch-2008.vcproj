@@ -29,7 +29,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Copying to destination folder"
+				Description="Copying client.dll to destination folder"
 				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%/../bin_release/&quot;&#x0D;&#x0A;if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quot; &quot;%FortressForeverBin%/../bin_release/&quot;&#x0D;&#x0A;"
 				Outputs="server.dll"
 			/>
@@ -144,7 +144,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Copying to destination folder"
+				Description="Copying server.dll to destination folder"
 				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;"
 				Outputs="server.dll"
 			/>

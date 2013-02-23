@@ -1,35 +1,40 @@
 #include "cbase.h"
-#include "ff_hud_buildstate_dispenser.h"
-#include "ff_buildableobjects_shared.h"
+#include "ff_hud_buildstate_pipe.h"
 
-DECLARE_HUDELEMENT(CHudBuildStateDispenser);
-DECLARE_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
+enum {
+	RESET_PIPES=0,
+	INCREMENT_PIPES,
+	DECREMENT_PIPES
+};
 
-CHudBuildStateDispenser::CHudBuildStateDispenser(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStateDispenser")
+DECLARE_HUDELEMENT(CHudBuildStatePipe);
+DECLARE_HUD_MESSAGE(CHudBuildStatePipe, PipeMsg);
+
+CHudBuildStatePipe::CHudBuildStatePipe(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildStatePipe")
 {
 	SetParent(g_pClientMode->GetViewport());
 
-	// Hide when player is dead and not engi
-	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NOTENGINEER );
+	// Hide when player is dead
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NOTDEMOMAN );
 
 	SetUseToggleText(true);
 
 	m_bBuilt = false;
-	m_bBuilding = false;
+	m_iNumPipes = 0;
 }
-
-CHudBuildStateDispenser::~CHudBuildStateDispenser() 
+	
+CHudBuildStatePipe::~CHudBuildStatePipe() 
 {
 }
-
-KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
+	
+KeyValues* CHudBuildStatePipe::GetDefaultStyleData()
 {
 	KeyValues *kvPreset = new KeyValues("StyleData");
 
 	kvPreset->SetInt("x", 580);
-	kvPreset->SetInt("y", 330);
+	kvPreset->SetInt("y", 325);
 	kvPreset->SetInt("alignH", 2);
-	kvPreset->SetInt("alignV", 0);
+	kvPreset->SetInt("alignV", 2);
 
 	kvPreset->SetInt("showPanel", 1);
 	kvPreset->SetInt("panelMargin", 5);
@@ -174,129 +179,94 @@ KeyValues* CHudBuildStateDispenser::GetDefaultStyleData()
 
 	return kvPreset;
 }
-
-void CHudBuildStateDispenser::VidInit()
-{
-	wchar_t *tempString = vgui::localize()->Find("#HudPanel_Dispenser");
 	
+void CHudBuildStatePipe::VidInit()
+{
+	wchar_t *tempString = vgui::localize()->Find("#HudPanel_PipeTrap");
+
 	wcsupr(tempString);
 
 	if (!tempString) 
-		tempString = L"DISPENSER";
-	
+		tempString = L"PIPE";
+
 	SetHeaderText(tempString, false);
-	SetHeaderIconChar("4", false);
+	SetHeaderIconChar("o", false);
 
 	m_wszNotBuiltText = vgui::localize()->Find("#HudPanel_NotBuilt"); 
 
 	if (!m_wszNotBuiltText) 
 		m_wszNotBuiltText = L"Not Built";
-	SetText(m_wszNotBuiltText);
+	SetText(m_wszNotBuiltText, false);
 
-	m_wszBuildingText = vgui::localize()->Find("#HudPanel_Building"); 
+	m_qiPipeLaid->SetLabelText("#FF_ITEM_PIPES", false);
+	m_qiPipeLaid->SetIconChar("o", false);
+	m_qiPipeLaid->SetIntensityAmountScaled(true);//max changes (is not 100) so we need to scale to a percentage amount for calculation
+	m_qiPipeLaid->SetAmount(0);
+	m_qiPipeLaid->SetAmountMax(8);
+	HideItem(m_qiPipeLaid);
 
-	if (!m_wszBuildingText) 
-		m_wszBuildingText = L"Building...";
-	
-	m_qiDispenserHealth->SetLabelText("#FF_ITEM_HEALTH", false);
-	m_qiDispenserHealth->SetIconChar("a", false);
-	m_qiDispenserHealth->ShowAmountMax(false);
-	HideItem(m_qiDispenserAmmo);	
-
-	m_qiDispenserAmmo->SetLabelText("#FF_ITEM_AMMO", false);
-	m_qiDispenserAmmo->SetIconChar("r", false);
-	m_qiDispenserAmmo->ShowAmountMax(false);
-	HideItem(m_qiDispenserHealth);
-	
-	m_qiCellCounter->SetLabelText("#FF_ITEM_CELLS", false);
-	m_qiCellCounter->SetIconChar("p", false);
-	m_qiCellCounter->SetIntensityControl(0, (int)(FF_BUILDCOST_DISPENSER/3), (int)(FF_BUILDCOST_DISPENSER/3) * 2, FF_BUILDCOST_DISPENSER);
-	m_qiCellCounter->SetAmountMax(FF_BUILDCOST_DISPENSER);
-	
 	SetToggleTextVisible(true);
 }
 
-void CHudBuildStateDispenser::Init() 
+void CHudBuildStatePipe::Init() 
 {
 	ivgui()->AddTickSignal(GetVPanel(), 250); //only update 4 times a second
-	HOOK_HUD_MESSAGE(CHudBuildStateDispenser, DispenserMsg);
+	HOOK_HUD_MESSAGE(CHudBuildStatePipe, PipeMsg);
 
-	m_qiDispenserHealth = AddItem("BuildStateDispenserHealth");
-	m_qiDispenserAmmo = AddItem("BuildStateDispenserAmmo");
-	m_qiCellCounter = AddItem("BuildStateCellCounter");
+	m_qiPipeLaid = AddItem("HudBuildStatePipeLaid"); 
 
-	AddPanelToHudOptions("Dispenser", "#HudPanel_Dispenser", "BuildState", "#HudPanel_BuildableState");
+	AddPanelToHudOptions("Pipe Trap", "#HudPanel_PipeTrap", "BuildState", "#HudPanel_BuildableState");
 }
 
-void CHudBuildStateDispenser::OnTick() 
+void CHudBuildStatePipe::OnTick() 
 {
 	BaseClass::OnTick();
 
 	if( !engine->IsInGame() | !ShouldDraw() )
 		return;
+ 
+   	bool bBuilt = m_iNumPipes > 0;
 
-	// Get the local player
-	C_FFPlayer *pPlayer = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
-
-	// Never below zero (dunno why this is here)
-	int iCells = max( pPlayer->GetAmmoCount( AMMO_CELLS ), 0);
-	iCells = min(iCells, FF_BUILDCOST_DISPENSER);
-	// Only update if we've changed cell count
-	if ( iCells != m_qiCellCounter->GetAmount() )
-		m_qiCellCounter->SetAmount(iCells);
-
-	bool bBuilt = pPlayer->GetDispenser() && pPlayer->GetDispenser()->IsBuilt();
-	bool bBuilding = pPlayer->GetDispenser() && !bBuilt;
-
-	//small optimisation by comparing building with what it was previously
-	//if building
-	if(bBuilding && !m_bBuilding)
-	//show building text
-	{
-		SetText(m_wszBuildingText);
-		m_bBuilding = bBuilding;
-	}
-	//if not building
-	else if(!bBuilding && m_bBuilding)
-	//show not built text
-	{
-		SetText(m_wszNotBuiltText);
-		m_bBuilding = bBuilding;
-	}
-	
 	//small optimisation by comparing build with what it was previously
 	//if not built
 	if(!bBuilt && m_bBuilt)
 	//hide quantity bars
 	{
 		m_bBuilt = false;
-		HideItem(m_qiDispenserHealth);
-		HideItem(m_qiDispenserAmmo);
-		EnableItem(m_qiCellCounter);
+		HideItem(m_qiPipeLaid);
 		SetToggleTextVisible(true);
 	}
 	else if(bBuilt && !m_bBuilt)
 	//show quantity bars
 	{
 		m_bBuilt = true;
-		ShowItem(m_qiDispenserHealth);
-		ShowItem(m_qiDispenserAmmo);
-		DisableItem(m_qiCellCounter);
+		ShowItem(m_qiPipeLaid);
 		SetToggleTextVisible(false);
 	}
 }
 
-void CHudBuildStateDispenser::Paint() 
+void CHudBuildStatePipe::Paint() 
 {
 	//paint header
 	BaseClass::Paint();
 }
 
-void CHudBuildStateDispenser::MsgFunc_DispenserMsg(bf_read &msg)
+void CHudBuildStatePipe::MsgFunc_PipeMsg(bf_read &msg)
 {
-    int iHealth = (int) msg.ReadByte();
-    int iAmmo = (int) msg.ReadByte();
-
-	m_qiDispenserHealth->SetAmount(iHealth);
-	m_qiDispenserAmmo->SetAmount(iAmmo);
+    int iIncrementPipes = (int) msg.ReadByte();
+	switch (iIncrementPipes)
+	{
+	case INCREMENT_PIPES:
+		m_iNumPipes++;
+		break;
+	case DECREMENT_PIPES:
+		m_iNumPipes--;
+		break;
+	case RESET_PIPES:
+	default:
+		m_iNumPipes = 0;
+		break;
+	}
+	m_iNumPipes = max(0, m_iNumPipes);
+	m_qiPipeLaid->SetAmount(m_iNumPipes);
 }

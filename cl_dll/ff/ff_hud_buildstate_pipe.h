@@ -1,5 +1,5 @@
-#ifndef FF_HUDBUILDSTATEMANCANNON_H
-#define FF_HUDBUILDSTATEMANCANNON_H
+#ifndef FF_HUDBUILDSTATEPIPE_H
+#define FF_HUDBUILDSTATEPIPE_H
 
 #include "ff_quantitypanel.h"
 #include "hudelement.h"
@@ -15,20 +15,19 @@
 
 using namespace vgui;
 
-class CHudBuildStateManCannon : public CHudElement, public FFQuantityPanel
+class CHudBuildStatePipe : public CHudElement, public FFQuantityPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CHudBuildStateManCannon, FFQuantityPanel );
+	DECLARE_CLASS_SIMPLE( CHudBuildStatePipe, FFQuantityPanel );
 
-	FFQuantityItem *m_qiManCannonHealth;
+	FFQuantityItem *m_qiPipeLaid;
 
 	bool	m_bBuilt;
-	bool	m_bBuilding;
 	wchar_t* m_wszNotBuiltText;
-	wchar_t* m_wszBuildingText;
+	int		m_iNumPipes;
 public:
-	CHudBuildStateManCannon(const char *pElementName);
-	~CHudBuildStateManCannon();
+	CHudBuildStatePipe(const char *pElementName);
+	~CHudBuildStatePipe();
 
 	KeyValues* GetDefaultStyleData();
 
@@ -37,7 +36,7 @@ public:
 	void OnTick( void );
 	void Paint( void );
 
-	void	MsgFunc_ManCannonMsg(bf_read &msg);
+	void	MsgFunc_PipeMsg(bf_read &msg);
 };
 
 #endif

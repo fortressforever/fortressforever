@@ -38,18 +38,6 @@ CFFMiscOptions::CFFMiscOptions(Panel *parent, char const *panelName, const char 
 //-----------------------------------------------------------------------------
 void CFFMiscOptions::Apply()
 {
-	/*if ( m_pHintsConVar )
-		m_pHintsConVar->SetValue( m_pHints->IsSelected() );
-
-	if ( m_pAutoRLConVar )
-		m_pAutoRLConVar->SetValue( m_pARCheck->IsSelected() );
-
-	if ( m_pAutoKillConVar )
-		m_pAutoKillConVar->SetValue( m_pAutoKillCheck->IsSelected() );
-
-	if ( m_pBlurConVar )
-		m_pBlurConVar->SetValue( m_pBlurCheck->IsSelected() );*/
-
 	KeyValues *kvOptions = new KeyValues("Options");
 	kvOptions->LoadFromFile(*pFilesystem, m_szSourceFile);
 
@@ -325,27 +313,6 @@ void CFFMiscOptions::Load()
 			slider->SetValue(pCvar->GetInt());
 		}
 	}
-
-
-	/*if ( !m_pHintsConVar )
-		m_pHintsConVar = cvar->FindVar( "cl_hints" );
-	if ( m_pHintsConVar )
-		m_pHints->SetSelected( m_pHintsConVar->GetBool() );
-
-	if ( !m_pAutoRLConVar )
-		m_pAutoRLConVar = cvar->FindVar( "cl_autoreload" );
-	if ( m_pAutoRLConVar )
-		m_pARCheck->SetSelected( m_pAutoRLConVar->GetBool() );
-
-	if ( !m_pAutoKillConVar )
-		m_pAutoKillConVar = cvar->FindVar( "cl_classautokill" );
-	if ( m_pAutoKillConVar )
-		m_pAutoKillCheck->SetSelected( m_pAutoKillConVar->GetBool() );
-
-	if ( !m_pBlurConVar )
-		m_pBlurConVar = cvar->FindVar( "cl_dynamicblur" );
-	if ( m_pBlurConVar )
-		m_pBlurCheck->SetSelected( m_pBlurConVar->GetBool() );*/
 }
 
 int CFFMiscOptions::GetComboBoxOption(ComboBox *cb, const char *value, const char *keyname)

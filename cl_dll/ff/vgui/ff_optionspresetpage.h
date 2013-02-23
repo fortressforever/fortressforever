@@ -41,10 +41,12 @@ namespace vgui
 		virtual void ApplyPresetToControls(KeyValues *kvPreset) = 0;
 		virtual void RegisterSelfForPresetAssignment() = 0;
 		virtual KeyValues* RemoveNonEssentialValues(KeyValues *kvPreset) = 0;
-		virtual void SendUpdatedPresetNameToPresetAssignment(const char *pszPresetName) = 0;
-		virtual void SendRenamedPresetNameToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName) = 0;
-		virtual void SendDeletedPresetNameToPresetAssignment(const char *pszDeletedPresetName) = 0;
-		virtual void SendNewPresetNameToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset) = 0;
+
+		virtual void SendUpdatedPresetPreviewToPresetAssignment(const char *pszPresetName, KeyValues *kvPresetPreview) = 0;
+		virtual void SendUpdatedPresetToPresetAssignment(const char *pszPresetName) = 0;
+		virtual void SendRenamedPresetToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName) = 0;
+		virtual void SendDeletedPresetToPresetAssignment(const char *pszDeletedPresetName) = 0;
+		virtual void SendNewPresetToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset) = 0;
 
 		void AddPreset(KeyValues *kvPreset);
 
@@ -76,7 +78,7 @@ namespace vgui
 	protected:
 		char m_szSourceFile[128];
 		char m_szPresetTypeName[128];
-		bool m_bLoaded, m_bPresetLoading, m_bIsLoading;
+		bool m_bLoaded, m_bIsLoading;
 		bool m_bCopy, m_bRename;
 		ComboBox		*m_pPresets;
 		

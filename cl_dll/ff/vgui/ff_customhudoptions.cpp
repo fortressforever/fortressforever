@@ -4,90 +4,145 @@
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
 
+using namespace vgui;
+
+DEFINE_GAMEUI(CFFCustomHudOptions, CFFCustomHudOptionsPanel, ffcustomhudoptions);
+
+//-----------------------------------------------------------------------------
+// Purpose: Display the ff custom hud options panel
+//-----------------------------------------------------------------------------
+CON_COMMAND(ff_customhudoptions, NULL)
+{
+	ffcustomhudoptions->GetPanel()->SetVisible(true);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Populate all the menu stuff
 //-----------------------------------------------------------------------------
-CFFCustomHudOptions::CFFCustomHudOptions(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
+CFFCustomHudOptionsPanel::CFFCustomHudOptionsPanel(VPANEL parent) : BaseClass( NULL, "FFCustomHudOptions" )
 {
 	m_pPositionPresets = new CFFCustomHudPositionPresets(this, "CustomHudPositionPresets", "Position");
-	m_pArrangementPresets = new CFFCustomHudArrangementPresets(this, "CustomHudArrangementPresets", "Arrangement");
-	m_pStylePresets = new CFFCustomHudStylePresets(this, "CustomHudStylePresets", "Style");
-	m_pAssignPresets = new CFFCustomHudAssignPresets(this, "CustomHudAssignPresets", m_pStylePresets, m_pArrangementPresets, m_pPositionPresets);
+	m_pPanelStylePresets = new CFFCustomHudPanelStylePresets(this, "CustomHudPanelStylePresets", "PanelStyle");
+	m_pItemStylePresets = new CFFCustomHudItemStylePresets(this, "CustomHudItemStylePresets", "ItemStyle");
+	m_pAssignPresets = new CFFCustomHudAssignPresets(this, "CustomHudAssignPresets", m_pItemStylePresets, m_pPanelStylePresets, m_pPositionPresets);
 
 	m_pPropertyPages = new PropertySheet(this, "CustomHudPages", true);
 
 	m_pPropertyPages->AddPage(m_pAssignPresets, "#GameUI_AssignPresets");
 	m_pPropertyPages->AddPage(m_pPositionPresets, "#GameUI_PositionPresets");
-	m_pPropertyPages->AddPage(m_pArrangementPresets, "#GameUI_ArrangementPresets");
-	m_pPropertyPages->AddPage(m_pStylePresets, "#GameUI_StylePresets");
+	m_pPropertyPages->AddPage(m_pPanelStylePresets, "#GameUI_PanelStylePresets");
+	m_pPropertyPages->AddPage(m_pItemStylePresets, "#GameUI_ItemStylePresets");
 	m_pPropertyPages->SetActivePage(m_pAssignPresets);
 	m_pPropertyPages->SetDragEnabled(false);
-		
-	m_pPositionPresets->AddActionSignalTarget( this );
-	m_pArrangementPresets->AddActionSignalTarget( this );
-	m_pStylePresets->AddActionSignalTarget( this );
 	
-	LoadControlSettings("resource/ui/FFOptionsSubCustomHud.res");
-}
+	m_pPositionPresets->RemoveActionSignalTarget( m_pPropertyPages );
+	m_pPanelStylePresets->RemoveActionSignalTarget( m_pPropertyPages );
+	m_pItemStylePresets->RemoveActionSignalTarget( m_pPropertyPages );
+	
+	m_pPositionPresets->AddActionSignalTarget( this );
+	m_pPanelStylePresets->AddActionSignalTarget( this );
+	m_pItemStylePresets->AddActionSignalTarget( this );
 
-void CFFCustomHudOptions::OnActivatePage(KeyValues* data)
-{
-	if(Q_stricmp(data->GetString("Page"),"Arrangement"))
-	{
-		m_pPropertyPages->SetActivePage(m_pArrangementPresets);
-	}
-}
+	m_pOKButton = new Button(this, "OKButton", "", this, "OK");
+	m_pCancelButton = new Button(this, "CancelButton", "", this, "Cancel");
+	m_pApplyButton = new Button(this, "ApplyButton", "", this, "Apply");
 
-void CFFCustomHudOptions::OnActivatePositionPage(KeyValues* data)
+	SetSizeable(false);
+	
+	LoadControlSettings("resource/ui/FFCustomHudOptions.res");
+}
+void CFFCustomHudOptionsPanel::OnActivatePositionPage(KeyValues* data)
 {
 	m_pPropertyPages->SetActivePage(m_pPositionPresets);
 }
-void CFFCustomHudOptions::OnActivateArrangmentPage(KeyValues* data)
+void CFFCustomHudOptionsPanel::OnActivatePanelStylePage(KeyValues* data)
 {
-	m_pPropertyPages->SetActivePage(m_pArrangementPresets);
+	m_pPropertyPages->SetActivePage(m_pPanelStylePresets);
 }
-void CFFCustomHudOptions::OnActivateStylePage(KeyValues* data)
+void CFFCustomHudOptionsPanel::OnActivateItemStylePage(KeyValues* data)
 {
-	m_pPropertyPages->SetActivePage(m_pStylePresets);
+	m_pPropertyPages->SetActivePage(m_pItemStylePresets);
 }
-
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Catch the buttons. We have OK (save + close), Cancel (close) and
+//			Apply (save).
 //-----------------------------------------------------------------------------
-void CFFCustomHudOptions::AllowChanges(bool state)
+void CFFCustomHudOptionsPanel::OnButtonCommand(KeyValues *data)
 {
+	const char *pszCommand = data->GetString("command");
 
+	// Both Apply and OK save the options window stuff
+	if (Q_strcmp(pszCommand, "Apply") == 0 || Q_strcmp(pszCommand, "OK") == 0)
+	{
+		m_pAssignPresets->Apply();
+		m_pPositionPresets->Apply();
+		m_pPanelStylePresets->Apply();
+		m_pItemStylePresets->Apply();
+
+		// Apply doesn't quit the menu
+		if (pszCommand[0] == 'A')
+		{
+			return;
+		}
+	}
+	else
+	{
+		// Cancelled, so reset the settings
+		m_pPositionPresets->Reset();
+		m_pPanelStylePresets->Reset();
+		m_pItemStylePresets->Reset();
+		m_pAssignPresets->Reset();
+	}
+
+	// Now make invisible
+	SetVisible(false);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFFCustomHudOptions::Apply()
+void CFFCustomHudOptionsPanel::Apply()
 {
-	m_pAssignPresets->Apply();
 	m_pPositionPresets->Apply();
-	m_pArrangementPresets->Apply();
-	m_pStylePresets->Apply();
+	m_pPanelStylePresets->Apply();
+	m_pItemStylePresets->Apply();
+	m_pAssignPresets->Apply();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CFFCustomHudOptions::Load()
+void CFFCustomHudOptionsPanel::Load()
 {
-	m_pAssignPresets->Load();
 	m_pPositionPresets->Load();
-	m_pArrangementPresets->Load();
-	m_pStylePresets->Load();
+	m_pPanelStylePresets->Load();
+	m_pItemStylePresets->Load();
+	m_pAssignPresets->Load();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFFCustomHudOptions::Reset()
+void CFFCustomHudOptionsPanel::Reset()
 {
-	m_pAssignPresets->Reset();
 	m_pPositionPresets->Reset();
-	m_pArrangementPresets->Reset();
-	m_pStylePresets->Reset();
+	m_pPanelStylePresets->Reset();
+	m_pItemStylePresets->Reset();
+	m_pAssignPresets->Reset();
+}
+void CFFCustomHudOptionsPanel::SetVisible(bool state)
+{
+	if (state)
+	{
+		// Centre this panel on the screen for consistency.
+		int nWide = GetWide();
+		int nTall = GetTall();
+
+		SetPos((ScreenWidth() - nWide) / 2, (ScreenHeight() - nTall) / 2);
+
+		RequestFocus();
+		MoveToFront();
+	}
+
+	BaseClass::SetVisible(state);
 }

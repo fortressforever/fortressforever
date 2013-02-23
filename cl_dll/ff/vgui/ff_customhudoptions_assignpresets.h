@@ -2,8 +2,8 @@
 #define FF_CUSTOMHUDOPTIONS_ASSIGNPRESETS_H
 
 #include "ff_optionspage.h"
-#include "ff_customhudoptions_arrangementpresets.h"
-#include "ff_customhudoptions_stylepresets.h"
+#include "ff_customhudoptions_panelstylepresets.h"
+#include "ff_customhudoptions_itemstylepresets.h"
 #include "ff_customhudoptions_positionpresets.h"
 
 #include "keyvalues.h"
@@ -24,7 +24,7 @@ class CFFCustomHudAssignPresets : public CFFOptionsPage
 	DECLARE_CLASS_SIMPLE(CFFCustomHudAssignPresets, CFFOptionsPage);
 	
 public:
-	CFFCustomHudAssignPresets(Panel *parent, char const *panelName, CFFCustomHudStylePresets* stylePresetsClass, CFFCustomHudArrangementPresets* arrangementPresetsClass, CFFCustomHudPositionPresets* positionPresetsClass);
+	CFFCustomHudAssignPresets(Panel *parent, char const *panelName, CFFCustomHudItemStylePresets* stylePresetsClass, CFFCustomHudPanelStylePresets* arrangementPresetsClass, CFFCustomHudPositionPresets* positionPresetsClass);
 	~CFFCustomHudAssignPresets();
 
 	virtual void Load();
@@ -35,29 +35,34 @@ public:
 	void ApplyAssignmentToControls(KeyValues *kvAssignment);
 	void UpdateSecondaryComboFromParentKey(KeyValues *kvPrimary);
 
-	void StylePresetUpdated(const char *pszPresetName);
-	void StylePresetRenamed(const char *pszOldPresetName, const char *pszNewPresetName);
-	void StylePresetDeleted(const char *pszDeletedPresetName);
-	void StylePresetAdded(const char *pszPresetName, KeyValues *kvPreset);
+	void ItemStylePresetPreviewUpdated(const char *pszPresetName, KeyValues *kvPresetPreview);
+	void ItemStylePresetUpdated(const char *pszPresetName);
+	void ItemStylePresetRenamed(const char *pszOldPresetName, const char *pszNewPresetName);
+	void ItemStylePresetDeleted(const char *pszDeletedPresetName);
+	void ItemStylePresetAdded(const char *pszPresetName, KeyValues *kvPreset);
 
-	void ArrangementPresetUpdated(const char *pszPresetName);
-	void ArrangementPresetRenamed(const char *pszOldPresetName, const char *pszNewPresetName);
-	void ArrangementPresetDeleted(const char *pszDeletedPresetName);
-	void ArrangementPresetAdded(const char *pszPresetName, KeyValues *kvPreset);
+	void PanelStylePresetPreviewUpdated(const char *pszPresetName, KeyValues *kvPresetPreview);
+	void PanelStylePresetUpdated(const char *pszPresetName);
+	void PanelStylePresetRenamed(const char *pszOldPresetName, const char *pszNewPresetName);
+	void PanelStylePresetDeleted(const char *pszDeletedPresetName);
+	void PanelStylePresetAdded(const char *pszPresetName, KeyValues *kvPreset);
 
+	void PositionPresetPreviewUpdated(const char *pszPresetName, KeyValues *kvPresetPreview);
 	void PositionPresetUpdated(const char *pszPresetName);
 	void PositionPresetRenamed(const char *pszOldPresetName, const char *pszNewPresetName);
 	void PositionPresetDeleted(const char *pszDeletedPresetName);
 	void PositionPresetAdded(const char *pszPresetName, KeyValues *kvPreset);
 
-	void OnStylePresetsClassLoaded();
-	void OnArrangementPresetsClassLoaded();
+	void OnItemStylePresetsClassLoaded();
+	void OnPanelStylePresetsClassLoaded();
 	void OnPositionPresetsClassLoaded();
 
+	KeyValues* GetPresetAssignments();
 	void RegisterAssignmentChange(KeyValues *kvSelf, KeyValues* kvParent = NULL);
 	
 	KeyValues* GetStyleDataForAssignment(KeyValues *kvAssignment);
 	void SendStyleDataToAssignment(KeyValues *kvAssignment);
+	void SendPresetPreviewDataToAssignment(KeyValues *kvAssignment, KeyValues *kvPresetData);
 	void CreatePresetFromPanelDefault(KeyValues *kvPresetData);
 private:
 	//-----------------------------------------------------------------------------
@@ -73,39 +78,34 @@ private:
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the checkboxes changing their state
 	//-----------------------------------------------------------------------------
-	MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data);
+	MESSAGE_FUNC_PARAMS(OnUpdateCheckButton, "CheckButtonChecked", data);
 	
 	//-----------------------------------------------------------------------------
 	// Purpose: Catch the "Copy Default" buttons
 	//-----------------------------------------------------------------------------
 	MESSAGE_FUNC_PARAMS(OnButtonCommand, "Command", data);
 
-	ComboBox		*m_pPrimary, *m_pSecondary;
-	ComboBox		*m_pStylePresets, *m_pArrangementPresets, *m_pPositionPresets;
+	Panel			*m_pPanelSpecificOptions; 
 
-	CheckButton		*m_pUseDefaultStyle, *m_pUseDefaultArrangement, *m_pUseDefaultPosition;
-	Button			*m_pCopyDefaultStyle, *m_pCopyDefaultArrangement, *m_pCopyDefaultPosition;
+	ComboBox		*m_pPrimary, *m_pSecondary;
+	ComboBox		*m_pItemStylePresets, *m_pPanelStylePresets, *m_pPositionPresets;
+	
+	CheckButton		*m_pPreviewMode;
+
+	Button			*m_pCopyDefaultItemStyle, *m_pCopyDefaultPanelStyle, *m_pCopyDefaultPosition;
 
 	KeyValues		*m_kvLoadedAssignments;
 	KeyValues		*m_kvRequiredUpdates;
 
-	CFFCustomHudArrangementPresets *m_pArrangementPresetsClass;
-	CFFCustomHudStylePresets *m_pStylePresetsClass;
+	CFFCustomHudPanelStylePresets *m_pPanelStylePresetsClass;
+	CFFCustomHudItemStylePresets *m_pItemStylePresetsClass;
 	CFFCustomHudPositionPresets *m_pPositionPresetsClass;
 
-	bool m_bAssignmentPositionChanging;
-	bool m_bAssignmentPositionUseDefaultChanging;
-	bool m_bAssignmentArrangementChanging;
-	bool m_bAssignmentArrangementUseDefaultChanging;
-	bool m_bAssignmentStyleChanging;
-	bool m_bAssignmentStyleUseDefaultChanging;
-
 	bool m_bCopyDefaultPosition;
-	bool m_bCopyDefaultArrangement;
-	bool m_bCopyDefaultStyle;
+	bool m_bCopyDefaultPanelStyle;
+	bool m_bCopyDefaultItemStyle;
 
 	bool m_bLoaded;
-	bool m_bIsLoading;
 	int iYCoords;
 };
 

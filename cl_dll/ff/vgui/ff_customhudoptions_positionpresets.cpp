@@ -40,7 +40,7 @@ namespace vgui
 		m_pAlignV->AddItem("#GameUI_Bottom", kv);
 		kv->deleteThis();
 		m_pAlignV->ActivateItemByRow(0);
-
+		
 		kv = NULL;
 		
 		m_pX = new CFFInputSlider(this, "X", "XInput");
@@ -51,7 +51,7 @@ namespace vgui
 		m_pY->SetRange(0, 480);
 		m_pY->SetValue(0);
 		
-		LoadControlSettings("resource/ui/FFOptionsSubCustomHudPositionPresets.res");
+		LoadControlSettings("resource/ui/FFCustomHudOptionsPositionPresets.res");
 	}
 	
 	void CFFCustomHudPositionPresets::ActivatePresetPage()
@@ -88,17 +88,20 @@ namespace vgui
 
 	void CFFCustomHudPositionPresets::UpdatePresetFromControls(KeyValues *kvPreset)
 	{
-		BaseClass::UpdatePresetFromControls(kvPreset);
-
 		kvPreset->SetInt("x", m_pX->GetValue());
 		kvPreset->SetInt("y", m_pY->GetValue());
 		kvPreset->SetInt("alignH", m_pAlignH->GetActiveItem());
 		kvPreset->SetInt("alignV", m_pAlignV->GetActiveItem());
+
+		BaseClass::UpdatePresetFromControls(kvPreset);
 	}
 
 	void CFFCustomHudPositionPresets::ApplyPresetToControls(KeyValues *kvPreset)
 	{
-		m_bPresetLoading = true;
+		m_pX->RemoveActionSignalTarget(this);
+		m_pY->RemoveActionSignalTarget(this);
+		m_pAlignH->RemoveActionSignalTarget(this);
+		m_pAlignV->RemoveActionSignalTarget(this);
 		//this disables the preset options from registering these changes as a preset update!
 
 		m_pX->SetValue(kvPreset->GetInt("x", 320));
@@ -106,7 +109,10 @@ namespace vgui
 		m_pAlignH->ActivateItemByRow(kvPreset->GetInt("alignH", 1));
 		m_pAlignV->ActivateItemByRow(kvPreset->GetInt("alignV", 1));
 		
-		m_bPresetLoading = false;
+		m_pX->AddActionSignalTarget(this);
+		m_pY->AddActionSignalTarget(this);
+		m_pAlignH->AddActionSignalTarget(this);
+		m_pAlignV->AddActionSignalTarget(this);
 		//this enables the preset options to register follwoing changes as a preset update!
 	}
 
@@ -115,7 +121,7 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	void CFFCustomHudPositionPresets::OnUpdateCombos(KeyValues *data)
 	{
-		if (m_bLoaded && !m_bPresetLoading && (data->GetPtr("panel") == m_pAlignH || data->GetPtr("panel") == m_pAlignV))
+		if (m_bLoaded && (data->GetPtr("panel") == m_pAlignH || data->GetPtr("panel") == m_pAlignV))
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 		else
 			BaseClass::OnUpdateCombos(data);
@@ -126,23 +132,27 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	void CFFCustomHudPositionPresets::OnUpdateSliders(KeyValues *data)
 	{
-		if(m_bLoaded && !m_bPresetLoading)
+		if(m_bLoaded)
 			UpdatePresetFromControls(m_pPresets->GetActiveItemUserData());
 	}
 
-	void CFFCustomHudPositionPresets::SendUpdatedPresetNameToPresetAssignment(const char *pszPresetName)
+	void CFFCustomHudPositionPresets::SendUpdatedPresetPreviewToPresetAssignment(const char *pszPresetName, KeyValues *kvPresetPreview)
+	{
+		g_AP->PositionPresetPreviewUpdated(pszPresetName, kvPresetPreview);
+	}
+	void CFFCustomHudPositionPresets::SendUpdatedPresetToPresetAssignment(const char *pszPresetName)
 	{
 		g_AP->PositionPresetUpdated(pszPresetName);
 	}
-	void CFFCustomHudPositionPresets::SendRenamedPresetNameToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName)
+	void CFFCustomHudPositionPresets::SendRenamedPresetToPresetAssignment(const char *pszOldPresetName, const char *pszNewPresetName)
 	{
 		g_AP->PositionPresetRenamed(pszOldPresetName, pszNewPresetName);
 	}
-	void CFFCustomHudPositionPresets::SendDeletedPresetNameToPresetAssignment(const char *pszDeletedPresetName)
+	void CFFCustomHudPositionPresets::SendDeletedPresetToPresetAssignment(const char *pszDeletedPresetName)
 	{
 		g_AP->PositionPresetDeleted(pszDeletedPresetName);
 	}
-	void CFFCustomHudPositionPresets::SendNewPresetNameToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset)
+	void CFFCustomHudPositionPresets::SendNewPresetToPresetAssignment(const char *pszPresetName, KeyValues *kvPreset)
 	{
 		g_AP->PositionPresetAdded(pszPresetName, kvPreset);
 	}
