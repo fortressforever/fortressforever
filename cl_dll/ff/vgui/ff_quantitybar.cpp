@@ -1188,13 +1188,13 @@ namespace vgui
 	{
 		if(m_bIntensityAmountScaled && m_iMaxAmount != 0)
 		{
-			m_ColorIntensityFaded = getIntensityColor((int)((float)m_iAmount/(float)m_iMaxAmount * 100), 100, 2, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
-			m_ColorIntensityStepped = getIntensityColor((int)((float)m_iAmount/(float)m_iMaxAmount * 100), 100, 1, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
+			m_ColorIntensityFaded = GetIntensityColor((int)((float)m_iAmount/(float)m_iMaxAmount * 100), 100, 2, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
+			m_ColorIntensityStepped = GetIntensityColor((int)((float)m_iAmount/(float)m_iMaxAmount * 100), 100, 1, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
 		}
 		else
 		{
-			m_ColorIntensityFaded = getIntensityColor(m_iAmount, m_iMaxAmount, 2, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
-			m_ColorIntensityStepped = getIntensityColor(m_iAmount, m_iMaxAmount, 1, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
+			m_ColorIntensityFaded = GetIntensityColor(m_iAmount, m_iMaxAmount, 2, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
+			m_ColorIntensityStepped = GetIntensityColor(m_iAmount, m_iMaxAmount, 1, m_ColorBarCustom.a(), m_iIntensityRed,m_iIntensityOrange,m_iIntensityYellow,m_iIntensityGreen,m_bIntensityInvertScale);
 		}
 
 		if(!m_bShowAmountMax)
