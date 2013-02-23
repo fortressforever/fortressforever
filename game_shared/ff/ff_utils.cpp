@@ -268,7 +268,7 @@ Color ColorFade( int iValue, int iMin, int iMax, Color clrMin, Color clrMax )
 		(int) (clrMax.a() * flMaxAmount + clrMin.a() * flMinAmount));
 }
 
-Color getIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen, bool invertScale )
+Color GetIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen, bool invertScale )
 {
 	Color innerCol;
 	if(!invertScale) 
