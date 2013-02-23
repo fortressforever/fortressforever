@@ -743,6 +743,9 @@ bool CHud::IsHidden( int iHudFlags )
 	if ( iHideHud & HIDEHUD_ALL )
 		return true;
 
+	if( iHudFlags & HIDEHUD_ALWAYS )
+		return true;
+
 	// Local player dead?
 	if ( ( iHudFlags & HIDEHUD_PLAYERDEAD ) && ( pPlayer->GetHealth() <= 0 ) )
 		return true;

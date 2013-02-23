@@ -31,21 +31,24 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(CFFInputSlider, Slider)
 
 	public:
-
 		//-----------------------------------------------------------------------------
-		// Purpose: Link this slider in with its input box
+		// Purpose: Link this slider in with an input box
 		//-----------------------------------------------------------------------------
-		CFFInputSlider(Panel *parent, char const *panelName, char const *inputName) : BaseClass(parent, panelName)
+		CFFInputSlider(Panel *parent, char const *panelName, char const *inputName, Panel *pActionSignalTarget=NULL) : BaseClass(parent, panelName)
 		{
 			m_pInputBox = new TextEntry(parent, inputName);
 			m_pInputBox->SetAllowNumericInputOnly(true);
-			//m_pInputBox->SetEditable(false);
 			m_pInputBox->AddActionSignalTarget(this);
-			//m_pInputBox->SendNewLine(true);
-
-			AddActionSignalTarget(parent);
+			if(pActionSignalTarget)
+			{
+				AddActionSignalTarget(pActionSignalTarget);
+			}
+			else
+			{
+				AddActionSignalTarget(parent);
+			}
 		}
-
+		
 		//-----------------------------------------------------------------------------
 		// Purpose: Transfer the value onto the input box
 		//-----------------------------------------------------------------------------
@@ -54,14 +57,16 @@ namespace vgui
 			m_pInputBox->SetText(VarArgs("%d", value));
 			BaseClass::SetValue(value, bTriggerChangeMessage);
 		}
+		
 		virtual void SetPos(int x, int y)
 		{
+			//reposition the input box depending on how wide the slider is
 			int iWide, iTall;
 			GetSize(iWide, iTall);
 			m_pInputBox->SetPos(x + iWide, y);
 			BaseClass::SetPos(x,y);
 		}
-
+		
 		//-----------------------------------------------------------------------------
 		// Purpose: Keep the input box up to date
 		//-----------------------------------------------------------------------------
@@ -70,7 +75,7 @@ namespace vgui
 			m_pInputBox->SetEnabled(state);
 			BaseClass::SetEnabled(state);
 		}
-
+		
 		//-----------------------------------------------------------------------------
 		// Purpose: Keep the input box up to date
 		//-----------------------------------------------------------------------------
@@ -79,8 +84,27 @@ namespace vgui
 			m_pInputBox->SetVisible(state);
 			BaseClass::SetVisible(state);
 		}
-
+		
+		virtual void AddActionSignalTarget(Panel *messageTarget)
+		{
+			m_pInputBox->AddActionSignalTarget(messageTarget);
+			BaseClass::AddActionSignalTarget(messageTarget);
+		}
+		
+		virtual void AddActionSignalTarget(VPANEL messageTarget)
+		{
+			m_pInputBox->AddActionSignalTarget(messageTarget);
+			BaseClass::AddActionSignalTarget(messageTarget);
+		}
+		
+		virtual void RemoveActionSignalTarget(Panel *oldTarget)
+		{
+			m_pInputBox->RemoveActionSignalTarget(oldTarget);
+			BaseClass::RemoveActionSignalTarget(oldTarget);
+		}
+		
 	private:
+		TextEntry *m_pInputBox;
 
 		//-----------------------------------------------------------------------------
 		// Purpose: Allow the input box to change this value
@@ -89,7 +113,7 @@ namespace vgui
 		{
 			BaseClass::SetValue(iValue, bTriggerChangeMessage);
 		}
-
+		
 		//-----------------------------------------------------------------------------
 		// Purpose: 
 		//-----------------------------------------------------------------------------
@@ -119,16 +143,12 @@ namespace vgui
 
 			return iValue;
 		}
-
+		
 		//-----------------------------------------------------------------------------
 		// Purpose: Catch the text box being changed and update the slider
 		//-----------------------------------------------------------------------------
 		MESSAGE_FUNC_PARAMS(OnTextChanged, "TextChanged", data)
 		{
-			// Apparently this is a good check
-			if (!m_pInputBox->HasFocus())
-				return;
-
 			int iValue = GetInputValue();
 
 			int iMin, iMax;
@@ -138,7 +158,7 @@ namespace vgui
 
 			UpdateFromInput(iValue, true);
 		}
-
+		
 		//-----------------------------------------------------------------------------
 		// Purpose: Don't let the box be left on invalid values
 		//-----------------------------------------------------------------------------
@@ -153,8 +173,6 @@ namespace vgui
 
 			m_pInputBox->SetText(VarArgs("%d", iValue));
 		}
-
-		TextEntry *m_pInputBox;
 	};
 }
 #endif

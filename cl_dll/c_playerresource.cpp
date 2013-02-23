@@ -71,11 +71,11 @@ C_PlayerResource::C_PlayerResource()
 #endif
    */
 
-   m_Colors[ TEAM_SPECTATOR ] = Color( 0, 200, 200, 255 );
-   m_Colors[ TEAM_BLUE ] = Color( 56,100, 171, 255 );
-   m_Colors[ TEAM_RED ] = Color( 188, 0, 0, 255 );
-   m_Colors[ TEAM_YELLOW ] = Color( 202, 173, 33, 255 );
-   m_Colors[ TEAM_GREEN ] = Color( 68, 144, 65, 255 );
+   m_Colors[ TEAM_SPECTATOR ] = TEAM_COLOR_SPECTATOR;
+   m_Colors[ TEAM_BLUE ] = TEAM_COLOR_BLUE;
+   m_Colors[ TEAM_RED ] = TEAM_COLOR_RED;
+   m_Colors[ TEAM_YELLOW ] = TEAM_COLOR_YELLOW;
+   m_Colors[ TEAM_GREEN ] = TEAM_COLOR_GREEN;
    // END: Added by Mulchman 
 
 	g_PR = this;
