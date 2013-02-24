@@ -3814,30 +3814,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				RelativePath=".\ff\ff_hud_buildstate.h">
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_buildstate_detpack.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_buildstate_detpack.h">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_buildstate_dispenser.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_buildstate_dispenser.h">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_buildstate_mancannon.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_buildstate_mancannon.h">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_buildstate_sentry.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_buildstate_sentry.h">
-			</File>
-			<File
 				RelativePath=".\ff\ff_hud_buildtimer.cpp">
 			</File>
 			<File
@@ -4012,6 +3988,18 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 					RelativePath=".\ff\vgui\ff_frame.h">
 				</File>
 				<File
+					RelativePath=".\ff\vgui\ff_colorpicker.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_colorpicker.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_colorpickerdialog.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_colorpickerdialog.h">
+				</File>
+				<File
 					RelativePath=".\ff\vgui\ff_gamemodes.cpp">
 				</File>
 				<File
@@ -4104,104 +4092,82 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				<Filter
 					Name="fortressoptions">
 					<File
-						RelativePath=".\ff\vgui\ff_crosshairoptions.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_crosshairoptions.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_crosshairoptions.h"
-						>
+						RelativePath=".\ff\vgui\ff_crosshairoptions.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_dlightoptions.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions.h"
-						>
+						RelativePath=".\ff\vgui\ff_dlightoptions.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_arrangementpresets.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_miscoptions.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_arrangementpresets.h"
-						>
+						RelativePath=".\ff\vgui\ff_miscoptions.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_options.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.h"
-						>
+						RelativePath=".\ff\vgui\ff_options.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_optionspage.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.h"
-						>
+						RelativePath=".\ff\vgui\ff_timeroptions.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_preview.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_timeroptions.h">
+					</File>
+				</Filter>
+				<Filter
+					Name="customhudoptions">
+					<File
+						RelativePath=".\ff\vgui\ff_customhudoptions.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_preview.h"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_stylepresets.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_customhudoptions_stylepresets.h"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_assignpresets.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_dlightoptions.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_itemstylepresets.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_dlightoptions.h"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_itemstylepresets.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_miscoptions.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_newpresetdialog.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_miscoptions.h"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_newpresetdialog.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_options.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_panelstylepresets.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_options.h"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_panelstylepresets.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_optionspage.h"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_optionspresetpage.cpp"
-						>
+						RelativePath=".\ff\vgui\ff_customhudoptions_positionpresets.h">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_optionspresetpage.h"
-						>
+						RelativePath=".\ff\vgui\ff_optionspresetpage.cpp">
 					</File>
 					<File
-						RelativePath=".\ff\vgui\ff_timeroptions.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\ff\vgui\ff_timeroptions.h"
-						>
+						RelativePath=".\ff\vgui\ff_optionspresetpage.h">
 					</File>
 				</Filter>
 			</Filter>
@@ -4227,6 +4193,39 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				</File>
 				<File
 					RelativePath=".\ff\update\autoupdate.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="customhudpanels">
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_detpack.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_detpack.h">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_dispenser.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_dispenser.h">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_mancannon.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_mancannon.h">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_pipe.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_pipe.h">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_sentry.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_buildstate_sentry.h">
 				</File>
 			</Filter>
 		</Filter>
