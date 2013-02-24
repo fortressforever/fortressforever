@@ -142,7 +142,7 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying server.dll to destination folder"
-				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%/../bin_release/&quot;&#x0D;&#x0A;if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quot; &quot;%FortressForeverBin%/../bin_release/&quot;&#x0D;&#x0A;"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;&#x0D;&#x0A;if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quot; &quot;%FortressForeverBin%&quot;"
 				Outputs="client.dll"
 			/>
 			<Tool
@@ -3352,11 +3352,11 @@
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
@@ -3680,11 +3680,11 @@
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
@@ -4911,10 +4911,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\ff\vgui\ff_frame.h"
-					>
-				</File>
-				<File
 					RelativePath=".\ff\vgui\ff_colorpicker.cpp"
 					>
 				</File>
@@ -4928,6 +4924,10 @@
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_colorpickerdialog.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_frame.h"
 					>
 				</File>
 				<File
