@@ -271,8 +271,8 @@ int C_BaseViewModel::DrawModel( int flags )
 	if ( ShouldFlipViewModel() )
 		materials->CullMode( MATERIAL_CULLMODE_CW );
 
+	// use the owner of the weapon instead of the local player so it works universally (for spectators, etc)
 	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
-	//C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	int ret;
 	// If the local player's overriding the viewmodel rendering, let him do it
 	// Jon: override if we have an override material
