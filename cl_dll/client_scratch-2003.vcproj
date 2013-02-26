@@ -4013,6 +4013,12 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 					RelativePath=".\ff\vgui\ff_training.h">
 				</File>
 				<File
+					RelativePath=".\ff\vgui\ff_updates.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_updates.h">
+				</File>
+				<File
 					RelativePath=".\ff\vgui\ff_vgui_timer.cpp">
 				</File>
 				<File
@@ -4044,6 +4050,15 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				</File>
 				<File
 					RelativePath=".\ff\irc\ff_socks.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="update">
+				<File
+					RelativePath=".\ff\update\autoupdate.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\update\autoupdate.h">
 				</File>
 			</Filter>
 		</Filter>
