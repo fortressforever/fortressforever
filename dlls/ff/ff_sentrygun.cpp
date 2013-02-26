@@ -521,7 +521,7 @@ void CFFSentryGun::OnActiveThink( void )
 		enemy = NULL;
 
 	// Enemy is no longer targettable // hlstriker: Crashing bug when sg loses sight of enemy buildable is somewhere in this if statement/nest
-	if( !IsTargetVisible( enemy, SG_RANGE_UNTARGET ) )
+	if( enemy && !IsTargetVisible( enemy, SG_RANGE_UNTARGET ) )
 	{
 		// AfterShock: if we lost track of our target, and they are still alive, 
 		// and we're looking the right way, then pause to see if our target comes back
