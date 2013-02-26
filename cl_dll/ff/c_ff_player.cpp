@@ -989,6 +989,9 @@ static ConVar cl_ragdolltime("cl_ragdolltime", "25.0", FCVAR_ARCHIVE);
 
 void C_FFRagdoll::CreateRagdoll()
 {
+	if (!cl_ragdolltime.GetBool())
+		return;
+
 	// First, initialize all our data. If we have the player's entity on our client,
 	// then we can make ourselves start out exactly where the player is.
 	C_FFPlayer *pPlayer = dynamic_cast< C_FFPlayer* >( m_hPlayer.Get() );
@@ -1048,7 +1051,7 @@ void C_FFRagdoll::CreateRagdoll()
 		// We can also spawn a valid weapon
 		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
-			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), cl_ragdolltime.GetFloat());
 
 			if (pGib)
 			{
@@ -1100,6 +1103,7 @@ void C_FFRagdoll::CreateRagdoll()
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+	SetNextClientThink( gpGlobals->curtime + cl_ragdolltime.GetFloat() );
 
 	m_pBloodStreamEmitter = CBloodStream::Create(this, "BloodStream");
 	m_pBloodStreamEmitter->SetDieTime(gpGlobals->curtime + cl_ragdolltime.GetFloat());
@@ -1122,7 +1126,8 @@ void C_FFRagdoll::OnDataChanged( DataUpdateType_t type )
 			pPhysicsObject->AddVelocity( &vecExaggeratedVelocity, &aVelocity );
 		}
 
-		SetNextClientThink( CLIENT_THINK_ALWAYS );
+		// no longer think always, only think when it should be removed
+		//SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 }
 
@@ -1159,6 +1164,10 @@ IRagdoll* C_FFPlayer::GetRepresentativeRagdoll() const
 //-----------------------------------------------------------------------------
 void C_FFRagdoll::ClientThink( void )
 {
+	// This ragdoll only thinks at the end of its lifetime
+	Release();
+	return;
+
 	/*
 	if( UTIL_PointContents( GetAbsOrigin() ) & MASK_WATER )
 	{
