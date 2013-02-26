@@ -2613,9 +2613,9 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 			if ( pFFNewSpecTarget )
 			{
 				pFFSelf->m_flConcTime = pFFNewSpecTarget->m_flConcTime;
-				float timeRemaining = pFFNewSpecTarget->m_flConcTime - gpGlobals->curtime;
-				
-				if ( timeRemaining > gpGlobals->curtime || timeRemaining == -1 )
+				float timeRemaining =  pFFNewSpecTarget->m_flConcTime == -1 ? -1 : pFFNewSpecTarget->m_flConcTime - gpGlobals->curtime;
+
+				if ( timeRemaining > 0 || timeRemaining == -1 )
 					pFFSelf->Concuss( timeRemaining, timeRemaining );
 				else 
 					pFFSelf->UnConcuss( ); // be sure to clear concussion icon
