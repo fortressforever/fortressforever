@@ -3,6 +3,7 @@
 #define AUTOUPDATE_H
 
 enum eUpdateResponse {
+	UPDATE_UNKNOWN,
 	UPDATE_ERROR,
 	UPDATE_FOUND,
 	UPDATE_NOTFOUND,
