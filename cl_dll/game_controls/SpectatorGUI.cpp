@@ -507,7 +507,7 @@ void CSpectatorGUI::Update()
 			_snwprintf( health, sizeof( health ), L"%i", iHealth );
 			_snwprintf( armor, sizeof( armor ), L"%i", iArmor );
 			// TODO: Modify #Spec_PlayerItem_team to include a %s for armor
-			localize()->ConstructString( playerText, sizeof( playerText ), localize()->Find( "#Spec_PlayerItem_Team" ), 2, playerName,  health );
+			localize()->ConstructString( playerText, sizeof( playerText ), localize()->Find( "#Spec_PlayerItem_Team" ), 3, playerName, health, armor );
 		}
 		else
 		{
