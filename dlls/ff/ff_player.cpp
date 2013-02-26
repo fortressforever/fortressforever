@@ -1569,14 +1569,14 @@ void CFFPlayer::Spawn( void )
 		Q_snprintf(weaponDefault, BufferSize, "ff_weapon_%s", pDefaultWpn?pDefaultWpn:"");
 		Q_snprintf(weaponSpawn, BufferSize, "ff_weapon_%s", pSpawnWpn?pSpawnWpn:"");
 
-		CBaseCombatWeapon *pSpawnWeapon = Weapon_OwnsThisType(weaponDefault);
+		CBaseCombatWeapon *pSpawnWeapon = Weapon_OwnsThisType(weaponSpawn);
 		if(pSpawnWpn && pSpawnWeapon)
 		{
 			if(Weapon_Switch(pSpawnWeapon))
 				break;
 		}
 
-		pSpawnWeapon = Weapon_OwnsThisType(weaponSpawn);
+		pSpawnWeapon = Weapon_OwnsThisType(weaponDefault);
 		if(pDefaultWpn && pSpawnWeapon)
 		{
 			if(Weapon_Switch(pSpawnWeapon))
