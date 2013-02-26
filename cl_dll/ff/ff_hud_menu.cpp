@@ -45,9 +45,6 @@ CHudContextMenu *g_pHudContextMenu = NULL;
 extern ConVar sensitivity;
 extern ConVar ffdev_spy_scloak_minstartvelocity;
 
-// This is a bit of a hacky way to do it!!
-char g_szLastDisguiseComment[128] = { 0 };
-
 ConVar cm_usemouse("cl_cmusemouse", "1", FCVAR_ARCHIVE, "Use the mouse for the context menu");
 ConVar cm_capturemouse("cl_cmcapture", "1", FCVAR_ARCHIVE, "Context menu captures mouse");
 ConVar cm_hidecursor("cl_cmhidecursor", "0", FCVAR_ARCHIVE, "Show mouse cursor");
@@ -142,6 +139,27 @@ int CheckDisguiseClass( int iClass )
 
 	// Check the class limit for the disguise team
 	if( pGr->GetTeamClassLimits( iDisguiseTeam, iClass ) == -1 )
+		return MENU_DIM;
+
+	return MENU_SHOW;
+}
+
+int CheckLastDisguise()
+{
+	IGameResources *pGr = GameResources();
+
+	if( !g_pHudContextMenu || !pGr )
+		return MENU_DIM;
+
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsDisguisable() )
+		return MENU_DIM;
+
+	// Bail if we don't have a last disguise
+	if( !pPlayer->HasLastDisguise() )
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -347,7 +365,7 @@ ADD_MENU_OPTION(disguisepyro, "#FF_CM_DISGUISEPYRO", '?', "pyro") { return Check
 ADD_MENU_OPTION(disguiseengineer, "#FF_CM_DISGUISEENGINEER", '(', "engineer") { return CheckDisguiseClass( CLASS_ENGINEER ); }
 ADD_MENU_OPTION(disguisecivilian, "#FF_CM_DISGUISECIVILIAN", ')', "civilian") { return CheckDisguiseClass( CLASS_CIVILIAN ); }
 
-ADD_MENU_OPTION(lastdisguise, "#FF_CM_DISGUISELAST", 'J', "disguise last") { return (g_szLastDisguiseComment[0] == 0 ? MENU_DIM : MENU_SHOW); }
+ADD_MENU_OPTION(lastdisguise, "#FF_CM_DISGUISELAST", 'J', "disguise last") { return CheckLastDisguise(); }
 
 
 //-----------------------------------------------------------------------------
@@ -486,13 +504,6 @@ void CHudContextMenu::DoCommand(const char *cmd)
 {
 	if (m_nLayer == 0)	// Is this check really needed anyway?
 	{
-		// They are disguising as last, so do it if possible
-		if (Q_strncmp(cmd, "disguise last", 13) == 0 && g_szLastDisguiseComment[0] != 0)
-		{
-			engine->ClientCmd(g_szLastDisguiseComment);
-			return;
-		}
-
 		if( cm_aimsentry.GetBool() && ( strcmp( cmd, "aimsentry" ) == 0 ) )
 		{
 			// Special case for aimsentry - we "bind" attack1 to
@@ -513,10 +524,6 @@ void CHudContextMenu::DoCommand(const char *cmd)
 	{
 		Q_strcat(szCmdBuffer, cmd, MAX_CMD_LEN);
 		engine->ClientCmd(szCmdBuffer);
-
-		// If disguise command, save this for later
-		if (Q_strncmp(szCmdBuffer, "disguise", 8) == 0)
-			Q_strncpy(g_szLastDisguiseComment, szCmdBuffer, sizeof(g_szLastDisguiseComment));
 
 		//  Jiggles: The player used the menu to disguise!  Good for him/her!
 		//				Note: This logic assumes there is only disguise functionality in our 2nd menu level				

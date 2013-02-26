@@ -871,6 +871,36 @@ int CFFPlayer::GetDisguisedClass( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+bool CFFPlayer::HasLastDisguise( void ) const
+{
+	return ( GetClassSlot() == CLASS_SPY ) && ( m_iLastSpyDisguise != 0 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetLastDisguisedTeam( void ) const
+{
+	if( HasLastDisguise() )	
+		return ( m_iLastSpyDisguise & 0x0000000F );
+
+	return TEAM_UNASSIGNED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetLastDisguisedClass( void ) const
+{
+	if( HasLastDisguise() )
+		return ( ( m_iLastSpyDisguise & 0x000000F0 ) >> 4 );
+
+	return CLASS_NONE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 float CFFPlayer::GetMovementSpeed( void ) const
 {
 	Vector vecVelocity = GetAbsVelocity();
