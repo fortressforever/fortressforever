@@ -843,7 +843,7 @@ void CFFWeaponAssaultCannon::UpdateBarrelRotation()
 //-----------------------------------------------------------------------------
 float GetAssaultCannonCharge()
 {
-	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 
 	if (!pPlayer)
 		return 0.0f;
