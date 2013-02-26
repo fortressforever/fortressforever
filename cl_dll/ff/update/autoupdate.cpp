@@ -42,6 +42,16 @@ int CFFUpdateThread::Run()
 
 	if (g_pUpdatePanel)
 		g_pUpdatePanel->UpdateAvailable( response );
+	
+	/*
+	int i=0;
+	while(IsAlive() && i<0)
+	{
+		i++;
+		Sleep(100);
+		Msg("[update] %d...\n", i);
+	}
+	*/
 
 	m_bIsRunning = false;
 
@@ -65,8 +75,6 @@ eUpdateResponse wyUpdateAvailable()
 		Q_strncat(szPath, "\" /quickcheck /justcheck", MAX_PATH);
 		//PathAppend(szPath, _T("wyUpdate.exe\" /quickcheck /justcheck")); // only usable if the path is to a directory, not a file
 		//Msg("[update] command: %s\n", szPath);
-
-		Msg("[update] Checking for updates\n", szPath);
 
 		STARTUPINFO si = {0}; si.cb = sizeof(si);
 		PROCESS_INFORMATION pi = {0};
@@ -102,16 +110,17 @@ eUpdateResponse wyUpdateAvailable()
 
 eUpdateResponse sockUpdateAvailable( const char *pszServerVersion )
 {
-	Socks sock;
-	char buf[1024];
+	static Socks sock;
+	static char buf[1024];
+	int a;
 	
 	// Open up a socket
 	if (!sock.Open( 1, 0)) 
 	{
 		Warning("[update] Could not open socket\n");
+		sock.Close();
 		return UPDATE_ERROR;
 	}
-	
 	// Connect to remote host
 	if (!sock.Connect("www.fortress-forever.com", 80)) 
 	{
@@ -121,7 +130,7 @@ eUpdateResponse sockUpdateAvailable( const char *pszServerVersion )
 	}
 	
 	Q_snprintf(buf, sizeof(buf),
-		"GET %s HTTP/1.1\r\n"
+		"GET /notifier/test.php?c=%s&s=%s HTTP/1.1\r\n"
 		"Host: %s\r\n"
 		"User-Agent: FortressForever\r\n"
 		"Connection: close\r\n"
@@ -129,7 +138,7 @@ eUpdateResponse sockUpdateAvailable( const char *pszServerVersion )
 		"Cache-Control: no-cache\r\n"
 		"\r\n",
 		
-		VarArgs("/notifier/test.php?c=%s&s=%s", GetModVersion(), pszServerVersion ? pszServerVersion : ""),
+		GetModVersion(), (pszServerVersion ? pszServerVersion : ""),
 		"www.fortress-forever.com");
 
 	// Send data
@@ -139,8 +148,6 @@ eUpdateResponse sockUpdateAvailable( const char *pszServerVersion )
 		sock.Close();
 		return UPDATE_ERROR;
 	}
-	
-	int a;
 
 	// Send data
 	if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
@@ -158,6 +165,16 @@ eUpdateResponse sockUpdateAvailable( const char *pszServerVersion )
 	//	409 Conflict = server out of date
 	//	304 Not Modified = up to date
 	char *response = strtok(buf,"\r\n");
+	if (!response)
+	{
+		Warning("[update] Unknown response received (NULL)\n");
+		return UPDATE_ERROR;
+	}
+	else if (strlen(response) <= 10)
+	{
+		Warning("[update] Unknown response received (%s)\n", response);
+		return UPDATE_ERROR;
+	}
 	response = response+9; // skip the HTTP/1.1 part
 
 	//DevMsg("[update] Successfully sent update check request. Response code: %s\n Full response:\n---\n%s\n---\n", response, buf);
