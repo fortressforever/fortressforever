@@ -353,69 +353,62 @@ namespace vgui
 	}
 	
 	//-----------------------------------------------------------------------------
-	// Purpose: Cleans up preset.. we might add remove alter values in the future
+	// Purpose: Cleans up a preset.. we might add remove alter values in the future
+	//			Also used for new preset settings
 	//-----------------------------------------------------------------------------	
 	KeyValues* CFFCustomHudPanelStylePresets::RemoveNonEssentialValues(KeyValues *kvPreset)
 	{
 		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
 
-		kvTemp->SetInt("headerTextAlignHoriz", kvPreset->GetInt("headerTextAlignHoriz", 1));
-		kvTemp->SetInt("headerTextAlignVert", kvPreset->GetInt("headerTextAlignVert", 1));
-		kvTemp->SetInt("headerIconAlignHoriz", kvPreset->GetInt("headerIconAlignHoriz", 1));
-		kvTemp->SetInt("headerIconAlignVert", kvPreset->GetInt("headerIconAlignVert", 1));
-		kvTemp->SetInt("textAlignHoriz", kvPreset->GetInt("textAlignHoriz", 1));
-		kvTemp->SetInt("textAlignVert", kvPreset->GetInt("textAlignVert", 1));
-
-		kvTemp->SetInt("headerTextAnchorPosition", kvPreset->GetInt("headerTextAnchorPosition", 1));
-		kvTemp->SetInt("headerIconAnchorPosition", kvPreset->GetInt("headerIconAnchorPosition", 1));
-		kvTemp->SetInt("textAnchorPosition", kvPreset->GetInt("textAnchorPosition", 1));
-
-		kvTemp->SetInt("headerTextX", kvPreset->GetInt("headerTextX", 20));
-		kvTemp->SetInt("headerTextY", kvPreset->GetInt("headerTextY", 7));
-		kvTemp->SetInt("headerIconX", kvPreset->GetInt("headerIconX", 3));
-		kvTemp->SetInt("headerIconY", kvPreset->GetInt("headerIconY", 3));
-		kvTemp->SetInt("textX", kvPreset->GetInt("textX", 25));
-		kvTemp->SetInt("textY", kvPreset->GetInt("textY", 20));
-
+		kvTemp->SetInt("showPanel", kvPreset->GetInt("showPanel", 1));
 		kvTemp->SetInt("panelMargin", kvPreset->GetInt("panelMargin", 5));
+		kvTemp->SetInt("panelColorMode", kvPreset->GetInt("panelColorMode", FFQuantityPanel::COLOR_MODE_TEAMCOLORED));
+		kvTemp->SetInt("panelRed", kvPreset->GetInt("panelRed", 255));
+		kvTemp->SetInt("panelGreen", kvPreset->GetInt("panelGreen", 255));
+		kvTemp->SetInt("panelBlue", kvPreset->GetInt("panelBlue", 255));
+		kvTemp->SetInt("panelAlpha", kvPreset->GetInt("panelAlpha", 255));
 
 		kvTemp->SetInt("showHeaderText", kvPreset->GetInt("showHeaderText", 1));
-		kvTemp->SetInt("showHeaderIcon", kvPreset->GetInt("showHeaderIcon", 1));
-		kvTemp->SetInt("showText", kvPreset->GetInt("showText", 1));
-
 		kvTemp->SetInt("headerTextSize", kvPreset->GetInt("headerTextSize", 3));
-		kvTemp->SetInt("headerIconSize", kvPreset->GetInt("headerIconSize", 3));
-		kvTemp->SetInt("textSize", kvPreset->GetInt("textSize", 3));
-
-		kvTemp->SetInt("headerTextShadow", kvPreset->GetInt("headerTextShadow", 0));
-		kvTemp->SetInt("headerIconShadow", kvPreset->GetInt("headerIconShadow", 0));
-		kvTemp->SetInt("textShadow", kvPreset->GetInt("textShadow", 0));
-
-		kvTemp->SetInt("showPanel", kvPreset->GetInt("showPanel", 1));
-		kvTemp->SetInt("panelColorMode", kvPreset->GetInt("panelColorMode", 0));
-
-		kvTemp->SetInt("headerTextColorMode", kvPreset->GetInt("headerTextColorMode", 0));
+		kvTemp->SetInt("headerTextShadow", kvPreset->GetInt("headerTextShadow", 1));
+		kvTemp->SetInt("headerTextAnchorPosition", kvPreset->GetInt("headerTextAnchorPosition", FFQuantityPanel::ANCHORPOS_TOPLEFT));
+		kvTemp->SetInt("headerTextAlignHoriz", kvPreset->GetInt("headerTextAlignHoriz", FFQuantityPanel::ALIGN_LEFT));
+		kvTemp->SetInt("headerTextAlignVert", kvPreset->GetInt("headerTextAlignVert", FFQuantityPanel::ALIGN_BOTTOM));
+		kvTemp->SetInt("headerTextX", kvPreset->GetInt("headerTextX", 11));
+		kvTemp->SetInt("headerTextY", kvPreset->GetInt("headerTextY", -4));
+		kvTemp->SetInt("headerTextColorMode", kvPreset->GetInt("headerTextColorMode", FFQuantityPanel::COLOR_MODE_CUSTOM));
 		kvTemp->SetInt("headerTextRed", kvPreset->GetInt("headerTextRed", 255));
 		kvTemp->SetInt("headerTextGreen", kvPreset->GetInt("headerTextGreen", 255));
 		kvTemp->SetInt("headerTextBlue", kvPreset->GetInt("headerTextBlue", 255));
 		kvTemp->SetInt("headerTextAlpha", kvPreset->GetInt("headerTextAlpha", 255));
 
-		kvTemp->SetInt("headerIconColorMode", kvPreset->GetInt("headerIconColorMode", 0));
+		kvTemp->SetInt("showHeaderIcon", kvPreset->GetInt("showHeaderIcon", 1));
+		kvTemp->SetInt("headerIconSize", kvPreset->GetInt("headerIconSize", 3));
+		kvTemp->SetInt("headerIconShadow", kvPreset->GetInt("headerIconShadow", 1));
+		kvTemp->SetInt("headerIconAnchorPosition", kvPreset->GetInt("headerIconAnchorPosition", FFQuantityPanel::ANCHORPOS_TOPLEFT));
+		kvTemp->SetInt("headerIconAlignHoriz", kvPreset->GetInt("headerIconAlignHoriz", FFQuantityPanel::ALIGN_LEFT));
+		kvTemp->SetInt("headerIconAlignVert", kvPreset->GetInt("headerIconAlignVert", FFQuantityPanel::ALIGN_BOTTOM));
+		kvTemp->SetInt("headerIconX", kvPreset->GetInt("headerIconX", -5));
+		kvTemp->SetInt("headerIconY", kvPreset->GetInt("headerIconY", -2));
+		kvTemp->SetInt("headerIconColorMode", kvPreset->GetInt("headerIconColorMode", FFQuantityPanel::COLOR_MODE_CUSTOM));
 		kvTemp->SetInt("headerIconRed", kvPreset->GetInt("headerIconRed", 255));
 		kvTemp->SetInt("headerIconGreen", kvPreset->GetInt("headerIconGreen", 255));
 		kvTemp->SetInt("headerIconBlue", kvPreset->GetInt("headerIconBlue", 255));
 		kvTemp->SetInt("headerIconAlpha", kvPreset->GetInt("headerIconAlpha", 255));
 
-		kvTemp->SetInt("textColorMode", kvPreset->GetInt("textColorMode", 0));
+		kvTemp->SetInt("showText", kvPreset->GetInt("showText", 1));
+		kvTemp->SetInt("textSize", kvPreset->GetInt("textSize", 3));
+		kvTemp->SetInt("textShadow", kvPreset->GetInt("textShadow", 1));
+		kvTemp->SetInt("textAnchorPosition", kvPreset->GetInt("textAnchorPosition", FFQuantityPanel::ANCHORPOS_TOPLEFT));
+		kvTemp->SetInt("textAlignHoriz", kvPreset->GetInt("textAlignHoriz", FFQuantityPanel::ALIGN_LEFT));
+		kvTemp->SetInt("textAlignVert", kvPreset->GetInt("textAlignVert", FFQuantityPanel::ALIGN_TOP));
+		kvTemp->SetInt("textX", kvPreset->GetInt("textX", 5));
+		kvTemp->SetInt("textY", kvPreset->GetInt("textY", 5));
+		kvTemp->SetInt("textColorMode", kvPreset->GetInt("textColorMode", FFQuantityPanel::COLOR_MODE_CUSTOM));
 		kvTemp->SetInt("textRed", kvPreset->GetInt("textRed", 255));
 		kvTemp->SetInt("textGreen", kvPreset->GetInt("textGreen", 255));
 		kvTemp->SetInt("textBlue", kvPreset->GetInt("textBlue", 255));
 		kvTemp->SetInt("textAlpha", kvPreset->GetInt("textAlpha", 255));
-
-		kvTemp->SetInt("panelRed", kvPreset->GetInt("panelRed", 255));
-		kvTemp->SetInt("panelGreen", kvPreset->GetInt("panelGreen", 255));
-		kvTemp->SetInt("panelBlue", kvPreset->GetInt("panelBlue", 255));
-		kvTemp->SetInt("panelAlpha", kvPreset->GetInt("panelAlpha", 255));
 
 		return kvTemp;
 	}

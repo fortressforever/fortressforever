@@ -241,6 +241,7 @@ namespace vgui
 	{
 		if(!m_pDialogButton)
 		{
+			m_iColorMode = iColorMode;
 			m_pColorMode->RemoveActionSignalTarget(this);
 			if(m_pColorMode->GetItemCount() >= iColorMode)
 			{

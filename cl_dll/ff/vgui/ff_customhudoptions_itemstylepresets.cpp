@@ -210,13 +210,13 @@ namespace vgui
 	{
 		KeyValues *kvTemp = new KeyValues(kvPreset->GetName());
 
-		kvTemp->SetInt("itemColumns", kvPreset->GetInt("itemColumns", 2));
-		kvTemp->SetInt("barWidth", kvPreset->GetInt("barWidth", 60));
-		kvTemp->SetInt("barHeight", kvPreset->GetInt("barHeight", 10));
+		kvTemp->SetInt("barOrientation", kvPreset->GetInt("barOrientation", FFQuantityItem::ORIENTATION_HORIZONTAL));
+		kvTemp->SetInt("barWidth", kvPreset->GetInt("barWidth", 70));
+		kvTemp->SetInt("barHeight", kvPreset->GetInt("barHeight", 5));
 		kvTemp->SetInt("barBorderWidth", kvPreset->GetInt("barBorderWidth", 1));
-		kvTemp->SetInt("itemMarginHorizontal", kvPreset->GetInt("itemMarginHorizontal", 10));
-		kvTemp->SetInt("itemMarginVertical", kvPreset->GetInt("itemMarginVertical", 10));
-		kvTemp->SetInt("barOrientation", kvPreset->GetInt("barOrientation", 0));
+		kvTemp->SetInt("itemColumns", kvPreset->GetInt("itemColumns", 1));
+		kvTemp->SetInt("itemMarginHorizontal", kvPreset->GetInt("itemMarginHorizontal", 0));
+		kvTemp->SetInt("itemMarginVertical", kvPreset->GetInt("itemMarginVertical", 0));
 
 		//see if component data exists
 		KeyValues *kvComponent = kvPreset->FindKey("Bar");
@@ -228,11 +228,11 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 2));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
-			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 130));
 
 			kvTemp->AddSubKey(kvTempComponent);
 		}
@@ -241,11 +241,11 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("Bar");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", 2);
+			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
-			kvComponent->SetInt("alpha", 255);
+			kvComponent->SetInt("alpha", 130);
 			
 			//also add component data to the preset
 			kvTemp->AddSubKey(kvComponent);
@@ -260,11 +260,11 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 0));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
-			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 155));
 
 			kvTemp->AddSubKey(kvTempComponent);
 		}
@@ -273,11 +273,11 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("BarBorder");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
-			kvComponent->SetInt("alpha", 255);
+			kvComponent->SetInt("alpha", 155);
 
 			//also add component data to the preset
 			kvTemp->AddSubKey(kvComponent);
@@ -291,12 +291,12 @@ namespace vgui
 			KeyValues *kvTempComponent = new KeyValues("BarBackground");
 
 			//strip as normal	
-			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 2));
+			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 0));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
-			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 96));
+			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 40));
 
 			kvTemp->AddSubKey(kvTempComponent);
 		}
@@ -305,11 +305,11 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("BarBackground");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", 2);
+			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
-			kvComponent->SetInt("alpha", 96);
+			kvComponent->SetInt("alpha", 40);
 			
 			//also add component data to the preset
 			kvTemp->AddSubKey(kvComponent);
@@ -323,13 +323,13 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 0));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
 			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
-			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
-			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
+			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 1));
+			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 2));
 			kvTempComponent->SetInt("anchorPosition", kvComponent->GetInt("anchorPosition", FFQuantityItem::ANCHORPOS_MIDDLELEFT));
 			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", FFQuantityItem::ALIGN_RIGHT));
 			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", FFQuantityItem::ALIGN_MIDDLE));
@@ -343,13 +343,13 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("Icon");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
 			kvComponent->SetInt("alpha", 255);
-			kvComponent->SetInt("shadow", 0);
-			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("shadow", 1);
+			kvComponent->SetInt("size", 2);
 			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_MIDDLELEFT);
 			kvComponent->SetInt("alignH", FFQuantityItem::ALIGN_RIGHT);
 			kvComponent->SetInt("alignV", FFQuantityItem::ALIGN_MIDDLE);
@@ -369,19 +369,19 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 0));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
 			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
-			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
-			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
+			kvTempComponent->SetInt("fontTahoma", kvComponent->GetInt("fontTahoma", 1));
+			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 1));
+			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 1));
 			kvTempComponent->SetInt("anchorPosition", kvComponent->GetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPLEFT));
 			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", FFQuantityItem::ALIGN_LEFT));
 			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", FFQuantityItem::ALIGN_BOTTOM));
 			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", 0));
 			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 0));
-			kvTempComponent->SetInt("fontTahoma", kvComponent->GetInt("fontTahoma", 0));
 
 			kvTemp->AddSubKey(kvTempComponent);
 		}
@@ -390,19 +390,19 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("Label");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", 0);
+			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
 			kvComponent->SetInt("alpha", 255);
-			kvComponent->SetInt("shadow", 0);
-			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("fontTahoma", 1);
+			kvComponent->SetInt("shadow", 1);
+			kvComponent->SetInt("size", 1);
 			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPLEFT);
 			kvComponent->SetInt("alignH", FFQuantityItem::ALIGN_LEFT);
 			kvComponent->SetInt("alignV", FFQuantityItem::ALIGN_BOTTOM);
 			kvComponent->SetInt("offsetX", 0);
 			kvComponent->SetInt("offsetY", 0);
-			kvComponent->SetInt("fontTahoma", 0);
 			
 			//also add component data to the preset
 			kvTemp->AddSubKey(kvComponent);
@@ -417,19 +417,19 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", 0));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
 			kvTempComponent->SetInt("alpha", kvComponent->GetInt("alpha", 255));
-			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 0));
-			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 4));
+			kvTempComponent->SetInt("fontTahoma", kvComponent->GetInt("fontTahoma", 1));
+			kvTempComponent->SetInt("shadow", kvComponent->GetInt("shadow", 1));
+			kvTempComponent->SetInt("size", kvComponent->GetInt("size", 1));
 			kvTempComponent->SetInt("anchorPosition", kvComponent->GetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPRIGHT));
 			kvTempComponent->SetInt("alignH", kvComponent->GetInt("alignH", FFQuantityItem::ALIGN_RIGHT));
 			kvTempComponent->SetInt("alignV", kvComponent->GetInt("alignV", FFQuantityItem::ALIGN_BOTTOM));
 			kvTempComponent->SetInt("offsetX", kvComponent->GetInt("offsetX", 0));
 			kvTempComponent->SetInt("offsetY", kvComponent->GetInt("offsetY", 0));
-			kvTempComponent->SetInt("fontTahoma", kvComponent->GetInt("fontTahoma", 0));
 
 			kvTemp->AddSubKey(kvTempComponent);
 		}
@@ -438,19 +438,19 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("Amount");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", 0);
-			kvComponent->SetInt("red", 0);
-			kvComponent->SetInt("green", 0);
-			kvComponent->SetInt("blue", 0);
+			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+			kvComponent->SetInt("red", 255);
+			kvComponent->SetInt("green", 255);
+			kvComponent->SetInt("blue", 255);
 			kvComponent->SetInt("alpha", 255);
-			kvComponent->SetInt("shadow", 0);
-			kvComponent->SetInt("size", 4);
+			kvComponent->SetInt("fontTahoma", 1);
+			kvComponent->SetInt("shadow", 1);
+			kvComponent->SetInt("size", 1);
 			kvComponent->SetInt("anchorPosition", FFQuantityItem::ANCHORPOS_TOPRIGHT);
 			kvComponent->SetInt("alignH", FFQuantityItem::ALIGN_RIGHT);
 			kvComponent->SetInt("alignV", FFQuantityItem::ALIGN_BOTTOM);
 			kvComponent->SetInt("offsetX", 0);
 			kvComponent->SetInt("offsetY", 0);
-			kvComponent->SetInt("fontTahoma", 0);
 			
 			//also add component data to the preset
 			kvTemp->AddSubKey(kvComponent);	
@@ -751,54 +751,8 @@ namespace vgui
 
 		if(m_pComponentSelection->GetActiveItem() == iMenuItemToShow)
 		{
-			m_pOffsetX->RemoveActionSignalTarget(this);
-			m_pOffsetY->RemoveActionSignalTarget(this);
-			m_pSize->RemoveActionSignalTarget(this);
-
-			m_pColor->RemoveActionSignalTarget(this);
-			
-			m_pAlignH->RemoveActionSignalTarget(this);
-			m_pAlignV->RemoveActionSignalTarget(this);
-			
-			m_pShadow->RemoveActionSignalTarget(this);
-			m_pShow->RemoveActionSignalTarget(this);
-			m_pFontTahoma->RemoveActionSignalTarget(this);
-			
-			m_pAnchorPositionTopLeft->RemoveActionSignalTarget(this);
-			m_pAnchorPositionTopCenter->RemoveActionSignalTarget(this);
-			m_pAnchorPositionTopRight->RemoveActionSignalTarget(this);
-			m_pAnchorPositionMiddleLeft->RemoveActionSignalTarget(this);
-			m_pAnchorPositionMiddleCenter->RemoveActionSignalTarget(this);
-			m_pAnchorPositionMiddleRight->RemoveActionSignalTarget(this);
-			m_pAnchorPositionBottomLeft->RemoveActionSignalTarget(this);
-			m_pAnchorPositionBottomCenter->RemoveActionSignalTarget(this);
-			m_pAnchorPositionBottomRight->RemoveActionSignalTarget(this);
-
 			//force an update of component controls because the dropdown won't register a change to do it itself
 			UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
-			
-			m_pColor->AddActionSignalTarget(this);
-
-			m_pOffsetX->AddActionSignalTarget(this);
-			m_pOffsetY->AddActionSignalTarget(this);
-			m_pSize->AddActionSignalTarget(this);
-			
-			m_pAlignH->AddActionSignalTarget(this);
-			m_pAlignV->AddActionSignalTarget(this);
-			
-			m_pShadow->AddActionSignalTarget(this);
-			m_pShow->AddActionSignalTarget(this);
-			m_pFontTahoma->AddActionSignalTarget(this);
-
-			m_pAnchorPositionTopLeft->AddActionSignalTarget(this);
-			m_pAnchorPositionTopCenter->AddActionSignalTarget(this);
-			m_pAnchorPositionTopRight->AddActionSignalTarget(this);
-			m_pAnchorPositionMiddleLeft->AddActionSignalTarget(this);
-			m_pAnchorPositionMiddleCenter->AddActionSignalTarget(this);
-			m_pAnchorPositionMiddleRight->AddActionSignalTarget(this);
-			m_pAnchorPositionBottomLeft->AddActionSignalTarget(this);
-			m_pAnchorPositionBottomCenter->AddActionSignalTarget(this);
-			m_pAnchorPositionBottomRight->AddActionSignalTarget(this);
 		}
 		//select the item which was previously selected (might be default 0)
 		m_pComponentSelection->ActivateItemByRow(iMenuItemToShow);
@@ -817,98 +771,6 @@ namespace vgui
 	// Purpose: Update the component controls from the selected Component
 	//-----------------------------------------------------------------------------	
 	void CFFCustomHudItemStylePresets::UpdateComponentControls(KeyValues *kvComponent)
-	{
-		m_pShow->SetSelected(kvComponent->GetInt("show", 1));
-		m_pColor->SetColorMode(kvComponent->GetInt("colorMode", 0));
-
-		m_pColor->SetValue(
-			kvComponent->GetInt("red", 255), 
-			kvComponent->GetInt("green", 255),
-			kvComponent->GetInt("blue", 255),
-			kvComponent->GetInt("alpha", 255) );
-
-		if(m_pShadow->IsEnabled())
-			m_pShadow->SetSelected(kvComponent->GetInt("shadow", 0));
-		else
-			m_pShadow->SetSelected(false);
-
-		if(m_pSize->IsEnabled())
-			m_pSize->SetValue(kvComponent->GetInt("size", 5) + 1);
-		else
-			m_pSize->SetValue(0);
-
-		if(m_pAlignH->IsEnabled())
-			m_pAlignH->ActivateItemByRow(kvComponent->GetInt("alignH", 0));
-		else
-			m_pAlignH->ActivateItemByRow(0);
-
-		if(m_pAlignV->IsEnabled())
-			m_pAlignV->ActivateItemByRow(kvComponent->GetInt("alignV", 0));
-		else
-			m_pAlignV->ActivateItemByRow(0);
-		
-		if(m_pOffsetX->IsEnabled())
-			m_pOffsetX->SetValue(kvComponent->GetInt("offsetX", 0));
-		else
-			m_pOffsetX->SetValue(0);
-
-		if(m_pOffsetY->IsEnabled())
-			m_pOffsetY->SetValue(kvComponent->GetInt("offsetY", 0));
-		else
-			m_pOffsetY->SetValue(0);
-
-		if(m_pFontTahoma->IsEnabled())
-			m_pFontTahoma->SetSelected(kvComponent->GetInt("fontTahoma", 0));
-		else
-			m_pFontTahoma->SetSelected(false);
-
-		if(m_pAnchorPositionTopLeft->IsEnabled())
-			m_pAnchorPositionTopLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPLEFT);
-		else
-			m_pAnchorPositionTopLeft->SetSelected(false);
-
-		if(m_pAnchorPositionTopCenter->IsEnabled())
-			m_pAnchorPositionTopCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPCENTER);
-		else
-			m_pAnchorPositionTopCenter->SetSelected(false);
-
-		if(m_pAnchorPositionTopRight->IsEnabled())
-			m_pAnchorPositionTopRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPRIGHT);
-		else
-			m_pAnchorPositionTopRight->SetSelected(false);
-
-		if(m_pAnchorPositionMiddleLeft->IsEnabled())
-			m_pAnchorPositionMiddleLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLELEFT);
-		else
-			m_pAnchorPositionMiddleLeft->SetSelected(false);
-
-		if(m_pAnchorPositionMiddleCenter->IsEnabled())
-			m_pAnchorPositionMiddleCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLECENTER);
-		else
-			m_pAnchorPositionMiddleCenter->SetSelected(false);
-
-		if(m_pAnchorPositionMiddleRight->IsEnabled())
-			m_pAnchorPositionMiddleRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLERIGHT);
-		else
-			m_pAnchorPositionMiddleRight->SetSelected(false);
-
-		if(m_pAnchorPositionBottomLeft->IsEnabled())
-			m_pAnchorPositionBottomLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMLEFT);
-		else
-			m_pAnchorPositionBottomLeft->SetSelected(false);
-
-		if(m_pAnchorPositionBottomCenter->IsEnabled())
-			m_pAnchorPositionBottomCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMCENTER);
-		else
-			m_pAnchorPositionBottomCenter->SetSelected(false);
-
-		if(m_pAnchorPositionBottomRight->IsEnabled())
-			m_pAnchorPositionBottomRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMRIGHT);
-		else
-			m_pAnchorPositionBottomRight->SetSelected(false);
-	}
-	
-	void CFFCustomHudItemStylePresets::OnUpdateComponentSelection()
 	{
 		m_pOffsetX->RemoveActionSignalTarget(this);
 		m_pOffsetY->RemoveActionSignalTarget(this);
@@ -933,7 +795,15 @@ namespace vgui
 		m_pAnchorPositionBottomCenter->RemoveActionSignalTarget(this);
 		m_pAnchorPositionBottomRight->RemoveActionSignalTarget(this);
 
-		const char* m_szName = m_pComponentSelection->GetActiveItemUserData()->GetName();
+		m_pShow->SetSelected(kvComponent->GetInt("show", 1));
+		m_pColor->SetColorMode(kvComponent->GetInt("colorMode", 0));
+		m_pColor->SetValue(
+			kvComponent->GetInt("red", 255), 
+			kvComponent->GetInt("green", 255),
+			kvComponent->GetInt("blue", 255),
+			kvComponent->GetInt("alpha", 255) );
+
+		const char* m_szName = kvComponent->GetName();
 		if(!(Q_stricmp(m_szName, "Bar") == 0 || Q_stricmp(m_szName, "BarBorder") == 0 || Q_stricmp(m_szName, "BarBackground") == 0))
 		{
 			if(Q_stricmp(m_szName, "Icon") == 0)
@@ -971,6 +841,23 @@ namespace vgui
 			m_pAnchorPositionBottomLeft->SetEnabled(true);
 			m_pAnchorPositionBottomCenter->SetEnabled(true);
 			m_pAnchorPositionBottomRight->SetEnabled(true);
+
+			m_pShadow->SetSelected(kvComponent->GetInt("shadow", 0));
+			m_pSize->SetValue(kvComponent->GetInt("size", 5) + 1);
+			m_pAlignH->ActivateItemByRow(kvComponent->GetInt("alignH", 0));
+			m_pAlignV->ActivateItemByRow(kvComponent->GetInt("alignV", 0));
+			m_pOffsetX->SetValue(kvComponent->GetInt("offsetX", 0));
+			m_pOffsetY->SetValue(kvComponent->GetInt("offsetY", 0));
+			m_pFontTahoma->SetSelected(kvComponent->GetInt("fontTahoma", 0));
+			m_pAnchorPositionTopLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPLEFT);
+			m_pAnchorPositionTopCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPCENTER);
+			m_pAnchorPositionTopRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_TOPRIGHT);
+			m_pAnchorPositionMiddleLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLELEFT);
+			m_pAnchorPositionMiddleCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLECENTER);
+			m_pAnchorPositionMiddleRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_MIDDLERIGHT);
+			m_pAnchorPositionBottomLeft->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMLEFT);
+			m_pAnchorPositionBottomCenter->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMCENTER);
+			m_pAnchorPositionBottomRight->SetSelected(kvComponent->GetInt("anchorPosition", -1) == FFQuantityItem::ANCHORPOS_BOTTOMRIGHT);
 		}
 		else
 		{
@@ -999,10 +886,26 @@ namespace vgui
 			m_pAnchorPositionBottomLeft->SetEnabled(false);
 			m_pAnchorPositionBottomCenter->SetEnabled(false);
 			m_pAnchorPositionBottomRight->SetEnabled(false);
+
+			m_pShadow->SetSelected(false);
+			m_pSize->SetValue(0);
+			m_pAlignH->ActivateItemByRow(0);
+			m_pAlignV->ActivateItemByRow(0);
+			m_pOffsetX->SetValue(0);
+			m_pOffsetY->SetValue(0);
+			m_pFontTahoma->SetSelected(false);
+			m_pAnchorPositionTopLeft->SetSelected(false);
+			m_pAnchorPositionTopCenter->SetSelected(false);
+			m_pAnchorPositionTopRight->SetSelected(false);
+			m_pAnchorPositionMiddleLeft->SetSelected(false);
+			m_pAnchorPositionMiddleCenter->SetSelected(false);
+			m_pAnchorPositionMiddleRight->SetSelected(false);
+			m_pAnchorPositionBottomLeft->SetSelected(false);
+			m_pAnchorPositionBottomCenter->SetSelected(false);
+			m_pAnchorPositionBottomRight->SetSelected(false);
 		}
-
-		UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
-
+		
+		m_pShow->AddActionSignalTarget(this);
 		m_pColor->AddActionSignalTarget(this);
 
 		m_pOffsetX->AddActionSignalTarget(this);
@@ -1013,7 +916,6 @@ namespace vgui
 		m_pAlignV->AddActionSignalTarget(this);
 		
 		m_pShadow->AddActionSignalTarget(this);
-		m_pShow->AddActionSignalTarget(this);
 		m_pFontTahoma->AddActionSignalTarget(this);
 
 		m_pAnchorPositionTopLeft->AddActionSignalTarget(this);
@@ -1025,6 +927,11 @@ namespace vgui
 		m_pAnchorPositionBottomLeft->AddActionSignalTarget(this);
 		m_pAnchorPositionBottomCenter->AddActionSignalTarget(this);
 		m_pAnchorPositionBottomRight->AddActionSignalTarget(this);
+	}
+	
+	void CFFCustomHudItemStylePresets::OnUpdateComponentSelection()
+	{
+		UpdateComponentControls(m_pComponentSelection->GetActiveItemUserData());
 	}
 
 	//-----------------------------------------------------------------------------
