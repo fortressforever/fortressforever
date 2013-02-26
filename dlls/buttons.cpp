@@ -282,10 +282,16 @@ int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
 			_scriptman.SetVar("info_classname", weapon->GetName());
 	}
 
-	// TODO: Need to send the attacker to the button...
+	// TODO: Update this to use .Push() to send the arguments instead of SetVar()ing globals
 	CFFLuaSC hOnDamage;
-	if( !_scriptman.RunPredicates_LUA(this, &hOnDamage, "ondamage" ) )
-		return 0;
+	// if the :ondamage() function exists in Lua, let it decide if damage should be done
+	if( _scriptman.RunPredicates_LUA(this, &hOnDamage, "ondamage" ) )
+	{
+		// if the return value was false, then don't do damage
+		if (!hOnDamage.GetBool())
+			return 0;
+	}
+
 	if (_scriptman.GetFloat("info_damage") <= 0.0)
 		return 0;
 
