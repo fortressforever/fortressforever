@@ -160,6 +160,7 @@ public:
 	~C_FFPlayer();
 
 	static C_FFPlayer* GetLocalFFPlayer();
+	static C_FFPlayer* GetLocalFFPlayerOrObserverTarget();
 
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
