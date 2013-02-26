@@ -51,7 +51,7 @@ CHudCrosshair::CHudCrosshair( const char *pElementName ) :
 
 	m_vecCrossHairOffsetAngle.Init();
 
-	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR );
+	SetHiddenBits( HIDEHUD_CROSSHAIR );
 }
 
 void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
