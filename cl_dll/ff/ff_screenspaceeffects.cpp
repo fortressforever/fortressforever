@@ -342,7 +342,7 @@ extern float GetAssaultCannonCharge();
 void CMotionBlur::Render(int x, int y, int w, int h)
 {
 	// First of all lets work out how much to do this
-	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+	C_BasePlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 
 	// Must be valid, on a team and not no-clipping and alive
 	if (!cl_dynamicblur.GetBool() || !pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || !pPlayer->IsAlive() || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
@@ -491,13 +491,13 @@ void CCloakedEffect::Render( int x, int y, int w, int h )
 //-----------------------------------------------------------------------------
 bool CCloakedEffect::IsEnabled( void )
 {
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 
 	if( !pPlayer )
 		return false;
 
 	// don't bother with screen effect if in thirdperson
-	return (pPlayer->IsCloaked() && !pPlayer->ShouldDraw());
+	return ( pPlayer->IsInSlowfield() && ( !pPlayer->IsLocalPlayer() || ( pPlayer->IsLocalPlayer() && !pPlayer->ShouldDrawLocalPlayer() ) ) );
 }
 
 
@@ -530,7 +530,11 @@ void CSlowedEffect::Render( int x, int y, int w, int h )
 
 	if (pVar)
 	{
-		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
+
+		if (!pPlayer)
+			return;
+
 		C_FFGrenadeBase *pSlowfield = pPlayer->GetActiveSlowfield();
 		
 		Vector vColor;
@@ -565,11 +569,11 @@ void CSlowedEffect::Render( int x, int y, int w, int h )
 //-----------------------------------------------------------------------------
 bool CSlowedEffect::IsEnabled( void )
 {
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 
 	if( !pPlayer )
 		return false;
 
 	// don't bother with screen effect if in thirdperson
-	return (pPlayer->IsInSlowfield() && !pPlayer->ShouldDraw());
+	return ( pPlayer->IsInSlowfield() && ( !pPlayer->IsLocalPlayer() || ( pPlayer->IsLocalPlayer() && !pPlayer->ShouldDrawLocalPlayer() ) ) );
 }
