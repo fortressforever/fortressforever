@@ -2613,7 +2613,8 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 			if ( pFFNewSpecTarget )
 			{
 				pFFSelf->m_flConcTime = pFFNewSpecTarget->m_flConcTime;
-				if ( pFFSelf->m_flConcTime )
+				float timeRemaining = pFFSelf->m_flConcTime - gpGlobals->curtime;
+				if ( timeRemaining )
 				{
 					// if we still have conc time update the icon for remaining time
 					CSingleUserRecipientFilter user( this );
@@ -2621,7 +2622,7 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 
 					UserMessageBegin( user, "StatusIconUpdate" );
 						WRITE_BYTE( FF_STATUSICON_CONCUSSION );
-						WRITE_FLOAT( pFFSelf->m_flConcTime );
+						WRITE_FLOAT( timeRemaining );
 					MessageEnd();	
 				}
 			}
