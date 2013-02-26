@@ -330,6 +330,9 @@ void C_HLTVCamera::CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 	eyeAngles = m_aCamAngle;
 	fov = m_flFOV;
 
+	float zNear,zFar;
+	pPlayer->CalcView(eyeOrigin, eyeAngles, zNear, zFar, fov);
+
 	pPlayer->CalcViewModelView( eyeOrigin, eyeAngles);
 
 	C_BaseViewModel *pViewModel = pPlayer->GetViewModel( 0 );
