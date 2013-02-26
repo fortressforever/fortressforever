@@ -16,6 +16,7 @@
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Label.h>
 
+#include <vgui/IVgui.h>
 #include "vstdlib/icommandline.h"
 #include <vgui_controls/MessageBox.h>
 
@@ -96,6 +97,10 @@ CFFUpdatesPanel::CFFUpdatesPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFUp
 	m_pUpdateStatus->SetPos(ScreenWidth()-m_pUpdateStatus->GetWide()-m_pCurrentVersion->GetWide()-20,ScreenHeight()-m_pUpdateStatus->GetTall()-10);
 
 	m_flStatusFadeTime = -1.0f;
+	
+	// create the response thread
+	vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
+	m_UpdateStatus = UPDATE_UNKNOWN;
 
 	// check for updates in a separate thread
 	CheckUpdate();
@@ -212,6 +217,17 @@ void CFFUpdatesPanel::Paint( void )
 	}
 
 	BaseClass::Paint();
+}
+
+void CFFUpdatesPanel::OnTick()
+{
+	if (m_UpdateStatus != UPDATE_UNKNOWN)
+	{
+		UpdateAvailable( m_UpdateStatus );
+		m_UpdateStatus = UPDATE_UNKNOWN;
+	}
+
+	BaseClass::OnTick();
 }
 
 //-----------------------------------------------------------------------------
