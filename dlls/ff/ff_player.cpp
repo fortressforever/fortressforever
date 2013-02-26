@@ -337,6 +337,8 @@ PRECACHE_REGISTER(player);
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFPlayerObserver )
 	SendPropFloat(SENDINFO(m_flNextClassSpecificSkill)),
+	SendPropFloat(SENDINFO(m_flTrueAimTime)),
+	SendPropFloat(SENDINFO(m_flHitTime)),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
@@ -558,6 +560,9 @@ CFFPlayer::CFFPlayer()
 
 	m_flConcTime = 0;		// Not concussed on creation
 	m_bConcussed = false;
+	
+	m_flTrueAimTime	= 0.0f;
+	m_flHitTime	= 0.0f;
 	
 	m_bTranqed = false;
 
@@ -5520,10 +5525,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
 	if( pAttacker && pAttacker != this )
 	{
-		CSingleUserRecipientFilter filter(pAttacker);
-		UserMessageBegin(filter, "Hit");
-			WRITE_FLOAT(info.GetDamage());
-		MessageEnd();
+		pAttacker->m_flHitTime = gpGlobals->curtime;
 	}
 
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client

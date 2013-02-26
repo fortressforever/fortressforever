@@ -813,6 +813,8 @@ END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFPlayerObserver )
 	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
+	RecvPropFloat(RECVINFO(m_flTrueAimTime)),
+	RecvPropFloat(RECVINFO(m_flHitTime)),
 END_RECV_TABLE()
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
@@ -1248,6 +1250,9 @@ C_FFPlayer::C_FFPlayer() :
 
 	m_flConcTime = 0;
 	m_bConcussed = false;
+
+	m_flTrueAimTime = 0.0f;
+	m_flHitTime = 0.0f;
 	
 	m_bTranqed = false;
 	

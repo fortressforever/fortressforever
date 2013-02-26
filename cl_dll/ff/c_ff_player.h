@@ -394,7 +394,8 @@ public:
 	QAngle m_angConced, m_angConcedTest;
 
 	
-	float m_flTrueAimTime;
+	CNetworkVar( float, m_flTrueAimTime );
+	CNetworkVar( float, m_flHitTime );
 
 	virtual const QAngle &EyeAngles();
 	virtual void CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
