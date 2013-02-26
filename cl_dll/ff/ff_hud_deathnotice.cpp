@@ -14,7 +14,7 @@
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <KeyValues.h>
-#include "c_baseplayer.h"
+#include "c_ff_player.h"
 #include "c_team.h"
 #include "ff_gamerules.h"
 
@@ -22,9 +22,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
-static ConVar hud_deathnotice_selfonly( "hud_deathnotice_selfonly", "0", FCVAR_ARCHIVE );
-static ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "0", FCVAR_ARCHIVE );
+ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
+ConVar hud_deathnotice_selfonly( "hud_deathnotice_selfonly", "0", FCVAR_ARCHIVE );
+ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "0", FCVAR_ARCHIVE );
+ConVar cl_spec_killbeep( "cl_spec_killbeep", "1", FCVAR_ARCHIVE, "Determines whether or not the kill beep gets played while spectating someone in first-person mode" );
 
 extern ConVar cl_killbeepwav;
 
@@ -169,7 +170,7 @@ void CHudDeathNotice::Paint()
 	int iCount = m_DeathNotices.Count();
 	for ( int i = 0; i < iCount; i++ )
 	{
-		bool selfInvolved = m_DeathNotices[i].Victim.iEntIndex == GetLocalPlayerIndex() ||  m_DeathNotices[i].Killer.iEntIndex == GetLocalPlayerIndex();
+		bool selfInvolved = m_DeathNotices[i].Victim.iEntIndex == GetLocalPlayerOrObserverTargetIndex() ||  m_DeathNotices[i].Killer.iEntIndex == GetLocalPlayerOrObserverTargetIndex();
 		// if we should only draw notices that the local player is involved in and the local player isn't involved, then skip drawing this notice
 		if (hud_deathnotice_selfonly.GetBool() && !selfInvolved)
 			continue;
@@ -711,8 +712,8 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		}
 
 		// play the killbeep
-		CBasePlayer *pLocalPlayer = CBasePlayer::GetLocalPlayer();
-		if ( pLocalPlayer && killer == GetLocalPlayerIndex() )
+		C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
+		if ( pLocalPlayer && killer == GetLocalPlayerOrObserverTargetIndex() && (pLocalPlayer->IsLocalPlayer() || cl_spec_killbeep.GetBool()) )
 		{
 			char buf[MAX_PATH];
 			Q_snprintf( buf, MAX_PATH - 1, "player/deathbeep/%s.wav", cl_killbeepwav.GetString() );
