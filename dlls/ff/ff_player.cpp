@@ -335,6 +335,10 @@ END_SEND_TABLE()
 LINK_ENTITY_TO_CLASS( player, CFFPlayer );
 PRECACHE_REGISTER(player);
 
+BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFPlayerObserver )
+	SendPropFloat(SENDINFO(m_flNextClassSpecificSkill)),
+END_SEND_TABLE()
+
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
@@ -408,6 +412,10 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 	SendPropDataTable("fforigin", 0, &REFERENCE_SEND_TABLE(DT_NonLocalOrigin), SendProxy_NonLocalOrigin),
 #endif
+	
+	// Data that only gets sent to the player as well as observers of the player
+	SendPropDataTable( "ffplayerobserverdata", 0, &REFERENCE_SEND_TABLE(DT_FFPlayerObserver), SendProxy_OnlyToObservers ),
+
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11 ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11 ),
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
@@ -418,7 +426,6 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
 	
 	SendPropFloat(SENDINFO(m_flConcTime)),
-	SendPropFloat(SENDINFO(m_flNextClassSpecificSkill)),
 
 	SendPropBool( SENDINFO( m_bSaveMe ) ),
 	SendPropBool( SENDINFO( m_bEngyMe ) ),

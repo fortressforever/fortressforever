@@ -103,6 +103,41 @@ void* SendProxy_OnlyToTeam( const SendProp *pProp, const void *pStruct, const vo
 }
 REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_OnlyToTeam );
 
+//-----------------------------------------------------------------------------
+// Purpose: Proxy that only sends data to observers of the entity
+// Input  : *pStruct - 
+//			*pData - 
+//			*pOut - 
+//			objectID - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+void* SendProxy_OnlyToObservers( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID )
+{
+	CBaseEntity *pEntity = (CBaseEntity*)pStruct;
+	if ( pEntity )
+	{
+		pRecipients->ClearAllRecipients();
+
+		// send to the ent if its a player
+		if (pEntity->IsPlayer())
+			pRecipients->SetRecipient( ToBasePlayer(pEntity)->GetClientIndex() );
+
+		for ( int i=1; i <= gpGlobals->maxClients; i++ )
+		{
+			CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+			if (pPlayer)
+			{
+				if (pPlayer->IsObserver() && pPlayer->GetObserverTarget() == pEntity)
+					pRecipients->SetRecipient( pPlayer->GetClientIndex() );
+			}
+		}
+		return (void*)pVarData;
+	}
+
+	return NULL;
+}
+REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_OnlyToObservers );
+
 #define TIME_BITS 24
 
 // This table encodes edict data.

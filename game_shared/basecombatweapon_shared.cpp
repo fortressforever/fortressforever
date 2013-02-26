@@ -2568,16 +2568,27 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalWeaponData )
 #endif
 END_NETWORK_TABLE()
 
+
+//-----------------------------------------------------------------------------
+// Purpose: Propagation data for weapons. Only sent when a player's holding it.
+//-----------------------------------------------------------------------------
+BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_ObserverWeaponData )
+#if !defined( CLIENT_DLL )
+	SendPropIntWithMinusOneFlag( SENDINFO(m_iClip1 ), 8 ),
+	SendPropIntWithMinusOneFlag( SENDINFO(m_iClip2 ), 8 ),
+#endif
+END_NETWORK_TABLE()
+
 BEGIN_NETWORK_TABLE(CBaseCombatWeapon, DT_BaseCombatWeapon)
 #if !defined( CLIENT_DLL )
 	SendPropDataTable("LocalWeaponData", 0, &REFERENCE_SEND_TABLE(DT_LocalWeaponData), SendProxy_SendLocalWeaponDataTable ),
 	SendPropDataTable("LocalActiveWeaponData", 0, &REFERENCE_SEND_TABLE(DT_LocalActiveWeaponData), SendProxy_SendActiveLocalWeaponDataTable ),
+	// Data that only gets sent to the player as well as observers of the player
+	SendPropDataTable( "ObserverWeaponData", 0, &REFERENCE_SEND_TABLE(DT_ObserverWeaponData), SendProxy_OnlyToObservers ),
 	SendPropModelIndex( SENDINFO(m_iViewModelIndex) ),
 	SendPropModelIndex( SENDINFO(m_iWorldModelIndex) ),
 	SendPropInt( SENDINFO(m_iState ), 8, SPROP_UNSIGNED ),
 	SendPropEHandle( SENDINFO(m_hOwner) ),
-	SendPropIntWithMinusOneFlag( SENDINFO(m_iClip1 ), 8 ),
-	SendPropIntWithMinusOneFlag( SENDINFO(m_iClip2 ), 8 ),
 #else
 	RecvPropDataTable("LocalWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalWeaponData)),
 	RecvPropDataTable("LocalActiveWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalActiveWeaponData)),

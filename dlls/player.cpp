@@ -7271,7 +7271,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_iArmor), 10 ),
 		SendPropInt		(SENDINFO(m_iMaxArmor), 10 ), //AfterShock: we should work this out from class
 		
-		SendPropArray3		( SENDINFO_ARRAY3(m_iAmmo), SendPropInt( SENDINFO_ARRAY(m_iAmmo), 10, SPROP_UNSIGNED ) ),
+		SendPropArray3		( SENDINFO_ARRAY3(m_iAmmo), SendPropInt( SENDINFO_ARRAY(m_iAmmo), 10, SPROP_UNSIGNED ), SendProxy_OnlyToObservers ),
 
 		// Added by Mulch for testing
 		SendPropInt		(SENDINFO(m_lifeState), 3, SPROP_UNSIGNED ),
