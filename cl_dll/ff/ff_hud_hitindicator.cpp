@@ -63,9 +63,6 @@ public:
 	void			Init();
 	void			Reset();
 
-	// Handler for our message
-	void			MsgFunc_Hit(bf_read &msg);
-
 protected:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint();
@@ -73,8 +70,6 @@ protected:
 private:
 	// Crosshair sprite and colors
 	QAngle			m_vecCrossHairOffsetAngle;
-	
-	float			m_flStartTime;
 
 	QAngle			m_curViewAngles;
 	Vector			m_curViewOrigin;
@@ -84,7 +79,6 @@ private:
 };
 
 DECLARE_HUDELEMENT(CHudHitIndicator);
-DECLARE_HUD_MESSAGE(CHudHitIndicator, Hit);
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -92,12 +86,10 @@ DECLARE_HUD_MESSAGE(CHudHitIndicator, Hit);
 void CHudHitIndicator::Reset()
 {
 	m_vecCrossHairOffsetAngle.Init();
-	m_flStartTime = 0.0;
 }
 
 void CHudHitIndicator::Init()
 {
-	HOOK_HUD_MESSAGE(CHudHitIndicator, Hit);
 }
 
 //-----------------------------------------------------------------------------
@@ -123,25 +115,20 @@ void CHudHitIndicator::ApplySchemeSettings( IScheme *scheme )
     SetSize( ScreenWidth(), ScreenHeight() );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Message handler for Damage message
-//-----------------------------------------------------------------------------
-void CHudHitIndicator::MsgFunc_Hit(bf_read &msg)
-{
-	m_flStartTime = gpGlobals->curtime;
-}
-
 extern void GetHitCrosshair(char &innerChar, Color &innerCol, int &innerSize, char &outerChar, Color &outerCol, int &outerSize);	// |-- squeek
 
 void CHudHitIndicator::Paint( void )
 {
-	if ( !CHudElement::ShouldDraw() || hud_hitindicator_time.GetFloat() == 0 || (m_flStartTime + hud_hitindicator_time.GetFloat() < gpGlobals->curtime) )
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
+
+	if (!pPlayer)
+		return;
+
+	if ( !CHudElement::ShouldDraw() || hud_hitindicator_time.GetFloat() == 0 || (pPlayer->m_flHitTime + hud_hitindicator_time.GetFloat() < gpGlobals->curtime) )
 		return;
 
 	if ( !IsCurrentViewAccessAllowed() )
 		return;
-	
-	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 
 	m_curViewAngles = CurrentViewAngles();
 	m_curViewOrigin = CurrentViewOrigin();
@@ -240,7 +227,7 @@ void CHudHitIndicator::Paint( void )
 	GetHitCrosshair(innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 
 	// Find our fade based on our time shown
-	float dt = ( m_flStartTime - gpGlobals->curtime );
+	float dt = ( pPlayer->m_flHitTime - gpGlobals->curtime );
 	float flAlpha = SimpleSplineRemapVal( dt, 0.0f, hud_hitindicator_time.GetFloat(), 255, 0 );
 	flAlpha = clamp( flAlpha, 0.0f, 255.0f );
 	

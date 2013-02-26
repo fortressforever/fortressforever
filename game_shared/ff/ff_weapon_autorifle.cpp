@@ -120,10 +120,7 @@ void CFFWeaponAutoRifle::PrimaryAttack()
 	// Fire now
 	Fire();
 
-#ifdef CLIENT_DLL
 	pPlayer->m_flTrueAimTime = gpGlobals->curtime;
-#endif
-
 
 	// To use server .txt files uncomment this line
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
