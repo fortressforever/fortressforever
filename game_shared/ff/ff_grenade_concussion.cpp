@@ -236,8 +236,20 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 
 		// nb. Do not move this 32 units above the ground!
 		// That behaviour does not occur with conc grenades
+#ifdef GAME_DLL
+		// Dexter: try concussing appropriate specs
+		// keep a handy list of shit so we dont loop maxclients for every ent in teh conc entitysphere
+		CBaseEntity *pConcOwner = GetOwnerEntity();
+		CUtlVector<CBasePlayer *> spectators;
 
-		CBaseEntity *pEntity = NULL;
+		for ( int i = 0; i < gpGlobals->maxClients; ++i )
+		{
+			CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+			if ( pPlayer && pPlayer->IsObserver( ) && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE )
+				spectators.AddToTail( pPlayer );
+		}
+#endif
+  		CBaseEntity *pEntity = NULL;
 
 		for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
@@ -246,9 +258,9 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 
 			CFFPlayer *pPlayer = ToFFPlayer(pEntity);
 
-			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+			if( !pPlayer->IsAlive() )// || pPlayer->IsObserver() )
 				continue;
-
+			
 			// caes: make hh concs not push other players
 			// Shok: OR concuss at all!
 			if ( pEntity != GetThrower() && m_fIsHandheld )
@@ -259,23 +271,39 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			float flDistance = vecDisplacement.Length();
 			Vector vecDir = vecDisplacement / flDistance;
 
-#ifdef GAME_DLL
+#ifdef GAME_DLL			
 			// Concuss the player first
-			if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
+			if (g_pGameRules->FCanTakeDamage(pPlayer, pConcOwner))
 			{
 				QAngle angDirection;
 				VectorAngles(vecDir, angDirection);
 
 				float flDuration = 10.0f;
 				float flIconDuration = flDuration;
-				if( pPlayer->LuaRunEffect( LUA_EF_CONC, GetOwnerEntity(), &flDuration, &flIconDuration ) )
+				if( pPlayer->LuaRunEffect( LUA_EF_CONC, pConcOwner, &flDuration, &flIconDuration ) )
 				{
 					if( pPlayer == GetOwnerEntity() )
 						pPlayer->Concuss( flDuration, flIconDuration, NULL, flDistance);
 					else
 						pPlayer->Concuss( flDuration, flIconDuration, &angDirection, flDistance);
+
+					// see if any specs are watching this dude
+					for ( int i = 0; i < spectators.Count(); ++i )
+					{
+						CBasePlayer* pSpec = spectators[i];
+						if ( pSpec->GetObserverTarget() == pPlayer )
+						{
+							CFFPlayer *pFFSpec = ToFFPlayer( pSpec );
+							if ( pFFSpec )
+							{
+								//pFFSpec->m_flConcTime = flDuration;
+								pFFSpec->Concuss( flDuration, flIconDuration, NULL, flDistance );
+							}
+						}
+					}
 				}					
 			}
+
 #endif
 
 			// People who are building shouldn't be pushed around by anything
@@ -358,6 +386,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 
 		// Now get rid of this
 #ifdef GAME_DLL
+		spectators.Purge();
 		UTIL_Remove(this);
 #endif
 	}
