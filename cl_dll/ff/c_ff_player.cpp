@@ -826,6 +826,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_iSpyDisguise ) ),
 	
 	RecvPropFloat(RECVINFO(m_flConcTime)),
+	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
 
 	RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
 	
