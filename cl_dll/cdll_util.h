@@ -80,6 +80,7 @@ int		GetSpectatorTarget();
 int		GetSpectatorMode( void );
 bool	IsPlayerIndex( int index );
 int		GetLocalPlayerIndex( void );
+int		GetLocalPlayerOrObserverTargetIndex( void );
 int		GetLocalPlayerTeam( void );
 bool	IsLocalPlayerSpectator( void );
 void	NormalizeAngles( QAngle& angles );

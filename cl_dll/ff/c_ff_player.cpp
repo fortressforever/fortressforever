@@ -1402,6 +1402,23 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 		return NULL;
 }
 
+C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrObserverTarget()
+{
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	
+	if (pLocalPlayer)
+	{
+		// if we're specing someone in first person, then return the target
+		if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+			return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
+		// else return local player
+		else
+			return pLocalPlayer;
+	}
+	else
+		return NULL;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2592,7 +2609,7 @@ ShadowType_t C_FFPlayer::ShadowCastType( void )
 	if( IsCloaked() )
 		return SHADOWS_NONE;
 
-	if( this == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )
+	if( this == C_FFPlayer::GetLocalFFPlayerOrObserverTarget() )
 	{
 		if( r_selfshadows.GetInt() )
 			return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
