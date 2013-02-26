@@ -754,7 +754,7 @@ public:
 	void ClassSpecificSkill();
 	void ClassSpecificSkill_Post();
 
-	float m_flNextClassSpecificSkill;
+	CNetworkVar( float, m_flNextClassSpecificSkill );
 
 	CNetworkVar( float, m_flConcTime );
 	void UnConcuss( void );
