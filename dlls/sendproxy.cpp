@@ -118,16 +118,28 @@ void* SendProxy_OnlyToObservers( const SendProp *pProp, const void *pStruct, con
 	{
 		pRecipients->ClearAllRecipients();
 
-		// send to the ent if its a player
+		CBasePlayer *pRecipient = NULL;
+
 		if (pEntity->IsPlayer())
-			pRecipients->SetRecipient( ToBasePlayer(pEntity)->GetClientIndex() );
+			pRecipient = ToBasePlayer(pEntity);
+		else if (pEntity->GetOwnerEntity())
+		{
+			CBaseEntity *pOwner = pEntity->GetOwnerEntity();
+			if (pOwner->IsPlayer())
+				pRecipient = ToBasePlayer(pOwner);
+		}
+		// send to the ent if its a player
+		if (pRecipient)
+			pRecipients->SetRecipient( pRecipient->GetClientIndex() );
+		else
+			return NULL;
 
 		for ( int i=1; i <= gpGlobals->maxClients; i++ )
 		{
 			CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
 			if (pPlayer)
 			{
-				if (pPlayer->IsObserver() && pPlayer->GetObserverTarget() == pEntity)
+				if (pPlayer->IsObserver() && pPlayer->GetObserverTarget() == pRecipient)
 					pRecipients->SetRecipient( pPlayer->GetClientIndex() );
 			}
 		}
