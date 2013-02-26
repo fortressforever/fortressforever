@@ -179,8 +179,6 @@ END_RECV_TABLE()
 		RecvPropFloat		( RECVINFO(m_vecViewOffset[1]) ),
 		RecvPropFloat		( RECVINFO(m_vecViewOffset[2]) ),
 		RecvPropFloat		( RECVINFO(m_flFriction) ),
-
-		RecvPropArray3		( RECVINFO_ARRAY(m_iAmmo), RecvPropInt( RECVINFO(m_iAmmo[0])) ),
 		
 		RecvPropInt			( RECVINFO(m_fOnTarget) ),
 
@@ -236,7 +234,8 @@ END_RECV_TABLE()
 
 		RecvPropFloat	(RECVINFO(m_flMaxspeed)),
 		RecvPropInt		(RECVINFO(m_fFlags)),
-
+		
+		RecvPropArray3		( RECVINFO_ARRAY(m_iAmmo), RecvPropInt( RECVINFO(m_iAmmo[0])) ),
 
 		RecvPropInt		(RECVINFO(m_iObserverMode) ),
 		RecvPropEHandle	(RECVINFO(m_hObserverTarget), RecvProxy_ObserverTarget ),
