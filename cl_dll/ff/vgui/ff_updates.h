@@ -41,6 +41,7 @@ public:
 	void CheckUpdate(const char *pszServerVersion = NULL);
 	void UpdateAvailable(eUpdateResponse status);
 	
+	virtual void OnTick();
 	virtual void Paint( void );
 	
 	// called when scheme settings need to be applied; called the first time before the panel is painted
@@ -53,6 +54,10 @@ private:
 	vgui::Label				*m_pCurrentVersion;
 
 	float					m_flStatusFadeTime;
+
+public:
+
+	eUpdateResponse			m_UpdateStatus;
 
 };
 

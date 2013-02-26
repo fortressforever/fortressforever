@@ -41,7 +41,7 @@ int CFFUpdateThread::Run()
 		response = wyUpdateAvailable();
 
 	if (g_pUpdatePanel)
-		g_pUpdatePanel->UpdateAvailable( response );
+		g_pUpdatePanel->m_UpdateStatus = response;
 	
 	/*
 	int i=0;
