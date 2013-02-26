@@ -789,9 +789,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropEHandle( RECVINFO( m_hLastMapGuide ) ),
 	RecvPropFloat( RECVINFO( m_flNextMapGuideTime ) ),
 
-	RecvPropFloat(RECVINFO(m_flConcTime)),
 	RecvPropFloat(RECVINFO(m_flSlidingTime)),
-
 	RecvPropFloat(RECVINFO(m_flSpeedModifier)),
 
 	RecvPropInt( RECVINFO( m_iSpyDisguising ) ),
@@ -826,6 +824,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 
 	RecvPropInt( RECVINFO( m_iClassStatus ) ),	
 	RecvPropInt( RECVINFO( m_iSpyDisguise ) ),
+	
+	RecvPropFloat(RECVINFO(m_flConcTime)),
 
 	RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
 	
