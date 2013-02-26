@@ -16,34 +16,206 @@
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Label.h>
 
-#include "update/autoupdate.h"
+#include "vstdlib/icommandline.h"
+#include <vgui_controls/MessageBox.h>
 
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
 
 DEFINE_GAMEUI(CFFUpdatesUI, CFFUpdatesPanel, ffupdates);
 
+char *GetModVersion();
 CFFUpdatesPanel *g_pUpdatePanel = NULL;
+
+#define UPDATESTATUS_FADETIME 1.0f
+#define UPDATESTATUS_FADETIME_DELAY 5.0f
+
+float g_flLastCheck = -15.0f;
+
+void CheckModUpdate(const char *pszServerVersion = NULL)
+{
+	if (ffupdates->GetPanel())
+	{
+		((CFFUpdatesPanel*)ffupdates->GetPanel())->CheckUpdate(pszServerVersion);
+	}
+}
+
+// We have received the server's version, so check on the website
+CON_COMMAND(sync_version, "Sync version")
+{
+	if (engine->Cmd_Argc() > 1 && g_flLastCheck < gpGlobals->realtime)
+	{
+		g_flLastCheck = gpGlobals->realtime + 3.0f;
+		const char *pszVersion = engine->Cmd_Argv(1);
+		CheckModUpdate(pszVersion);
+		Msg("Server version %s\n", pszVersion);
+	}
+}
 
 CON_COMMAND(ff_updates,NULL)
 {
-	//ToggleVisibility(ffirc->GetPanel());
-	ffupdates->GetPanel()->SetVisible(true);
+	CheckModUpdate();
+	//ffupdates->GetPanel()->SetVisible(true);
 }
 
-
-// The main screen where everything IRC related is added to
 CFFUpdatesPanel::CFFUpdatesPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFUpdatesPanel" )
 {
-	SetParent(parent);
-	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme");
-	SetScheme( scheme );
-
 	if (g_pUpdatePanel == NULL)
 		g_pUpdatePanel = this;
 
-	// Centre this panel on the screen for consistency.
-	// This should be in the .res surely? - AfterShock
+	SetParent( parent );
+
+	// Make it screen sized
+	SetBounds( 0, 0, ScreenWidth(), ScreenHeight() );
+
+	m_pUpdateInfo = new CFFUpdateInfo( this, "ff_update_info" );
+	m_pUpdateInfo->SetVisible(false);
+
+	// use SETUP_PANEL to apply scheme settings instantly, so we can set things in the constructor instead of in ApplySchemeSettings
+	// this is necessary because UpdateAvailable can finish before ApplySchemeSettings is called, and therefore overwrites settings from the update status
+	m_pUpdateStatus = SETUP_PANEL( new Label( this, "ff_update_status", "" ) );
+	m_pCurrentVersion = SETUP_PANEL( new Label( this, "ff_current_version", VarArgs("v%s",GetModVersion()) ) );
+	
+	//m_pCurrentVersion->SetFgColor(Color(255,255,255,255));
+	m_pCurrentVersion->SetBgColor(Color(0,0,0,255));
+	m_pCurrentVersion->SetPaintBackgroundType(0);
+	m_pCurrentVersion->SetPaintBackgroundEnabled(true);
+	m_pCurrentVersion->SetZPos(1);
+	m_pCurrentVersion->SetSize(70,30);
+	m_pCurrentVersion->SetContentAlignment(Label::a_center);
+
+	//m_pUpdateStatus->SetFgColor(Color(255,255,255,255));
+	m_pUpdateStatus->SetBgColor(Color(0,0,0,255));
+	m_pUpdateStatus->SetPaintBackgroundType(0);
+	m_pUpdateStatus->SetPaintBackgroundEnabled(true);
+	m_pUpdateStatus->SetZPos(1);
+	m_pUpdateStatus->SetSize(180,30);
+	m_pUpdateStatus->SetContentAlignment(Label::a_center);
+	
+	m_pCurrentVersion->SetPos(ScreenWidth()-m_pCurrentVersion->GetWide()-10,ScreenHeight()-m_pCurrentVersion->GetTall()-10);
+	m_pUpdateStatus->SetPos(ScreenWidth()-m_pUpdateStatus->GetWide()-m_pCurrentVersion->GetWide()-20,ScreenHeight()-m_pUpdateStatus->GetTall()-10);
+
+	m_flStatusFadeTime = -1.0f;
+
+	// check for updates in a separate thread
+	CheckUpdate();
+}
+
+CFFUpdatesPanel::~CFFUpdatesPanel()
+{
+	CFFUpdateThread::GetInstance().Terminate();
+}
+
+void CFFUpdatesPanel::ApplySchemeSettings(IScheme *pScheme)
+{
+	BaseClass::ApplySchemeSettings(pScheme);
+}
+
+//-----------------------------------------------------------------------------
+// Check for an update
+//-----------------------------------------------------------------------------
+void CFFUpdatesPanel::CheckUpdate(const char *pszServerVersion /*= NULL*/)
+{
+	m_pUpdateStatus->SetText("Checking for updates...");
+	m_pUpdateStatus->SetFgColor(Color(255,255,255,255));
+	m_pUpdateStatus->SetWide(180);
+	m_pUpdateStatus->SetPos(ScreenWidth()-m_pUpdateStatus->GetWide()-m_pCurrentVersion->GetWide()-20,ScreenHeight()-m_pUpdateStatus->GetTall()-10);
+	m_flStatusFadeTime = -1.0f;
+
+	if (pszServerVersion)
+		Q_strncpy( CFFUpdateThread::GetInstance().m_szServerVersion, pszServerVersion, sizeof(CFFUpdateThread::GetInstance().m_szServerVersion) );
+
+	CFFUpdateThread::GetInstance().Start();
+}
+
+//-----------------------------------------------------------------------------
+//	Set if an update is available	
+//-----------------------------------------------------------------------------
+void CFFUpdatesPanel::UpdateAvailable( eUpdateResponse status )
+{
+	switch(status)
+	{
+	case UPDATE_ERROR:
+		m_pUpdateStatus->SetText("Error while checking for updates");
+		m_pUpdateStatus->SetFgColor(Color(255,0,0,255));
+		m_pUpdateStatus->SetWide(225);
+		m_flStatusFadeTime = gpGlobals->curtime + UPDATESTATUS_FADETIME + UPDATESTATUS_FADETIME_DELAY;
+		break;
+	case UPDATE_FOUND:
+		Msg("[update] Update available\n");
+		m_pUpdateInfo->SetVisible(true);
+		m_pUpdateStatus->SetFgColor(Color(229,170,86,255));
+		m_pUpdateStatus->SetText("Update found");
+		m_pUpdateStatus->SetWide(110);
+		m_flStatusFadeTime = -1.0f;
+		break;
+	case UPDATE_NOTFOUND:
+		Msg("[update] No update available\n");
+		m_pUpdateStatus->SetFgColor(Color(130,229,100,255));
+		m_pUpdateStatus->SetText("Up to date");
+		m_pUpdateStatus->SetWide(110);
+		m_flStatusFadeTime = gpGlobals->curtime + UPDATESTATUS_FADETIME + UPDATESTATUS_FADETIME_DELAY;
+		break;
+	case UPDATE_SERVER_OUTOFDATE:
+		m_pUpdateStatus->SetText("Server out of date");
+		m_pUpdateStatus->SetFgColor(Color(255,0,0,255));
+		m_pUpdateStatus->SetWide(180);
+		m_flStatusFadeTime = -1.0f;
+		break;
+	}
+	m_pUpdateStatus->SetPos(ScreenWidth()-m_pUpdateStatus->GetWide()-m_pCurrentVersion->GetWide()-20,ScreenHeight()-m_pUpdateStatus->GetTall()-10);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Catch this menu coming on screen and load up the info needed
+//			
+//-----------------------------------------------------------------------------
+void CFFUpdatesPanel::SetVisible(bool state)
+{
+	//BaseClass::SetVisible(true);
+	m_pUpdateInfo->SetVisible(state);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw stuff!
+//-----------------------------------------------------------------------------
+void CFFUpdatesPanel::Paint( void )
+{
+	if (m_flStatusFadeTime != -1.0f)
+	{
+		float dt = ( m_flStatusFadeTime - gpGlobals->curtime );
+		if (dt > 0)
+		{
+			// Find our fade based on our time shown
+			dt = clamp( dt, 0.0f, UPDATESTATUS_FADETIME );
+			float flAlpha = SimpleSplineRemapVal( dt, 0.0f, UPDATESTATUS_FADETIME, 0, 255 );
+
+			m_pUpdateStatus->SetAlpha( flAlpha );
+		}
+		else
+		{
+			m_pUpdateStatus->SetVisible( false );
+		}
+	}
+	else
+	{
+		m_pUpdateStatus->SetVisible( true );
+		m_pUpdateStatus->SetAlpha( 255 );
+	}
+
+	BaseClass::Paint();
+}
+
+//-----------------------------------------------------------------------------
+// CFFUpdateInfo
+//			
+//-----------------------------------------------------------------------------
+CFFUpdateInfo::CFFUpdateInfo(Panel *parent, const char *panelName, bool showTaskbarIcon) : BaseClass( parent, panelName, showTaskbarIcon )
+{
+	//Other useful options
+	SetVisible(false);//made visible on command later 
+	SetSizeable(true);
+	SetMoveable(true);
 
 	m_pOKButton = new Button(this, "OKButton", "", this, "OK");
 	m_pCancelButton = new Button(this, "CancelButton", "", this, "Cancel");
@@ -58,20 +230,13 @@ CFFUpdatesPanel::CFFUpdatesPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFUp
 
 	SetPos((ScreenWidth() - nWide) / 2, (ScreenHeight() - nTall) / 2);
 
-	//Other useful options
-	SetVisible(false);//made visible on command later 
-	SetSizeable(false);
-	SetMoveable(true);
-
-	// check for updates in a separate thread
-	CFFUpdateThread::GetInstance().Start();
 } 
 
 //-----------------------------------------------------------------------------
 // Purpose: Catch the buttons. We have OK (save + close), Cancel (close) and
 //			Apply (save).
 //-----------------------------------------------------------------------------
-void CFFUpdatesPanel::OnButtonCommand(KeyValues *data)
+void CFFUpdateInfo::OnButtonCommand(KeyValues *data)
 {
 	const char *pszCommand = data->GetString("command");
 
@@ -90,37 +255,12 @@ void CFFUpdatesPanel::OnButtonCommand(KeyValues *data)
 
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Catch this menu coming on screen and load up the info needed
-//			
-//-----------------------------------------------------------------------------
-void CFFUpdatesPanel::UpdateAvailable(bool state)
-{
-	if (state)
-	{
-		Msg("[update] Update available\n");
-		SetVisible(true);
-	}
-	else
-	{
-		Msg("[update] No update available\n");
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Catch this menu coming on screen and load up the info needed
-//			
-//-----------------------------------------------------------------------------
-void CFFUpdatesPanel::SetVisible(bool state)
+void CFFUpdateInfo::SetVisible(bool state)
 {
 	if (state)
 	{
 		RequestFocus();
 		MoveToFront();
-	}
-	else
-	{
-
 	}
 
 	BaseClass::SetVisible(state);

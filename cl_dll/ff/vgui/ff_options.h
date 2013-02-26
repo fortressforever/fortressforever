@@ -63,23 +63,4 @@ private:
 
 DECLARE_GAMEUI(CFFOptions, CFFOptionsPanel, ffoptions);
 
-class SplashHTML;
-
-//-----------------------------------------------------------------------------
-// Purpose: Used to inform about new versions of FF (I think) - Elmo
-//-----------------------------------------------------------------------------
-class CFFSplashPanel : public Frame
-{
-	DECLARE_CLASS_SIMPLE(CFFSplashPanel, Frame);
-
-public:
-	CFFSplashPanel(VPANEL parent);
-	void CheckUpdate(const char *pszServerVersion = NULL);
-
-private:
-	SplashHTML	*m_pSplashHTML;
-};
-
-DECLARE_GAMEUI(CFFSplash, CFFSplashPanel, ffsplash);
-
 #endif

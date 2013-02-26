@@ -3,8 +3,10 @@
 #include "autoupdate.h"
 #include "filesystem.h"
 
+#include "irc/ff_socks.h"
 #include "vgui/ff_updates.h"
 extern CFFUpdatesPanel *g_pUpdatePanel;
+char *GetModVersion();
 
 // supressing macro redefinition warnings
 #undef ARRAYSIZE
@@ -31,27 +33,22 @@ int CFFUpdateThread::Run()
 		DevMsg("[update] g_pUpdatePanel is NULL\n");
 	}
 
-	g_pUpdatePanel->UpdateAvailable( wyUpdateAvailable() );
-	
-	/*
-	// just to test the thread
-	int i=0;
-	while(IsAlive())
-	{
-		i++;
-		Sleep(1000);
-		DevMsg("[UpdateThread] %d...\n", i);
-		if (i>20)
-			break;
-	}
-	*/
+	// try checking for update with sockets
+	eUpdateResponse response = sockUpdateAvailable( m_szServerVersion );
+
+	// if sockets failed, try wyUpdate; it's slower, so only use it as a last resort
+	if (response == UPDATE_ERROR)
+		response = wyUpdateAvailable();
+
+	if (g_pUpdatePanel)
+		g_pUpdatePanel->UpdateAvailable( response );
 
 	m_bIsRunning = false;
 
 	return 1;
 }
 
-bool wyUpdateAvailable()
+eUpdateResponse wyUpdateAvailable()
 {
 	if (vgui::filesystem()->FileExists( "wyUpdate.exe", "MOD" ))
 	{
@@ -79,7 +76,7 @@ bool wyUpdateAvailable()
 		{
 			Msg("[update] ERROR: Failed to launch wyUpdate\n");
 			//MessageBox(0, _T("Failed to launch wyUpdate."), _T("Error..."), MB_OK);
-			return false;
+			return UPDATE_ERROR;
 		}
 
 		// Wait until child process exits.
@@ -94,13 +91,101 @@ bool wyUpdateAvailable()
 		CloseHandle(pi.hThread);
 
 		// exitcode of 2 means update available
-		return exitcode == 2;
+		return (exitcode == 2 ? UPDATE_FOUND : UPDATE_NOTFOUND);
 	}
 	else
 	{
 		Msg("[update] ERROR: wyUpdate.exe not found\n");
-		return false;
+		return UPDATE_ERROR;
 	}
+}
+
+eUpdateResponse sockUpdateAvailable( const char *pszServerVersion )
+{
+	Socks sock;
+	char buf[1024];
+	
+	// Open up a socket
+	if (!sock.Open( 1, 0)) 
+	{
+		Warning("[update] Could not open socket\n");
+		return UPDATE_ERROR;
+	}
+	
+	// Connect to remote host
+	if (!sock.Connect("www.fortress-forever.com", 80)) 
+	{
+		Warning("[update] Could not connect to remote host\n");
+		sock.Close();
+		return UPDATE_ERROR;
+	}
+	
+	Q_snprintf(buf, sizeof(buf),
+		"GET %s HTTP/1.1\r\n"
+		"Host: %s\r\n"
+		"User-Agent: FortressForever\r\n"
+		"Connection: close\r\n"
+		"Accept-Charset: ISO-8859-1,UTF-8;q=0.7,*;q=0.7\r\n"
+		"Cache-Control: no-cache\r\n"
+		"\r\n",
+		
+		VarArgs("/notifier/test.php?c=%s&s=%s", GetModVersion(), pszServerVersion ? pszServerVersion : ""),
+		"www.fortress-forever.com");
+
+	// Send data
+	if (!sock.Send(buf)) 
+	{
+		Warning("[update] Could not send data to remote host\n");
+		sock.Close();
+		return UPDATE_ERROR;
+	}
+	
+	int a;
+
+	// Send data
+	if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
+	{
+		Warning("[update] Did not get response from server\n");
+		sock.Close();
+		return UPDATE_ERROR;
+	}
+
+	buf[a] = '\0';
+	
+	// response header first line determines the status:
+	// HTTP/1.1 ??? Code
+	//	201 Created = client patch available
+	//	409 Conflict = server out of date
+	//	304 Not Modified = up to date
+	char *response = strtok(buf,"\r\n");
+	response = response+9; // skip the HTTP/1.1 part
+
+	//DevMsg("[update] Successfully sent update check request. Response code: %s\n Full response:\n---\n%s\n---\n", response, buf);
+
+	eUpdateResponse ret;
+
+	if (Q_strcmp(response, "304 Not Modified") == 0)
+	{
+		ret = UPDATE_NOTFOUND;
+	}
+	else if (Q_strcmp(response, "409 Conflict") == 0)
+	{
+		ret = UPDATE_SERVER_OUTOFDATE;
+	}
+	else if (Q_strcmp(response, "201 Created") == 0)
+	{
+		ret = UPDATE_FOUND;
+	}
+	else
+	{
+		Warning("[update] Unknown response code received (%s)\n", response);
+		ret = UPDATE_ERROR;
+	}
+
+	// Close socket
+	sock.Close();
+	
+	return ret;
 }
 
 void wyInstallUpdate()
