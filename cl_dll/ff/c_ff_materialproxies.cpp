@@ -475,9 +475,7 @@ void C_FFSpyCloakMaterialProxy::OnBind( void *pC_BaseEntity )
 		{
 			if( pViewModel->IsViewModel() )
 			{
-				pPlayer = C_FFPlayer::GetLocalFFPlayer();
-				// TODO: Try this while spec'ing
-				//pPlayer = ToFFPlayer( pAnimating->GetOwner() );
+				pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 			}
 		}
 
