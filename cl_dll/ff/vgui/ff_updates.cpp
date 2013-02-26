@@ -103,7 +103,8 @@ CFFUpdatesPanel::CFFUpdatesPanel( vgui::VPANEL parent ) : BaseClass( NULL, "FFUp
 
 CFFUpdatesPanel::~CFFUpdatesPanel()
 {
-	CFFUpdateThread::GetInstance().Terminate();
+	if (CFFUpdateThread::GetInstance().IsRunning())
+		CFFUpdateThread::GetInstance().Terminate();
 }
 
 void CFFUpdatesPanel::ApplySchemeSettings(IScheme *pScheme)
@@ -116,16 +117,23 @@ void CFFUpdatesPanel::ApplySchemeSettings(IScheme *pScheme)
 //-----------------------------------------------------------------------------
 void CFFUpdatesPanel::CheckUpdate(const char *pszServerVersion /*= NULL*/)
 {
-	m_pUpdateStatus->SetText("Checking for updates...");
-	m_pUpdateStatus->SetFgColor(Color(255,255,255,255));
-	m_pUpdateStatus->SetWide(180);
-	m_pUpdateStatus->SetPos(ScreenWidth()-m_pUpdateStatus->GetWide()-m_pCurrentVersion->GetWide()-20,ScreenHeight()-m_pUpdateStatus->GetTall()-10);
-	m_flStatusFadeTime = -1.0f;
+	if (!CFFUpdateThread::GetInstance().IsRunning())
+	{
+		m_pUpdateStatus->SetText("Checking for updates...");
+		m_pUpdateStatus->SetFgColor(Color(255,255,255,255));
+		m_pUpdateStatus->SetWide(180);
+		m_pUpdateStatus->SetPos(ScreenWidth()-m_pUpdateStatus->GetWide()-m_pCurrentVersion->GetWide()-20,ScreenHeight()-m_pUpdateStatus->GetTall()-10);
+		m_flStatusFadeTime = -1.0f;
 
-	if (pszServerVersion)
-		Q_strncpy( CFFUpdateThread::GetInstance().m_szServerVersion, pszServerVersion, sizeof(CFFUpdateThread::GetInstance().m_szServerVersion) );
+		if (pszServerVersion)
+			Q_strncpy( CFFUpdateThread::GetInstance().m_szServerVersion, pszServerVersion, sizeof(CFFUpdateThread::GetInstance().m_szServerVersion) );
 
-	CFFUpdateThread::GetInstance().Start();
+		CFFUpdateThread::GetInstance().Start();
+	}
+	else
+	{
+		Msg("[update] Already checking for updates\n");
+	}
 }
 
 //-----------------------------------------------------------------------------
