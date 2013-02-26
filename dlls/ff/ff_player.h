@@ -821,7 +821,7 @@ protected:
 public:
 	void SetDisguisable( bool bDisguisable ) 
 	{
-		if( !bDisguisable && IsDisguised() )
+		if( !bDisguisable )
 		{
 			ResetDisguise();
 		}
