@@ -526,7 +526,7 @@ void CSpectatorGUI::Update()
 	wchar_t szTitleLabel[1024];
 	char tempstr[128];
 
-	if ( engine->IsHLTV() )
+	if ( engine->IsHLTV() && !engine->IsPlayingDemo() )
 	{
 		// show top bar
 		m_pTopBar->SetVisible(true);
