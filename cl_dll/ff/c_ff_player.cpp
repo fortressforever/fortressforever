@@ -771,6 +771,8 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 
 	RecvPropInt(RECVINFO(m_iSkiState)),
 	// ---> end
+	
+	RecvPropInt( RECVINFO( m_iLastSpyDisguise ) ),
 
 	// Beg: Added by L0ki - Grenade related
 	RecvPropInt( RECVINFO( m_iPrimary ) ),
@@ -1236,6 +1238,7 @@ C_FFPlayer::C_FFPlayer() :
 
 	// BEG: Added by Mulchman
 	m_iSpyDisguise = 0; // start w/ no disguise
+	m_iLastSpyDisguise = 0; // start w/ no disguise
 	// END: Added by Mulchman
 	
 	// ---> Tracks priming times for hint logic
