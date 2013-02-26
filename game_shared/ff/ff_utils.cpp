@@ -1216,8 +1216,12 @@ int UTIL_PickRandomTeam()
 		if( !pFFTeam )
 			continue;
 
+		// if team is disabled, skip
+		if (pFFTeam->GetTeamLimits() == -1)
+			continue;
+
 		// Getthe percentage of the team filled
-		flFullnessOfTeam[iTeamToCheck - FF_TEAM_BLUE] = iPlayersOnTeam[iTeamToCheck - FF_TEAM_BLUE] / ( pFFTeam->GetTeamLimits() == 0 ? 32 : pFFTeam->GetTeamLimits() );
+		flFullnessOfTeam[iTeamToCheck - FF_TEAM_BLUE] = ((float)iPlayersOnTeam[iTeamToCheck - FF_TEAM_BLUE] / ( pFFTeam->GetTeamLimits() == 0 ? gpGlobals->maxClients : pFFTeam->GetTeamLimits() ));
 
 		//if we haven't set an emptiest team or this is the emptiest team so far
 		if(iEmptiestTeam == -1 || flFullnessOfTeam[iTeamToCheck - FF_TEAM_BLUE] < flFullnessOfTeam[iEmptiestTeam - FF_TEAM_BLUE])
