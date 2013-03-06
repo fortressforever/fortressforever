@@ -1,32 +1,5 @@
 // =============== Fortress Forever ==============
 // ======== A modification for Half-Life 2 =======
-//
-// @file ff_buildableobject.h
-// @author Patrick O'Leary (Mulchman)
-// @date 12/15/2005
-// @brief BuildableObject class
-//
-// REVISIONS
-// ---------
-// 12/15/2005, Mulchman: 
-//		First created
-//
-// 12/23-25/2005, Mulchman: 
-//		A bunch of modifications (explosions, gibs, fire, building checking)
-//
-// 12/28/2004, Mulchman:
-//		Bunch of mods - shares network values correctly. Officially a base 
-//		class for other buildables
-//
-// 01/20/2004, Mulchman: 
-//		Having no sounds (build/explode) won't cause problems
-//
-// 05/09/2005, Mulchman: 
-//		Tons of additions - better checking of build area, lots of 
-//		cleanup... basically an overhaul
-//
-// 22/01/2006, Mirv:
-//		Ground build angles and origin are now stored when the build starts
 
 #ifndef FF_BUILDABLEOBJECT_H
 #define FF_BUILDABLEOBJECT_H
