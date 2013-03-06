@@ -251,6 +251,7 @@ namespace Omnibot
 		"ff_weapon_assaultcannon", // TF_WP_MINIGUN
 		"ff_weapon_autorifle", // TF_WP_AUTORIFLE
 		"ff_weapon_tranq", // TF_WP_DARTGUN
+		"ff_weapon_hookgun", // TF_WP_HOOKGUN
 		"ff_weapon_pipelauncher", // TF_WP_PIPELAUNCHER
 		"ff_weapon_ic", // TF_WP_NAPALMCANNON
 		"ff_weapon_tommygun", // TF_WP_TOMMYGUN
@@ -412,6 +413,8 @@ namespace Omnibot
 			return TF_WP_MINIGUN;
 		case FF_WEAPON_RPG: 
 			return TF_WP_ROCKET_LAUNCHER;
+		case FF_WEAPON_HOOKGUN: 
+			return TF_WP_HOOKGUN;
 		case FF_WEAPON_DEPLOYDISPENSER: 
 			return TF_WP_DEPLOY_DISP;
 		case FF_WEAPON_DEPLOYSENTRYGUN: 

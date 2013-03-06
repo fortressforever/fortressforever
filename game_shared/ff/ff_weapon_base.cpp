@@ -55,6 +55,7 @@ const char *s_WeaponAliasInfo[] =
 	"railgun", 			// FF_WEAPON_RAILGUN
 
 	"tranq",		 	// FF_WEAPON_TRANQUILISER
+	"hookgun", 			// FF_WEAPON_HOOKGUN
 
 	"assaultcannon", 	// FF_WEAPON_ASSAULTCANNON
 
