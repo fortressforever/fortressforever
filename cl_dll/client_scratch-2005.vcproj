@@ -3351,11 +3351,11 @@
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
@@ -3679,11 +3679,11 @@
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
@@ -4611,11 +4611,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_fx_slowfield.cpp"
+				RelativePath=".\ff\ff_fx_ring_emitter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_fx_ring_emitter.h"
+				RelativePath=".\ff\ff_fx_slowfield.cpp"
 				>
 			</File>
 			<File
@@ -5127,6 +5127,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_mirv.cpp"
 				>
 			</File>
@@ -5136,10 +5140,6 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_nail.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp"
 				>
 			</File>
 			<File
@@ -5244,6 +5244,14 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_projectile_grenade.h"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_hook.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_projectile_hook.h"
 				>
 			</File>
 			<File
@@ -5391,15 +5399,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_weapon_flag.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\game_shared\ff\ff_weapon_flamethrower.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_grenadelauncher.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_hookgun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_hookgun.h"
 				>
 			</File>
 			<File

@@ -112,8 +112,7 @@ typedef enum
 	FF_WEAPON_KNIFE, 
 	FF_WEAPON_MEDKIT, 
 	FF_WEAPON_SPANNER, 
-	FF_WEAPON_UMBRELLA, 
-	FF_WEAPON_FLAG, 
+	FF_WEAPON_UMBRELLA,
 
 	// Shutguns
 	FF_WEAPON_SHOTGUN, 
@@ -140,6 +139,8 @@ typedef enum
 
 	// Spy specific
 	FF_WEAPON_TRANQUILISER, 
+	// Spy grappling hook gun
+	FF_WEAPON_HOOKGUN, 
 
 	// HWG Specific
 	FF_WEAPON_ASSAULTCANNON, 

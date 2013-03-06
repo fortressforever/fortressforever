@@ -251,6 +251,7 @@ namespace Omnibot
 		"ff_weapon_assaultcannon", // TF_WP_MINIGUN
 		"ff_weapon_autorifle", // TF_WP_AUTORIFLE
 		"ff_weapon_tranq", // TF_WP_DARTGUN
+		"ff_weapon_hookgun", // TF_WP_HOOKGUN
 		"ff_weapon_pipelauncher", // TF_WP_PIPELAUNCHER
 		"ff_weapon_ic", // TF_WP_NAPALMCANNON
 		"ff_weapon_tommygun", // TF_WP_TOMMYGUN
@@ -258,7 +259,6 @@ namespace Omnibot
 		"ff_weapon_deploydispenser", // TF_WP_DEPLOY_DISP
 		"ff_weapon_deploydetpack", // TF_WP_DEPLOY_DETP
 		"ff_weapon_deploymancannon", // TF_WP_DEPLOY_JUMPPAD
-		"ff_weapon_flag", // TF_WP_FLAG
 	};
 
 	int obUtilGetWeaponId(const char *_weaponName)
@@ -385,8 +385,6 @@ namespace Omnibot
 			return TF_WP_SPANNER;
 		case FF_WEAPON_UMBRELLA: 
 			return TF_WP_UMBRELLA;
-		case FF_WEAPON_FLAG:
-			return TF_WP_FLAG;
 		case FF_WEAPON_SHOTGUN: 
 			return TF_WP_SHOTGUN;
 		case FF_WEAPON_SUPERSHOTGUN: 
@@ -415,6 +413,8 @@ namespace Omnibot
 			return TF_WP_MINIGUN;
 		case FF_WEAPON_RPG: 
 			return TF_WP_ROCKET_LAUNCHER;
+		case FF_WEAPON_HOOKGUN: 
+			return TF_WP_HOOKGUN;
 		case FF_WEAPON_DEPLOYDISPENSER: 
 			return TF_WP_DEPLOY_DISP;
 		case FF_WEAPON_DEPLOYSENTRYGUN: 
@@ -440,8 +440,6 @@ namespace Omnibot
 			return FF_WEAPON_SPANNER;
 		case TF_WP_UMBRELLA: 
 			return FF_WEAPON_UMBRELLA;
-		case TF_WP_FLAG:
-			return FF_WEAPON_FLAG;
 		case TF_WP_SHOTGUN: 
 			return FF_WEAPON_SHOTGUN;
 		case TF_WP_SUPERSHOTGUN: 

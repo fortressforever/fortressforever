@@ -36,7 +36,6 @@ const char *s_WeaponAliasInfo[] =
 	"medkit", 			// FF_WEAPON_MEDKIT
 	"spanner", 			// FF_WEAPON_SPANNER
 	"umbrella", 		// FF_WEAPON_UMBRELLA
-	"flag", 			// FF_WEAPON_FLAG
 
 	"shotgun", 			// FF_WEAPON_SHOTGUN
 	"supershotgun", 	// FF_WEAPON_SUPERSHOTGUN
@@ -56,6 +55,7 @@ const char *s_WeaponAliasInfo[] =
 	"railgun", 			// FF_WEAPON_RAILGUN
 
 	"tranq",		 	// FF_WEAPON_TRANQUILISER
+	"hookgun", 			// FF_WEAPON_HOOKGUN
 
 	"assaultcannon", 	// FF_WEAPON_ASSAULTCANNON
 
