@@ -357,7 +357,7 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 			{
 				// skip prematch so that it doesn't immediately restart a second time
 				FFGameRules()->StartGame(false);
-			}
+		}
 		}
 		else
 		{
@@ -1468,6 +1468,55 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 				float flCalculatedForce = flAdjustedDamage * PUSH_MULTIPLIER;
 				
 				flCalculatedForce = GetAdjustedPushForce(flCalculatedForce, pEntity, adjustedInfo);
+
+						case CLASS_RAIL_PROJECTILE:
+							flPushClamp = 300.0f;
+							// Don't want people jumpin' real high with the Rail Gun :)
+							flCalculatedForce /= 3;
+							break;
+
+						case CLASS_GREN_EMP:
+						case CLASS_GREN_SHOCKEMP:
+							if (flCalculatedForce > 700.0f )
+								flCalculatedForce = 700.0f;
+							break;
+					}
+				}	
+
+				if (flCalculatedForce < flPushClamp)
+					flCalculatedForce = flPushClamp;
+
+				CFFPlayer *pPlayer = NULL;
+
+				if( pEntity->IsPlayer() )
+					pPlayer = ToFFPlayer(pEntity);
+
+				// We have to reduce the force further if they're fat
+				// 0000936 - use convar
+				if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
+					flCalculatedForce *= FATTYPUSH_MULTIPLIER;
+
+				//CFFPlayer *pAttacker = NULL;
+				CBaseEntity *pAttacker = info.GetAttacker();
+
+				/*
+				// If it's a building then take it's owner
+				if( ( info.GetAttacker()->Classify() == CLASS_DISPENSER ) ||
+					( info.GetAttacker()->Classify() == CLASS_SENTRYGUN ) ||
+					( info.GetAttacker()->Classify() == CLASS_DISPENSER ) )
+				{
+					pAttacker = ToFFPlayer( ( ( CFFBuildableObject * )info.GetAttacker() )->m_hOwner.Get() );
+				}
+				else
+                    pAttacker = ToFFPlayer( info.GetAttacker() );
+
+				*/
+                
+				// And also reduce if we couldn't hurt them
+				// TODO: Get exact figure for this
+				// 0000936 - use convar
+				if (pPlayer && pAttacker && !g_pGameRules->FCanTakeDamage(pPlayer, pAttacker))
+					flCalculatedForce *= NODAMAGEPUSH_MULTIPLIER;
 
 				// Don't use the damage source direction, use the reported position
 				// if it exists

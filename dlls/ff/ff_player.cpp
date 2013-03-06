@@ -31,6 +31,7 @@
 #include "in_buttons.h"			// for in_attack2
 #include "ff_projectile_pipebomb.h"
 #include "ff_grenade_emp.h"
+#include "ff_grenade_shockemp.h"
 #include "ff_lualib_constants.h"
 
 #include "client.h"
@@ -1910,6 +1911,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			case CLASS_GREN_MIRVLET:
 			case CLASS_GREN_NAPALM:
 			case CLASS_GREN_GAS:
+			case CLASS_GREN_SHOCKEMP:
 				FF_SendHint( this, GLOBAL_GRENDEATH, 3, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_GRENDEATH" );
 				break;
 		}    
@@ -5125,7 +5127,15 @@ void CFFPlayer::GrenadeThink(void)
 			m_bEngyGrenWarned = true;
 			EmitSound( EMP_SOUND );
 		}
-	}	
+	}
+	if( ( GetClassSlot() == CLASS_SPY ) && ( m_iGrenadeState == FF_GREN_PRIMETWO ) )
+	{
+		if( !m_bEngyGrenWarned && ( gpGlobals->curtime > ( m_flServerPrimeTime + GREN_TIMER - 0.685f ) ) )
+		{
+			m_bEngyGrenWarned = true;
+			EmitSound( SHOCKEMP_SOUND );
+		}
+	}
 
 	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= GREN_THROW_DELAY)
 	{
@@ -5219,6 +5229,9 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		// Special case for emps since their explode sound starts before it actually explodes
 		if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_bEngyGrenWarned ) && ( pGrenade->Classify() == CLASS_GREN_EMP ) )
 			dynamic_cast< CFFGrenadeEmp * >( pGrenade )->SetWarned();
+
+		if( ( GetClassSlot() == CLASS_SPY ) && ( m_bEngyGrenWarned ) && ( pGrenade->Classify() == CLASS_GREN_SHOCKEMP ) )
+			dynamic_cast< CFFGrenadeShockEmp * >( pGrenade )->SetWarned();
 
 		if (fTimer > 0)
 			pGrenade->m_fIsHandheld = false;

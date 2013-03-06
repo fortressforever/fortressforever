@@ -45,6 +45,7 @@ void CFFLuaLib::InitWeapons(lua_State* L)
 				value("kNapalm",		CLASS_GREN_NAPALM),
 				value("kGas",			CLASS_GREN_GAS),
 				value("kEmp",			CLASS_GREN_EMP),
+				value("kShockEmp",		CLASS_GREN_SHOCKEMP),
 				value("kSlowfield",		CLASS_GREN_SLOWFIELD),
 				value("kLaser",			CLASS_GREN_LASER)
 			],

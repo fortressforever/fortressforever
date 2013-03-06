@@ -525,6 +525,8 @@ namespace Omnibot
 			return "normalgrenade";
 		case TF_CLASSEX_EMP_GRENADE:
 			return "empgrenade";
+		case TF_CLASSEX_SHOCKEMP_GRENADE:
+			return "shockempgrenade";
 		case TF_CLASSEX_NAIL_GRENADE:
 			return "nailgrenade";
 		case TF_CLASSEX_MIRV_GRENADE:
@@ -1116,6 +1118,8 @@ namespace Omnibot
 					return TF_CLASSEX_GRENADE;
 				case CLASS_GREN_EMP:
 					return TF_CLASSEX_EMP_GRENADE;
+				case CLASS_GREN_SHOCKEMP:
+					return TF_CLASSEX_SHOCKEMP_GRENADE;
 				case CLASS_GREN_NAIL:
 					return TF_CLASSEX_NAIL_GRENADE;
 				case CLASS_GREN_MIRV:
@@ -1221,6 +1225,7 @@ namespace Omnibot
 					break;
 				case CLASS_GREN:
 				case CLASS_GREN_EMP:
+				case CLASS_GREN_SHOCKEMP:
 				case CLASS_GREN_NAIL:
 				case CLASS_GREN_MIRV:
 				case CLASS_GREN_MIRVLET:
@@ -1436,6 +1441,7 @@ namespace Omnibot
 					}
 				case CLASS_GREN:
 				case CLASS_GREN_EMP:
+				case CLASS_GREN_SHOCKEMP:
 				case CLASS_GREN_NAIL:
 				case CLASS_GREN_MIRV:
 				case CLASS_GREN_MIRVLET:

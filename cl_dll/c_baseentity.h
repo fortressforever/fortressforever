@@ -77,7 +77,8 @@ enum Class_T
 	CLASS_DETPACK,
 	CLASS_MANCANNON,
 	CLASS_GREN,			// Normal gren
-	CLASS_GREN_EMP,		// Emp greande
+	CLASS_GREN_EMP,		// Emp grenade
+	CLASS_GREN_SHOCKEMP,		// Emp grenade
 	CLASS_GREN_NAIL,	// Nail grenade
 	CLASS_GREN_MIRV,	// Mirv grenade
 	CLASS_GREN_MIRVLET,	// Mirvlet (from mirv gren)
