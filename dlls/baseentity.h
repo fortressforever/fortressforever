@@ -184,6 +184,7 @@ enum Class_T
 	CLASS_MANCANNON,
 	CLASS_GREN,			// Normal gren
 	CLASS_GREN_EMP,		// Emp greande
+	CLASS_GREN_SHOCKEMP,		// Emp greande
 	CLASS_GREN_NAIL,	// Nail grenade
 	CLASS_GREN_MIRV,	// Mirv grenade
 	CLASS_GREN_MIRVLET,	// Mirvlet (from mirv gren)

@@ -5159,6 +5159,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_shockemp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_grenade_shockemp.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_slowfield.cpp"
 				>
 			</File>

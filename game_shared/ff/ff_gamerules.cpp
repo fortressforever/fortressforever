@@ -1483,6 +1483,7 @@ ConVar mp_prematch( "mp_prematch",
 							break;
 
 						case CLASS_GREN_EMP:
+						case CLASS_GREN_SHOCKEMP:
 							if (flCalculatedForce > 700.0f )
 								flCalculatedForce = 700.0f;
 							break;
