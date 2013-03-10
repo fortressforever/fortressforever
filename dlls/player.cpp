@@ -67,6 +67,9 @@
 // For the upcast in CommitSuicide
 #include "ff_player.h"
 
+// For spectating info scripts
+#include "ff_item_flag.h"
+
 // Forward declare
 class CFFPlayer;
 
@@ -2638,49 +2641,58 @@ bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 
 	// MOD AUTHORS: Add checks on target here or in derived methode
 
-	if ( !target->IsPlayer() )	// only track players
-		return false;
-
-	CBasePlayer * player = ToBasePlayer( target );
-
-	/* Don't spec observers or players who haven't picked a class yet
- 	if ( player->IsObserver() )
-		return false;	*/
-
-	if( player == this )
-		return false; // We can't observe ourselves.
-
-	// gibbed players have EF_NODRAW effect active, so make an exception for LIFE_DEAD players
-	if ( player->m_lifeState != LIFE_DEAD && player->m_lifeState != LIFE_RESPAWNABLE && player->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
-		return false;
-
-	// 0001670: Player you are spectating changes when they die
-	// Commenting out the death check as dead players are actually valid targets (since they respawn almost instantly anyway...)
-	// Might want to alter this to be controllable by lua in future as certain game types may not allow respawning  -> Defrag
-	
-	//if ( player->m_lifeState == LIFE_RESPAWNABLE ) // target is dead, waiting for respawn
-	//	return false;
-	
-	if ( player->m_lifeState == LIFE_DEAD || player->m_lifeState == LIFE_DYING )
+	if ( target->IsPlayer() )	// track players
 	{
-		if ( (player->m_flDeathTime + DEATH_ANIMATION_TIME ) < gpGlobals->curtime )
-		{
-			return false;	// allow watching until 3 seconds after death to see death animation
-		}
-	}
+		CBasePlayer * player = ToBasePlayer( target );
+
+		/* Don't spec observers or players who haven't picked a class yet
+ 		if ( player->IsObserver() )
+			return false;	*/
+
+		if( player == this )
+			return false; // We can't observe ourselves.
+
+		// gibbed players have EF_NODRAW effect active, so make an exception for LIFE_DEAD players
+		if ( player->m_lifeState != LIFE_DEAD && player->m_lifeState != LIFE_RESPAWNABLE && player->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
+			return false;
+
+		// 0001670: Player you are spectating changes when they die
+		// Commenting out the death check as dead players are actually valid targets (since they respawn almost instantly anyway...)
+		// Might want to alter this to be controllable by lua in future as certain game types may not allow respawning  -> Defrag
 		
-	// check forcecamera settings for active players
-	if ( GetTeamNumber() != TEAM_SPECTATOR )
-	{
-		switch ( mp_forcecamera.GetInt() )	
+		//if ( player->m_lifeState == LIFE_RESPAWNABLE ) // target is dead, waiting for respawn
+		//	return false;
+		
+		if ( player->m_lifeState == LIFE_DEAD || player->m_lifeState == LIFE_DYING )
 		{
-			case OBS_ALLOW_ALL	:	break;
-			case OBS_ALLOW_TEAM :	if ( GetTeamNumber() != target->GetTeamNumber() )
-										 return false;
-									break;
-			case OBS_ALLOW_NONE :	return false;
+			if ( (player->m_flDeathTime + DEATH_ANIMATION_TIME ) < gpGlobals->curtime )
+			{
+				return false;	// allow watching until 3 seconds after death to see death animation
+			}
+		}
+			
+		// check forcecamera settings for active players
+		if ( GetTeamNumber() != TEAM_SPECTATOR )
+		{
+			switch ( mp_forcecamera.GetInt() )	
+			{
+				case OBS_ALLOW_ALL	:	break;
+				case OBS_ALLOW_TEAM :	if ( GetTeamNumber() != target->GetTeamNumber() )
+											 return false;
+										break;
+				case OBS_ALLOW_NONE :	return false;
+			}
 		}
 	}
+	else if (target->Classify() == CLASS_INFOSCRIPT) // track info_ff_scripts
+	{
+		CFFInfoScript *pInfoScript = static_cast< CFFInfoScript * >( target );
+
+		if (pInfoScript->IsRemoved())
+			return false;
+	}
+	else
+		return false; // not one of the trackable entity types
 	
 	return true;	// passed all test
 }
@@ -5989,13 +6001,47 @@ bool CBasePlayer::ClientCommand(const char *cmd)
 		
 		return true;
 	}
+	
+	else if ( stricmp( cmd, "spec_item" ) == 0 ) // chase next player
+	{
+		if ( GetObserverMode() > OBS_MODE_FIXED &&
+			 engine->Cmd_Argc() == 2 )
+		{
+			CFFInfoScript *target = NULL;
+			CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
+
+			while( pEnt != NULL )
+			{
+				if ( FStrEq( STRING(pEnt->GetEntityName()), engine->Cmd_Argv(1) ) )
+				{
+					target = pEnt;
+					break;
+				}
+
+				// Next!
+				pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( pEnt, CLASS_INFOSCRIPT );
+			}
+
+			if ( IsValidObserverTarget( target ) )
+			{
+				SetObserverTarget( target );
+			}
+		}
+		
+		return true;
+	}
 
 	else if ( stricmp( cmd, "spec_goto" ) == 0 ) // chase next player
 	{
-		if ( ( GetObserverMode() == OBS_MODE_FIXED ||
-			   GetObserverMode() == OBS_MODE_ROAMING ) &&
-			 engine->Cmd_Argc() == 6 )
+		if ( (GetObserverMode() == OBS_MODE_FIXED 
+			  || GetObserverMode() == OBS_MODE_ROAMING 
+			  || GetObserverMode() > OBS_MODE_FIXED)
+			 && engine->Cmd_Argc() == 6 )
 		{
+			// if is a spec and in a valid obs mode but not in roaming yet, then force roaming
+			if (!(GetObserverMode() == OBS_MODE_FIXED || GetObserverMode() == OBS_MODE_ROAMING))
+				SetObserverMode( OBS_MODE_ROAMING );
+
 			Vector origin;
 			origin.x = atof( engine->Cmd_Argv(1) );
 			origin.y = atof( engine->Cmd_Argv(2) );

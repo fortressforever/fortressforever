@@ -1405,7 +1405,9 @@ ConVar mp_prematch( "mp_prematch",
 			float flBaseDamage = info.GetDamage();
 
 			// Decrease damage for an ent that's farther from the explosion
-			flAdjustedDamage = flBaseDamage - (flDistance * falloff); // AfterShock: this means if a player is on the radius of 2x the base damage, you'll do 0 damage
+			flAdjustedDamage = flBaseDamage - (flDistance / flRadius * flBaseDamage * falloff); // AfterShock: this means if a player is on the radius of 2x the base damage, you'll do 0 damage
+			float flOldDamage = flBaseDamage - (flDistance * falloff);
+			Msg("base: %f | new: %f | old: %f\n", flBaseDamage, flAdjustedDamage, flOldDamage);
 			// We're doing no damage, so don't do anything else here
 			if (flAdjustedDamage <= 0) 
 				continue;
