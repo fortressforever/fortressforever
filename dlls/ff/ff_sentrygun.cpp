@@ -215,8 +215,11 @@ CFFSentryGun::CFFSentryGun()
 	m_flCloakDistance = 65536.0f;
 
 	m_flNextSparkTime = 0;
+	m_flNextDisableEffectTime = 0;
 	m_flLastClientUpdate = 0;
 	m_iLastState = 0;
+
+	m_flDisableTime = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -394,9 +397,37 @@ void CFFSentryGun::OnObjectThink( void )
 				TakeDamage( CTakeDamageInfo( this, pOwner, 10000, DMG_GENERIC ) );
 		}
 	}
+	
+	SparkIfDisabled();
 
 	// Run base class thinking
 	CFFBuildableObject::OnObjectThink();
+}
+
+void CFFSentryGun::SparkIfDisabled()
+{
+	if ( IsDisabled() && gpGlobals->curtime >= m_flNextDisableEffectTime )
+	{
+		Vector vecUp(0, 0, 1.0f);
+		g_pEffects->Sparks( GetAbsOrigin() + Vector(random->RandomFloat( -16, 16 ), random->RandomFloat( -16, 16 ), random->RandomFloat( 5, 32 )), 2, 5, &vecUp );
+		EmitSound( "DoSpark" ); //TODO: Better disabled sound?
+		m_flNextDisableEffectTime = gpGlobals->curtime + random->RandomFloat( 0.1, 0.5 );
+	}
+}
+
+bool CFFSentryGun::IsDisabled() const
+{
+	return (m_flDisableTime > gpGlobals->curtime);
+}
+
+void CFFSentryGun::Disable(float disableDuration)
+{
+	if ( !m_bBuilt )
+		return;
+
+	m_flDisableTime = gpGlobals->curtime + disableDuration;
+	//m_flSavedThink = GetNextThink();
+	SetNextThink( gpGlobals->curtime + 0.029f );
 }
 
 //-----------------------------------------------------------------------------
@@ -409,6 +440,9 @@ void CFFSentryGun::OnSearchThink( void )
 	OnObjectThink();
 
 	SetNextThink( gpGlobals->curtime + 0.029f ); // Just less than 1 tick (33 tickrate) or just less than 2 ticks (66 tick) or just less than 3 (100 tick)
+
+	if ( IsDisabled() )
+		return;
 
 	if(m_iLevel > 1)
 	{
@@ -507,6 +541,26 @@ void CFFSentryGun::OnActiveThink( void )
 	SetNextThink( gpGlobals->curtime + 0.029f ); // slightly less than 1 tick (33 tick), 
 
 	CBaseEntity *enemy = GetEnemy();
+
+	if ( IsDisabled() )
+	{
+		SetEnemy( NULL );
+		SetThink( &CFFSentryGun::OnSearchThink );
+		SpinDown();
+		
+		// Tell player they aren't locked on any more, and remove the status icon
+		if ( enemy->IsPlayer() )
+		{
+			CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
+			user.MakeReliable();
+
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+				WRITE_FLOAT(0.0);
+			MessageEnd();
+		}
+		return;
+	}
 
 	// Jiggles: Hint that tells Soldiers to use nail grens on SGs
 	CFFPlayer *pFFPlayer = ToFFPlayer( enemy );
