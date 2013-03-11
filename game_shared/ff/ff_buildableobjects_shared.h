@@ -303,6 +303,7 @@ public:
 	virtual void UpdateOnRemove( void );
 	virtual void RemoveSaboteur( bool bSuppressNotification = false );
 	virtual void RemoveQuietly( void );
+	void DetonateIfMalfunctioned( void );
 
 	static CFFBuildableObject *AttackerInflictorBuildable(CBaseEntity *pAttacker, CBaseEntity *pInflictor);
 
@@ -693,12 +694,14 @@ public:
 	virtual void	PhysicsSimulate();
 	float			m_flLastClientUpdate;
 	int				m_iLastState;
-
+	void Disable(float flDisableTime);
 
 private:
 	bool IsTargetInAimingEllipse( const Vector& vecTarget ) const;
 	bool IsTargetVisible( CBaseEntity *pTarget, int iSightDistance );
 	bool IsTargetClassTValid( Class_T cT ) const;
+	void SparkIfDisabled();
+	bool IsDisabled() const;
 
 public:
 	CBaseEntity *GetEnemy( void	) const { return m_hEnemy; }
@@ -728,6 +731,7 @@ public:
 
 	bool				m_bSendNailGrenHint;	// Only send the "kill sgs with nail grens" hint once per sg
 	float				m_flNextSparkTime;
+	float				m_flNextDisableEffectTime;
 	SmokeTrail			*m_pSmokeTrail;
 
 	float	m_flLastCloakSonarSound;
@@ -781,6 +785,10 @@ public:
 	int m_iPitchPoseParameter;
 	int m_iYawPoseParameter;
 
+private:
+	float m_flDisableTime;
+
+public:
 	//
 	// Level 3 only stuff
 	//

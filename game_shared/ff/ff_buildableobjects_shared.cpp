@@ -1,28 +1,5 @@
 // =============== Fortress Forever ==============
 // ======== A modification for Half-Life 2 =======
-//
-// @file ff_buildableobjects_shared.cpp
-// @author Patrick O'Leary(Mulchman) 
-// @date 06/08/2005
-// @brief Shared code for buildable objects
-//
-// REVISIONS
-// ---------
-// 06/08/2005, Mulchman: 
-//		This file First created
-// 22/01/2006, Mirv:
-//		Rewritten a lot of this, an instance of this object will now hold all the information
-//		needed to put a buildable on the ground(including pre-working out the orientation 
-//		and whether or not the orientation is okay, since that is now part of this class) 
-//		 (Previously calculating the orientation was left until last and not part of the
-//		buildable spot validation).
-//		Also now the SG orients away from walls.
-//
-// 9/16/2006, Mulchman:
-//		Re-jigged the building process, hopefully it's a little better now
-//
-//	12/6/2007, Mulchman:
-//		Added man cannon stuff
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"

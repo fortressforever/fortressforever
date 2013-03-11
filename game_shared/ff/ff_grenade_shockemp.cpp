@@ -35,6 +35,10 @@ extern short g_sModelIndexWExplosion;
 	ConVar ffdev_shockemp_removepipesquietly("ffdev_shockemp_removepipesquietly","1",FCVAR_CHEAT,"1 = shockEMPing pipes removes them without detonation");
 	#define FFDEV_SHOCKEMP_REMOVEPIPESQUIETLY ffdev_shockemp_removepipesquietly.GetBool()
 
+	ConVar ffdev_disable_duration_max("ffdev_disable_duration_max", "6", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+	#define FFDEV_DISABLE_DURATION_MAX ffdev_disable_duration_max.GetFloat()
+	ConVar ffdev_disable_duration_min("ffdev_disable_duration_min", "4", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+	#define FFDEV_DISABLE_DURATION_MIN ffdev_disable_duration_min.GetFloat()
 #endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeShockEmp, DT_FFGrenadeShockEmp)
@@ -91,32 +95,45 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_shockemp );
 			if( pEntity == this )
 				continue;
 
-			// It's a bit weird that we've split the code so that some EMP effects are done in the target class and some are done right here. 
-			// We should probably agree to either have the effects in teh target code or in the source code (here) and stick with it.. - AfterShock
-
 			switch( pEntity->Classify() )
 			{
 				case CLASS_PIPEBOMB:
-
-					((CFFProjectilePipebomb *)pEntity)->DecrementHUDCount();
-
-					if ( FFDEV_SHOCKEMP_REMOVEPIPESQUIETLY == 1)
 					{
-						Vector vecUp(0, 0, 1.0f);
-						g_pEffects->Sparks( pEntity->GetAbsOrigin(), 2, 5, &vecUp );
-						EmitSound( "DoSpark" );
-		
-						UTIL_Remove(pEntity);
-					}
-					else
-					{
-						((CFFProjectilePipebomb *)pEntity)->DetonatePipe(true, GetOwnerEntity());
+						CFFProjectilePipebomb *pPipebomb = (CFFProjectilePipebomb *) pEntity;
+						bool bFriendly = ( g_pGameRules->PlayerRelationship( GetThrower(), ToFFPlayer( pPipebomb->GetOwnerEntity() ) ) == GR_TEAMMATE );
+						if (bFriendly == true)
+							continue;
+
+						pPipebomb->DecrementHUDCount();
+
+						if ( FFDEV_SHOCKEMP_REMOVEPIPESQUIETLY == 1)
+						{
+							Vector vecUp(0, 0, 1.0f);
+							g_pEffects->Sparks( pPipebomb->GetAbsOrigin(), 2, 5, &vecUp );
+							EmitSound( "DoSpark" );
+			
+							UTIL_Remove(pPipebomb);
+						}
+						else
+						{
+							pPipebomb->DetonatePipe(true, GetOwnerEntity());
+						}
 					}
 					break;
 
 				case CLASS_SENTRYGUN:
-					// disable
-					// Damage?
+					{
+						CFFSentryGun *pSentryGun = (CFFSentryGun *) pEntity;
+						bool bFriendly = ( g_pGameRules->PlayerRelationship( GetThrower(), ToFFPlayer( pSentryGun->m_hOwner.Get() ) ) == GR_TEAMMATE );
+						if (bFriendly == true)
+							continue;
+
+						Vector distanceFromGrenade = GetAbsOrigin() - pSentryGun->GetAbsOrigin();
+						float linearDistanceFromGrenade = distanceFromGrenade.Length();
+						float flPercentPower = (radius - linearDistanceFromGrenade)/radius;
+						float disableTime = FFDEV_DISABLE_DURATION_MIN + (FFDEV_DISABLE_DURATION_MAX - FFDEV_DISABLE_DURATION_MIN) * flPercentPower;
+						pSentryGun->Disable(disableTime);
+					}
 					break;
 			}
 		}
