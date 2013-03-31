@@ -4581,7 +4581,7 @@ void CFFPlayer::RecalculateSpeed( void )
 		m_flSpeedModifierOld = m_flSpeedModifier;
 
 		// Work our approximately when the client will receive this speed change.
-		m_flSpeedModifierChangeTime = gpGlobals->curtime + (0.002f * this->GetPing());
+		m_flSpeedModifierChangeTime = gpGlobals->curtime + (0.002f * this->GetPing()); // This is a retarded workaround for lack of client prediction - AfterShock
 	}
 	else
 	{
