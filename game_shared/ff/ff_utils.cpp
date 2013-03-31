@@ -1398,3 +1398,13 @@ void FF_SendStopGrenTimerMessage(CFFPlayer *target)
 
 #endif
 
+void FF_DevMsg(const char *pMsg)
+{
+#ifdef GAME_DLL
+	DevMsg("SERVER: %s",pMsg);
+#endif
+
+#ifdef CLIENT_DLL
+	DevMsg("CLIENT: %s",pMsg);
+#endif
+}
