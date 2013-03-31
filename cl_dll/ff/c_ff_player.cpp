@@ -2457,15 +2457,16 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		// The client doesn't pick up on this and so weapons' holster and deploy aren't run.
 		// This fixes it, hurrah.
 		// Added extra guards to make this safer
-		if (IsAlive() && GetTeamNumber() >= TEAM_BLUE && GetActiveWeapon() != m_pOldActiveWeapon)
+		C_BaseCombatWeapon *pActiveWeapon = GetActiveWeapon();
+		if (IsAlive() && GetTeamNumber() >= TEAM_BLUE && pActiveWeapon != m_pOldActiveWeapon)
 		{
 			if (m_pOldActiveWeapon)
-				m_pOldActiveWeapon->Holster(GetActiveWeapon());
+				m_pOldActiveWeapon->Holster(pActiveWeapon);
 
-			if (GetActiveWeapon())
-				GetActiveWeapon()->Deploy();
+			if (pActiveWeapon)
+				pActiveWeapon->Deploy();
 
-			m_pOldActiveWeapon = GetActiveWeapon();
+			m_pOldActiveWeapon = pActiveWeapon;
 		}
 
 		// Also lets keep track of the lift state of the local player here too
