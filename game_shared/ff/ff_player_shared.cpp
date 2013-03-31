@@ -1,6 +1,9 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// If you want to add shared functions in here, annoyingly you'll need to add them to the 
+// c_ff_player.h and ff_player.h header files as there can't be an ff_player_shared.h #
+// (since there would be two declarations of the player class for both server and client)
+// - AfterShock
 //
 //=============================================================================//
 
@@ -15,6 +18,7 @@
 #include "ff_buildableobjects_shared.h"
 #include "ff_weapon_sniperrifle.h"
 #include "ff_weapon_assaultcannon.h"
+#include "ff_weapon_electricknife.h"
 
 #ifdef CLIENT_DLL
 	
@@ -177,6 +181,25 @@ void ClearAllowedEffects()
 CFFWeaponBase * CFFPlayer::FFAnim_GetActiveWeapon()
 {
 	return GetActiveFFWeapon();
+}
+
+CFFWeaponBase* CFFPlayer::GetFFWeapon(FFWeaponID weaponid)
+{
+	CFFWeaponBase *weap = GetActiveFFWeapon();
+
+	if (weap && weap->GetWeaponID() == weaponid)
+		return weap;
+
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(i));
+		if (weap && weap->GetWeaponID() == weaponid)
+		{
+			return weap;
+		}
+	}	
+
+	return NULL;
 }
 
 CFFPlayer * CFFPlayer::FFAnim_GetPlayer()
@@ -719,9 +742,8 @@ void CFFPlayer::ClassSpecificSkill()
 			break;
 
 		case CLASS_ENGINEER:
-		case CLASS_SPY:
-			// Bug #0001683: Can use engineer radial menu when dead.  This seems to put an end to it -> Defrag
-			if( IsAlive()  )
+			//Bug #0001683: Can use engineer radial menu when dead.  This seems to put an end to it -> Defrag
+			if( IsAlive() )
 			{
 				HudContextShow(true);
 			}			
@@ -733,6 +755,32 @@ void CFFPlayer::ClassSpecificSkill()
 			break;
 
 #endif
+
+		case CLASS_SPY:
+			if (IsCloakable())
+			{	
+				FF_DevMsg("Right click! trying to charge!\n");
+				CFFWeaponElectricKnife *pKnife = (CFFWeaponElectricKnife *) GetFFWeapon(FF_WEAPON_ELECTRICKNIFE);
+
+				if (pKnife && pKnife->IsRecharged())
+				{
+					// This doesnt quite work properly under laggy conditions due to the crappy code in c_ff_player in OnDataChanged
+					// when you switch from e.g. shotgun to knife by right clicking, the code receives a late packet from the server saying your active weapon
+					// is a shotgun, so the client code tries to switch back to the shotgun, cancelling the sounds and effects of the knife charging clientside.
+					Weapon_Switch(pKnife); 
+					//SwapToWeapon(FF_WEAPON_ELECTRICKNIFE);
+					pKnife->TryStartCharging();
+				}
+				else if (!pKnife)
+				{
+					FF_DevMsg("ERROR: No knife!\n");
+				}
+				else
+				{
+					FF_DevMsg("Cant charge, not recharged!\n");
+				}
+			}
+
 		default:
 			break;
 	}

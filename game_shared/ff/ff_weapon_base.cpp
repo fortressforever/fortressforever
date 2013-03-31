@@ -33,6 +33,7 @@ const char *s_WeaponAliasInfo[] =
 
 	"crowbar", 			// FF_WEAPON_CROWBAR
 	"knife", 			// FF_WEAPON_KNIFE
+	"electricknife", 	// FF_WEAPON_ELECTRICKNIFE
 	"medkit", 			// FF_WEAPON_MEDKIT
 	"spanner", 			// FF_WEAPON_SPANNER
 	"umbrella", 		// FF_WEAPON_UMBRELLA
