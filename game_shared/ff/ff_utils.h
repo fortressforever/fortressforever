@@ -253,6 +253,7 @@ enum HintType
 #define END_ENTITY_SPHERE_QUERY( ) }
 
 const char *FF_GetAmmoName(int i);
+void FF_DevMsg(const char *pMsg);
 
 bool FF_TraceHitWorld( trace_t *pTrace );
 
