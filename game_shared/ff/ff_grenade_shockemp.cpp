@@ -24,14 +24,8 @@ extern short g_sModelIndexWExplosion;
 #endif
 
 #ifndef CLIENT_DLL
-	ConVar shockemp_framerate("ffdev_eshockmp_framerate","2",FCVAR_CHEAT,"Framerate of the shockemp explosion");
-	ConVar shockemp_width("ffdev_shockemp_width","8.0",FCVAR_CHEAT,"width of the shockemp shockwave");
-	ConVar shockemp_life("ffdev_shockemp_life","0.3",FCVAR_CHEAT,"life of the shockemp shockwave");
-	ConVar shockemp_spread("ffdev_shockemp_spread","0",FCVAR_CHEAT,"spread of the shockemp shockwave");
-	ConVar shockemp_amplitude("ffdev_shockemp_amplitude","1",FCVAR_CHEAT,"amplitude of the shockemp shockwave");
-	ConVar shockemp_speed("ffdev_shockemp_speed","0",FCVAR_CHEAT,"speed of the shockemp shockwave");
-	ConVar shockemp_damage("ffdev_shockemp_damage","90.0",FCVAR_CHEAT,"Amount of damage dealt to anyone right in the center of the blast");
-
+	ConVar ffdev_shockemp_damage("ffdev_shockemp_damage","90.0",FCVAR_CHEAT,"Amount of damage dealt to anyone right in the center of the blast");
+	#define FFDEV_SHOCKEMP_DAMAGE ffdev_shockemp_damage.GetFloat()
 	ConVar ffdev_shockemp_removepipesquietly("ffdev_shockemp_removepipesquietly","1",FCVAR_CHEAT,"1 = shockEMPing pipes removes them without detonation");
 	#define FFDEV_SHOCKEMP_REMOVEPIPESQUIETLY ffdev_shockemp_removepipesquietly.GetBool()
 
@@ -84,7 +78,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_shockemp );
 
 		// Do small bonus damage in center
 		Vector vecReported = pTrace->endpos;
-		CTakeDamageInfo info( this, GetThrower(), GetBlastForce(), GetAbsOrigin(), shockemp_damage.GetFloat(), bitsDamageType, 0, &vecReported );
+		CTakeDamageInfo info( this, GetThrower(), GetBlastForce(), GetAbsOrigin(), FFDEV_SHOCKEMP_DAMAGE, bitsDamageType, 0, &vecReported );
 		RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
 		float radius = GetGrenadeRadius();

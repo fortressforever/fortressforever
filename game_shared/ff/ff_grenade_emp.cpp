@@ -38,16 +38,6 @@ int g_iEmpRingTexture = -1;
 	#define CFFGrenadeEmp C_FFGrenadeEmp
 #endif
 
-#ifndef CLIENT_DLL
-	ConVar emp_framerate("ffdev_emp_framerate","2",FCVAR_FF_FFDEV_CLIENT,"Framerate of the emp explosion");
-	ConVar emp_width("ffdev_emp_width","8.0",FCVAR_FF_FFDEV_CLIENT,"width of the emp shockwave");
-	ConVar emp_life("ffdev_emp_life","0.3",FCVAR_FF_FFDEV_CLIENT,"life of the emp shockwave");
-	ConVar emp_spread("ffdev_emp_spread","0",FCVAR_FF_FFDEV_CLIENT,"spread of the emp shockwave");
-	ConVar emp_amplitude("ffdev_emp_amplitude","1",FCVAR_FF_FFDEV_CLIENT,"amplitude of the emp shockwave");
-	ConVar emp_speed("ffdev_emp_speed","0",FCVAR_FF_FFDEV_CLIENT,"speed of the emp shockwave");
-	ConVar emp_buildable_damage("ffdev_emp_buildable_damage","10.0",FCVAR_FF_FFDEV_CLIENT,"Amount of damage to deal to sentryguns and dispensers in the emp radius.");
-#endif
-
 IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeEmp, DT_FFGrenadeEmp)
 
 BEGIN_NETWORK_TABLE(CFFGrenadeEmp, DT_FFGrenadeEmp)
