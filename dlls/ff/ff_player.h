@@ -57,6 +57,7 @@ enum SpeedEffectType
 	SE_ASSAULTCANNON,
 	SE_LEGSHOT,
 	SE_TRANQ,
+	SE_ELECTRICKNIFE,
 	SE_LUA1,	// a speed effect that lua can set
 	SE_LUA2,	// a speed effect that lua can set
 	SE_LUA3,	// a speed effect that lua can set
@@ -175,6 +176,8 @@ public:
 	const char* GetActiveWeaponName() const;
 
 	CFFWeaponBase* GetActiveFFWeapon() const;
+	CFFWeaponBase* GetFFWeapon(FFWeaponID weaponid);
+
 	virtual void	CreateViewModel( int viewmodelindex = 0 );
 
 	virtual void	CheatImpulseCommands( int iImpulse );

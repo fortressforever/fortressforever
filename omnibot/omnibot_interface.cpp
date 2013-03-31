@@ -238,6 +238,7 @@ namespace Omnibot
 		"ff_weapon_crowbar", // TF_WP_CROWBAR
 		"ff_weapon_medkit", // TF_WP_MEDKIT
 		"ff_weapon_knife", // TF_WP_KNIFE
+		"ff_weapon_electricknife", // TF_WP_KNIFE
 		"ff_weapon_spanner", // TF_WP_SPANNER
 		"ff_weapon_shotgun", // TF_WP_SHOTGUN
 		"ff_weapon_supershotgun", // TF_WP_SUPERSHOTGUN	
@@ -379,6 +380,8 @@ namespace Omnibot
 			return TF_WP_CROWBAR;
 		case FF_WEAPON_KNIFE: 
 			return TF_WP_KNIFE;
+		case FF_WEAPON_ELECTRICKNIFE: 
+			return TF_WP_ELECTRICKNIFE;
 		case FF_WEAPON_MEDKIT: 
 			return TF_WP_MEDKIT;
 		case FF_WEAPON_SPANNER: 
@@ -434,6 +437,8 @@ namespace Omnibot
 			return FF_WEAPON_CROWBAR;
 		case TF_WP_KNIFE: 
 			return FF_WEAPON_KNIFE;
+		case TF_WP_ELECTRICKNIFE: 
+			return FF_WEAPON_ELECTRICKNIFE;
 		case TF_WP_MEDKIT: 
 			return FF_WEAPON_MEDKIT;
 		case TF_WP_SPANNER: 

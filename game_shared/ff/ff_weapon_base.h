@@ -110,6 +110,7 @@ typedef enum
 	// Melee
 	FF_WEAPON_CROWBAR, 
 	FF_WEAPON_KNIFE, 
+	FF_WEAPON_ELECTRICKNIFE, 
 	FF_WEAPON_MEDKIT, 
 	FF_WEAPON_SPANNER, 
 	FF_WEAPON_UMBRELLA,
@@ -139,7 +140,6 @@ typedef enum
 
 	// Spy specific
 	FF_WEAPON_TRANQUILISER, 
-	// Spy grappling hook gun
 	FF_WEAPON_HOOKGUN, 
 
 	// HWG Specific

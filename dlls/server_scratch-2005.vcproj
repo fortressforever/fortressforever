@@ -5075,6 +5075,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_electricknife.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_weapon_electricknife.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_flamethrower.cpp"
 				>
 			</File>

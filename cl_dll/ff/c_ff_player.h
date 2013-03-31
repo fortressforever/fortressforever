@@ -261,6 +261,7 @@ public:
 	EHANDLE	m_hRagdoll;
 
 	CFFWeaponBase *GetActiveFFWeapon() const;
+	CFFWeaponBase* GetFFWeapon(FFWeaponID weaponid);
 
 	C_BaseAnimating *BecomeRagdollOnClient( bool bCopyEntity);
 	IRagdoll* C_FFPlayer::GetRepresentativeRagdoll() const;
