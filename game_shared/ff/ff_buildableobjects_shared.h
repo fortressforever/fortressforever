@@ -822,7 +822,7 @@ public:
 	int m_iYawPoseParameter;
 
 private:
-	float m_flDisableTime;
+	float m_flDisableEndTime;
 
 public:
 	//

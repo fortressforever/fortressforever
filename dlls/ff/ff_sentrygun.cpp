@@ -219,7 +219,7 @@ CFFSentryGun::CFFSentryGun()
 	m_flLastClientUpdate = 0;
 	m_iLastState = 0;
 
-	m_flDisableTime = 0;
+	m_flDisableEndTime = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -417,7 +417,7 @@ void CFFSentryGun::SparkIfDisabled()
 
 bool CFFSentryGun::IsDisabled() const
 {
-	return (m_flDisableTime > gpGlobals->curtime);
+	return (m_flDisableEndTime > gpGlobals->curtime);
 }
 
 void CFFSentryGun::Disable(float disableDuration)
@@ -425,9 +425,16 @@ void CFFSentryGun::Disable(float disableDuration)
 	if ( !m_bBuilt )
 		return;
 
-	m_flDisableTime = gpGlobals->curtime + disableDuration;
+	if (disableDuration <= 0.0f)
+		return;
+
+	if( m_flDisableEndTime > gpGlobals->curtime + disableDuration)
+		return;
+
+	m_flDisableEndTime = gpGlobals->curtime + disableDuration;
 	//m_flSavedThink = GetNextThink();
 	SetNextThink( gpGlobals->curtime + 0.029f );
+
 }
 
 //-----------------------------------------------------------------------------
