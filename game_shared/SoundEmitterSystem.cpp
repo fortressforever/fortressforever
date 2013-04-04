@@ -1186,6 +1186,12 @@ void CBaseEntity::EmitSoundShared( const char *soundname, float soundtime /*= 0.
 		CBasePlayer *pPlayer = ToBasePlayer( this );
 		if ( pPlayer )
 			filter.RemoveRecipient(pPlayer);
+		else
+		{
+			CBasePlayer *pOwner = ToBasePlayer( GetOwnerEntity() );
+			if ( pOwner )
+				filter.RemoveRecipient(pOwner);
+		}
 	}
 #endif
 
