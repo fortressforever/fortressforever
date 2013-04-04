@@ -848,6 +848,7 @@ public:
 	int GetDisguisedClass( void ) const;
 	int GetDisguisedTeam( void ) const;
 	bool IsDisguised( void ) const;
+	bool IsElectrified( void );
 	void SetDisguise(int iTeam, int iClass, bool bInstant = false);
 
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise

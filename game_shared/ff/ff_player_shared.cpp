@@ -767,8 +767,10 @@ void CFFPlayer::ClassSpecificSkill()
 					// This doesnt quite work properly under laggy conditions due to the crappy code in c_ff_player in OnDataChanged
 					// when you switch from e.g. shotgun to knife by right clicking, the code receives a late packet from the server saying your active weapon
 					// is a shotgun, so the client code tries to switch back to the shotgun, cancelling the sounds and effects of the knife charging clientside.
-					Weapon_Switch(pKnife); 
-					//SwapToWeapon(FF_WEAPON_ELECTRICKNIFE);
+					//Weapon_Switch(pKnife); 
+#ifdef CLIENT_DLL
+					SwapToWeapon(FF_WEAPON_ELECTRICKNIFE); // We only do this on the client due to the above not working
+#endif
 					pKnife->TryStartCharging();
 				}
 				else if (!pKnife)
@@ -917,6 +919,18 @@ CFFBuildableObject *CFFPlayer::GetBuildable( int iBuildable ) const
 bool CFFPlayer::IsDisguised( void ) const
 {
 	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CFFPlayer::IsElectrified( void )
+{
+	CFFWeaponElectricKnife *pKnife = (CFFWeaponElectricKnife *) GetFFWeapon(FF_WEAPON_ELECTRICKNIFE);
+	if (!pKnife)
+		return false;
+
+	return pKnife->IsElectrified();
 }
 
 //-----------------------------------------------------------------------------

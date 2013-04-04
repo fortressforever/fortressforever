@@ -66,7 +66,19 @@ CFFWeaponElectricKnife::CFFWeaponElectricKnife()
 {
 	m_flStartElectrifyTime = 0.0f;
 	m_flStartRechargeTime = 0.0f;
+	m_flElectrifyPercent = 0.0f;
 	pOwner = ToFFPlayer(GetOwner()); // TODO: Check this actually gets the owner player and doesnt do something dumb like this doesnt work during construction
+}
+
+
+//----------------------------------------------------------------------------
+// Purpose: Precache some extra sounds
+//----------------------------------------------------------------------------
+void CFFWeaponElectricKnife::Precache() 
+{
+	PrecacheScriptSound("electricknife.charge");
+	PrecacheScriptSound("electricknife.discharge");
+	BaseClass::Precache();
 }
 
 //----------------------------------------------------------------------------
@@ -302,6 +314,11 @@ float CFFWeaponElectricKnife::GetCooldownPercent()
 
 float CFFWeaponElectricKnife::GetElectrifyPercent()
 {
+	return m_flElectrifyPercent;
+}
+
+float CFFWeaponElectricKnife::CalculateElectrifyPercent()
+{
 	if (IsElectrified() == false)
 		return 0.0f;
 
@@ -334,7 +351,9 @@ void CFFWeaponElectricKnife::PrimaryAttack()
 
 void CFFWeaponElectricKnife::ItemPostFrame()
 {
-	if (GetElectrifyPercent() > 1.0f)
+	m_flElectrifyPercent = CalculateElectrifyPercent();
+
+	if (m_flElectrifyPercent > 1.0f)
 	{
 		FF_DevMsg("");
 		DevMsg("Postframe - electrify over 100%, cancelling.\n");

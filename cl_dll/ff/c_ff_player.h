@@ -336,6 +336,7 @@ public:
 	int GetDisguisedClass( void ) const;
 	int GetDisguisedTeam( void ) const;
 	bool IsDisguised( void ) const;
+	bool IsElectrified( void );
 	// Client-side only -- the return value is positive while disguising (and it changes every time the disguise command is issued)
 	//	However, it DOESN'T match up with the actual class (b/c it needs to change if the same class disguise is picked again)
 	int IsDisguising( void ) const { return m_iSpyDisguising; } 

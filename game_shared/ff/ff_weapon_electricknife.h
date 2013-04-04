@@ -24,20 +24,24 @@ public:
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual void ItemPostFrame( void );
 	virtual	void PrimaryAttack();
+	virtual void Precache();
 
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_ELECTRICKNIFE; }
 	
 	void TryStartCharging();
 	bool IsRecharged();
+	float GetElectrifyPercent();
+	float GetCooldownPercent();
+	bool IsElectrified( void );
 
 private:
 
 	CFFPlayer *pOwner;
 	float m_flStartElectrifyTime;
 	float m_flStartRechargeTime;
+	float m_flElectrifyPercent;
+	float CalculateElectrifyPercent();
 
-	float GetCooldownPercent();
-	float GetElectrifyPercent();
 	void Update();
 	void CancelElectrify();
 
@@ -45,7 +49,6 @@ private:
 	void ChargedStabEntity(trace_t &traceHit, CBaseEntity *pHitEntity);
 	void UnchargedStabEntity(trace_t &traceHit, CBaseEntity *pHitEntity);
 	bool IsHitEntitySpecialCase(CBaseEntity *pHitEntity);
-	bool IsElectrified( void );
 	void ChargedStabPlayer(trace_t &traceHit, CFFPlayer *pTarget );
 	float GetChargedPlayerDamage( void );
 	Vector GetChargedPlayerForce( Vector hitDirection );

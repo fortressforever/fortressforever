@@ -73,7 +73,7 @@ class CHudSpyDisguise : public CHudElement, public vgui::FFPanel
 public:
 	DECLARE_CLASS_SIMPLE( CHudSpyDisguise, vgui::FFPanel );
 
-	CHudSpyDisguise( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpyDisguise" ), CHudElement( pElementName )
+	CHudSpyDisguise( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpyDisguiseOld" ), CHudElement( pElementName )
 	{
 		SetParent( g_pClientMode->GetViewport() );
 		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );

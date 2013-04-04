@@ -916,6 +916,9 @@ CBaseEntity *CFFSentryGun::HackFindEnemy( void )
 			continue;
 		}
 
+		if ( pPlayer->IsElectrified())
+			continue;
+
 		// Spy check - but don't let valid radio tagged targets sneak by!
 		if( pPlayer->IsDisguised() ) // && !pPlayer->IsCloaked() )
 		{
@@ -1130,12 +1133,19 @@ bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget, int iSightDistance )
 		debugoverlay->AddLineOverlay(vecOrigin, vecTarget, r, g, b, false, 0.1f);
 	}*/
 
-	if ( pFFPlayer && pFFPlayer->IsCloaked() )
+	if ( pFFPlayer )
 	{
-		if (flDistToTarget <= ( SG_RANGE * SG_RANGE_CLOAKMULTI ) && flDistToTarget < m_flCloakDistance )
-			m_flCloakDistance = flDistToTarget;
+		if ( pFFPlayer->IsCloaked() )
+		{
+			if (flDistToTarget <= ( SG_RANGE * SG_RANGE_CLOAKMULTI ) && flDistToTarget < m_flCloakDistance )
+				m_flCloakDistance = flDistToTarget;
 
-		return false;
+			return false;
+		}
+		if ( pFFPlayer->IsElectrified() )
+		{
+			return false;
+		}
 	}
 	
 	// Finally, is that target even in our aim ellipse?
