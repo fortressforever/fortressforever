@@ -26,7 +26,7 @@ ConVar ffdev_hook_range( "ffdev_hook_range", "1000.0", FCVAR_REPLICATED | FCVAR_
 #define HOOK_RANGE ffdev_hook_range.GetFloat()
 ConVar ffdev_hook_closerange( "ffdev_hook_closerange", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook close range - will snap when this close" );
 #define HOOK_CLOSERANGE ffdev_hook_closerange.GetFloat()
-ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1500.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook fire speed" );
+ConVar ffdev_hook_firespeed( "ffdev_hook_firespeed", "1750.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook fire speed" );
 #define HOOK_FIRESPEED ffdev_hook_firespeed.GetFloat()
 ConVar ffdev_hook_pullspeed( "ffdev_hook_pullspeed", "650.0", FCVAR_REPLICATED | FCVAR_CHEAT, "Grappling hook pull speed" );
 #define HOOK_PULLSPEED ffdev_hook_pullspeed.GetFloat()
@@ -140,6 +140,29 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_hook);
 #endif
 	}
 
+#ifdef GAME_DLL
+	//----------------------------------------------------------------------------
+	// Purpose: Creata a trail of smoke for the grenade
+	//----------------------------------------------------------------------------
+	void CFFProjectileHook::CreateProjectileEffects() 
+	{
+		//int nAttachment = LookupAttachment( "fuse" );
+
+		// Start up the eye trail
+		m_hGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
+
+		if ( m_hGlowTrail != NULL )
+		{
+			m_hGlowTrail->FollowEntity( this );
+			m_hGlowTrail->SetAttachment( this, 0 /*nAttachment*/ );
+			m_hGlowTrail->SetTransparency( kRenderTransAdd, 85, 95, 205, 255, kRenderFxNone );
+			m_hGlowTrail->SetStartWidth( 10.0f );
+			m_hGlowTrail->SetEndWidth( 5.0f );
+			m_hGlowTrail->SetLifeTime( 0.5f );
+		}
+	}
+#endif
+
 #ifdef CLIENT_DLL
 	//-----------------------------------------------------------------------------
 	// Purpose: Remove the rocket trail
@@ -195,6 +218,10 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_hook);
 //----------------------------------------------------------------------------
 void CFFProjectileHook::Spawn() 
 {
+#ifdef GAME_DLL
+		// Creates the smoke trail
+		CreateProjectileEffects();
+#endif
 	BaseClass::Spawn();
 
 #if defined(CLIENT_DLL) && !defined(PREDICTED_ROCKETS)
@@ -677,10 +704,9 @@ CFFProjectileHook * CFFProjectileHook::CreateHook(CBaseEntity *pOwnerGun, const 
  
 	if ( pHook->m_hRope )
 	{
-		pHook->m_hRope->m_Width = 2;
-		pHook->m_hRope->m_nSegments = FFDEV_HOOK_ROPE_SEGMENTS; // This is like 10+9*8 segments = 41, which is a lot, could probably cut this down.
+		pHook->m_hRope->m_Width = 1;
+		pHook->m_hRope->m_nSegments = FFDEV_HOOK_ROPE_SEGMENTS;
 		pHook->m_hRope->EnableWind( false );
-	//	pHook->m_hRope->EnableCollision(); // Collision looks worse than no collision
 		pHook->m_hRope->SetupHangDistance( FFDEV_HOOK_ROPE_HANGDISTANCE ); 
 		pHook->m_hRope->SetParent( pHook, 1 );
 	}

@@ -19,6 +19,7 @@
 
 #include "cbase.h"
 #include "ff_projectile_base.h"
+#include "SpriteTrail.h"
 
 #ifdef GAME_DLL
 	#include "rope.h"
@@ -68,6 +69,12 @@ public:
 	CHandle<CRopeKeyframe>		m_hRope;
 	float m_fNextSparkTime;
 	CBaseEntity * m_pAttachedEntity;
+	
+protected:
+	// Creates the smoke trail
+	void CreateProjectileEffects();
+	CHandle<CSpriteTrail>	m_hGlowTrail;
+public:
 #endif
 
 	//void CreateSmokeTrail();
