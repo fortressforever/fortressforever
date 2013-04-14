@@ -18,6 +18,7 @@
 #include "ff_weapon_sniperrifle.h"
 #include "ff_weapon_assaultcannon.h"
 #include "ff_weapon_electricknife.h"
+#include "ff_weapon_hookgun.h"
 
 #ifdef CLIENT_DLL
 	
@@ -1733,6 +1734,22 @@ void CFFPlayer::Overpressure( void )
 					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
 #endif
 
+				
+				// break active hooks
+				CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+				if (pWeapon)
+				{
+					FFWeaponID weaponID = pWeapon->GetWeaponID();
+
+					if (weaponID == FF_WEAPON_HOOKGUN)
+					{
+						CFFWeaponHookGun *pHookGun = dynamic_cast< CFFWeaponHookGun * > (pWeapon);
+						if (pHookGun && pHookGun->m_pHook)
+						{
+							pHookGun->RemoveHook();
+						}
+					}
+				}
 
 				Vector vecVelocity = pPlayer->GetAbsVelocity();
 				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
