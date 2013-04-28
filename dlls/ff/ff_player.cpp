@@ -174,6 +174,13 @@ ConVar ffdev_cloaksmoke_reveal_time( "ffdev_cloaksmoke_reveal_time", "0.1", FCVA
 ConVar ffdev_cloaksmoke_reveal_damage_mod( "ffdev_cloaksmoke_reveal_damage_mod", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Percentage of damage to convert to raw added reveal time" );
 #define CLOAKSMOKE_REVEAL_DAMAGE_MOD ffdev_cloaksmoke_reveal_damage_mod.GetFloat()
 
+ConVar ffdev_flagtrail_startwidth( "ffdev_flagtrail_startwidth", "100", FCVAR_REPLICATED | FCVAR_NOTIFY, "Start width of flag trail" );
+#define FFDEV_FLAGTRAIL_STARTWIDTH ffdev_flagtrail_startwidth.GetFloat()
+ConVar ffdev_flagtrail_endwidth( "ffdev_flagtrail_endwidth", "5", FCVAR_REPLICATED | FCVAR_NOTIFY, "End width of flag trail" );
+#define FFDEV_FLAGTRAIL_ENDWIDTH ffdev_flagtrail_endwidth.GetFloat()
+ConVar ffdev_flagtrail_lifetime( "ffdev_flagtrail_lifetime", "1.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time flag trail stays active before disappearing" );
+#define FFDEV_FLAGTRAIL_LIFETIME ffdev_flagtrail_lifetime.GetFloat()
+
 ConVar ffdev_gren_throwspeed( "ffdev_gren_throwspeed", "660", FCVAR_REPLICATED );
 
 #ifdef _DEBUG
@@ -7651,6 +7658,51 @@ int CFFPlayer::RemoveArmor( int iAmount )
 	m_iArmor = clamp( m_iArmor - iAmount, 0, m_iArmor );
 
 	return iRemovedAmt;
+}
+
+void CFFPlayer::StartFlagTrail(int teamId)
+{
+	m_hFlagGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/ff_trail.vmt", GetLocalOrigin(), false );
+
+	if ( m_hFlagGlowTrail != NULL )
+	{
+		m_hFlagGlowTrail->FollowEntity( this );
+		m_hFlagGlowTrail->SetAttachment( this, 0 /*nAttachment*/ );
+		
+		if (teamId == TEAM_BLUE)
+		{
+			m_hFlagGlowTrail->SetTransparency(kRenderTransAdd, 85, 95, 205, 255, kRenderFxNone);
+		}
+		else if (teamId == TEAM_RED)
+		{
+			m_hFlagGlowTrail->SetTransparency(kRenderTransAdd, 205, 95, 85, 255, kRenderFxNone);
+		}
+		else if (teamId == TEAM_GREEN)
+		{
+			m_hFlagGlowTrail->SetTransparency(kRenderTransAdd, 85, 205, 85, 255, kRenderFxNone);
+		}
+		else if (teamId == TEAM_YELLOW)
+		{
+			m_hFlagGlowTrail->SetTransparency(kRenderTransAdd, 205, 205, 85, 255, kRenderFxNone);
+		}
+		else
+		{
+			m_hFlagGlowTrail->SetTransparency(kRenderTransAdd, 255, 255, 255, 255, kRenderFxNone);
+		}
+
+		m_hFlagGlowTrail->SetStartWidth( FFDEV_FLAGTRAIL_STARTWIDTH );
+		m_hFlagGlowTrail->SetEndWidth( FFDEV_FLAGTRAIL_ENDWIDTH );
+		m_hFlagGlowTrail->SetLifeTime( FFDEV_FLAGTRAIL_LIFETIME );
+	}
+}
+
+void CFFPlayer::StopFlagTrail()
+{
+	if (m_hFlagGlowTrail == NULL)
+		return;
+
+	m_hFlagGlowTrail->FadeAndDie( 0.1f );
+	m_hFlagGlowTrail = NULL;
 }
 
 //-----------------------------------------------------------------------------
