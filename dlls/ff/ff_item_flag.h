@@ -95,6 +95,7 @@ public:
 	virtual bool	IsPlayer( void ) { return false; }
 	virtual bool	BlocksLOS( void ) { return false; }
 	virtual bool	IsAlive( void ) { return false; }
+	virtual Vector	EyePosition( void ) { return WorldSpaceCenter(); } // squeek: for spectating info scripts
 
 	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	virtual int		UpdateTransmitState( void );

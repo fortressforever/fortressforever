@@ -36,6 +36,7 @@
 #include <igameresources.h>
 #include "c_ff_team.h"
 #include "ff_gamerules.h"
+#include "ff_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -607,7 +608,21 @@ void CSpectatorMenu::Update( void )
 				team = teamText;
 			}
 
-			localize()->ConstructString( playerText, sizeof( playerText ), localize()->Find( "#Spec_PlayerItem_Team" ), 2, playerName, team );
+			wchar_t classText[ 64 ], *pwszClass;
+			char localizeClassName[64];
+
+			const char *classname = Class_IntToResourceString( gr->GetClass( iPlayerIndex ) );
+
+			Q_snprintf( localizeClassName, sizeof( localizeClassName ), "%s", classname );
+			pwszClass=localize()->Find( localizeClassName );
+			
+			if ( !pwszClass ) 
+			{
+				localize()->ConvertANSIToUnicode( classname , classText, sizeof( classText ) );
+				pwszClass = classText;
+			}
+
+			localize()->ConstructString( playerText, sizeof( playerText ), localize()->Find( "#Spec_PlayerItem_Team" ), 3, playerName, team, pwszClass );
 		}
 		else
 		{
@@ -809,5 +824,28 @@ CON_COMMAND( spec_player, "Spectate player by name" )
 	}
 }
 
+CON_COMMAND( spec_item, "Spectate item by name" )
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if ( !pPlayer || !pPlayer->IsObserver() )
+		return;
+
+	if ( engine->Cmd_Argc() != 2 )
+		return;
+
+	if ( engine->IsHLTV() )
+	{
+		// we can only switch primary spectator targets is PVS isnt locked by auto-director
+		if ( !HLTVCamera()->IsPVSLocked() )
+		{
+			//HLTVCamera()->SpecNamedPlayer( engine->Cmd_Argv(1) );
+		}
+	}
+	else
+	{
+		ForwardSpecCmdToServer();
+	}
+}
 
 

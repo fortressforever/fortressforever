@@ -1148,33 +1148,38 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 
 	// QAngle tmpangles;
 
-	Vector forward, viewpoint;
+	Vector forward, viewpoint, origin;
 
-	// GetRenderOrigin() returns ragdoll pos if player is ragdolled
-	Vector origin = target->GetRenderOrigin();
-
-	C_BasePlayer *player = ToBasePlayer( target );
-	
-	if ( player && player->IsAlive() )
+	if (target->IsPlayer())
 	{
-		if( player->GetFlags() & FL_DUCKING )
+		// GetRenderOrigin() returns ragdoll pos if player is ragdolled
+		origin = target->GetRenderOrigin();
+
+		C_BasePlayer *player = ToBasePlayer( target );
+		
+		if ( player && player->IsAlive() )
 		{
-			VectorAdd( origin, VEC_DUCK_VIEW, origin );
+			if( player->GetFlags() & FL_DUCKING )
+			{
+				VectorAdd( origin, VEC_DUCK_VIEW, origin );
+			}
+			else
+			{
+				VectorAdd( origin, VEC_VIEW, origin );
+			}
 		}
 		else
 		{
-			VectorAdd( origin, VEC_VIEW, origin );
+			// assume it's the players ragdoll
+			VectorAdd( origin, VEC_DEAD_VIEWHEIGHT, origin );
 		}
 	}
 	else
-	{
-		// assume it's the players ragdoll
-		VectorAdd( origin, VEC_DEAD_VIEWHEIGHT, origin );
-	}
+		origin = target->WorldSpaceCenter();
 
 	QAngle viewangles;
 
-	if ( GetObserverMode() == OBS_MODE_IN_EYE )
+	if ( GetObserverMode() == OBS_MODE_IN_EYE && target->IsPlayer() )
 	{
 		viewangles = eyeAngles;
 	}
