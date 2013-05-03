@@ -39,11 +39,21 @@ void CFFLuaLib::InitMath(lua_State* L)
 	ASSERT(L);
 
 	module(L)
-		[
-			class_<Vector>("Vector")
-			//.def(tostring(const_self))
+	[
+		def("AngleVectors",		(void(*)(const QAngle&, Vector*))&AngleVectors),
+		def("AngleVectors",		(void(*)(const QAngle&, Vector*, Vector*, Vector*))&AngleVectors),
+		def("VectorAngles",		(void(*)(const Vector&, QAngle&))&VectorAngles),
+
+		class_<Vector>("Vector")
 			.def(constructor<>())
 			.def(constructor<float, float, float>())
+			.def(self * float())
+			.def(self / float())
+			.def(self + const_self)
+			.def(self - const_self)
+			.def(self * const_self)
+			.def(self / const_self)
+			.def(const_self == const_self)
 			.def_readwrite("x",			&Vector::x)
 			.def_readwrite("y",			&Vector::y)
 			.def_readwrite("z",			&Vector::z)
@@ -52,20 +62,30 @@ void CFFLuaLib::InitMath(lua_State* L)
 			.def("DistTo",				&Vector::DistTo)
 			.def("DistToSq",			&Vector::DistToSqr)
 			.def("Dot",					&Vector::Dot)
+			.def("Cross",				&Vector::Cross)
 			.def("Length",				&Vector::Length)
 			.def("LengthSqr",			&Vector::LengthSqr)
 			.def("Normalize",			&Vector::NormalizeInPlace)
 			.def("ClampToAABB",			&Vector::ClampToAABB)
+			.def("Random",				&Vector::Random)
+			.def("Min",					&Vector::Min)
+			.def("Max",					&Vector::Max)
 			.def("Negate",				&Vector::Negate),
 
-			class_<QAngle>("QAngle")
+		class_<QAngle>("QAngle")
 			.def(constructor<>())
 			.def(constructor<float, float, float>())
+			.def(self * float())
+			.def(self / float())
+			.def(self + const_self)
+			.def(self - const_self)
+			.def(const_self == const_self)
 			.def_readwrite("x",			&QAngle::x)
 			.def_readwrite("y",			&QAngle::y)
 			.def_readwrite("z",			&QAngle::z)
 			.def("IsValid",				&QAngle::IsValid)
+			.def("Random",				&QAngle::Random)
 			.def("Length",				&QAngle::Length)
 			.def("LengthSqr",			&QAngle::LengthSqr)
-		];
+	];
 };
