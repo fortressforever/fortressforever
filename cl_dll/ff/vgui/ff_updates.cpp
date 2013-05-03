@@ -55,7 +55,7 @@ CON_COMMAND(sync_version, "Sync version")
 
 CON_COMMAND(ff_updates,NULL)
 {
-	CheckModUpdate();
+	CheckModUpdate("");
 	//ffupdates->GetPanel()->SetVisible(true);
 }
 
@@ -124,7 +124,7 @@ void CFFUpdatesPanel::CheckUpdate(const char *pszServerVersion /*= NULL*/)
 {
 	if (!CFFUpdateThread::GetInstance().IsRunning())
 	{
-		m_pUpdateStatus->SetText("Checking for updates...");
+		m_pUpdateStatus->SetText("#FF_UPDATE_STATUS_CHECKING");
 		m_pUpdateStatus->SetFgColor(Color(255,255,255,255));
 		m_pUpdateStatus->SetWide(180);
 		m_pUpdateStatus->SetPos(ScreenWidth()-m_pUpdateStatus->GetWide()-m_pCurrentVersion->GetWide()-20,ScreenHeight()-m_pUpdateStatus->GetTall()-10);
@@ -149,34 +149,34 @@ void CFFUpdatesPanel::UpdateAvailable( eUpdateResponse status )
 	switch(status)
 	{
 	case UPDATE_ERROR:
-		m_pUpdateStatus->SetText("Error while checking for updates");
+		m_pUpdateStatus->SetText("#FF_UPDATE_STATUS_ERROR");
 		m_pUpdateStatus->SetFgColor(Color(255,0,0,255));
 		m_pUpdateStatus->SetWide(225);
 		m_flStatusFadeTime = gpGlobals->curtime + UPDATESTATUS_FADETIME + UPDATESTATUS_FADETIME_DELAY;
 		break;
 	case UPDATE_FOUND:
 		Msg("[update] Update available\n");
-		m_pUpdateInfo->SetVisible(true);
 		m_pUpdateStatus->SetFgColor(Color(229,170,86,255));
-		m_pUpdateStatus->SetText("Update found");
+		m_pUpdateStatus->SetText("#FF_UPDATE_STATUS_FOUND");
 		m_pUpdateStatus->SetWide(110);
 		m_flStatusFadeTime = -1.0f;
 		break;
 	case UPDATE_NOTFOUND:
 		Msg("[update] No update available\n");
 		m_pUpdateStatus->SetFgColor(Color(130,229,100,255));
-		m_pUpdateStatus->SetText("Up to date");
+		m_pUpdateStatus->SetText("#FF_UPDATE_STATUS_NOTFOUND");
 		m_pUpdateStatus->SetWide(110);
 		m_flStatusFadeTime = gpGlobals->curtime + UPDATESTATUS_FADETIME + UPDATESTATUS_FADETIME_DELAY;
 		break;
 	case UPDATE_SERVER_OUTOFDATE:
-		m_pUpdateStatus->SetText("Server out of date");
+		m_pUpdateStatus->SetText("#FF_UPDATE_STATUS_CONFLICT");
 		m_pUpdateStatus->SetFgColor(Color(255,0,0,255));
-		m_pUpdateStatus->SetWide(180);
+		m_pUpdateStatus->SetWide(225);
 		m_flStatusFadeTime = -1.0f;
 		break;
 	}
 	m_pUpdateStatus->SetPos(ScreenWidth()-m_pUpdateStatus->GetWide()-m_pCurrentVersion->GetWide()-20,ScreenHeight()-m_pUpdateStatus->GetTall()-10);
+	m_pUpdateInfo->UpdateAvailable(status);
 }
 
 //-----------------------------------------------------------------------------
@@ -238,13 +238,14 @@ CFFUpdateInfo::CFFUpdateInfo(Panel *parent, const char *panelName, bool showTask
 {
 	//Other useful options
 	SetVisible(false);//made visible on command later 
-	SetSizeable(true);
+	SetSizeable(false);
 	SetMoveable(true);
 
 	m_pOKButton = new Button(this, "OKButton", "", this, "OK");
 	m_pCancelButton = new Button(this, "CancelButton", "", this, "Cancel");
-	m_pOKButton->SetVisible(false);
-	m_pCancelButton->SetVisible(false);
+
+	m_pTitle = new Label(this, "UpdateTitle", "");
+	m_pDescription = new Label(this, "UpdateDescription", "");
 
 	LoadControlSettings("Resource/UI/FFUpdates.res");
 	//CenterThisPanelOnScreen();//keep in mind, hl2 supports widescreen 
@@ -264,16 +265,13 @@ void CFFUpdateInfo::OnButtonCommand(KeyValues *data)
 {
 	const char *pszCommand = data->GetString("command");
 
-	// Play starts the mode
 	if (Q_strcmp(pszCommand, "OK") == 0)
 	{
 		wyInstallUpdate();
-		// Just make it invisible now...
 		SetVisible(false);
 	}
 	else if (Q_strcmp(pszCommand, "Cancel") == 0)
 	{
-		// Now make invisible
 		SetVisible(false);
 	}
 
@@ -288,4 +286,36 @@ void CFFUpdateInfo::SetVisible(bool state)
 	}
 
 	BaseClass::SetVisible(state);
+}
+
+//-----------------------------------------------------------------------------
+//	Set if an update is available	
+//-----------------------------------------------------------------------------
+void CFFUpdateInfo::UpdateAvailable( eUpdateResponse status )
+{
+	switch(status)
+	{
+	case UPDATE_FOUND:
+		m_pTitle->SetText("#FF_UPDATE_TITLE_OUTOFDATE");
+		m_pDescription->SetText("#FF_UPDATE_TEXT_OUTOFDATE");
+		m_pOKButton->SetText("#FF_UPDATE_DOWNLOAD");
+		m_pCancelButton->SetText("#GameUI_Cancel");
+		m_pOKButton->SetVisible(true);
+		m_pCancelButton->SetVisible(true);
+		SetVisible(true);
+		break;
+	case UPDATE_SERVER_OUTOFDATE:
+		m_pTitle->SetText("#FF_UPDATE_TITLE_CONFLICT");
+		m_pDescription->SetText("#FF_UPDATE_TEXT_CONFLICT");
+		m_pCancelButton->SetText("#GameUI_OK");
+		m_pOKButton->SetVisible(false);
+		m_pCancelButton->SetVisible(true);
+		SetVisible(true);
+		break;
+	case UPDATE_ERROR:
+	case UPDATE_NOTFOUND:
+	default:
+		SetVisible(false);
+		break;
+	}
 }

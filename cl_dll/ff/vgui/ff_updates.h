@@ -73,6 +73,7 @@ class CFFUpdateInfo : public Frame
 public:
 	CFFUpdateInfo(Panel *parent, const char *panelName, bool showTaskbarIcon = true);
 	void SetVisible(bool state);
+	void UpdateAvailable(eUpdateResponse status);
 
 private:
 
@@ -80,6 +81,9 @@ private:
 
 	vgui::Button			*m_pOKButton;
 	vgui::Button			*m_pCancelButton;
+
+	vgui::Label				*m_pTitle;
+	vgui::Label				*m_pDescription;
 
 };
 
