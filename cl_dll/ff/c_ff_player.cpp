@@ -121,7 +121,17 @@ ConVar ff_defaultweapon_civy("cl_spawnweapon_civilian", "umbrella", FCVAR_USERIN
 
 // *** ELMO
 
-static ConVar gibcount("cl_gibcount", "6", FCVAR_ARCHIVE);
+// gib settings
+ConVar cl_gib_count("cl_gib_count", "6", FCVAR_ARCHIVE, "Number of gibs to spawn");
+ConVar cl_gib_force_scale("cl_gib_force_scale", "1", FCVAR_ARCHIVE);
+ConVar cl_gib_force_randomness("cl_gib_force_randomness", "300", FCVAR_ARCHIVE);
+ConVar cl_gib_lifetime("cl_gib_lifetime", "10", FCVAR_ARCHIVE);
+
+// gib blood settings
+ConVar cl_gib_blood_scale("cl_gib_blood_scale", "20", FCVAR_ARCHIVE);
+ConVar cl_gib_blood_force_scale("cl_gib_blood_force_scale", ".1", FCVAR_ARCHIVE);
+ConVar cl_gib_blood_count("cl_gib_blood_count", "3", FCVAR_ARCHIVE);
+ConVar cl_gib_blood_force_randomness("cl_gib_blood_force_randomness", "1", FCVAR_ARCHIVE);
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
 static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Change class instantly");
@@ -3368,7 +3378,10 @@ void Gib_Callback(const CEffectData &data)
 
 	Vector vecForce = data.m_vStart;
 	Vector vecPlayerOrigin = data.m_vOrigin;
-	//Add some of the players speed too.
+
+	float flGibForceRandom = cl_gib_force_randomness.GetFloat();
+	float flBloodForce = cl_gib_blood_force_scale.GetFloat();
+	float flBloodForceRandom = cl_gib_blood_force_randomness.GetFloat();
 
 	// We can use the player origin here
 	if (pPlayer && !pPlayer->IsDormant())
@@ -3378,9 +3391,11 @@ void Gib_Callback(const CEffectData &data)
 
 		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
-			Vector gibVector;
-			VectorAdd(vecForce, Vector(random->RandomFloat(-20, 20), random->RandomFloat(-20, 20), random->RandomFloat(-10, 0)), gibVector);
-			C_Gib * pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), gibVector, Vector(0, 0, 0), 10.0f);
+			Vector vecGibForce;
+			vecGibForce = vecForce * cl_gib_force_scale.GetFloat();
+			vecGibForce += Vector(random->RandomFloat(-flGibForceRandom, flGibForceRandom), random->RandomFloat(-flGibForceRandom, flGibForceRandom), random->RandomFloat(-flGibForceRandom, flGibForceRandom));
+
+			C_Gib * pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), vecGibForce, RandomAngularImpulse( -90, 90 ), cl_gib_lifetime.GetFloat());
 
 			if (pGib)
 			{
@@ -3390,7 +3405,7 @@ void Gib_Callback(const CEffectData &data)
 	}
 
 	// Now spawn a number of gibs
-	for (int i = 0; i < gibcount.GetInt(); i++)
+	for (int i = 0; i < cl_gib_count.GetInt(); i++)
 	{
 		// The first 3 gibs should be done only once, those after should be random
 		int iGibNumber = (i < 3 ? i + 1 : random->RandomInt(4, 8));
@@ -3403,20 +3418,58 @@ void Gib_Callback(const CEffectData &data)
 
 		//spread different amounts
 		Vector vecGibForce;
-		VectorAdd(vecForce, Vector(random->RandomFloat(-40, 40), random->RandomFloat(-40, 40), random->RandomFloat(-20, 20)), vecGibForce);
+		vecGibForce = vecForce * cl_gib_force_scale.GetFloat();
+		vecGibForce += Vector(random->RandomFloat(-flGibForceRandom, flGibForceRandom), random->RandomFloat(-flGibForceRandom, flGibForceRandom), random->RandomFloat(-flGibForceRandom, flGibForceRandom));
 
-		C_Gib *pGib = C_Gib::CreateClientsideGib(pszGibModel, vecGibSpawn, vecGibForce, Vector(0, 0, 0), 10.0f);
+		C_Gib *pGib = C_Gib::CreateClientsideGib(pszGibModel, vecGibSpawn, vecGibForce, RandomAngularImpulse( -90, 90 ), cl_gib_lifetime.GetFloat());
 
 		if (pGib)
 		{
 			pGib->LeaveBloodDecal(true);
 		}
 
-		UTIL_BloodImpact(vecGibSpawn, Vector(0, 0, 0), BLOOD_COLOR_RED, 512);
+	}
+
+	vecForce.NormalizeInPlace();
+
+	// Now spawn a number of blood sprays
+	for (int i = 0; i < cl_gib_blood_count.GetInt(); i++)
+	{
+		//spawn at different locations around the player
+		Vector vecBloodSpawn;
+		VectorAdd(vecPlayerOrigin, Vector(random->RandomFloat(-4, 4),random->RandomFloat(-4, 4),random->RandomFloat(-12, 12)),vecBloodSpawn);
+
+		//spread different amounts
+		Vector vecBloodForce;
+
+		vecBloodForce = vecForce * flBloodForce + Vector(random->RandomFloat(-flBloodForceRandom, flBloodForceRandom), random->RandomFloat(-flBloodForceRandom, flBloodForceRandom), random->RandomFloat(-flBloodForceRandom, flBloodForceRandom));
+
+		UTIL_BloodSpray(vecBloodSpawn, vecBloodForce, BLOOD_COLOR_RED, cl_gib_blood_scale.GetFloat(), FX_BLOODSPRAY_ALL);
 	}
 }
 
 DECLARE_CLIENT_EFFECT("Gib", Gib_Callback);
+
+//-----------------------------------------------------------------------------
+// Purpose: Console command for emitting gibs.
+//-----------------------------------------------------------------------------
+void CC_Gib( void )
+{
+	C_FFPlayer *pEnt = C_FFPlayer::GetLocalFFPlayer();
+	if (pEnt)
+	{
+		Vector forward;
+		pEnt->EyeVectors(&forward, NULL, NULL);
+
+		CEffectData data;
+  		data.m_vOrigin = pEnt->GetAbsOrigin();
+		data.m_vStart = forward * 256;
+		data.m_hEntity = pEnt;
+		DispatchEffect("Gib", data);
+	}
+}
+
+static ConCommand spawngibs( "spawngibs", CC_Gib, "Spawn gibs on top of the local player", FCVAR_CHEAT );
 
 void C_FFPlayer::StopGrenTimersListener(bf_read &msg)
 {
