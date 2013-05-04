@@ -257,7 +257,9 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
             g_pEffects->Sparks(GetAbsOrigin());
 		}
 
+#ifdef GAME_DLL
 		Remove();
+#endif
 	}
 	else
 	{
@@ -318,7 +320,9 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 				UTIL_ImpactTrace(&tr, DMG_BULLET);
 			}
 
+#ifdef GAME_DLL
 			Remove();
+#endif
 		}
 	}
 }
