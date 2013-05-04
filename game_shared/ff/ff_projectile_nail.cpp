@@ -150,8 +150,10 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 		EmitSound("Nail.HitBody");
 	}
 
+#ifdef GAME_DLL
 	// Now just remove the nail
 	Remove();
+#endif
 }
 
 //----------------------------------------------------------------------------
