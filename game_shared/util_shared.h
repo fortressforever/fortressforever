@@ -290,6 +290,7 @@ bool		UTIL_ShouldShowBlood( int bloodColor );
 void		UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, int amount );
 
 void		UTIL_BloodImpact( const Vector &pos, const Vector &dir, int color, int amount );
+void		UTIL_BloodSpray( const Vector &pos, const Vector &dir, int color, int amount, int flags );
 void		UTIL_BloodDecalTrace( trace_t *pTrace, int bloodColor );
 void		UTIL_DecalTrace( trace_t *pTrace, char const *decalName );
 bool		UTIL_IsSpaceEmpty( CBaseEntity *pMainEnt, const Vector &vMin, const Vector &vMax );

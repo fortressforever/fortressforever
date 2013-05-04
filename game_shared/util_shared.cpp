@@ -1108,6 +1108,25 @@ void UTIL_BloodImpact( const Vector &pos, const Vector &dir, int color, int amou
 	DispatchEffect( "bloodimpact", data );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void UTIL_BloodSpray( const Vector &pos, const Vector &dir, int color, int amount, int flags )
+{
+	if( color == DONT_BLEED )
+		return;
+	
+	CEffectData	data;
+
+	data.m_vOrigin = pos;
+	data.m_vNormal = dir;
+	data.m_flScale = (float)amount;
+	data.m_fFlags = flags;
+	data.m_nColor = (unsigned char)color;
+
+	DispatchEffect( "bloodspray", data );
+}
+
 bool UTIL_IsSpaceEmpty( CBaseEntity *pMainEnt, const Vector &vMin, const Vector &vMax )
 {
 	Vector vHalfDims = ( vMax - vMin ) * 0.5f;

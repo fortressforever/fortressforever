@@ -1122,26 +1122,6 @@ Vector CBlood::BloodPosition( CBaseEntity *pActivator )
 	return GetLocalOrigin();
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void UTIL_BloodSpray( const Vector &pos, const Vector &dir, int color, int amount, int flags )
-{
-	if( color == DONT_BLEED )
-		return;
-	
-	CEffectData	data;
-
-	data.m_vOrigin = pos;
-	data.m_vNormal = dir;
-	data.m_flScale = (float)amount;
-	data.m_fFlags = flags;
-	data.m_nColor = (unsigned char)color;
-
-	DispatchEffect( "bloodspray", data );
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Input handler for triggering the blood effect.
 //-----------------------------------------------------------------------------
