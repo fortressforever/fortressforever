@@ -72,7 +72,7 @@ eUpdateResponse wyUpdateAvailable()
 		vgui::filesystem()->GetLocalPath( "wyUpdate.exe", &szPath[1], MAX_PATH-1 );
 
 		// add params
-		Q_strncat(szPath, "\" /quickcheck /justcheck", MAX_PATH);
+		Q_strncat(szPath, "\" /quickcheck /justcheck /noerr", MAX_PATH);
 		//PathAppend(szPath, _T("wyUpdate.exe\" /quickcheck /justcheck")); // only usable if the path is to a directory, not a file
 		//Msg("[update] command: %s\n", szPath);
 
@@ -82,7 +82,7 @@ eUpdateResponse wyUpdateAvailable()
 		// start wyUpdate
 		if (!CreateProcess(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 		{
-			Msg("[update] ERROR: Failed to launch wyUpdate\n");
+			Warning("[update] Failed to launch wyUpdate\n");
 			//MessageBox(0, _T("Failed to launch wyUpdate."), _T("Error..."), MB_OK);
 			return UPDATE_ERROR;
 		}
@@ -98,12 +98,19 @@ eUpdateResponse wyUpdateAvailable()
 		CloseHandle(pi.hProcess);
 		CloseHandle(pi.hThread);
 
-		// exitcode of 2 means update available
+		// exitcode of 1 means error
+		if (exitcode == 1)
+		{
+			Warning("[update] wyUpdate was not able to determine update status\n");
+			return UPDATE_ERROR;
+		}
+
+		// exitcode of 2 means update available, 0 means no update found
 		return (exitcode == 2 ? UPDATE_FOUND : UPDATE_NOTFOUND);
 	}
 	else
 	{
-		Msg("[update] ERROR: wyUpdate.exe not found\n");
+		Warning("[update] wyUpdate.exe not found\n");
 		return UPDATE_ERROR;
 	}
 }
@@ -218,6 +225,6 @@ void wyInstallUpdate()
 	}
 	else
 	{
-		Msg("[update] ERROR: wyUpdate.exe not found\n");
+		Warning("[update] wyUpdate.exe not found\n");
 	}
 }
