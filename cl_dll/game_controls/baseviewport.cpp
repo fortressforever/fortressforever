@@ -121,7 +121,7 @@ CBaseViewport::CBaseViewport() : vgui::EditablePanel( NULL, "CBaseViewport")
 #endif
 	m_bHasParent = false;
 	m_pActivePanel = NULL;
-	m_pLastActivePanel = NULL;
+	m_LastActivePanelStack.Clear();
 
 	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ClientScheme.res", "ClientScheme");
 	SetScheme(scheme);
@@ -334,11 +334,13 @@ void CBaseViewport::ShowPanel( IViewPortPanel* pPanel, bool state )
 			{
 				// store a pointer to the currently active panel
 				// so we can restore it later
-				m_pLastActivePanel = m_pActivePanel;
-				m_pActivePanel->ShowPanel( false );
+				m_LastActivePanelStack.Push( m_pActivePanel );
+				m_pActivePanel = pPanel;
+				if (GetLastActivePanel())
+					GetLastActivePanel()->ShowPanel( false );
 			}
-		
-			m_pActivePanel = pPanel;
+			else
+				m_pActivePanel = pPanel;
 		}
 	}
 	else
@@ -351,10 +353,9 @@ void CBaseViewport::ShowPanel( IViewPortPanel* pPanel, bool state )
 		}
 
 		// restore the previous active panel if it exists
-		if( m_pLastActivePanel )
+		if( m_LastActivePanelStack.Count() > 0 )
 		{
-			m_pActivePanel = m_pLastActivePanel;
-			m_pLastActivePanel = NULL;
+			m_LastActivePanelStack.Pop( m_pActivePanel );
 
 			m_pActivePanel->ShowPanel( true );
 		}
@@ -369,6 +370,11 @@ void CBaseViewport::ShowPanel( IViewPortPanel* pPanel, bool state )
 IViewPortPanel* CBaseViewport::GetActivePanel( void )
 {
 	return m_pActivePanel;
+}
+
+IViewPortPanel* CBaseViewport::GetLastActivePanel( void )
+{
+	return (m_LastActivePanelStack.Count() > 0 ? m_LastActivePanelStack.Top() : NULL);
 }
 
 void CBaseViewport::RemoveAllPanels( void)
@@ -387,7 +393,7 @@ void CBaseViewport::RemoveAllPanels( void)
 #endif
 	m_Panels.Purge();
 	m_pActivePanel = NULL;
-	m_pLastActivePanel = NULL;
+	m_LastActivePanelStack.Clear();
 }
 
 CBaseViewport::~CBaseViewport()
@@ -481,11 +487,10 @@ void CBaseViewport::OnThink()
 	// if they are stored as the last active panel
 	if( m_pActivePanel && !m_pActivePanel->IsVisible() )
 	{
-		if( m_pLastActivePanel )
+		if( m_LastActivePanelStack.Count() > 0 )
 		{
-			m_pActivePanel = m_pLastActivePanel;
+			m_LastActivePanelStack.Pop( m_pActivePanel );
 			ShowPanel( m_pActivePanel, true );
-			m_pLastActivePanel = NULL;
 		}
 		else
 			m_pActivePanel = NULL;
