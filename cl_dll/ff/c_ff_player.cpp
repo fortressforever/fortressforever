@@ -1019,7 +1019,7 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 	m_pRagdoll->ResetRagdollSleepAfterTime();
 }
 
-static ConVar cl_ragdolltime("cl_ragdolltime", "25.0", FCVAR_ARCHIVE);
+//static ConVar cl_ragdolltime("cl_ragdolltime", "25.0", FCVAR_ARCHIVE);
 
 void C_FFRagdoll::CreateRagdoll()
 {
