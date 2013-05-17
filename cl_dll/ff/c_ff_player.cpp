@@ -2358,7 +2358,7 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 			C_FFPlayer *pFFSpecTarget = ToFFPlayer( GetObserverTarget() );
 			if (pFFSpecTarget && !pFFSpecTarget->IsAlive())
 			{
-				// might want to clear this in prethink
+				// dont worry about clearing these, they will be reset on next observer target
 				//m_flConcTime = 0;
 				//m_bConcussed = false;
 				return;
