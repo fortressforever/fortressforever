@@ -2350,7 +2350,22 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 	}
 
 	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) /*&& conc_test.GetInt() == 0*/)
+	{
+		// if we're a spec and our target dies smething goes FUBAR so ignore
+		// this is my knee jerk idea of a fix, probably a better way
+		if (GetObserverMode() == OBS_MODE_IN_EYE)
+		{
+			C_FFPlayer *pFFSpecTarget = ToFFPlayer( GetObserverTarget() );
+			if (pFFSpecTarget && !pFFSpecTarget->IsAlive())
+			{
+				// might want to clear this in prethink
+				//m_flConcTime = 0;
+				//m_bConcussed = false;
+				return;
+			}
+		}
 		eyeAngles += m_angConced;
+	}
 }
 
 //-----------------------------------------------------------------------------
