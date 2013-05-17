@@ -1136,7 +1136,7 @@ void C_FFRagdoll::CreateRagdoll()
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 
 	m_pBloodStreamEmitter = CBloodStream::Create(this, "BloodStream");
-	m_pBloodStreamEmitter->SetDieTime(gpGlobals->curtime + cl_ragdolltime.GetFloat());
+	m_pBloodStreamEmitter->SetDieTime(gpGlobals->curtime + 25.0);//cl_ragdolltime.GetFloat());
 }
 
 
