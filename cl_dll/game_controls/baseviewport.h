@@ -36,6 +36,7 @@ public:
 	virtual IViewPortPanel* CreatePanelByName(const char *szPanelName);
 	virtual IViewPortPanel* FindPanelByName(const char *szPanelName);
 	virtual IViewPortPanel* GetActivePanel( void );
+	virtual IViewPortPanel* GetLastActivePanel( void );
 	virtual void RemoveAllPanels( void);
 
 	virtual void ShowPanel( const char *pName, bool state );
@@ -134,6 +135,7 @@ protected:
 	bool				m_bInitialized;
 	IViewPortPanel		*m_pActivePanel;
 	IViewPortPanel		*m_pLastActivePanel;
+	CUtlStack< IViewPortPanel * >	m_LastActivePanelStack;
 	vgui::HCursor		m_hCursorNone;
 	vgui::AnimationController *m_pAnimController;
 	int					m_OldSize[2];
