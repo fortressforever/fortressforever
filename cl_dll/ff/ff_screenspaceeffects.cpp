@@ -497,7 +497,7 @@ bool CCloakedEffect::IsEnabled( void )
 		return false;
 
 	// don't bother with screen effect if in thirdperson
-	return ( pPlayer->IsInSlowfield() && ( !pPlayer->IsLocalPlayer() || ( pPlayer->IsLocalPlayer() && !pPlayer->ShouldDrawLocalPlayer() ) ) );
+	return ( pPlayer->IsCloaked() && ( !pPlayer->IsLocalPlayer() || ( pPlayer->IsLocalPlayer() && !pPlayer->ShouldDrawLocalPlayer() ) ) );
 }
 
 
