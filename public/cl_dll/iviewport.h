@@ -52,6 +52,7 @@ public:
 	virtual void ShowBackGround(bool bShow) = 0;
 	virtual IViewPortPanel* FindPanelByName(const char *szPanelName) = 0;
 	virtual IViewPortPanel* GetActivePanel( void ) = 0;
+	virtual IViewPortPanel* GetLastActivePanel( void ) = 0;
 };
 
 extern IViewPort *gViewPortInterface;
