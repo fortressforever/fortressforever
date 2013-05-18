@@ -1006,7 +1006,7 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 	m_pRagdoll->ResetRagdollSleepAfterTime();
 }
 
-static ConVar cl_ragdolltime("cl_ragdolltime", "25.0", FCVAR_ARCHIVE);
+//static ConVar cl_ragdolltime("cl_ragdolltime", "25.0", FCVAR_ARCHIVE);
 
 void C_FFRagdoll::CreateRagdoll()
 {
@@ -1123,7 +1123,7 @@ void C_FFRagdoll::CreateRagdoll()
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 
 	m_pBloodStreamEmitter = CBloodStream::Create(this, "BloodStream");
-	m_pBloodStreamEmitter->SetDieTime(gpGlobals->curtime + cl_ragdolltime.GetFloat());
+	m_pBloodStreamEmitter->SetDieTime(gpGlobals->curtime + 25.0);//cl_ragdolltime.GetFloat());
 }
 
 
