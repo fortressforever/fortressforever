@@ -72,6 +72,9 @@ public:
 
 	// pushes a parameter by reference in preparation for a function call
 	void PushRef(CTakeDamageInfo& info);
+	void PushRef(luabind::adl::object& luabindObject);
+	void PushRef(Vector &vector);
+	void PushRef(QAngle &angle);
 
 	// returns the number of parameters
 	int GetNumParams() const { return m_params.Count(); }

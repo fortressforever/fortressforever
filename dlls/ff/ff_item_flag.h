@@ -160,6 +160,7 @@ public:
 	bool CanEntityTouch(CBaseEntity* pEntity);
 
 	virtual void	ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
+	virtual void	PhysicsSimulate( void );
 
 	// bot info accessors
 	int GetBotTeamFlags() const { return m_BotTeamFlags; }
@@ -173,6 +174,7 @@ protected:
 	virtual void	SetReturned( void );
 	virtual void	SetDropped( void );
 
+	void MakeTouchable();
 	bool CreateItemVPhysicsObject( void );
 
 	void PlayDroppedAnim( void );
@@ -194,6 +196,11 @@ protected:
 	QAngle m_vStartAngles;
 	Vector	m_vecMins;
 	Vector	m_vecMaxs;
+	Vector	m_vecPhysicsMins;
+	Vector	m_vecPhysicsMaxs;
+	Vector	m_vecTouchMins;
+	Vector	m_vecTouchMaxs;
+	float	m_flHitboxBloat;
 
 	CBaseEntity *m_pLastOwner;
 	
