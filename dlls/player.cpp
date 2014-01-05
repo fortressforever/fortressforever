@@ -5882,9 +5882,6 @@ bool CBasePlayer::ClientCommand(const char *cmd)
 		if ( !IsDead() )
 		{
 			ClientKill( edict() );	// kill player
-
-			// add 1 to frags to balance out the 1 subtracted for killing yourself
-			IncrementFragCount( 1 );
 		}
 		
 		RemoveAllItems( true );
