@@ -39,7 +39,10 @@ extern "C"
 
 #include "tier0/memdbgon.h"
 
-#define ITEM_PICKUP_BOX_BLOAT		12
+ConVar ffdev_visualize_infoscript_sizes( "ffdev_visualize_infoscript_sizes", "0", FCVAR_FF_FFDEV );
+#define VISUALIZE_INFOSCRIPT_SIZES ffdev_visualize_infoscript_sizes.GetBool()
+
+#define ITEM_PICKUP_BOX_BLOAT 12 // default; only used if no lua function exists
 //ConVar ffdev_flag_throwup( "ffdev_flag_throwup", "1.6", FCVAR_FF_FFDEV );
 #define FLAG_THROWUP 1.6f
 //ConVar ffdev_flag_float_force( "ffdev_flag_float_force", "1.05", FCVAR_FF_FFDEV );
@@ -170,6 +173,40 @@ void CFFInfoScript::UpdateOnRemove( void )
 	BaseClass::UpdateOnRemove();
 }
 
+void CFFInfoScript::MakeTouchable()
+{
+	// SOLID_NONE is used instead of SOLID_BBOX so that dropped items do not block doors, etc
+	SetSolid( SOLID_NONE );
+	// FSOLID_USE_TRIGGER_BOUNDS is required to allow SOLID_NONE non-vphysics objects to be touched
+	// FSOLID_NOT_STANDABLE makes vphysics objects non-solid to players
+	AddSolidFlags( FSOLID_USE_TRIGGER_BOUNDS | FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
+	SetCollisionGroup( COLLISION_GROUP_TRIGGERONLY );
+
+	m_vecTouchMins = m_vecMins;
+	m_vecTouchMaxs = m_vecMaxs;
+	m_flHitboxBloat = 0.0f;
+	
+	CFFLuaSC TouchSizeContext;
+	TouchSizeContext.PushRef(m_vecTouchMins);
+	TouchSizeContext.PushRef(m_vecTouchMaxs);
+	TouchSizeContext.CallFunction( this, "gettouchsize" );
+
+	CFFLuaSC BloatSizeContext;
+	if (BloatSizeContext.CallFunction( this, "getbloatsize" ))
+		m_flHitboxBloat = BloatSizeContext.GetFloat();
+	else
+		m_flHitboxBloat = ITEM_PICKUP_BOX_BLOAT;
+
+	// Reset size
+	UTIL_SetSize( this, m_vecTouchMins, m_vecTouchMaxs );
+
+	if (m_flHitboxBloat > 0.0f)
+		CollisionProp()->UseTriggerBounds( true, m_flHitboxBloat );
+	
+	// make it respond to touch again
+	SetTouch( &CFFInfoScript::OnTouch );		// |-- Mirv: Account for GCC strictness
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -186,8 +223,7 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	SetAbsOrigin( m_vStartOrigin );
 	SetLocalAngles( m_vStartAngles );
 
-	// Reset size
-	UTIL_SetSize( this, m_vecMins, m_vecMaxs );
+	MakeTouchable();
 
 	SetMoveType( MOVETYPE_NONE );
 
@@ -195,12 +231,6 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	SetInactive();
 	// Update position state
 	SetReturned();
-
-	// Bug #0000131: Ammo, health and armor packs stop rockets
-	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
-	SetSolid( SOLID_NONE );
-	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
-	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 
 	CFFLuaSC hDropAtSpawn;
 	_scriptman.RunPredicates_LUA( this, &hDropAtSpawn, "dropatspawn" );
@@ -216,9 +246,6 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 			return false;
 		}
 	}
-
-	// make it respond to touches
-	SetTouch( &CFFInfoScript::OnTouch );
 
 	return true;
 }
@@ -246,17 +273,9 @@ void CFFInfoScript::Spawn( void )
 			m_iShadow = 0;
 	}
 	
-	// Bug #0000131: Ammo, health and armor packs stop rockets
-	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
-	SetSolid( SOLID_NONE );
-	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
-	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 	SetModel( FLAG_MODEL );
 
 	SetBlocksLOS( false );
-
-	// Try and make the flags easier to grab
-	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 
 	// Run the spawn function
 	CFFLuaSC hSpawn;
@@ -719,8 +738,6 @@ void CFFInfoScript::OnRespawn( void )
 		_scriptman.RunPredicates_LUA( this, &hMaterialize, "materialize" );
 	}
 
-	SetTouch( &CFFInfoScript::OnTouch );
-
 	m_pLastOwner = NULL;
 	m_flThrowTime = 0.0f;
 
@@ -745,7 +762,17 @@ void CFFInfoScript::Drop( float delay, Vector pos, Vector velocity )
 
 	// stop following
 	FollowEntity( NULL );
-	SetSolid( SOLID_NONE );
+
+	m_vecPhysicsMins = m_vecMins;
+	m_vecPhysicsMaxs = m_vecMaxs;
+	
+	CFFLuaSC PhysicsSizeContext;
+	PhysicsSizeContext.PushRef(m_vecPhysicsMins);
+	PhysicsSizeContext.PushRef(m_vecPhysicsMaxs);
+	PhysicsSizeContext.CallFunction( this, "getphysicssize" );
+
+	MakeTouchable();
+
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	CollisionRulesChanged();
 
@@ -806,7 +833,6 @@ void CFFInfoScript::Drop( float delay, Vector pos, Vector velocity )
 
 		// #0001026: backpacks & flags can be discarded through doors
 		// When the bounding box was getting reset after coming to a rest, it was getting stuck in various surfaces -> Defrag
-		UTIL_SetSize( this, Vector( m_vecMins.x, m_vecMins.y, 0 ), Vector( m_vecMaxs.x, m_vecMaxs.y, 1 ) );
 
 		SetAbsOrigin( pos ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
 
@@ -826,11 +852,6 @@ void CFFInfoScript::Drop( float delay, Vector pos, Vector velocity )
 
 		SetAbsVelocity( velocity );
 	}
-
-	// make it respond to touch again
-	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
-	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
-	SetTouch( &CFFInfoScript::OnTouch );		// |-- Mirv: Account for GCC strictness
 
 	// set to respawn in [delay] seconds
 	if( delay >= 0 )
@@ -1327,22 +1348,34 @@ void CFFInfoScript::LUA_SetStartAngles(const QAngle& vecAngles)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Custom fly code. Want to reset bounding boxes when item comes to rest
+// Purpose: Custom fly code. No longer used
 //-----------------------------------------------------------------------------
 void CFFInfoScript::ResolveFlyCollisionCustom( trace_t& trace, Vector& vecVelocity )
 {
 	BaseClass::ResolveFlyCollisionBounce( trace, vecVelocity );
+}
 
-	if( vecVelocity.IsZero() || GetAbsVelocity().IsZero() )
+//-----------------------------------------------------------------------------
+// Purpose: Custom fly code. Change size for physics collisions
+//-----------------------------------------------------------------------------
+void CFFInfoScript::PhysicsSimulate()
+{
+	if (!m_bUsePhysics && GetMoveType() == MOVETYPE_FLYGRAVITY)
 	{
-		UTIL_SetSize( this, m_vecMins, m_vecMaxs );
+		UTIL_SetSize( this, m_vecPhysicsMins, m_vecPhysicsMaxs );
+
+		if (VISUALIZE_INFOSCRIPT_SIZES)
+			DrawBBoxOverlay();
+
+		BaseClass::PhysicsSimulate();
 		
-		// This causes problems!
-		// #0001624: Flags, when dropped, do not respond to moving entities etc.  Temp solution = remove MOVETYPE_NONE call.
-		// I don't think this will be too performance-heavy as backpacks already respond to these kinds of situation correctly
-		// Note, this causes a "interpenetrating entities" message in the console when the flag is on a lift
-		// but there is no visual discontinuity or performance hit so I think it's OK -> Defrag
-		
-		// SetMoveType( MOVETYPE_NONE );
+		UTIL_SetSize( this, m_vecTouchMins, m_vecTouchMaxs );
 	}
+	else
+	{
+		BaseClass::PhysicsSimulate();
+	}
+	
+	if (VISUALIZE_INFOSCRIPT_SIZES)
+		DrawBBoxOverlay();
 }

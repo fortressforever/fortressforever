@@ -134,6 +134,9 @@ void CFFLuaSC::Push(QAngle angle) { m_params.AddToTail(SETOBJECT(angle)); }
 void CFFLuaSC::Push(const CTakeDamageInfo* pInfo) { m_params.AddToTail(SETOBJECT(pInfo)); }
 
 //---------------------------------------------------------------------------
+void CFFLuaSC::PushRef(luabind::adl::object& luabindObject) { m_params.AddToTail(SETOBJECTREF(luabindObject)); }
+void CFFLuaSC::PushRef(Vector &vector) { m_params.AddToTail(SETOBJECTREF(vector)); }
+void CFFLuaSC::PushRef(QAngle &angle) { m_params.AddToTail(SETOBJECTREF(angle)); }
 void CFFLuaSC::PushRef(CTakeDamageInfo& info) { m_params.AddToTail(SETOBJECTREF(info)); }
 
 //---------------------------------------------------------------------------
