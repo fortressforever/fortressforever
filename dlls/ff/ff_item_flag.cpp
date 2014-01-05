@@ -39,7 +39,7 @@ extern "C"
 
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_visualize_infoscript_sizes( "ffdev_visualize_infoscript_sizes", "0", FCVAR_FF_FFDEV );
+ConVar ffdev_visualize_infoscript_sizes( "ffdev_visualize_infoscript_sizes", "0", FCVAR_CHEAT );
 #define VISUALIZE_INFOSCRIPT_SIZES ffdev_visualize_infoscript_sizes.GetBool()
 
 #define ITEM_PICKUP_BOX_BLOAT 12 // default; only used if no lua function exists
