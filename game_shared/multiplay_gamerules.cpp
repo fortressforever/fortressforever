@@ -729,6 +729,12 @@ bool CMultiplayRules::IsMultiplayer( void )
 			case KILLTYPE_HEADCRUSH:
 				killer_weapon_name = "headcrush";
 				break;
+			case KILLTYPE_RAILBOUNCE_1:
+				killer_weapon_name  = "ff_weapon_railgun_bounce1";
+				break;
+			case KILLTYPE_RAILBOUNCE_2:
+				killer_weapon_name  = "ff_weapon_railgun_bounce2";
+				break;
 			}
 			
 			//UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);

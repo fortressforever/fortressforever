@@ -1758,6 +1758,12 @@ ConVar mp_prematch( "mp_prematch",
 			case KILLTYPE_SENTRYGUN_DET:
 				pszWeapon  = "sg_det";
 				break;
+			case KILLTYPE_RAILBOUNCE_1:
+				pszWeapon  = "ff_weapon_railgun_bounce1";
+				break;
+			case KILLTYPE_RAILBOUNCE_2:
+				pszWeapon  = "ff_weapon_railgun_bounce2";
+				break;
 			}
 
 			//UTIL_LogPrintf( " killer_ID: %i\n", iKillerID );

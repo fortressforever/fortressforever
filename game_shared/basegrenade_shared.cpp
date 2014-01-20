@@ -207,7 +207,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	Vector vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	
 	// --> Mirv: #0000675: Killing people with certain weapons says the person killed themself
-	CTakeDamageInfo info( this, /*m_hThrower*/ GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
+	CTakeDamageInfo info( this, /*m_hThrower*/ GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, m_iKillType, &vecReported );
 	// <-- Mirv
 
 	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
@@ -586,6 +586,7 @@ CBaseGrenade::CBaseGrenade(void)
 	m_DmgRadius			= 100;
 	m_flDetonateTime	= 0;
 	m_bHasWarnedAI		= false;
+	m_iKillType			= 0;
 
 	SetSimulatedEveryTick( true );
 };
