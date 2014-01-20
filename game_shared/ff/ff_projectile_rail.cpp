@@ -18,6 +18,7 @@
 #include "IEffects.h"
 #include "iefx.h"
 #include "ff_shareddefs.h"
+#include "ff_utils.h"
 
 class CRecvProxyData;
 extern void RecvProxy_LocalVelocityX(const CRecvProxyData *pData, void *pStruct, void *pOut);
@@ -236,7 +237,10 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 		ClearMultiDamage();
 
-		CTakeDamageInfo	dmgInfo( this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB, m_iKillType );
+		if (FF_IsAirshot(pOther))
+			m_iDamageType |= DMG_AIRSHOT;
+
+		CTakeDamageInfo	dmgInfo( this, GetOwnerEntity(), m_flDamage, m_iDamageType | DMG_NEVERGIB, m_iKillType );
 		CalculateMeleeDamageForce( &dmgInfo, vecNormalizedVel, tr.endpos, 0.7f );
 		dmgInfo.SetDamagePosition( tr.endpos );
 		pOther->DispatchTraceAttack( dmgInfo, vecNormalizedVel, &tr );

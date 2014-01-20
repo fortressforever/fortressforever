@@ -9,6 +9,7 @@
 #include "EventLog.h"
 #include "team.h"
 #include "KeyValues.h"
+#include "ff_shareddefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -124,6 +125,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 
 //#ifdef HL2MP
 		const char *weapon = event->GetString( "weapon" );
+		int damagetype = event->GetInt("damagetype");
 //#endif
 		
 		CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
@@ -160,7 +162,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 			CTeam *attackerTeam = pAttacker->GetTeam();
 
 //#ifdef HL2MP
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed \"%s<%i><%s><%s>\" with \"%s\"\n",  
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed \"%s<%i><%s><%s>\" with \"%s\"%s\n",  
 							pAttacker->GetPlayerName(),
 							attackerid,
 							pAttacker->GetNetworkIDString(),
@@ -169,7 +171,8 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 							userid,
 							pPlayer->GetNetworkIDString(),
 							team ? team->GetName() : "",
-							weapon
+							weapon,
+							damagetype & DMG_AIRSHOT ? " (modifier \"airshot\")" : ""
 							);
 /*#else
 			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed \"%s<%i><%s><%s>\"\n",  

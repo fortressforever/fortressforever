@@ -524,7 +524,7 @@ LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 			CBaseEntity *pThrower = GetThrower();
 			// Use the grenade's position as the reported position
 			Vector vecReported = pTrace->endpos;
-			CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
+			CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, m_iKillType, &vecReported );
 			RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
 			EmitSound( "BaseGrenade.Explode" );

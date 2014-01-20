@@ -63,7 +63,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		return;
 	// Do normal radius damage then do a trace sphere to set things alight
 	Vector vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
-	CTakeDamageInfo info(this, pBurninator, GetBlastForce(), GetAbsOrigin(), m_flDamage, DMG_BURN, 0, &vecReported);
+	CTakeDamageInfo info(this, pBurninator, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, m_iKillType, &vecReported);
 	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
 	
 	// Sorry, not fond of the BEGIN_ENTITY_SPHERE_QUERY macro
@@ -201,6 +201,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		SetSize(Vector(-2, -2, -2), Vector(2, 2, 2)); // smaller, cube bounding box so we rest on the ground
 		SetSolid(SOLID_BBOX);	// So it will collide with physics props!
 		SetSolidFlags(FSOLID_NOT_STANDABLE);
+		m_iDamageType = DMG_BURN;
 
 		// Set the correct think & touch for the nail
 		SetTouch(&CFFProjectileIncendiaryRocket::ExplodeTouch); // No we're going to explode when we touch something

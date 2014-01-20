@@ -29,6 +29,8 @@
 
 extern IFileSystem *filesystem;
 
+#include "ff_utils.h"
+
 #ifndef CLIENT_DLL
 	#include "env_player_surface_trigger.h"
 	#include "ff_player.h"				// |-- Mirv: Fall sounds
@@ -3525,7 +3527,12 @@ void CGameMovement::CheckFalling( void )
 						{
 							flCrushDamage = HEADCRUSH_DAMAGE;
 						}
-						CTakeDamageInfo info( player, player, flCrushDamage, DMG_DIRECT, KILLTYPE_HEADCRUSH );
+
+						int bitsDamageType = DMG_DIRECT;
+						if (FF_IsAirshot(pCrushedPlayer))
+							bitsDamageType |= DMG_AIRSHOT;
+
+						CTakeDamageInfo info( player, player, flCrushDamage, bitsDamageType, KILLTYPE_HEADCRUSH );
 						pCrushedPlayer->TakeDamage(info);
 					}
 				}

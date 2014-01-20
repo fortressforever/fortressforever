@@ -855,6 +855,31 @@ bool FF_HasPlayerPickedClass( CFFPlayer *pPlayer )
 	return ( ( pPlayer->GetClassSlot() >= CLASS_SCOUT ) && ( pPlayer->GetClassSlot() <= CLASS_CIVILIAN ) );
 }
 
+ConVar ffdev_airshot_height_threshold("ffdev_airshot_height_threshold", "32", FCVAR_REPLICATED, "Minimum height a player has to be off the ground for a direct hit to count as an airshot");
+
+bool FF_IsAirshot( CBaseEntity *pEntity, float flThresholdMultiplier/*=1.0f*/ )
+{
+	if (!pEntity->IsPlayer())
+		return false;
+
+	CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+
+	// if on the ground or in water at all, no airshot
+	if (!pPlayer || pPlayer->GetFlags() & FL_ONGROUND || pPlayer->GetWaterLevel() != WL_NotInWater)
+		return false;
+
+	trace_t tr;
+	Vector vecStartPos = pPlayer->GetAbsOrigin();
+	vecStartPos.z += pPlayer->GetPlayerMins()[ 2 ];
+	Vector vecEndPos = vecStartPos - Vector(0,0,FFDEV_AIRSHOT_HEIGHT_THRESHOLD*flThresholdMultiplier);
+	UTIL_TraceLine( vecStartPos, vecEndPos, MASK_PLAYERSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
+
+	if (!tr.DidHit())
+		return true;
+	else
+		return false;
+}
+
 #ifdef CLIENT_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Get the current map name, but formatted

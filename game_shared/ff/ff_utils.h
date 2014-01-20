@@ -126,6 +126,11 @@ int UTIL_GetIntermissionData( Vector *pPosition, QAngle *pAngles );
 bool FF_IsPlayerSpec( CFFPlayer *pPlayer );
 bool FF_HasPlayerPickedClass( CFFPlayer *pPlayer );
 
+extern ConVar ffdev_airshot_height_threshold;
+#define FFDEV_AIRSHOT_HEIGHT_THRESHOLD ffdev_airshot_height_threshold.GetFloat()
+
+bool FF_IsAirshot( CBaseEntity *pEntity, float flThresholdMultiplier=1.0f );
+
 // Do a HudHint
 void FF_HudHint(
 #ifndef CLIENT_DLL 

@@ -783,11 +783,8 @@ bool CMultiplayRules::IsMultiplayer( void )
 			// Added damagetype field to the player_death message.  This field records the type of damage dealt by a trigger_hurt
 			// so, further down the road, we can determine which death icon to use (e.g. fall, drown, shock) instead of generic -> Defrag
 
-			// if a trigger hurt is causing the damage, add its damage type to the event.  Otherwise, use DMG_GENERIC 
-			if( Q_stricmp( killer_weapon_name, "trigger_hurt" ) == 0 )
-				event->SetInt("damagetype", info.GetDamageType() );
-			else
-				event->SetInt("damagetype", DMG_GENERIC );			
+			// send the damage type
+			event->SetInt("damagetype", info.GetDamageType() );	
 			
 			gameeventmanager->FireEvent( event );
 		}
