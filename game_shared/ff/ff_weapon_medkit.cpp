@@ -20,6 +20,9 @@
 	#include "omnibot_interface.h"
 #endif
 
+#include "ff_shareddefs.h"
+#include "ff_utils.h"
+
 //=============================================================================
 // CFFWeaponMedkit
 //=============================================================================
@@ -128,7 +131,11 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 			pPlayer->EyeVectors(&hitDirection, NULL, NULL);
 			VectorNormalize(hitDirection);
 
-			CTakeDamageInfo info(this, GetOwner(), GetFFWpnData().m_iDamage, DMG_CLUB);
+			int bitsDamageType = DMG_CLUB;
+			if (FF_IsAirshot( pHitEntity ))
+				bitsDamageType |= DMG_AIRSHOT;
+
+			CTakeDamageInfo info(this, GetOwner(), GetFFWpnData().m_iDamage, bitsDamageType);
 			info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 
 			pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 

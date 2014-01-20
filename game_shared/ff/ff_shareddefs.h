@@ -31,6 +31,9 @@
 #define DEFAULTWEAPON_SPY "knife"
 #define DEFAULTWEAPON_CIVILIAN "umbrella"
 
+// extended from shareddefs.h
+#define DMG_AIRSHOT			(DMG_LASTGENERICFLAG<<1)		// damage done by an airshot
+
 // Leave this commented out unless you're compiling for the beta testers!
 // Mulch or Mirv should be the only ones messing with this!
 //#define FF_BETA_TEST_COMPILE

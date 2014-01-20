@@ -14,6 +14,8 @@
 #include "cbase.h"
 #include "ff_projectile_grenade.h"
 #include "ff_buildableobjects_shared.h"
+#include "ff_shareddefs.h"
+#include "ff_utils.h"
 
 #define GRENADE_MODEL "models/projectiles/pipe/w_pipe.mdl"
 
@@ -126,7 +128,11 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_gl);
 			if (ExplodeOnHitPlayer()) 
 			{
 				CBasePlayer *pVictim = dynamic_cast< CBasePlayer* > ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to player here
-				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , DMG_BLAST ) );
+
+				if (FF_IsAirshot(pVictim))
+					m_iDamageType |= DMG_AIRSHOT;
+
+				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , m_iDamageType ) );
 							//CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
 				Detonate();
 			}
@@ -141,7 +147,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_gl);
 			if( m_bIsLive )
 			{
 				CFFBuildableObject *pVictim = dynamic_cast< CFFBuildableObject* > ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to buildable here
-				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , DMG_BLAST ) );
+				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , m_iDamageType ) );
 							//CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
 				Detonate();
 			}
