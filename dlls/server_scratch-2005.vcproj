@@ -4795,6 +4795,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_mirv.cpp"
 				>
 			</File>
@@ -4804,10 +4808,6 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_nail.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp"
 				>
 			</File>
 			<File
@@ -5056,10 +5056,6 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_deploysentrygun.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_weapon_flag.cpp"
 				>
 			</File>
 			<File
