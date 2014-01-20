@@ -17,6 +17,7 @@
 #include "effect_dispatch_data.h"
 #include "IEffects.h"
 #include "iefx.h"
+#include "ff_shareddefs.h"
 
 class CRecvProxyData;
 extern void RecvProxy_LocalVelocityX(const CRecvProxyData *pData, void *pStruct, void *pOut);
@@ -220,6 +221,12 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 	trace_t	tr;
 	tr = BaseClass::GetTouchTrace();
+	
+	switch(m_iNumBounces)
+	{
+	case 1: m_iKillType = KILLTYPE_RAILBOUNCE_1; break;
+	case 2: m_iKillType = KILLTYPE_RAILBOUNCE_2; break;
+	}
 
 	// If the object we touch takes damage
 	if( pOther->m_takedamage != DAMAGE_NO ) 
@@ -229,7 +236,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 		ClearMultiDamage();
 
-		CTakeDamageInfo	dmgInfo( this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB );
+		CTakeDamageInfo	dmgInfo( this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB, m_iKillType );
 		CalculateMeleeDamageForce( &dmgInfo, vecNormalizedVel, tr.endpos, 0.7f );
 		dmgInfo.SetDamagePosition( tr.endpos );
 		pOther->DispatchTraceAttack( dmgInfo, vecNormalizedVel, &tr );
