@@ -671,6 +671,14 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		{
 			deathMsg.iconDeath = gHUD.GetIcon("death_headcrush");
 		}
+		else if (Q_stricmp(killedwith, "weapon_railgun_bounce1") == 0)
+		{
+			deathMsg.iconDeath = gHUD.GetIcon("death_railgun_bounce1");
+		}
+		else if (Q_stricmp(killedwith, "weapon_railgun_bounce2") == 0)
+		{
+			deathMsg.iconDeath = gHUD.GetIcon("death_railgun_bounce2");
+		}
 		else
 		{
 			// Try and find the death identifier in the icon list
