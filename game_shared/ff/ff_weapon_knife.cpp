@@ -17,6 +17,7 @@
 #ifdef CLIENT_DLL
 	#define CFFWeaponKnife C_FFWeaponKnife
 #endif
+#include "ff_shareddefs.h"
 
 ConVar ffdev_cloakstab_damage("ffdev_cloakstab_damage", "200", FCVAR_REPLICATED );
 #define FFDEV_CLOAKSTAB_DAMAGE ffdev_cloakstab_damage.GetFloat()
@@ -141,8 +142,12 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				pPlayer->EyeVectors(&hitDirection, NULL, NULL);
 				VectorNormalize(hitDirection);
 
+				int bitsDamageType = DMG_GENERIC;
+				if (FF_IsAirshot(pHitEntity))
+					bitsDamageType |= DMG_AIRSHOT;
+
 				//Adding cloakstab damage modifiers -GreenMushy
-				CTakeDamageInfo info(this, pPlayer, Lerp( pPlayer->GetCloakPercent(), FFDEV_KNIFE_DAMAGE, FFDEV_CLOAKSTAB_DAMAGE) , DMG_GENERIC);
+				CTakeDamageInfo info(this, pPlayer, Lerp( pPlayer->GetCloakPercent(), FFDEV_KNIFE_DAMAGE, FFDEV_CLOAKSTAB_DAMAGE) , bitsDamageType);
 				info.SetDamageForce( (hitDirection + Vector(0, 0, FFDEV_CLOAKSTAB_PUSHFORCE_UP)) * MELEE_IMPACT_FORCE * pPlayer->GetCloakPercent() * FFDEV_CLOAKSTAB_PUSHFORCE); // Push players further
 				info.SetCustomKill(KILLTYPE_BACKSTAB);
 

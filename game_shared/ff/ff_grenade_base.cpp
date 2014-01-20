@@ -518,7 +518,7 @@ ConVar gren_teamcolored_trails("ffdev_gren_teamcolored_trails", "0", FCVAR_REPLI
 			CBaseEntity *pThrower = GetThrower();
 			// Use the grenade's position as the reported position
 			Vector vecReported = pTrace->endpos;
-			CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
+			CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, m_iKillType, &vecReported );
 			RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
 			EmitSound( "BaseGrenade.Explode" );

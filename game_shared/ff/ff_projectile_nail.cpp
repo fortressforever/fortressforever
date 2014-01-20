@@ -18,6 +18,8 @@
 #include "effect_dispatch_data.h"
 #include "IEffects.h"
 #include "ammodef.h"
+#include "ff_shareddefs.h"
+#include "ff_utils.h"
 
 #define NAIL_MODEL "models/projectiles/nail/w_nail.mdl"
 
@@ -66,6 +68,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_nail);
 		SetSolid(SOLID_BBOX);
 		//SetGravity(0.01f);
 		SetEffects(EF_NODRAW);
+		m_iDamageType = DMG_BULLET | DMG_NEVERGIB;
 		
 		// Set the correct think & touch for the nail
 		SetTouch(&CFFProjectileNail::NailTouch);		// |-- Mirv: Account for GCC strictness
@@ -123,7 +126,10 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 
 		ClearMultiDamage();
 
-		CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB);
+		if (FF_IsAirshot(pOther)) 
+			m_iDamageType |= DMG_AIRSHOT;
+
+		CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), m_flDamage, m_iDamageType);
 		CalculateBulletDamageForce(&dmgInfo, GetAmmoDef()->Index("AMMO_NAILS"), vecNormalizedVel, tr.endpos);
 		dmgInfo.SetDamagePosition(tr.startpos);
 		dmgInfo.SetImpactPosition(tr.endpos);

@@ -20,6 +20,8 @@
 	#include "omnibot_interface.h"
 	#include "ilagcompensationmanager.h"
 #endif
+#include "ff_shareddefs.h"
+#include "ff_utils.h"
 
 ConVar ffdev_melee_hull_dim("ffdev_melee_hull_dim", "32", FCVAR_REPLICATED); //16.0f
 #define MELEE_HULL_DIM	ffdev_melee_hull_dim.GetFloat() //If this is changed, need to change the hardcoded cube root of 2 around line 305
@@ -136,8 +138,12 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 			pPlayer->EyeVectors(&hitDirection, NULL, NULL);
 			VectorNormalize(hitDirection);
 
+			int bitsDamageType = DMG_CLUB;
+			if (FF_IsAirshot( pHitEntity ))
+				bitsDamageType |= DMG_AIRSHOT;
+
 			CFFWeaponInfo wpndata = GetFFWpnData();
-			CTakeDamageInfo info(this, GetOwner(), wpndata.m_iDamage, DMG_CLUB);
+			CTakeDamageInfo info(this, GetOwner(), wpndata.m_iDamage, bitsDamageType);
 			info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 
 			if (!pHitEntity->IsPlayer())

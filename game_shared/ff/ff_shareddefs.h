@@ -31,6 +31,9 @@
 #define DEFAULTWEAPON_SPY "hookgun"
 #define DEFAULTWEAPON_CIVILIAN "tommygun"
 
+// extended from shareddefs.h
+#define DMG_AIRSHOT			(DMG_LASTGENERICFLAG<<1)		// damage done by an airshot
+
 // Leave this commented out unless you're compiling for the beta testers!
 // Mulch or Mirv should be the only ones messing with this!
 

@@ -11,6 +11,8 @@
 #include "engine/IEngineSound.h"
 #include "ff_gamerules.h"
 #include "ff_grenade_base.h"
+#include "ff_shareddefs.h"
+#include "ff_utils.h"
 
 #if !defined( CLIENT_DLL )
 
@@ -314,7 +316,7 @@ void CBaseGrenade::Detonate( void )
 	vecSpot = GetAbsOrigin() + Vector ( 0 , 0 , 8 );
 	UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -32 ), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, & tr);
 
-	Explode( &tr, DMG_BLAST );
+	Explode( &tr, m_iDamageType );
 
 	// No shake if in a no gren area
 #ifdef GAME_DLL
@@ -357,7 +359,10 @@ void CBaseGrenade::ExplodeTouch( CBaseEntity *pOther )
 	//UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 	UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
 
-	Explode( &tr, DMG_BLAST );
+	if (FF_IsAirshot( pOther ))
+		m_iDamageType |= DMG_AIRSHOT;
+
+	Explode( &tr, m_iDamageType );
 }
 
 
@@ -587,6 +592,7 @@ CBaseGrenade::CBaseGrenade(void)
 	m_flDetonateTime	= 0;
 	m_bHasWarnedAI		= false;
 	m_iKillType			= 0;
+	m_iDamageType		= DMG_BLAST;
 
 	SetSimulatedEveryTick( true );
 };
