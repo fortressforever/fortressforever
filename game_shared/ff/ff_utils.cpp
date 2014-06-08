@@ -855,11 +855,11 @@ bool FF_HasPlayerPickedClass( CFFPlayer *pPlayer )
 	return ( ( pPlayer->GetClassSlot() >= CLASS_SCOUT ) && ( pPlayer->GetClassSlot() <= CLASS_CIVILIAN ) );
 }
 
-ConVar ffdev_airshot_height_threshold("ffdev_airshot_height_threshold", "32", FCVAR_REPLICATED, "Minimum height a player has to be off the ground for a direct hit to count as an airshot");
+ConVar ffdev_airshot_height_threshold("ffdev_airshot_height_threshold", "72", FCVAR_REPLICATED, "Minimum height a player has to be off the ground for a direct hit to count as an airshot");
 
 bool FF_IsAirshot( CBaseEntity *pEntity, float flThresholdMultiplier/*=1.0f*/ )
 {
-	if (!pEntity->IsPlayer())
+	if (!pEntity || !pEntity->IsPlayer())
 		return false;
 
 	CFFPlayer *pPlayer = ToFFPlayer( pEntity );
