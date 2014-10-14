@@ -5043,18 +5043,6 @@
 				</Filter>
 			</Filter>
 			<Filter
-				Name="irc"
-				>
-				<File
-					RelativePath=".\ff\irc\ff_socks.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ff\irc\ff_socks.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="update"
 				>
 				<File

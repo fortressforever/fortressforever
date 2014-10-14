@@ -6,7 +6,6 @@
 #include "cbase.h"
 #include "ff_mathackman.h"
 #include "tier0/vprof.h"
-#include "irc/ff_socks.h"
 #include "c_ff_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -97,72 +96,6 @@ void CFFMathackModel::ReportMathack( const char *pszModelName )
 		return;
 	
 	pLocalPlayer->m_bMathackDetected = true;
-
-	Socks sock;
-	char buf[1024];
-	
-	// Open up a socket
-	if (!sock.Open( 1, 0)) 
-	{
-		//Warning("[mathack] Could not open socket\n");
-		return;
-	}
-	
-	// Connect to remote host
-	if (!sock.Connect("www.fortress-forever.com", 80)) 
-	{
-		//Warning("[mathack] Could not connect to remote host\n");
-		return;
-	}
-
-	player_info_t sPlayerInfo;
-
-	engine->GetPlayerInfo( pLocalPlayer->entindex(), &sPlayerInfo );
-
-	char getData[255];
-
-	Q_snprintf(getData, sizeof(getData),
-		"/notifier/mathack.php?steamid=%s&mdl=%s&name=%s&key=donthack",
-
-		sPlayerInfo.guid,
-		pszModelName,
-		pLocalPlayer->GetPlayerName());
-
-	Q_snprintf(buf, sizeof(buf),
-		"GET %s HTTP/1.1\r\n"
-		"Host: %s\r\n"
-		"Connection: close\r\n"
-		"Accept-Charset: ISO-8859-1,UTF-8;q=0.7,*;q=0.7\r\n"
-		"Cache-Control: no-cache\r\n"
-		"\r\n",
-		
-		getData,
-		"www.fortress-forever.com");
-
-	// Send data
-	if (!sock.Send(buf)) 
-	{
-		//Warning("[mathack] Could not send data to remote host\n");
-		sock.Close();
-		return;
-	}
-	
-	int a;
-
-	// Send data
-	if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
-	{
-		//Warning("[mathack] Did not get response from server\n");
-		sock.Close();
-		return;
-	}
-
-	buf[a] = '\0';
-	
-	//DevMsg("[mathack] Successfully logged mathacker. Response:\n---\n%s\n---\n", buf);
-
-	// Close socket
-	sock.Close();
 }
 
 /////////////////////////////////////////////////////////////////////////////
