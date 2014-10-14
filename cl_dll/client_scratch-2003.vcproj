@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="../Public/tier1;.\ff\vgui;.\ff;..\game_shared\ff;.;.\..\Public;.\..\vgui2\include;.\..\vgui2\controls;..\game_shared;.\game_controls;..\g15lcd\Include;..\g15lcd\Samples\shared\lcdui"
+				AdditionalIncludeDirectories="../Public/tier1;.\ff\vgui;.\ff;..\game_shared\ff;.;.\..\Public;.\..\vgui2\include;.\..\vgui2\controls;..\game_shared;.\game_controls"
 				PreprocessorDefinitions="_DEBUG;fopen=dont_use_fopen;FF_DLL;NO_STRING_T;CLIENT_DLL;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
 				ExceptionHandling="FALSE"
 				RuntimeLibrary="1"
@@ -54,7 +54,7 @@
 				OutputFile="$(IntDir)/client.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="&quot;..\lib-vc7\public&quot;;..\g15lcd\Lib\x86"
+				AdditionalLibraryDirectories="&quot;..\lib-vc7\public&quot;"
 				IgnoreDefaultLibraryNames="LIBCMT,LIBC"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(IntDir)/client.pdb"
@@ -110,7 +110,7 @@
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
 				OptimizeForProcessor="3"
-				AdditionalIncludeDirectories="../Public/tier1;.\ff\vgui;.\ff;..\game_shared\ff;.;.\..\Public;.\..\vgui2\include;.\..\vgui2\controls;..\game_shared;.\game_controls;..\g15lcd\Include;..\g15lcd\Samples\shared\lcdui"
+				AdditionalIncludeDirectories="../Public/tier1;.\ff\vgui;.\ff;..\game_shared\ff;.;.\..\Public;.\..\vgui2\include;.\..\vgui2\controls;..\game_shared;.\game_controls"
 				PreprocessorDefinitions="NDEBUG;FF_DLL;NO_STRING_T;CLIENT_DLL;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
@@ -147,7 +147,7 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				OutputFile="$(IntDir)/client.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="&quot;..\lib-vc7\public&quot;;..\g15lcd\Lib\x86"
+				AdditionalLibraryDirectories="&quot;..\lib-vc7\public&quot;"
 				IgnoreDefaultLibraryNames="libcd.lib,LIBCD,LIBCMT,libcmtd"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(IntDir)/client.pdb"
@@ -203,7 +203,7 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
 				OptimizeForProcessor="3"
-				AdditionalIncludeDirectories="../Public/tier1;.\ff\vgui;.\ff;..\game_shared\ff;.;.\..\Public;.\..\vgui2\include;.\..\vgui2\controls;..\game_shared;.\game_controls;..\g15lcd\Include;..\g15lcd\Samples\shared\lcdui"
+				AdditionalIncludeDirectories="../Public/tier1;.\ff\vgui;.\ff;..\game_shared\ff;.;.\..\Public;.\..\vgui2\include;.\..\vgui2\controls;..\game_shared;.\game_controls"
 				PreprocessorDefinitions="NDEBUG;FF_DLL;NO_STRING_T;CLIENT_DLL;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
@@ -237,7 +237,7 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 				OutputFile="$(IntDir)/client.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="&quot;..\lib-vc7\public&quot;;..\g15lcd\Lib\x86"
+				AdditionalLibraryDirectories="&quot;..\lib-vc7\public&quot;"
 				IgnoreDefaultLibraryNames="libcd.lib,LIBCD,LIBCMT,libcmtd"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(IntDir)/client.pdb"
@@ -4368,332 +4368,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/client.pdb&quo
 			<File
 				RelativePath="..\game_shared\ff\ff_weapon_umbrella.cpp">
 			</File>
-		</Filter>
-		<Filter
-			Name="g15"
-			Filter="">
-			<File
-				RelativePath=".\G15.cpp">
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Beta FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\G15.h">
-			</File>
-			<File
-				RelativePath=".\lcd_engy.bmp">
-			</File>
-			<File
-				RelativePath=".\lcd_ff.bmp">
-			</File>
-			<Filter
-				Name="sdk"
-				Filter="">
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDAnimatedBitmap.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDAnimatedBitmap.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDBase.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDBase.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDBitmap.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDBitmap.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDCollection.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDCollection.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDGfx.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDGfx.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDIcon.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDIcon.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDManager.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDManager.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDOutput.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDOutput.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDProgressBar.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDProgressBar.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDScrollingText.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDScrollingText.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDStreamingText.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDStreamingText.h">
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDText.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\g15lcd\Samples\shared\lcdui\LCDText.h">
-				</File>
-			</Filter>
 		</Filter>
 		<File
 			RelativePath="..\lib-vc7\public\bitmap.lib">

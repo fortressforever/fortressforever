@@ -86,7 +86,6 @@
 #include "avi/iavi.h"
 #include "hltvcamera.h"
 #include "ff_vieweffects.h"
-#include "G15.h"
 
 // BEG: Added by Mulchman for team menu at level start up
 #include <cl_dll/iviewport.h>
@@ -764,8 +763,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	ClientWorldFactoryInit();
 
-	G15::Initialize();
-
 	return true;
 }
 
@@ -775,8 +772,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 //-----------------------------------------------------------------------------
 void CHLClient::Shutdown( void )
 {
-	G15::Shutdown();
-
 	ClientWorldFactoryShutdown();
 
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetViewEffectsRestoreBlockHandler() );
@@ -860,8 +855,6 @@ void CHLClient::HudUpdate( bool bActive )
 	// I don't think this is necessary any longer, but I will leave it until
 	// I can check into this further.
 	C_BaseTempEntity::CheckDynamicTempEnts();
-
-	G15::Update();
 }
 
 //-----------------------------------------------------------------------------
