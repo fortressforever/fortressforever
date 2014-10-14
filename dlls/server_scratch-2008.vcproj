@@ -4770,10 +4770,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_grenade_armorstrip.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\game_shared\ff\ff_grenade_base.cpp"
 				>
 			</File>
@@ -4783,10 +4779,6 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_concussion.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_grenade_disable.cpp"
 				>
 			</File>
 			<File
@@ -4814,6 +4806,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_grenade_laser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_grenade_napalm.cpp"
 				>
 			</File>
@@ -4831,10 +4827,6 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_slowfield.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_grenade_vert.cpp"
 				>
 			</File>
 			<File
@@ -4919,14 +4911,6 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_projectile_grenade.h"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_projectile_hook.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_projectile_hook.h"
 				>
 			</File>
 			<File
@@ -5086,19 +5070,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\game_shared\ff\ff_weapon_hookgun.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_weapon_hookgun.h"
-				>
-			</File>
-			<File
 				RelativePath="..\game_shared\ff\ff_weapon_ic.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_weapon_jumpdown.cpp"
 				>
 			</File>
 			<File
