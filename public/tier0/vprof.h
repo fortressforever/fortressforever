@@ -100,7 +100,6 @@
 // FF SPECIFIC VPROF ENTRIES
 #define VPROF_BUDGETGROUP_FF_BUILDABLE				_T( "FF Buildable Objects" )
 #define VPROF_BUDGETGROUP_FF_LUA					_T( "FF Lua" )
-#define VPROF_BUDGETGROUP_FF_STATS					_T( "FF Stats" )
 #define VPROF_BUDGETGROUP_FF_MATHACKDETECT			_T( "FF Mathack Detection" )
 	
 #ifdef _XBOX
