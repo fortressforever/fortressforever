@@ -195,6 +195,25 @@ END_NETWORK_TABLE()
 		UTIL_Remove(this);
 		return m_flDamage;
 	}
+
+	/** Override CBaseEntity::IsInWorld to ignore speed
+		Fixes grenades disappearing when they fall too far
+	*/
+	bool CFFProjectileBase::IsInWorld( void ) const
+	{
+		if ( !edict() )
+			return true;
+
+		// position 
+		if (GetAbsOrigin().x >= MAX_COORD_INTEGER) return false;
+		if (GetAbsOrigin().y >= MAX_COORD_INTEGER) return false;
+		if (GetAbsOrigin().z >= MAX_COORD_INTEGER) return false;
+		if (GetAbsOrigin().x <= MIN_COORD_INTEGER) return false;
+		if (GetAbsOrigin().y <= MIN_COORD_INTEGER) return false;
+		if (GetAbsOrigin().z <= MIN_COORD_INTEGER) return false;
+
+		return true;
+	}
 #endif
 
 //----------------------------------------------------------------------------

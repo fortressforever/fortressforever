@@ -946,7 +946,7 @@ public:
 	virtual bool	IsTemplate( void ) { return false; }
 	virtual bool	IsBaseObject( void ) const { return false; }
 	bool			IsBSPModel() const;
-	bool			IsInWorld( void ) const;
+	virtual bool	IsInWorld( void ) const;
 
 	// If this is a vehicle, returns the vehicle interface
 	virtual IServerVehicle*			GetServerVehicle() { return NULL; }

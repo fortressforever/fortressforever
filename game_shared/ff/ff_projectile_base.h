@@ -81,6 +81,7 @@ private:
 	// sit still until it had gotten a few updates from the server.
 	void SetupInitialTransmittedVelocity(const Vector &velocity);
 	int TakeEmp();
+	virtual bool IsInWorld( void ) const;
 
 #endif
 
