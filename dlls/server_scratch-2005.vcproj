@@ -455,38 +455,6 @@
 				>
 			</File>
 			<Filter
-				Name="FF Stats Source"
-				>
-				<File
-					RelativePath="..\stats\ff_socks.cpp"
-					>
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\stats\ff_socks.h"
-					>
-				</File>
-				<File
-					RelativePath="..\stats\ff_statdefs.h"
-					>
-				</File>
-				<File
-					RelativePath="..\stats\ff_statslog.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\stats\ff_statslog.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="Lua"
 				>
 				<File
@@ -664,14 +632,6 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_shareddefs.h"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_string.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_string.h"
 				>
 			</File>
 			<File
@@ -1072,7 +1032,7 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="lib"
+			Name="SDK"
 			>
 			<File
 				RelativePath="..\lib\public\choreoobjects.lib"
