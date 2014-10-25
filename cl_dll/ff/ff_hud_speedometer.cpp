@@ -26,7 +26,7 @@
 
 // ELMO *** 
 #define BHOP_CAP_SOFT 1.4f // as defined in ff_gamemovement.cpp
-#define BHOP_CAP_HARD 2.0f // as defined in ff_gamemovement.cpp
+#define BHOP_CAP_HARD 1.9f // as defined in ff_gamemovement.cpp
 // *** ELMO
 
 // memdbgon must be the last include file in a .cpp file!!!
