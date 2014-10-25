@@ -43,7 +43,7 @@
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag
 
 //ConVar ffdev_mancannon_conc_speed( "ffdev_mancannon_conc_speed", "1700.0", FCVAR_FF_FFDEV_REPLICATED, "Max conc speed a player can attain after just using a jump pad." );
-#define MAX_JUMPPAD_TO_CONC_SPEED 1700.0f // ffdev_mancannon_conc_speed.GetFloat()
+#define MAX_JUMPPAD_TO_CONC_SPEED 1400.0f // ffdev_mancannon_conc_speed.GetFloat()
 //static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_FF_FFDEV, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
 #define FFDEV_CONC_LATERAL_POWER 2.74f //ffdev_conc_lateral_power.GetFloat() //2.74f
 //static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_FF_FFDEV, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
