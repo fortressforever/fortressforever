@@ -729,6 +729,12 @@ bool CMultiplayRules::IsMultiplayer( void )
 			case KILLTYPE_HEADCRUSH:
 				killer_weapon_name = "headcrush";
 				break;
+			case KILLTYPE_RAILBOUNCE_1:
+				killer_weapon_name  = "ff_weapon_railgun_bounce1";
+				break;
+			case KILLTYPE_RAILBOUNCE_2:
+				killer_weapon_name  = "ff_weapon_railgun_bounce2";
+				break;
 			}
 			
 			//UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);
@@ -777,11 +783,8 @@ bool CMultiplayRules::IsMultiplayer( void )
 			// Added damagetype field to the player_death message.  This field records the type of damage dealt by a trigger_hurt
 			// so, further down the road, we can determine which death icon to use (e.g. fall, drown, shock) instead of generic -> Defrag
 
-			// if a trigger hurt is causing the damage, add its damage type to the event.  Otherwise, use DMG_GENERIC 
-			if( Q_stricmp( killer_weapon_name, "trigger_hurt" ) == 0 )
-				event->SetInt("damagetype", info.GetDamageType() );
-			else
-				event->SetInt("damagetype", DMG_GENERIC );			
+			// send the damage type
+			event->SetInt("damagetype", info.GetDamageType() );	
 			
 			gameeventmanager->FireEvent( event );
 		}

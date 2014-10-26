@@ -31,6 +31,9 @@
 #define DEFAULTWEAPON_SPY "knife"
 #define DEFAULTWEAPON_CIVILIAN "umbrella"
 
+// extended from shareddefs.h
+#define DMG_AIRSHOT			(DMG_LASTGENERICFLAG<<1)		// damage done by an airshot
+
 // Leave this commented out unless you're compiling for the beta testers!
 // Mulch or Mirv should be the only ones messing with this!
 //#define FF_BETA_TEST_COMPILE
@@ -162,7 +165,9 @@ enum KillTypes_t
 	KILLTYPE_GASSED,
 	KILLTYPE_BACKSTAB,
 	KILLTYPE_SENTRYGUN_DET,
-	KILLTYPE_HEADCRUSH
+	KILLTYPE_HEADCRUSH,
+	KILLTYPE_RAILBOUNCE_1,
+	KILLTYPE_RAILBOUNCE_2
 };
 
 //extern ConVar sniperrifle_chargetime;

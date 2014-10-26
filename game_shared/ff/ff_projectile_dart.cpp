@@ -18,6 +18,8 @@
 #ifdef GAME_DLL
 	#include "ff_player.h"
 #endif
+#include "ff_shareddefs.h"
+#include "ff_utils.h"
 
 //extern ConVar ffdev_nail_speed;
 //extern ConVar ffdev_nail_bbox;
@@ -131,7 +133,11 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 		ClearMultiDamage();
 		VectorNormalize(vecNormalizedVel);
 
-		CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB);
+		m_iDamageType = DMG_BULLET | DMG_NEVERGIB;
+		if (FF_IsAirshot( pOther))
+			m_iDamageType |= DMG_AIRSHOT;
+
+		CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), m_flDamage, m_iDamageType);
 		CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 0.7f);
 		dmgInfo.SetDamagePosition(tr.endpos);
 

@@ -16,6 +16,7 @@
 #ifdef CLIENT_DLL
 	#define CFFWeaponKnife C_FFWeaponKnife
 #endif
+#include "ff_shareddefs.h"
 
 //=============================================================================
 // CFFWeaponKnife
@@ -129,7 +130,11 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				pPlayer->EyeVectors(&hitDirection, NULL, NULL);
 				VectorNormalize(hitDirection);
 
-				CTakeDamageInfo info(this, pPlayer, 108, DMG_DIRECT);
+				int bitsDamageType = DMG_DIRECT;
+				if (FF_IsAirshot(pHitEntity))
+					bitsDamageType |= DMG_AIRSHOT;
+
+				CTakeDamageInfo info(this, pPlayer, 108, bitsDamageType);
 				info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 				info.SetCustomKill(KILLTYPE_BACKSTAB);
 

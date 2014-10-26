@@ -17,6 +17,7 @@
 #include "c_ff_player.h"
 #include "c_team.h"
 #include "ff_gamerules.h"
+#include "ff_shareddefs.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -46,6 +47,7 @@ struct DeathNoticeItem
 	CHudTexture *iconDeath; // draws before victims name
 	CHudTexture *iconBuildable; // draws after victim name, if it exists
 	CHudTexture *iconObjective; // draws before "victims" name
+	CHudTexture *iconDeathModifier; // draws after the weapon icon and before the victims name
 	char		objectiveText[MAX_OBJECTIVE_TEXT_LENGTH]; // "victim" has capped the flag
 	int			iSuicide;
 	float		flDisplayTime;
@@ -300,6 +302,25 @@ void CHudDeathNotice::Paint()
 				iconWide = (int)( scale * (float)icon->Width() );
 				iconTall = (int)( scale * (float)icon->Height() );
 			}
+			
+			CHudTexture *iconModifier = m_DeathNotices[i].iconDeathModifier;
+			int iconModifierWide = 0;
+			int iconModifierTall = 0;
+
+			if (iconModifier)
+			{
+				if( iconModifier->bRenderUsingFont )
+				{
+					iconModifierWide = surface()->GetCharacterWidth( iconModifier->hFont, iconModifier->cCharacterInFont );
+					iconModifierTall = surface()->GetFontTall( iconModifier->hFont );
+				}
+				else
+				{
+					float scale = ( (float)ScreenHeight() / 480.0f );	//scale based on 640x480
+					iconModifierWide = (int)( scale * (float)iconModifier->Width() );
+					iconModifierTall = (int)( scale * (float)iconModifier->Height() );
+				}
+			}
 
 
 			int iconBuildableWide = 0;
@@ -329,6 +350,9 @@ void CHudDeathNotice::Paint()
 
 				// keep moving over for buildable icon
 				x -= iconBuildableWide ? iconBuildableWide + 5 : 0;
+				
+				// keep moving over for modifier icon
+				x -= iconModifierWide ? iconModifierWide + 5 : 0;
 			}
 			else
 			{
@@ -376,6 +400,13 @@ void CHudDeathNotice::Paint()
 			//If we're using a font char, this will ignore iconTall and iconWide
 			icon->DrawSelf( x, y - (iconTall / 4), iconWide, iconTall, bTeamKill ? iconTeamKillColor : iconColor );
 			x += iconWide + 5;		// |-- Mirv: 5px gap
+			
+			// draw the death modifier icon
+			if (iconModifier)
+			{
+				iconModifier->DrawSelf( x, y - (iconModifierTall / 4), iconModifierWide, iconModifierTall, bTeamKill ? iconTeamKillColor : iconColor );
+				x += iconModifierWide + 5;		// |-- Mirv: 5px gap
+			}
 
 			SetColorForNoticePlayer( iVictimTeam );
 
@@ -431,6 +462,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	int sglevel_killed = event->GetInt( "killedsglevel" );
 	int sglevel_killer = event->GetInt( "killersglevel" );
 	const char *killedwith = event->GetString( "weapon" );
+	int bitsDamageType = event->GetInt( "damagetype" );
 	//const char *objectivename = event->GetString( "eventname" );
 	const char *objectivetext = event->GetString( "eventtext" );
 	
@@ -514,7 +546,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 			{
 				bTriggerHurt = true;
 
-				switch( event->GetInt( "damagetype" ))
+				switch( bitsDamageType )
 				{
 				case DMG_FALL:
 					Q_snprintf( tempTriggerHurtString, sizeof(tempTriggerHurtString), "%s_fall", killedwith );
@@ -585,6 +617,11 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		Q_strncpy( deathMsg.Killer.szName, killer_name, MAX_PLAYER_NAME_LENGTH );
 		Q_strncpy( deathMsg.Victim.szName, victim_name, MAX_PLAYER_NAME_LENGTH );
 		deathMsg.flDisplayTime = gpGlobals->curtime + hud_deathnotice_time.GetFloat();
+
+		if (bitsDamageType & DMG_AIRSHOT)
+			deathMsg.iconDeathModifier = gHUD.GetIcon( "death_airshot" );
+		else
+			deathMsg.iconDeathModifier = NULL;
 
 		// buildable kills
 		if( !Q_strcmp( event->GetName(), "sentrygun_killed" ) )
@@ -671,6 +708,14 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		{
 			deathMsg.iconDeath = gHUD.GetIcon("death_headcrush");
 		}
+		else if (Q_stricmp(killedwith, "weapon_railgun_bounce1") == 0)
+		{
+			deathMsg.iconDeath = gHUD.GetIcon("death_railgun_bounce1");
+		}
+		else if (Q_stricmp(killedwith, "weapon_railgun_bounce2") == 0)
+		{
+			deathMsg.iconDeath = gHUD.GetIcon("death_railgun_bounce2");
+		}
 		else
 		{
 			// Try and find the death identifier in the icon list
@@ -707,7 +752,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 			if ( fullkilledwith && *fullkilledwith && (*fullkilledwith > 13 ) )
 			{
-				Q_strncat( sDeathMsg, VarArgs( " with %s.\n", fullkilledwith+6 ), sizeof( sDeathMsg ), COPY_ALL_CHARACTERS );
+				Q_strncat( sDeathMsg, VarArgs( " with %s%s.\n", fullkilledwith+6, (bitsDamageType & DMG_AIRSHOT ? " (airshot)" : "") ), sizeof( sDeathMsg ), COPY_ALL_CHARACTERS );
 			}
 		}
 

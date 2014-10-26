@@ -10,6 +10,7 @@
 #include "ammodef.h"
 #include "ai_debug_shared.h"
 #include "shot_manipulator.h"
+#include "ff_shareddefs.h"
 #include "ff_utils.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_weapon_sniperrifle.h"
@@ -362,6 +363,11 @@ void CFFPlayer::FireBullet(
 	// --> Mirv: Locational damage
 
 	int iDamageType = DMG_BULLET | DMG_NEVERGIB;
+
+	if (flSniperRifleCharge && FF_IsAirshot( tr.m_pEnt ))
+	{
+		iDamageType |= DMG_AIRSHOT;
+	}
 
 	if (bDoEffects) // Only once every 0.3 seconds
 	{

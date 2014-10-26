@@ -122,7 +122,8 @@ public:
 
 	CNetworkVar(float,	m_flNextAttack);
 
-
+	int					m_iKillType; // custom kill type sent with explosion damage info
+	int					m_iDamageType; // damage type used for default explosion calls
 
 protected:
 

@@ -11,6 +11,8 @@
 #include "engine/IEngineSound.h"
 #include "ff_gamerules.h"
 #include "ff_grenade_base.h"
+#include "ff_shareddefs.h"
+#include "ff_utils.h"
 
 #if !defined( CLIENT_DLL )
 
@@ -209,7 +211,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	Vector vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	
 	// --> Mirv: #0000675: Killing people with certain weapons says the person killed themself
-	CTakeDamageInfo info( this, /*m_hThrower*/ GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
+	CTakeDamageInfo info( this, /*m_hThrower*/ GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, m_iKillType, &vecReported );
 	// <-- Mirv
 
 	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
@@ -316,7 +318,7 @@ void CBaseGrenade::Detonate( void )
 	vecSpot = GetAbsOrigin() + Vector ( 0 , 0 , 8 );
 	UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -32 ), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, & tr);
 
-	Explode( &tr, DMG_BLAST );
+	Explode( &tr, m_iDamageType );
 
 	// No shake if in a no gren area
 #ifdef GAME_DLL
@@ -359,7 +361,10 @@ void CBaseGrenade::ExplodeTouch( CBaseEntity *pOther )
 	//UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 	UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
 
-	Explode( &tr, DMG_BLAST );
+	if (FF_IsAirshot( pOther ))
+		m_iDamageType |= DMG_AIRSHOT;
+
+	Explode( &tr, m_iDamageType );
 }
 
 
@@ -588,6 +593,8 @@ CBaseGrenade::CBaseGrenade(void)
 	m_DmgRadius			= 100;
 	m_flDetonateTime	= 0;
 	m_bHasWarnedAI		= false;
+	m_iKillType			= 0;
+	m_iDamageType		= DMG_BLAST;
 
 	SetSimulatedEveryTick( true );
 };
