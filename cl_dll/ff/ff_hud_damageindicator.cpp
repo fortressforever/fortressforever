@@ -102,11 +102,17 @@ static DamageAnimation_t g_DamageAnimations[] =
 	{ "HudTakeDamageRadiation", 	DMG_RADIATION, 	ANGLE_ANY, 	ANGLE_ANY, 	DAMAGE_ANY }, 
 	{ "HudTakeDamageRadiation", 	DMG_ACID, 	ANGLE_ANY, 	ANGLE_ANY, 	DAMAGE_ANY }, 
 
-	{ "HudTakeDamageHighLeft", 		DMG_ANY, 	45.0f, 		135.0f, 		DAMAGE_HIGH }, 
+	{ "HudTakeDamageHighLeft", 		DMG_ANY, 	45.0f, 			135.0f, 		DAMAGE_HIGH }, 
 	{ "HudTakeDamageHighRight", 	DMG_ANY, 	225.0f, 		315.0f, 		DAMAGE_HIGH }, 
-	{ "HudTakeDamageHigh", 			DMG_ANY, 	ANGLE_ANY, 	ANGLE_ANY, 	DAMAGE_HIGH }, 
+	{ "HudTakeDamageHighBehind", 	DMG_ANY, 	135.0f, 		225.0f, 		DAMAGE_HIGH }, 
+	{ "HudTakeDamageHighFront", 	DMG_ANY, 	ANGLE_ANY, 		ANGLE_ANY, 		DAMAGE_HIGH }, 
+
+	{ "HudTakeDamageMidLeft", 		DMG_ANY, 	45.0f, 			135.0f, 		DAMAGE_LOW }, 
+	{ "HudTakeDamageMidRight", 	    DMG_ANY, 	225.0f, 		315.0f, 		DAMAGE_LOW }, 
+	{ "HudTakeDamageMidBehind", 	DMG_ANY, 	135.0f, 		225.0f, 		DAMAGE_LOW }, 
+	{ "HudTakeDamageMidFront", 		DMG_ANY, 	ANGLE_ANY, 		ANGLE_ANY, 		DAMAGE_LOW }, 
 	
-	{ "HudTakeDamageLeft", 			DMG_ANY, 	45.0f, 		135.0f, 		DAMAGE_ANY }, 
+	{ "HudTakeDamageLeft", 			DMG_ANY, 	45.0f, 			135.0f, 		DAMAGE_ANY }, 
 	{ "HudTakeDamageRight", 		DMG_ANY, 	225.0f, 		315.0f, 		DAMAGE_ANY }, 
 	{ "HudTakeDamageBehind", 		DMG_ANY, 	135.0f, 		225.0f, 		DAMAGE_ANY }, 
 
@@ -321,6 +327,7 @@ void CHudDamageIndicator::MsgFunc_Damage(bf_read &msg)
 {
 	int armor = msg.ReadByte();	// armor
 	int damageTaken = msg.ReadByte();	// health
+	int totalDamageTaken = armor + damageTaken;
 	long bitsDamage = msg.ReadLong(); // damage bits
 
 	Vector vecFrom;
@@ -345,7 +352,7 @@ void CHudDamageIndicator::MsgFunc_Damage(bf_read &msg)
 	// or the player is forcibly killed, handled above
 	if (vecFrom == vec3_origin && ! (bitsDamage & DMG_DROWN))
 	{
-		if (damageTaken > 0)
+		if (totalDamageTaken > 0)
 		{
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HudTakeDamageAll");
 		}
@@ -356,19 +363,23 @@ void CHudDamageIndicator::MsgFunc_Damage(bf_read &msg)
 	Vector vecDelta = (vecFrom - MainViewOrigin());
 	VectorNormalize(vecDelta);
 
-	int highDamage = DAMAGE_LOW;
-/*	if (damageTaken > 25)
+	int damageType = DAMAGE_ANY;
+	if (totalDamageTaken > 60)
 	{
-		highDamage = DAMAGE_HIGH;
+		damageType = DAMAGE_HIGH;
 	}
-
+	else if (totalDamageTaken > 30)
+	{
+		damageType = DAMAGE_LOW;
+	}
+/*
 	// if we have no suit, all damage is high
 	if (!pPlayer->IsSuitEquipped())
 	{
-		highDamage = DAMAGE_HIGH;
+		damageType = DAMAGE_HIGH;
 	}*/
 
-	if (damageTaken > 0 || armor > 0)
+	if (totalDamageTaken > 0)
 	{
 		// see which quandrant the effect is in
 		float angle;
@@ -378,7 +389,8 @@ void CHudDamageIndicator::MsgFunc_Damage(bf_read &msg)
 		DamageAnimation_t *dmgAnim = g_DamageAnimations;
 		for (; dmgAnim->name != NULL; ++dmgAnim)
 		{
-			if (dmgAnim->bitsDamage && ! (bitsDamage & dmgAnim->bitsDamage))
+			// If this anim needs special damage type and this damage doesnt match that type
+			if (dmgAnim->bitsDamage && ! (bitsDamage & dmgAnim->bitsDamage)) 
 				continue;
 
 			if (dmgAnim->angleMinimum && angle < dmgAnim->angleMinimum)
@@ -387,7 +399,8 @@ void CHudDamageIndicator::MsgFunc_Damage(bf_read &msg)
 			if (dmgAnim->angleMaximum && angle > dmgAnim->angleMaximum)
 				continue;
 
-			if (dmgAnim->damage && dmgAnim->damage != highDamage)
+			// If this anim requires at least a decent amount of damage, and the damage isnt correct
+			if (dmgAnim->damage && dmgAnim->damage != damageType)
 				continue;
 
 			// we have a match, break
