@@ -154,11 +154,11 @@ extern ConVar sv_maxspeed;
 #define GREN_THROWSPEED 660.0f
 
 
-ConVar ffdev_flagtrail_startwidth( "ffdev_flagtrail_startwidth", "100", FCVAR_REPLICATED | FCVAR_NOTIFY, "Start width of flag trail" );
+ConVar ffdev_flagtrail_startwidth( "ffdev_flagtrail_startwidth", "50", FCVAR_REPLICATED | FCVAR_NOTIFY, "Start width of flag trail" );
 #define FFDEV_FLAGTRAIL_STARTWIDTH ffdev_flagtrail_startwidth.GetFloat()
-ConVar ffdev_flagtrail_endwidth( "ffdev_flagtrail_endwidth", "5", FCVAR_REPLICATED | FCVAR_NOTIFY, "End width of flag trail" );
+ConVar ffdev_flagtrail_endwidth( "ffdev_flagtrail_endwidth", "3", FCVAR_REPLICATED | FCVAR_NOTIFY, "End width of flag trail" );
 #define FFDEV_FLAGTRAIL_ENDWIDTH ffdev_flagtrail_endwidth.GetFloat()
-ConVar ffdev_flagtrail_lifetime( "ffdev_flagtrail_lifetime", "1.5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time flag trail stays active before disappearing" );
+ConVar ffdev_flagtrail_lifetime( "ffdev_flagtrail_lifetime", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time flag trail stays active before disappearing" );
 #define FFDEV_FLAGTRAIL_LIFETIME ffdev_flagtrail_lifetime.GetFloat()
 
 #ifdef _DEBUG
@@ -7527,6 +7527,7 @@ void CFFPlayer::StartFlagTrail(int teamId)
 {
 	m_hFlagGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/ff_trail.vmt", GetLocalOrigin(), false );
 
+	DevMsg("Created flag trail\n");
 	if ( m_hFlagGlowTrail != NULL )
 	{
 		m_hFlagGlowTrail->FollowEntity( this );
@@ -7564,8 +7565,9 @@ void CFFPlayer::StopFlagTrail()
 	if (m_hFlagGlowTrail == NULL)
 		return;
 
-	m_hFlagGlowTrail->FadeAndDie( 0.1f );
-	m_hFlagGlowTrail = NULL;
+	m_hFlagGlowTrail->StopFollowingEntity();
+	m_hFlagGlowTrail->FadeAndDie( 1.5f ); // Can't take longer unfortuntely
+	//m_hFlagGlowTrail = NULL;
 }
 
 //-----------------------------------------------------------------------------
