@@ -884,8 +884,6 @@ public:
 
 protected:
 	CNetworkVar( bool, m_bConcussed );
-	CHandle<CSpriteTrail>	m_hGlowTrail;
-	CHandle<CSpriteTrail>	m_hFlagGlowTrail;
 	// **********************************
 
 	// **********************************

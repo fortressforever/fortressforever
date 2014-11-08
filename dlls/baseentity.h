@@ -28,6 +28,7 @@ class AI_CriteriaSet;
 class IResponseSystem;
 class IEntitySaveUtils;
 class CRecipientFilter;
+class CSpriteTrail;
 
 // Matching the high level concept is significantly better than other criteria
 // FIXME:  Could do this in the script file by making it required and bumping up weighting there instead...
@@ -863,6 +864,7 @@ protected:
 
 private:
 	CBaseEntity( CBaseEntity& );
+	CSpriteTrail *m_pFlagGlowTrail;
 
 	// list handling
 	friend class CGlobalEntityList;
@@ -938,6 +940,8 @@ public:
 	void			AddPoints( int score, bool bAllowNegativeScore );
 	void			AddPointsToTeam( int score, bool bAllowNegativeScore );
 	void			RemoveAllDecals( void );
+	void			StartTrail( int teamId );
+	void			StopTrail( void );
 
 	virtual bool	OnControls( CBaseEntity *pControls ) { return false; }
 	virtual bool	HasTarget( string_t targetname );
