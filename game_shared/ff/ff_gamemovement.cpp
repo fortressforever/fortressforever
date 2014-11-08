@@ -18,6 +18,7 @@
 #include "in_buttons.h"
 #include "movevars_shared.h"
 #include "ff_mapguide.h"
+#include "IEffects.h"
 
 #define	STOP_EPSILON		0.1
 #define	MAX_CLIP_PLANES		5
@@ -85,6 +86,7 @@ public:
 	virtual void WalkMove();
 	virtual void AirMove();
 	virtual void Friction();
+	bool IsRampSliding( CFFPlayer *pPlayer );
 
 	CFFGameMovement() {};
 };
@@ -907,6 +909,42 @@ bool CFFGameMovement::CanAccelerate()
 	return true;
 }
 
+bool CFFGameMovement::IsRampSliding( CFFPlayer *pPlayer )
+{
+	if (pPlayer->GetGroundEntity() == NULL)  // Rampsliding occurs when normal ground detection fails
+	{
+		// Take the lateral velocity
+		Vector vecVelocity = mv->m_vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+		float flHorizontalSpeed = vecVelocity.Length();
+
+		if (flHorizontalSpeed > SV_TRIMPTRIGGERSPEED)
+		{
+			trace_t pm;
+
+			Vector vecStart = mv->m_vecAbsOrigin;
+			Vector vecStop = vecStart - Vector(0, 0, 0.1f);
+			
+			TracePlayerBBox(vecStart, vecStop, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm); // but actually you are on the ground
+
+			// Found the floor
+			if(pm.fraction != 1.0f)
+			{
+				if (flHorizontalSpeed > 0)
+					vecVelocity /= flHorizontalSpeed;
+
+				float flDotProduct = DotProduct(vecVelocity, pm.plane.normal);
+				if (flDotProduct < -0.15f) // On an upwards ramp
+				{
+					return true;
+				}
+			}
+		}
+		
+	}
+
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Check player velocity & clamp if cloaked
 //-----------------------------------------------------------------------------
@@ -920,7 +958,12 @@ void CFFGameMovement::CheckVelocity( void )
 	CFFPlayer *pPlayer = ToFFPlayer( player );
 	if( !pPlayer )
 		return;
-	
+#ifdef CLIENT_DLL
+	if (IsRampSliding(pPlayer))
+	{
+		g_pEffects->Sparks(pPlayer->GetAbsOrigin());
+	}
+#endif
 	if( !pPlayer->IsCloaked() )
 		return;
 
@@ -933,7 +976,6 @@ void CFFGameMovement::CheckVelocity( void )
 		mv->m_vecVelocity.y *= 0.5f;
 	}
 }
-
 // Expose our interface.
 static CFFGameMovement g_GameMovement;
 IGameMovement *g_pGameMovement = ( IGameMovement * )&g_GameMovement;
