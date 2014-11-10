@@ -127,10 +127,11 @@ void CHudSpeedometer::OnThink()
 		return;
 
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
-	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if(!pPlayer)
 		return;
+
+	bool isSpectating = pPlayer != C_FFPlayer::GetLocalFFPlayer();
 
 	//don't update so fast.
 	if(m_flNextUpdate < gpGlobals->curtime)
@@ -140,7 +141,7 @@ void CHudSpeedometer::OnThink()
 			vecVelocity.x * vecVelocity.x 
 			+ vecVelocity.y * vecVelocity.y );
 
-		if (pPlayer == pLocalPlayer)
+		if (!isSpectating)
 		{
 			// average[i+1] = (average[i]*i + value[i+1])/(i+1)
 			m_flAvgVelocity = (m_flAvgVelocity*m_iNumUpdates + (float)m_iVelocity)/(m_iNumUpdates+1);
@@ -161,11 +162,11 @@ void CHudSpeedometer::Paint()
 		return;
 
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
-	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if(!pPlayer)
 		return;
 
+	bool isSpectating = pPlayer != C_FFPlayer::GetLocalFFPlayer();
 	float maxVelocity = pPlayer->MaxSpeed();
 	Color speedColor;
 
@@ -202,7 +203,7 @@ void CHudSpeedometer::Paint()
 	}
 
 	// average speedometer
-	if( hud_speedometer_avg.GetBool() && pPlayer == pLocalPlayer )
+	if( hud_speedometer_avg.GetBool() && !isSpectating )
 	{
 		if( m_flAvgVelocity > BHOP_CAP_HARD * maxVelocity && hud_speedometer_avg_color.GetInt() > 0) // above hard cap
 			speedColor = INTENSITYSCALE_COLOR_RED;
