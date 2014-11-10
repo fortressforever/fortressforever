@@ -11,11 +11,11 @@
 #elif _LINUX
 #define stricmp strcasecmp
 #endif
-#include "vstdlib/strtools.h"
+#include "tier1/strtools.h"
 #include "tier0/dbg.h"
 #include "KeyValues.h"
 #include "cmdlib.h"
-#include "vstdlib/ICommandLine.h"
+#include "tier0/icommandline.h"
 #include "vcprojconvert.h"
 #include "makefilecreator.h"
 
@@ -60,6 +60,7 @@ public:
 	long GetFileTime( const char *pFileName, const char *pPathID = 0 ) { return 0; }
 	bool ReadFile( const char *pFileName, const char *pPath, CUtlBuffer &buf, int nMaxBytes = 0, int nStartingByte = 0, FSAllocFunc_t pfnAlloc = NULL ) {return false;}
 	bool WriteFile( const char *pFileName, const char *pPath, CUtlBuffer &buf ) {return false;}
+	bool UnzipFile( const char *,const char *,const char * ) {return false;}
 };
 
 MyFileSystem g_MyFS;
@@ -70,7 +71,7 @@ IBaseFileSystem *g_pFileSystem = &g_MyFS;
 //-----------------------------------------------------------------------------
 void printusage( void )
 {
-	Msg( "usage:  vcprojtomake <vcproj filename> \n" );
+	Msg( "usage:  vcprojtomake <vcproj filename|vcxproj filename (VS2010)> \n" );
 }
 
 //-----------------------------------------------------------------------------
@@ -110,6 +111,8 @@ int main( int argc, char* argv[] )
 	SpewOutputFunc( SpewFunc );
 
 	Msg( "Valve Software - vcprojtomake.exe (%s)\n", __DATE__ );
+	Msg( "Modified for VS2010 Support by Killer Monkey\n" );
+	Msg( "<killermonkey01@gmail.com>\n" );
 	CommandLine()->CreateCmdLine( argc, argv );
 
 	if ( CommandLine()->ParmCount() < 2)

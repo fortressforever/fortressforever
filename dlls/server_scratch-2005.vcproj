@@ -3712,6 +3712,26 @@
 					>
 				</File>
 				<File
+					RelativePath="..\public\tier0\memoverride-linux.cpp"
+					>
+					<FileConfiguration
+						Name="Release FF|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug FF|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\public\tier0\memoverride.cpp"
 					>
 					<FileConfiguration

@@ -4,9 +4,6 @@
 // 
 // $NoKeywords: $
 //=============================================================================//
-#ifdef _WIN32
-#include <windows.h>
-#endif
 #include "stdafx.h" 
 #include "makefilecreator.h" 
 #include "cmdlib.h"
