@@ -18,7 +18,9 @@ MOD_CONFIG=server_ff_ReleaseFFWin32
 # the directory the base binaries (tier0_i486.so, etc) are located
 #GAME_DIR=../../srcds
 # NOTE: don't use ~ for home, it breaks build process
-GAME_DIR=/home/dmh/srcds
+#GAME_DIR=/home/dmh/srcds
+# dexter 11/09/2014: set to this directory, it looks in a dir called 'bin' for the srcds stuff, where we copied the old bins
+GAME_DIR=.
 
 # compiler options (gcc 3.4.1 or above is required)
 #dexter - edited for 'gcc34' for 3.4.6 bins on CentOS 5
