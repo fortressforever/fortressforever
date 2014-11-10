@@ -7,7 +7,7 @@
 //=============================================================================//
 
 
-#if !defined(STEAM) && !defined(NO_MALLOC_OVERRIDE)
+#if !defined(STEAM) && !defined(NO_MALLOC_OVERRIDE) && !defined(_LINUX_MEMOVERRIDE) // Dexter: added _LINUX_MEMOVERRIDE (see memoverride-linux.cpp)
 
 #undef PROTECTED_THINGS_ENABLE   // allow use of _vsnprintf
 

@@ -7,6 +7,12 @@
 //=============================================================================//
 
 
+// Dexter: this is kind of a dumb fix: we need memoverride-vc7 on linux so i renamed to 
+// new file (since we nuked vs2003) which is always included in the project (along with memoverride for windows!)
+// and made whole file in a linux only _LINUX_MEMOVERRIDE preproc.. deleted all non-linux code from it too
+
+#if defined(LINUX_MEMOVERRIDE)
+
 #if !defined(STEAM) && !defined(NO_MALLOC_OVERRIDE)
 
 #undef PROTECTED_THINGS_ENABLE   // allow use of _vsnprintf
@@ -576,3 +582,5 @@ int __cdecl _CrtReportBlockType(const void * pUserData)
 #endif
 
 #endif // !STEAM && !NO_MALLOC_OVERRIDE
+
+#endif // _LINUX_MEMOVERRIDE
