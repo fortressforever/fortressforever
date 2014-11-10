@@ -3867,31 +3867,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 			<File
 				RelativePath=".\ff\te_firebullets.h">
 			</File>
-			<Filter
-				Name="FF Stats Source"
-				Filter="">
-				<File
-					RelativePath="..\stats\ff_socks.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\stats\ff_socks.h">
-				</File>
-				<File
-					RelativePath="..\stats\ff_statdefs.h">
-				</File>
-				<File
-					RelativePath="..\stats\ff_statslog.cpp">
-				</File>
-				<File
-					RelativePath="..\stats\ff_statslog.h">
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="FF Shared Source"
@@ -4066,12 +4041,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetDir)/server.pdb&quo
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_shareddefs.h">
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_string.cpp">
-			</File>
-			<File
-				RelativePath="..\game_shared\ff\ff_string.h">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_timers_shared.cpp">
