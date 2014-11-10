@@ -56,7 +56,7 @@ public:
 		SetParent( g_pClientMode->GetViewport() );
 
 		// Hide when player is dead
-		SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD );
 	}
 
 	virtual ~CHudSpeedometer( void )
@@ -126,22 +126,27 @@ void CHudSpeedometer::OnThink()
 	if (!hud_speedometer.GetBool() && !hud_speedometer_avg.GetBool())
 		return;
 
-	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 
-	if(!local)
+	if(!pPlayer)
 		return;
+
+	bool isSpectating = pPlayer != C_FFPlayer::GetLocalFFPlayer();
 
 	//don't update so fast.
 	if(m_flNextUpdate < gpGlobals->curtime)
 	{
-		Vector vecVelocity = local->GetAbsVelocity();
+		Vector vecVelocity = pPlayer->GetAbsVelocity();
 		m_iVelocity = (int) FastSqrt(
 			vecVelocity.x * vecVelocity.x 
 			+ vecVelocity.y * vecVelocity.y );
 
-		// average[i+1] = (average[i]*i + value[i+1])/(i+1)
-		m_flAvgVelocity = (m_flAvgVelocity*m_iNumUpdates + (float)m_iVelocity)/(m_iNumUpdates+1);
-		m_iNumUpdates++;
+		if (!isSpectating)
+		{
+			// average[i+1] = (average[i]*i + value[i+1])/(i+1)
+			m_flAvgVelocity = (m_flAvgVelocity*m_iNumUpdates + (float)m_iVelocity)/(m_iNumUpdates+1);
+			m_iNumUpdates++;
+		}
 
 		m_flNextUpdate = gpGlobals->curtime + 0.1;
 	}
@@ -156,12 +161,13 @@ void CHudSpeedometer::Paint()
 	if (!hud_speedometer.GetBool() && !hud_speedometer_avg.GetBool())
 		return;
 
-	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
 
-	if(!local)
+	if(!pPlayer)
 		return;
 
-	float maxVelocity = local->MaxSpeed();
+	bool isSpectating = pPlayer != C_FFPlayer::GetLocalFFPlayer();
+	float maxVelocity = pPlayer->MaxSpeed();
 	Color speedColor;
 
 	// regular speedometer
@@ -197,7 +203,7 @@ void CHudSpeedometer::Paint()
 	}
 
 	// average speedometer
-	if( hud_speedometer_avg.GetBool() )
+	if( hud_speedometer_avg.GetBool() && !isSpectating )
 	{
 		if( m_flAvgVelocity > BHOP_CAP_HARD * maxVelocity && hud_speedometer_avg_color.GetInt() > 0) // above hard cap
 			speedColor = INTENSITYSCALE_COLOR_RED;
