@@ -91,16 +91,14 @@ public:
 
 //static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.4", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_soft.GetFloat()
 #define BHOP_CAP_SOFT 1.4f // also defined in ff_hud_speedometer - change it there too! 
-static ConVar bhop_cap_mid("ffdev_bhop_cap_mid", "1.55", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_mid.GetFloat()
-#define BHOP_CAP_MID bhop_cap_mid.GetFloat() // also defined in ff_hud_speedometer - change it there too! // This slows the player more if they go above this cap
+//static ConVar bhop_cap_mid("ffdev_bhop_cap_mid", "1.55", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_mid.GetFloat()
+#define BHOP_CAP_MID 1.55f //bhop_cap_mid.GetFloat() // also defined in ff_hud_speedometer - change it there too! // This slows the player more if they go above this cap
 //static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "1.71", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_hard.GetFloat()
 #define BHOP_CAP_HARD 1.71f // also defined in ff_hud_speedometer - change it there too!
-//static ConVar bhop_cap_hard_result("ffdev_bhop_cap_hard_result", "1.71", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_hard.GetFloat()
-#define BHOP_CAP_HARD_RESULT 1.71f // also defined in ff_hud_speedometer - change it there too!
-static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_FF_FFDEV_REPLICATED); // bhop_pcfactor.GetFloat()
-#define BHOP_PCFACTOR bhop_pcfactor.GetFloat()
-static ConVar bhop_pcfactor_mid("ffdev_bhop_pcfactor_mid", "0.4", FCVAR_FF_FFDEV_REPLICATED); // bhop_pcfactor_mid.GetFloat()
-#define BHOP_PCFACTOR_MID bhop_pcfactor_mid.GetFloat()
+//static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_FF_FFDEV_REPLICATED); // bhop_pcfactor.GetFloat()
+#define BHOP_PCFACTOR 0.65f //bhop_pcfactor.GetFloat()
+//static ConVar bhop_pcfactor_mid("ffdev_bhop_pcfactor_mid", "0.4", FCVAR_FF_FFDEV_REPLICATED); // bhop_pcfactor_mid.GetFloat()
+#define BHOP_PCFACTOR_MID 0.4f //bhop_pcfactor_mid.GetFloat()
 
 //-----------------------------------------------------------------------------
 // Purpose: Provides TFC jump heights, trimping, doublejumps
@@ -381,7 +379,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 			// apply skim cap
 			if (speed > cap_hard )
 			{
-				float applied_cap = BHOP_CAP_HARD_RESULT * mv->m_flMaxSpeed;; 
+				float applied_cap = BHOP_CAP_HARD * mv->m_flMaxSpeed;; 
 				float multi = applied_cap / speed;
 
 				mv->m_vecVelocity[0] *= multi;
