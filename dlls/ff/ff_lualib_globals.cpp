@@ -517,6 +517,7 @@ namespace FFLib
 		bool good = true;
 		for (unsigned int i=0; i<strlen(script); i++)
 		{
+			if (script[i]=='/' || script[i]=='\\') continue;
 			if (script[i]>='a' && script[i]<='z') continue;
 			if (script[i]>='A' && script[i]<='Z') continue;
 			if (script[i]>='0' && script[i]<='9') continue;
