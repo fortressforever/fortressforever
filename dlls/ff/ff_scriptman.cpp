@@ -98,29 +98,26 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 	int errorCode = luaL_loadbuffer(L, buffer, fileSize, filename);
 
 	// check if load was successful
-	if(errorCode)
+	if(errorCode != 0)
 	{
-		if(errorCode == LUA_ERRSYNTAX )
-		{
-			// syntax error, lookup description for the error
-			const char *error = lua_tostring(L, -1);
-			if (error)
-			{
-				Warning("Error loading %s: %s\n", filename, error);
-				lua_pop( L, 1 );
-			}
-			else
-				Warning("Unknown Syntax Error loading %s\n", filename);
-		}
-		else
-		{
-			Msg("Unknown Error loading %s\n", filename);
-		}
+		const char *error = lua_tostring(L, -1);
+		Warning("Error loading %s: %s\n", filename, error);
+		lua_pop( L, 1 );
 		return false;
 	}
 
 	// execute script. script at top scrop gets exectued
 	lua_pcall(L, 0, 0, 0);
+
+	// check if execution was successful
+	if (errorCode != 0)
+	{
+		const char *error = lua_tostring(L, -1);
+		Warning("Error loading %s: %s\n", filename, error);
+		lua_pop( L, 1 );
+		return false;
+	}
+
 	Msg( "[SCRIPT] Successfully loaded %s\n", filename );
 
 	// cleanup
