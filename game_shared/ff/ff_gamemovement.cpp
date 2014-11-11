@@ -91,12 +91,14 @@ public:
 
 //static ConVar bhop_cap_soft("ffdev_bhop_cap_soft", "1.4", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_soft.GetFloat()
 #define BHOP_CAP_SOFT 1.4f // also defined in ff_hud_speedometer - change it there too! 
+//static ConVar bhop_cap_mid("ffdev_bhop_cap_mid", "1.55", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_mid.GetFloat()
+#define BHOP_CAP_MID 1.55f //bhop_cap_mid.GetFloat() // also defined in ff_hud_speedometer - change it there too! // This slows the player more if they go above this cap
 //static ConVar bhop_cap_hard("ffdev_bhop_cap_hard", "1.71", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_hard.GetFloat()
 #define BHOP_CAP_HARD 1.71f // also defined in ff_hud_speedometer - change it there too!
-//static ConVar bhop_cap_hard_result("ffdev_bhop_cap_hard_result", "1.71", FCVAR_FF_FFDEV_REPLICATED); // bhop_cap_hard.GetFloat()
-#define BHOP_CAP_HARD_RESULT 1.71f // also defined in ff_hud_speedometer - change it there too!
 //static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_FF_FFDEV_REPLICATED); // bhop_pcfactor.GetFloat()
-#define BHOP_PCFACTOR 0.65 
+#define BHOP_PCFACTOR 0.65f //bhop_pcfactor.GetFloat()
+//static ConVar bhop_pcfactor_mid("ffdev_bhop_pcfactor_mid", "0.4", FCVAR_FF_FFDEV_REPLICATED); // bhop_pcfactor_mid.GetFloat()
+#define BHOP_PCFACTOR_MID 0.4f //bhop_pcfactor_mid.GetFloat()
 
 //-----------------------------------------------------------------------------
 // Purpose: Provides TFC jump heights, trimping, doublejumps
@@ -248,17 +250,21 @@ bool CFFGameMovement::CheckJumpButton(void)
 	//		http://www.madabouthats.org/code-tf2/viewtopic.php?t=2360
 
 	const float cap_soft = BHOP_CAP_SOFT * mv->m_flMaxSpeed;
+	const float cap_mid = BHOP_CAP_MID * mv->m_flMaxSpeed;
 	const float cap_hard = BHOP_CAP_HARD * mv->m_flMaxSpeed;
-	const float pcfactor = BHOP_PCFACTOR;
+	float pcfactor = BHOP_PCFACTOR;
 	float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
 #ifdef GAME_DLL
 	if ( ffplayer->m_flMancannonTime + 0.5f <= gpGlobals->curtime )
 	{
 #endif
-		// apply soft cap
-		if (speed > cap_soft)
+		
+		if (speed > cap_soft) // apply soft cap
 		{
+			if (speed > cap_mid) // Slow down even more if above mid cap
+				pcfactor = BHOP_PCFACTOR_MID;
+
 			float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
 			float multi = applied_cap / speed;
 
@@ -373,7 +379,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 			// apply skim cap
 			if (speed > cap_hard )
 			{
-				float applied_cap = BHOP_CAP_HARD_RESULT * mv->m_flMaxSpeed;; 
+				float applied_cap = BHOP_CAP_HARD * mv->m_flMaxSpeed;; 
 				float multi = applied_cap / speed;
 
 				mv->m_vecVelocity[0] *= multi;
