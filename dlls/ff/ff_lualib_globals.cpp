@@ -2747,6 +2747,14 @@ namespace FFLib
 		if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 			g_pGameRules->SetGameDescription( szGameDescription );
 	}
+	
+	const char* GetGameDescription()
+	{
+		if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
+			return g_pGameRules->GetGameDescription();
+		else
+			return "";
+	}
 
 	void ShowMenuToPlayer( CFFPlayer *pPlayer, const char *szMenuName )
 	{
@@ -3093,6 +3101,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon),
 		def("DisplayMessage",			&FFLib::DisplayMessage),
 		def("SetGameDescription",		&FFLib::SetGameDescription),
+		def("GetGameDescription",		&FFLib::GetGameDescription),
 		def("ShowMenuToPlayer",			&FFLib::ShowMenuToPlayer),
 		def("ShowMenuToTeam",			&FFLib::ShowMenuToTeam),
 		def("ShowMenu",					&FFLib::ShowMenu),
