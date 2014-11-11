@@ -4613,6 +4613,23 @@ void CFFPlayer::ReloadClips( void )
 	}
 }
 
+bool CFFPlayer::IsInAir( float flUnitsAboveGround ) const
+{
+	if ( IsOnGround() )
+		return false;
+
+	trace_t tr;
+	Vector vecStartPos = pPlayer->GetAbsOrigin();
+	vecStartPos.z += pPlayer->GetPlayerMins()[ 2 ];
+	Vector vecEndPos = vecStartPos - Vector(0,0,flUnitsAboveGround);
+	UTIL_TraceLine( vecStartPos, vecEndPos, MASK_PLAYERSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
+
+	if (!tr.DidHit())
+		return true;
+	else
+		return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Get a player's Steam ID
 //-----------------------------------------------------------------------------

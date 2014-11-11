@@ -912,6 +912,7 @@ public:
 	bool IsDucking( void ) const	{ return ( GetFlags() & FL_DUCKING ) ? true : false; }
 	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
+	bool IsInAir( float flUnitsAboveGround ) const;
 
 	const char *GetSteamID( void ) const;
 	int GetPing( void ) const;
