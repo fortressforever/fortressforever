@@ -6,15 +6,15 @@ A Team Fortress mod on the Source Engine (Source SDK 2006)
 
 Fortress Forever must be compiled using Visual C++ 2005. The following instructions are an updated version of Microsoft's old [Using Visual C++ 2005 Express Edition with the Microsoft Platform SDK](https://web.archive.org/web/20070210205738/http://msdn.microsoft.com/vstudio/express/visualc/usingpsdk/) guide
 
-* Install Visual C++ 2005 Express
+1. Install Visual C++ 2005 Express
   * Download and install [Visual Studio C++ 2005 Express Edition](http://download.microsoft.com/download/8/3/a/83aad8f9-38ba-4503-b3cd-ba28c360c27b/ENU/vcsetup.exe) (or the full version if you have it)
   * Download and install the [Visual Studio 2005 Express Editions Service Pack 1](http://www.microsoft.com/en-us/download/details.aspx?id=804)
   * Download and install the [Visual Studio 2005 Service Pack 1 Update for Windows Vista](http://www.microsoft.com/en-us/download/details.aspx?id=7524)
-* Install the Microsoft Platform SDK 
+2. Install the Microsoft Platform SDK 
   * Download and install the [Windows Server 2003 SP1 Platform SDK](http://www.microsoft.com/en-us/download/details.aspx?id=6510) 
     * You'll probably want the amd64 version; only get the x86 version if you are running a 32 bit version of Windows
     * You only need to install *Microsoft Windows Core SDK*
-* Configure Visual C++ 2005 Express
+3. Configure Visual C++ 2005 Express
   * Open Visual Studio C++ 2005 Express Edition
   * Update *VC++ Directories* in the *Projects and Solutions* section of the *Tools* -> *Options* dialog box. 
     * Add the paths to the appropriate subsection:
@@ -30,7 +30,7 @@ Fortress Forever must be compiled using Visual C++ 2005. The following instructi
       `AdditionalDependencies="kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib"`
     * **Note:** You might need to change the file permissions to be able to edit the corewin_express.vsprops file. To do so, right click `corewin_express.vsprops` and select *Properties*. Open the *Security* tab and click the *Edit...* button. Select the *Users (computername\User)* group in top and check *Write* in the *Allow* column, then click *OK* twice
   * Restart Visual C++ 2005
-* Build Fortress Forever
+4. Build Fortress Forever
   * Open `Game_Scratch-2005.sln` and run *Build Solution*
 
 #### Addendum: Registering VC++ 2005 Express
