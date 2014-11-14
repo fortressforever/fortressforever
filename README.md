@@ -29,6 +29,9 @@ Fortress Forever must be compiled using Visual C++ 2005. The following instructi
       to
       `AdditionalDependencies="kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib"`
     * **Note:** You might need to change the file permissions to be able to edit the corewin_express.vsprops file. To do so, right click `corewin_express.vsprops` and select *Properties*. Open the *Security* tab and click the *Edit...* button. Select the *Users (computername\User)* group in top and check *Write* in the *Allow* column, then click *OK* twice
+  * Restart Visual C++ 2005
+* Build Fortress Forever
+  * Open `Game_Scratch-2005.sln` and run *Build Solution*
 
 #### Addendum: Registering VC++ 2005 Express
 
