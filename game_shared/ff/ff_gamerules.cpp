@@ -875,21 +875,23 @@ ConVar mp_prematch( "mp_prematch",
 						// NOTE: this is a useless flag I think...
 					}
 
-					if( pbFlags[ AT_FORCE_DROP_ITEMS ] || pbFlags[ AT_FORCE_THROW_ITEMS ] )
+					if( pbFlags[ AT_FORCE_THROW_ITEMS ] )
 					{
-						// TODO: iterate through getting this players' items
-						// and make them be dropped before killing the player
+						pPlayer->Command_DropItems();
+					}
 
+					if( pbFlags[ AT_FORCE_DROP_ITEMS ] )
+					{
 						CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
 						while( pEntity )
 						{
 							CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
 							if( pFFScript )
 							{
-								// TODO: Need to make a lua call to get the delay and throw speed
-								float flDelay = 10.0f;
-								float flSpeed = 0.0f;
-								pFFScript->Drop( flDelay, flSpeed );
+								// This is a bit hacky; re-use ownerforcerespawn to force drop items
+								// The alternative would be to create a new info_ff_script:onforcedrop callback
+								// Chose to re-use this instead because it will be more backwards compatible
+								pFFScript->OnOwnerForceRespawn( ( CBaseEntity * )pPlayer );
 							}
 
 							pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
