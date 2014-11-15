@@ -15,7 +15,7 @@ Fortress Forever must be compiled using Visual C++ 2005. The following instructi
     * You'll probably want the amd64 version; only get the x86 version if you are running a 32 bit version of Windows
     * You only need to install *Microsoft Windows Core SDK*
 3. **Configure Visual C++ 2005**
-  * Open Visual Studio C++ 2005
+  * Open Visual Studio C++ 2005 (it's suggested to right click -> *Run as administrator*)
   * Update *VC++ Directories* in the *Projects and Solutions* section of the *Tools* -> *Options* dialog box. 
     * Add the paths to the appropriate subsection:
       * Executable files: `C:\Program Files\Microsoft Platform SDK\Bin`
@@ -28,7 +28,7 @@ Fortress Forever must be compiled using Visual C++ 2005. The following instructi
       `AdditionalDependencies="kernel32.lib"`
       to
       `AdditionalDependencies="kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib"`
-    * **Note:** You might need to change the file permissions to be able to edit the corewin_express.vsprops file. To do so, right click `corewin_express.vsprops` and select *Properties*. Open the *Security* tab and click the *Edit...* button. Select the *Users (computername\User)* group and check *Write* in the *Allow* column, then click *OK* twice
+    * **Note:** You'll probably need to change the file permissions to be able to edit the corewin_express.vsprops file. To do so, right click `corewin_express.vsprops` and select *Properties*. Open the *Security* tab and click the *Edit...* button. Select the *Users (computername\User)* group and check *Write* in the *Allow* column, then click *OK* twice
   * Restart Visual C++ 2005
 4. **Build Fortress Forever**
   * Open `Game_Scratch-2005.sln` and run *Build Solution*
