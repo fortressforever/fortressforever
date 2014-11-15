@@ -64,13 +64,6 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 {
 	VPROF_BUDGET( "CFFScriptManager::LoadFile", VPROF_BUDGETGROUP_FF_LUA );
 
-	// don't allow scripters to sneak in scripts after the initial load
-	if(!_scriptman.m_isLoading)
-	{
-		Warning("[SCRIPT] Loading of scripts after initial map load is not allowed.\n");
-		return false;
-	}
-
 	// open the file
 	Msg("[SCRIPT] Loading Lua File: %s\n", filename);
 	FileHandle_t hFile = filesystem->Open(filename, "rb", "MOD");
