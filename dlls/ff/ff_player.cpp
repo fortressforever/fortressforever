@@ -4619,10 +4619,10 @@ bool CFFPlayer::IsInAir( float flUnitsAboveGround ) const
 		return false;
 
 	trace_t tr;
-	Vector vecStartPos = pPlayer->GetAbsOrigin();
-	vecStartPos.z += pPlayer->GetPlayerMins()[ 2 ];
+	Vector vecStartPos = GetAbsOrigin();
+	vecStartPos.z += GetPlayerMins()[ 2 ];
 	Vector vecEndPos = vecStartPos - Vector(0,0,flUnitsAboveGround);
-	UTIL_TraceLine( vecStartPos, vecEndPos, MASK_PLAYERSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
+	UTIL_TraceLine( vecStartPos, vecEndPos, MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
 
 	if (!tr.DidHit())
 		return true;
