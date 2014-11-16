@@ -6584,9 +6584,9 @@ void CFFPlayer::FinishDisguise()
 //-----------------------------------------------------------------------------
 void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 {
-#ifdef _DEBUG
-	//bInstant = true;
-#endif
+	// If not a spy, abort
+	if( GetClassSlot() != CLASS_SPY )
+		return;
 
 	m_iNewSpyDisguise = iTeam;
 	m_iNewSpyDisguise += iClass << 4;
