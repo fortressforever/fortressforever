@@ -888,10 +888,10 @@ ConVar mp_prematch( "mp_prematch",
 							CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
 							if( pFFScript )
 							{
-								// This is a bit hacky; re-use ownerforcerespawn to force drop items
-								// The alternative would be to create a new info_ff_script:onforcedrop callback
-								// Chose to re-use this instead because it will be more backwards compatible
-								pFFScript->OnOwnerForceRespawn( ( CBaseEntity * )pPlayer );
+								// This is a bit hacky; re-use onownerdie to force drop items.
+								// The alternative would be to create a new info_ff_script:onforcedrop callback, but
+								// its probably better to re-use this because it will be more backwards compatible
+								pFFScript->OnOwnerDied( ( CBaseEntity * )pPlayer );
 							}
 
 							pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
