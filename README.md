@@ -32,6 +32,7 @@ Fortress Forever must be compiled using Visual C++ 2005. The following instructi
   * Restart Visual C++ 2005
 4. **Build Fortress Forever**
   * Open `Game_Scratch-2005.sln` and run *Build Solution*
+  * **Note:** The compiled .dlls will automatically get copied to `<SteamDirectory>\SteamApps\common\Fortress Forever\FortressForever\bin`
 
 #### Addendum: Registering VC++ 2005 Express
 
