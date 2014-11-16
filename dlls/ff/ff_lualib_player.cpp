@@ -25,6 +25,15 @@ extern "C"
 //---------------------------------------------------------------------------
 using namespace luabind;
 
+namespace FFLib
+{
+	// helper function to turn int into bool
+	bool IsFlashlightOn(CFFPlayer *pPlayer)
+	{
+		return pPlayer->FlashlightIsOn() != 0;
+	}
+}
+
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitPlayer(lua_State* L)
 {
@@ -81,7 +90,7 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("IsInAir",				(bool(CFFPlayer::*)(float) const)&CFFPlayer::IsInAir)
 			.def("IsDucking",			&CFFPlayer::IsDucking)
 			.def("IsBot",				&CFFPlayer::IsBot)
-			.def("IsFlashlightOn",		&CFFPlayer::FlashlightIsOn)
+			.def("IsFlashlightOn",		&FFLib::IsFlashlightOn)
 			.def("MarkRadioTag",		&CFFPlayer::SetRadioTagged)
 			//.def("RemoveAmmo",			(void(CFFPlayer::*)(int, const char*))&CFFPlayer::RemoveAmmo)
 			.def("OwnsWeaponType",		&CFFPlayer::LuaOwnsWeaponType)
