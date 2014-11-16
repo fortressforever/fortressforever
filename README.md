@@ -42,3 +42,18 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Microsoft\VCExpress\8.0\Registration]
 "Params"="487A8D4D0000000001000000010000009F6A4D0000000000"
 ```
+
+### Debugging
+
+#### Debugging an active session
+* Compile using the *Debug FF* configuration
+* Copy the built dlls to your Fortress Forever folder and launch Fortress Forever (need to use the launch parameter `-allowdebug`)
+* In Visual C++, go to *Debug* -> *Attach to Process*
+* Find `hl2.exe` in the list and click *Attach*
+
+#### Debugging a crash log
+* Open the crash log (.dmp/.mdmp) in Visual C++ 2005
+* Go to *Debug* -> *Start Debugging*
+  * Check the output window to see if symbols were successfully loaded for `fortressforever\bin\server.dll`/`fortressforever\bin\client.dll`. If not, you'll probably need to copy the dump file to a directory containing the correct .dll and .pdb files for the version of the game that the crash occurred on.
+  * If the crash points to *Disassembly*, the crash log will likely not be of much use, as that usually means that the crash occurred somewhere in the Source engine code that we don't have access to. However, it's a good idea to check the *Call Stack* window to see if the crash originated in FF code.
+* **Note:** Crash logs can be found in the `<SteamDirectory>/dumps` directory, and will be named something like `assert_hl2.exe_<datetime>_1.dmp`
