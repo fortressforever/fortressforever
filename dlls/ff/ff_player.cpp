@@ -6650,20 +6650,25 @@ int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 
 int CFFPlayer::LuaAddHealth(int iAmount)
 {
-	if (m_iHealth > m_iMaxHealth) // Dont let LUA give over max health
-		return 0;
+	return LuaAddHealth(iAmount, false);
+}
 
-	iAmount = min( iAmount, m_iMaxHealth - m_iHealth ); // dont give more health than their max
-		//if (iAmount == 0)
-		//	return 0;
+int CFFPlayer::LuaAddHealth(int iAmount, bool bAllowOverheal)
+{
+	if (!bAllowOverheal)
+	{
+		if (m_iHealth > m_iMaxHealth)
+			return 0;
+
+		iAmount = min( iAmount, m_iMaxHealth - m_iHealth );
+	}
+
 	if (iAmount > 0)
 		m_iHealth += iAmount;
 	else
 	{
-		// use direct damage so armor is ignored -squeek
+		// use direct damage so armor is ignored
 		CTakeDamageInfo info( this, this, -iAmount, DMG_DIRECT );
-		//info.SetDamageForce( Vector( 0, 0, -1 ) );
-		//info.SetDamagePosition( Vector( 0, 0, 1 ) );
 		info.SetCustomKill(KILLTYPE_INFECTION);
 
 		TakeDamage( info );

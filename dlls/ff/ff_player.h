@@ -794,6 +794,7 @@ public:
 	void SetCurrentLuaMenu( const char *szMenuName ) { Q_strcpy(m_pCurrentLuaMenu, szMenuName); }
 
 	int LuaAddHealth(int iAmount);
+	int LuaAddHealth(int iAmount, bool bAllowOverheal);
 	int LuaAddAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAllAmmo(bool bClipToo);
