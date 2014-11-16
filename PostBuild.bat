@@ -1,3 +1,11 @@
 @echo off
-powershell -command 'Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force'
-powershell -file ../copy_bins_steam.ps1 %1 
+FOR /f "tokens=1,2*" %%E in ('reg query "HKEY_CURRENT_USER\Software\Valve\Steam"') DO (
+	IF "%%E"=="SteamPath" (
+		set SteamPath=%%G
+	)
+)
+IF "%SteamPath%" NEQ "" (
+	XCOPY /R /Y /V %1 "%SteamPath%\SteamApps\common\Fortress Forever\FortressForever\bin"
+) ELSE (
+	echo "Not able to determine Steam install path"
+)
