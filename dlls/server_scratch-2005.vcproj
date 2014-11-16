@@ -239,7 +239,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="../PostBuild.Bat &quot;$(TargetPath)&quot;"
+				CommandLine="../utils/PostBuild.Bat &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
