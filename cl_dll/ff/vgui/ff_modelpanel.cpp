@@ -36,7 +36,7 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 ModelPanel::ModelPanel(Panel *pParent, const char *pName) : BaseClass(pParent, pName)
 {
-	m_szModelName[0] = '0';
+	m_szModelName[0] = 0;
 	m_hModel = NULL;
 }
 
@@ -64,7 +64,7 @@ void ModelPanel::Reset()
 		m_hModel = NULL;
 	}
 
-	m_szModelName[0] = '0';
+	m_szModelName[0] = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -205,7 +205,7 @@ void ModelPanel::SetModel(const char *pszModelName)
 PlayerModelPanel::PlayerModelPanel(Panel *pParent, const char *pName) : BaseClass(pParent, pName)
 {
 	m_hWeaponModel = NULL;
-	m_szWeaponModelName[0] = m_szLowerAnim[0] = m_szUpperAnim[0] = '0';
+	m_szWeaponModelName[0] = m_szLowerAnim[0] = m_szUpperAnim[0] = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -236,7 +236,7 @@ void PlayerModelPanel::Reset()
 		m_hWeaponModel = NULL;
 	}
 	
-	m_szWeaponModelName[0] = m_szLowerAnim[0] = m_szUpperAnim[0] = '0';
+	m_szWeaponModelName[0] = m_szLowerAnim[0] = m_szUpperAnim[0] = 0;
 }
 
 //-----------------------------------------------------------------------------
