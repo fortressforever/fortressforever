@@ -201,7 +201,7 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	char globalscript_filename[256] = {0};
 	// Even though LoadFile already checks to see if the file exists, we'll check now so at least the default map lua file is loaded.
 	// That way servers can keep their suffix set without worrying about every map having whatever game mode they always want to use.
-	if ( sv_mapluasuffix.GetString()[0] != '0' )
+	if ( sv_mapluasuffix.GetString()[0] != 0 )
 	{
 		Msg( "[SCRIPT] sv_mapluasuffix set to %s | finding maps\\%s__%s__.lua\n", sv_mapluasuffix.GetString(), szMapName, sv_mapluasuffix.GetString() );
 		if ( filesystem->FileExists( UTIL_VarArgs( "maps/%s__%s__.lua", szMapName, sv_mapluasuffix.GetString() ) ) )
@@ -216,7 +216,7 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	}
 
 	// Load global include script, overwriting previously loaded stuff per map
-	if( sv_luaglobalscript.GetString()[0] != '0' )
+	if( sv_luaglobalscript.GetString()[0] != 0 )
 	{
 		const char* scriptname = sv_luaglobalscript.GetString();
 		Msg("[SCRIPT] sv_luaglobalscript set to %s | loading global script maps maps\\globalscripts\\%s.lua\n", scriptname, scriptname );
@@ -256,7 +256,7 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 		
 
 		// if we have a globalscript, precache it as well
-		if( sv_luaglobalscript.GetString()[0] != '0' && globalscript_filename[0] )
+		if( sv_luaglobalscript.GetString()[0] != 0 && globalscript_filename[0] )
 		{
 			V_FixSlashes(globalscript_filename);
 			if(filesystem->FileExists(globalscript_filename))
@@ -292,7 +292,7 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	EndScriptLoad();
 
 	// force loading global script in another call :/
-	if( sv_luaglobalscript.GetString()[0] != '0' && globalscript_filename[0] )
+	if( sv_luaglobalscript.GetString()[0] != 0 && globalscript_filename[0] )
 	{
 		BeginScriptLoad();
 		LoadFile(L, globalscript_filename);
