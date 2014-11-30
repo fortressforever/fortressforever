@@ -368,7 +368,8 @@ void CHudDeathNotice::Paint()
 			{
 				surface()->DrawSetColor( m_HighlightColor );
 				int x_start = (m_DeathNotices[i].iSuicide) ? x - 5 : x - len2 - 5;
-				surface()->DrawFilledRect( x_start, y - (iconTall / 4) - 3, x + 5 + iconWide + 5 + len + 5 + ((iconBuildableWide) ? iconBuildableWide + 5 : 0), y + iconTall/2 + 6 );
+				int x_end = x + 5 + iconWide + 5 + len + 5 + ((iconBuildableWide) ? iconBuildableWide + 5 : 0) + ((iconModifierWide) ? iconModifierWide + 5 : 0);
+				surface()->DrawFilledRect( x_start, y - (iconTall / 4) - 3, x_end, y + iconTall/2 + 6 );
 			}
 
 			// Only draw killers name if it wasn't a suicide
