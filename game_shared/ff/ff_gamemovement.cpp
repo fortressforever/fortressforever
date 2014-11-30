@@ -961,7 +961,8 @@ void CFFGameMovement::CheckVelocity( void )
 #ifdef CLIENT_DLL
 	if (IsRampSliding(pPlayer))
 	{
-		g_pEffects->Sparks(pPlayer->GetAbsOrigin());
+		Vector vecDir = -mv->m_vecVelocity / (mv->m_vecVelocity.LengthSqr() / 1000.0f);
+		g_pEffects->Sparks(pPlayer->GetFeetOrigin() + Vector(random->RandomFloat(-8, 8), random->RandomFloat(-8, 8), 0), 1, 1, &vecDir);
 	}
 #endif
 	if( !pPlayer->IsCloaked() )
