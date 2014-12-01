@@ -27,7 +27,7 @@ using namespace luabind;
 
 namespace FFLib
 {
-	// helper function to turn int into bool
+	// helper function because CFFPlayer::FlashlightIsOn returns an int rather than a bool
 	bool IsFlashlightOn(CFFPlayer *pPlayer)
 	{
 		return pPlayer->FlashlightIsOn() != 0;
