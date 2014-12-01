@@ -337,20 +337,22 @@ ConVar mp_prematch( "mp_prematch",
 
 		if( FFGameRules() )
 		{
+			// default to no prematch
+			float flPrematchTime = 0;
+
 			if( engine->Cmd_Argc() > 1 )
 			{
-				float flTime = atof( engine->Cmd_Argv( 1 ) );
-
-				// TODO: Check flTime a number?
-				mp_prematch.SetValue( flTime / 60.0f );
-			}
-			else
-			{
-				// Default 15 seconds
-				mp_prematch.SetValue( 15.0f / 60.0f );
+				flPrematchTime = atof( engine->Cmd_Argv( 1 ) );
+				mp_prematch.SetValue( flPrematchTime / 60.0f );
 			}
 
 			FFGameRules()->RestartRound();
+
+			if (flPrematchTime <= 0)
+			{
+				// skip prematch so that it doesn't immediately restart a second time
+				FFGameRules()->StartGame(false);
+			}
 		}
 		else
 		{
@@ -1898,14 +1900,14 @@ ConVar mp_prematch( "mp_prematch",
 
 	// --> Mirv: Prematch
 	// Stuff to do when the game starts
-	void CFFGameRules::StartGame()
+	void CFFGameRules::StartGame(bool bAllowReset/*=true*/)
 	{
 #ifndef FF_BETA_TEST_COMPILE
 		m_flIntermissionEndTime = 0.f;
 		m_flGameStarted = gpGlobals->curtime;
 
 		// Don't do this upon first spawning in a map w/o any prematch
-		if( gpGlobals->curtime > 2.0f )
+		if( bAllowReset && gpGlobals->curtime > 2.0f )
 		{
 			// Stuff to do when prematch ends
 			bool bFlags[ AT_MAX_FLAG ] = { true };

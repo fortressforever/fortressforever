@@ -171,12 +171,12 @@ public:
 protected:
 
 	// Prematch stuff
-	void	StartGame();
 	float	m_flGameStarted;
 	float	m_flNextMsg;
 	CNetworkVar( float, m_flRoundStarted );
 
 public:
+	void StartGame(bool bAllowReset=true);
 	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }
 	float GetRoundStart( void ) const { return m_flRoundStarted; }
 	void SetRoundStart( float flStartTime ) { m_flRoundStarted = flStartTime; }
