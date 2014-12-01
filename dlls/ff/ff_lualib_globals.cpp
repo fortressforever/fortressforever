@@ -529,40 +529,18 @@ namespace FFLib
 		// if it's a good filename, then go ahead and include it
 		if (good)
 		{
-			// Let's use a little more control
-			/*
-			strcpy(realscript, "maps/includes/" );
-			strcat(realscript, script);
-			strcat(realscript, ".lua");
-			*/
-
 			Q_snprintf( realscript, sizeof( realscript ), "maps/includes/%s.lua", script );
 
-			//////////////////////////////////////////////////////////////////////////
-			// Try a precache, rumor has it this will cause the engine to send the lua files to clients
-			if(PRECACHE_LUA_FILES)
-			{
-				V_FixSlashes(realscript);
-				if(filesystem->FileExists(realscript))
-				{
-					Util_AddDownload(realscript);
-
-					if(!engine->IsGenericPrecached(realscript))
-						engine->PrecacheGeneric(realscript, true);
-				}
-			}
-			//////////////////////////////////////////////////////////////////////////
-
-			if( !CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript ) )
+			if( !_scriptman.LoadFile( realscript ) )
 			{
 				// Try looking in the maps directory
 				Q_snprintf( realscript, sizeof( realscript ), "maps/%s.lua", script );
-				CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript );
+				_scriptman.LoadFile( realscript );
 			}
 		}
 		else
 		{
-			Msg("[SCRIPT] Warning: Invalid filename: %s\n", script);
+			_scriptman.LuaWarning("Invalid filename: %s\n", script);
 		}
 	}
 
