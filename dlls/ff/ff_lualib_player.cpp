@@ -25,6 +25,15 @@ extern "C"
 //---------------------------------------------------------------------------
 using namespace luabind;
 
+namespace FFLib
+{
+	// helper function because CFFPlayer::FlashlightIsOn returns an int rather than a bool
+	bool IsFlashlightOn(CFFPlayer *pPlayer)
+	{
+		return pPlayer->FlashlightIsOn() != 0;
+	}
+}
+
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitPlayer(lua_State* L)
 {
@@ -42,17 +51,21 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("AddAmmo",				&CFFPlayer::LuaAddAmmo)
 			.def("AddArmor",			&CFFPlayer::AddArmor)
 			.def("AddFrags",			&CFFPlayer::IncrementFragCount)
-			.def("AddFortPoints",		&CFFPlayer::AddFortPoints)			
+			.def("AddFortPoints",		&CFFPlayer::AddFortPoints)
 			//.def("AddAction",			(void(CFFPlayer::*)(CFFPlayer *, const char *, const char *))&CFFPlayer::AddAction)
 			//.def("AddAction",			(void(CFFPlayer::*)(CFFPlayer *, const char *, const char *, Vector &, const char *))&CFFPlayer::AddAction)
 			//.def("AddStat",				&CFFPlayer::AddStat)
-			.def("AddHealth",			&CFFPlayer::LuaAddHealth)
+			.def("AddHealth",			(int(CFFPlayer::*)(int))&CFFPlayer::LuaAddHealth)
+			.def("AddHealth",			(int(CFFPlayer::*)(int, bool))&CFFPlayer::LuaAddHealth)
 			.def("GetClass",			&CFFPlayer::GetClassSlot)
 			.def("GetName",				&CFFPlayer::GetPlayerName)
 			.def("GetArmor",			&CFFPlayer::GetArmor)
 			.def("GetMaxArmor",			&CFFPlayer::GetMaxArmor)
 			.def("GetHealth",			&CFFPlayer::GetHealth)
 			.def("GetMaxHealth",		&CFFPlayer::GetMaxHealth)
+			.def("GetFortPoints",		&CFFPlayer::FortPointsCount)
+			.def("GetFrags",			&CFFPlayer::FragCount)
+			.def("GetDeaths",			&CFFPlayer::DeathCount)
 			.def("HasItem",				&CFFPlayer::HasItem)
 			.def("IsFeetDeepInWater",	&CFFPlayer::IsFeetDeepInWater)
 			.def("IsInNoBuild",			&CFFPlayer::IsInNoBuild)
@@ -74,9 +87,11 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("IsInWalk",			&CFFPlayer::IsInWalk)
 			.def("IsInZoom",			&CFFPlayer::IsInZoom)
 			.def("IsOnGround",			&CFFPlayer::IsOnGround)
-			.def("IsInAir",				&CFFPlayer::IsInAir)
+			.def("IsInAir",				(bool(CFFPlayer::*)() const)&CFFPlayer::IsInAir)
+			.def("IsInAir",				(bool(CFFPlayer::*)(float) const)&CFFPlayer::IsInAir)
 			.def("IsDucking",			&CFFPlayer::IsDucking)
 			.def("IsBot",				&CFFPlayer::IsBot)
+			.def("IsFlashlightOn",		&FFLib::IsFlashlightOn)
 			.def("MarkRadioTag",		&CFFPlayer::SetRadioTagged)
 			//.def("RemoveAmmo",			(void(CFFPlayer::*)(int, const char*))&CFFPlayer::RemoveAmmo)
 			.def("OwnsWeaponType",		&CFFPlayer::LuaOwnsWeaponType)
@@ -109,6 +124,8 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("IsDisguised",			&CFFPlayer::IsDisguised)
 			.def("GetDisguisedClass",	&CFFPlayer::GetDisguisedClass)
 			.def("GetDisguisedTeam",	&CFFPlayer::GetDisguisedTeam)
+			.def("SetDisguise",			&CFFPlayer::SetDisguise)
+			.def("ResetDisguise",		&CFFPlayer::ResetDisguise)
 			.def("AddEffect",			&CFFPlayer::LuaAddEffect)
 			.def("IsEffectActive",		&CFFPlayer::LuaIsEffectActive)
 			.def("RemoveEffect",		&CFFPlayer::LuaRemoveEffect)

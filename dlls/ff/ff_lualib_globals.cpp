@@ -517,6 +517,7 @@ namespace FFLib
 		bool good = true;
 		for (unsigned int i=0; i<strlen(script); i++)
 		{
+			if (script[i]=='/' || script[i]=='\\') continue;
 			if (script[i]>='a' && script[i]<='z') continue;
 			if (script[i]>='A' && script[i]<='Z') continue;
 			if (script[i]>='0' && script[i]<='9') continue;
@@ -1342,11 +1343,28 @@ namespace FFLib
 		}
 	}
 
-	// Displays a string in the hint box
-	void DisplayMessage( CFFPlayer *pPlayer, const char* message )
+	void SendHintToPlayer( CFFPlayer *pPlayer, const char* message )
 	{
 		if ( pPlayer )
 			FF_SendHint( pPlayer, MAP_HINT, -1, PRIORITY_HIGH, message );
+	}
+
+	void SendHintToTeam( CFFTeam *pTeam, const char* message )
+	{
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CFFPlayer *pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+			if ( pPlayer && pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber() )
+				SendHintToPlayer( pPlayer, message );
+		}
+	}
+
+	void SendHintToAll( const char* message )
+	{
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			SendHintToPlayer( GetPlayer(UTIL_EntityByIndex(i)), message );
+		}
 	}
 
 	// Updates which entity the HUD objective icon is attached to
@@ -2747,6 +2765,14 @@ namespace FFLib
 		if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 			g_pGameRules->SetGameDescription( szGameDescription );
 	}
+	
+	const char* GetGameDescription()
+	{
+		if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
+			return g_pGameRules->GetGameDescription();
+		else
+			return "";
+	}
 
 	void ShowMenuToPlayer( CFFPlayer *pPlayer, const char *szMenuName )
 	{
@@ -3091,8 +3117,12 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("ObjectiveNotice",			&FFLib::ObjectiveNotice),
 		def("UpdateObjectiveIcon",		&FFLib::UpdateObjectiveIcon),
 		def("UpdateTeamObjectiveIcon",	&FFLib::UpdateTeamObjectiveIcon),
-		def("DisplayMessage",			&FFLib::DisplayMessage),
+		def("DisplayMessage",			&FFLib::SendHintToPlayer),
+		def("SendHintToPlayer",			&FFLib::SendHintToPlayer),
+		def("SendHintToTeam",			&FFLib::SendHintToTeam),
+		def("SendHintToAll",			&FFLib::SendHintToAll),
 		def("SetGameDescription",		&FFLib::SetGameDescription),
+		def("GetGameDescription",		&FFLib::GetGameDescription),
 		def("ShowMenuToPlayer",			&FFLib::ShowMenuToPlayer),
 		def("ShowMenuToTeam",			&FFLib::ShowMenuToTeam),
 		def("ShowMenu",					&FFLib::ShowMenu),

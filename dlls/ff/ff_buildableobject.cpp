@@ -723,7 +723,10 @@ void CFFBuildableObject::Event_Killed( const CTakeDamageInfo& info )
 		m_pFlickerer = NULL;
 	}
 
-	// TODO: Run through lua "buildable_onkilled"
+	CFFLuaSC hBuildableKilled;
+	hBuildableKilled.Push(this);
+	hBuildableKilled.Push(&info);
+	_scriptman.RunPredicates_LUA( NULL, &hBuildableKilled, "buildable_killed" );
 
 	// Can't kill detpacks
 	if( Classify() != CLASS_DETPACK )

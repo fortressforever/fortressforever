@@ -794,6 +794,7 @@ public:
 	void SetCurrentLuaMenu( const char *szMenuName ) { Q_strcpy(m_pCurrentLuaMenu, szMenuName); }
 
 	int LuaAddHealth(int iAmount);
+	int LuaAddHealth(int iAmount, bool bAllowOverheal);
 	int LuaAddAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAmmo( int iAmmoType, int iAmount );
 	void LuaRemoveAllAmmo(bool bClipToo);
@@ -912,6 +913,7 @@ public:
 	bool IsDucking( void ) const	{ return ( GetFlags() & FL_DUCKING ) ? true : false; }
 	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
+	bool IsInAir( float flUnitsAboveGround ) const;
 
 	const char *GetSteamID( void ) const;
 	int GetPing( void ) const;

@@ -4613,6 +4613,23 @@ void CFFPlayer::ReloadClips( void )
 	}
 }
 
+bool CFFPlayer::IsInAir( float flUnitsAboveGround ) const
+{
+	if ( IsOnGround() )
+		return false;
+
+	trace_t tr;
+	Vector vecStartPos = GetAbsOrigin();
+	vecStartPos.z += GetPlayerMins()[ 2 ];
+	Vector vecEndPos = vecStartPos - Vector(0,0,flUnitsAboveGround);
+	UTIL_TraceLine( vecStartPos, vecEndPos, MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
+
+	if (!tr.DidHit())
+		return true;
+	else
+		return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Get a player's Steam ID
 //-----------------------------------------------------------------------------
@@ -6567,9 +6584,9 @@ void CFFPlayer::FinishDisguise()
 //-----------------------------------------------------------------------------
 void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 {
-#ifdef _DEBUG
-	//bInstant = true;
-#endif
+	// If not a spy, abort
+	if( GetClassSlot() != CLASS_SPY )
+		return;
 
 	m_iNewSpyDisguise = iTeam;
 	m_iNewSpyDisguise += iClass << 4;
@@ -6633,20 +6650,25 @@ int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 
 int CFFPlayer::LuaAddHealth(int iAmount)
 {
-	if (m_iHealth > m_iMaxHealth) // Dont let LUA give over max health
-		return 0;
+	return LuaAddHealth(iAmount, false);
+}
 
-	iAmount = min( iAmount, m_iMaxHealth - m_iHealth ); // dont give more health than their max
-		//if (iAmount == 0)
-		//	return 0;
+int CFFPlayer::LuaAddHealth(int iAmount, bool bAllowOverheal)
+{
+	if (!bAllowOverheal)
+	{
+		if (m_iHealth > m_iMaxHealth)
+			return 0;
+
+		iAmount = min( iAmount, m_iMaxHealth - m_iHealth );
+	}
+
 	if (iAmount > 0)
 		m_iHealth += iAmount;
 	else
 	{
-		// use direct damage so armor is ignored -squeek
+		// use direct damage so armor is ignored
 		CTakeDamageInfo info( this, this, -iAmount, DMG_DIRECT );
-		//info.SetDamageForce( Vector( 0, 0, -1 ) );
-		//info.SetDamagePosition( Vector( 0, 0, 1 ) );
 		info.SetCustomKill(KILLTYPE_INFECTION);
 
 		TakeDamage( info );
