@@ -22,10 +22,6 @@ extern "C"
 }
 
 #include "luabind/luabind.hpp"
-
-// Prototype this before operator.hpp so it can be found for tostring() operator.
-std::ostream& operator<<(std::ostream&, const CBaseEntity&);
-
 #include "luabind/operator.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -35,9 +31,16 @@ std::ostream& operator<<(std::ostream&, const CBaseEntity&);
 using namespace luabind;
 
 //---------------------------------------------------------------------------
+/// tostring implemenation for CBaseEntity
 std::ostream& operator<<(std::ostream& stream, const CBaseEntity& entity)
 {
-	return stream << const_cast<CBaseEntity&>(entity).GetName() << "<" << const_cast<CBaseEntity&>(entity).GetClassname() << ":" << entity.entindex() << ">";
+	stream << const_cast<CBaseEntity&>(entity).GetClassname() << ":";
+	const char *szEntityName = const_cast<CBaseEntity&>(entity).GetName();
+	if (szEntityName[0])
+	{
+		stream << szEntityName << ":";
+	}
+	return stream << entity.entindex();
 }
 
 //---------------------------------------------------------------------------

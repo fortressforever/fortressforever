@@ -18,12 +18,19 @@ extern "C"
 }
 
 #include "luabind/luabind.hpp"
+#include "luabind/operator.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 //---------------------------------------------------------------------------
 using namespace luabind;
+
+/// tostring implemenation for CTeam
+std::ostream& operator<<(std::ostream& stream, const CTeam& team)
+{
+	return stream << "team" << ":" << const_cast<CTeam&>(team).GetName() << ":" << const_cast<CTeam&>(team).GetTeamNumber();
+}
 
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitTeam(lua_State* L)
@@ -34,6 +41,7 @@ void CFFLuaLib::InitTeam(lua_State* L)
 	[
 		// CTeam
 		class_<CTeam>("BaseTeam")
+			.def(tostring(self))
 			.def("AddScore",			&CTeam::AddScore)
 			.def("GetScore",			&CTeam::GetScore)
 			.def("SetScore",			&CTeam::SetScore)
