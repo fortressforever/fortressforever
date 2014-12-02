@@ -501,10 +501,6 @@ namespace FFLib
 
 	void ConsoleToAll(const char* szMessage)
 	{
-		DevMsg( "Debug: " );
-		DevMsg( szMessage );
-		DevMsg( "\n" );
-
 		Msg( szMessage );
 		Msg( "\n" );
 	}
