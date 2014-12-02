@@ -187,19 +187,19 @@ void CFFScriptManager::MakeEnvironmentSafe()
 
 	// dofile, load, loadfile, loadstring
 	const char* ppszUnsafeGlobalFunctions[] = { "dofile", "load", "loadfile", "loadstring", NULL };
-	RemoveVarsFromGlobal( L, ppszUnsafeGlobalFunctions );
+	RemoveVarsFromGlobal( ppszUnsafeGlobalFunctions );
 
 	// os.*
 	const char* ppszUnsafeOSFunctions[] = { "execute", "exit", "getenv", "remove", "rename", "setlocale", "tmpname", NULL };
-	RemoveKeysFromGlobalTable( L, LUA_OSLIBNAME, ppszUnsafeOSFunctions );
+	RemoveKeysFromGlobalTable( LUA_OSLIBNAME, ppszUnsafeOSFunctions );
 
 	// package.*
 	const char* ppszUnsafePackageFunctions[] = { "loadlib", NULL };
-	RemoveKeysFromGlobalTable( L, LUA_LOADLIBNAME, ppszUnsafePackageFunctions );
+	RemoveKeysFromGlobalTable( LUA_LOADLIBNAME, ppszUnsafePackageFunctions );
 
 	// io.* gives access to the filesystem, just remove it totally
 	const char* ppszUnsafeLibraries[] = { "io", NULL };
-	RemoveVarsFromGlobal( L, ppszUnsafeLibraries );
+	RemoveVarsFromGlobal( ppszUnsafeLibraries );
 
 	// require can load .dll/.so, need to disable the loaders that search for them
 	// the third index checks package.cpath and loads .so/.dll files
@@ -512,7 +512,7 @@ bool CFFScriptManager::GetFunction(luabind::adl::object& tableObject,
 	return false;
 }
 
-void CFFScriptManager::RemoveVarsFromGlobal( lua_State *L, const char** ppszVars )
+void CFFScriptManager::RemoveVarsFromGlobal( const char** ppszVars )
 {
 	for( int i=0; ppszVars[i] != NULL; ++i )
 	{
@@ -521,7 +521,7 @@ void CFFScriptManager::RemoveVarsFromGlobal( lua_State *L, const char** ppszVars
 	}
 }
 
-void CFFScriptManager::RemoveKeysFromGlobalTable( lua_State *L, const char *pszTableName, const char** ppszKeys )
+void CFFScriptManager::RemoveKeysFromGlobalTable( const char *pszTableName, const char** ppszKeys )
 {
 	lua_getglobal(L, pszTableName);
 	if (lua_type(L, -1) == LUA_TTABLE)

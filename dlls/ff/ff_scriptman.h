@@ -57,8 +57,8 @@ public:
 	bool GetFunction(CBaseEntity* pEntity, const char* szFunctionName, luabind::adl::object& outObject);
 	bool GetFunction(luabind::adl::object& tableObject, const char* szFunctionName, luabind::adl::object& outObject);
 
-	void RemoveVarsFromGlobal( lua_State *L, const char **ppszVars );
-	void RemoveKeysFromGlobalTable( lua_State *L, const char *pszTableName, const char **ppszKeys );
+	void RemoveVarsFromGlobal( const char **ppszVars );
+	void RemoveKeysFromGlobalTable( const char *pszTableName, const char **ppszKeys );
 
 	bool RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName );
 
