@@ -23,6 +23,11 @@ extern "C"
 
 #include "luabind/luabind.hpp"
 
+// Prototype this before operator.hpp so it can be found for tostring() operator.
+std::ostream& operator<<(std::ostream&, const CBaseEntity&);
+
+#include "luabind/operator.hpp"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -30,13 +35,9 @@ extern "C"
 using namespace luabind;
 
 //---------------------------------------------------------------------------
-// TODO: evaluate these functions off lua's BaseEntity types
-namespace FFLib
+std::ostream& operator<<(std::ostream& stream, const CBaseEntity& entity)
 {
-	bool IsDispenser(CBaseEntity* pEntity);
-	bool IsGrenade(CBaseEntity* pEntity);
-	bool IsSentrygun(CBaseEntity* pEntity);
-	bool IsDetpack(CBaseEntity* pEntity);
+	return stream << const_cast<CBaseEntity&>(entity).GetName() << "<" << const_cast<CBaseEntity&>(entity).GetClassname() << ":" << entity.entindex() << ">";
 }
 
 //---------------------------------------------------------------------------
@@ -48,6 +49,7 @@ void CFFLuaLib::InitBase(lua_State* L)
 	[
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
+			.def(tostring(self))
 			.def("EmitSound",			&CBaseEntity::PlaySound)
 			.def("StopSound",			(void(CBaseEntity::*)(const char*))&CBaseEntity::StopSound)
 			.def("GetClassName",		&CBaseEntity::GetClassname)
@@ -58,12 +60,6 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("GetVelocity",			&CBaseEntity::GetAbsVelocity)
 			.def("SetVelocity",			&CBaseEntity::SetAbsVelocity)
 			.def("GetOwner",			&CBaseEntity::GetOwnerEntity)
-			// Use the global stuff for these
-			//.def("IsDispenser",			&FFLib::IsDispenser)
-			//.def("IsGrenade",			&FFLib::IsGrenade)
-			//.def("IsPlayer",			&CBaseEntity::IsPlayer)
-			//.def("IsSentryGun",			&FFLib::IsSentrygun)
-			//.def("IsDetpack",			&FFLib::IsDetpack)
 			.def("SetModel",			(void(CBaseEntity::*)(const char*))&CBaseEntity::SetModel)
 			.def("SetModel",			(void(CBaseEntity::*)(const char*, int))&CBaseEntity::SetModel)
 			.def("SetSkin",				&CBaseEntity::SetSkin)
