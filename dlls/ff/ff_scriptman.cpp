@@ -41,21 +41,25 @@ ConVar sv_mapluasuffix( "sv_mapluasuffix", "", FCVAR_ARCHIVE, "Have a custom lua
 ConVar sv_globalluascript( "sv_globalluascript", "", FCVAR_ARCHIVE, "Load a custom lua file globally after map scripts. Will overwrite map script. Will be loaded from maps\\globalscripts. To disable, set to \"\".");
 
 // redirect Lua's print function to the console
+// based on the default Lua 5.1 print implementation in lbaselib.c
 static int print(lua_State *L)
 {
-	int n=lua_gettop(L);
+	int n = lua_gettop(L);  /* number of arguments */
 	int i;
+	lua_getglobal(L, "tostring");
 	for (i=1; i<=n; i++)
 	{
-	if (i>1) Msg("\t");
-	if (lua_isstring(L,i))
-		Msg("%s",lua_tostring(L,i));
-	else if (lua_isnil(L,i))
-		Msg("%s","nil");
-	else if (lua_isboolean(L,i))
-		Msg("%s",lua_toboolean(L,i) ? "true" : "false");
-	else
-		Msg("%s:%p",luaL_typename(L,i),lua_topointer(L,i));
+		const char *s;
+		lua_pushvalue(L, -1);  /* function to be called */
+		lua_pushvalue(L, i);   /* value to print */
+		lua_call(L, 1, 1);
+		s = lua_tostring(L, -1);  /* get result */
+		if (s == NULL)
+			return luaL_error(L, LUA_QL("tostring") " must return a string to " LUA_QL("print"));
+		if (i>1)
+			Msg("\t");
+		Msg(s);
+		lua_pop(L, 1);  /* pop result */
 	}
 	Msg("\n");
 	return 0;
