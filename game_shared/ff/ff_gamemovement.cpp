@@ -79,6 +79,7 @@ public:
 	virtual bool CanAccelerate();
 	virtual void FullNoClipMove(float factor, float maxacceleration);
 	virtual void CheckVelocity( void );
+	virtual void CategorizePosition( void );
 
 	// CFFGameMovement
 	virtual void FullBuildMove( void );	
@@ -255,27 +256,19 @@ bool CFFGameMovement::CheckJumpButton(void)
 	float pcfactor = BHOP_PCFACTOR;
 	float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
-#ifdef GAME_DLL
-	if ( ffplayer->m_flMancannonTime + 0.5f <= gpGlobals->curtime )
+	if (speed > cap_soft) // apply soft cap
 	{
-#endif
-		
-		if (speed > cap_soft) // apply soft cap
-		{
-			if (speed > cap_mid) // Slow down even more if above mid cap
-				pcfactor = BHOP_PCFACTOR_MID;
+		if (speed > cap_mid) // Slow down even more if above mid cap
+			pcfactor = BHOP_PCFACTOR_MID;
 
-			float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
-			float multi = applied_cap / speed;
+		float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
+		float multi = applied_cap / speed;
 
-			mv->m_vecVelocity[0] *= multi;
-			mv->m_vecVelocity[1] *= multi;
+		mv->m_vecVelocity[0] *= multi;
+		mv->m_vecVelocity[1] *= multi;
 
-			Assert(multi <= 1.0f);
-		}
-#ifdef GAME_DLL
+		Assert(multi <= 1.0f);
 	}
-#endif
 
 	// --> Mirv: Trimp code v2.0!
 	//float fMul = FF_MUL_CONSTANT;
@@ -368,29 +361,22 @@ bool CFFGameMovement::CheckJumpButton(void)
 	}
 	// <-- Mirv: Trimp code v2.0!
 
-#ifdef GAME_DLL
-	if ( ffplayer->m_flMancannonTime + 0.5f <= gpGlobals->curtime )
+	if (!bTrimped)
 	{
-#endif
-		if (!bTrimped)
+		speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
+
+		// apply skim cap
+		if (speed > cap_hard )
 		{
-			speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
+			float applied_cap = BHOP_CAP_HARD * mv->m_flMaxSpeed;; 
+			float multi = applied_cap / speed;
 
-			// apply skim cap
-			if (speed > cap_hard )
-			{
-				float applied_cap = BHOP_CAP_HARD * mv->m_flMaxSpeed;; 
-				float multi = applied_cap / speed;
+			mv->m_vecVelocity[0] *= multi;
+			mv->m_vecVelocity[1] *= multi;
 
-				mv->m_vecVelocity[0] *= multi;
-				mv->m_vecVelocity[1] *= multi;
-
-				Assert(multi <= 1.0f);
-			}
+			Assert(multi <= 1.0f);
 		}
-#ifdef GAME_DLL
 	}
-#endif
 
 	//// Acclerate upward
 	//// If we are ducking...
@@ -469,6 +455,21 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// Flag that we jumped.
 	mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
 	return true;
+}
+
+void CFFGameMovement::CategorizePosition()
+{
+	BaseClass::CategorizePosition();
+
+#ifdef GAME_DLL
+	CFFPlayer *pFFPlayer = ToFFPlayer(player);
+	if (pFFPlayer->m_flMancannonTime > 0.0f && player->GetGroundEntity() != NULL || player->GetWaterLevel() > WL_Feet)
+	{
+		// reset jump pad time so that it stops conc speed limiting
+		// once you're firmly on the ground or in water
+		pFFPlayer->m_flMancannonTime = 0.0f;
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

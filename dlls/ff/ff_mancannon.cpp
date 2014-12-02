@@ -205,6 +205,7 @@ void CFFManCannon::OnObjectTouch( CBaseEntity *pOther )
 	// add an amount to their horizontal + vertical velocity (dont multiply cos slow classes wouldnt go anywhere!)
 	//pPlayer->ApplyAbsVelocityImpulse( (vecForward * ffdev_mancannon_push_forward.GetFloat()) + Vector( 0, 0, ffdev_mancannon_push_up.GetFloat() ) );
 
+	pPlayer->SetGroundEntity( (CBaseEntity *)NULL );
 	pPlayer->SetAbsVelocity((vecForward * MANCANNON_PUSH_FORWARD) + Vector( 0, 0, MANCANNON_PUSH_UP ) );
 	
 	//Vector vecVelocity = pPlayer->GetAbsVelocity();
