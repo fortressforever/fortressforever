@@ -594,6 +594,21 @@ namespace FFLib
 		return gEntList.FindEntityByName(NULL, szName, NULL);
 	}
 
+	luabind::adl::object GetEntitiesByName(const char *szName)
+	{
+		luabind::adl::object luatblEntities = luabind::newtable(_scriptman.GetLuaState());
+
+		int iTableKey = 1;
+		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, szName );
+		while( pEntity )
+		{
+			luatblEntities[iTableKey++] = luabind::adl::object(_scriptman.GetLuaState(), pEntity);
+			pEntity = gEntList.FindEntityByName( pEntity, szName );
+		}
+
+		return luatblEntities;
+	}
+
 	CFFPlayer* GetPlayer(CBaseEntity *pEntity)
 	{
 		// ToFFPlayer checks for NULL & IsPlayer()
@@ -3041,6 +3056,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("GetConvar",				&FFLib::GetConvar),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
+		def("GetEntitiesByName",		&FFLib::GetEntitiesByName),
 		def("GetInfoScriptById",		&FFLib::GetInfoScriptById),
 		def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
 		def("GetGrenade",				&FFLib::GetGrenade),
