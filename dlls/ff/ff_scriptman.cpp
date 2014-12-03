@@ -715,6 +715,9 @@ void CFFScriptManager::LuaWarning( const char *pszFormat, ... )
 
 CON_COMMAND( lua_dostring, "Run a server-side Lua string in the global environment" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	if ( engine->Cmd_Argc() == 1 )
 	{
 		Msg( "Usage: lua_dostring <string>\n" );
