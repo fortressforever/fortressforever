@@ -2457,7 +2457,7 @@ void C_FFPlayer::ClientThink( void )
 	// Hopefully when the particles die the ::Create()
 	// stuff gets removed automagically?
 
-	if (IsRampsliding())
+	if (IsRampsliding() && GetAbsVelocity().LengthSqr() > 0)
 	{
 		Vector vecDir = -GetAbsVelocity() / (GetAbsVelocity().LengthSqr() / 1000.0f);
 		g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-8, 8), random->RandomFloat(-8, 8), 0), 1, 1, &vecDir);
