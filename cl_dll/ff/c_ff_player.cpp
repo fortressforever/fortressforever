@@ -856,6 +856,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropBool( RECVINFO( m_bConcussed ) ),
 	RecvPropBool( RECVINFO( m_bTranqed ) ),
 	RecvPropBool( RECVINFO( m_bSliding ) ),
+	RecvPropBool( RECVINFO( m_bIsRampsliding ) ),
 	RecvPropEHandle( RECVINFO( m_hActiveSlowfield ) ),
 	RecvPropBool( RECVINFO( m_bInfected ) ),
 	RecvPropBool( RECVINFO( m_bImmune ) ),
@@ -1262,6 +1263,8 @@ C_FFPlayer::C_FFPlayer() :
 	
 	m_flSlidingTime = 0;
 	m_bSliding = false;
+
+	m_bIsRampsliding = false;
 
 	m_flSpeedModifier = 1.0f;
 	
@@ -2453,6 +2456,12 @@ void C_FFPlayer::ClientThink( void )
 {
 	// Hopefully when the particles die the ::Create()
 	// stuff gets removed automagically?
+
+	if (IsRampsliding())
+	{
+		Vector vecDir = -GetAbsVelocity() / (GetAbsVelocity().LengthSqr() / 1000.0f);
+		g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-8, 8), random->RandomFloat(-8, 8), 0), 1, 1, &vecDir);
+	}
 
 	// Update infection emitters
 	if( IsAlive() && IsInfected() && !IsImmune() && !IsDormant() )

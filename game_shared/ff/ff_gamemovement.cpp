@@ -18,7 +18,6 @@
 #include "in_buttons.h"
 #include "movevars_shared.h"
 #include "ff_mapguide.h"
-#include "IEffects.h"
 
 #define	STOP_EPSILON		0.1
 #define	MAX_CLIP_PLANES		5
@@ -958,13 +957,9 @@ void CFFGameMovement::CheckVelocity( void )
 	CFFPlayer *pPlayer = ToFFPlayer( player );
 	if( !pPlayer )
 		return;
-#ifdef CLIENT_DLL
-	if (IsRampSliding(pPlayer))
-	{
-		Vector vecDir = -mv->m_vecVelocity / (mv->m_vecVelocity.LengthSqr() / 1000.0f);
-		g_pEffects->Sparks(pPlayer->GetFeetOrigin() + Vector(random->RandomFloat(-8, 8), random->RandomFloat(-8, 8), 0), 1, 1, &vecDir);
-	}
-#endif
+
+	pPlayer->SetRampsliding(IsRampSliding(pPlayer));
+
 	if( !pPlayer->IsCloaked() )
 		return;
 

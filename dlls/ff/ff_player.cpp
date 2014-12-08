@@ -437,6 +437,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropBool( SENDINFO( m_bConcussed ) ),
 	SendPropBool( SENDINFO( m_bTranqed ) ),
 	SendPropBool( SENDINFO( m_bSliding ) ),
+	SendPropBool( SENDINFO( m_bIsRampsliding ) ),
 	SendPropEHandle( SENDINFO( m_hActiveSlowfield ) ),
 	SendPropBool( SENDINFO( m_bInfected ) ),
 	SendPropBool( SENDINFO( m_bImmune ) ),
@@ -574,6 +575,8 @@ CFFPlayer::CFFPlayer()
 
 	m_flSlidingTime = 0;		// Not sliding on creation
 	m_bSliding = false;
+
+	m_bIsRampsliding = false;
 
 	m_bGassed = false;
 	m_hGasser = NULL;
