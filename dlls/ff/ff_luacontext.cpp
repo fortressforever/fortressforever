@@ -149,7 +149,7 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName, co
 	lua_State* L = _scriptman.GetLuaState();
 
 	// If there is no active script then allow the ents to always go
-	if(!_scriptman.ScriptExists() || !L)
+	if(!L)
 		return false;
 
 	// set lua's reference to the calling entity
@@ -259,7 +259,7 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName, co
 	if(lua_pcall(L, pEntity||szTargetEntName ? nParams + 1 : nParams, 1, 0) != 0)
 	{
 		const char* szErrorMsg = lua_tostring(L, -1);
-		Msg("[SCRIPT] Error calling %s (%s) ent: %s\n",
+		_scriptman.LuaWarning("Error calling %s (%s) ent: %s\n",
 				   szFunctionName, 
 				   szErrorMsg,
 				   pEntity ? STRING(pEntity->GetEntityName()) : "NULL");

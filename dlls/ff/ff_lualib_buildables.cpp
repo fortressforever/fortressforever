@@ -33,7 +33,7 @@ void CFFLuaLib::InitBuildables(lua_State* L)
 	module(L)
 	[
 		// Buildable base
-		class_<CFFBuildableObject>("BaseBuildable")
+		class_<CFFBuildableObject, CBaseEntity>("BaseBuildable")
 			.def("GetTeamId",			&CFFBuildableObject::GetTeamNumber)
 			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer)
 			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam),

@@ -185,8 +185,6 @@ public:
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
 
-	virtual bool ClientCommand(const char *cmd);
-
 // In shared code.
 public:
 	// IFFPlayerAnimState overrides.

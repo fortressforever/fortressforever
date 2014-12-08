@@ -501,69 +501,20 @@ namespace FFLib
 
 	void ConsoleToAll(const char* szMessage)
 	{
-		DevMsg( "Debug: " );
-		DevMsg( szMessage );
-		DevMsg( "\n" );
-
 		Msg( szMessage );
 		Msg( "\n" );
 	}
 
-	void IncludeScript(const char* script)
+	luabind::adl::object IncludeScript(const char* script)
 	{
-		char realscript[255];
-
-		// make sure it's a valid filename (alphanum only)
-		bool good = true;
-		for (unsigned int i=0; i<strlen(script); i++)
-		{
-			if (script[i]=='/' || script[i]=='\\') continue;
-			if (script[i]>='a' && script[i]<='z') continue;
-			if (script[i]>='A' && script[i]<='Z') continue;
-			if (script[i]>='0' && script[i]<='9') continue;
-			if (script[i]=='_') continue;
-			
-			good = false;
-		}
-
-		// if it's a good filename, then go ahead and include it
-		if (good)
-		{
-			// Let's use a little more control
-			/*
-			strcpy(realscript, "maps/includes/" );
-			strcat(realscript, script);
-			strcat(realscript, ".lua");
-			*/
-
-			Q_snprintf( realscript, sizeof( realscript ), "maps/includes/%s.lua", script );
-
-			//////////////////////////////////////////////////////////////////////////
-			// Try a precache, rumor has it this will cause the engine to send the lua files to clients
-			if(PRECACHE_LUA_FILES)
-			{
-				V_FixSlashes(realscript);
-				if(filesystem->FileExists(realscript))
-				{
-					Util_AddDownload(realscript);
-
-					if(!engine->IsGenericPrecached(realscript))
-						engine->PrecacheGeneric(realscript, true);
-				}
-			}
-			//////////////////////////////////////////////////////////////////////////
-
-			if( !CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript ) )
-			{
-				// Try looking in the maps directory
-				Q_snprintf( realscript, sizeof( realscript ), "maps/%s.lua", script );
-				CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript );
-			}
-		}
-		else
-		{
-			Msg("[SCRIPT] Warning: Invalid filename: %s\n", script);
-		}
+		lua_State *L = _scriptman.GetLuaState();
+		lua_getglobal(L, "require");
+		lua_pushvalue(L, -1);  /* function to be called */
+		lua_pushstring(L, script);
+		lua_call(L, 1, 1);
+		luabind::adl::object objReturnValue = luabind::adl::object(luabind::from_stack(L, -1));
+		lua_pop(L, 2);  /* pop result and function */
+		return objReturnValue;
 	}
 
 	void RemoveEntity(CBaseEntity* pEntity)

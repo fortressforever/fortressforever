@@ -18,12 +18,19 @@ extern "C"
 }
 
 #include "luabind/luabind.hpp"
+#include "luabind/operator.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 //---------------------------------------------------------------------------
 using namespace luabind;
+
+/// tostring implemenation for CFFPlayer
+std::ostream& operator<<(std::ostream& stream, const CFFPlayer& player)
+{
+	return stream << const_cast<CFFPlayer&>(player).GetClassname() << ":" << const_cast<CFFPlayer&>(player).GetPlayerName() << ":" << player.entindex();
+}
 
 namespace FFLib
 {
@@ -46,6 +53,7 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 
 		// CFFPlayer
 		class_<CFFPlayer, CBasePlayer>("Player")
+			.def(tostring(self))
 			.def("MaxSpeed",			&CFFPlayer::MaxSpeed)
 			.def("GetSpeed",			&CFFPlayer::LuaGetMovementSpeed)
 			.def("AddAmmo",				&CFFPlayer::LuaAddAmmo)

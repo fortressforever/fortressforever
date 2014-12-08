@@ -41,16 +41,6 @@ extern CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer );
 
 extern bool			g_fGameOver;
 
-void SendScriptChecksumToClient(CBasePlayer* pPlayer, unsigned long scriptCRC)
-{
-	CSingleUserRecipientFilter filter(pPlayer);
-	filter.MakeReliable();
-
-	UserMessageBegin(filter, "FFScriptCRC");
-		WRITE_LONG(scriptCRC);
-	MessageEnd();
-}
-
 void FinishClientPutInServer( CFFPlayer *pPlayer )
 {
 	pPlayer->m_flNextSpawnDelay = 0;

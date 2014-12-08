@@ -94,7 +94,7 @@ namespace FFLib
 
 		if ( f == FILESYSTEM_INVALID_HANDLE )
 		{
-			Msg("[SCRIPT] Error saving data (File \"%s\" could not be opened for writing)\n",
+			_scriptman.LuaWarning("Error saving data (File \"%s\" could not be opened for writing)\n",
 				   filename?filename:"NULL");
 			return false;
 		}
@@ -220,7 +220,7 @@ namespace FFLib
 
 		if ( f == FILESYSTEM_INVALID_HANDLE )
 		{
-			Msg("[SCRIPT] Error loading data (File \"%s\" could not be opened for writing)\n", 
+			_scriptman.LuaWarning("Error loading data (File \"%s\" could not be opened for writing)\n", 
 				filename?filename:"NULL" );
 			return luabind::adl::object();
 		}
@@ -300,7 +300,7 @@ namespace FFLib
 				break;
 			}
 		default:
-			Msg("[SCRIPT] Error loading data (Data format is not recognized)\n");
+			_scriptman.LuaWarning("Error loading data (Data format is not recognized)\n");
 			return false;
 			break;
 		}
@@ -353,7 +353,7 @@ namespace FFLib
 		// if the validated suffix string is blank
 		if (!validSuffix[0])
 		{
-			Msg("[SCRIPT] Error saving data to %s_%s.luadat (Suffix must contain alphanumeric characters only)\n",
+			_scriptman.LuaWarning("Error saving data to %s_%s.luadat (Suffix must contain alphanumeric characters only)\n",
 				   STRING(gpGlobals->mapname), suffix);
 			return false;
 		}
@@ -373,7 +373,7 @@ namespace FFLib
 		// if the validated suffix string is blank
 		if (!validSuffix[0])
 		{
-			Msg("[SCRIPT] Error loading data from %s_%s.luadat (Suffix must contain alphanumeric characters only)\n",
+			_scriptman.LuaWarning("Error loading data from %s_%s.luadat (Suffix must contain alphanumeric characters only)\n",
 				   STRING(gpGlobals->mapname), suffix);
 			return luabind::adl::object();
 		}
@@ -393,7 +393,7 @@ namespace FFLib
 		// if the validated suffix string is blank
 		if (!validSuffix[0])
 		{
-			Msg("[SCRIPT] Error saving data to global_%s.luadat (Suffix must contain alphanumeric characters only)\n",
+			_scriptman.LuaWarning("Error saving data to global_%s.luadat (Suffix must contain alphanumeric characters only)\n",
 				   suffix);
 			return false;
 		}
@@ -413,7 +413,7 @@ namespace FFLib
 		// if the validated suffix string is blank
 		if (!validSuffix[0])
 		{
-			Msg("[SCRIPT] Error loading data from global_%s.luadat (Suffix must contain alphanumeric characters only)\n",
+			_scriptman.LuaWarning("Error loading data from global_%s.luadat (Suffix must contain alphanumeric characters only)\n",
 				   suffix);
 			return luabind::adl::object();
 		}
