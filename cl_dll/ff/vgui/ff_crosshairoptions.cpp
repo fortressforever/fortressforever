@@ -23,6 +23,9 @@
 
 CFFCrosshairOptions *g_pCrosshairOptions = NULL;
 
+#define FF_HIT_CROSSHAIR FF_WEAPON_TOMMYGUN + 1
+#define FF_NUM_CROSSHAIRS FF_HIT_CROSSHAIR + 1
+
 CFFCrosshairOptions::CFFCrosshairOptions(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
 {
 	g_pCrosshairOptions = this;
@@ -116,7 +119,7 @@ CFFCrosshairOptions::CFFCrosshairOptions(Panel *parent, char const *panelName) :
 	m_pCrosshairBackground->SetZPos(-1);
 
 	// Weapons list
-	m_pWeapon = new ComboBox(this, "Weapon", (int) FF_WEAPON_TOMMYGUN + 2, false);
+	m_pWeapon = new ComboBox(this, "Weapon", (int) FF_NUM_CROSSHAIRS, false);
 	m_pWeapon->AddActionSignalTarget(this);
 	m_pWeapon->SetEditable(false);
 
@@ -236,7 +239,7 @@ void CFFCrosshairOptions::Apply()
 		kv->AddSubKey(k);
 	}
 	
-	const WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 1];
+	const WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_HIT_CROSSHAIR];
 
 	KeyValues *k = new KeyValues("hit");
 	k->SetString("innerChar", VarArgs("%c", cinfo.innerChar));
@@ -317,7 +320,7 @@ void CFFCrosshairOptions::Load()
 	}
 
 	// hit crosshair
-	WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 1];
+	WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_HIT_CROSSHAIR];
 
 	KeyValues *k = kv->FindKey("hit");
 
@@ -413,7 +416,7 @@ void CFFCrosshairOptions::GetCrosshair(FFWeaponID iWeapon, char &innerChar, Colo
 //-----------------------------------------------------------------------------
 void CFFCrosshairOptions::GetHitCrosshair(char &innerChar, Color &innerCol, int &innerSize, char &outerChar, Color &outerCol, int &outerSize)
 {
-	WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 1];
+	WeaponCrosshair_t &cinfo = m_sCrosshairInfo[FF_HIT_CROSSHAIR];
 	WeaponCrosshair_t *pCrosshair = &cinfo;
 
 	if (cinfo.innerUseGlobal || m_bForceGlobalCrosshair)
@@ -445,7 +448,7 @@ void CFFCrosshairOptions::UpdateCrosshairs()
 {
 	int iCurrentWeapon = m_pWeapon->GetActiveItem();
 	//assert forgot to include hit
-	Assert(iCurrentWeapon >= 0 && iCurrentWeapon <= FF_WEAPON_TOMMYGUN + 1);
+	Assert(iCurrentWeapon >= 0 && iCurrentWeapon <= FF_HIT_CROSSHAIR);
 
 	WeaponCrosshair_t &cinfo = m_sCrosshairInfo[iCurrentWeapon];
 	cinfo.innerChar = m_pInnerCharacter->GetActiveItemUserData()->GetString("character")[0];
@@ -463,8 +466,8 @@ void CFFCrosshairOptions::UpdateCrosshairs()
 	cinfo.outerA = m_pOuterAlpha->GetValue();
 
 	// Don't allow the individual use globals to be selected if we're editing global
-	cinfo.innerUseGlobal = (iCurrentWeapon == 0 || iCurrentWeapon == FF_WEAPON_TOMMYGUN + 1) ? 0 : m_pInnerUseGlobal->IsSelected();
-	cinfo.outerUseGlobal = (iCurrentWeapon == 0 || iCurrentWeapon == FF_WEAPON_TOMMYGUN + 1) ? 0 : m_pOuterUseGlobal->IsSelected();
+	cinfo.innerUseGlobal = (iCurrentWeapon == 0 || iCurrentWeapon == FF_HIT_CROSSHAIR) ? 0 : m_pInnerUseGlobal->IsSelected();
+	cinfo.outerUseGlobal = (iCurrentWeapon == 0 || iCurrentWeapon == FF_HIT_CROSSHAIR) ? 0 : m_pOuterUseGlobal->IsSelected();
 
 	m_bForceGlobalCrosshair = m_pForceGlobal->IsSelected();
 
@@ -483,7 +486,7 @@ void CFFCrosshairOptions::UpdateCrosshairs()
 
 	// Don't allow them to select "use global" for an inner/outer if they are
 	// editing the global one (logical)
-	if (iCurrentWeapon == 0 || iCurrentWeapon == FF_WEAPON_TOMMYGUN + 1)
+	if (iCurrentWeapon == 0 || iCurrentWeapon == FF_HIT_CROSSHAIR)
 	{
 		m_pInnerUseGlobal->SetEnabled(false);
 		m_pOuterUseGlobal->SetEnabled(false);
@@ -520,7 +523,7 @@ void CFFCrosshairOptions::UpdateCrosshairs()
 void CFFCrosshairOptions::UpdateSliders()
 {
 	int iCurrentWeapon = m_pWeapon->GetActiveItem();
-	Assert(iCurrentWeapon >= 0 && iCurrentWeapon <= FF_WEAPON_TOMMYGUN);
+	Assert(iCurrentWeapon >= 0 && iCurrentWeapon <= FF_HIT_CROSSHAIR);
 
 	const WeaponCrosshair_t &cinfo = m_sCrosshairInfo[iCurrentWeapon];
 
