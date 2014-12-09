@@ -21,7 +21,7 @@
 #define HISTORY_DRAW_TIME	"5"
 
 ConVar hud_drawhistory_time( "hud_drawhistory_time", HISTORY_DRAW_TIME, FCVAR_ARCHIVE );
-ConVar hud_fastswitch( "hud_fastswitch", "0", FCVAR_ARCHIVE, "0 = none | 1 = keyboard & mouse | 2 = keyboard only (old HL/TFC style)" );
+ConVar hud_fastswitch( "hud_fastswitch", "1", FCVAR_ARCHIVE, "0 = none | 1 = keyboard & mouse | 2 = keyboard only (old HL/TFC style)" );
 ConVar hud_weaponselect( "hud_weaponselect", "1", FCVAR_ARCHIVE, "Briefly shows the weapon select menu whenever switching weapons when hud_fastswitch is enabled" );
 
 //-----------------------------------------------------------------------------
