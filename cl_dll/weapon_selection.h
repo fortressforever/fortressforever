@@ -39,6 +39,7 @@ public:
 	virtual void OnThink(void);
 
 	virtual void OpenSelection( void );
+	virtual void ShowSelection( void );
 	virtual void HideSelection( void );
 
 	virtual void				CancelWeaponSelection( void );
@@ -98,6 +99,7 @@ protected:
 	bool	CanBeSelectedInHUD( C_BaseCombatWeapon *pWeapon );
 
 	void	UpdateSelectionTime( void );
+	void	QuicklyFadeOut( void );
 
 	float	m_flSelectionTime;	// most recent time at which weapon selection had input
 
