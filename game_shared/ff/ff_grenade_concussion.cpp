@@ -367,7 +367,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			// AfterShock: This takes into account vertical speed too, limiting horizontal speed if you're going upwards aswell
 			//             is this a bad thing? 
 #ifdef GAME_DLL
-			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
+			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 3.0f )
 			{
 				if ( vecResult.Length() > MAX_JUMPPAD_TO_CONC_SPEED )
 				{
