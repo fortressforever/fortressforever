@@ -1,17 +1,3 @@
-/// =============== Fortress Forever ==============
-/// ======== A modification for Half-Life 2 =======
-///
-/// @file ff_weapon_jumpgun.cpp
-/// @author Gavin "Mirvin_Monkey" Bramhill
-/// @date December 21, 2004
-/// @brief The FF railgun code & class declaration
-///
-/// REVISIONS
-/// ---------
-/// Jan 19 2004 Mirv: First implementation
-//
-//	11/11/2006 Mulchman: Reverting back to bouncy rail
-
 #include "cbase.h"
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
@@ -23,13 +9,10 @@
 
 	#include "soundenvelope.h"
 	#include "c_ff_player.h"
-	//#include "c_te_effect_dispatch.h"
-	
 	#include "beamdraw.h"
 	#include "c_te_effect_dispatch.h"
 
 	extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
-	//extern void DrawHalo(IMaterial* pMaterial, const Vector &source, float scale, float const *color, float flHDRColorScale);
 #else
 	#include "omnibot_interface.h"
 	#include "ff_player.h"
@@ -296,11 +279,6 @@ bool CFFWeaponJumpgun::Deploy( void )
 	//Reset the last weapon to this jumpgun
 	ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon(this);
 
-//#else
-
-	//m_flTotalChargeTimeBuffered = m_flClampedChargeTimeBuffered = 0.0f;
-	//m_flChargeTimeBufferedNextUpdate = 0.0f;
-
 #endif
 
 	return BaseClass::Deploy();
@@ -350,11 +328,6 @@ bool CFFWeaponJumpgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 void CFFWeaponJumpgun::Precache( void )
 {
 	PrecacheScriptSound( "railgun.single_shot" );		// SINGLE
-	PrecacheScriptSound( "railgun.charged_shot" );		// WPN_DOUBLE
-	PrecacheScriptSound( "railgun.chargeloop" );		// SPECIAL1
-	PrecacheScriptSound( "railgun.halfcharge" );		// SPECIAL2 - half charge notification
-	PrecacheScriptSound( "railgun.fullcharge" );		// SPECIAL3 - full charge notification
-	PrecacheScriptSound( "railgun.overcharge" );		// BURST - overcharge
 	m_iShockwaveTexture = PrecacheModel( "sprites/lgtning.vmt" );	
 
 	BaseClass::Precache();
@@ -366,8 +339,6 @@ void CFFWeaponJumpgun::Precache( void )
 void CFFWeaponJumpgun::Fire( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
-	//const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();  
-	// Jiggles: Above line removed until we decide on a good base damage value
 
 	if (!pPlayer)
 		return;
@@ -384,7 +355,6 @@ void CFFWeaponJumpgun::Fire( void )
 	horizPush *= JUMPGUN_HORIZONTALPUSH;
 
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	//Vector vecSrc = pPlayer->GetAbsOrigin() + vecForward * 8.0f + vecRight * 5.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 22.0f);
 
 	float flPercent = m_flClampedChargeTime / JUMPGUN_CHARGEUPTIME;
 
@@ -430,8 +400,6 @@ void CFFWeaponJumpgun::Fire( void )
 	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
 	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
 
-	//pPlayer->ViewPunch( -QAngle( RAILGUN_RECOIL_MIN + ((RAILGUN_RECOIL_MAX - RAILGUN_RECOIL_MIN) * flPercent), 0, 0 ) );
-
 	m_flNextPrimaryAttack = (JUMPGUN_ALLOWUNCHARGEDSHOT) ? (gpGlobals->curtime + 0.2f) : (gpGlobals->curtime + JUMPGUN_CHARGEUPTIME);
 
 	// reset these variables
@@ -462,10 +430,7 @@ void CFFWeaponJumpgun::Fire( void )
 		JUMPGUN_EFFECT_ALPHA,					//a
 		JUMPGUN_EFFECT_SPEED,					//speed
 		FBEAM_FADEOUT
-		);
-
-#ifdef GAME_DLL
-#endif
+	);
 }
 
 //----------------------------------------------------------------------------
@@ -518,9 +483,7 @@ void CFFWeaponJumpgun::ItemPostFrame( void )
 		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
 	}
 
-#ifdef GAME_DLL
-#else // ^^ GAME_DLL ^^
-
+#ifdef CLIENT_DLL
 	// create a little buffer so some client stuff can be more smooth
 	if (m_flChargeTimeBufferedNextUpdate <= gpGlobals->curtime)
 	{
@@ -528,7 +491,6 @@ void CFFWeaponJumpgun::ItemPostFrame( void )
 		m_flTotalChargeTimeBuffered = m_flTotalChargeTime;
 		m_flClampedChargeTimeBuffered = m_flClampedChargeTime;
 	}
-
 #endif
 }
 
