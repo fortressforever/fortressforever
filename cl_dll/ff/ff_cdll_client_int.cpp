@@ -6,6 +6,7 @@
 
 #define CLASSCFG_PATH				"cfg/%s.cfg"
 #define CLASSCFG_DEFAULT_PATH		"cfg/classcfg_default.cfg"
+// userconfig is a helper cfg for the default class configs
 #define USERCONFIG_PATH				"cfg/userconfig.cfg"
 #define USERCONFIG_DEFAULT_PATH		"cfg/userconfig_default.cfg"
 
@@ -13,58 +14,74 @@ int CFFClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 {
 	int ret = BaseClass::Init( appSystemFactory, physicsFactory, pGlobals );
 
-	PopulateMissingConfigs();
+	PopulateMissingClassConfigs();
+	PopulateMissingUserConfig();
 	
 	return ret;
 }
 
-void CFFClient::PopulateMissingConfigs()
+void CFFClient::PopulateMissingClassConfigs()
 {
-	// populate class configs
-	if (filesystem->FileExists(CLASSCFG_DEFAULT_PATH, "MOD"))
+	bool bIsBufferPopulated = false;
+	CUtlBuffer bufferDefaultConfig;
+	char szConfigPath[MAX_PATH] = {0};
+
+	// it's still worth creating empty class .cfg files if the default cfg
+	// doesn't exist, so just mark the buffer as populated and continue as normal
+	if (!filesystem->FileExists(CLASSCFG_DEFAULT_PATH, "MOD"))
+		bIsBufferPopulated = true;
+
+	for (int iClass=CLASS_SCOUT; iClass<=CLASS_CIVILIAN; iClass++ )
 	{
-		char szConfigPath[MAX_PATH] = {0};
-		CUtlBuffer buf(0,0,false);
-		bool bIsBufferPopulated = false;
+		Q_snprintf(szConfigPath, sizeof(szConfigPath), CLASSCFG_PATH, Class_IntToString(iClass));
 
-		for (int iClass=CLASS_SCOUT; iClass<=CLASS_CIVILIAN; iClass++ )
+		// don't overwrite existing cfgs
+		if (filesystem->FileExists(szConfigPath))
+			continue;
+		
+		// only read the file if we know theres a use for its contents
+		if (!bIsBufferPopulated)
 		{
-			Q_snprintf(szConfigPath, sizeof(szConfigPath), CLASSCFG_PATH, Class_IntToString(iClass));
-
-			if (!filesystem->FileExists(szConfigPath))
+			// read in binary mode
+			FileHandle_t fileDefaultConfig = filesystem->Open(CLASSCFG_DEFAULT_PATH, "rb");
+			
+			// if we fail to open the file, act like the file doesn't exist
+			// and generate blank class cfgs
+			if ( fileDefaultConfig != FILESYSTEM_INVALID_HANDLE )
 			{
-				if (!bIsBufferPopulated)
-				{
-					FileHandle_t f = filesystem->Open(CLASSCFG_DEFAULT_PATH, "rb");
-					
-					if ( f == FILESYSTEM_INVALID_HANDLE )
-						continue;
-
-					filesystem->ReadToBuffer( f, buf );
-					filesystem->Close(f);
-
-					bIsBufferPopulated = true;
-				}
-
-				filesystem->WriteFile(szConfigPath, "MOD", buf);
+				filesystem->ReadToBuffer( fileDefaultConfig, bufferDefaultConfig );
+				filesystem->Close(fileDefaultConfig);
 			}
-		}
-	}
 
-	// populate userconfig (helper cfg for class cfgs)
-	if (filesystem->FileExists(USERCONFIG_DEFAULT_PATH, "MOD") && !filesystem->FileExists(USERCONFIG_PATH, "MOD"))
+			bIsBufferPopulated = true;
+		}
+
+		filesystem->WriteFile(szConfigPath, "MOD", bufferDefaultConfig);
+	}
+}
+
+void CFFClient::PopulateMissingUserConfig()
+{
+	// don't overwrite existing cfgs
+	if (filesystem->FileExists(USERCONFIG_PATH, "MOD"))
+		return;
+
+	CUtlBuffer bufferDefaultConfig;
+
+	// if the default doesn't exist or fails to get read, then a blank
+	// userconfig.cfg will be created
+	if (filesystem->FileExists(USERCONFIG_DEFAULT_PATH, "MOD"))
 	{
-		CUtlBuffer buf(0,0,false);
-		FileHandle_t f = filesystem->Open(USERCONFIG_DEFAULT_PATH, "rb");
+		FileHandle_t fileDefaultConfig = filesystem->Open(USERCONFIG_DEFAULT_PATH, "rb");
 
-		if ( f != FILESYSTEM_INVALID_HANDLE )
+		if ( fileDefaultConfig != FILESYSTEM_INVALID_HANDLE )
 		{
-			filesystem->ReadToBuffer( f, buf );
-			filesystem->Close(f);
-
-			filesystem->WriteFile(USERCONFIG_PATH, "MOD", buf);
+			filesystem->ReadToBuffer( fileDefaultConfig, bufferDefaultConfig );
+			filesystem->Close(fileDefaultConfig);
 		}
 	}
+
+	filesystem->WriteFile(USERCONFIG_PATH, "MOD", bufferDefaultConfig);
 }
 
 CFFClient gFFClient;

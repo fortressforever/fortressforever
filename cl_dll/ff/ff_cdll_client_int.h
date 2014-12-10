@@ -21,7 +21,8 @@ public:
 	// --> Extended functions
 
 	// <-- FF-specific functions
-	void PopulateMissingConfigs();
+	void PopulateMissingClassConfigs();
+	void PopulateMissingUserConfig();
 	// -->
 };
 
