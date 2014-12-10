@@ -1199,11 +1199,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\game_shared\ff\ff_weapon_jumpdown.cpp"
+					RelativePath="..\game_shared\ff\ff_weapon_ic.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\game_shared\ff\ff_weapon_ic.cpp"
+					RelativePath="..\game_shared\ff\ff_weapon_jumpgun.cpp"
 					>
 				</File>
 				<File

@@ -239,7 +239,7 @@ bool CFFWeaponDeployManCannon::Holster( CBaseCombatWeapon *pSwitchingTo )
 	//jump values, but it wont work right if the last weapon is set to the very jumpgun we are switching to
 	if( pSwitchingTo != NULL )
 	{
-		if( ((CFFWeaponBase*)pSwitchingTo)->GetWeaponID() != FF_WEAPON_JUMPDOWN )
+		if( ((CFFWeaponBase*)pSwitchingTo)->GetWeaponID() != FF_WEAPON_JUMPGUN )
 		{
 			ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon( (CFFWeaponBase*)pSwitchingTo );
 		}

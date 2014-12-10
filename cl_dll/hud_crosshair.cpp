@@ -342,10 +342,10 @@ void CHudCrosshair::Paint( void )
 		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
 		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
 	}
-	else if ( weaponID == FF_WEAPON_JUMPDOWN )
+	else if ( weaponID == FF_WEAPON_JUMPGUN )
 	{
-		extern float GetJumpdownCharge();
-		float flCharge = GetJumpdownCharge();
+		extern float GetJumpgunCharge();
+		float flCharge = GetJumpgunCharge();
 		
 		if( flCharge <= 0.0f )
 			return;
