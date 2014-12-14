@@ -536,6 +536,7 @@ public:
 	void SetRampsliding( bool bIsRampsliding ) { m_bIsRampsliding = bIsRampsliding; }
 protected:
 	bool m_bIsRampsliding;
+	float m_flNextRampslideFX;
 
 	// ----------------------------------
 	// Cloak stuff

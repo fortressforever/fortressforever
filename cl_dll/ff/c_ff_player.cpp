@@ -26,6 +26,7 @@
 #include "dlight.h"
 #include "beamdraw.h"
 #include "fx.h"
+#include "decals.h"
 #include "c_te_effect_dispatch.h"
 
 #include "view.h"
@@ -132,6 +133,15 @@ ConVar cl_gib_blood_scale("cl_gib_blood_scale", "20", FCVAR_ARCHIVE);
 ConVar cl_gib_blood_force_scale("cl_gib_blood_force_scale", ".1", FCVAR_ARCHIVE);
 ConVar cl_gib_blood_count("cl_gib_blood_count", "3", FCVAR_ARCHIVE);
 ConVar cl_gib_blood_force_randomness("cl_gib_blood_force_randomness", "1", FCVAR_ARCHIVE);
+
+// rampslide effect settings
+ConVar cl_rampslidefx("cl_rampslidefx", "1", FCVAR_ARCHIVE, "Enables/disables rampslide particle effects");
+ConVar cl_rampslidefx_interval("cl_rampslidefx_interval", "0", FCVAR_ARCHIVE, "Time between spawning rampslide particles");
+ConVar cl_rampslidefx_offset("cl_rampslidefx_offset", "8", FCVAR_ARCHIVE, "Maximum random horizontal offset from the feet of the player to spawn rampsliding effects");
+ConVar cl_rampslidefx_offset_vertical("cl_rampslidefx_offset_vertical", "0", FCVAR_ARCHIVE, "Vertical offset from the feet of the player to spawn rampsliding effects", true, -4.0f, true, 32.0f);
+ConVar cl_rampslidefx_spark_length("cl_rampslidefx_spark_length", "1", FCVAR_ARCHIVE, "Length of the sparks");
+ConVar cl_rampslidefx_dust_size("cl_rampslidefx_dust_size", "4", FCVAR_ARCHIVE, "The number of dust particles spawned");
+ConVar cl_rampslidefx_debug("cl_rampslidefx_alwayson", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "If 1, spawns ramspliding particles regardless of whether or not player are actually rampsliding");
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
 static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Change class instantly");
@@ -2457,10 +2467,46 @@ void C_FFPlayer::ClientThink( void )
 	// Hopefully when the particles die the ::Create()
 	// stuff gets removed automagically?
 
-	if (IsRampsliding() && GetAbsVelocity().LengthSqr() > 0)
+	if (cl_rampslidefx.GetBool() && (cl_rampslidefx_debug.GetBool() || IsRampsliding()) && gpGlobals->curtime >= m_flNextRampslideFX && GetAbsVelocity().LengthSqr() > 0)
 	{
-		Vector vecDir = -GetAbsVelocity() / (GetAbsVelocity().LengthSqr() / 1000.0f);
-		g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-8, 8), random->RandomFloat(-8, 8), 0), 1, 1, &vecDir);
+		bool bIsSlidingOnMetal = false;
+		Vector vecDir = Vector(0,0,1);
+
+		// get ground
+		trace_t tr;
+		Vector vecStartPos = GetAbsOrigin();
+		vecStartPos.z += GetPlayerMins()[ 2 ];
+		Vector vecEndPos = vecStartPos - Vector(0,0,32);
+		UTIL_TraceLine( vecStartPos, vecEndPos, MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
+
+		if (tr.DidHit())
+		{
+			surfacedata_t *pSurfaceData = physprops->GetSurfaceData( tr.surface.surfaceProps );
+			char cMaterial = pSurfaceData->game.material;
+
+			bIsSlidingOnMetal = cMaterial == CHAR_TEX_METAL || cMaterial == CHAR_TEX_VENT || cMaterial == CHAR_TEX_GRATE || cMaterial == CHAR_TEX_COMPUTER;
+
+			vecDir = tr.plane.normal;
+		}
+
+		int iRandomOffset = cl_rampslidefx_offset.GetFloat();
+		float flVerticalOffset = cl_rampslidefx_offset_vertical.GetFloat();
+
+		// sparks on metal, dust on everything else
+		if ( bIsSlidingOnMetal )
+		{
+			int iSparkMagnitude = 1.0f; // controls the width of the spark, but doesn't seem to affect much, so it's not particularly useful
+			int iSparkLength = cl_rampslidefx_spark_length.GetInt();
+			g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), iSparkMagnitude, iSparkLength, &vecDir);
+		}
+		else
+		{
+			float flDustSize = cl_rampslidefx_dust_size.GetFloat();
+			float flDustSpeed = 0.0f; // controls how far apart the dust particles get spawned in vecDir's direction; not particularly useful
+			g_pEffects->Dust(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), vecDir, flDustSize, flDustSpeed);
+		}
+
+		m_flNextRampslideFX = gpGlobals->curtime + cl_rampslidefx_interval.GetFloat();
 	}
 
 	// Update infection emitters
