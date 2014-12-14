@@ -230,7 +230,7 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM)
 
 	m_pAutoAssignButton = new FFButton(this, "AutoAssignButton", (const char *) NULL, this, "AutoAssign");
 	m_pSpectateButton = new FFButton(this, "SpectateButton", (const char *) NULL, this, "Spectate");
-	m_pFlythroughButton = new FFButton(this, "FlythroughButton", (const char *) NULL, this, "mapguide overview");
+	m_pFlythroughButton = new FFButton(this, "FlythroughButton", (const char *) NULL, this, "mapguide");
 
 	m_pMapScreenshotButton = new FFButton(this, "MapScreenshotButton", (const char *) NULL, this, "MapShot");
 

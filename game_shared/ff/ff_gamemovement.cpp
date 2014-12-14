@@ -77,7 +77,6 @@ public:
 	// CGameMovement
 	virtual bool CheckJumpButton();
 	virtual bool CanAccelerate();
-	virtual void FullNoClipMove(float factor, float maxacceleration);
 	virtual void CheckVelocity( void );
 	virtual void CategorizePosition( void );
 
@@ -470,31 +469,6 @@ void CFFGameMovement::CategorizePosition()
 		pFFPlayer->m_flMancannonTime = 0.0f;
 	}
 #endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Mapguide movement. Needs sorting out at some point
-//-----------------------------------------------------------------------------
-void CFFGameMovement::FullNoClipMove(float factor, float maxacceleration)
-{
-#ifdef CLIENT_DLL
-	//CFFPlayer *ffplayer = (CFFPlayer *) player;
-
-	//if( ffplayer->m_flNextMapGuideTime > gpGlobals->curtime )
-	//{
-	//	CFFMapGuide *nextguide = ffplayer->m_hNextMapGuide;
-	//	CFFMapGuide *lastguide = ffplayer->m_hLastMapGuide;
-
-	//	float t = clamp( ( ffplayer->m_flNextMapGuideTime - gpGlobals->curtime ) / 10.0f, 0, 1.0f );
-
-	//	Vector vecNewPos = t * lastguide->GetAbsOrigin() + ( 1 - t ) * nextguide->GetAbsOrigin();
-	//	QAngle angNewDirection = t * lastguide->GetAbsAngles() + ( 1 - t ) * nextguide->GetAbsAngles();
-
-	//	// Apply these here
-	//}
-	//else
-#endif
-		BaseClass::FullNoClipMove(factor, maxacceleration);
 }
 
 //-----------------------------------------------------------------------------

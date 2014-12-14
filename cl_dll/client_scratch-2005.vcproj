@@ -5423,14 +5423,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\game_controls\mapguidemenu.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\game_controls\mapguidemenu.h"
-						>
-					</File>
-					<File
 						RelativePath="game_controls\MapOverview.cpp"
 						>
 					</File>
