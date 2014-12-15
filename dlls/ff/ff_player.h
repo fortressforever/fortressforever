@@ -878,6 +878,9 @@ protected:
 	// Concussion stuffs
 public:
 	bool IsConcussed( void ) const { return m_bConcussed; }
+	void StartFlagTrail( int teamId );
+	void StopFlagTrail( void );
+
 protected:
 	CNetworkVar( bool, m_bConcussed );
 	// **********************************
