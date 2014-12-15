@@ -18,6 +18,7 @@
 	#include "ff_player.h"
 	#include "soundent.h"
 	#include "util.h"
+	#include "te_effect_dispatch.h"
 #else
 	#include "c_ff_player.h"
 	#include "iinput.h"
@@ -213,6 +214,20 @@ END_NETWORK_TABLE()
 		if (GetAbsOrigin().z <= MIN_COORD_INTEGER) return false;
 
 		return true;
+	}
+
+	/** Override CBaseEntity::Splash to spawn splash effects
+		when the projectile enters water
+	*/
+	void CFFProjectileBase::Splash()
+	{
+		CEffectData	data;
+
+		data.m_fFlags  = 0;
+		data.m_vOrigin = GetAbsOrigin();
+		data.m_flScale = 8.0f;
+
+		DispatchEffect("watersplash", data);
 	}
 #endif
 

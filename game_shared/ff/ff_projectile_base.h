@@ -82,6 +82,9 @@ private:
 	void SetupInitialTransmittedVelocity(const Vector &velocity);
 	int TakeEmp();
 	virtual bool IsInWorld( void ) const;
+	
+	// from CBaseEntity
+	virtual void Splash();
 
 #endif
 
