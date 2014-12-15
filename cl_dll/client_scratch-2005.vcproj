@@ -328,6 +328,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff\ff_cdll_client_int.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_cdll_client_int.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_glyph.cpp"
 				>
 			</File>
