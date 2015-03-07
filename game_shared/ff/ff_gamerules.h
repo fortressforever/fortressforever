@@ -132,6 +132,8 @@ public:
 	virtual ~CFFGameRules();
 
 	virtual void	RadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrc, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore);
+	virtual float	GetAdjustedPushForce(float flPushForce, CBaseEntity *pVictim, const CTakeDamageInfo &info);
+	virtual float	GetAdjustedDamage(float flDamage, CBaseEntity *pVictim, const CTakeDamageInfo &info);
 
 	virtual float	FlPlayerFallDamage(CBasePlayer *pPlayer);
 	virtual bool	FlPlayerFallDeathDoesScreenFade( CBasePlayer *pPlayer );
