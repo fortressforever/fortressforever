@@ -823,7 +823,7 @@ void CFFGameMovement::Friction( void )
 			friction = sv_friction.GetFloat();
 
 		// Grab friction value.
-		friction *= /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
+		friction *= pFFPlayer->GetFriction() * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 
 		// Bleed off some speed, but if we have less than the bleed
 		//  threshhold, bleed the theshold amount.
