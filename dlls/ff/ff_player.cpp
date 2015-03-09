@@ -6084,7 +6084,6 @@ void CFFPlayer::UnGas( void )
 void CFFPlayer::StartSliding( float flDuration, float flIconDuration )
 {
 	m_bSliding = true;
-	SetFriction( 0.0f );
 
 	if(flDuration != -1)
 		m_flSlidingTime = gpGlobals->curtime + flDuration;
@@ -6113,7 +6112,6 @@ void CFFPlayer::StopSliding( void )
 {
 	m_bSliding = false;
 	m_flSlidingTime = 0;
-	SetFriction( 1.0f );
 
 	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
 	user.MakeReliable();
