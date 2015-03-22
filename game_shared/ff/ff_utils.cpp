@@ -731,7 +731,6 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 
 	UserMessageBegin(user, "FF_HudLua");
 		WRITE_BYTE(HUD_ICON);
-		//WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
@@ -756,7 +755,6 @@ void FF_LuaHudBox(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, i
 
 	UserMessageBegin(user, "FF_HudLua");
 		WRITE_BYTE(HUD_BOX);
-		//WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
@@ -789,7 +787,6 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 
 	UserMessageBegin(user, "FF_HudLua");
 		WRITE_BYTE(HUD_TEXT);
-		//WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
@@ -813,7 +810,6 @@ void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y,
 
 	UserMessageBegin(user, "FF_HudLua");
 		WRITE_BYTE(HUD_TIMER);
-		//WRITE_STRING(pszIdentifier);
 		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
@@ -834,8 +830,7 @@ void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier)
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(HUD_REMOVE);	// HUD_REMOVE
-		//WRITE_STRING(pszIdentifier);
+		WRITE_BYTE(HUD_REMOVE);
 		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
 	MessageEnd();
 }
