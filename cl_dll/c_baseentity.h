@@ -1041,6 +1041,7 @@ public:
 
 	// Sets physics parameters
 	void				SetFriction( float flFriction );
+	float				GetFriction( void ) const;
 
 	void				SetGravity( float flGravity );
 	float				GetGravity( void ) const;
@@ -1890,6 +1891,11 @@ inline const Vector& C_BaseEntity::GetBaseVelocity() const
 inline void	C_BaseEntity::SetBaseVelocity( const Vector& v ) 
 { 
 	m_vecBaseVelocity = v; 
+}
+
+inline float C_BaseEntity::GetFriction() const
+{ 
+	return m_flFriction;
 }
 
 inline void C_BaseEntity::SetFriction( float flFriction ) 
