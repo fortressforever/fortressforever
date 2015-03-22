@@ -25,6 +25,7 @@
 #include "ff_buildableobjects_shared.h"
 #include "ff_radiotagdata.h"
 #include "model_types.h"
+#include "IEffects.h"
 
 class C_FFBuildableObject;
 class C_FFDetpack;
@@ -529,6 +530,13 @@ protected:
 	bool m_bSliding;
 	// ----------------------------------
 // *** SQUEEK
+
+public:
+	bool IsRampsliding( void ) const { return m_bIsRampsliding; }
+	void SetRampsliding( bool bIsRampsliding ) { m_bIsRampsliding = bIsRampsliding; }
+protected:
+	bool m_bIsRampsliding;
+	float m_flNextRampslideFX;
 
 	// ----------------------------------
 	// Cloak stuff

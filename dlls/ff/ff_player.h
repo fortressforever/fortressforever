@@ -539,6 +539,12 @@ protected:
 	void StopSliding( void ); // stop the overpressure friction/acceleration effect
 	CNetworkVar( bool, m_bSliding );
 
+public:
+	bool IsRampsliding( void ) const { return m_bIsRampsliding; }
+	void SetRampsliding( bool bIsRampsliding ) { m_bIsRampsliding = bIsRampsliding; }
+protected:
+	CNetworkVar( bool, m_bIsRampsliding );
+
 public:	
 	bool IsInfected( void ) const		{ return m_bInfected; }
 	bool IsImmune( void ) const			{ return m_bImmune; }
