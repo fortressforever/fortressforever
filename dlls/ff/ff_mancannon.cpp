@@ -45,7 +45,7 @@ extern const char *g_pszFFManCannonSounds[];
 
 extern const char *g_pszFFGenGibModels[];
 
-ConVar ffdev_mancannon_push_forward( "ffdev_mancannon_push_forward", "600", FCVAR_FF_FFDEV_REPLICATED );
+ConVar ffdev_mancannon_push_forward( "ffdev_mancannon_push_forward", "768", FCVAR_FF_FFDEV_REPLICATED );
 #define MANCANNON_PUSH_FORWARD ffdev_mancannon_push_forward.GetInt()
 //ConVar ffdev_mancannon_push_up( "ffdev_mancannon_push_up", "512", FCVAR_FF_FFDEV_REPLICATED );
 #define MANCANNON_PUSH_UP 512 //ffdev_mancannon_push_up.GetInt()
