@@ -70,6 +70,10 @@ using namespace luabind;
 // global script manager instance
 CFFScriptManager _scriptman;
 
+CStringRegistry	g_HudElementStrings;
+int nextHudElementIndex;
+
+/////////////////////////////////////////////////////////////////////////////
 CFFScriptManager::CFFScriptManager()
 {
 	L = NULL;
@@ -285,8 +289,29 @@ bool CFFScriptManager::LoadFile(const char *filename)
 	return true;
 }
 
+// ----------- HUD ELEMENTS ----------
+int CFFScriptManager::GetOrAddHudElementIndex(const char* szElementName)
+{
+	if(!szElementName)
+		return;
+
+	int existingIndex = g_HudElementStrings.GetStringID( szElementName ); // Gets key for name
+	if ( existingIndex < 0 )
+	{
+		nextHudElementIndex++;
+		g_HudElementStrings.AddString( szElementName, nextHudElementIndex ); // Inserts
+		return nextHudElementIndex;
+	}
+
+	return existingIndex;
+}
+
+
 void CFFScriptManager::LevelInit(const char* szMapName)
 {
+	g_HudElementStrings.ClearStrings();
+	nextHudElementIndex = 0;
+
 	const char* default_luafile = "maps/default.lua";
 	VPROF_BUDGET("CFFScriptManager::LevelInit", VPROF_BUDGETGROUP_FF_LUA);
 
