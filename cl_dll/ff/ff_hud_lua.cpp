@@ -653,25 +653,27 @@ Panel *CHudLua::GetHudElement(int hudIdentifier, HudElementType_t iType)
 	}
 
 	Panel *pPanel = NULL;
+	char szPanelName[16];
+	sprintf(szPanelName, "ff_hud_lua_%d", hudIdentifier);
 
 	// Return a new one of the correct type
 	switch (iType)
 	{
 		case HUD_ICON:
 		{
-			pPanel = new ImagePanel(this, "ImagePanel");
+			pPanel = new ImagePanel(this, szPanelName);
 		}
 		break;
 
 		case HUD_BOX:
 		{
-			pPanel = new FFLuaBox(this, "FFLuaBox");
+			pPanel = new FFLuaBox(this, szPanelName);
 		}
 		break;
 
 		case HUD_TEXT:
 		{
-			pPanel = new Label(this, "Label", "");
+			pPanel = new Label(this, szPanelName, "");
 
 			Label *pLabel = dynamic_cast<Label *>(pPanel);
 			if (pLabel)
@@ -689,7 +691,7 @@ Panel *CHudLua::GetHudElement(int hudIdentifier, HudElementType_t iType)
 
 		case HUD_TIMER:
 		{
-			pPanel = new Timer(this, "Timer");
+			pPanel = new Timer(this, szPanelName);
 
 			Timer *pTimer = dynamic_cast<Timer *>(pPanel);
 			if (pTimer)
