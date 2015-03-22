@@ -69,7 +69,7 @@ void CHudLua::VidInit()
 {
 	SetPaintBackgroundEnabled(false);
 
-	for( int i = 0; i < m_nHudElements; i++ )
+	for( int i = 0; i < MAX_HUD_ELEMENTS; i++ )
 	{
 		if( m_sHudElements[ i ].pPanel )
 		{
@@ -638,18 +638,17 @@ void CHudLua::HudTimer(int hudIdentifier, int iX, int iY, float flValue, float f
 //-----------------------------------------------------------------------------
 Panel *CHudLua::GetHudElement(int hudIdentifier, HudElementType_t iType)
 {
-	// Return existing one
-	for (int i = 0; i < m_nHudElements; i++)
-	{
-		if (iType == m_sHudElements[i].iType && m_sHudElements[i].hudIdentifier == hudIdentifier)
-			return m_sHudElements[i].pPanel;
-	}
-
 	// Don't create a new one if we've reached max elements
-	if (m_nHudElements == MAX_HUD_ELEMENTS)
+	if (hudIdentifier >= MAX_HUD_ELEMENTS)
 	{
 		AssertMsg(0, "MAX_HUD_ELEMENTS reached!");
 		return NULL;
+	}
+
+	// Return existing one
+	if (m_sHudElements[hudIdentifier].pPanel)
+	{
+		return m_sHudElements[hudIdentifier].pPanel;
 	}
 
 	Panel *pPanel = NULL;
@@ -714,9 +713,9 @@ Panel *CHudLua::GetHudElement(int hudIdentifier, HudElementType_t iType)
 		return NULL;
 
 	// Store tracking data about this hud element
-	m_sHudElements[m_nHudElements].pPanel = pPanel;
-	m_sHudElements[m_nHudElements].iType = iType;
-	m_sHudElements[m_nHudElements].hudIdentifier = hudIdentifier;
+	m_sHudElements[hudIdentifier].pPanel = pPanel;
+	m_sHudElements[hudIdentifier].iType = iType;
+	m_sHudElements[hudIdentifier].hudIdentifier = hudIdentifier;
 
 	m_nHudElements++;
 
@@ -726,15 +725,11 @@ Panel *CHudLua::GetHudElement(int hudIdentifier, HudElementType_t iType)
 //-----------------------------------------------------------------------------
 // Purpose: Remove (hide) any elements with this name
 //-----------------------------------------------------------------------------
-void CHudLua::RemoveElement(int identifier)
+void CHudLua::RemoveElement(int hudIdentifier)
 {
-	for (int i = 0; i < m_nHudElements; i++)
+	if (m_sHudElements[hudIdentifier].pPanel != NULL)
 	{
-		if (m_sHudElements[i].hudIdentifier == identifier)
-		{
-			m_sHudElements[i].pPanel->SetVisible(false);
-			return;
-		}
+		m_sHudElements[hudIdentifier].pPanel->SetVisible(false);
 	}
 }
 
