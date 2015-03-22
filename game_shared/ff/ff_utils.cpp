@@ -45,6 +45,9 @@
 
 #include "ff_playerclass_parse.h" //for parseing ff player txts
 #include "ff_grenade_parse.h" //for parseing ff gren txts
+#ifdef GAME_DLL
+	#include "ff_scriptman.h"
+#endif
 
 // This function takes a class name like "scout"
 // and returns its integer value

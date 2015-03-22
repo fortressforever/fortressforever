@@ -9,6 +9,7 @@
 #include "ff_utils.h"
 #include "ff_item_flag.h"
 #include "triggers.h"
+#include "stringregistry.h"
 
 // engine
 #include "filesystem.h"
@@ -293,7 +294,7 @@ bool CFFScriptManager::LoadFile(const char *filename)
 int CFFScriptManager::GetOrAddHudElementIndex(const char* szElementName)
 {
 	if(!szElementName)
-		return;
+		return -1; // throw?
 
 	int existingIndex = g_HudElementStrings.GetStringID( szElementName ); // Gets key for name
 	if ( existingIndex < 0 )
