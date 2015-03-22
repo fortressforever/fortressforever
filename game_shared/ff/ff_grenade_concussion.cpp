@@ -42,8 +42,10 @@
 
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag
 
-//ConVar ffdev_mancannon_conc_speed( "ffdev_mancannon_conc_speed", "1700.0", FCVAR_FF_FFDEV_REPLICATED, "Max conc speed a player can attain after just using a jump pad." );
-#define MAX_JUMPPAD_TO_CONC_SPEED 1400.0f // ffdev_mancannon_conc_speed.GetFloat()
+ConVar ffdev_mancannon_conc_speed_horiz( "ffdev_mancannon_conc_speed_horiz", "1024", FCVAR_FF_FFDEV_REPLICATED, "Max horizontal conc speed a player can attain after just using a jump pad." );
+#define MAX_JUMPPAD_TO_CONC_SPEED_HORIZ ffdev_mancannon_conc_speed_horiz.GetFloat()
+ConVar ffdev_mancannon_conc_speed_vert( "ffdev_mancannon_conc_speed_vert", "768", FCVAR_FF_FFDEV_REPLICATED, "Max vertical conc speed a player can attain after just using a jump pad." );
+#define MAX_JUMPPAD_TO_CONC_SPEED_VERT ffdev_mancannon_conc_speed_vert.GetFloat()
 //static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_FF_FFDEV, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
 #define FFDEV_CONC_LATERAL_POWER 2.74f //ffdev_conc_lateral_power.GetFloat() //2.74f
 //static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_FF_FFDEV, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
@@ -364,16 +366,17 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			}
 
 			// Jiggles: players can easily get insane speeds by using a jump pad and then concing
-			// AfterShock: This takes into account vertical speed too, limiting horizontal speed if you're going upwards aswell
-			//             is this a bad thing? 
 #ifdef GAME_DLL
 			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
 			{
-				if ( vecResult.Length() > MAX_JUMPPAD_TO_CONC_SPEED )
+				float flPreviousVelocityZ = vecResult.z;
+				vecResult.z = 0;
+				if ( vecResult.Length() > MAX_JUMPPAD_TO_CONC_SPEED_HORIZ )
 				{
 					vecResult.NormalizeInPlace();
-					vecResult *= MAX_JUMPPAD_TO_CONC_SPEED;
+					vecResult *= MAX_JUMPPAD_TO_CONC_SPEED_HORIZ;
 				}
+				vecResult.z = min(MAX_JUMPPAD_TO_CONC_SPEED_VERT, flPreviousVelocityZ);
 			}
 #endif
 			pPlayer->SetAbsVelocity(vecResult);
