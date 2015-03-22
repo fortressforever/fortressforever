@@ -92,6 +92,8 @@ ConVar ffdev_flagtrail_endwidth( "ffdev_flagtrail_endwidth", "3", FCVAR_REPLICAT
 #define FFDEV_FLAGTRAIL_ENDWIDTH ffdev_flagtrail_endwidth.GetFloat()
 ConVar ffdev_flagtrail_lifetime( "ffdev_flagtrail_lifetime", "0.7", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time flag trail stays active before disappearing" );
 #define FFDEV_FLAGTRAIL_LIFETIME ffdev_flagtrail_lifetime.GetFloat()
+ConVar ffdev_flagtrail_enabled( "ffdev_flagtrail_enabled", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Enable/disable flag trails completely." );
+#define FFDEV_FLAGTRAIL_ENABLED ffdev_flagtrail_enabled.GetBool()
 
 // This table encodes edict data.
 void SendProxy_AnimTime( const SendProp *pProp, const void *pStruct, const void *pVarData, DVariant *pOut, int iElement, int objectID )
@@ -6569,6 +6571,11 @@ void CC_Ent_Create( void )
 
 void CBaseEntity::StartTrail(int teamId)
 {
+	if (!FFDEV_FLAGTRAIL_ENABLED)
+	{
+		return;
+	}
+
 	m_pFlagGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/ff_trail.vmt", GetLocalOrigin(), false );
 
 	DevMsg("Created flag trail\n");
@@ -6611,6 +6618,6 @@ void CBaseEntity::StopTrail()
 
 	m_pFlagGlowTrail->StopFollowingEntity();
 	m_pFlagGlowTrail->FadeAndDie( 1.5f ); // Can't take longer unfortuntely
-	//m_hFlagGlowTrail = NULL;
 }
+
 static ConCommand ent_create("ent_create", CC_Ent_Create, "Creates an entity of the given type where the player is looking.", FCVAR_GAMEDLL | FCVAR_CHEAT);
