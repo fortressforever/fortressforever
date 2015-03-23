@@ -166,6 +166,7 @@ public:
 	virtual void Event_Killed(const CTakeDamageInfo &info);
 	virtual bool Event_Gibbed(const CTakeDamageInfo &info);
 	virtual bool BecomeRagdollOnClient(const Vector &force);
+	virtual void PlayerUse( void );
 
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 	virtual void UpdateOnRemove( void );
