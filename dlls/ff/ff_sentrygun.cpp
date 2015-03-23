@@ -228,6 +228,7 @@ CFFSentryGun::~CFFSentryGun( void )
 
 void CFFSentryGun::UpdateOnRemove( void ) 
 {
+	SetEnemy(NULL);
 	BaseClass::UpdateOnRemove();
 }
 
@@ -1547,8 +1548,6 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 	if( m_hOwner.Get() )
 		ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_SENTRYGUN_DESTROYED" );
 
-	SetEnemy(NULL);
-
 	BaseClass::Event_Killed( info );
 }
 
@@ -1880,8 +1879,6 @@ void CFFSentryGun::Detonate()
 			gameeventmanager->FireEvent(pEvent, true);
 		}
 	}
-
-	SetEnemy(NULL);
 
 	CFFBuildableObject::Detonate();
 }
