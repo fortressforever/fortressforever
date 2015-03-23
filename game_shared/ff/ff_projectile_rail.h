@@ -51,6 +51,8 @@ public:
 	//virtual void CFFProjectileRail::Explode(trace_t *pTrace, int bitsDamageType);
 	virtual Class_T Classify( void ) { return CLASS_RAIL_PROJECTILE; }
 
+	virtual bool			CanClipOwnerEntity() const { return m_iNumBounces > 0; }
+
 #ifdef CLIENT_DLL
 
 	virtual void OnDataChanged(DataUpdateType_t type);
