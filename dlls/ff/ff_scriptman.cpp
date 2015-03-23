@@ -177,6 +177,10 @@ void CFFScriptManager::SetupEnvironmentForFF()
 	// initialize luabind
 	luabind::open(L);
 
+	// remove luabind's 'class' implementation because it seems to be broken
+	lua_pushnil(L);
+	lua_setglobal(L, "class");
+
 	// initialize game-specific library
 	CFFLuaLib::Init(L);
 }
