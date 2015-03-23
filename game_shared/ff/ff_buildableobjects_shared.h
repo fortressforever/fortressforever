@@ -702,7 +702,7 @@ private:
 
 public:
 	CBaseEntity *GetEnemy( void	) const { return m_hEnemy; }
-	void SetEnemy( CBaseEntity *hEnemy ) { m_hEnemy = hEnemy; }
+	void SetEnemy( CBaseEntity *hEnemy );
 private:
 	CHandle< CBaseEntity >	m_hEnemy;
 
