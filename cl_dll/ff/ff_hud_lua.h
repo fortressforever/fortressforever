@@ -36,7 +36,6 @@ using namespace vgui;
 
 typedef struct HudElement_s
 {
-	int				hudIdentifier;
 	vgui::Panel			*pPanel;
 	HudElementType_t	iType;
 } HudElement_t;

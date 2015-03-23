@@ -715,7 +715,6 @@ Panel *CHudLua::GetHudElement(int hudIdentifier, HudElementType_t iType)
 	// Store tracking data about this hud element
 	m_sHudElements[hudIdentifier].pPanel = pPanel;
 	m_sHudElements[hudIdentifier].iType = iType;
-	m_sHudElements[hudIdentifier].hudIdentifier = hudIdentifier;
 
 	m_nHudElements++;
 
