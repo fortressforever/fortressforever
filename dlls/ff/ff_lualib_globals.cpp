@@ -158,10 +158,16 @@ namespace FFLib
 		return IsOfClass(pEntity, CLASS_SENTRYGUN);
 	}
 
-	// is entity a dispenser
+	// is entity a detpack
 	bool IsDetpack( CBaseEntity *pEntity )
 	{
 		return IsOfClass( pEntity, CLASS_DETPACK );
+	}
+
+	// is entity a jump pad
+	bool IsJumpPad( CBaseEntity *pEntity )
+	{
+		return IsOfClass( pEntity, CLASS_MANCANNON );
 	}
 
 	// is the entity a grenade
@@ -722,6 +728,17 @@ namespace FFLib
 			return NULL;
 
 		return dynamic_cast< CFFDetpack * >( pEntity );
+	}
+
+	CFFManCannon *CastToJumpPad( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !IsJumpPad( pEntity ) )
+			return NULL;
+
+		return dynamic_cast< CFFManCannon * >( pEntity );
 	}
 
 	bool AreTeamsAllied(CTeam* pTeam1, CTeam* pTeam2)
@@ -3000,6 +3017,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToDispenser",			&FFLib::CastToDispenser),
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
 		def("CastToDetpack",			&FFLib::CastToDetpack),
+		def("CastToJumpPad",			&FFLib::CastToJumpPad),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
 		def("DeleteSchedule",			&FFLib::DeleteSchedule),
 		def("DropToFloor",				&FFLib::DropToFloor),
@@ -3030,6 +3048,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("IsDispenser",				&FFLib::IsDispenser),
 		def("IsSentrygun",				&FFLib::IsSentrygun),
 		def("IsDetpack",				&FFLib::IsDetpack),
+		def("IsJumpPad",				&FFLib::IsJumpPad),
 		def("IsGrenade",				&FFLib::IsGrenade),
 		def("IsTurret",					&FFLib::IsTurret),
 		//def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
