@@ -245,7 +245,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= 130)) 
 				{
 					// If we upgrade, play a special sound. Pun intended.
-					if( pSentryGun->Upgrade(true) )
+					if( pSentryGun->Upgrade() )
 					{
 						WeaponSoundLocal( SPECIAL3 );
 #ifdef GAME_DLL
@@ -294,9 +294,10 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					if ( cells > 0 ) 
 						pPlayer->AddFortPoints(cells*0.3, "#FF_FORTPOINTS_REPAIRTEAMMATESG");
 
-
-					pSentryGun->Upgrade(false, cells, shells, rockets);
+					pSentryGun->Repair(cells);
 					pPlayer->RemoveAmmo(cells, AMMO_CELLS);
+
+					pSentryGun->AddAmmo(shells, rockets);
 					pPlayer->RemoveAmmo(shells, AMMO_SHELLS);
 					pPlayer->RemoveAmmo(rockets, AMMO_ROCKETS);
 #endif
