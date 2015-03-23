@@ -534,8 +534,7 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 		return;
 
 	m_flSabotageTime = gpGlobals->curtime + FF_BUILD_SABOTAGE_TIMEOUT;
-	m_hSaboteur = pSaboteur;
-	m_iSaboteurTeamNumber = m_hSaboteur->GetTeamNumber();
+	SetSaboteur(pSaboteur);
 
 	// AfterShock - scoring system: 25 points for sabotage dispenser
 	pSaboteur->AddFortPoints(25, "#FF_FORTPOINTS_SABOTAGEDISPENSER");

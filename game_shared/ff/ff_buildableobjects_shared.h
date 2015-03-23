@@ -315,8 +315,14 @@ public:
 	virtual bool IsSabotaged() const;
 	virtual bool IsMaliciouslySabotaged() const;
 	virtual void Sabotage( CFFPlayer *pSaboteur ) {};
-	virtual void MaliciouslySabotage( CFFPlayer *pSaboteur ) { m_bMaliciouslySabotaged = true; m_flSabotageTime = gpGlobals->curtime + 8.0f; }
-	
+	virtual void MaliciouslySabotage( CFFPlayer *pSaboteur ) { m_bMaliciouslySabotaged = true; m_flSabotageTime = gpGlobals->curtime + 8.0f; SetSaboteur(pSaboteur) }
+	virtual void SetSaboteur( CFFPlayer *pSaboteur ) 
+	{ 
+		m_hSaboteur = pSaboteur;
+		if (pSaboteur)
+			m_iSaboteurTeamNumber = m_hSaboteur->GetTeamNumber(); 
+	}
+
 	virtual void Cancel( void ) 
 	{
 		// Stop the build sound
