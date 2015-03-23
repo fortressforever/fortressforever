@@ -567,6 +567,24 @@ namespace FFLib
 		return ToFFPlayer( pEntity );
 	}
 
+	luabind::adl::object GetPlayers()
+	{
+		luabind::adl::object luatblPlayers = luabind::newtable(_scriptman.GetLuaState());
+
+		int iTableKey = 1;
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			luatblPlayers[iTableKey++] = luabind::adl::object(_scriptman.GetLuaState(), pPlayer);
+		}
+
+		return luatblPlayers;
+	}
+
 	CFFGrenadeBase *GetGrenade( int ent_id )
 	{
 		CBaseEntity *pEnt = GetEntity( ent_id );
@@ -3034,6 +3052,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("IsTurret",					&FFLib::IsTurret),
 		//def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
 		def("NumPlayers",				&FF_NumPlayers),
+		def("GetPlayers",				&FFLib::GetPlayers),
 		def("OutputEvent",				(void(*)(const char*, const char*))&FFLib::FireOutput),
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*))&FFLib::FireOutput),
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float))&FFLib::FireOutput),
