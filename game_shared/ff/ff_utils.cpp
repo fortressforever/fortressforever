@@ -45,6 +45,9 @@
 
 #include "ff_playerclass_parse.h" //for parseing ff player txts
 #include "ff_grenade_parse.h" //for parseing ff gren txts
+#ifdef GAME_DLL
+	#include "ff_scriptman.h"
+#endif
 
 // This function takes a class name like "scout"
 // and returns its integer value
@@ -728,7 +731,7 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 
 	UserMessageBegin(user, "FF_HudLua");
 		WRITE_BYTE(HUD_ICON);
-		WRITE_STRING(pszIdentifier);
+		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
 		WRITE_STRING(pszImage);
@@ -752,7 +755,7 @@ void FF_LuaHudBox(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, i
 
 	UserMessageBegin(user, "FF_HudLua");
 		WRITE_BYTE(HUD_BOX);
-		WRITE_STRING(pszIdentifier);
+		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
 		WRITE_SHORT(x);
 		WRITE_SHORT(y);
 		WRITE_SHORT(iWidth);
@@ -783,14 +786,14 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(HUD_TEXT);
-	WRITE_STRING(pszIdentifier);
-	WRITE_SHORT(x);
-	WRITE_SHORT(y);
-	WRITE_STRING(pszText);
-	WRITE_SHORT(iAlignX);
-	WRITE_SHORT(iAlignY);
-	WRITE_SHORT(iSize);
+		WRITE_BYTE(HUD_TEXT);
+		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
+		WRITE_SHORT(x);
+		WRITE_SHORT(y);
+		WRITE_STRING(pszText);
+		WRITE_SHORT(iAlignX);
+		WRITE_SHORT(iAlignY);
+		WRITE_SHORT(iSize);
 	MessageEnd();
 }
 
@@ -806,15 +809,15 @@ void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y,
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-	WRITE_BYTE(HUD_TIMER);
-	WRITE_STRING(pszIdentifier);
-	WRITE_SHORT(x);
-	WRITE_SHORT(y);
-	WRITE_FLOAT(flStartValue);
-	WRITE_FLOAT(flSpeed);
-	WRITE_SHORT(iAlignX);
-	WRITE_SHORT(iAlignY);
-	WRITE_SHORT(iSize);
+		WRITE_BYTE(HUD_TIMER);
+		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
+		WRITE_SHORT(x);
+		WRITE_SHORT(y);
+		WRITE_FLOAT(flStartValue);
+		WRITE_FLOAT(flSpeed);
+		WRITE_SHORT(iAlignX);
+		WRITE_SHORT(iAlignY);
+		WRITE_SHORT(iSize);
 	MessageEnd();
 }
 
@@ -827,8 +830,8 @@ void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier)
 	user.MakeReliable();
 
 	UserMessageBegin(user, "FF_HudLua");
-		WRITE_BYTE(HUD_REMOVE);	// HUD_REMOVE
-		WRITE_STRING(pszIdentifier);
+		WRITE_BYTE(HUD_REMOVE);
+		WRITE_SHORT(_scriptman.GetOrAddHudElementIndex(pszIdentifier));
 	MessageEnd();
 }
 #endif

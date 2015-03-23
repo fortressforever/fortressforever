@@ -69,7 +69,7 @@ void CHudLua::VidInit()
 {
 	SetPaintBackgroundEnabled(false);
 
-	for( int i = 0; i < m_nHudElements; i++ )
+	for( int i = 0; i < MAX_HUD_ELEMENTS; i++ )
 	{
 		if( m_sHudElements[ i ].pPanel )
 		{
@@ -101,14 +101,12 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 	if (wType < 0)
 		return;
 
-	char szIdentifier[256];
 
-	if (!msg.ReadString(szIdentifier, 255))
-		return;
+	int hudIdentifier = msg.ReadShort();
 
 	if (wType == HUD_REMOVE)
 	{
-		RemoveElement(szIdentifier);
+		RemoveElement(hudIdentifier);
 		return;
 	}
 
@@ -128,7 +126,7 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 			int iAlignX = msg.ReadShort();
 			int iAlignY = msg.ReadShort();
 
-			HudIcon(szIdentifier, xPos, yPos, szSource, iWidth, iHeight, iAlignX, iAlignY);
+			HudIcon(hudIdentifier, xPos, yPos, szSource, iWidth, iHeight, iAlignX, iAlignY);
 
 			break;
 		}
@@ -151,7 +149,7 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 			int iAlignX = msg.ReadShort();
 			int iAlignY = msg.ReadShort();
 
-			HudBox(szIdentifier, xPos, yPos, iWidth, iHeight, Color(iRed,iGreen,iBlue,iAlpha), Color(iBorderRed,iBorderGreen,iBorderBlue,iBorderAlpha), iBorderWidth, iAlignX, iAlignY);
+			HudBox(hudIdentifier, xPos, yPos, iWidth, iHeight, Color(iRed,iGreen,iBlue,iAlpha), Color(iBorderRed,iBorderGreen,iBorderBlue,iBorderAlpha), iBorderWidth, iAlignX, iAlignY);
 
 			break;
 		}
@@ -169,7 +167,7 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 			int iAlignY = msg.ReadShort();
 			int iSize = msg.ReadShort();
 
-			HudText(szIdentifier, xPos, yPos, szText, iAlignX, iAlignY, iSize);
+			HudText(hudIdentifier, xPos, yPos, szText, iAlignX, iAlignY, iSize);
 
 			break;
 		}
@@ -186,7 +184,7 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 			int iAlignY = msg.ReadShort();
 			int iSize = msg.ReadShort();
 
-			HudTimer(szIdentifier, xPos, yPos, flValue, flSpeed, iAlignX, iAlignY, iSize);
+			HudTimer(hudIdentifier, xPos, yPos, flValue, flSpeed, iAlignX, iAlignY, iSize);
 
 			break;
 		}
@@ -196,9 +194,9 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 //-----------------------------------------------------------------------------
 // Purpose: Create a new icon on the hud
 //-----------------------------------------------------------------------------
-void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY)
+void CHudLua::HudIcon(int hudIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlignX, int iAlignY)
 {
-	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(pszIdentifier, HUD_ICON));
+	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(hudIdentifier, HUD_ICON));
 
 	if (!pImagePanel)
 		return;
@@ -286,10 +284,10 @@ void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *psz
 //-----------------------------------------------------------------------------
 // Purpose: Create a new box on the hud
 //-----------------------------------------------------------------------------
-void CHudLua::HudBox(const char *pszIdentifier, int iX, int iY, int iWidth, int iHeight, Color clr, Color clrBorder, int iBorderWidth, int iAlignX, int iAlignY)
+void CHudLua::HudBox(int hudIdentifier, int iX, int iY, int iWidth, int iHeight, Color clr, Color clrBorder, int iBorderWidth, int iAlignX, int iAlignY)
 {
 	// Create or find the correct hud element
-	FFLuaBox *pLabel = dynamic_cast<FFLuaBox *> (GetHudElement(pszIdentifier, HUD_BOX));
+	FFLuaBox *pLabel = dynamic_cast<FFLuaBox *> (GetHudElement(hudIdentifier, HUD_BOX));
 
 	if (!pLabel)
 		return;
@@ -384,10 +382,10 @@ void CHudLua::HudBox(const char *pszIdentifier, int iX, int iY, int iWidth, int 
 //-----------------------------------------------------------------------------
 // Purpose: Create a new text box on the hud - x & y alignment
 //-----------------------------------------------------------------------------
-void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY, int iSize)
+void CHudLua::HudText(int hudIdentifier, int iX, int iY, const char *pszText, int iAlignX, int iAlignY, int iSize)
 {
 	// Create or find the correct hud element
-	Label *pLabel = dynamic_cast<Label *> (GetHudElement(pszIdentifier, HUD_TEXT));
+	Label *pLabel = dynamic_cast<Label *> (GetHudElement(hudIdentifier, HUD_TEXT));
 
 	if (!pLabel)
 		return;
@@ -543,10 +541,10 @@ bool CHudLua::TranslateKeyCommand( const char *szMessage, char *szTranslated, in
 //-----------------------------------------------------------------------------
 // Purpose: Create a new timer on the hud - x & y alignment
 //-----------------------------------------------------------------------------
-void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY, int iSize)
+void CHudLua::HudTimer(int hudIdentifier, int iX, int iY, float flValue, float flSpeed, int iAlignX, int iAlignY, int iSize)
 {
 	// Create or find the correct hud element
-	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(pszIdentifier, HUD_TIMER));
+	Timer *pTimer = dynamic_cast<Timer *> (GetHudElement(hudIdentifier, HUD_TIMER));
 
 	if (!pTimer)
 		return;
@@ -638,42 +636,43 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 //-----------------------------------------------------------------------------
 // Purpose: Find a hud element for a particular identifier
 //-----------------------------------------------------------------------------
-Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType)
+Panel *CHudLua::GetHudElement(int hudIdentifier, HudElementType_t iType)
 {
-	// Return existing one
-	for (int i = 0; i < m_nHudElements; i++)
-	{
-		if (iType == m_sHudElements[i].iType && Q_strcmp(pszIdentifier, m_sHudElements[i].szIdentifier) == 0)
-			return m_sHudElements[i].pPanel;
-	}
-
 	// Don't create a new one if we've reached max elements
-	if (m_nHudElements == MAX_HUD_ELEMENTS)
+	if (hudIdentifier >= MAX_HUD_ELEMENTS)
 	{
 		AssertMsg(0, "MAX_HUD_ELEMENTS reached!");
 		return NULL;
 	}
 
+	// Return existing one
+	if (m_sHudElements[hudIdentifier].pPanel)
+	{
+		return m_sHudElements[hudIdentifier].pPanel;
+	}
+
 	Panel *pPanel = NULL;
+	char szPanelName[16];
+	sprintf(szPanelName, "ff_hud_lua_%d", hudIdentifier);
 
 	// Return a new one of the correct type
 	switch (iType)
 	{
 		case HUD_ICON:
 		{
-			pPanel = new ImagePanel(this, pszIdentifier);
+			pPanel = new ImagePanel(this, szPanelName);
 		}
 		break;
 
 		case HUD_BOX:
 		{
-			pPanel = new FFLuaBox(this, pszIdentifier);
+			pPanel = new FFLuaBox(this, szPanelName);
 		}
 		break;
 
 		case HUD_TEXT:
 		{
-			pPanel = new Label(this, pszIdentifier, "");
+			pPanel = new Label(this, szPanelName, "");
 
 			Label *pLabel = dynamic_cast<Label *>(pPanel);
 			if (pLabel)
@@ -691,7 +690,7 @@ Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType)
 
 		case HUD_TIMER:
 		{
-			pPanel = new Timer(this, pszIdentifier);
+			pPanel = new Timer(this, szPanelName);
 
 			Timer *pTimer = dynamic_cast<Timer *>(pPanel);
 			if (pTimer)
@@ -714,9 +713,8 @@ Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType)
 		return NULL;
 
 	// Store tracking data about this hud element
-	m_sHudElements[m_nHudElements].pPanel = pPanel;
-	m_sHudElements[m_nHudElements].iType = iType;
-	Q_strncpy(m_sHudElements[m_nHudElements].szIdentifier, pszIdentifier, 127);
+	m_sHudElements[hudIdentifier].pPanel = pPanel;
+	m_sHudElements[hudIdentifier].iType = iType;
 
 	m_nHudElements++;
 
@@ -726,12 +724,11 @@ Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType)
 //-----------------------------------------------------------------------------
 // Purpose: Remove (hide) any elements with this name
 //-----------------------------------------------------------------------------
-void CHudLua::RemoveElement(const char *pszIdentifier)
+void CHudLua::RemoveElement(int hudIdentifier)
 {
-	for (int i = 0; i < m_nHudElements; i++)
+	if (m_sHudElements[hudIdentifier].pPanel != NULL)
 	{
-		if (Q_strcmp(pszIdentifier, m_sHudElements[i].szIdentifier) == 0)
-			m_sHudElements[i].pPanel->SetVisible(false);
+		m_sHudElements[hudIdentifier].pPanel->SetVisible(false);
 	}
 }
 
