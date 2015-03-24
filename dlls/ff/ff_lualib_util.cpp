@@ -997,7 +997,8 @@ void CFFLuaLib::InitUtil(lua_State* L)
 
 				value("kProjectiles",		CF_PROJECTILES),
 				value("kGrenades",			CF_GRENADES),
-				value("kInfoScipts",		CF_INFOSCRIPTS),
+				value("kInfoScipts",		CF_INFOSCRIPTS), // typo; kept for backwards compatibility
+				value("kInfoScripts",		CF_INFOSCRIPTS),
 
 				value("kInfoScript_Carried",	CF_INFOSCRIPT_CARRIED),
 				value("kInfoScript_Dropped",	CF_INFOSCRIPT_DROPPED),
