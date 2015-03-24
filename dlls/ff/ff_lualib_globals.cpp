@@ -604,6 +604,11 @@ namespace FFLib
 		return dynamic_cast< CFFGrenadeBase * >( pEnt );
 	}
 
+	bool IsEntity( const luabind::adl::object &obj )
+	{
+		return obj.is_valid() && luabind::type(obj) == LUA_TUSERDATA && luabind::object_cast_nothrow< CBaseEntity * >( obj ) != NULL;
+	}
+
 	bool IsPlayer( CBaseEntity *pEntity )
 	{
 		return GetPlayer( pEntity ) == NULL ? false : true;
@@ -3062,6 +3067,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("HasGameStarted",			&FFLib::HasGameStarted),
 		def("GoToIntermission",			&FFLib::GoToIntermission),
 		def("IncludeScript",			&FFLib::IncludeScript),
+		def("IsEntity",					&FFLib::IsEntity),
 		def("IsPlayer",					&FFLib::IsPlayer),
 		def("IsDispenser",				&FFLib::IsDispenser),
 		def("IsSentrygun",				&FFLib::IsSentrygun),
