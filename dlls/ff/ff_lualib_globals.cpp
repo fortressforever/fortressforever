@@ -584,6 +584,32 @@ namespace FFLib
 		return luatblEntities;
 	}
 
+	luabind::adl::object GetEntitiesInSphere(const Vector& vecOrigin, float flRadius, bool bIgnoreWalls)
+	{
+		luabind::adl::object luatblEntities = luabind::newtable(_scriptman.GetLuaState());
+
+		int iTableKey = 1;
+		CBaseEntity *pEntity = NULL;
+		for( CEntitySphereQuery sphere( vecOrigin, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( !pEntity )
+				continue;
+
+			if (!bIgnoreWalls)
+			{
+				trace_t tr;
+				UTIL_TraceLine( vecOrigin, pEntity->GetAbsOrigin(), MASK_SOLID, NULL, COLLISION_GROUP_NONE, &tr );
+
+				if( FF_TraceHitWorld( &tr ) )
+					continue;
+			}
+
+			luatblEntities[iTableKey++] = luabind::adl::object(_scriptman.GetLuaState(), pEntity);
+		}
+
+		return luatblEntities;
+	}
+
 	CFFPlayer* GetPlayer(CBaseEntity *pEntity)
 	{
 		// ToFFPlayer checks for NULL & IsPlayer()
@@ -3091,6 +3117,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
 		def("GetEntitiesByName",		&FFLib::GetEntitiesByName),
+		def("GetEntitiesInSphere",		&FFLib::GetEntitiesInSphere),
 		def("GetInfoScriptById",		&FFLib::GetInfoScriptById),
 		def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
 		def("GetGrenade",				&FFLib::GetGrenade),
