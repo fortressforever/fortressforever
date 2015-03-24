@@ -187,6 +187,12 @@ namespace FFLib
 				*/
 	}
 
+	// is the entity a projectile
+	bool IsProjectile(CBaseEntity* pEntity)
+	{
+		return dynamic_cast< CFFProjectileBase * >( pEntity ) != NULL;
+	}
+
 	// is the entity a miniturret
 	bool IsTurret( CBaseEntity *pEntity )
 	{
@@ -674,6 +680,17 @@ namespace FFLib
 			return NULL;
 
 		return dynamic_cast< CFFGrenadeBase * >( pEntity );
+	}
+
+	CFFProjectileBase *CastToProjectile( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !IsProjectile( pEntity ) )
+			return NULL;
+
+		return dynamic_cast< CFFProjectileBase * >( pEntity );
 	}
 
 	CBeam* CastToBeam(CBaseEntity* pEntity)
@@ -3041,6 +3058,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
 		def("CastToDetpack",			&FFLib::CastToDetpack),
 		def("CastToJumpPad",			&FFLib::CastToJumpPad),
+		def("CastToProjectile",			&FFLib::CastToProjectile),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
 		def("DeleteSchedule",			&FFLib::DeleteSchedule),
 		def("DropToFloor",				&FFLib::DropToFloor),
@@ -3075,6 +3093,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("IsJumpPad",				&FFLib::IsJumpPad),
 		def("IsGrenade",				&FFLib::IsGrenade),
 		def("IsTurret",					&FFLib::IsTurret),
+		def("IsProjectile",				&FFLib::IsProjectile),
 		//def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
 		def("NumPlayers",				&FF_NumPlayers),
 		def("GetPlayers",				&FFLib::GetPlayers),

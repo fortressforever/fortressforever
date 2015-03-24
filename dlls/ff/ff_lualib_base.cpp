@@ -9,6 +9,7 @@
 #include "ff_lualib.h"
 #include "ff_item_flag.h"
 #include "ff_triggerclip.h"
+#include "ff_projectile_base.h"
 #include "ff_team.h"
 
 #include "triggers.h"
@@ -86,6 +87,9 @@ void CFFLuaLib::InitBase(lua_State* L)
 
 			.def("GetFriction",			&CBaseEntity::GetFriction)
 			.def("SetFriction",			&CBaseEntity::SetFriction),
+
+		// CFFProjectileBase
+		class_<CFFProjectileBase, CBaseEntity>("Projectile"),
 
 		// CFFInfoScript
 		class_<CFFInfoScript, CBaseEntity>("InfoScript")
