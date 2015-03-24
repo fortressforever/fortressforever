@@ -300,7 +300,7 @@ void CFFSentryGun::GoLive( void )
 	BaseClass::GoLive();
 
 	// Upgrade to level 1
-	Upgrade( true );
+	Upgrade();
 
 	// Object is now built
 	m_bBuilt = true;
@@ -528,9 +528,8 @@ void CFFSentryGun::OnActiveThink( void )
 		{
 			// AfterShock: if we lost track of our target, and they are still alive, 
 			// and we're looking the right way, then pause to see if our target comes back
-			Vector vecAiming, vecGoal;
-			AngleVectors( m_angAiming, &vecAiming );
-			AngleVectors( m_angGoal, &vecGoal );
+			Vector vecAiming = GetVecAiming();
+			Vector vecGoal = GetVecGoal();
 			bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_7DEGREE;
 			if ( bCanFire )
 				m_flEndLockTime = gpGlobals->curtime; 
@@ -609,9 +608,8 @@ void CFFSentryGun::OnActiveThink( void )
 	// Update angles now, otherwise we'll always be lagging behind
 	UpdateFacing();
 
-	Vector vecAiming, vecGoal;
-	AngleVectors( m_angAiming, &vecAiming );
-	AngleVectors( m_angGoal, &vecGoal );
+	Vector vecAiming = GetVecAiming();
+	Vector vecGoal = GetVecGoal();
 
 	if(m_iLevel > 1)
 	{
@@ -674,7 +672,7 @@ void CFFSentryGun::OnActiveThink( void )
 		{
 			if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) && ( gpGlobals->curtime > m_flNextShell ) )
 			{
-				ShootRockets( RocketPosition(), vecAiming, true );
+				ShootRocket( RocketPosition(), vecAiming, true );
 
 				m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
 				bFired = true;
@@ -1105,6 +1103,14 @@ bool CFFSentryGun::IsTargetClassTValid( Class_T cT ) const
 	return ( ( cT == CLASS_PLAYER ) || ( cT == CLASS_SENTRYGUN ) || ( cT == CLASS_DISPENSER ) || ( cT == CLASS_MANCANNON ) );
 }
 
+void CFFSentryGun::Shoot() 
+{
+	if (GetShells() <= 0)
+		return;
+
+	Shoot(MuzzlePosition(), GetVecAiming(), true);
+}
+
 void CFFSentryGun::SetEnemy(CBaseEntity *hEnemy)
 {
 	CBaseEntity *hOldEnemy = m_hEnemy;
@@ -1246,12 +1252,20 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	m_iShells--;
 }
 
+void CFFSentryGun::ShootRocket() 
+{
+	if (GetRockets() <= 0)
+		return;
+
+	ShootRocket(RocketPosition(), GetVecAiming(), true);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Fire Rockets!
 //-----------------------------------------------------------------------------
-void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict ) 
+void CFFSentryGun::ShootRocket( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict ) 
 {
-	VPROF_BUDGET( "CFFSentryGun::ShootRockets", VPROF_BUDGETGROUP_FF_BUILDABLE );
+	VPROF_BUDGET( "CFFSentryGun::ShootRocket", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if( m_iRockets <= 0 )
 		return;
@@ -1600,149 +1614,149 @@ Vector CFFSentryGun::RocketPosition( void )
 	return vecOrigin;
 }
 
+void CFFSentryGun::SetLevel( int iLevel, bool bEmitSounds/*=true*/ )
+{
+	m_iLevel = iLevel;
+
+	float flAimPitch = GetPoseParameter( SG_BC_PITCH );
+	float flAimYaw = GetPoseParameter( SG_BC_YAW );
+
+	CPASAttenuationFilter sndFilter( this );
+
+	switch( m_iLevel ) 
+	{
+	case 1:
+		SetModel( FF_SENTRYGUN_MODEL );
+		SetSolid( SOLID_VPHYSICS );
+		
+		m_iShells = 20;
+
+		m_iMaxShells = 100;
+		m_iMaxRockets = 0;
+		m_iShellDamage = SG_BULLETDAMAGE;
+
+		//m_flShellCycleTime = 0.2f;
+		m_flShellCycleTime = SG_SHOTCYCLETIME_LVL1;
+
+		m_iMaxHealth = SG_HEALTH_LEVEL1;
+		m_iHealth = SG_HEALTH_LEVEL1;
+
+		m_flLockTime = SG_LOCKONTIME_LVL1;
+		//m_flTurnSpeed = 4.0f;
+		m_flTurnSpeed = SG_TURNSPEED;
+
+		break;
+
+	case 2:
+		SetModel( FF_SENTRYGUN_MODEL_LVL2 );
+		SetSolid( SOLID_VPHYSICS );
+		EmitSound( sndFilter, entindex(), "Sentry.Two" );
+
+		m_iMaxShells = 125;
+		m_iMaxRockets = 0;
+		m_iShellDamage = SG_BULLETDAMAGE;
+
+		//m_flShellCycleTime = 0.1f;
+		m_flShellCycleTime = SG_SHOTCYCLETIME_LVL2;
+
+		m_iMaxHealth = SG_HEALTH_LEVEL2;
+		m_iHealth = SG_HEALTH_LEVEL2;
+
+		m_flLockTime = SG_LOCKONTIME_LVL2;
+		//m_flTurnSpeed = 7.0f;
+		m_flTurnSpeed = SG_TURNSPEED;
+
+		// Update attachments
+		m_iMuzzleAttachment = LookupAttachment( "barrel01" );
+		m_iEyeAttachment = LookupAttachment( "eyes" );
+
+		break;
+
+	case 3:
+		SetModel( FF_SENTRYGUN_MODEL_LVL3 );
+		SetSolid( SOLID_VPHYSICS );
+		EmitSound( sndFilter, entindex(), "Sentry.Three" );
+
+		m_iMaxShells = 150;
+		m_iMaxRockets = 20;
+		m_iShellDamage = SG_BULLETDAMAGE;
+
+		//m_flShellCycleTime = 0.1f;
+		m_flShellCycleTime = SG_SHOTCYCLETIME_LVL3;
+		m_flRocketCycleTime = 3.0f;
+
+		m_iMaxHealth = SG_HEALTH_LEVEL3;
+		m_iHealth = SG_HEALTH_LEVEL3;
+
+		m_flLockTime = SG_LOCKONTIME_LVL3;
+		//m_flTurnSpeed = 7.0f;
+		m_flTurnSpeed = SG_TURNSPEED;
+		
+		m_iEyeAttachment = LookupAttachment( "eyes" );
+		m_iLBarrelAttachment = LookupAttachment( "barrel01" );
+		m_iRBarrelAttachment = LookupAttachment( "barrel02" );
+
+		m_iRocketLAttachment = LookupAttachment( "rocket01" );
+		m_iRocketRAttachment = LookupAttachment( "rocket02" );
+
+		break;
+	}
+
+	SetPoseParameter( m_iPitchPoseParameter, flAimPitch );
+	SetPoseParameter( m_iYawPoseParameter, flAimYaw );
+
+	// Re-adjust size
+	UTIL_SetSize( this, FF_SENTRYGUN_MINS, FF_SENTRYGUN_MAXS );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Upgrade the SG
 //-----------------------------------------------------------------------------
-bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRockets ) 
+bool CFFSentryGun::Upgrade() 
 {
-	VPROF_BUDGET( "CFFSentryGun::Update", VPROF_BUDGETGROUP_FF_BUILDABLE );
+	VPROF_BUDGET( "CFFSentryGun::Upgrade", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	// Returns true if we upgrade a level
-	bool bUpgraded = false;
-	bool bRetval = false;
+	bool bDidUpgrade = false;
 
-	if( bUpgradeLevel ) 
+	if( m_iLevel < 3 ) 
 	{
-		if( m_iLevel < 3 ) 
-		{
-			bUpgraded = true;
-			bRetval = true;
-			m_iLevel++;
-		}
-
-		float flAimPitch = GetPoseParameter( SG_BC_PITCH );
-		float flAimYaw = GetPoseParameter( SG_BC_YAW );
-
-		CPASAttenuationFilter sndFilter( this );
-
-		switch( m_iLevel ) 
-		{
-		case 1:
-			SetModel( FF_SENTRYGUN_MODEL );
-			SetSolid( SOLID_VPHYSICS );
-			
-			m_iShells = 20;
-
-			m_iMaxShells = 100;
-			m_iMaxRockets = 0;
-			m_iShellDamage = SG_BULLETDAMAGE;
-
-			//m_flShellCycleTime = 0.2f;
-			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL1;
-
-			m_iMaxHealth = SG_HEALTH_LEVEL1;
-			m_iHealth = SG_HEALTH_LEVEL1;
-
-			m_flLockTime = SG_LOCKONTIME_LVL1;
-			//m_flTurnSpeed = 4.0f;
-			m_flTurnSpeed = SG_TURNSPEED;
-
-			break;
-
-		case 2:
-			SetModel( FF_SENTRYGUN_MODEL_LVL2 );
-			SetSolid( SOLID_VPHYSICS );
-			EmitSound( sndFilter, entindex(), "Sentry.Two" );
-
-			m_iMaxShells = 125;
-			m_iMaxRockets = 0;
-			m_iShellDamage = SG_BULLETDAMAGE;
-
-			//m_flShellCycleTime = 0.1f;
-			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL2;
-
-			m_iMaxHealth = SG_HEALTH_LEVEL2;
-			m_iHealth = SG_HEALTH_LEVEL2;
-
-			m_flLockTime = SG_LOCKONTIME_LVL2;
-			//m_flTurnSpeed = 7.0f;
-			m_flTurnSpeed = SG_TURNSPEED;
-
-			// Update attachments
-			m_iMuzzleAttachment = LookupAttachment( "barrel01" );
-			m_iEyeAttachment = LookupAttachment( "eyes" );
-
-			break;
-
-		case 3:
-			SetModel( FF_SENTRYGUN_MODEL_LVL3 );
-			SetSolid( SOLID_VPHYSICS );
-			EmitSound( sndFilter, entindex(), "Sentry.Three" );
-
-			m_iMaxShells = 150;
-			m_iMaxRockets = 20;
-			m_iShellDamage = SG_BULLETDAMAGE;
-
-			//m_flShellCycleTime = 0.1f;
-			m_flShellCycleTime = SG_SHOTCYCLETIME_LVL3;
-			m_flRocketCycleTime = 3.0f;
-
-			m_iMaxHealth = SG_HEALTH_LEVEL3;
-			m_iHealth = SG_HEALTH_LEVEL3;
-
-			m_flLockTime = SG_LOCKONTIME_LVL3;
-			//m_flTurnSpeed = 7.0f;
-			m_flTurnSpeed = SG_TURNSPEED;
-			
-			m_iEyeAttachment = LookupAttachment( "eyes" );
-			m_iLBarrelAttachment = LookupAttachment( "barrel01" );
-			m_iRBarrelAttachment = LookupAttachment( "barrel02" );
-
-			m_iRocketLAttachment = LookupAttachment( "rocket01" );
-			m_iRocketRAttachment = LookupAttachment( "rocket02" );
-
-			break;
-		}
-
-		SetPoseParameter( m_iPitchPoseParameter, flAimPitch );
-		SetPoseParameter( m_iYawPoseParameter, flAimYaw );
-
-		// Re-adjust size
-		UTIL_SetSize( this, FF_SENTRYGUN_MINS, FF_SENTRYGUN_MAXS );
+		bDidUpgrade = true;
+		SetLevel(m_iLevel+1);
+		SendStatsToBot();
 	}
-	else
-	{
-		m_iHealth = clamp( m_iHealth + iCells * 3.5f, 0, m_iMaxHealth );
-		m_iShells = clamp( m_iShells + iShells, 0, m_iMaxShells );
-		m_iRockets = clamp( m_iRockets + iRockets, 0, m_iMaxRockets );
 
-		// Bug #0000238: Repairing sg doesn't remove damage decals
-		if( iCells > 0 )
-			RemoveAllDecals();
-	}
+	return bDidUpgrade;
+}
+
+void CFFSentryGun::Repair( int iCells ) 
+{
+	VPROF_BUDGET( "CFFSentryGun::Repair", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	SetHealth( GetHealth() + iCells * 3.5f );
+
+	// Bug #0000238: Repairing sg doesn't remove damage decals
+	if( iCells > 0 )
+		RemoveAllDecals();
 
 	SendStatsToBot();
+}
 
-/*
-	if(bUpgraded)
-	{
-		IGameEvent *pEvent = gameeventmanager->CreateEvent( "sentrygun_upgraded" );
-		if( pEvent && m_hOwner.Get() )
-		{
-			CFFPlayer *pOwner = static_cast<CFFPlayer*>( m_hOwner.Get() );
-			pEvent->SetInt( "userid", pOwner->GetUserID() );
-			pEvent->SetInt( "level", m_iLevel );
-			gameeventmanager->FireEvent( pEvent, true );
-		}
-	}
-*/
+void CFFSentryGun::AddAmmo( int iShells, int iRockets )
+{
+	VPROF_BUDGET( "CFFSentryGun::AddAmmo", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
+	SetShells( GetShells() + iShells );
+	SetRockets( GetRockets() + iRockets );
+
+	SendStatsToBot();
+}
+
+void CFFSentryGun::RecalculateAmmoPercent()
+{
 	// Recalculate ammo percentage, 7 bits for shells + 1 bit for no rockets
 	m_iAmmoPercent = 100.0f * (float)m_iShells / (float)m_iMaxShells;
 	if( m_iMaxRockets && !m_iRockets ) 
 		m_iAmmoPercent += 128;
-
-	return bRetval;
 }
 
 //-----------------------------------------------------------------------------

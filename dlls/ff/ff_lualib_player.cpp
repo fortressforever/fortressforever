@@ -160,6 +160,10 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("SendBotMessage",		(void(CFFPlayer::*)(const char*,const char*))&CFFPlayer::SendBotMessage)
 			.def("SendBotMessage",		(void(CFFPlayer::*)(const char*,const char*,const char*))&CFFPlayer::SendBotMessage)
 			.def("SendBotMessage",		(void(CFFPlayer::*)(const char*,const char*,const char*,const char*))&CFFPlayer::SendBotMessage)
+			.def("GetSentryGun",		&CFFPlayer::GetSentryGun)
+			.def("GetDispenser",		&CFFPlayer::GetDispenser)
+			.def("GetDetpack",			&CFFPlayer::GetDetpack)
+			.def("GetJumpPad",			&CFFPlayer::GetManCannon)
 
 			.enum_("ClassId")
 			[
