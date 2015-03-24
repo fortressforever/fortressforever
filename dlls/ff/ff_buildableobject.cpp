@@ -562,27 +562,6 @@ void CFFBuildableObject::RemoveQuietly( void )
 	// again and remove current owner
 	m_hOwner = NULL;
 
-	// remove locked on icon from SG's target
-	if ( Classify() == CLASS_SENTRYGUN)
-	{
-		CFFSentryGun *pSentrygun = FF_ToSentrygun( this );
-		if ( pSentrygun )
-		{
-			CBaseEntity *enemy = pSentrygun->GetEnemy();
-
-			if ( enemy && enemy->IsPlayer() )
-			{
-				CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
-				user.MakeReliable();
-
-				UserMessageBegin(user, "StatusIconUpdate");
-					WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-					WRITE_FLOAT(0.0);
-				MessageEnd();
-			}
-		}
-	}
-
 	// Remove entity from game
 	UTIL_Remove( this );
 }

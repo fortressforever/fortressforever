@@ -228,6 +228,7 @@ CFFSentryGun::~CFFSentryGun( void )
 
 void CFFSentryGun::UpdateOnRemove( void ) 
 {
+	SetEnemy(NULL);
 	BaseClass::UpdateOnRemove();
 }
 
@@ -531,20 +532,8 @@ void CFFSentryGun::OnActiveThink( void )
 			AngleVectors( m_angAiming, &vecAiming );
 			AngleVectors( m_angGoal, &vecGoal );
 			bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_7DEGREE;
-			if ( bCanFire )			
+			if ( bCanFire )
 				m_flEndLockTime = gpGlobals->curtime; 
-
-			// Tell player they aren't locked on any more, and remove the status icon
-			if ( enemy->IsPlayer() )
-			{
-				CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
-				user.MakeReliable();
-
-				UserMessageBegin(user, "StatusIconUpdate");
-					WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-					WRITE_FLOAT(0.0);
-				MessageEnd();
-			}
 		}
 
 		SetEnemy( NULL );
@@ -559,15 +548,6 @@ void CFFSentryGun::OnActiveThink( void )
 		CBaseEntity *pNewTarget = HackFindEnemy();
 		if(pNewTarget && pNewTarget->IsPlayer())
 		{
-			// Tell player they're locked on, and give the status icon
-			CSingleUserRecipientFilter user( ToBasePlayer( pNewTarget ) );
-			user.MakeReliable();
-
-			UserMessageBegin(user, "StatusIconUpdate");
-				WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-				WRITE_FLOAT(-1.0); //forever
-			MessageEnd();
-
 			SetEnemy(pNewTarget);
 		}
 	}
@@ -1125,6 +1105,36 @@ bool CFFSentryGun::IsTargetClassTValid( Class_T cT ) const
 	return ( ( cT == CLASS_PLAYER ) || ( cT == CLASS_SENTRYGUN ) || ( cT == CLASS_DISPENSER ) || ( cT == CLASS_MANCANNON ) );
 }
 
+void CFFSentryGun::SetEnemy(CBaseEntity *hEnemy)
+{
+	CBaseEntity *hOldEnemy = m_hEnemy;
+	m_hEnemy = hEnemy;
+
+	if (hOldEnemy && hOldEnemy->IsPlayer())
+	{
+		// Tell player they aren't locked on any more, and remove the status icon
+		CSingleUserRecipientFilter user( ToBasePlayer( hOldEnemy ) );
+		user.MakeReliable();
+
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+			WRITE_FLOAT(0.0);
+		MessageEnd();
+	}
+
+	if (m_hEnemy && m_hEnemy->IsPlayer())
+	{
+		// Tell player they're locked on, and give the status icon
+		CSingleUserRecipientFilter user( ToBasePlayer( m_hEnemy ) );
+		user.MakeReliable();
+
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
+			WRITE_FLOAT(-1.0); //forever
+		MessageEnd();
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Fire Bullets!
 //-----------------------------------------------------------------------------
@@ -1351,17 +1361,6 @@ void CFFSentryGun::SpinUp( void )
 	}
 
 	EmitSound("Sentry.Spot");
-
-	if ( GetEnemy() && GetEnemy()->Classify() == CLASS_PLAYER )
-	{
-		CSingleUserRecipientFilter user( ToBasePlayer( GetEnemy() ) );
-		user.MakeReliable();
-
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-			WRITE_FLOAT(-1.0); //forever
-		MessageEnd();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1548,20 +1547,6 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 
 	if( m_hOwner.Get() )
 		ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_SENTRYGUN_DESTROYED" );
-
-
-	CBaseEntity *enemy = GetEnemy();
-
-	if ( enemy && enemy->IsPlayer() )
-	{
-		CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
-		user.MakeReliable();
-
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-			WRITE_FLOAT(0.0);
-		MessageEnd();
-	}
 
 	BaseClass::Event_Killed( info );
 }
@@ -1868,17 +1853,6 @@ void CFFSentryGun::MaliciouslySabotage(CFFPlayer *pSaboteur)
 	EmitSound( "Sentry.SabotageActivate" );
 
 	// Cancel target so it searchs for a new (friendly one)
-	if ( GetEnemy() && GetEnemy()->IsPlayer() )
-	{
-		// Tell player they aren't locked on any more, and remove the status icon
-		CSingleUserRecipientFilter user( ToBasePlayer( GetEnemy() ) );
-		user.MakeReliable();
-
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-			WRITE_FLOAT(0.0);
-		MessageEnd();
-	}
 	SetEnemy(NULL);
 
 	m_nSkin = clamp( pSaboteur->GetTeamNumber() - TEAM_BLUE, 0, 3 );
@@ -1904,19 +1878,6 @@ void CFFSentryGun::Detonate()
 			pEvent->SetInt("level", GetLevel());
 			gameeventmanager->FireEvent(pEvent, true);
 		}
-	}
-
-	CBaseEntity *enemy = GetEnemy();
-
-	if ( enemy && enemy->IsPlayer() )
-	{
-		CSingleUserRecipientFilter user( ToBasePlayer( enemy ) );
-		user.MakeReliable();
-
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE(FF_STATUSICON_LOCKEDON);
-			WRITE_FLOAT(0.0);
-		MessageEnd();
 	}
 
 	CFFBuildableObject::Detonate();
