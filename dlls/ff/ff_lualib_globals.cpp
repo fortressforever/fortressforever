@@ -193,6 +193,12 @@ namespace FFLib
 		return dynamic_cast< CFFProjectileBase * >( pEntity ) != NULL;
 	}
 
+	// is entity an infoscript
+	bool IsInfoScript( CBaseEntity *pEntity )
+	{
+		return IsOfClass( pEntity, CLASS_INFOSCRIPT );
+	}
+
 	// is the entity a miniturret
 	bool IsTurret( CBaseEntity *pEntity )
 	{
@@ -3094,6 +3100,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("IsGrenade",				&FFLib::IsGrenade),
 		def("IsTurret",					&FFLib::IsTurret),
 		def("IsProjectile",				&FFLib::IsProjectile),
+		def("IsInfoScript",				&FFLib::IsInfoScript),
 		//def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
 		def("NumPlayers",				&FF_NumPlayers),
 		def("GetPlayers",				&FFLib::GetPlayers),
