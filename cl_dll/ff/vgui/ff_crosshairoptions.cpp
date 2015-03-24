@@ -130,7 +130,7 @@ CFFCrosshairOptions::CFFCrosshairOptions(Panel *parent, char const *panelName) :
 	{
 		KeyValues *kv = new KeyValues("W");
 		kv->SetString("wpid", s_WeaponAliasInfo[i]);
-		m_pCrosshairComboBox->AddItem(VarArgs("#%s", s_WeaponAliasInfo[i]), kv);
+		m_pCrosshairComboBox->AddItem(VarArgs("  %s", s_WeaponAliasInfo[i]), kv);
 		kv->deleteThis();
 	}
 
