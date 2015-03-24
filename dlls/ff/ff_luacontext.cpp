@@ -299,31 +299,31 @@ void CFFLuaSC::ClearParams()
 }
 
 //---------------------------------------------------------------------------
-bool CFFLuaSC::GetBool(int idx/* = 0*/)
+bool CFFLuaSC::GetBool(int idx)
 {
 	RETURN_OBJECTCAST(bool, false, idx);
 }
 
 //---------------------------------------------------------------------------
-float CFFLuaSC::GetFloat(int idx/* = 0*/)
+float CFFLuaSC::GetFloat(int idx)
 {
 	RETURN_OBJECTCAST(float, 0.0f, idx);
 }
 
 //---------------------------------------------------------------------------
-int CFFLuaSC::GetInt(int idx/* = 0*/)
+int CFFLuaSC::GetInt(int idx)
 {
 	RETURN_OBJECTCAST(int, 0, idx);
 }
 
 //---------------------------------------------------------------------------
-luabind::adl::object* CFFLuaSC::GetObject(int idx/* = 0*/)
+luabind::adl::object* CFFLuaSC::GetObject(int idx)
 {
 	return m_returnVals[idx];
 }
 
 //---------------------------------------------------------------------------
-bool CFFLuaSC::DidReturnNil(int idx/* = 0*/)
+bool CFFLuaSC::DidReturnNil(int idx)
 {
 	return luabind::type(*GetObject(idx)) == LUA_TNIL;
 }
