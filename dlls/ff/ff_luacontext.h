@@ -94,12 +94,13 @@ public:
 	int GetNumReturns() const { return m_returnVals.Count(); }
 
 	// gets the return value
-	bool	GetBool();
-	float	GetFloat();
-	int		GetInt();
+	bool	GetBool(int idx = 0);
+	float	GetFloat(int idx = 0);
+	int		GetInt(int idx = 0);
 	QAngle	GetQAngle();
 	Vector	GetVector();
-	luabind::adl::object* GetObject();
+	luabind::adl::object* GetObject(int idx = 0);
+	bool	DidReturnNil(int idx = 0);
 
 public:
 	static void QuickCallFunction(CBaseEntity* pEntity, const char* szFunctionName);
