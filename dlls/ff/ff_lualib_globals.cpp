@@ -170,6 +170,12 @@ namespace FFLib
 		return IsOfClass( pEntity, CLASS_MANCANNON );
 	}
 
+	// is entity a buildable
+	bool IsBuildable( CBaseEntity *pEntity )
+	{
+		return IsDispenser(pEntity) || IsSentrygun(pEntity) || IsDetpack(pEntity) || IsJumpPad(pEntity);
+	}
+
 	// is the entity a grenade
 	bool IsGrenade(CBaseEntity* pEntity)
 	{
@@ -185,6 +191,18 @@ namespace FFLib
 				IsOfClass(pEntity, CLASS_GREN_GAS) ||
 				IsOfClass(pEntity, CLASS_GREN_CONC)
 				*/
+	}
+
+	// is the entity a projectile
+	bool IsProjectile(CBaseEntity* pEntity)
+	{
+		return dynamic_cast< CFFProjectileBase * >( pEntity ) != NULL;
+	}
+
+	// is entity an infoscript
+	bool IsInfoScript( CBaseEntity *pEntity )
+	{
+		return IsOfClass( pEntity, CLASS_INFOSCRIPT );
 	}
 
 	// is the entity a miniturret
@@ -566,6 +584,32 @@ namespace FFLib
 		return luatblEntities;
 	}
 
+	luabind::adl::object GetEntitiesInSphere(const Vector& vecOrigin, float flRadius, bool bIgnoreWalls)
+	{
+		luabind::adl::object luatblEntities = luabind::newtable(_scriptman.GetLuaState());
+
+		int iTableKey = 1;
+		CBaseEntity *pEntity = NULL;
+		for( CEntitySphereQuery sphere( vecOrigin, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( !pEntity )
+				continue;
+
+			if (!bIgnoreWalls)
+			{
+				trace_t tr;
+				UTIL_TraceLine( vecOrigin, pEntity->GetAbsOrigin(), MASK_SOLID, NULL, COLLISION_GROUP_NONE, &tr );
+
+				if( FF_TraceHitWorld( &tr ) )
+					continue;
+			}
+
+			luatblEntities[iTableKey++] = luabind::adl::object(_scriptman.GetLuaState(), pEntity);
+		}
+
+		return luatblEntities;
+	}
+
 	CFFPlayer* GetPlayer(CBaseEntity *pEntity)
 	{
 		// ToFFPlayer checks for NULL & IsPlayer()
@@ -676,6 +720,17 @@ namespace FFLib
 		return dynamic_cast< CFFGrenadeBase * >( pEntity );
 	}
 
+	CFFProjectileBase *CastToProjectile( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !IsProjectile( pEntity ) )
+			return NULL;
+
+		return dynamic_cast< CFFProjectileBase * >( pEntity );
+	}
+
 	CBeam* CastToBeam(CBaseEntity* pEntity)
 	{
 		if( !pEntity )
@@ -762,6 +817,17 @@ namespace FFLib
 			return NULL;
 
 		return dynamic_cast< CFFManCannon * >( pEntity );
+	}
+
+	CFFBuildableObject *CastToBuildable( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !IsBuildable( pEntity ) )
+			return NULL;
+
+		return dynamic_cast< CFFBuildableObject * >( pEntity );
 	}
 
 	bool AreTeamsAllied(CTeam* pTeam1, CTeam* pTeam2)
@@ -3041,6 +3107,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
 		def("CastToDetpack",			&FFLib::CastToDetpack),
 		def("CastToJumpPad",			&FFLib::CastToJumpPad),
+		def("CastToBuildable",			&FFLib::CastToBuildable),
+		def("CastToProjectile",			&FFLib::CastToProjectile),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
 		def("DeleteSchedule",			&FFLib::DeleteSchedule),
 		def("DropToFloor",				&FFLib::DropToFloor),
@@ -3049,6 +3117,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
 		def("GetEntitiesByName",		&FFLib::GetEntitiesByName),
+		def("GetEntitiesInSphere",		&FFLib::GetEntitiesInSphere),
 		def("GetInfoScriptById",		&FFLib::GetInfoScriptById),
 		def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
 		def("GetGrenade",				&FFLib::GetGrenade),
@@ -3073,8 +3142,11 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("IsSentrygun",				&FFLib::IsSentrygun),
 		def("IsDetpack",				&FFLib::IsDetpack),
 		def("IsJumpPad",				&FFLib::IsJumpPad),
+		def("IsBuildable",				&FFLib::IsBuildable),
 		def("IsGrenade",				&FFLib::IsGrenade),
 		def("IsTurret",					&FFLib::IsTurret),
+		def("IsProjectile",				&FFLib::IsProjectile),
+		def("IsInfoScript",				&FFLib::IsInfoScript),
 		//def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
 		def("NumPlayers",				&FF_NumPlayers),
 		def("GetPlayers",				&FFLib::GetPlayers),

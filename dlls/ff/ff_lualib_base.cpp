@@ -7,8 +7,10 @@
 // includes
 #include "cbase.h"
 #include "ff_lualib.h"
+#include "EntityList.h"
 #include "ff_item_flag.h"
 #include "ff_triggerclip.h"
+#include "ff_projectile_base.h"
 #include "ff_team.h"
 
 #include "triggers.h"
@@ -50,6 +52,11 @@ void CFFLuaLib::InitBase(lua_State* L)
 
 	module(L)
 	[
+		class_<CGlobalEntityList>("EntityList")
+			.def("FirstEntity",			&CGlobalEntityList::FirstEnt)
+			.def("NextEntity",			&CGlobalEntityList::NextEnt)
+			.def("NumEntities",			&CGlobalEntityList::NumberOfEntities),
+
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
 			.def(tostring(self))
@@ -86,6 +93,9 @@ void CFFLuaLib::InitBase(lua_State* L)
 
 			.def("GetFriction",			&CBaseEntity::GetFriction)
 			.def("SetFriction",			&CBaseEntity::SetFriction),
+
+		// CFFProjectileBase
+		class_<CFFProjectileBase, CBaseEntity>("Projectile"),
 
 		// CFFInfoScript
 		class_<CFFInfoScript, CBaseEntity>("InfoScript")
@@ -132,4 +142,6 @@ void CFFLuaLib::InitBase(lua_State* L)
 		class_<CFFTriggerClip>("TriggerClip")
 			.def("SetClipFlags",		&CFFTriggerClip::LUA_SetClipFlags)
 	];
+
+	(globals(L))["GlobalEntityList"] = &gEntList;
 };

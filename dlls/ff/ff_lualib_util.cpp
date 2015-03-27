@@ -82,6 +82,7 @@ enum CollectionFilter
 	CF_BUILDABLE_DISPENSER,
 	CF_BUILDABLE_SENTRYGUN,
 	CF_BUILDABLE_DETPACK,
+	CF_BUILDABLE_JUMPPAD,
 
 	CF_TRACE_BLOCK_WALLS,
 
@@ -407,6 +408,12 @@ bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags )
 	if( pbFlags[ CF_BUILDABLE_DETPACK ] )
 	{
 		if( pEntity->Classify() != CLASS_DETPACK )
+			return false;
+	}
+
+	if( pbFlags[ CF_BUILDABLE_JUMPPAD ] )
+	{
+		if( pEntity->Classify() != CLASS_MANCANNON )
 			return false;
 	}
 
@@ -990,7 +997,8 @@ void CFFLuaLib::InitUtil(lua_State* L)
 
 				value("kProjectiles",		CF_PROJECTILES),
 				value("kGrenades",			CF_GRENADES),
-				value("kInfoScipts",		CF_INFOSCRIPTS),
+				value("kInfoScipts",		CF_INFOSCRIPTS), // typo; kept for backwards compatibility
+				value("kInfoScripts",		CF_INFOSCRIPTS),
 
 				value("kInfoScript_Carried",	CF_INFOSCRIPT_CARRIED),
 				value("kInfoScript_Dropped",	CF_INFOSCRIPT_DROPPED),
@@ -1004,7 +1012,8 @@ void CFFLuaLib::InitUtil(lua_State* L)
 				value("kBuildables",		CF_BUILDABLES),
 				value("kDispenser",			CF_BUILDABLE_DISPENSER),
 				value("kSentrygun",			CF_BUILDABLE_SENTRYGUN),
-				value("kDetpack",			CF_BUILDABLE_DETPACK)
+				value("kDetpack",			CF_BUILDABLE_DETPACK),
+				value("kJumpPad",			CF_BUILDABLE_JUMPPAD)
 			]
 	];
 };
