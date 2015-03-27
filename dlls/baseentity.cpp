@@ -86,13 +86,6 @@ int g_nInsideDispatchUpdateTransmitState = 0;
 
 ConVar sv_netvisdist( "sv_netvisdist", "10000", FCVAR_CHEAT, "Test networking visibility distance" );
 
-ConVar ffdev_flagtrail_startwidth( "ffdev_flagtrail_startwidth", "20", FCVAR_REPLICATED | FCVAR_NOTIFY, "Start width of flag trail" );
-#define FFDEV_FLAGTRAIL_STARTWIDTH ffdev_flagtrail_startwidth.GetFloat()
-ConVar ffdev_flagtrail_endwidth( "ffdev_flagtrail_endwidth", "3", FCVAR_REPLICATED | FCVAR_NOTIFY, "End width of flag trail" );
-#define FFDEV_FLAGTRAIL_ENDWIDTH ffdev_flagtrail_endwidth.GetFloat()
-ConVar ffdev_flagtrail_lifetime( "ffdev_flagtrail_lifetime", "0.7", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time flag trail stays active before disappearing" );
-#define FFDEV_FLAGTRAIL_LIFETIME ffdev_flagtrail_lifetime.GetFloat()
-
 // This table encodes edict data.
 void SendProxy_AnimTime( const SendProp *pProp, const void *pStruct, const void *pVarData, DVariant *pOut, int iElement, int objectID )
 {
@@ -6567,7 +6560,7 @@ void CC_Ent_Create( void )
 	CBaseEntity::SetAllowPrecache( allowPrecache );
 }
 
-void CBaseEntity::StartTrail(int teamId)
+void CBaseEntity::StartTrail(int teamId, float startWidth, float endWidth, float lifetime)
 {
 	m_pFlagGlowTrail = CSpriteTrail::SpriteTrailCreate( "sprites/ff_trail.vmt", GetLocalOrigin(), false );
 
@@ -6597,9 +6590,9 @@ void CBaseEntity::StartTrail(int teamId)
 			m_pFlagGlowTrail->SetTransparency(kRenderTransAdd, 255, 255, 255, 255, kRenderFxNone);
 		}
 
-		m_pFlagGlowTrail->SetStartWidth( FFDEV_FLAGTRAIL_STARTWIDTH );
-		m_pFlagGlowTrail->SetEndWidth( FFDEV_FLAGTRAIL_ENDWIDTH );
-		m_pFlagGlowTrail->SetLifeTime( FFDEV_FLAGTRAIL_LIFETIME );
+		m_pFlagGlowTrail->SetStartWidth( startWidth );
+		m_pFlagGlowTrail->SetEndWidth( endWidth );
+		m_pFlagGlowTrail->SetLifeTime( lifetime );
 	}
 }
 
