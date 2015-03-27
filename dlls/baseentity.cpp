@@ -59,6 +59,7 @@
 #include "datacache/imdlcache.h"
 #include "ModelSoundsCache.h"
 #include "env_debughistory.h"
+#include "SpriteTrail.h"
 
 #include "ff_luacontext.h" // FF
 #include "ff_scriptman.h" // FF
@@ -6558,4 +6559,53 @@ void CC_Ent_Create( void )
 	}
 	CBaseEntity::SetAllowPrecache( allowPrecache );
 }
+
+//------------------------------------------------------------------------------
+// Purpose: Start a trail which the object leaves behind as it moves, e.g. for flag trails
+//------------------------------------------------------------------------------
+void CBaseEntity::StartTrail(int teamId, float startWidth, float endWidth, float lifetime)
+{
+	m_pSpriteTrail = CSpriteTrail::SpriteTrailCreate( "sprites/ff_trail.vmt", GetLocalOrigin(), false );
+
+	if ( m_pSpriteTrail != NULL )
+	{
+		m_pSpriteTrail->FollowEntity( this );
+		m_pSpriteTrail->SetAttachment( this, 0 );
+		
+		if (teamId == TEAM_BLUE)
+		{
+			m_pSpriteTrail->SetTransparency(kRenderTransAdd, 85, 95, 205, 255, kRenderFxNone);
+		}
+		else if (teamId == TEAM_RED)
+		{
+			m_pSpriteTrail->SetTransparency(kRenderTransAdd, 205, 95, 85, 255, kRenderFxNone);
+		}
+		else if (teamId == TEAM_GREEN)
+		{
+			m_pSpriteTrail->SetTransparency(kRenderTransAdd, 85, 205, 85, 255, kRenderFxNone);
+		}
+		else if (teamId == TEAM_YELLOW)
+		{
+			m_pSpriteTrail->SetTransparency(kRenderTransAdd, 205, 205, 85, 255, kRenderFxNone);
+		}
+		else
+		{
+			m_pSpriteTrail->SetTransparency(kRenderTransAdd, 255, 255, 255, 255, kRenderFxNone);
+		}
+
+		m_pSpriteTrail->SetStartWidth( startWidth );
+		m_pSpriteTrail->SetEndWidth( endWidth );
+		m_pSpriteTrail->SetLifeTime( lifetime );
+	}
+}
+
+void CBaseEntity::StopTrail()
+{
+	if (m_pSpriteTrail == NULL)
+		return;
+
+	m_pSpriteTrail->StopFollowingEntity();
+	m_pSpriteTrail->FadeAndDie( 1.5f ); // Can't take longer unfortuntely
+}
+
 static ConCommand ent_create("ent_create", CC_Ent_Create, "Creates an entity of the given type where the player is looking.", FCVAR_GAMEDLL | FCVAR_CHEAT);

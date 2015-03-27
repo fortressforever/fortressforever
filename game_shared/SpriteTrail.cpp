@@ -415,6 +415,7 @@ void CSpriteTrail::UpdateTrail( void )
 
 ConVar grenadetrails("cl_grenadetrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 ConVar pipetrails("cl_pipetrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar flagtrails("cl_flagtrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Turns on/off all trails attached to flags and all other Lua-based INFO_FF_SCRIPT objects.");
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -440,6 +441,10 @@ int CSpriteTrail::DrawModel( int flags )
 	if (pipetrails.GetBool() == false && 
 		pParent && pParent->Classify() >= CLASS_PIPEBOMB && pParent->Classify() <= CLASS_GLGRENADE)
 		return 0;
+
+    if (flagtrails.GetBool() == false &&
+        pParent && pParent->Classify() == CLASS_INFOSCRIPT)
+        return 0;
 
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( GetModel(), m_flFrame, GetRenderMode() );
 	if ( pSprite == NULL )
