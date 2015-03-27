@@ -28,6 +28,7 @@ extern "C"
 
 // luabind
 #include "luabind/luabind.hpp"
+#include "luabind/class_info.hpp"
 #include "luabind/object.hpp"
 #include "luabind/iterator_policy.hpp"
 
@@ -176,6 +177,9 @@ void CFFScriptManager::SetupEnvironmentForFF()
 
 	// initialize luabind
 	luabind::open(L);
+
+	// add class_info to the environment
+	luabind::bind_class_info(L);
 
 	// remove luabind's 'class' implementation because it seems to be broken
 	lua_pushnil(L);
