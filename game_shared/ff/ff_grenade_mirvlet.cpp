@@ -68,6 +68,8 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_mirvlet );
 	{
 		SetModel( MIRVLET_MODEL );
 		BaseClass::Spawn();
+
+		m_fIsHandheld = false;
 	}
 #endif
 
