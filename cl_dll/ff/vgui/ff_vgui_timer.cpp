@@ -87,12 +87,14 @@ void Timer::UpdateTimer()
 
 	char szText[128];
 
+	int iTimeForDisplay = m_flTimerSpeed > 0 ? floor( m_flTimerValue ) : ceil( m_flTimerValue ); 
+
 	// Timers may be draw in clock style (MM:SS) or just as a counter (n)
 	if (m_bDrawClockStyle)
-		Q_snprintf(szText, 128, "%d:%02d", (int) m_flTimerValue / 60, (int) m_flTimerValue % 60);
+		Q_snprintf(szText, 128, "%d:%02d", iTimeForDisplay / 60, iTimeForDisplay % 60);
 
 	else
-		Q_snprintf(szText, 128, "%d", (int) m_flTimerValue);
+		Q_snprintf(szText, 128, "%d", iTimeForDisplay);
 
 	SetText(szText);
 }
