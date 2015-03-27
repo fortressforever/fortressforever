@@ -940,6 +940,7 @@ public:
 	void			AddPoints( int score, bool bAllowNegativeScore );
 	void			AddPointsToTeam( int score, bool bAllowNegativeScore );
 	void			RemoveAllDecals( void );
+    void	        StartTrail( int teamId);
     void	        StartTrail( int teamId, float startWidth, float endWidth, float lifetime);
     void	        StopTrail( void );
 

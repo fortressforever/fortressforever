@@ -6563,6 +6563,12 @@ void CC_Ent_Create( void )
 //------------------------------------------------------------------------------
 // Purpose: Start a trail which the object leaves behind as it moves, e.g. for flag trails
 //------------------------------------------------------------------------------
+void CBaseEntity::StartTrail(int teamId)
+{
+    // Defaults: start width 20, end 3, last for 0.7 seconds
+    StartTrail(teamId, 20, 3, 0.7);
+}
+
 void CBaseEntity::StartTrail(int teamId, float startWidth, float endWidth, float lifetime)
 {
 	m_pSpriteTrail = CSpriteTrail::SpriteTrailCreate( "sprites/ff_trail.vmt", GetLocalOrigin(), false );
