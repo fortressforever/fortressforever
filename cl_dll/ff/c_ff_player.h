@@ -187,6 +187,9 @@ public:
 	C_BaseEntity* FindTeamIntersect( C_Team *pTeam, const Vector& boxMin, const Vector& boxMax );
 	// <-- hlstriker
 
+	// client version of CBasePlayer::IsOnLadder
+	virtual bool IsOnLadder( void ) { return GetMoveType() == MOVETYPE_LADDER; }
+
 protected:
 	// For render origin
 	Vector	m_vecFeetOrigin;
