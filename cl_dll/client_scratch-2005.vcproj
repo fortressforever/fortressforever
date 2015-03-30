@@ -85,7 +85,7 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="winmm.lib"
+				AdditionalDependencies="winmm.lib steam_api.lib"
 				OutputFile="$(IntDir)/client.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -2128,11 +2128,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui\IInput.h"
+					RelativePath="iinput.h"
 					>
 				</File>
 				<File
-					RelativePath="iinput.h"
+					RelativePath="..\public\vgui\IInput.h"
 					>
 				</File>
 				<File
@@ -2456,11 +2456,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h"
+					RelativePath="menu.h"
 					>
 				</File>
 				<File
-					RelativePath="menu.h"
+					RelativePath="..\public\vgui_controls\Menu.h"
 					>
 				</File>
 				<File
