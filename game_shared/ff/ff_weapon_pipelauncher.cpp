@@ -27,7 +27,7 @@
 #endif
 
 //ConVar pipe_damage_radius( "ffdev_pipe_damage_radius", "130", FCVAR_FF_FFDEV_REPLICATED, "Pipe explosion radius" );
-#define PIPE_DAMAGERADIUS 130.0f //pipe_damage_radius.GetInt()
+#define PIPE_DAMAGERADIUS 125.0f //pipe_damage_radius.GetInt()
 
 //----------------------------------------------------------------------------
 // Purpose: Send special hint on firing first pipe
