@@ -333,7 +333,10 @@ void CFFLuaMenuManager::RemoveLuaMenu(const char* szMenuName)
 	// remove the schedule from the list
 	unsigned short it = m_menus.Find(id);
 	if(m_menus.IsValidIndex(it))
+	{
+		delete m_menus[it];
 		m_menus.RemoveAt(it);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -417,6 +420,13 @@ void CFFLuaMenuManager::PlayerMenuExpired(const char *szMenuName)
 /////////////////////////////////////////////////////////////////////////////
 void CFFLuaMenuManager::Shutdown()
 {
+	unsigned short i = m_menus.FirstInorder();
+	while ( i != m_menus.InvalidIndex() )
+	{
+		delete m_menus[i];
+		i = m_menus.NextInorder( i );
+	}
+
 	m_menus.RemoveAll();
 }
 
