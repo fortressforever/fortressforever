@@ -208,7 +208,6 @@ CFFScheduleManager::CFFScheduleManager()
 /////////////////////////////////////////////////////////////////////////////
 CFFScheduleManager::~CFFScheduleManager()
 {
-
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -393,12 +392,22 @@ void CFFScheduleManager::RemoveSchedule(const char* szScheduleName)
 	// remove the schedule from the list
 	unsigned short it = m_schedules.Find(id);
 	if(m_schedules.IsValidIndex(it))
+	{
+		delete m_schedules[it];
 		m_schedules.RemoveAt(it);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
 void CFFScheduleManager::Shutdown()
 {
+	unsigned short i = m_schedules.FirstInorder();
+	while ( i != m_schedules.InvalidIndex() )
+	{
+		delete m_schedules[i];
+		i = m_schedules.NextInorder( i );
+	}
+
 	m_schedules.RemoveAll();
 }
 
@@ -430,7 +439,10 @@ void CFFScheduleManager::Update()
 					return;
 
 				if (pCallbackCheck->IsComplete())
+				{
+					delete m_schedules[itCheck];
 					m_schedules.RemoveAt(itCheck);
+				}
 			}
 		}
 		else
