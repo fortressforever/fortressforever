@@ -3,6 +3,7 @@
 
 #include "filesystem.h"
 #include "ff_utils.h"
+#include "steam/steam_api.h"
 
 #define CLASSCFG_PATH				"cfg/%s.cfg"
 #define CLASSCFG_DEFAULT_PATH		"cfg/classcfg_default.cfg"
@@ -16,7 +17,16 @@ int CFFClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	PopulateMissingClassConfigs();
 	PopulateMissingUserConfig();
-	
+
+	// use the player's Steam friends name as their default name
+	// note: this is before config.cfg gets executed, so if there is any
+	// name specified in that cfg, that will take precedence
+	ConVar *pNameCvar = (ConVar*) ConCommandBase::FindCommand("name");
+	if (pNameCvar)
+	{
+		pNameCvar->SetValue(SteamFriends()->GetPersonaName());
+	}
+
 	return ret;
 }
 
