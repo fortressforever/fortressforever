@@ -250,11 +250,19 @@
 			Name="FF Source"
 			>
 			<File
-				RelativePath=".\ff\ff_bot_temp.cpp"
+				RelativePath=".\ff\ff_bot_debug.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_bot_temp.h"
+				RelativePath=".\ff\ff_bot_debug.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_bot_simple.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\ff_bot_simple.h"
 				>
 			</File>
 			<File
