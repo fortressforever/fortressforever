@@ -1302,112 +1302,100 @@ C_FFPlayer::C_FFPlayer() :
 	usermessages->HookMessage("FFStopGrenTimers", &StopGrenTimersListener);
 
 	//Loop through all classes.
-	for (int i=1; i < 11; i++)
+	for (int classDisguisedAs=CLASS_SCOUT; classDisguisedAs <= CLASS_CIVILIAN; classDisguisedAs++)
 	{
 		PLAYERCLASS_FILE_INFO_HANDLE PlayerClassInfo;
 
-		if (!ReadPlayerClassDataFromFileForSlot((*pFilesystem), Class_IntToString(i), &PlayerClassInfo, GetEncryptionKey()))
+		if (!ReadPlayerClassDataFromFileForSlot((*pFilesystem), Class_IntToString(classDisguisedAs), &PlayerClassInfo, GetEncryptionKey()))
 			return;
 
-		CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(PlayerClassInfo);
+		CFFPlayerClassInfo *pClassInfoDisguisedAs = GetFilePlayerClassInfoFromHandle(PlayerClassInfo);
 
 		//Get weapons for the class they disguised as.
 		WEAPON_FILE_INFO_HANDLE	WeaponInfo;
 
 		//Loop through weapons, find a weapon in the same slot as the one they are using, and set their current weapon model to that.
-		for ( int j = 0; j < pPlayerClassInfo->m_iNumWeapons; j++ )
+		for ( int disguisedClassWeaponSlotIndex = 0; disguisedClassWeaponSlotIndex < pClassInfoDisguisedAs->m_iNumWeapons; disguisedClassWeaponSlotIndex++ )
 		{
-			if ( ReadWeaponDataFromFileForSlot( (*pFilesystem), pPlayerClassInfo->m_aWeapons[j], &WeaponInfo, GetEncryptionKey() ) )
+			if ( ReadWeaponDataFromFileForSlot( (*pFilesystem), pClassInfoDisguisedAs->m_aWeapons[disguisedClassWeaponSlotIndex], &WeaponInfo, GetEncryptionKey() ) )
 			{
-				CFFWeaponInfo *pWeaponInfo = NULL;
+				CFFWeaponInfo *pDisguisedClassWeaponInfo = NULL;
 #ifdef _DEBUG
-				pWeaponInfo = dynamic_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
-				Assert(pWeaponInfo);
+				pDisguisedClassWeaponInfo = dynamic_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
+				Assert(pDisguisedClassWeaponInfo);
 #else
-				pWeaponInfo = static_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
+				pDisguisedClassWeaponInfo = static_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
 #endif
 
-				if(pWeaponInfo)
+				if(pDisguisedClassWeaponInfo)
 				{
-					int iPlayerClass = i;
-					int iSlot = pWeaponInfo->iSlot;
+					// weapon info slots start at 0, add 1 to make it more understandable
+					int disguisedClassWeaponSlot = pDisguisedClassWeaponInfo->iSlot + 1;
+					int spyWeaponSlot = disguisedClassWeaponSlot;
 					bool bDone = false;
 
 					//Correct slots in a 1/2/3/4 layout, so spy can select all available weapons.
-					switch(iPlayerClass)
+					switch(classDisguisedAs)
 					{
-					case 1:
-						if(iSlot == 3) 
-							iSlot = 2;
+					case CLASS_SCOUT:
+						if(disguisedClassWeaponSlot == 4) // super shotgun as nailgun (also let it map ng:ng)
+							MapDisguisedWeaponSlot(classDisguisedAs, 3, pDisguisedClassWeaponInfo);
 						break;
-					case 3:
-						if(iSlot == 4) 
-							iSlot = 3;
+					case CLASS_SNIPER:
+						if(disguisedClassWeaponSlot == 3) // nailgun as AR (also let it map ssg:AR)
+							MapDisguisedWeaponSlot(classDisguisedAs, 4, pDisguisedClassWeaponInfo);
 						break;
-					case 4:
-						if(iSlot == 4) 
-							iSlot = 2;
+					case CLASS_SOLDIER:
+						if(disguisedClassWeaponSlot == 5) // nailgun as rpg
+							spyWeaponSlot = 4;
+						else if(disguisedClassWeaponSlot == 3) // tranq as super shotgun (also let it map ssg:ssg)
+							MapDisguisedWeaponSlot(classDisguisedAs, 2, pDisguisedClassWeaponInfo);
 						break;
-					case 6:
-						if(iSlot == 4) 
-							iSlot = 3;
+					case CLASS_DEMOMAN:
+						if(disguisedClassWeaponSlot == 4) // shotgun as GL
+							spyWeaponSlot = 3;
+						if(disguisedClassWeaponSlot == 5) // nailgun as PL
+							spyWeaponSlot = 4;
 						break;
-					case 7:
-						if(iSlot == 3) 
-							iSlot = 2;
-						else if(iSlot == 4) 
-							iSlot = 3;
+					case CLASS_MEDIC:
+						if(disguisedClassWeaponSlot == 3) // tranq as super shotgun (also let it map ssg:ssg)
+							MapDisguisedWeaponSlot(classDisguisedAs, 2, pDisguisedClassWeaponInfo);
+					case CLASS_HWGUY:
+						if(disguisedClassWeaponSlot == 5) // nailgun as AC
+							spyWeaponSlot = 4;
+						else if (disguisedClassWeaponSlot == 3) // tranq as super shotgun (also let it map ssg:ssg)
+							MapDisguisedWeaponSlot(classDisguisedAs, 2, pDisguisedClassWeaponInfo);
 						break;
-					case 9:
-						if(iSlot > 2) //use shotgun for everything after the shotgun.
+					case CLASS_PYRO:
+						if(disguisedClassWeaponSlot == 4) // tranq and super shotgun as flamethrower
 						{
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szWeaponModel[2], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
-
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szAnimExt[2], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
-							
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szWeaponClassName[2], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
+							MapDisguisedWeaponSlot(classDisguisedAs, 2, pDisguisedClassWeaponInfo);
+							MapDisguisedWeaponSlot(classDisguisedAs, 3, pDisguisedClassWeaponInfo);
 							bDone = true;
 						}
+						else if(disguisedClassWeaponSlot == 5) // nailgun as IC
+							spyWeaponSlot = 4;
 						break;
-					case 10:
-						if(iSlot > 0) // always use umbrella
-						{
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szWeaponModel[0], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
-
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szAnimExt[0], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
-							
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szWeaponClassName[0], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
+					case CLASS_ENGINEER:
+						if(disguisedClassWeaponSlot == 3) // nailgun as super shotgun (also let it map ssg:ssg)
+							MapDisguisedWeaponSlot(classDisguisedAs, 4, pDisguisedClassWeaponInfo);
+						else if (disguisedClassWeaponSlot > 3) // skip the rest (buildables)
 							bDone = true;
+						break;
+					case CLASS_CIVILIAN:
+						if (disguisedClassWeaponSlot == 1) // always use umbrella
+						{
+							for (spyWeaponSlot = 1; spyWeaponSlot <= MAX_WEAPON_SLOTS; spyWeaponSlot++)
+								MapDisguisedWeaponSlot(classDisguisedAs, spyWeaponSlot, pDisguisedClassWeaponInfo);
 						}
+						bDone = true;
 						break;
 					}
 
-					if(bDone)
+					if (bDone)
 						continue;
 
-					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
-						pWeaponInfo->szClassName, 
-						sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
-
-					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
-						pWeaponInfo->szWorldModel, 
-						sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
-
-					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
-						pWeaponInfo->m_szAnimExtension, 
-						sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
+					MapDisguisedWeaponSlot(classDisguisedAs, spyWeaponSlot, pDisguisedClassWeaponInfo);
 				}
 			}
 		}
@@ -1446,6 +1434,26 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrObserverTarget()
 	}
 	else
 		return NULL;
+}
+
+/** Maps a spy slot to a weapon that will be shown while disguised for the given class
+*	NOTE: spyWeaponSlot should NOT be 0 indexed; it should be in human-readable form (slot1 = 1)
+*/
+void C_FFPlayer::MapDisguisedWeaponSlot(int classDisguisedAs, int spyWeaponSlot, CFFWeaponInfo *disguisedWeaponInfo)
+{
+	int spyWeaponSlotIndex = spyWeaponSlot - 1;
+
+	Q_strncpy(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szWeaponClassName, 
+		disguisedWeaponInfo->szClassName, 
+		sizeof(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szWeaponClassName));
+
+	Q_strncpy(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szWeaponModel, 
+		disguisedWeaponInfo->szWorldModel, 
+		sizeof(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szWeaponModel));
+
+	Q_strncpy(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szAnimExt, 
+		disguisedWeaponInfo->m_szAnimExtension, 
+		sizeof(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szAnimExt));
 }
 
 //-----------------------------------------------------------------------------

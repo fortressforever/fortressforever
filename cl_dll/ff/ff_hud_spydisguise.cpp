@@ -303,10 +303,8 @@ void CHudSpyDisguise2::Paint( void )
 		int iClass = pPlayer->GetDisguisedClass();
 		const char *disguisedWeaponName = "ff_weapon_crowbar";
 
-		if(pPlayer->m_DisguisedWeapons[iClass].szWeaponClassName[iSlot][0] != NULL)
-			disguisedWeaponName = pPlayer->m_DisguisedWeapons[iClass].szWeaponClassName[iSlot];
-		else if (pPlayer->GetDisguisedClass() == CLASS_CIVILIAN && pPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szWeaponClassName[0] != NULL)
-			disguisedWeaponName = pPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szWeaponClassName[0]; // always use umbrella
+		if(pPlayer->m_DisguisedWeapons[iClass][iSlot].szWeaponClassName[0] != NULL)
+			disguisedWeaponName = pPlayer->m_DisguisedWeapons[iClass][iSlot].szWeaponClassName;
 		
 		if( Q_strnicmp( disguisedWeaponName, "ff_", 3 ) == 0 )
 		{

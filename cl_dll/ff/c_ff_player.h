@@ -328,7 +328,9 @@ public:
 	virtual ShadowType_t ShadowCastType( void );
 
 public:	
-	SpyDisguiseWeapon m_DisguisedWeapons[11];
+	SpyDisguiseWeapon m_DisguisedWeapons[CLASS_CIVILIAN+1][MAX_WEAPON_SLOTS];
+	void MapDisguisedWeaponSlot(int classId, int spyWeaponSlot, CFFWeaponInfo *disguisedWeaponInfo);
+
 	int GetDisguisedClass( void ) const;
 	int GetDisguisedTeam( void ) const;
 	bool IsDisguised( void ) const;
