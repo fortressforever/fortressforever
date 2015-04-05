@@ -529,6 +529,19 @@ namespace FFLib
 		Msg( "\n" );
 	}
 
+	void ServerCommand(const char* command)
+	{
+		if ( !command[0] )
+			return;
+
+		// deny any string that includes rcon_password
+		// can't just check for the start because ' rcon_password blah' and 'dummy; rcon_password blah' are also valid
+		if ( Q_stristr(command, "rcon_password") )
+			return;
+
+		engine->ServerCommand( UTIL_VarArgs( "%s\n", command ) );
+	}
+
 	luabind::adl::object IncludeScript(const char* script)
 	{
 		lua_State *L = _scriptman.GetLuaState();
@@ -1564,6 +1577,10 @@ namespace FFLib
 		if( !Q_stricmp( pszConvarName, "sv_cheats" ) )
 			return;
 
+		// protect rcon_password
+		if ( Q_stricmp( pszConvarName, "rcon_password" ) == 0 )
+			return;
+
 		if( !cvar )
 			return;
 
@@ -1587,6 +1604,10 @@ namespace FFLib
 
 		// Don't allow sv_cheats setting
 		if( !Q_stricmp( pszConvarName, "sv_cheats" ) )
+			return;
+
+		// protect rcon_password
+		if ( Q_stricmp( pszConvarName, "rcon_password" ) == 0 )
 			return;
 
 		if( !cvar )
@@ -3134,6 +3155,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("DisableTimeLimit",			(void(*)())&FFLib::DisableTimeLimit),
 		def("DisableTimeLimit",			(void(*)(bool))&FFLib::DisableTimeLimit),
 		def("HasGameStarted",			&FFLib::HasGameStarted),
+		def("ServerCommand",			&FFLib::ServerCommand),
 		def("GoToIntermission",			&FFLib::GoToIntermission),
 		def("IncludeScript",			&FFLib::IncludeScript),
 		def("IsEntity",					&FFLib::IsEntity),
