@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "ff_lualib.h"
 #include "ff_team.h"
+#include "ff_scriptman.h"
 
 // Lua includes
 extern "C"
@@ -31,6 +32,29 @@ std::ostream& operator<<(std::ostream& stream, const CTeam& team)
 {
 	return stream << "team" << ":" << const_cast<CTeam&>(team).GetName() << ":" << const_cast<CTeam&>(team).GetTeamNumber();
 }
+
+namespace FFLib
+{
+	// helper function to turn the bitmask into a lua table of teams
+	luabind::adl::object GetAllies(CFFTeam *pTeam)
+	{
+		luabind::adl::object luatblAllies = luabind::newtable(_scriptman.GetLuaState());
+		if (pTeam)
+		{
+			int iTableKey = 1;
+			int alliesMask = pTeam->GetAllies();
+			for (int teamId = TEAM_UNASSIGNED; teamId < TEAM_COUNT; teamId++)
+			{
+				if (alliesMask & (1<<teamId))
+				{
+					CFFTeam *pAlliedTeam = dynamic_cast<CFFTeam*>(g_Teams[teamId]);
+					luatblAllies[iTableKey++] = luabind::adl::object(_scriptman.GetLuaState(), pAlliedTeam);
+				}
+			}
+		}
+		return luatblAllies;
+	}
+};
 
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitTeam(lua_State* L)
@@ -62,8 +86,11 @@ void CFFLuaLib::InitTeam(lua_State* L)
 		class_<CFFTeam, CTeam>("Team")
 			.def("SetAllies",			&CFFTeam::SetEasyAllies)
 			.def("ClearAllies",			&CFFTeam::ClearAllies)
+			.def("GetAllies",			&FFLib::GetAllies)
 			.def("SetClassLimit",		&CFFTeam::SetClassLimit)
+			.def("GetClassLimit",		&CFFTeam::GetClassLimit)
 			.def("SetPlayerLimit",		&CFFTeam::SetTeamLimits)
+			.def("GetPlayerLimit",		&CFFTeam::GetTeamLimits)
 			.enum_("TeamId")
 			[
 				value("kUnassigned",	TEAM_UNASSIGNED),
