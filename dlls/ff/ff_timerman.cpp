@@ -109,22 +109,12 @@ void CFFTimerManager::RemoveTimer(const char* szTimerName)
 	// remove the timer from the list
 	unsigned short it = m_timers.Find(id);
 	if(m_timers.IsValidIndex(it))
-	{
-		delete m_timers[it];
 		m_timers.RemoveAt(it);
-	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
 void CFFTimerManager::Shutdown()
 {
-	unsigned short i = m_timers.FirstInorder();
-	while ( i != m_timers.InvalidIndex() )
-	{
-		delete m_timers[i];
-		i = m_timers.NextInorder( i );
-	}
-
 	m_timers.RemoveAll();
 }
 
@@ -143,7 +133,6 @@ void CFFTimerManager::Update()
 			// remove and cleanup the timer
 			unsigned int itDeleteMe = it;
 			it = m_timers.NextInorder(it);
-			delete m_timers[itDeleteMe];
 			m_timers.RemoveAt(itDeleteMe);
 		}
 		else
