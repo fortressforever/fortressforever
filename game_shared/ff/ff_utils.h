@@ -282,6 +282,9 @@ public:
 	{
 	}
 
+	virtual void SetPassEntity( const IHandleEntity *pPassEntity ) { m_pPassEnt = pPassEntity; }
+	const IHandleEntity *GetPassEntity( void ){ return m_pPassEnt;}
+
 	virtual bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
 	{
 		// If the entity has this certain flag, ignore it!
@@ -290,11 +293,15 @@ public:
 		if( pEntity && ( pEntity->GetFlags() & m_flag ) )
 			return false;
 
+		if ( pEntity == GetPassEntity() )
+			return false;
+
 		return true;
 	}
 
 private:
 	unsigned int	m_flag;
+	const IHandleEntity *m_pPassEnt;
 };
 
 class DevConVar
