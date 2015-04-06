@@ -553,10 +553,10 @@ float CFFGrenadeLaser::getLengthPercent()
 
 				Vector startpos = vecOrigin + vecDirection * LASERGREN_CENTERGAP;
 
-				UTIL_TraceLine( startpos, 
+				UTIL_TraceLine( vecOrigin, 
 								vecOrigin + vecDirection * LASERGREN_DISTANCE * getLengthPercent(), 
 								MASK_SHOT, this, COLLISION_GROUP_PLAYER, &tr );
-				
+
 				if( !pBeam[i] )
 				{
 					pBeam[i] = CBeam::BeamCreate( GRENADE_BEAM_SPRITE, LASERGREN_WIDTHCREATE );
@@ -589,6 +589,13 @@ float CFFGrenadeLaser::getLengthPercent()
 				else
 				{
 					pBeam[i]->SetBrightness( 255 );
+				}
+
+
+				bool blockedBeforeGapEnds = (tr.endpos - vecOrigin).LengthSqr() <= LASERGREN_CENTERGAP * LASERGREN_CENTERGAP;
+				if (blockedBeforeGapEnds)
+				{
+					startpos = tr.endpos;
 				}
 
 				pBeam[i]->PointsInit( startpos, tr.endpos );
