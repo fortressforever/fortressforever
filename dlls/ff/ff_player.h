@@ -239,6 +239,7 @@ public:
 	int		AddArmor( int iAmount );
 	int		RemoveArmor( int iAmount );
 	//void	ReduceArmorClass();	// Bit of a one hit wonder, this
+	float	GetArmorAbsorption() { return ((float)m_iArmorType) / 10.0f; }
 
 	int GetMaxShells( void ) const { return GetFFClassData().m_iMaxShells; }
 	int GetMaxCells( void ) const { return GetFFClassData().m_iMaxCells; }
