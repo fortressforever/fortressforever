@@ -181,10 +181,10 @@ ConVar mp_prematch( "mp_prematch",
 					FCVAR_NOTIFY|FCVAR_REPLICATED,
 					"delay before game starts" );
 
-ConVar mp_armorstrip( "mp_armorstrip",
+ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 					"0",
 					FCVAR_NOTIFY|FCVAR_REPLICATED,
-					"If > 0, only deals armor damage to teammates. The armor damage is multiplied by the value of the cvar (mp_armorstrip 0.5 means half damage). Requires mp_friendlyfire 1" );
+					"If > 0, only deals armor damage to teammates. The armor damage is multiplied by the value of the cvar (mp_friendlyfire_armorstrip 0.5 means half damage). Requires mp_friendlyfire 1" );
 
 #ifdef CLIENT_DLL
 	void RecvProxy_FFGameRules( const RecvProp *pProp, void **pOut, void *pData, int objectID )
