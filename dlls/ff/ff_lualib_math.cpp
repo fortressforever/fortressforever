@@ -33,6 +33,39 @@ using namespace luabind;
 //	return s;
 //}
 
+namespace FFLib
+{
+	int BitwiseOr(int a, int b)
+	{
+		return a | b;
+	}
+
+	int BitwiseAnd(int a, int b)
+	{
+		return a & b;
+	}
+
+	int BitwiseXor(int a, int b)
+	{
+		return a ^ b;
+	}
+
+	int BitwiseNot(int a)
+	{
+		return ~a;
+	}
+
+	int BitwiseLShift(int a, int shift)
+	{
+		return a << shift;
+	}
+
+	int BitwiseRShift(int a, int shift)
+	{
+		return a >> shift;
+	}
+}
+
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitMath(lua_State* L)
 {
@@ -86,6 +119,13 @@ void CFFLuaLib::InitMath(lua_State* L)
 			.def("IsValid",				&QAngle::IsValid)
 			.def("Random",				&QAngle::Random)
 			.def("Length",				&QAngle::Length)
-			.def("LengthSqr",			&QAngle::LengthSqr)
+			.def("LengthSqr",			&QAngle::LengthSqr),
+
+		def("BitwiseOr",		&FFLib::BitwiseOr),
+		def("BitwiseAnd",		&FFLib::BitwiseAnd),
+		def("BitwiseXor",		&FFLib::BitwiseXor),
+		def("BitwiseNot",		&FFLib::BitwiseNot),
+		def("BitwiseLShift",	&FFLib::BitwiseLShift),
+		def("BitwiseRShift",	&FFLib::BitwiseRShift)
 	];
 };

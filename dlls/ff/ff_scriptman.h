@@ -33,6 +33,7 @@ public:
 	bool LoadFile( const char *filename );
 
 	void LevelInit(const char* szMapName);
+	void ExecuteLuaConfigs(const char* szMapName);
 
 	// Adds a hud element to the list
 	int GetOrAddHudElementIndex(const char* szElementName);

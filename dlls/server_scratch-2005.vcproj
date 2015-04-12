@@ -362,14 +362,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_menuman.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ff\ff_menuman.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ff\ff_minecart.cpp"
 				>
 			</File>
@@ -394,14 +386,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_scheduleman.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ff\ff_scheduleman.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ff\ff_sentrygun.cpp"
 				>
 			</File>
@@ -419,14 +403,6 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_team.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ff\ff_timerman.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ff\ff_timerman.h"
 				>
 			</File>
 			<File
@@ -452,6 +428,14 @@
 			<Filter
 				Name="Lua"
 				>
+				<File
+					RelativePath=".\ff\ff_convarman.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_convarman.h"
+					>
+				</File>
 				<File
 					RelativePath=".\ff\ff_luacontext.cpp"
 					>
@@ -482,6 +466,10 @@
 				</File>
 				<File
 					RelativePath=".\ff\ff_lualib_constants.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_lualib_convar.cpp"
 					>
 				</File>
 				<File
@@ -521,11 +509,35 @@
 					>
 				</File>
 				<File
+					RelativePath=".\ff\ff_menuman.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_menuman.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_scheduleman.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_scheduleman.h"
+					>
+				</File>
+				<File
 					RelativePath=".\ff\ff_scriptman.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\ff\ff_scriptman.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_timerman.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_timerman.h"
 					>
 				</File>
 			</Filter>
