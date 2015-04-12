@@ -140,6 +140,7 @@ ConVar ffdev_gibdamage("ffdev_gibdamage", "50", FCVAR_FF_FFDEV_REPLICATED, "If a
 #define FFDEV_GIBDAMAGE ffdev_gibdamage.GetFloat()
 
 extern ConVar sv_maxspeed;
+extern ConVar mp_friendlyfire_armorstrip;
 
 //ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_REPLICATED, "Time it takes to cloak (fade out to cloak)" );
 #define FFDEV_SPY_CLOAKFADESPEED 1.0f
@@ -5420,6 +5421,12 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		float fArmorDamage = fFullDamage * GetArmorAbsorption();
 		float fHealthDamage = fFullDamage - fArmorDamage;
 		float fArmorLeft = (float) m_iArmor;
+		bool shouldArmorstrip = mp_friendlyfire_armorstrip.GetFloat() > 0 && g_pGameRules->PlayerRelationship( this, info.GetAttacker() ) == GR_TEAMMATE;
+
+		if (shouldArmorstrip)
+		{
+			fArmorDamage *= mp_friendlyfire_armorstrip.GetFloat();
+		}
 
 		// if the armor damage is greater than the amount of armor remaining, apply the excess straight to health
 		if(fArmorDamage > fArmorLeft)
@@ -5431,6 +5438,11 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		else
 		{
 			m_iArmor -= (int) fArmorDamage;
+		}
+
+		if (shouldArmorstrip)
+		{
+			fHealthDamage = 0;
 		}
 
 		// Set armor lost for hud "damage" message
