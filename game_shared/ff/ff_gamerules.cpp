@@ -1333,8 +1333,8 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
 				float flBodyTargetOffset = vecSpot.z - pPlayer->GetAbsOrigin().z;
 
-                float dH = vecDisplacement.Length2D() - 16.0f;	// Half of model width
-				float dV = fabs(vecDisplacement.z - flBodyTargetOffset) - 36.0f; // Half of model height
+                float dH = vecDisplacement.Length2D() - pPlayer->GetPlayerMaxs().x;	// Half of model width
+				float dV = fabs(vecDisplacement.z - flBodyTargetOffset) - pPlayer->GetPlayerMaxs().z; // Half of model height
 
 				// Inside our model bounds
 				if (dH <= 0.0f && dV <= 0.0f)
