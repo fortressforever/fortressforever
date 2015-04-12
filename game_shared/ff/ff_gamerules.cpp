@@ -1387,6 +1387,9 @@ ConVar mp_prematch( "mp_prematch",
 			if( info.GetInflictor() && ( ( info.GetInflictor() )->GetFlags() & FL_GRENADE ) )
 			{
 				CTraceFilterIgnoreSingleFlag traceFilter( FL_GRENADE );
+				// ignore the ignored entity here as well because HH nades get blocked by the nade's owner
+				// when the owner is standing still and the ignored entity is the owner for HH nades
+				traceFilter.SetPassEntity(pEntityIgnore);
 				UTIL_TraceLine( vecSrc, vecSpot, MASK_SHOT, &traceFilter, &tr );
 				
 				// Jiggles: This is the case where an EMP triggered a backpack to explode.
