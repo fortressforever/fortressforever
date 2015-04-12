@@ -239,6 +239,7 @@ public:
 	int		AddArmor( int iAmount );
 	int		RemoveArmor( int iAmount );
 	//void	ReduceArmorClass();	// Bit of a one hit wonder, this
+	float	GetArmorAbsorption() { return ((float)m_iArmorType) / 10.0f; } // changing int to float e.g. armor type 8 means 0.8 i.e. 80% damage absorbed by armor
 
 	int GetMaxShells( void ) const { return GetFFClassData().m_iMaxShells; }
 	int GetMaxCells( void ) const { return GetFFClassData().m_iMaxCells; }
