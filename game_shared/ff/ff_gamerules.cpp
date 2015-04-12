@@ -1290,11 +1290,6 @@ ConVar mp_prematch( "mp_prematch",
 		// TFC style falloff please.
 		falloff = 0.5f; // AfterShock: need to change this if you want to have a radius over 2x the damage
 
-		// Always raise by 1.0f
-		// It's so that the grenade isn't in the ground
-		// AfterShock: Isn't this going to raise grenades into the ceiling if they explode there? Shouldnt we be raising off the surface normal instead?
-		vecSrc.z += 1.0f;
-
 		// iterate on all entities in the vicinity.
 		for (CEntitySphereQuery sphere(vecSrc, flRadius); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
 		{
