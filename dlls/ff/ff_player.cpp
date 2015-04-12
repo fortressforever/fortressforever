@@ -5417,7 +5417,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		//float flNew = info.GetDamage() * flRatio;
 		float fFullDamage = info.GetDamage();
 
-		float fArmorDamage = fFullDamage * GetArmorAbsorption(); //AfterShock: changing int to float e.g. armor type 8 means 0.8 i.e. 80% damage absorbed by armor
+		float fArmorDamage = fFullDamage * GetArmorAbsorption();
 		float fHealthDamage = fFullDamage - fArmorDamage;
 		float fArmorLeft = (float) m_iArmor;
 
