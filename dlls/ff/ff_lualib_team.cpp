@@ -39,19 +39,18 @@ namespace FFLib
 	luabind::adl::object GetAllies(CFFTeam *pTeam)
 	{
 		luabind::adl::object luatblAllies = luabind::newtable(_scriptman.GetLuaState());
-		if (pTeam)
+
+		int iTableKey = 1;
+		int alliesMask = pTeam->GetAllies();
+		for (int teamId = TEAM_UNASSIGNED; teamId < TEAM_COUNT; teamId++)
 		{
-			int iTableKey = 1;
-			int alliesMask = pTeam->GetAllies();
-			for (int teamId = TEAM_UNASSIGNED; teamId < TEAM_COUNT; teamId++)
-			{
-				if (alliesMask & (1<<teamId))
-				{
-					CFFTeam *pAlliedTeam = dynamic_cast<CFFTeam*>(g_Teams[teamId]);
-					luatblAllies[iTableKey++] = luabind::adl::object(_scriptman.GetLuaState(), pAlliedTeam);
-				}
-			}
+			if (!(alliesMask & (1<<teamId)))
+				continue;
+
+			CFFTeam *pAlliedTeam = dynamic_cast<CFFTeam*>(g_Teams[teamId]);
+			luatblAllies[iTableKey++] = luabind::adl::object(_scriptman.GetLuaState(), pAlliedTeam);
 		}
+
 		return luatblAllies;
 	}
 };
