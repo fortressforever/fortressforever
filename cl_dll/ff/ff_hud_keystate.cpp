@@ -48,7 +48,7 @@ public:
 
 	virtual void Paint() 
 	{
-		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget(); 
+		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget(); 
 
 		if ( !pPlayer ) 
 			return; 
@@ -85,6 +85,7 @@ public:
 	CHudKeyState( const char *pElementName ) : vgui::FFPanel( NULL, "HudKeyState" ), CHudElement( pElementName )
 	{
 		SetParent( g_pClientMode->GetViewport() );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_UNASSIGNED );
 	}
 
 	virtual ~CHudKeyState( void )
@@ -121,7 +122,6 @@ public:
 		}
 	}
 
-	virtual void Paint( void );
 	virtual void Init( void );
 	virtual void VidInit( void );
 	virtual bool ShouldDraw( void );
@@ -243,16 +243,13 @@ void CHudKeyState::VidInit( void )
 
 bool CHudKeyState::ShouldDraw() 
 { 
-	if( !engine->IsInGame() ) 
-		return false; 
+	if( !CHudElement::ShouldDraw() ) 
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	C_FFPlayer *pTarget = C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget();
 
 	if( !pTarget ) 
-		return false;
-	
-	if( !FF_HasPlayerPickedClass( pTarget ) )
 		return false;
 
 	bool isSpectating = pTarget != pLocalPlayer;
@@ -265,8 +262,3 @@ bool CHudKeyState::ShouldDraw()
 
 	return true; 
 } 
-
-void CHudKeyState::Paint() 
-{
-	BaseClass::Paint();
-}

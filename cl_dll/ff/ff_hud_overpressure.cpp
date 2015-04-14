@@ -45,11 +45,8 @@ public:
 
 	CHudOverpressure( const char *pElementName ) : vgui::FFPanel( NULL, "HudOverpressure" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 	}
 
 	virtual ~CHudOverpressure( void )

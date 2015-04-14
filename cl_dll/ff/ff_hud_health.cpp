@@ -71,7 +71,7 @@ DECLARE_HUD_MESSAGE( CHudHealth, PlayerAddHealth );
 //-----------------------------------------------------------------------------
 CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay( NULL, "HudHealth" )
 {
-	SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 	//updating health is fairly important!
 	//the only reason we need the tick signal is for when we respawn and get a new health value
 	ivgui()->AddTickSignal( GetVPanel(), 250 ); 

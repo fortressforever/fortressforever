@@ -75,11 +75,8 @@ public:
 
 	CHudSpyDisguise( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpyDisguise" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 
 		m_flDisguiseStartTime = 0.0f;
 		m_iDisguising = 0;
@@ -138,15 +135,9 @@ void CHudSpyDisguise::VidInit( void )
 //-----------------------------------------------------------------------------
 void CHudSpyDisguise::Paint( void )
 {
-	if( !engine->IsInGame() )
-		return;
-
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if( !pPlayer )
-		return;
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
 		return;
 
 	// Let's calculate and draw the disguising progress bar
@@ -236,11 +227,8 @@ public:
 
 	CHudSpyDisguise2( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpyDisguise2" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 	}
 
 	virtual void Paint( void );
@@ -276,15 +264,9 @@ void CHudSpyDisguise2::VidInit( void )
 //-----------------------------------------------------------------------------
 void CHudSpyDisguise2::Paint( void )
 {
-	if( !engine->IsInGame() )
-		return;
-
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if( !pPlayer )
-		return;
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
 		return;
 
 	if ( !pPlayer->IsDisguising() && !pPlayer->IsDisguised() )
@@ -338,11 +320,8 @@ public:
 
 	CHudSpyDisguise3( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpyDisguise3" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 	}
 
 	virtual void VidInit( void )
@@ -352,15 +331,9 @@ public:
 
 	virtual void Paint( void )
 	{
-		if( !engine->IsInGame() )
-			return;
-
 		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 		if( !pPlayer )
-			return;
-
-		if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
 			return;
 
 		if ( !pPlayer->IsDisguising() && !pPlayer->IsDisguised() )

@@ -50,7 +50,7 @@ DECLARE_HUDELEMENT(CHudGrenade2);
 //-----------------------------------------------------------------------------
 CHudGrenade2::CHudGrenade2(const char *pElementName) : BaseClass(NULL, "HudGrenade2"), CHudElement(pElementName) 
 {
-	SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED);
 }
 
 //-----------------------------------------------------------------------------

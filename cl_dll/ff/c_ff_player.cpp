@@ -1442,8 +1442,13 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget()
 
 	if (!pLocalPlayer)
 		return NULL;
-	else if (pLocalPlayer->IsObserver() && (pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE || pLocalPlayer->GetObserverMode() == OBS_MODE_CHASE))
+	else if (pLocalPlayer->IsObserver() 
+			&& (pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE || pLocalPlayer->GetObserverMode() == OBS_MODE_CHASE) 
+			&& pLocalPlayer->GetObserverTarget() != NULL 
+			&& pLocalPlayer->GetObserverTarget()->IsPlayer())
+	{
 		return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
+	}
 
 	return pLocalPlayer;
 }

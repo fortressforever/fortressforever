@@ -56,11 +56,8 @@ private:
 public:
 	CHudCrosshairInfo( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudCrosshairInfo" )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 
 		vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 
@@ -74,7 +71,6 @@ public:
 	void VidInit( void );
 	void OnTick( void );
 	void Paint( void );
-	virtual	bool	ShouldDraw( void );
 
 	void Reset( void )
 	{ 
@@ -627,28 +623,12 @@ void CHudCrosshairInfo::OnTick( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: See if we should draw stuff or not
-//-----------------------------------------------------------------------------
-bool CHudCrosshairInfo::ShouldDraw( void )
-{
-	if( !engine->IsInGame() )
-		return false;
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
-		return false;
-
-	return pPlayer->IsAlive();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Draw stuff
 //-----------------------------------------------------------------------------
 void CHudCrosshairInfo::Paint( void )
 {
 	if( ( m_flDrawTime + m_flDrawDuration ) > gpGlobals->curtime )
 	{
-
 		// draw xhair info
 		if( hud_centerid.GetInt() )
 			surface()->DrawSetTextPos( m_flXOffset, m_flYOffset );
@@ -663,8 +643,5 @@ void CHudCrosshairInfo::Paint( void )
 
 		for( wchar_t *wch = m_pText; *wch != 0; wch++ )
 			surface()->DrawUnicodeChar( *wch );
-
-
-		
 	}
 }

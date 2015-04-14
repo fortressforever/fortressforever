@@ -53,8 +53,8 @@ public:
 
 	CHudSpeedometer( const char *pElementName ) : vgui::FFPanel( NULL, "HudSpeedometer" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_UNASSIGNED );
 	}
 
 	virtual ~CHudSpeedometer( void )
