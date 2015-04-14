@@ -769,6 +769,8 @@ public:
 	CNetworkVar( float, m_flTrueAimTime );
 	CNetworkVar( float, m_flHitTime );
 
+	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_nButtons );
+
 	CNetworkVar( int, m_iClassStatus );
 	int GetClassForClient() const { return (0x0000000F & m_iClassStatus); }
 

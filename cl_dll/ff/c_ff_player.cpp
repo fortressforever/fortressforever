@@ -837,6 +837,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFPlayerObserver )
 	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
 	RecvPropFloat(RECVINFO(m_flTrueAimTime)),
 	RecvPropFloat(RECVINFO(m_flHitTime)),
+	RecvPropInt(RECVINFO(m_nButtons)),
 END_RECV_TABLE()
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
