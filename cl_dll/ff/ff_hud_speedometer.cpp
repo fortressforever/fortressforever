@@ -55,9 +55,6 @@ public:
 	{
 		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
 	}
 
 	virtual ~CHudSpeedometer( void )
@@ -127,12 +124,12 @@ void CHudSpeedometer::OnThink()
 	if (!hud_speedometer.GetBool() && !hud_speedometer_avg.GetBool())
 		return;
 
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget();
 
 	if(!pPlayer)
 		return;
 
-	bool isSpectating = pPlayer != C_FFPlayer::GetLocalFFPlayer();
+	bool isSpectating = FF_IsPlayerSpec( C_FFPlayer::GetLocalFFPlayer() );
 
 	//don't update so fast.
 	if(m_flNextUpdate < gpGlobals->curtime)
@@ -162,12 +159,12 @@ void CHudSpeedometer::Paint()
 	if (!hud_speedometer.GetBool() && !hud_speedometer_avg.GetBool())
 		return;
 
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrObserverTarget();
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget();
 
 	if(!pPlayer)
 		return;
 
-	bool isSpectating = pPlayer != C_FFPlayer::GetLocalFFPlayer();
+	bool isSpectating = FF_IsPlayerSpec( C_FFPlayer::GetLocalFFPlayer() );
 	float maxVelocity = pPlayer->MaxSpeed();
 	Color speedColor;
 
