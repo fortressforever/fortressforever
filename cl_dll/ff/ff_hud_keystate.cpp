@@ -247,6 +247,11 @@ bool CHudKeyState::ShouldDraw()
 		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	// this doesn't work in sourcetv demos, so don't even try
+	if ( engine->IsPlayingDemo() && engine->IsHLTV() )
+		return false;
+
 	C_FFPlayer *pTarget = C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget();
 
 	if( !pTarget ) 
