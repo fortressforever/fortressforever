@@ -7632,7 +7632,7 @@ Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 
 	if (bNoisy)
 	{
-		return GetAbsOrigin() + (Vector(0, 0, 28) * random->RandomFloat(0.5f, 1.1f));
+		return GetAbsOrigin() + (GetViewOffset() * random->RandomFloat(0.5f, 1.1f));
 	}
 	else
 	{
