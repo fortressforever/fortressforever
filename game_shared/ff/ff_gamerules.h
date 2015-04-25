@@ -150,6 +150,7 @@ public:
 	virtual void	RestartRound( void );
 
 	virtual void	ResetUsingCriteria( bool *pbFlags, int iTeam = TEAM_UNASSIGNED, CFFPlayer *pFFPlayer = NULL, bool bFullReset = false );
+	virtual void	GoToIntermission( void );
 
 	virtual void	UpdateSpawnPoints();
 	CUtlVector<CBaseEntity*> m_SpawnPoints;

@@ -630,7 +630,12 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 		// absolutely everything - scores, players, entities, etc.		
 		if( bFullReset )
 		{
-			// TODO: Do stuff!
+			// give lua a chance to prepare for the restart
+			if (_scriptman.GetLuaState() != NULL)
+			{
+				CFFLuaSC hRestartRound;
+				_scriptman.RunPredicates_LUA(NULL, &hRestartRound, "restartround");
+			}
 
 			m_flIntermissionEndTime = 0.f;
 
@@ -1034,6 +1039,17 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 		{
 			GoToIntermission();
 		}
+	}
+
+	void CFFGameRules::GoToIntermission()
+	{
+		if ( g_fGameOver )
+			return;
+
+		BaseClass::GoToIntermission();
+
+		CFFLuaSC hIntermission;
+		_scriptman.RunPredicates_LUA(NULL, &hIntermission, "intermission");
 	}
 
 	//-----------------------------------------------------------------------------
