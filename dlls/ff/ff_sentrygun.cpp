@@ -155,6 +155,7 @@ IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun)
 	SendPropInt( SENDINFO( m_iRockets ), 5, SPROP_UNSIGNED ), //AfterShock: max 20 rockets for level 3
 	SendPropInt( SENDINFO( m_iMaxShells ) ), //AfterShock: this should be inferred from level
 	SendPropInt( SENDINFO( m_iMaxRockets ) ), //AfterShock: this should be inferred from level
+	SendPropInt( SENDINFO( m_iUpgradeProgress ), 2, SPROP_UNSIGNED ),
 END_SEND_TABLE() 
 
 LINK_ENTITY_TO_CLASS( FF_SentryGun, CFFSentryGun );
@@ -1616,6 +1617,9 @@ Vector CFFSentryGun::RocketPosition( void )
 
 void CFFSentryGun::SetLevel( int iLevel, bool bEmitSounds/*=true*/ )
 {
+	if (iLevel > 3)
+		return;
+
 	m_iLevel = iLevel;
 
 	float flAimPitch = GetPoseParameter( SG_BC_PITCH );
@@ -1707,25 +1711,36 @@ void CFFSentryGun::SetLevel( int iLevel, bool bEmitSounds/*=true*/ )
 
 	// Re-adjust size
 	UTIL_SetSize( this, FF_SENTRYGUN_MINS, FF_SENTRYGUN_MAXS );
+
+	SetUpgradeProgress(0);
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Upgrade the SG
+// Upgrading
 //-----------------------------------------------------------------------------
-bool CFFSentryGun::Upgrade() 
+bool CFFSentryGun::CanUpgrade() 
+{
+	VPROF_BUDGET( "CFFSentryGun::CanUpgrade", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	return IsBuilt() && GetLevel() < 3 && NeedsHealth() == 0;
+}
+
+bool CFFSentryGun::CanBeUpgradedBy(CFFPlayer *pPlayer) 
+{
+	VPROF_BUDGET( "CFFSentryGun::CanBeUpgradedBy", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if (!CanUpgrade())
+		return false;
+
+	return pPlayer->GetAmmoCount(AMMO_CELLS) >= 130;
+}
+
+void CFFSentryGun::Upgrade() 
 {
 	VPROF_BUDGET( "CFFSentryGun::Upgrade", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	bool bDidUpgrade = false;
-
-	if( m_iLevel < 3 ) 
-	{
-		bDidUpgrade = true;
-		SetLevel(m_iLevel+1);
-		SendStatsToBot();
-	}
-
-	return bDidUpgrade;
+	SetLevel(GetLevel()+1);
+	SendStatsToBot();
 }
 
 void CFFSentryGun::Repair( int iCells ) 
