@@ -88,12 +88,6 @@ bool CHudCrosshair::ShouldDraw( void )
 	if ( !pPlayer )
 		return false;
 
-	C_FFPlayer *pFFPlayer = ToFFPlayer( pPlayer );
-
-	// Dunno about this... specs might want a crosshair drawn?
-	/*if( FF_IsPlayerSpec( pFFPlayer ) || !FF_HasPlayerPickedClass( pFFPlayer ) )
-		return false;*/
-
 	// draw a crosshair only if alive or spectating in eye
 	if ( IsXbox() )
 	{
