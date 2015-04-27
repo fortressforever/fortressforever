@@ -80,7 +80,7 @@ CFFWeaponSpanner::CFFWeaponSpanner()
 
 void CFFWeaponSpanner::Precache() 
 {
-	PrecacheScriptSound("Spanner.PartialUpgradeSG");
+	PrecacheScriptSound("Sentry.PartialUpgrade");
 	BaseClass::Precache();
 }
 
@@ -281,7 +281,19 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					// play upgrade progress sound
 					else
 					{
-						EmitSound( "Spanner.PartialUpgradeSG" );
+						CPASAttenuationFilter filter( pSentryGun, "Sentry.PartialUpgrade" );
+
+						// this UsePredictionRules call fixes the sound being played multiple times
+						// when prediction errors (I'm assuming) cause PrimaryAttack() to be called
+						// multiple times on the client for a single attack
+						filter.UsePredictionRules();
+
+#ifdef GAME_DLL
+						// don't send the sound to the owner; that is handled client-side
+						filter.RemoveRecipient(pPlayer);
+#endif
+
+						EmitSound( filter, pSentryGun->entindex(), "Sentry.PartialUpgrade" );
 					}
 				}
 				else
