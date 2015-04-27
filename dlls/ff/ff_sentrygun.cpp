@@ -240,6 +240,7 @@ void CFFSentryGun::Precache( void )
 {
 	VPROF_BUDGET( "CFFSentryGun::Precache", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
+	PrecacheScriptSound("Sentry.PartialDowngrade");
 	BaseClass::Precache();
 }
 
@@ -394,6 +395,12 @@ void CFFSentryGun::OnObjectThink( void )
 			if ( pOwner )
 				TakeDamage( CTakeDamageInfo( this, pOwner, 10000, DMG_GENERIC ) );
 		}
+	}
+
+	if (ShouldUpgradeProgressReset())
+	{
+		SetUpgradeProgress(0);
+		EmitSound( "Sentry.PartialDowngrade" );
 	}
 
 	// Run base class thinking
