@@ -270,29 +270,15 @@ void CBaseButton::InputPress( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
 {
+	CTakeDamageInfo mutableInfo = info;
+
 	// check to see if the trepids allow this button to do what it wants to
-	_scriptman.SetVar("info_damage", info.GetDamage());
-	_scriptman.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
-	_scriptman.SetVar("info_classname", info.GetInflictor()?info.GetInflictor()->GetClassname():"");
-    CBasePlayer *player = ToBasePlayer(info.GetInflictor());
-    if (player)
-    {
-        CBaseCombatWeapon *weapon = player->GetActiveWeapon();
-        if (weapon)
-			_scriptman.SetVar("info_classname", weapon->GetName());
-	}
-
-	// TODO: Update this to use .Push() to send the arguments instead of SetVar()ing globals
 	CFFLuaSC hOnDamage;
-	// if the :ondamage() function exists in Lua, let it decide if damage should be done
-	if( _scriptman.RunPredicates_LUA(this, &hOnDamage, "ondamage" ) )
-	{
-		// if the return value was false, then don't do damage
-		if (!hOnDamage.GetBool())
-			return 0;
-	}
+	hOnDamage.PushRef(mutableInfo);
+	_scriptman.RunPredicates_LUA(this, &hOnDamage, "ondamage");
 
-	if (_scriptman.GetFloat("info_damage") <= 0.0)
+	// lua can cancel the effects of the damage by setting it to 0
+	if (mutableInfo.GetDamage() <= 0.0)
 		return 0;
 
 	m_OnDamaged.FireOutput(m_hActivator, this);
@@ -308,7 +294,7 @@ int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
 	if ( code == BUTTON_NOTHING )
 		return 0;
 
-	m_hActivator = info.GetAttacker();
+	m_hActivator = mutableInfo.GetAttacker();
 
 	// dvsents2: why would activator be NULL here?
 	if ( m_hActivator == NULL )
