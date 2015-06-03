@@ -17,7 +17,6 @@
 #define PANEL_TEAM			"team"
 #define PANEL_CLASS			"class"
 #define PANEL_SCOREBOARD	"scores"
-#define PANEL_MAPGUIDE		"mapguides"
 #define PANEL_OVERVIEW		"overview"
 #define PANEL_SPECGUI		"specgui"	// passive spectator elements (top/bottom bars)
 #define PANEL_SPECMENU		"specmenu"  // active spectator elements (options menus etc)

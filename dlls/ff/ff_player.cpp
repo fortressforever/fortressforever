@@ -140,6 +140,7 @@ ConVar ffdev_gibdamage("ffdev_gibdamage", "50", FCVAR_FF_FFDEV_REPLICATED, "If a
 #define FFDEV_GIBDAMAGE ffdev_gibdamage.GetFloat()
 
 extern ConVar sv_maxspeed;
+extern ConVar mp_friendlyfire_armorstrip;
 
 //ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_REPLICATED, "Time it takes to cloak (fade out to cloak)" );
 #define FFDEV_SPY_CLOAKFADESPEED 1.0f
@@ -437,6 +438,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropBool( SENDINFO( m_bConcussed ) ),
 	SendPropBool( SENDINFO( m_bTranqed ) ),
 	SendPropBool( SENDINFO( m_bSliding ) ),
+	SendPropBool( SENDINFO( m_bIsRampsliding ) ),
 	SendPropEHandle( SENDINFO( m_hActiveSlowfield ) ),
 	SendPropBool( SENDINFO( m_bInfected ) ),
 	SendPropBool( SENDINFO( m_bImmune ) ),
@@ -574,6 +576,8 @@ CFFPlayer::CFFPlayer()
 
 	m_flSlidingTime = 0;		// Not sliding on creation
 	m_bSliding = false;
+
+	m_bIsRampsliding = false;
 
 	m_bGassed = false;
 	m_hGasser = NULL;
@@ -1732,21 +1736,6 @@ void CFFPlayer::InitialSpawn( void )
 
 	//DevMsg("CFFPlayer::InitialSpawn");
 #endif // FF_BETA_TEST_COMPILE
-}
-
-//-----------------------------------------------------------------------------
-extern void SendScriptChecksumToClient(CBasePlayer* pPlayer, unsigned long scriptCRC);
-
-bool CFFPlayer::ClientCommand(const char *cmd)
-{
-	if(strcmp(cmd, "ff_scriptcrc") == 0)
-	{
-		unsigned long scriptCRC = _scriptman.GetScriptCRC();
-		SendScriptChecksumToClient(this, scriptCRC);
-		return true;
-	}
-
-	return BaseClass::ClientCommand(cmd);
 }
 
 //-----------------------------------------------------------------------------
@@ -5429,9 +5418,15 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		//float flNew = info.GetDamage() * flRatio;
 		float fFullDamage = info.GetDamage();
 
-		float fArmorDamage = fFullDamage * (((float)m_iArmorType) / 10.0f); //AfterShock: changing int to float e.g. armor type 8 means 0.8 i.e. 80% damage absorbed by armor
+		float fArmorDamage = fFullDamage * GetArmorAbsorption();
 		float fHealthDamage = fFullDamage - fArmorDamage;
 		float fArmorLeft = (float) m_iArmor;
+		bool shouldArmorstrip = mp_friendlyfire_armorstrip.GetFloat() > 0 && g_pGameRules->PlayerRelationship( this, info.GetAttacker() ) == GR_TEAMMATE;
+
+		if (shouldArmorstrip)
+		{
+			fArmorDamage *= mp_friendlyfire_armorstrip.GetFloat();
+		}
 
 		// if the armor damage is greater than the amount of armor remaining, apply the excess straight to health
 		if(fArmorDamage > fArmorLeft)
@@ -5443,6 +5438,11 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		else
 		{
 			m_iArmor -= (int) fArmorDamage;
+		}
+
+		if (shouldArmorstrip)
+		{
+			fHealthDamage = 0;
 		}
 
 		// Set armor lost for hud "damage" message
@@ -6099,7 +6099,6 @@ void CFFPlayer::UnGas( void )
 void CFFPlayer::StartSliding( float flDuration, float flIconDuration )
 {
 	m_bSliding = true;
-	SetFriction( 0.0f );
 
 	if(flDuration != -1)
 		m_flSlidingTime = gpGlobals->curtime + flDuration;
@@ -6128,7 +6127,6 @@ void CFFPlayer::StopSliding( void )
 {
 	m_bSliding = false;
 	m_flSlidingTime = 0;
-	SetFriction( 1.0f );
 
 	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
 	user.MakeReliable();
@@ -7634,7 +7632,7 @@ Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 
 	if (bNoisy)
 	{
-		return GetAbsOrigin() + (Vector(0, 0, 28) * random->RandomFloat(0.5f, 1.1f));
+		return GetAbsOrigin() + (GetViewOffset() * random->RandomFloat(0.5f, 1.1f));
 	}
 	else
 	{

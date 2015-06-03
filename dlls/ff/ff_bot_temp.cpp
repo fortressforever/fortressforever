@@ -179,7 +179,9 @@ CON_COMMAND( bot_savesentry, "makes a bot save his sentry" )
 		if( pPlayer && pPlayer->GetSentryGun() )
 		{
 			CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
-			pSentryGun->Upgrade( true, 200, 200, 200 );
+			pSentryGun->Upgrade();
+			pSentryGun->Repair(200);
+			pSentryGun->AddAmmo(200, 200);
 		}
 	}
 }

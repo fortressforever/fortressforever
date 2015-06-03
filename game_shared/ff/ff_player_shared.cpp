@@ -606,6 +606,25 @@ void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 }
 // <-- Mirv: Proper sounds
 
+/** Allow Lua to react to and/or deny +use
+*/
+void CFFPlayer::PlayerUse()
+{
+#ifdef GAME_DLL
+	if (m_afButtonPressed & IN_USE)
+	{
+		CFFLuaSC hContext( 0 );
+		hContext.Push( this );
+		if( _scriptman.RunPredicates_LUA( NULL, &hContext, "player_onuse" ) && !hContext.DidReturnNil() && !hContext.GetBool() )
+		{
+			return;
+		}
+	}
+#endif
+
+	BaseClass::PlayerUse();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Handle all class specific skills
 //-----------------------------------------------------------------------------

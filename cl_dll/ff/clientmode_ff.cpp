@@ -96,7 +96,6 @@ void CFFModeManager::LevelShutdown( void )
 //-----------------------------------------------------------------------------
 ClientModeFFNormal::ClientModeFFNormal()
 {
-	Q_strcpy(m_szValidationFile, "validationkeys.txt");
 }
 
 //-----------------------------------------------------------------------------
@@ -147,11 +146,6 @@ void ClientModeFFNormal::PostRenderVGui()
 //-----------------------------------------------------------------------------
 void ClientModeFFNormal::Init( void )
 {
-	m_servercriptCRC = 0;
-	m_serverScriptValid = false;
-
-	usermessages->HookMessage("FFScriptCRC", &ClientModeFFNormal::FFScriptCRC_MsgHandler);
-
 	gameeventmanager->AddListener( this, "ff_restartround", false );
 
 	ClientModeShared::Init();
@@ -184,107 +178,4 @@ void ClientModeFFNormal::FireGameEvent( IGameEvent *pEvent )
 	}
 
 	BaseClass::FireGameEvent( pEvent );
-}
-
-//-----------------------------------------------------------------------------
-void ClientModeFFNormal::SetNextValidationFilePath(const char* szFilePath)
-{
-	Q_strncpy(m_szValidationFile, szFilePath, sizeof(m_szValidationFile));
-}
-
-//-----------------------------------------------------------------------------
-void ClientModeFFNormal::FFScriptCRC_MsgHandler(bf_read& msg)
-{
-	ClientModeFFNormal* pClientMode = GetClientModeFFNormal();
-
-	unsigned long crc = (unsigned long)msg.ReadLong();
-	pClientMode->m_servercriptCRC = crc;
-
-	// lookup the valid crc and check against it
-	char szLevelName[256];
-	Q_strcpy(szLevelName, engine->GetLevelName() + 5); // Skip the "maps/" part
-	szLevelName[(int)strlen(szLevelName) - 4] = '\0'; // Skip the ".bsp" part
-
-	char szDescription[256];
-	bool bValidated = ValidateLevel(pClientMode->m_szValidationFile,
-									szLevelName,
-									crc,
-									szDescription,
-									256);
-
-	Msg("\n");
-	Msg("Server Script Validation\n");
-	Msg("Level Name:   %s\n", szLevelName);
-	Msg("Checksum:     0x%x\n", crc);
-
-	if(bValidated)
-	{
-		Msg("Validated:    Yes\n");
-		Msg("Description:  %s\n", szDescription);
-	}
-	else
-	{
-		Msg("Validated:    No\n");
-	}
-
-	Msg("\n");
-
-	// reset the validation filepath
-	Q_strcpy(pClientMode->m_szValidationFile, "validationkeys.txt");
-}
-
-//-----------------------------------------------------------------------------
-bool ClientModeFFNormal::ValidateLevel(const char* szValidateFilePath,
-									   const char* szLevelName,
-									   CRC32_t checksum,
-									   char* szDescription,
-									   int descMaxLength)
-{
-	// load validation file
-	KeyValues* pKvRoot = new KeyValues("Levels");
-	bool bRes = pKvRoot->LoadFromFile(::filesystem, szValidateFilePath);
-
-	if(!bRes)
-	{
-		Warning("Error loading validation keys file '%s'\n", szValidateFilePath);
-		pKvRoot->deleteThis();
-		return false;
-	}
-
-	bool bValidate = false;
-
-	// find section with level name
-	KeyValues* pKvLevel = pKvRoot->FindKey(szLevelName);
-	if(pKvLevel)
-	{
-		// find section with the checksum
-		char szChecksum[32];
-		Q_snprintf(szChecksum, sizeof(szChecksum), "0x%x", checksum);
-
-		KeyValues* pKvEntry = pKvLevel->FindKey(szChecksum);
-		if(pKvEntry)
-		{
-			// copy the description
-			const char* szDesc = pKvEntry->GetString("description", "");
-			Q_strncpy(szDescription, szDesc, descMaxLength);
-			bValidate = true;
-		}
-	}
-
-	pKvRoot->deleteThis();
-	return bValidate;
-}
-
-//-----------------------------------------------------------------------------
-CON_COMMAND(ff_validate, "Requests a validation of the crc checksum of the server's current level scripts." )
-{
-	if(engine->Cmd_Argc() > 1)
-	{
-		const char* szFilePath = engine->Cmd_Argv(1);
-		
-		ClientModeFFNormal* pClientMode = GetClientModeFFNormal();
-		pClientMode->SetNextValidationFilePath(szFilePath);
-	}
-
-	engine->ClientCmd("ff_scriptcrc");
 }

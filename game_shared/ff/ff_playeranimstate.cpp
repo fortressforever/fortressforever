@@ -349,10 +349,8 @@ const char* CFFPlayerAnimState::GetWeaponSuffix()
 
 	if(pFFPlayer && pFFPlayer->IsDisguised())
 	{
-		if(pFFPlayer->m_DisguisedWeapons[pFFPlayer->GetDisguisedClass()].szAnimExt[pWeapon->GetFFWpnData().iSlot][0] != NULL)
-			pSuffix = pFFPlayer->m_DisguisedWeapons[pFFPlayer->GetDisguisedClass()].szAnimExt[pWeapon->GetFFWpnData().iSlot];
-		else if (pFFPlayer->GetDisguisedClass() == CLASS_CIVILIAN && pFFPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szAnimExt[0] != NULL)
-			pSuffix = pFFPlayer->m_DisguisedWeapons[CLASS_CIVILIAN].szAnimExt[0]; // always use umbrella
+		if(pFFPlayer->m_DisguisedWeapons[pFFPlayer->GetDisguisedClass()][pWeapon->GetFFWpnData().iSlot].szAnimExt[0] != NULL)
+			pSuffix = pFFPlayer->m_DisguisedWeapons[pFFPlayer->GetDisguisedClass()][pWeapon->GetFFWpnData().iSlot].szAnimExt;
 	}
 #endif
 	return pSuffix;

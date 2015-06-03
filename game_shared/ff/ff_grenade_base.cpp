@@ -19,6 +19,7 @@
 	#include "ff_player.h"
 	#include "ff_utils.h"
 	#include "ff_entity_system.h"
+	#include "ff_gamerules.h"
 #else
 	#include "c_te_effect_dispatch.h"
 	#include "c_ff_player.h"
@@ -84,6 +85,8 @@ LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 #define GREN_WATER_VEL_DEC 0.5f
 //ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_FF_FFDEV_REPLICATED);
 #define GREN_WATER_REDUCE_THINK 0.2f
+
+#define GREN_HH_PUSHFORCE 1000.0f
 
 //=============================================================================
 // CFFGrenadeBase implementation
@@ -525,7 +528,31 @@ LINK_ENTITY_TO_CLASS(grenade_ff_base, CFFGrenadeBase);
 			// Use the grenade's position as the reported position
 			Vector vecReported = pTrace->endpos;
 			CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, m_iKillType, &vecReported );
-			RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
+
+			RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, m_fIsHandheld ? pThrower : NULL );
+
+			if (m_fIsHandheld)
+			{
+				CTakeDamageInfo infoSelfDamage = info;
+				Vector vecPushDir = pThrower->GetAbsVelocity();
+				float flPushForce = GREN_HH_PUSHFORCE;
+
+				if (vecPushDir.LengthSqr() > 0.0f)
+				{
+					vecPushDir.NormalizeInPlace();
+				}
+				else
+				{
+					vecPushDir = Vector(0.0f, 0.0f, 0.95f);
+				}
+
+				flPushForce = FFGameRules()->GetAdjustedPushForce(flPushForce, pThrower, infoSelfDamage);
+				float flAdjustedDamage = FFGameRules()->GetAdjustedDamage(infoSelfDamage.GetDamage(), pThrower, infoSelfDamage);
+
+				infoSelfDamage.SetDamageForce(vecPushDir * flPushForce);
+				infoSelfDamage.SetDamage(flAdjustedDamage);
+				pThrower->TakeDamage(infoSelfDamage);
+			}
 
 			EmitSound( "BaseGrenade.Explode" );
 		}

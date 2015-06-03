@@ -402,14 +402,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ff\ff_scriptman.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ff\ff_scriptman.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ff\ff_sentrygun.cpp"
 				>
 			</File>
@@ -526,6 +518,14 @@
 				</File>
 				<File
 					RelativePath=".\ff\ff_lualib_weapons.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_scriptman.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_scriptman.h"
 					>
 				</File>
 			</Filter>

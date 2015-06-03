@@ -36,24 +36,6 @@ public:
 	virtual void	Init( void );
 	virtual void	FireGameEvent( IGameEvent *pEvent );
 
-	void SetNextValidationFilePath(const char* szFilePath);
-
-public:
-	static bool ValidateLevel(const char* szValidateFilePath,
-							  const char* szLevelName,
-							  CRC32_t checksum,
-							  char* szDescription,
-							  int descMaxLength);
-	static void FFScriptCRC_MsgHandler(bf_read& msg);
-	
-private:
-	//	void	UpdateSpectatorMode( void );
-
-private:
-	bool	m_serverScriptValid;
-	CRC32_t	m_servercriptCRC;
-	char	m_szValidationFile[1024];
-
 };
 
 

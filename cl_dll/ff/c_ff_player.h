@@ -25,6 +25,7 @@
 #include "ff_buildableobjects_shared.h"
 #include "ff_radiotagdata.h"
 #include "model_types.h"
+#include "IEffects.h"
 
 class C_FFBuildableObject;
 class C_FFDetpack;
@@ -170,6 +171,7 @@ public:
 	virtual bool IsOverridingViewmodel( void ) { return IsCloaked(); };
 	virtual int	DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags ) { return pViewmodel ? pViewmodel->DrawOverriddenViewmodel( flags ) : 0; }
 	virtual const QAngle& GetRenderAngles( void );
+	virtual void PlayerUse( void );
 
 	virtual RenderGroup_t GetRenderGroup();
 
@@ -184,6 +186,9 @@ public:
 	bool IsEntIntersectingBox( C_BaseEntity *pEnt, const Vector& boxMin, const Vector& boxMax );
 	C_BaseEntity* FindTeamIntersect( C_Team *pTeam, const Vector& boxMin, const Vector& boxMax );
 	// <-- hlstriker
+
+	// client version of CBasePlayer::IsOnLadder
+	virtual bool IsOnLadder( void ) { return GetMoveType() == MOVETYPE_LADDER; }
 
 protected:
 	// For render origin
@@ -323,7 +328,9 @@ public:
 	virtual ShadowType_t ShadowCastType( void );
 
 public:	
-	SpyDisguiseWeapon m_DisguisedWeapons[11];
+	SpyDisguiseWeapon m_DisguisedWeapons[CLASS_CIVILIAN+1][MAX_WEAPON_SLOTS];
+	void MapDisguisedWeaponSlot(int classId, int spyWeaponSlot, CFFWeaponInfo *disguisedWeaponInfo);
+
 	int GetDisguisedClass( void ) const;
 	int GetDisguisedTeam( void ) const;
 	bool IsDisguised( void ) const;
@@ -529,6 +536,13 @@ protected:
 	bool m_bSliding;
 	// ----------------------------------
 // *** SQUEEK
+
+public:
+	bool IsRampsliding( void ) const { return m_bIsRampsliding; }
+	void SetRampsliding( bool bIsRampsliding ) { m_bIsRampsliding = bIsRampsliding; }
+protected:
+	bool m_bIsRampsliding;
+	float m_flNextRampslideFX;
 
 	// ----------------------------------
 	// Cloak stuff

@@ -42,6 +42,8 @@
 //extern ConVar ffdev_spy_maxcloakspeed;
 #define SPY_MAXCLOAKSPEED 220
 
+#define MAX_WEAPON_SLOTS 6
+
 enum FFPlayerGrenadeState
 {
     FF_GREN_NONE,
@@ -132,9 +134,9 @@ enum LuaColors
 
 struct SpyDisguiseWeapon
 {
-	char szWeaponClassName[6][MAX_WEAPON_STRING];
-	char szWeaponModel[6][MAX_WEAPON_STRING];
-	char szAnimExt[6][MAX_WEAPON_PREFIX];
+	char szWeaponClassName[MAX_WEAPON_STRING];
+	char szWeaponModel[MAX_WEAPON_STRING];
+	char szAnimExt[MAX_WEAPON_PREFIX];
 };
 
 // Decapitation flags

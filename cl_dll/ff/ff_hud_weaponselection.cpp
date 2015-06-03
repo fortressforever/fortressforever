@@ -51,6 +51,7 @@ public:
 	}
 
 	virtual void OpenSelection( void );
+	virtual void ShowSelection( void );
 	virtual void HideSelection( void );
 
 	virtual void LevelInit();
@@ -185,16 +186,14 @@ bool CHudWeaponSelection::ShouldDraw()
 		return false;
 	}
 
-	// --> Mirv: Always show if hud fastswitch is on
-	if (hud_fastswitch.GetInt() > 0)
-		return (gpGlobals->curtime < m_flSelectionTime + SELECTION_TIMEOUT_THRESHOLD + SELECTION_FADEOUT_TIME);
-	// <-- Mirv: Always show if hud fastswitch is on
-
 	bool bret = CBaseHudWeaponSelection::ShouldDraw();
 	if ( !bret )
 		return false;
 
-	return ( m_bSelectionVisible ) ? true : false;
+	if ( IsInSelectionMode() )
+		return true;
+
+	return gpGlobals->curtime < m_flSelectionTime + SELECTION_TIMEOUT_THRESHOLD + SELECTION_FADEOUT_TIME;
 }
 
 //-----------------------------------------------------------------------------
@@ -483,7 +482,12 @@ void CHudWeaponSelection::OpenSelection( void )
 	Assert(!IsInSelectionMode());
 
 	CBaseHudWeaponSelection::OpenSelection();
+}
+
+void CHudWeaponSelection::ShowSelection( void )
+{
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("OpenWeaponSelectionMenu");
+	m_bFadingOut = false;
 }
 
 //-----------------------------------------------------------------------------

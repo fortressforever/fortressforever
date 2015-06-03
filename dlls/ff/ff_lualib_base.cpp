@@ -7,8 +7,10 @@
 // includes
 #include "cbase.h"
 #include "ff_lualib.h"
+#include "EntityList.h"
 #include "ff_item_flag.h"
 #include "ff_triggerclip.h"
+#include "ff_projectile_base.h"
 #include "ff_team.h"
 
 #include "triggers.h"
@@ -22,6 +24,7 @@ extern "C"
 }
 
 #include "luabind/luabind.hpp"
+#include "luabind/operator.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -30,13 +33,16 @@ extern "C"
 using namespace luabind;
 
 //---------------------------------------------------------------------------
-// TODO: evaluate these functions off lua's BaseEntity types
-namespace FFLib
+/// tostring implemenation for CBaseEntity
+std::ostream& operator<<(std::ostream& stream, const CBaseEntity& entity)
 {
-	bool IsDispenser(CBaseEntity* pEntity);
-	bool IsGrenade(CBaseEntity* pEntity);
-	bool IsSentrygun(CBaseEntity* pEntity);
-	bool IsDetpack(CBaseEntity* pEntity);
+	stream << const_cast<CBaseEntity&>(entity).GetClassname() << ":";
+	const char *szEntityName = const_cast<CBaseEntity&>(entity).GetName();
+	if (szEntityName[0])
+	{
+		stream << szEntityName << ":";
+	}
+	return stream << entity.entindex();
 }
 
 //---------------------------------------------------------------------------
@@ -46,8 +52,14 @@ void CFFLuaLib::InitBase(lua_State* L)
 
 	module(L)
 	[
+		class_<CGlobalEntityList>("EntityList")
+			.def("FirstEntity",			&CGlobalEntityList::FirstEnt)
+			.def("NextEntity",			&CGlobalEntityList::NextEnt)
+			.def("NumEntities",			&CGlobalEntityList::NumberOfEntities),
+
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
+			.def(tostring(self))
 			.def("EmitSound",			&CBaseEntity::PlaySound)
 			.def("StopSound",			(void(CBaseEntity::*)(const char*))&CBaseEntity::StopSound)
 			.def("GetClassName",		&CBaseEntity::GetClassname)
@@ -58,14 +70,11 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("GetVelocity",			&CBaseEntity::GetAbsVelocity)
 			.def("SetVelocity",			&CBaseEntity::SetAbsVelocity)
 			.def("GetOwner",			&CBaseEntity::GetOwnerEntity)
-			// Use the global stuff for these
-			//.def("IsDispenser",			&FFLib::IsDispenser)
-			//.def("IsGrenade",			&FFLib::IsGrenade)
-			//.def("IsPlayer",			&CBaseEntity::IsPlayer)
-			//.def("IsSentryGun",			&FFLib::IsSentrygun)
-			//.def("IsDetpack",			&FFLib::IsDetpack)
 			.def("SetModel",			(void(CBaseEntity::*)(const char*))&CBaseEntity::SetModel)
 			.def("SetModel",			(void(CBaseEntity::*)(const char*, int))&CBaseEntity::SetModel)
+            .def("StartTrail",          (void(CBaseEntity::*)(int))&CBaseEntity::StartTrail)
+            .def("StartTrail",          (void(CBaseEntity::*)(int, float, float, float))&CBaseEntity::StartTrail)
+            .def("StopTrail",           &CBaseEntity::StopTrail)
 			.def("SetSkin",				&CBaseEntity::SetSkin)
 			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin)
 			.def("SetOrigin",			&CBaseEntity::SetAbsOrigin)
@@ -87,6 +96,9 @@ void CFFLuaLib::InitBase(lua_State* L)
 
 			.def("GetFriction",			&CBaseEntity::GetFriction)
 			.def("SetFriction",			&CBaseEntity::SetFriction),
+
+		// CFFProjectileBase
+		class_<CFFProjectileBase, CBaseEntity>("Projectile"),
 
 		// CFFInfoScript
 		class_<CFFInfoScript, CBaseEntity>("InfoScript")
@@ -133,4 +145,6 @@ void CFFLuaLib::InitBase(lua_State* L)
 		class_<CFFTriggerClip>("TriggerClip")
 			.def("SetClipFlags",		&CFFTriggerClip::LUA_SetClipFlags)
 	];
+
+	(globals(L))["GlobalEntityList"] = &gEntList;
 };

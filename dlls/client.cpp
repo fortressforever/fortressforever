@@ -947,6 +947,11 @@ void CPointServerCommand::InputCommand( inputdata_t& inputdata )
 	if ( !inputdata.value.String()[0] )
 		return;
 
+		// deny any string that includes rcon_password
+		// can't just check for the start because ' rcon_password blah' and 'dummy; rcon_password blah' are also valid
+		if ( Q_stristr(inputdata.value.String(), "rcon_password") )
+			return;
+
 	engine->ServerCommand( UTIL_VarArgs( "%s\n", inputdata.value.String() ) );
 }
 

@@ -21,7 +21,8 @@
 #define HISTORY_DRAW_TIME	"5"
 
 ConVar hud_drawhistory_time( "hud_drawhistory_time", HISTORY_DRAW_TIME, FCVAR_ARCHIVE );
-ConVar hud_fastswitch( "hud_fastswitch", "0", FCVAR_ARCHIVE, "0 = none | 1 = keyboard & mouse | 2 = keyboard only (old HL/TFC style)" );
+ConVar hud_fastswitch( "hud_fastswitch", "1", FCVAR_ARCHIVE, "0 = none | 1 = keyboard & mouse | 2 = keyboard only (old HL/TFC style)" );
+ConVar hud_weaponselect( "hud_weaponselect", "1", FCVAR_ARCHIVE, "Briefly shows the weapon select menu whenever switching weapons when hud_fastswitch is enabled" );
 
 //-----------------------------------------------------------------------------
 // Purpose: Weapon Selection commands
@@ -112,6 +113,12 @@ void CBaseHudWeaponSelection::UpdateSelectionTime( void )
 	m_flSelectionTime = gpGlobals->curtime;
 }
 
+void CBaseHudWeaponSelection::QuicklyFadeOut( void )
+{
+	ShowSelection();
+	m_flSelectionTime = gpGlobals->curtime - 4.0f;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -191,6 +198,11 @@ bool CBaseHudWeaponSelection::IsInSelectionMode()
 void CBaseHudWeaponSelection::OpenSelection( void )
 {
 	m_bSelectionVisible = true;
+	ShowSelection();
+}
+
+void CBaseHudWeaponSelection::ShowSelection( void )
+{
 }
 
 //-----------------------------------------------------------------------------
@@ -348,10 +360,10 @@ void CBaseHudWeaponSelection::SelectSlot( int iSlot )
 
 	SelectWeaponSlot( iSlot );
 
-	// --> Mirv: On fast switch don't let this re-show the weapon select
 	if( hud_fastswitch.GetInt() == 0 )
 		UpdateSelectionTime();
-	// <-- Mirv: On fast switch don't let this re-show the weapon select
+	else if( hud_weaponselect.GetBool() )
+		QuicklyFadeOut();
 }
 
 //-----------------------------------------------------------------------------
@@ -390,7 +402,9 @@ void CBaseHudWeaponSelection::UserCmd_NextWeapon(void)
 	if( hud_fastswitch.GetInt() == 1 )
 	{
 		SelectWeapon();
-		m_flSelectionTime = gpGlobals->curtime - 4.0f;
+
+		if (hud_weaponselect.GetBool())
+			QuicklyFadeOut();
 	}
 	else
 //#endif
@@ -428,7 +442,9 @@ void CBaseHudWeaponSelection::UserCmd_PrevWeapon(void)
 	if( hud_fastswitch.GetInt() == 1 )
 	{
 		SelectWeapon();
-		m_flSelectionTime = gpGlobals->curtime - 4.0f;
+
+		if (hud_weaponselect.GetBool())
+			QuicklyFadeOut();
 	}
 	else
 //#endif
@@ -467,6 +483,9 @@ void CBaseHudWeaponSelection::SwitchToLastWeapon( void )
 	if (!player || !player->IsAlive() || player->GetTeamNumber() < TEAM_BLUE)
 		return;
 	// <-- Mirv: Don't select while dead
+
+	if (hud_weaponselect.GetBool())
+		QuicklyFadeOut();
 
 	input->MakeWeaponSelection( player->GetLastWeapon() );
 

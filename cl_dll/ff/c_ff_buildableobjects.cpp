@@ -526,7 +526,7 @@ void C_FFSentryGun::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool C_FFSentryGun::Upgrade( bool bUpgradelevel, int iCells, int iShells, int iRockets )
+bool C_FFSentryGun::Upgrade()
 {
 	if( ( m_iLevel < 3 ) && m_bBuilt )
 		return true;

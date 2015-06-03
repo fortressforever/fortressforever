@@ -19,12 +19,19 @@ extern "C"
 }
 
 #include "luabind/luabind.hpp"
+#include "luabind/operator.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 //---------------------------------------------------------------------------
 using namespace luabind;
+
+/// tostring implemenation for Color
+std::ostream& operator<<(std::ostream& stream, const Color& color)
+{
+	return stream << "(" << color.r() << "," << color.g() << "," << color.b() << "," << color.a() << ")";
+}
 
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitMisc(lua_State* L)
@@ -38,6 +45,7 @@ void CFFLuaLib::InitMisc(lua_State* L)
 			.def("SetColor",			&CBeam::SetColor),
 			
 		class_<Color>("CustomColor")
+			.def(tostring(self))
 			.def(constructor<>())
 			.def(constructor<int, int, int>())
 			.def(constructor<int, int, int, int>())

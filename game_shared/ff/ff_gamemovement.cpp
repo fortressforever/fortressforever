@@ -77,14 +77,15 @@ public:
 	// CGameMovement
 	virtual bool CheckJumpButton();
 	virtual bool CanAccelerate();
-	virtual void FullNoClipMove(float factor, float maxacceleration);
 	virtual void CheckVelocity( void );
+	virtual void CategorizePosition( void );
 
 	// CFFGameMovement
 	virtual void FullBuildMove( void );	
 	virtual void WalkMove();
 	virtual void AirMove();
 	virtual void Friction();
+	bool IsRampSliding( CFFPlayer *pPlayer );
 
 	CFFGameMovement() {};
 };
@@ -255,27 +256,19 @@ bool CFFGameMovement::CheckJumpButton(void)
 	float pcfactor = BHOP_PCFACTOR;
 	float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 
-#ifdef GAME_DLL
-	if ( ffplayer->m_flMancannonTime + 0.5f <= gpGlobals->curtime )
+	if (speed > cap_soft) // apply soft cap
 	{
-#endif
-		
-		if (speed > cap_soft) // apply soft cap
-		{
-			if (speed > cap_mid) // Slow down even more if above mid cap
-				pcfactor = BHOP_PCFACTOR_MID;
+		if (speed > cap_mid) // Slow down even more if above mid cap
+			pcfactor = BHOP_PCFACTOR_MID;
 
-			float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
-			float multi = applied_cap / speed;
+		float applied_cap = (speed - cap_soft) * pcfactor + cap_soft;
+		float multi = applied_cap / speed;
 
-			mv->m_vecVelocity[0] *= multi;
-			mv->m_vecVelocity[1] *= multi;
+		mv->m_vecVelocity[0] *= multi;
+		mv->m_vecVelocity[1] *= multi;
 
-			Assert(multi <= 1.0f);
-		}
-#ifdef GAME_DLL
+		Assert(multi <= 1.0f);
 	}
-#endif
 
 	// --> Mirv: Trimp code v2.0!
 	//float fMul = FF_MUL_CONSTANT;
@@ -368,29 +361,22 @@ bool CFFGameMovement::CheckJumpButton(void)
 	}
 	// <-- Mirv: Trimp code v2.0!
 
-#ifdef GAME_DLL
-	if ( ffplayer->m_flMancannonTime + 0.5f <= gpGlobals->curtime )
+	if (!bTrimped)
 	{
-#endif
-		if (!bTrimped)
+		speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
+
+		// apply skim cap
+		if (speed > cap_hard )
 		{
-			speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
+			float applied_cap = BHOP_CAP_HARD * mv->m_flMaxSpeed;; 
+			float multi = applied_cap / speed;
 
-			// apply skim cap
-			if (speed > cap_hard )
-			{
-				float applied_cap = BHOP_CAP_HARD * mv->m_flMaxSpeed;; 
-				float multi = applied_cap / speed;
+			mv->m_vecVelocity[0] *= multi;
+			mv->m_vecVelocity[1] *= multi;
 
-				mv->m_vecVelocity[0] *= multi;
-				mv->m_vecVelocity[1] *= multi;
-
-				Assert(multi <= 1.0f);
-			}
+			Assert(multi <= 1.0f);
 		}
-#ifdef GAME_DLL
 	}
-#endif
 
 	//// Acclerate upward
 	//// If we are ducking...
@@ -471,29 +457,19 @@ bool CFFGameMovement::CheckJumpButton(void)
 	return true;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Mapguide movement. Needs sorting out at some point
-//-----------------------------------------------------------------------------
-void CFFGameMovement::FullNoClipMove(float factor, float maxacceleration)
+void CFFGameMovement::CategorizePosition()
 {
-#ifdef CLIENT_DLL
-	//CFFPlayer *ffplayer = (CFFPlayer *) player;
+	BaseClass::CategorizePosition();
 
-	//if( ffplayer->m_flNextMapGuideTime > gpGlobals->curtime )
-	//{
-	//	CFFMapGuide *nextguide = ffplayer->m_hNextMapGuide;
-	//	CFFMapGuide *lastguide = ffplayer->m_hLastMapGuide;
-
-	//	float t = clamp( ( ffplayer->m_flNextMapGuideTime - gpGlobals->curtime ) / 10.0f, 0, 1.0f );
-
-	//	Vector vecNewPos = t * lastguide->GetAbsOrigin() + ( 1 - t ) * nextguide->GetAbsOrigin();
-	//	QAngle angNewDirection = t * lastguide->GetAbsAngles() + ( 1 - t ) * nextguide->GetAbsAngles();
-
-	//	// Apply these here
-	//}
-	//else
+#ifdef GAME_DLL
+	CFFPlayer *pFFPlayer = ToFFPlayer(player);
+	if (pFFPlayer->m_flMancannonTime > 0.0f && player->GetGroundEntity() != NULL || player->GetWaterLevel() > WL_Feet)
+	{
+		// reset jump pad time so that it stops conc speed limiting
+		// once you're firmly on the ground or in water
+		pFFPlayer->m_flMancannonTime = 0.0f;
+	}
 #endif
-		BaseClass::FullNoClipMove(factor, maxacceleration);
 }
 
 //-----------------------------------------------------------------------------
@@ -848,7 +824,7 @@ void CFFGameMovement::Friction( void )
 			friction = sv_friction.GetFloat();
 
 		// Grab friction value.
-		friction *= /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
+		friction *= pFFPlayer->GetFriction() * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 
 		// Bleed off some speed, but if we have less than the bleed
 		//  threshhold, bleed the theshold amount.
@@ -907,6 +883,42 @@ bool CFFGameMovement::CanAccelerate()
 	return true;
 }
 
+bool CFFGameMovement::IsRampSliding( CFFPlayer *pPlayer )
+{
+	if (pPlayer->GetGroundEntity() == NULL)  // Rampsliding occurs when normal ground detection fails
+	{
+		// Take the lateral velocity
+		Vector vecVelocity = mv->m_vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+		float flHorizontalSpeed = vecVelocity.Length();
+
+		if (flHorizontalSpeed > SV_TRIMPTRIGGERSPEED)
+		{
+			trace_t pm;
+
+			Vector vecStart = mv->m_vecAbsOrigin;
+			Vector vecStop = vecStart - Vector(0, 0, 0.1f);
+			
+			TracePlayerBBox(vecStart, vecStop, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm); // but actually you are on the ground
+
+			// Found the floor
+			if(pm.fraction != 1.0f)
+			{
+				if (flHorizontalSpeed > 0)
+					vecVelocity /= flHorizontalSpeed;
+
+				float flDotProduct = DotProduct(vecVelocity, pm.plane.normal);
+				if (flDotProduct < -0.15f) // On an upwards ramp
+				{
+					return true;
+				}
+			}
+		}
+		
+	}
+
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Check player velocity & clamp if cloaked
 //-----------------------------------------------------------------------------
@@ -920,7 +932,9 @@ void CFFGameMovement::CheckVelocity( void )
 	CFFPlayer *pPlayer = ToFFPlayer( player );
 	if( !pPlayer )
 		return;
-	
+
+	pPlayer->SetRampsliding(IsRampSliding(pPlayer));
+
 	if( !pPlayer->IsCloaked() )
 		return;
 
@@ -933,7 +947,6 @@ void CFFGameMovement::CheckVelocity( void )
 		mv->m_vecVelocity.y *= 0.5f;
 	}
 }
-
 // Expose our interface.
 static CFFGameMovement g_GameMovement;
 IGameMovement *g_pGameMovement = ( IGameMovement * )&g_GameMovement;

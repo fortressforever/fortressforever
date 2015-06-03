@@ -166,6 +166,7 @@ public:
 	virtual void Event_Killed(const CTakeDamageInfo &info);
 	virtual bool Event_Gibbed(const CTakeDamageInfo &info);
 	virtual bool BecomeRagdollOnClient(const Vector &force);
+	virtual void PlayerUse( void );
 
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 	virtual void UpdateOnRemove( void );
@@ -184,8 +185,6 @@ public:
 
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
-
-	virtual bool ClientCommand(const char *cmd);
 
 // In shared code.
 public:
@@ -240,6 +239,7 @@ public:
 	int		AddArmor( int iAmount );
 	int		RemoveArmor( int iAmount );
 	//void	ReduceArmorClass();	// Bit of a one hit wonder, this
+	float	GetArmorAbsorption() { return ((float)m_iArmorType) / 10.0f; } // changing int to float e.g. armor type 8 means 0.8 i.e. 80% damage absorbed by armor
 
 	int GetMaxShells( void ) const { return GetFFClassData().m_iMaxShells; }
 	int GetMaxCells( void ) const { return GetFFClassData().m_iMaxCells; }
@@ -540,6 +540,12 @@ public:
 protected:
 	void StopSliding( void ); // stop the overpressure friction/acceleration effect
 	CNetworkVar( bool, m_bSliding );
+
+public:
+	bool IsRampsliding( void ) const { return m_bIsRampsliding; }
+	void SetRampsliding( bool bIsRampsliding ) { m_bIsRampsliding = bIsRampsliding; }
+protected:
+	CNetworkVar( bool, m_bIsRampsliding );
 
 public:	
 	bool IsInfected( void ) const		{ return m_bInfected; }

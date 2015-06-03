@@ -628,17 +628,36 @@ public:
 	// --> shared
 	CFFSentryGun( void );
 	virtual ~CFFSentryGun( void );
+
 	int GetRockets( void ) const  { return m_iRockets; };
 	int GetShells( void ) const  { return m_iShells; };
-	int GetRocketsPercent( void ) const  { return (int) ((float) m_iRockets / (float) m_iMaxRockets) * 100.0f; };
-	int GetShellsPercent( void ) const  { return (int) ((float) m_iShells / (float) m_iMaxShells) * 100.0f; };
-	
-	int NeedsHealth( void ) const { return m_iMaxHealth - m_iHealth; }
-	int NeedsShells( void ) const { return m_iMaxShells - m_iShells; }
-	int NeedsRockets( void ) const { return m_iMaxRockets - m_iRockets; }
-	
+	int GetHealth( void ) const { return m_iHealth; };
+
+	int GetMaxRockets( void ) const  { return m_iMaxRockets; };
+	int GetMaxShells( void ) const { return m_iMaxShells; };
+	int GetMaxHealth( void ) const { return m_iMaxHealth; };
+
+	int GetRocketsPercent( void ) const  { return (int) ((float) GetRockets() / (float) GetMaxRockets()) * 100.0f; };
+	int GetShellsPercent( void ) const  { return (int) ((float) GetShells() / (float) GetMaxShells()) * 100.0f; };
+	int GetHealthPercent( void ) const  { return (int) ((float) GetHealth() / (float) GetMaxHealth()) * 100.0f; };
+
+	int NeedsRockets( void ) const { return GetMaxRockets() - GetRockets(); }
+	int NeedsShells( void ) const { return GetMaxShells() - GetShells(); }
+	int NeedsHealth( void ) const { return GetMaxHealth() - GetHealth(); }
+
 	int GetLevel( void ) const { return m_iLevel; }
-	bool Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
+	bool Upgrade();
+
+#ifdef GAME_DLL
+	void Repair( int iCells = 0 );
+	void AddAmmo( int iShells = 0, int iRockets = 0 );
+
+	void SetLevel( int iLevel, bool bEmitSounds=true );
+	void SetRockets(int iRockets) { m_iRockets = clamp( iRockets, 0, GetMaxRockets() ); RecalculateAmmoPercent(); }
+	void SetShells(int iShells) { m_iShells = clamp( iShells, 0, GetMaxShells() ); RecalculateAmmoPercent(); }
+	void SetHealth(int iHealth) { m_iHealth = clamp( iHealth, 0, GetMaxHealth() ); RecalculateAmmoPercent(); }
+	void RecalculateAmmoPercent();
+#endif
 
 	virtual Class_T Classify( void ) { return CLASS_SENTRYGUN; }
 	virtual bool	IsNPC( void ) { return true; }
@@ -683,6 +702,19 @@ public:
 	void OnActiveThink( void );
 
 	CBaseEntity *HackFindEnemy( void );
+	
+	Vector GetVecAiming() 
+	{
+		Vector vecAiming;
+		AngleVectors(m_angAiming, &vecAiming);
+		return vecAiming;
+	}
+	Vector GetVecGoal()
+	{
+		Vector vecGoal;
+		AngleVectors( m_angGoal, &vecGoal );
+		return vecGoal;
+	}
 
 	float MaxYawSpeed( void ) const;
 	float MaxPitchSpeed( void ) const;
@@ -702,13 +734,17 @@ private:
 
 public:
 	CBaseEntity *GetEnemy( void	) const { return m_hEnemy; }
-	void SetEnemy( CBaseEntity *hEnemy ) { m_hEnemy = hEnemy; }
+	void SetEnemy( CBaseEntity *hEnemy );
 private:
 	CHandle< CBaseEntity >	m_hEnemy;
 
+public:
+	void Shoot();
+	void ShootRocket();
+
 protected:
 	void Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
-	void ShootRockets( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
+	void ShootRocket( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
 	void Ping( void );	
 	void SpinUp( void );
 	void SpinDown( void );

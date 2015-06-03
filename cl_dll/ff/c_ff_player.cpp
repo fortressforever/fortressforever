@@ -26,6 +26,7 @@
 #include "dlight.h"
 #include "beamdraw.h"
 #include "fx.h"
+#include "decals.h"
 #include "c_te_effect_dispatch.h"
 
 #include "view.h"
@@ -132,6 +133,15 @@ ConVar cl_gib_blood_scale("cl_gib_blood_scale", "20", FCVAR_ARCHIVE);
 ConVar cl_gib_blood_force_scale("cl_gib_blood_force_scale", ".1", FCVAR_ARCHIVE);
 ConVar cl_gib_blood_count("cl_gib_blood_count", "3", FCVAR_ARCHIVE);
 ConVar cl_gib_blood_force_randomness("cl_gib_blood_force_randomness", "1", FCVAR_ARCHIVE);
+
+// rampslide effect settings
+ConVar cl_rampslidefx("cl_rampslidefx", "1", FCVAR_ARCHIVE, "Enables/disables rampslide particle effects");
+ConVar cl_rampslidefx_interval("cl_rampslidefx_interval", "0", FCVAR_ARCHIVE, "Time between spawning rampslide particles");
+ConVar cl_rampslidefx_offset("cl_rampslidefx_offset", "8", FCVAR_ARCHIVE, "Maximum random horizontal offset from the feet of the player to spawn rampsliding effects");
+ConVar cl_rampslidefx_offset_vertical("cl_rampslidefx_offset_vertical", "0", FCVAR_ARCHIVE, "Vertical offset from the feet of the player to spawn rampsliding effects", true, -4.0f, true, 32.0f);
+ConVar cl_rampslidefx_spark_length("cl_rampslidefx_spark_length", "1", FCVAR_ARCHIVE, "Length of the sparks");
+ConVar cl_rampslidefx_dust_size("cl_rampslidefx_dust_size", "4", FCVAR_ARCHIVE, "The number of dust particles spawned");
+ConVar cl_rampslidefx_debug("cl_rampslidefx_alwayson", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT, "If 1, spawns ramspliding particles regardless of whether or not player are actually rampsliding");
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
 static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Change class instantly");
@@ -856,6 +866,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropBool( RECVINFO( m_bConcussed ) ),
 	RecvPropBool( RECVINFO( m_bTranqed ) ),
 	RecvPropBool( RECVINFO( m_bSliding ) ),
+	RecvPropBool( RECVINFO( m_bIsRampsliding ) ),
 	RecvPropEHandle( RECVINFO( m_hActiveSlowfield ) ),
 	RecvPropBool( RECVINFO( m_bInfected ) ),
 	RecvPropBool( RECVINFO( m_bImmune ) ),
@@ -1263,6 +1274,8 @@ C_FFPlayer::C_FFPlayer() :
 	m_flSlidingTime = 0;
 	m_bSliding = false;
 
+	m_bIsRampsliding = false;
+
 	m_flSpeedModifier = 1.0f;
 	
 	m_iHallucinationIndex = 0;
@@ -1289,112 +1302,100 @@ C_FFPlayer::C_FFPlayer() :
 	usermessages->HookMessage("FFStopGrenTimers", &StopGrenTimersListener);
 
 	//Loop through all classes.
-	for (int i=1; i < 11; i++)
+	for (int classDisguisedAs=CLASS_SCOUT; classDisguisedAs <= CLASS_CIVILIAN; classDisguisedAs++)
 	{
 		PLAYERCLASS_FILE_INFO_HANDLE PlayerClassInfo;
 
-		if (!ReadPlayerClassDataFromFileForSlot((*pFilesystem), Class_IntToString(i), &PlayerClassInfo, GetEncryptionKey()))
+		if (!ReadPlayerClassDataFromFileForSlot((*pFilesystem), Class_IntToString(classDisguisedAs), &PlayerClassInfo, GetEncryptionKey()))
 			return;
 
-		CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(PlayerClassInfo);
+		CFFPlayerClassInfo *pClassInfoDisguisedAs = GetFilePlayerClassInfoFromHandle(PlayerClassInfo);
 
 		//Get weapons for the class they disguised as.
 		WEAPON_FILE_INFO_HANDLE	WeaponInfo;
 
 		//Loop through weapons, find a weapon in the same slot as the one they are using, and set their current weapon model to that.
-		for ( int j = 0; j < pPlayerClassInfo->m_iNumWeapons; j++ )
+		for ( int disguisedClassWeaponSlotIndex = 0; disguisedClassWeaponSlotIndex < pClassInfoDisguisedAs->m_iNumWeapons; disguisedClassWeaponSlotIndex++ )
 		{
-			if ( ReadWeaponDataFromFileForSlot( (*pFilesystem), pPlayerClassInfo->m_aWeapons[j], &WeaponInfo, GetEncryptionKey() ) )
+			if ( ReadWeaponDataFromFileForSlot( (*pFilesystem), pClassInfoDisguisedAs->m_aWeapons[disguisedClassWeaponSlotIndex], &WeaponInfo, GetEncryptionKey() ) )
 			{
-				CFFWeaponInfo *pWeaponInfo = NULL;
+				CFFWeaponInfo *pDisguisedClassWeaponInfo = NULL;
 #ifdef _DEBUG
-				pWeaponInfo = dynamic_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
-				Assert(pWeaponInfo);
+				pDisguisedClassWeaponInfo = dynamic_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
+				Assert(pDisguisedClassWeaponInfo);
 #else
-				pWeaponInfo = static_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
+				pDisguisedClassWeaponInfo = static_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
 #endif
 
-				if(pWeaponInfo)
+				if(pDisguisedClassWeaponInfo)
 				{
-					int iPlayerClass = i;
-					int iSlot = pWeaponInfo->iSlot;
+					// weapon info slots start at 0, add 1 to make it more understandable
+					int disguisedClassWeaponSlot = pDisguisedClassWeaponInfo->iSlot + 1;
+					int spyWeaponSlot = disguisedClassWeaponSlot;
 					bool bDone = false;
 
 					//Correct slots in a 1/2/3/4 layout, so spy can select all available weapons.
-					switch(iPlayerClass)
+					switch(classDisguisedAs)
 					{
-					case 1:
-						if(iSlot == 3) 
-							iSlot = 2;
+					case CLASS_SCOUT:
+						if(disguisedClassWeaponSlot == 4) // super shotgun as nailgun (also let it map ng:ng)
+							MapDisguisedWeaponSlot(classDisguisedAs, 3, pDisguisedClassWeaponInfo);
 						break;
-					case 3:
-						if(iSlot == 4) 
-							iSlot = 3;
+					case CLASS_SNIPER:
+						if(disguisedClassWeaponSlot == 3) // nailgun as AR (also let it map ssg:AR)
+							MapDisguisedWeaponSlot(classDisguisedAs, 4, pDisguisedClassWeaponInfo);
 						break;
-					case 4:
-						if(iSlot == 4) 
-							iSlot = 2;
+					case CLASS_SOLDIER:
+						if(disguisedClassWeaponSlot == 5) // nailgun as rpg
+							spyWeaponSlot = 4;
+						else if(disguisedClassWeaponSlot == 3) // tranq as super shotgun (also let it map ssg:ssg)
+							MapDisguisedWeaponSlot(classDisguisedAs, 2, pDisguisedClassWeaponInfo);
 						break;
-					case 6:
-						if(iSlot == 4) 
-							iSlot = 3;
+					case CLASS_DEMOMAN:
+						if(disguisedClassWeaponSlot == 4) // shotgun as GL
+							spyWeaponSlot = 3;
+						if(disguisedClassWeaponSlot == 5) // nailgun as PL
+							spyWeaponSlot = 4;
 						break;
-					case 7:
-						if(iSlot == 3) 
-							iSlot = 2;
-						else if(iSlot == 4) 
-							iSlot = 3;
+					case CLASS_MEDIC:
+						if(disguisedClassWeaponSlot == 3) // tranq as super shotgun (also let it map ssg:ssg)
+							MapDisguisedWeaponSlot(classDisguisedAs, 2, pDisguisedClassWeaponInfo);
+					case CLASS_HWGUY:
+						if(disguisedClassWeaponSlot == 5) // nailgun as AC
+							spyWeaponSlot = 4;
+						else if (disguisedClassWeaponSlot == 3) // tranq as super shotgun (also let it map ssg:ssg)
+							MapDisguisedWeaponSlot(classDisguisedAs, 2, pDisguisedClassWeaponInfo);
 						break;
-					case 9:
-						if(iSlot > 2) //use shotgun for everything after the shotgun.
+					case CLASS_PYRO:
+						if(disguisedClassWeaponSlot == 4) // tranq and super shotgun as flamethrower
 						{
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szWeaponModel[2], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
-
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szAnimExt[2], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
-							
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szWeaponClassName[2], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
+							MapDisguisedWeaponSlot(classDisguisedAs, 2, pDisguisedClassWeaponInfo);
+							MapDisguisedWeaponSlot(classDisguisedAs, 3, pDisguisedClassWeaponInfo);
 							bDone = true;
 						}
+						else if(disguisedClassWeaponSlot == 5) // nailgun as IC
+							spyWeaponSlot = 4;
 						break;
-					case 10:
-						if(iSlot > 0) // always use umbrella
-						{
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szWeaponModel[0], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
-
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szAnimExt[0], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
-							
-							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
-								m_DisguisedWeapons[iPlayerClass].szWeaponClassName[0], 
-								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
+					case CLASS_ENGINEER:
+						if(disguisedClassWeaponSlot == 3) // nailgun as super shotgun (also let it map ssg:ssg)
+							MapDisguisedWeaponSlot(classDisguisedAs, 4, pDisguisedClassWeaponInfo);
+						else if (disguisedClassWeaponSlot > 3) // skip the rest (buildables)
 							bDone = true;
+						break;
+					case CLASS_CIVILIAN:
+						if (disguisedClassWeaponSlot == 1) // always use umbrella
+						{
+							for (spyWeaponSlot = 1; spyWeaponSlot <= MAX_WEAPON_SLOTS; spyWeaponSlot++)
+								MapDisguisedWeaponSlot(classDisguisedAs, spyWeaponSlot, pDisguisedClassWeaponInfo);
 						}
+						bDone = true;
 						break;
 					}
 
-					if(bDone)
+					if (bDone)
 						continue;
 
-					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot], 
-						pWeaponInfo->szClassName, 
-						sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponClassName[iSlot]));
-
-					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
-						pWeaponInfo->szWorldModel, 
-						sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
-
-					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
-						pWeaponInfo->m_szAnimExtension, 
-						sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
+					MapDisguisedWeaponSlot(classDisguisedAs, spyWeaponSlot, pDisguisedClassWeaponInfo);
 				}
 			}
 		}
@@ -1433,6 +1434,26 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrObserverTarget()
 	}
 	else
 		return NULL;
+}
+
+/** Maps a spy slot to a weapon that will be shown while disguised for the given class
+*	NOTE: spyWeaponSlot should NOT be 0 indexed; it should be in human-readable form (slot1 = 1)
+*/
+void C_FFPlayer::MapDisguisedWeaponSlot(int classDisguisedAs, int spyWeaponSlot, CFFWeaponInfo *disguisedWeaponInfo)
+{
+	int spyWeaponSlotIndex = spyWeaponSlot - 1;
+
+	Q_strncpy(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szWeaponClassName, 
+		disguisedWeaponInfo->szClassName, 
+		sizeof(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szWeaponClassName));
+
+	Q_strncpy(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szWeaponModel, 
+		disguisedWeaponInfo->szWorldModel, 
+		sizeof(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szWeaponModel));
+
+	Q_strncpy(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szAnimExt, 
+		disguisedWeaponInfo->m_szAnimExtension, 
+		sizeof(m_DisguisedWeapons[classDisguisedAs][spyWeaponSlotIndex].szAnimExt));
 }
 
 //-----------------------------------------------------------------------------
@@ -2453,6 +2474,48 @@ void C_FFPlayer::ClientThink( void )
 {
 	// Hopefully when the particles die the ::Create()
 	// stuff gets removed automagically?
+
+	if (cl_rampslidefx.GetBool() && (cl_rampslidefx_debug.GetBool() || IsRampsliding()) && gpGlobals->curtime >= m_flNextRampslideFX && GetAbsVelocity().LengthSqr() > 0)
+	{
+		bool bIsSlidingOnMetal = false;
+		Vector vecDir = Vector(0,0,1);
+
+		// get ground
+		trace_t tr;
+		Vector vecStartPos = GetAbsOrigin();
+		vecStartPos.z += GetPlayerMins()[ 2 ];
+		Vector vecEndPos = vecStartPos - Vector(0,0,32);
+		UTIL_TraceLine( vecStartPos, vecEndPos, MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
+
+		if (tr.DidHit())
+		{
+			surfacedata_t *pSurfaceData = physprops->GetSurfaceData( tr.surface.surfaceProps );
+			char cMaterial = pSurfaceData->game.material;
+
+			bIsSlidingOnMetal = cMaterial == CHAR_TEX_METAL || cMaterial == CHAR_TEX_VENT || cMaterial == CHAR_TEX_GRATE || cMaterial == CHAR_TEX_COMPUTER;
+
+			vecDir = tr.plane.normal;
+		}
+
+		int iRandomOffset = cl_rampslidefx_offset.GetFloat();
+		float flVerticalOffset = cl_rampslidefx_offset_vertical.GetFloat();
+
+		// sparks on metal, dust on everything else
+		if ( bIsSlidingOnMetal )
+		{
+			int iSparkMagnitude = 1.0f; // controls the width of the spark, but doesn't seem to affect much, so it's not particularly useful
+			int iSparkLength = cl_rampslidefx_spark_length.GetInt();
+			g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), iSparkMagnitude, iSparkLength, &vecDir);
+		}
+		else
+		{
+			float flDustSize = cl_rampslidefx_dust_size.GetFloat();
+			float flDustSpeed = 0.0f; // controls how far apart the dust particles get spawned in vecDir's direction; not particularly useful
+			g_pEffects->Dust(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), vecDir, flDustSize, flDustSpeed);
+		}
+
+		m_flNextRampslideFX = gpGlobals->curtime + cl_rampslidefx_interval.GetFloat();
+	}
 
 	// Update infection emitters
 	if( IsAlive() && IsInfected() && !IsImmune() && !IsDormant() )

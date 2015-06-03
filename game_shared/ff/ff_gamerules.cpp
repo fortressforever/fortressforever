@@ -181,6 +181,11 @@ ConVar mp_prematch( "mp_prematch",
 					FCVAR_NOTIFY|FCVAR_REPLICATED,
 					"delay before game starts" );
 
+ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
+					"0",
+					FCVAR_NOTIFY|FCVAR_REPLICATED,
+					"If > 0, only deals armor damage to teammates. The armor damage is multiplied by the value of the cvar (mp_friendlyfire_armorstrip 0.5 means half damage). Requires mp_friendlyfire 1" );
+
 #ifdef CLIENT_DLL
 	void RecvProxy_FFGameRules( const RecvProp *pProp, void **pOut, void *pData, int objectID )
 	{
@@ -625,7 +630,12 @@ ConVar mp_prematch( "mp_prematch",
 		// absolutely everything - scores, players, entities, etc.		
 		if( bFullReset )
 		{
-			// TODO: Do stuff!
+			// give lua a chance to prepare for the restart
+			if (_scriptman.GetLuaState() != NULL)
+			{
+				CFFLuaSC hRestartRound;
+				_scriptman.RunPredicates_LUA(NULL, &hRestartRound, "restartround");
+			}
 
 			m_flIntermissionEndTime = 0.f;
 
@@ -1031,6 +1041,17 @@ ConVar mp_prematch( "mp_prematch",
 		}
 	}
 
+	void CFFGameRules::GoToIntermission()
+	{
+		if ( g_fGameOver )
+			return;
+
+		BaseClass::GoToIntermission();
+
+		CFFLuaSC hIntermission;
+		_scriptman.RunPredicates_LUA(NULL, &hIntermission, "intermission");
+	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: creates a list of valid spawn points
 	//-----------------------------------------------------------------------------
@@ -1290,11 +1311,6 @@ ConVar mp_prematch( "mp_prematch",
 		// TFC style falloff please.
 		falloff = 0.5f; // AfterShock: need to change this if you want to have a radius over 2x the damage
 
-		// Always raise by 1.0f
-		// It's so that the grenade isn't in the ground
-		// AfterShock: Isn't this going to raise grenades into the ceiling if they explode there? Shouldnt we be raising off the surface normal instead?
-		vecSrc.z += 1.0f;
-
 		// iterate on all entities in the vicinity.
 		for (CEntitySphereQuery sphere(vecSrc, flRadius); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
 		{
@@ -1333,8 +1349,8 @@ ConVar mp_prematch( "mp_prematch",
 				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
 				float flBodyTargetOffset = vecSpot.z - pPlayer->GetAbsOrigin().z;
 
-                float dH = vecDisplacement.Length2D() - 16.0f;	// Half of model width
-				float dV = fabs(vecDisplacement.z - flBodyTargetOffset) - 36.0f; // Half of model height
+                float dH = vecDisplacement.Length2D() - pPlayer->GetPlayerMaxs().x;	// Half of model width
+				float dV = fabs(vecDisplacement.z - flBodyTargetOffset) - pPlayer->GetPlayerMaxs().z; // Half of model height
 
 				// Inside our model bounds
 				if (dH <= 0.0f && dV <= 0.0f)
@@ -1392,6 +1408,9 @@ ConVar mp_prematch( "mp_prematch",
 			if( info.GetInflictor() && ( ( info.GetInflictor() )->GetFlags() & FL_GRENADE ) )
 			{
 				CTraceFilterIgnoreSingleFlag traceFilter( FL_GRENADE );
+				// ignore the ignored entity here as well because HH nades get blocked by the nade's owner
+				// when the owner is standing still and the ignored entity is the owner for HH nades
+				traceFilter.SetPassEntity(pEntityIgnore);
 				UTIL_TraceLine( vecSrc, vecSpot, MASK_SHOT, &traceFilter, &tr );
 				
 				// Jiggles: This is the case where an EMP triggered a backpack to explode.
@@ -1425,22 +1444,14 @@ ConVar mp_prematch( "mp_prematch",
 			if (flAdjustedDamage <= 0) 
 				continue;
 
-			// In TFC players only do 2/3 damage to themselves
-			// This also affects forces by the same amount
-			// Added: Make sure the source isn't a buildable though
-			// as that should do full damage!
-			if (pEntity == info.GetAttacker() && !pBuildable)
-				flAdjustedDamage *= 0.66666f;
+			flAdjustedDamage = GetAdjustedDamage(flAdjustedDamage, pEntity, info);
 
-			// if inflictor is a buildable (e.g. SG or dispenser exploding), engineers take half damage
-			if ((pBuildable) && (pEntity->IsPlayer()))
-			{
-				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
-				if ((pPlayer) &&( pPlayer->GetClassSlot() == CLASS_ENGINEER ))
-				{
-					flAdjustedDamage *= FFDEV_ENGI_BUILD_EXPL_REDUCE;
-				}
-			}
+			// Create a new TakeDamageInfo for this player
+			CTakeDamageInfo adjustedInfo = info;
+
+			// Set the new adjusted damage
+			adjustedInfo.SetDamage(flAdjustedDamage);
+			
 			// If we're stuck inside them, fixup the position and distance
 			// I'm assuming this is done in TFC too
 			if (tr.startsolid) 
@@ -1449,12 +1460,6 @@ ConVar mp_prematch( "mp_prematch",
 				tr.fraction = 0.0;
 			}
 
-			// Create a new TakeDamageInfo for this player
-			CTakeDamageInfo adjustedInfo = info;
-
-			// Set the new adjusted damage
-			adjustedInfo.SetDamage(flAdjustedDamage);
-
 			// Don't calculate the forces if we already have them
 			if (adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin) 
 			{
@@ -1462,72 +1467,7 @@ ConVar mp_prematch( "mp_prematch",
 				// 0000936 - use convar; ensure a lower "bounds"
 				float flCalculatedForce = flAdjustedDamage * PUSH_MULTIPLIER;
 				
-				CBaseEntity *pInflictor = info.GetInflictor();
-				// If this is an IC projectile, set to a lower clamp (350)
-				float flPushClamp = PUSH_CLAMP;
-				
-				if ( pInflictor )
-				{
-					switch ( pInflictor->Classify() )
-					{
-						case CLASS_IC_ROCKET:
-							flPushClamp = 350.0f;
-							// lower the push because of the increased damage needed
-							flCalculatedForce /= 3;
-							if (pEntity == info.GetAttacker() && !pBuildable)
-							{
-								flAdjustedDamage *= IC_SELFDAMAGEMULTIPLIER;
-								adjustedInfo.SetDamage(flAdjustedDamage);
-							}
-							break;
-
-						case CLASS_RAIL_PROJECTILE:
-							flPushClamp = 300.0f;
-							// Don't want people jumpin' real high with the Rail Gun :)
-							flCalculatedForce /= 3;
-							break;
-
-						case CLASS_GREN_EMP:
-							if (flCalculatedForce > 700.0f )
-								flCalculatedForce = 700.0f;
-							break;
-					}
-				}	
-
-				if (flCalculatedForce < flPushClamp)
-					flCalculatedForce = flPushClamp;
-
-				CFFPlayer *pPlayer = NULL;
-
-				if( pEntity->IsPlayer() )
-					pPlayer = ToFFPlayer(pEntity);
-
-				// We have to reduce the force further if they're fat
-				// 0000936 - use convar
-				if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
-					flCalculatedForce *= FATTYPUSH_MULTIPLIER;
-
-				//CFFPlayer *pAttacker = NULL;
-				CBaseEntity *pAttacker = info.GetAttacker();
-
-				/*
-				// If it's a building then take it's owner
-				if( ( info.GetAttacker()->Classify() == CLASS_DISPENSER ) ||
-					( info.GetAttacker()->Classify() == CLASS_SENTRYGUN ) ||
-					( info.GetAttacker()->Classify() == CLASS_DISPENSER ) )
-				{
-					pAttacker = ToFFPlayer( ( ( CFFBuildableObject * )info.GetAttacker() )->m_hOwner.Get() );
-				}
-				else
-                    pAttacker = ToFFPlayer( info.GetAttacker() );
-
-				*/
-                
-				// And also reduce if we couldn't hurt them
-				// TODO: Get exact figure for this
-				// 0000936 - use convar
-				if (pPlayer && pAttacker && !g_pGameRules->FCanTakeDamage(pPlayer, pAttacker))
-					flCalculatedForce *= NODAMAGEPUSH_MULTIPLIER;
+				flCalculatedForce = GetAdjustedPushForce(flCalculatedForce, pEntity, adjustedInfo);
 
 				// Don't use the damage source direction, use the reported position
 				// if it exists
@@ -1578,6 +1518,92 @@ ConVar mp_prematch( "mp_prematch",
 			// Now hit all triggers along the way that respond to damage... 
 			pEntity->TraceAttackToTriggers(adjustedInfo, vecSrc, tr.endpos, vecDirection);
 		}
+	}
+
+	float CFFGameRules::GetAdjustedPushForce(float flPushForce, CBaseEntity *pVictim, const CTakeDamageInfo &info)
+	{
+		float flAdjustedPushForce = flPushForce;
+		
+		CBaseEntity *pInflictor = info.GetInflictor();
+		float flPushClamp = PUSH_CLAMP;
+
+		if ( pInflictor )
+		{
+			switch ( pInflictor->Classify() )
+			{
+				case CLASS_IC_ROCKET:
+					flPushClamp = 350.0f;
+					// lower the push because of the increased damage needed
+					flAdjustedPushForce /= 3;
+					break;
+
+				case CLASS_RAIL_PROJECTILE:
+					flPushClamp = 300.0f;
+					// Don't want people jumpin' real high with the Rail Gun :)
+					flAdjustedPushForce /= 3;
+					break;
+
+				case CLASS_GREN_EMP:
+					if (flAdjustedPushForce > 700.0f )
+						flAdjustedPushForce = 700.0f;
+					break;
+			}
+		}	
+
+		if (flAdjustedPushForce < flPushClamp)
+			flAdjustedPushForce = flPushClamp;
+
+		CFFPlayer *pPlayer = NULL;
+
+		if( pVictim->IsPlayer() )
+			pPlayer = ToFFPlayer(pVictim);
+
+		// We have to reduce the force further if they're fat
+		// 0000936 - use convar
+		if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
+			flAdjustedPushForce *= FATTYPUSH_MULTIPLIER;
+
+		CBaseEntity *pAttacker = info.GetAttacker();
+
+		// And also reduce if we couldn't hurt them
+		// TODO: Get exact figure for this
+		// 0000936 - use convar
+		if (pPlayer && pAttacker && !g_pGameRules->FCanTakeDamage(pPlayer, pAttacker))
+			flAdjustedPushForce *= NODAMAGEPUSH_MULTIPLIER;
+
+		return flAdjustedPushForce;
+	}
+
+	float CFFGameRules::GetAdjustedDamage(float flDamage, CBaseEntity *pVictim, const CTakeDamageInfo &info)
+	{
+		float flAdjustedDamage = flDamage;
+
+		CBaseEntity *pInflictor = info.GetInflictor();
+		bool bIsInflictorABuildable = dynamic_cast <CFFBuildableObject *> (pInflictor) != NULL;
+
+		if (pInflictor && pInflictor->Classify() == CLASS_IC_ROCKET && pVictim == info.GetAttacker())
+		{
+			flAdjustedDamage *= IC_SELFDAMAGEMULTIPLIER;
+		}
+
+		// In TFC players only do 2/3 damage to themselves
+		// This also affects forces by the same amount
+		// Added: Make sure the source isn't a buildable though
+		// as that should do full damage!
+		if (pVictim == info.GetAttacker() && !bIsInflictorABuildable)
+			flAdjustedDamage *= 0.66666f;
+
+		// if inflictor is a buildable (e.g. SG or dispenser exploding), engineers take half damage
+		if (bIsInflictorABuildable && pVictim->IsPlayer())
+		{
+			CFFPlayer *pPlayer = ToFFPlayer(pVictim);
+			if (pPlayer && pPlayer->GetClassSlot() == CLASS_ENGINEER)
+			{
+				flAdjustedDamage *= FFDEV_ENGI_BUILD_EXPL_REDUCE;
+			}
+		}
+
+		return flAdjustedDamage;
 	}
 
 	// --> Mirv: Hodgepodge of different checks (from the base functions) inc. prematch

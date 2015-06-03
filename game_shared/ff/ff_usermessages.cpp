@@ -79,10 +79,6 @@ void RegisterUserMessages()
 
 	usermessages->Register("FFViewEffect", -1);
 
-	// after player connects, the crc checksum of the server's level
-	// scripts are sent to the client for validation
-	usermessages->Register("FFScriptCRC", 4);
-
 	usermessages->Register("DispenserMsg", -1);
 	usermessages->Register("SentryMsg", -1);
 	usermessages->Register("ManCannonMsg", -1);

@@ -25,6 +25,16 @@ extern "C"
 //---------------------------------------------------------------------------
 using namespace luabind;
 
+namespace FFLib
+{
+	// helper functions to avoid manadatory bEmitSound parameter
+	// Luabind doesn't handle default parameter values well
+	void SetSGLevel(CFFSentryGun *pSentryGun, int iLevel)
+	{
+		pSentryGun->SetLevel(iLevel, false);
+	}
+}
+
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitBuildables(lua_State* L)
 {
@@ -33,7 +43,7 @@ void CFFLuaLib::InitBuildables(lua_State* L)
 	module(L)
 	[
 		// Buildable base
-		class_<CFFBuildableObject>("BaseBuildable")
+		class_<CFFBuildableObject, CBaseEntity>("BaseBuildable")
 			.def("GetTeamId",			&CFFBuildableObject::GetTeamNumber)
 			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer)
 			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam),
@@ -44,7 +54,29 @@ void CFFLuaLib::InitBuildables(lua_State* L)
 		
 		// Sentrygun
 		class_<CFFSentryGun, CFFBuildableObject>("Sentrygun")
-			.def("GetLevel",			&CFFSentryGun::GetLevel),
+			.def("GetLevel",			&CFFSentryGun::GetLevel)
+			.def("SetLevel",			&FFLib::SetSGLevel)
+			.def("Upgrade",				&CFFSentryGun::Upgrade)
+			.def("Repair",				&CFFSentryGun::Repair)
+			.def("AddAmmo",				&CFFSentryGun::AddAmmo)
+			.def("RocketPosition",		&CFFSentryGun::RocketPosition)
+			.def("MuzzlePosition",		&CFFSentryGun::MuzzlePosition)
+			.def("GetRockets",			&CFFSentryGun::GetRockets)
+			.def("GetShells",			&CFFSentryGun::GetShells)
+			.def("GetHealth",			&CFFSentryGun::GetHealth)
+			.def("SetRockets",			&CFFSentryGun::SetRockets)
+			.def("SetShells",			&CFFSentryGun::SetShells)
+			.def("SetHealth",			&CFFSentryGun::SetHealth)
+			.def("GetMaxRockets",		&CFFSentryGun::GetMaxRockets)
+			.def("GetMaxShells",		&CFFSentryGun::GetMaxShells)
+			.def("GetMaxHealth",		&CFFSentryGun::GetMaxHealth)
+			.def("SetFocusPoint",		&CFFSentryGun::SetFocusPoint)
+			.def("GetEnemy",			&CFFSentryGun::GetEnemy)
+			.def("SetEnemy",			&CFFSentryGun::SetEnemy)
+			.def("GetVecAiming",		&CFFSentryGun::GetVecAiming)
+			.def("GetVecGoal",			&CFFSentryGun::GetVecGoal)
+			.def("Shoot",				(void(CFFSentryGun::*)())&CFFSentryGun::Shoot)
+			.def("ShootRocket",			(void(CFFSentryGun::*)())&CFFSentryGun::ShootRocket),
 		
 		// Detpack
 		class_<CFFDetpack, CFFBuildableObject>("Detpack")

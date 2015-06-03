@@ -36,6 +36,10 @@ extern IFileSystem **pFilesystem;
 
 #define CROSSHAIRS_FILE		"crosshairs.vdf"
 #define CROSSHAIR_SIZES		5					// This needs to be matched in hud_crosshair.h
+#define FF_CROSSHAIR_GLOBAL FF_WEAPON_NONE
+#define FF_CROSSHAIR_WEAPON_MAX FF_WEAPON_TOMMYGUN
+#define FF_CROSSHAIR_HIT 	FF_CROSSHAIR_WEAPON_MAX + 1
+#define FF_NUM_CROSSHAIRS 	FF_CROSSHAIR_HIT + 1
 
 using namespace vgui;
 
@@ -137,7 +141,7 @@ private:
 	CFFInputSlider	*m_pInnerAlpha, *m_pOuterAlpha;
 
 	ComboBox		*m_pInnerCharacter, *m_pOuterCharacter;
-	ComboBox		*m_pWeapon;
+	ComboBox		*m_pCrosshairComboBox;
 
 	Label			*m_pInnerCrosshair, *m_pOuterCrosshair;
 
@@ -156,9 +160,9 @@ private:
 		int		outerR, outerG, outerB, outerA;
 		char	innerChar, outerChar;
 		bool	innerUseGlobal, outerUseGlobal;
-	} WeaponCrosshair_t;
+	} CrosshairInfo_t;
 
-	WeaponCrosshair_t	m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 2];
+	CrosshairInfo_t	m_sCrosshairInfo[FF_NUM_CROSSHAIRS];
 
 	bool	m_bForceGlobalCrosshair;
 };
