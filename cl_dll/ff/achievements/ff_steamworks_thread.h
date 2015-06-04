@@ -1,12 +1,12 @@
 #ifndef FF_STEAMWORKS_THREAD_H
 #define FF_STEAMWORKS_THREAD_H
 
+
+
 #include "ff_steamworks_msg.h"
 
 class CFFSteamworksThread : public CThread
 {
-	//DECLARE_CLASS_SIMPLE( CFFSteamworksThread, CThread );
-	
 	public:
 		int Run();
 		bool IsRunning( void ) { return m_bIsRunning; };
@@ -18,12 +18,20 @@ class CFFSteamworksThread : public CThread
 		~CFFSteamworksThread( void );
 
 	private:
+		void KillServerProcess( void );
+		bool CreateServerProcess( void );
+
+		// bit of a hack, these are HANDLEs which are just void* so do this to avoid the windows.h crap here
+		void* m_hProcess;
+		void* m_hThread;
+		
 		int m_iPollRate; //ms
 		bool m_bIsShutdown;
 		CUtlVector<CFFSteamworksMessage> m_QueuedMessages;
-		bool CreateServerProcess( void );
 		Socks m_Sock;
 		bool m_bIsRunning;
+
+		// proc info
 };
 
 #endif /* FF_STEAMWORKS_THREAD_H */
