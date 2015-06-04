@@ -871,6 +871,34 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="achievements"
+				>
+				<File
+					RelativePath=".\ff\achievements\ff_socks.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\achievements\ff_socks.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\achievements\ff_steamworks_msg.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\achievements\ff_steamworks_msg.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\achievements\ff_steamworks_thread.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\achievements\ff_steamworks_thread.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="FF Shared Source Files"
@@ -2128,11 +2156,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui\IInput.h"
+					RelativePath="iinput.h"
 					>
 				</File>
 				<File
-					RelativePath="iinput.h"
+					RelativePath="..\public\vgui\IInput.h"
 					>
 				</File>
 				<File
@@ -2456,11 +2484,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h"
+					RelativePath="menu.h"
 					>
 				</File>
 				<File
-					RelativePath="menu.h"
+					RelativePath="..\public\vgui_controls\Menu.h"
 					>
 				</File>
 				<File

@@ -5,6 +5,8 @@
 #include "ff_utils.h"
 #include "steam/steam_api.h"
 
+#include "achievements/ff_steamworks_thread.h"
+
 #define CLASSCFG_PATH				"cfg/%s.cfg"
 #define CLASSCFG_DEFAULT_PATH		"cfg/classcfg_default.cfg"
 // userconfig is a helper cfg for the default class configs
@@ -27,6 +29,8 @@ int CFFClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		pNameCvar->SetValue(SteamFriends()->GetPersonaName());
 	}
 
+	
+	CFFSteamworksThread::GetInstance().Start();
 	return ret;
 }
 
