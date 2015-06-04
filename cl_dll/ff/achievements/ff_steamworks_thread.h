@@ -18,12 +18,16 @@ class CFFSteamworksThread : public CThread
 	private:
 		void KillServerProcess( void );
 		bool CreateServerProcess( void );
+		void SendMsg( const CFFSteamworksMessage &msg );
 
 		// bit of a hack, these are HANDLEs which are just void* so do this to avoid the windows.h crap here
 		void* m_hProcess;
 		void* m_hThread;
 		
 		int m_iPollRate; //ms
+		int m_iHeartbeatRate; // per poll
+		int m_iHeartbeatCheckCount;
+
 		bool m_bIsShutdown;
 		CUtlVector<CFFSteamworksMessage> m_QueuedMessages;
 		Socks m_Sock;

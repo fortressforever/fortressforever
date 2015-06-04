@@ -23,6 +23,8 @@ public:
 	bool GetNetworkFormat ( char* buff ) const;
 	//CFFSteamworksMessage(const char *rawStr);
 	CFFSteamworksMessage( SteamworksCommand_e eCmd, const char *key, const char *val );
+	CFFSteamworksMessage( SteamworksCommand_e eCmd );
+	//static CFFSteamworksMessage& CreateHeartbeat( );
 	~CFFSteamworksMessage( );
 private:
 	SteamworksCommand_e	m_cmd;

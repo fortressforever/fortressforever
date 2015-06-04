@@ -4,9 +4,16 @@
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
 
-CFFSteamworksMessage::CFFSteamworksMessage( SteamworksCommand_e eCmd, const char *key, const char *val ) : m_cmd(eCmd), 
-m_strKey(key), m_strValRaw(val)
+CFFSteamworksMessage::CFFSteamworksMessage( SteamworksCommand_e eCmd ) : m_cmd(eCmd)
 {
+	m_strKey = "";
+	m_strValRaw =  "";
+}
+
+CFFSteamworksMessage::CFFSteamworksMessage( SteamworksCommand_e eCmd, const char *key, const char *val ) : m_cmd(eCmd)
+{
+	m_strKey = key ? key : "";
+	m_strValRaw = val ? val : "";
 }
 
 CFFSteamworksMessage::~CFFSteamworksMessage( ) 
@@ -26,3 +33,4 @@ const char * CFFSteamworksMessage::GetVal( ) const
 {
 	return m_strValRaw.c_str( );
 }
+

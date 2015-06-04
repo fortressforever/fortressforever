@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
@@ -20,6 +21,8 @@ namespace SteamworksServer
 
         private class Message
         {
+            private readonly string _raw;
+
             public Command  Command     { get; private set; }
             public string   Key         { get; private set; }
             public string   Value       { get; private set; }
@@ -27,6 +30,7 @@ namespace SteamworksServer
 
             public Message(string raw)
             {
+                _raw = raw;
                 if (string.IsNullOrWhiteSpace(raw))
                     return;
 
@@ -51,6 +55,11 @@ namespace SteamworksServer
                     return;
                 Command = command;
                 IsValid = true;
+            }
+
+            public override string ToString()
+            {
+                return _raw;
             }
         }
 
@@ -140,6 +149,7 @@ namespace SteamworksServer
             if (msg == null || !msg.IsValid)
                 return;
 
+            Debug.WriteLine("[Steamworks Server] HandleMessage: '{0}'", msg);
             if (_steamworksManager == null)
             {
                 _steamworksManager = new SteamworksManager();

@@ -25,7 +25,9 @@
 #define SERVER_EXEC_NAME "bin/sws.exe"
 
 
-CFFSteamworksThread::CFFSteamworksThread( void ) : m_iPollRate(500), m_hProcess(NULL), m_hThread(NULL)
+// send a heartbeat every 5 poll (2.5 second), send heartbeat right away
+CFFSteamworksThread::CFFSteamworksThread( void ) : m_iPollRate(500), m_hProcess(NULL), m_hThread(NULL), 
+												m_iHeartbeatRate(5), m_iHeartbeatCheckCount(m_iHeartbeatRate)
 {
 	SetName("SteamworksThread");
 	m_bIsRunning = false;
@@ -69,8 +71,9 @@ void CFFSteamworksThread::KillServerProcess( void )
 	// the server loop will actually end once the socket closes, however make sure and axe it here just incase dragons
 	if ( !m_hProcess || !m_hThread)
 		return;
-	CloseHandle( m_hProcess );
-	CloseHandle( m_hThread );
+	// yikes: results in race condition with os if thread falls through, so just let it..
+	// CloseHandle( m_hProcess );
+	// CloseHandle( m_hThread );
 }
 
 void CFFSteamworksThread::QueueMessage( const CFFSteamworksMessage &msg )
@@ -83,7 +86,7 @@ void CFFSteamworksThread::ShutdownServer( void )
 	DevMsg( "[Steamworks thread] ShutdownServer" );
 	m_Sock.Close( );
 	m_bIsShutdown = true;
-	KillServerProcess ( );
+	KillServerProcess( );
 	// avoid race conditions
 	if ( m_bIsRunning )
 		Terminate( );
@@ -110,14 +113,12 @@ int CFFSteamworksThread::Run()
 		return -2;
 	}
 	
-	QueueMessage(CFFSteamworksMessage(SWC_HEARTBEAT, "key", "val"));
-	
-	while ( IsAlive( ) )
+	while ( IsAlive( ) && !m_bIsShutdown )
 	{
-		if (m_bIsShutdown)
+		if ( ++m_iHeartbeatCheckCount >= m_iHeartbeatRate )
 		{
-			m_bIsRunning = false;
-			return 1;
+			m_iHeartbeatCheckCount = 0;
+			SendMsg( CFFSteamworksMessage( SWC_HEARTBEAT ) );
 		}
 
 		int queueCount = m_QueuedMessages.Count( );
@@ -130,20 +131,31 @@ int CFFSteamworksThread::Run()
 		for (int i = 0; i < queueCount; ++i)
 		{
 			CFFSteamworksMessage &msg = m_QueuedMessages.Element ( i );
-			const int maxSize = 1024;
-			char buff[maxSize];
-			Q_memset( buff, maxSize, 0 );
-			Q_snprintf( buff, maxSize,"%d|%s|%s!",(int)msg.GetCommand( ), msg.GetKey( ), msg.GetVal( ) );
-			m_Sock.Send( buff );
+			SendMsg( msg );
 		}
 
 		m_QueuedMessages.RemoveAll( );
+		Sleep ( m_iPollRate );
 	}
 
 	DevMsg( "[Steamworks thread] Run3 - fallthrough\n" );
 	m_Sock.Close( );
 	m_bIsRunning = false;
 	return 1;
+}
+
+void CFFSteamworksThread::SendMsg( const CFFSteamworksMessage &msg )
+{
+	const int maxSize = 1024;
+	char buff[maxSize] = { 0 };
+	Q_snprintf( buff, maxSize,"%d|%s|%s!",(int)msg.GetCommand( ), msg.GetKey( ), msg.GetVal( ) );
+	DevMsg( "[Steamworks thread] SendMsg - '%s'\n", buff );
+
+	if ( !m_Sock.Send( buff ) )
+	{
+		// make sure to check this here, it will return false and we want to fall through
+		m_bIsShutdown = true; 
+	}
 }
 
 CFFSteamworksThread& CFFSteamworksThread::GetInstance()
