@@ -48,7 +48,6 @@ bool CFFSteamworksThread::CreateServerProcess( void )
 	char szExecPath[MAX_PATH] = { 0 };
 	filesystem->GetLocalPath( SERVER_EXEC_NAME, szExecPath, MAX_PATH );
 
-
 	PROCESS_INFORMATION procInfo = { 0 };
 	STARTUPINFO startUpInfo = { 0 };
 	startUpInfo.cb = sizeof( startUpInfo );
@@ -70,7 +69,8 @@ void CFFSteamworksThread::KillServerProcess( void )
 	// the server loop will actually end once the socket closes, however make sure and axe it here just incase dragons
 	if ( !m_hProcess || !m_hThread)
 		return;
-	//	return;
+	CloseHandle( m_hProcess );
+	CloseHandle( m_hThread );
 }
 
 void CFFSteamworksThread::QueueMessage( const CFFSteamworksMessage &msg )
@@ -145,7 +145,6 @@ int CFFSteamworksThread::Run()
 	m_bIsRunning = false;
 	return 1;
 }
-
 
 CFFSteamworksThread& CFFSteamworksThread::GetInstance()
 {

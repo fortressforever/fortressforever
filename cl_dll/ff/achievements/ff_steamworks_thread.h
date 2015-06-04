@@ -1,8 +1,6 @@
 #ifndef FF_STEAMWORKS_THREAD_H
 #define FF_STEAMWORKS_THREAD_H
 
-
-
 #include "ff_steamworks_msg.h"
 
 class CFFSteamworksThread : public CThread
@@ -30,8 +28,6 @@ class CFFSteamworksThread : public CThread
 		CUtlVector<CFFSteamworksMessage> m_QueuedMessages;
 		Socks m_Sock;
 		bool m_bIsRunning;
-
-		// proc info
 };
 
 #endif /* FF_STEAMWORKS_THREAD_H */
