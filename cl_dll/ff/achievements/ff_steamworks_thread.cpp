@@ -20,7 +20,7 @@
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
 
-CFFSteamworksThread::CFFSteamworksThread( void )
+CFFSteamworksThread::CFFSteamworksThread( void ) : m_iPollRate(500)
 {
 	SetName("SteamworksThread");
 	m_bIsRunning = false;
@@ -29,6 +29,7 @@ CFFSteamworksThread::CFFSteamworksThread( void )
 
 CFFSteamworksThread::~CFFSteamworksThread( void )
 {
+	ShutdownServer( );
 }
 
 bool CFFSteamworksThread::CreateServerProcess( void )
@@ -46,15 +47,18 @@ void CFFSteamworksThread::ShutdownServer( void )
 	m_Sock.Close( );
 	m_bIsShutdown = true;
 	// TODO: KillServerProcess( );
+	// avoid race conditions
+	Terminate( );
+	
 }
 
 int CFFSteamworksThread::Run()
 {
 	if ( !CreateServerProcess() )
-		return 1;
+		return -1;
 
 	m_bIsRunning = true;
-	Sleep(100);
+	Sleep(50);
 
 	// not sure what this is but it triggers winsocks init
 	m_Sock.Open( 1, 0 );
@@ -62,9 +66,10 @@ int CFFSteamworksThread::Run()
 	if ( !m_Sock.Connect("localhost", 7802) )
 	{
 		m_bIsRunning = false;
-		return 1;
+		return -2;
 	}
 	
+	QueueMessage(CFFSteamworksMessage(SWC_HEARTBEAT, "key", "val"));
 	//bool anyDataAvailable = false;
 	while ( IsAlive( ) )
 	{
@@ -77,15 +82,17 @@ int CFFSteamworksThread::Run()
 		int queueCount = m_QueuedMessages.Count( );
 		if (queueCount < 1)
 		{
-			Sleep ( 1000 );
+			Sleep ( m_iPollRate );
 			continue;
 		}
 
 		for (int i = 0; i < queueCount; ++i)
 		{
 			CFFSteamworksMessage &msg = m_QueuedMessages.Element ( i );
-			char buff[1024];
-			msg.GetNetworkFormat( buff );
+			const int maxSize = 1024;
+			char buff[maxSize];
+			Q_memset( buff, maxSize, 0 );
+			Q_snprintf( buff, maxSize,"%d|%s|%s!",(int)msg.GetCommand( ), msg.GetKey( ), msg.GetVal( ) );
 			m_Sock.Send( buff );
 		}
 

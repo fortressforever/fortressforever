@@ -13,19 +13,10 @@ CFFSteamworksMessage::~CFFSteamworksMessage( )
 {
 }
 
-void CFFSteamworksMessage::GetNetworkFormat( char* buff ) const 
+const SteamworksCommand_e CFFSteamworksMessage::GetCommand() const
 {
-	// 12am protection
-	if ( !buff )
-		return;
-
-	int size = sizeof( buff );
-	if (size < 512) 
-		return;
-	Q_memset( buff, size, 0 );
-	Q_snprintf( buff, size,"%d|%s|%s!",(int)m_cmd, m_strKey, m_strValRaw );
+	return m_cmd;
 }
-
 const char * CFFSteamworksMessage::GetKey( ) const 
 {
 	return m_strKey.c_str( );

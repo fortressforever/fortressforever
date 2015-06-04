@@ -18,6 +18,7 @@ class CFFSteamworksThread : public CThread
 		~CFFSteamworksThread( void );
 
 	private:
+		int m_iPollRate; //ms
 		bool m_bIsShutdown;
 		CUtlVector<CFFSteamworksMessage> m_QueuedMessages;
 		bool CreateServerProcess( void );

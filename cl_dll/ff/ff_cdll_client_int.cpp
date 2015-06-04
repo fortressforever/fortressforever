@@ -38,8 +38,9 @@ void CFFClient::Shutdown ( void )
 {
 	if ( CFFSteamworksThread::GetInstance( ).IsRunning( ) )
 	{
+		// shutdown server will call terminate. this avoids race conditions
 		CFFSteamworksThread::GetInstance( ).ShutdownServer( );
-		CFFSteamworksThread::GetInstance( ).Stop( );
+		//CFFSteamworksThread::GetInstance( ).Terminate( );
 	}
 
 	BaseClass::Shutdown( );
