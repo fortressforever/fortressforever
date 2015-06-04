@@ -37,8 +37,8 @@ namespace SteamworksServer
                     return;
 
                 var rawCmd = chunks[0];
-                var key = chunks[1];
-                var val = chunks[2].TrimEnd(delim);
+                var key = chunks[1].Trim();
+                var val = chunks[2].Trim().TrimEnd(delim);
 #if DEBUG
                 // local testing with putty
                 rawCmd = rawCmd.Replace(Environment.NewLine, string.Empty);
