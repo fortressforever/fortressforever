@@ -77,7 +77,7 @@ int CFFSteamworksThread::Run()
 		int queueCount = m_QueuedMessages.Count( );
 		if (queueCount < 1)
 		{
-			Sleep ( 500 );
+			Sleep ( 1000 );
 			continue;
 		}
 
@@ -90,7 +90,6 @@ int CFFSteamworksThread::Run()
 		}
 
 		m_QueuedMessages.RemoveAll( );
-		Sleep( 200 );
 	}
 
 	m_Sock.Close( );
