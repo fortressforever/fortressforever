@@ -11,6 +11,7 @@ enum SteamworksCommand_e
 	SWC_SETSTAT				= 10,
 	SWC_INCREMENTSTAT		= 20,
 	SWC_UNLOCKACHIEVEMENT	= 30,
+	SWC_QUIT				= 44,
 	SWC_RESETALL			= 99,
 };
 

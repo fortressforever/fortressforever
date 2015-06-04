@@ -24,10 +24,9 @@
 
 #define SERVER_EXEC_NAME "bin/sws.exe"
 
-
-// send a heartbeat every 5 poll (2.5 second), send heartbeat right away
-CFFSteamworksThread::CFFSteamworksThread( void ) : m_iPollRate(500), m_hProcess(NULL), m_hThread(NULL), 
-												m_iHeartbeatRate(5), m_iHeartbeatCheckCount(m_iHeartbeatRate)
+// HEARTBEATS: send a heartbeat every 10 seconds (10 polls)
+CFFSteamworksThread::CFFSteamworksThread( void ) : m_iPollRate(1000), m_hProcess(NULL), m_hThread(NULL), 
+												m_iHeartbeatRate(10), m_iHeartbeatCheckCount(m_iHeartbeatRate)
 {
 	SetName("SteamworksThread");
 	m_bIsRunning = false;
@@ -84,6 +83,7 @@ void CFFSteamworksThread::QueueMessage( const CFFSteamworksMessage &msg )
 void CFFSteamworksThread::ShutdownServer( void ) 
 {
 	DevMsg( "[Steamworks thread] ShutdownServer" );
+	SendMsg( CFFSteamworksMessage( SWC_QUIT ) );
 	m_Sock.Close( );
 	m_bIsShutdown = true;
 	KillServerProcess( );
@@ -103,8 +103,9 @@ int CFFSteamworksThread::Run()
 	m_bIsRunning = true;
 	Sleep(50);
 
-	// not sure what this is but it triggers winsocks init
-	m_Sock.Open( 1, 0 );
+	// make sure our socket doesnt close between heartbeats
+	//m_Sock.SetTimeoutSecs( m_iHeartbeatRate * 2 ); 
+	m_Sock.Open( 1, 6 );//SOCK_STREAM, IPPROTO_TCP );
 
 	if ( !m_Sock.Connect("localhost", 7802) )
 	{
@@ -118,7 +119,10 @@ int CFFSteamworksThread::Run()
 		if ( ++m_iHeartbeatCheckCount >= m_iHeartbeatRate )
 		{
 			m_iHeartbeatCheckCount = 0;
-			SendMsg( CFFSteamworksMessage( SWC_HEARTBEAT ) );
+			m_Sock.Send( "1|fart|!" );
+			m_Sock.Send( "2|two|!" );
+			//SendMsg( CFFSteamworksMessage( SWC_HEARTBEAT ) );
+			//SendMsg( CFFSteamworksMessage( SWC_HEARTBEAT ) );
 		}
 
 		int queueCount = m_QueuedMessages.Count( );
@@ -139,6 +143,7 @@ int CFFSteamworksThread::Run()
 	}
 
 	DevMsg( "[Steamworks thread] Run3 - fallthrough\n" );
+	SendMsg( CFFSteamworksMessage( SWC_QUIT ) );
 	m_Sock.Close( );
 	m_bIsRunning = false;
 	return 1;

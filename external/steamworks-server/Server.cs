@@ -16,6 +16,7 @@ namespace SteamworksServer
             SetStat             = 10,
             IncrementStat       = 20,
             UnlockAchievement   = 30,
+            Quit                = 44,
             ResetAll            = 99,
         }
 
@@ -64,15 +65,12 @@ namespace SteamworksServer
         }
 
         // <cmd>|<key>|<value>!
-        private const char delim = '!';
-        private const char kvpSep = '|';
+        private const char delim    = '!';
+        private const char kvpSep   = '|';
 
-#if DEBUG
-        // for manual testing with eg putty, kinda annoying
-        private const int           _timeoutMs = 60 * 1000;
-#else
-        private const int           _timeoutMs = 5 * 1000;
-#endif
+        // heartbeat is 30 seconds
+        private const int           _timeoutMs = 15 * 1000;
+
         //private DateTime            _lastHeartbeat;
         private SteamworksManager   _steamworksManager;
         private Socket              _socket;
@@ -100,7 +98,7 @@ namespace SteamworksServer
             }
             catch (SocketException exp)
             {
-                Console.WriteLine(exp);
+                Debug.WriteLine("[Steamworks Server] Start1: {0}", exp);
             }
             finally 
             {
@@ -111,20 +109,17 @@ namespace SteamworksServer
 
         public void Stop()
         {
-            try 
-            {
-                if (_socket == null) 
-                    return;
-                // this will cause any client loop to exception & fallthrough
-                _socket.Shutdown(SocketShutdown.Both);
-                _socket.Close();
-            }
-            catch (SocketException)
-            {}
+            Debug.WriteLine("[Steamworks Server] Stop");
+            if (_socket == null)
+                return;
+            // this will cause any client loop to exception & fallthrough
+            _socket.Shutdown(SocketShutdown.Both);
+            _socket.Close();
         }
 
         private void ClientLoop(Socket clientSocket)
         {
+            Debug.WriteLine("[Steamworks Server] ClientLoop0");
             var sb = new StringBuilder();
             while (true)
             {
@@ -147,18 +142,23 @@ namespace SteamworksServer
         private void HandleMessage(Message msg)
         {
             if (msg == null || !msg.IsValid)
+            {
+                 Debug.WriteLine("[Steamworks Server] HandleMessage0");
                 return;
-
-            Debug.WriteLine("[Steamworks Server] HandleMessage: '{0}'", msg);
+            }
+            
             if (_steamworksManager == null)
             {
+                Debug.WriteLine("[Steamworks Server] starting steamworks mgr");
                 _steamworksManager = new SteamworksManager();
                 _steamworksManager.Initialize();
             }
 
+            Debug.WriteLine("[Steamworks Server] HandleMessage1: '{0}'", msg);
             switch (msg.Command)
             {
                 case Command.Heartbeat:
+                     Debug.WriteLine("[Steamworks Server] Heartbeat");
                     //_lastHeartbeat = DateTime.UtcNow;
                     // used to use heartbeat system, but now we just let socket time out and close
                     break;
@@ -179,6 +179,11 @@ namespace SteamworksServer
                 case Command.UnlockAchievement:
                     // TODO: consider value for immediate store
                     _steamworksManager.UnlockAchievement(msg.Key);
+                    break;
+                case Command.Quit:
+                    Debug.WriteLine("[Steamworks Server] Quit");
+                    Stop();
+                    // will cause loop to fall through
                     break;
             }
         }
