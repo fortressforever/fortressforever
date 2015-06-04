@@ -9,15 +9,16 @@ class CFFSteamworksThread : public CThread
 	
 	public:
 		int Run();
-		bool IsRunning() { return m_bIsRunning; };
+		bool IsRunning( void ) { return m_bIsRunning; };
 		static CFFSteamworksThread& GetInstance(); 
 		void QueueMessage( const CFFSteamworksMessage & );
-
+		void ShutdownServer( void );
 	protected:
 		CFFSteamworksThread( void );
 		~CFFSteamworksThread( void );
 
 	private:
+		bool m_bIsShutdown;
 		CUtlVector<CFFSteamworksMessage> m_QueuedMessages;
 		bool CreateServerProcess( void );
 		Socks m_Sock;

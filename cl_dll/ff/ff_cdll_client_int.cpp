@@ -29,9 +29,20 @@ int CFFClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		pNameCvar->SetValue(SteamFriends()->GetPersonaName());
 	}
 
-	
+	// dexter: added this here, not sure there is a better place to start it
 	CFFSteamworksThread::GetInstance().Start();
 	return ret;
+}
+
+void CFFClient::Shutdown ( void ) 
+{
+	if ( CFFSteamworksThread::GetInstance( ).IsRunning( ) )
+	{
+		CFFSteamworksThread::GetInstance( ).ShutdownServer( );
+		CFFSteamworksThread::GetInstance( ).Stop( );
+	}
+
+	BaseClass::Shutdown( );
 }
 
 void CFFClient::PopulateMissingClassConfigs()

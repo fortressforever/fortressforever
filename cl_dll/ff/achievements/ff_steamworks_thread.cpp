@@ -41,10 +41,17 @@ void CFFSteamworksThread::QueueMessage( const CFFSteamworksMessage &msg )
 	m_QueuedMessages.AddToTail( msg );
 }
 
+void CFFSteamworksThread::ShutdownServer( void ) 
+{
+	m_Sock.Close( );
+	m_bIsShutdown = true;
+	// TODO: KillServerProcess( );
+}
+
 int CFFSteamworksThread::Run()
 {
 	if ( !CreateServerProcess() )
-		return 0;
+		return 1;
 
 	m_bIsRunning = true;
 	Sleep(100);
@@ -55,15 +62,24 @@ int CFFSteamworksThread::Run()
 	if ( !m_Sock.Connect("localhost", 7802) )
 	{
 		m_bIsRunning = false;
-		return 0;
+		return 1;
 	}
 	
 	//bool anyDataAvailable = false;
 	while ( IsAlive( ) )
 	{
+		if (m_bIsShutdown)
+		{
+			m_bIsRunning = false;
+			return 1;
+		}
+
 		int queueCount = m_QueuedMessages.Count( );
 		if (queueCount < 1)
+		{
+			Sleep ( 500 );
 			continue;
+		}
 
 		for (int i = 0; i < queueCount; ++i)
 		{
@@ -74,42 +90,10 @@ int CFFSteamworksThread::Run()
 		}
 
 		m_QueuedMessages.RemoveAll( );
-		//CUtlString
-		Sleep( 50 );
-	}
-	//CreateProcess();
-	/*
-	bool a = false;
-	//int i = 0;
-	//char buf[3000];
-
-	m_bIsRunning = true;
-
-	while(IsAlive())
-	{
-		a = g_IRCSocket.CheckBuffer();
-
-		// if length of message is bigger than 1
-		if (a)
-		{
-			if (g_pIRCPanel != NULL)
-				g_pIRCPanel->m_bDataReady = true;
-		}
-
-		a=false;
+		Sleep( 200 );
 	}
 
-	
-/*
-	int i=0;
-	while(IsAlive())
-	{
-		i++;
-		Sleep(1000);
-		Msg("[IRCThread] %d...\n", i);
-	}*/
-
-	Sleep(100);
+	m_Sock.Close( );
 	m_bIsRunning = false;
 	return 1;
 }

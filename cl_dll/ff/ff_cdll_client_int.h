@@ -18,6 +18,9 @@ public:
 
 	// <-- Extended functions (meaning the BaseClass function is always called)
 	virtual int	Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physicsFactory, CGlobalVarsBase *pGlobals );
+
+	// dexter: added this for shutting down thread, socket, server reading from local steamworks server
+	virtual void Shutdown( void );
 	// --> Extended functions
 
 	// <-- FF-specific functions
