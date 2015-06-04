@@ -50,6 +50,8 @@
 #include "history_resource.h" // squeek: For adding grens to the ammo pickups on the right
 #include "ff_mathackman.h" // squeek: For mathack manager update in ClientThink
 
+#include "c_ff_achievementmgr.h" // dexter: for achievement mgr in ClientThink
+
 #if defined( CFFPlayer )
 	#undef CFFPlayer
 #endif
@@ -2599,7 +2601,7 @@ void C_FFPlayer::ClientThink( void )
 	}
 
 	_mathackman.Update();
-
+	_achievementMgr.Think();
 	BaseClass::ClientThink();
 }
 

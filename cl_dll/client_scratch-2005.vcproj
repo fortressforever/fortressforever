@@ -85,11 +85,11 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="winmm.lib steam_api.lib"
+				AdditionalDependencies="winmm.lib steam_api.lib SteamworksShim.lib"
 				OutputFile="$(IntDir)/client.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\lib\public"
+				AdditionalLibraryDirectories="..\lib\public;..\external\steamworks-shim"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD,LIBCMT"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(IntDir)/client.pdb"
@@ -251,6 +251,14 @@
 		<Filter
 			Name="FF Source Files"
 			>
+			<File
+				RelativePath=".\ff\c_ff_achievementmgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff\c_ff_achievementmgr.h"
+				>
+			</File>
 			<File
 				RelativePath=".\ff\c_ff_buildableobjects.cpp"
 				>
@@ -2128,11 +2136,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui\IInput.h"
+					RelativePath="iinput.h"
 					>
 				</File>
 				<File
-					RelativePath="iinput.h"
+					RelativePath="..\public\vgui\IInput.h"
 					>
 				</File>
 				<File
@@ -2456,11 +2464,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h"
+					RelativePath="menu.h"
 					>
 				</File>
 				<File
-					RelativePath="menu.h"
+					RelativePath="..\public\vgui_controls\Menu.h"
 					>
 				</File>
 				<File
