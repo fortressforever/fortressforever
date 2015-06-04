@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -12,20 +10,20 @@ namespace SteamworksServer
     {
         public enum Command
         {
-            Unknown = 0,
-            Heartbeat = 1,
-            SetStat = 10,
-            IncrementStat = 20,
-            UnlockAchievement = 30,
-            ResetAll = 99,
+            Unknown             = 0,
+            Heartbeat           = 1,
+            SetStat             = 10,
+            IncrementStat       = 20,
+            UnlockAchievement   = 30,
+            ResetAll            = 99,
         }
 
         private class Message
         {
-            public Command Command { get; private set; }
-            public string Key { get; private set; }
-            public string Value { get; private set; }
-            public bool IsValid { get; private set; }
+            public Command  Command     { get; private set; }
+            public string   Key         { get; private set; }
+            public string   Value       { get; private set; }
+            public bool     IsValid     { get; private set; }
 
             public Message(string raw)
             {
@@ -69,6 +67,7 @@ namespace SteamworksServer
         //private DateTime            _lastHeartbeat;
         private SteamworksManager   _steamworksManager;
         private Socket              _socket;
+
         public int Port { get; set; }
 
         public Server()
