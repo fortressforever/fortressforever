@@ -86,7 +86,7 @@ namespace SteamworksServer
         {
             //NOTE: synchronous, because we really should only have one localhost client ever
 
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, ReceiveTimeout = _timeoutMs };
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, ReceiveTimeout = _timeoutMs, LingerState = new LingerOption(false, 0) };
 
             try
             {
@@ -99,6 +99,7 @@ namespace SteamworksServer
             catch (SocketException exp)
             {
                 Debug.WriteLine("[Steamworks Server] Start1: {0}", exp);
+                _socket.Close();
             }
             finally 
             {
@@ -152,6 +153,7 @@ namespace SteamworksServer
                 Debug.WriteLine("[Steamworks Server] starting steamworks mgr");
                 _steamworksManager = new SteamworksManager();
                 _steamworksManager.Initialize();
+                Debug.WriteLine("[Steamworks Server] steamworks mgr started");
             }
 
             Debug.WriteLine("[Steamworks Server] HandleMessage1: '{0}'", msg);

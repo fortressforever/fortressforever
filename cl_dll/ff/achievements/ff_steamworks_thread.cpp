@@ -35,7 +35,7 @@ CFFSteamworksThread::CFFSteamworksThread( void ) : m_iPollRate(1000), m_hProcess
 
 CFFSteamworksThread::~CFFSteamworksThread( void )
 {
-	ShutdownServer( );
+	//ShutdownServer( );
 }
 
 bool CFFSteamworksThread::CreateServerProcess( void )
@@ -86,10 +86,7 @@ void CFFSteamworksThread::ShutdownServer( void )
 	SendMsg( CFFSteamworksMessage( SWC_QUIT ) );
 	m_Sock.Close( );
 	m_bIsShutdown = true;
-	KillServerProcess( );
-	// avoid race conditions
-	if ( m_bIsRunning )
-		Terminate( );
+	//KillServerProcess( );
 }
 
 int CFFSteamworksThread::Run()
@@ -119,10 +116,7 @@ int CFFSteamworksThread::Run()
 		if ( ++m_iHeartbeatCheckCount >= m_iHeartbeatRate )
 		{
 			m_iHeartbeatCheckCount = 0;
-			m_Sock.Send( "1|fart|!" );
-			m_Sock.Send( "2|two|!" );
-			//SendMsg( CFFSteamworksMessage( SWC_HEARTBEAT ) );
-			//SendMsg( CFFSteamworksMessage( SWC_HEARTBEAT ) );
+			SendMsg( CFFSteamworksMessage( SWC_HEARTBEAT ) );
 		}
 
 		int queueCount = m_QueuedMessages.Count( );
