@@ -36,6 +36,7 @@ CFFSteamworksThread::CFFSteamworksThread( void ) : m_iPollRate(1000), m_hProcess
 CFFSteamworksThread::~CFFSteamworksThread( void )
 {
 	//ShutdownServer( );
+	Terminate( );
 }
 
 bool CFFSteamworksThread::CreateServerProcess( void )
@@ -86,7 +87,8 @@ void CFFSteamworksThread::ShutdownServer( void )
 	SendMsg( CFFSteamworksMessage( SWC_QUIT ) );
 	m_Sock.Close( );
 	m_bIsShutdown = true;
-	//KillServerProcess( );
+	KillServerProcess( );
+	Terminate( );
 }
 
 int CFFSteamworksThread::Run()

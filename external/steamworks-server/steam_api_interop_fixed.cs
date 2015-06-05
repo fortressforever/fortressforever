@@ -16,1355 +16,1356 @@ namespace Valve.Interop
     class NativeEntrypoints
     {
         // dexter added calling convention to all pinvokes. valve generated code doesnt seem to know defaults to stdcall which is not right
-
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_CreateSteamPipe", CallingConvention = CallingConvention.Cdecl)]
+        // dexter: rename the modern steam_api dll to avoid any confusion with source sdk base 2006 one
+        private const string dll = "steam_api_new";
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_CreateSteamPipe", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamClient_CreateSteamPipe(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_BReleaseSteamPipe", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_BReleaseSteamPipe", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamClient_BReleaseSteamPipe(IntPtr instancePtr, uint hSteamPipe);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_ConnectToGlobalUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_ConnectToGlobalUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamClient_ConnectToGlobalUser(IntPtr instancePtr, uint hSteamPipe);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_CreateLocalUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_CreateLocalUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamClient_CreateLocalUser(IntPtr instancePtr, ref uint phSteamPipe, uint eAccountType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_ReleaseUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_ReleaseUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamClient_ReleaseUser(IntPtr instancePtr, uint hSteamPipe, uint hUser);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamUser(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamGameServer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamGameServer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamGameServer(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_SetLocalIPBinding", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_SetLocalIPBinding", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamClient_SetLocalIPBinding(IntPtr instancePtr, uint unIP, char usPort);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamFriends", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamFriends", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamFriends(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamUtils", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamUtils", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamUtils(IntPtr instancePtr, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamMatchmaking", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamMatchmaking", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamMatchmaking(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamMatchmakingServers", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamMatchmakingServers", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamMatchmakingServers(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamGenericInterface", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamGenericInterface", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamGenericInterface(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamUserStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamUserStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamUserStats(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamGameServerStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamGameServerStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamGameServerStats(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamApps", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamApps", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamApps(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamNetworking", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamNetworking", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamNetworking(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamRemoteStorage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamRemoteStorage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamRemoteStorage(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamScreenshots", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamScreenshots", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamScreenshots(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_RunFrame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_RunFrame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamClient_RunFrame(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetIPCCallCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetIPCCallCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamClient_GetIPCCallCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_SetWarningMessageHook", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_SetWarningMessageHook", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamClient_SetWarningMessageHook(IntPtr instancePtr, IntPtr pFunction);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_BShutdownIfAllPipesClosed", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_BShutdownIfAllPipesClosed", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamClient_BShutdownIfAllPipesClosed(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamHTTP", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamHTTP", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamHTTP(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamUnifiedMessages", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamUnifiedMessages", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamUnifiedMessages(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamController", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamController", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamController(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamUGC", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamUGC", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamUGC(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamAppList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamAppList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamAppList(IntPtr instancePtr, uint hSteamUser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamMusic", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamMusic", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamMusic(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamMusicRemote", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamMusicRemote", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamMusicRemote(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamHTMLSurface", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamHTMLSurface", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamHTMLSurface(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_Set_SteamAPI_CPostAPIResultInProcess", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_Set_SteamAPI_CPostAPIResultInProcess", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamClient_Set_SteamAPI_CPostAPIResultInProcess(IntPtr instancePtr, IntPtr func);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_Remove_SteamAPI_CPostAPIResultInProcess", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_Remove_SteamAPI_CPostAPIResultInProcess", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamClient_Remove_SteamAPI_CPostAPIResultInProcess(IntPtr instancePtr, IntPtr func);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_Set_SteamAPI_CCheckCallbackRegisteredInProcess", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_Set_SteamAPI_CCheckCallbackRegisteredInProcess", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamClient_Set_SteamAPI_CCheckCallbackRegisteredInProcess(IntPtr instancePtr, IntPtr func);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamInventory", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamInventory", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamInventory(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamClient_GetISteamVideo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamClient_GetISteamVideo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamClient_GetISteamVideo(IntPtr instancePtr, uint hSteamuser, uint hSteamPipe, string pchVersion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetHSteamUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetHSteamUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUser_GetHSteamUser(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_BLoggedOn", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_BLoggedOn", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUser_BLoggedOn(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetSteamID", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetSteamID", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUser_GetSteamID(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_InitiateGameConnection", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_InitiateGameConnection", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUser_InitiateGameConnection(IntPtr instancePtr, IntPtr pAuthBlob, int cbMaxAuthBlob, ulong steamIDGameServer, uint unIPServer, char usPortServer, bool bSecure);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_TerminateGameConnection", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_TerminateGameConnection", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUser_TerminateGameConnection(IntPtr instancePtr, uint unIPServer, char usPortServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_TrackAppUsageEvent", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_TrackAppUsageEvent", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUser_TrackAppUsageEvent(IntPtr instancePtr, ulong gameID, int eAppUsageEvent, string pchExtraInfo);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetUserDataFolder", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetUserDataFolder", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUser_GetUserDataFolder(IntPtr instancePtr, string pchBuffer, int cubBuffer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_StartVoiceRecording", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_StartVoiceRecording", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUser_StartVoiceRecording(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_StopVoiceRecording", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_StopVoiceRecording", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUser_StopVoiceRecording(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetAvailableVoice", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetAvailableVoice", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUser_GetAvailableVoice(IntPtr instancePtr, ref uint pcbCompressed, ref uint pcbUncompressed, uint nUncompressedVoiceDesiredSampleRate);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetVoice", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetVoice", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUser_GetVoice(IntPtr instancePtr, bool bWantCompressed, IntPtr pDestBuffer, uint cbDestBufferSize, ref uint nBytesWritten, bool bWantUncompressed, IntPtr pUncompressedDestBuffer, uint cbUncompressedDestBufferSize, ref uint nUncompressBytesWritten, uint nUncompressedVoiceDesiredSampleRate);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_DecompressVoice", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_DecompressVoice", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUser_DecompressVoice(IntPtr instancePtr, IntPtr pCompressed, uint cbCompressed, IntPtr pDestBuffer, uint cbDestBufferSize, ref uint nBytesWritten, uint nDesiredSampleRate);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetVoiceOptimalSampleRate", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetVoiceOptimalSampleRate", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUser_GetVoiceOptimalSampleRate(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetAuthSessionTicket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetAuthSessionTicket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUser_GetAuthSessionTicket(IntPtr instancePtr, IntPtr pTicket, int cbMaxTicket, ref uint pcbTicket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_BeginAuthSession", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_BeginAuthSession", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUser_BeginAuthSession(IntPtr instancePtr, IntPtr pAuthTicket, int cbAuthTicket, ulong steamID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_EndAuthSession", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_EndAuthSession", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUser_EndAuthSession(IntPtr instancePtr, ulong steamID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_CancelAuthTicket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_CancelAuthTicket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUser_CancelAuthTicket(IntPtr instancePtr, uint hAuthTicket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_UserHasLicenseForApp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_UserHasLicenseForApp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUser_UserHasLicenseForApp(IntPtr instancePtr, ulong steamID, uint appID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_BIsBehindNAT", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_BIsBehindNAT", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUser_BIsBehindNAT(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_AdvertiseGame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_AdvertiseGame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUser_AdvertiseGame(IntPtr instancePtr, ulong steamIDGameServer, uint unIPServer, char usPortServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_RequestEncryptedAppTicket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_RequestEncryptedAppTicket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUser_RequestEncryptedAppTicket(IntPtr instancePtr, IntPtr pDataToInclude, int cbDataToInclude);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetEncryptedAppTicket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetEncryptedAppTicket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUser_GetEncryptedAppTicket(IntPtr instancePtr, IntPtr pTicket, int cbMaxTicket, ref uint pcbTicket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetGameBadgeLevel", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetGameBadgeLevel", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUser_GetGameBadgeLevel(IntPtr instancePtr, int nSeries, bool bFoil);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_GetPlayerSteamLevel", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_GetPlayerSteamLevel", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUser_GetPlayerSteamLevel(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUser_RequestStoreAuthURL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUser_RequestStoreAuthURL", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUser_RequestStoreAuthURL(IntPtr instancePtr, string pchRedirectURL);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetPersonaName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetPersonaName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetPersonaName(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_SetPersonaName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_SetPersonaName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_SetPersonaName(IntPtr instancePtr, string pchPersonaName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetPersonaState", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetPersonaState", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamFriends_GetPersonaState(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetFriendCount(IntPtr instancePtr, int iFriendFlags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_GetFriendByIndex(IntPtr instancePtr, int iFriend, int iFriendFlags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendRelationship", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendRelationship", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamFriends_GetFriendRelationship(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendPersonaState", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendPersonaState", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamFriends_GetFriendPersonaState(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendPersonaName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendPersonaName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetFriendPersonaName(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendGamePlayed", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendGamePlayed", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_GetFriendGamePlayed(IntPtr instancePtr, ulong steamIDFriend, ref FriendGameInfo_t pFriendGameInfo);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendPersonaNameHistory", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendPersonaNameHistory", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetFriendPersonaNameHistory(IntPtr instancePtr, ulong steamIDFriend, int iPersonaName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendSteamLevel", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendSteamLevel", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetFriendSteamLevel(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetPlayerNickname", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetPlayerNickname", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetPlayerNickname(IntPtr instancePtr, ulong steamIDPlayer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetFriendsGroupCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern char SteamAPI_ISteamFriends_GetFriendsGroupIDByIndex(IntPtr instancePtr, int iFG);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetFriendsGroupName(IntPtr instancePtr, char friendsGroupID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupMembersCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupMembersCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetFriendsGroupMembersCount(IntPtr instancePtr, char friendsGroupID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupMembersList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendsGroupMembersList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_GetFriendsGroupMembersList(IntPtr instancePtr, char friendsGroupID, [In, Out] CSteamID[] pOutSteamIDMembers, int nMembersCount);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_HasFriend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_HasFriend", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_HasFriend(IntPtr instancePtr, ulong steamIDFriend, int iFriendFlags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetClanCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_GetClanByIndex(IntPtr instancePtr, int iClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetClanName(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanTag", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanTag", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetClanTag(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanActivityCounts", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanActivityCounts", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_GetClanActivityCounts(IntPtr instancePtr, ulong steamIDClan, ref int pnOnline, ref int pnInGame, ref int pnChatting);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_DownloadClanActivityCounts", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_DownloadClanActivityCounts", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_DownloadClanActivityCounts(IntPtr instancePtr, [In, Out] CSteamID[] psteamIDClans, int cClansToRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendCountFromSource", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendCountFromSource", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetFriendCountFromSource(IntPtr instancePtr, ulong steamIDSource);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendFromSourceByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendFromSourceByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_GetFriendFromSourceByIndex(IntPtr instancePtr, ulong steamIDSource, int iFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_IsUserInSource", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_IsUserInSource", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_IsUserInSource(IntPtr instancePtr, ulong steamIDUser, ulong steamIDSource);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_SetInGameVoiceSpeaking", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_SetInGameVoiceSpeaking", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_SetInGameVoiceSpeaking(IntPtr instancePtr, ulong steamIDUser, bool bSpeaking);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlay", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlay", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_ActivateGameOverlay(IntPtr instancePtr, string pchDialog);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlayToUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlayToUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_ActivateGameOverlayToUser(IntPtr instancePtr, string pchDialog, ulong steamID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlayToWebPage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlayToWebPage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_ActivateGameOverlayToWebPage(IntPtr instancePtr, string pchURL);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlayToStore", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlayToStore", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_ActivateGameOverlayToStore(IntPtr instancePtr, uint nAppID, char eFlag);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_SetPlayedWith", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_SetPlayedWith", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_SetPlayedWith(IntPtr instancePtr, ulong steamIDUserPlayedWith);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialog(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetSmallFriendAvatar", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetSmallFriendAvatar", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetSmallFriendAvatar(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetMediumFriendAvatar", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetMediumFriendAvatar", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetMediumFriendAvatar(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetLargeFriendAvatar", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetLargeFriendAvatar", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetLargeFriendAvatar(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_RequestUserInformation", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_RequestUserInformation", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_RequestUserInformation(IntPtr instancePtr, ulong steamIDUser, bool bRequireNameOnly);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_RequestClanOfficerList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_RequestClanOfficerList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_RequestClanOfficerList(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanOwner", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanOwner", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_GetClanOwner(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanOfficerCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanOfficerCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetClanOfficerCount(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanOfficerByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanOfficerByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_GetClanOfficerByIndex(IntPtr instancePtr, ulong steamIDClan, int iOfficer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetUserRestrictions", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetUserRestrictions", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamFriends_GetUserRestrictions(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_SetRichPresence", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_SetRichPresence", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_SetRichPresence(IntPtr instancePtr, string pchKey, string pchValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_ClearRichPresence", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_ClearRichPresence", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_ClearRichPresence(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendRichPresence", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendRichPresence", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetFriendRichPresence(IntPtr instancePtr, ulong steamIDFriend, string pchKey);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendRichPresenceKeyCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendRichPresenceKeyCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetFriendRichPresenceKeyCount(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendRichPresenceKeyByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendRichPresenceKeyByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamFriends_GetFriendRichPresenceKeyByIndex(IntPtr instancePtr, ulong steamIDFriend, int iKey);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_RequestFriendRichPresence", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_RequestFriendRichPresence", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamFriends_RequestFriendRichPresence(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_InviteUserToGame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_InviteUserToGame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_InviteUserToGame(IntPtr instancePtr, ulong steamIDFriend, string pchConnectString);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetCoplayFriendCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetCoplayFriendCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetCoplayFriendCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetCoplayFriend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetCoplayFriend", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_GetCoplayFriend(IntPtr instancePtr, int iCoplayFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendCoplayTime", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendCoplayTime", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetFriendCoplayTime(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendCoplayGame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendCoplayGame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamFriends_GetFriendCoplayGame(IntPtr instancePtr, ulong steamIDFriend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_JoinClanChatRoom", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_JoinClanChatRoom", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_JoinClanChatRoom(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_LeaveClanChatRoom", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_LeaveClanChatRoom", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_LeaveClanChatRoom(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanChatMemberCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanChatMemberCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetClanChatMemberCount(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetChatMemberByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetChatMemberByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_GetChatMemberByIndex(IntPtr instancePtr, ulong steamIDClan, int iUser);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_SendClanChatMessage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_SendClanChatMessage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_SendClanChatMessage(IntPtr instancePtr, ulong steamIDClanChat, string pchText);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetClanChatMessage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetClanChatMessage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetClanChatMessage(IntPtr instancePtr, ulong steamIDClanChat, int iMessage, IntPtr prgchText, int cchTextMax, ref uint peChatEntryType, ref CSteamID psteamidChatter);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_IsClanChatAdmin", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_IsClanChatAdmin", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_IsClanChatAdmin(IntPtr instancePtr, ulong steamIDClanChat, ulong steamIDUser);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_IsClanChatWindowOpenInSteam", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_IsClanChatWindowOpenInSteam", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_IsClanChatWindowOpenInSteam(IntPtr instancePtr, ulong steamIDClanChat);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_OpenClanChatWindowInSteam", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_OpenClanChatWindowInSteam", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_OpenClanChatWindowInSteam(IntPtr instancePtr, ulong steamIDClanChat);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_CloseClanChatWindowInSteam", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_CloseClanChatWindowInSteam", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_CloseClanChatWindowInSteam(IntPtr instancePtr, ulong steamIDClanChat);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_SetListenForFriendsMessages", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_SetListenForFriendsMessages", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_SetListenForFriendsMessages(IntPtr instancePtr, bool bInterceptEnabled);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_ReplyToFriendMessage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_ReplyToFriendMessage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamFriends_ReplyToFriendMessage(IntPtr instancePtr, ulong steamIDFriend, string pchMsgToSend);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFriendMessage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFriendMessage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamFriends_GetFriendMessage(IntPtr instancePtr, ulong steamIDFriend, int iMessageID, IntPtr pvData, int cubData, ref uint peChatEntryType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_GetFollowerCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_GetFollowerCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_GetFollowerCount(IntPtr instancePtr, ulong steamID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_IsFollowing", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_IsFollowing", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_IsFollowing(IntPtr instancePtr, ulong steamID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamFriends_EnumerateFollowingList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamFriends_EnumerateFollowingList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamFriends_EnumerateFollowingList(IntPtr instancePtr, uint unStartIndex);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetSecondsSinceAppActive", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetSecondsSinceAppActive", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUtils_GetSecondsSinceAppActive(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetSecondsSinceComputerActive", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetSecondsSinceComputerActive", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUtils_GetSecondsSinceComputerActive(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetConnectedUniverse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetConnectedUniverse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUtils_GetConnectedUniverse(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetServerRealTime", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetServerRealTime", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUtils_GetServerRealTime(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetIPCountry", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetIPCountry", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamUtils_GetIPCountry(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetImageSize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetImageSize", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_GetImageSize(IntPtr instancePtr, int iImage, ref uint pnWidth, ref uint pnHeight);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetImageRGBA", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetImageRGBA", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_GetImageRGBA(IntPtr instancePtr, int iImage, IntPtr pubDest, int nDestBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetCSERIPPort", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetCSERIPPort", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_GetCSERIPPort(IntPtr instancePtr, ref uint unIP, ref char usPort);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetCurrentBatteryPower", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetCurrentBatteryPower", CallingConvention = CallingConvention.Cdecl)]
         internal static extern byte SteamAPI_ISteamUtils_GetCurrentBatteryPower(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetAppID", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetAppID", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUtils_GetAppID(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_SetOverlayNotificationPosition", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_SetOverlayNotificationPosition", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUtils_SetOverlayNotificationPosition(IntPtr instancePtr, uint eNotificationPosition);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_IsAPICallCompleted", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_IsAPICallCompleted", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_IsAPICallCompleted(IntPtr instancePtr, ulong hSteamAPICall, ref bool pbFailed);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetAPICallFailureReason", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetAPICallFailureReason", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUtils_GetAPICallFailureReason(IntPtr instancePtr, ulong hSteamAPICall);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetAPICallResult", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetAPICallResult", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_GetAPICallResult(IntPtr instancePtr, ulong hSteamAPICall, IntPtr pCallback, int cubCallback, int iCallbackExpected, ref bool pbFailed);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_RunFrame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_RunFrame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUtils_RunFrame(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetIPCCallCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetIPCCallCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUtils_GetIPCCallCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_SetWarningMessageHook", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_SetWarningMessageHook", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamUtils_SetWarningMessageHook(IntPtr instancePtr, IntPtr pFunction);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_IsOverlayEnabled", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_IsOverlayEnabled", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_IsOverlayEnabled(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_BOverlayNeedsPresent", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_BOverlayNeedsPresent", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_BOverlayNeedsPresent(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_CheckFileSignature", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_CheckFileSignature", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUtils_CheckFileSignature(IntPtr instancePtr, string szFileName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_ShowGamepadTextInput", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_ShowGamepadTextInput", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_ShowGamepadTextInput(IntPtr instancePtr, int eInputMode, int eLineInputMode, string pchDescription, uint unCharMax, string pchExistingText);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetEnteredGamepadTextLength", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetEnteredGamepadTextLength", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUtils_GetEnteredGamepadTextLength(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetEnteredGamepadTextInput", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetEnteredGamepadTextInput", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_GetEnteredGamepadTextInput(IntPtr instancePtr, string pchText, uint cchText);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_GetSteamUILanguage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_GetSteamUILanguage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamUtils_GetSteamUILanguage(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUtils_IsSteamRunningInVR", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUtils_IsSteamRunningInVR", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUtils_IsSteamRunningInVR(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetFavoriteGameCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetFavoriteGameCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamMatchmaking_GetFavoriteGameCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetFavoriteGame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetFavoriteGame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_GetFavoriteGame(IntPtr instancePtr, int iGame, ref uint pnAppID, ref uint pnIP, ref char pnConnPort, ref char pnQueryPort, ref uint punFlags, ref uint pRTime32LastPlayedOnServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_AddFavoriteGame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_AddFavoriteGame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamMatchmaking_AddFavoriteGame(IntPtr instancePtr, uint nAppID, uint nIP, char nConnPort, char nQueryPort, uint unFlags, uint rTime32LastPlayedOnServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_RemoveFavoriteGame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_RemoveFavoriteGame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_RemoveFavoriteGame(IntPtr instancePtr, uint nAppID, uint nIP, char nConnPort, char nQueryPort, uint unFlags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_RequestLobbyList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_RequestLobbyList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamMatchmaking_RequestLobbyList(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter(IntPtr instancePtr, string pchKeyToMatch, string pchValueToMatch, uint eComparisonType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListNumericalFilter", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListNumericalFilter", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_AddRequestLobbyListNumericalFilter(IntPtr instancePtr, string pchKeyToMatch, int nValueToMatch, uint eComparisonType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListNearValueFilter", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListNearValueFilter", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_AddRequestLobbyListNearValueFilter(IntPtr instancePtr, string pchKeyToMatch, int nValueToBeCloseTo);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListFilterSlotsAvailable", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListFilterSlotsAvailable", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_AddRequestLobbyListFilterSlotsAvailable(IntPtr instancePtr, int nSlotsAvailable);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter(IntPtr instancePtr, uint eLobbyDistanceFilter);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter(IntPtr instancePtr, int cMaxResults);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListCompatibleMembersFilter", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_AddRequestLobbyListCompatibleMembersFilter", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_AddRequestLobbyListCompatibleMembersFilter(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamMatchmaking_GetLobbyByIndex(IntPtr instancePtr, int iLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_CreateLobby", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_CreateLobby", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamMatchmaking_CreateLobby(IntPtr instancePtr, uint eLobbyType, int cMaxMembers);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_JoinLobby", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_JoinLobby", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamMatchmaking_JoinLobby(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_LeaveLobby", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_LeaveLobby", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_LeaveLobby(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_InviteUserToLobby", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_InviteUserToLobby", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_InviteUserToLobby(IntPtr instancePtr, ulong steamIDLobby, ulong steamIDInvitee);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetNumLobbyMembers", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetNumLobbyMembers", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamMatchmaking_GetNumLobbyMembers(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex(IntPtr instancePtr, ulong steamIDLobby, int iMember);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamMatchmaking_GetLobbyData(IntPtr instancePtr, ulong steamIDLobby, string pchKey);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_SetLobbyData(IntPtr instancePtr, ulong steamIDLobby, string pchKey, string pchValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyDataCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyDataCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamMatchmaking_GetLobbyDataCount(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_GetLobbyDataByIndex(IntPtr instancePtr, ulong steamIDLobby, int iLobbyData, string pchKey, int cchKeyBufferSize, string pchValue, int cchValueBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_DeleteLobbyData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_DeleteLobbyData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_DeleteLobbyData(IntPtr instancePtr, ulong steamIDLobby, string pchKey);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyMemberData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyMemberData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamMatchmaking_GetLobbyMemberData(IntPtr instancePtr, ulong steamIDLobby, ulong steamIDUser, string pchKey);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyMemberData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyMemberData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_SetLobbyMemberData(IntPtr instancePtr, ulong steamIDLobby, string pchKey, string pchValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SendLobbyChatMsg", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SendLobbyChatMsg", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_SendLobbyChatMsg(IntPtr instancePtr, ulong steamIDLobby, IntPtr pvMsgBody, int cubMsgBody);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyChatEntry", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyChatEntry", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamMatchmaking_GetLobbyChatEntry(IntPtr instancePtr, ulong steamIDLobby, int iChatID, ref CSteamID pSteamIDUser, IntPtr pvData, int cubData, ref uint peChatEntryType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_RequestLobbyData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_RequestLobbyData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_RequestLobbyData(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyGameServer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyGameServer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmaking_SetLobbyGameServer(IntPtr instancePtr, ulong steamIDLobby, uint unGameServerIP, char unGameServerPort, ulong steamIDGameServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyGameServer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyGameServer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_GetLobbyGameServer(IntPtr instancePtr, ulong steamIDLobby, ref uint punGameServerIP, ref char punGameServerPort, ref CSteamID psteamIDGameServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyMemberLimit", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyMemberLimit", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_SetLobbyMemberLimit(IntPtr instancePtr, ulong steamIDLobby, int cMaxMembers);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyMemberLimit", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyMemberLimit", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamMatchmaking_GetLobbyMemberLimit(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyType", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyType", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_SetLobbyType(IntPtr instancePtr, ulong steamIDLobby, uint eLobbyType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyJoinable", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyJoinable", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_SetLobbyJoinable(IntPtr instancePtr, ulong steamIDLobby, bool bLobbyJoinable);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyOwner", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_GetLobbyOwner", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamMatchmaking_GetLobbyOwner(IntPtr instancePtr, ulong steamIDLobby);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyOwner", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SetLobbyOwner", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_SetLobbyOwner(IntPtr instancePtr, ulong steamIDLobby, ulong steamIDNewOwner);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmaking_SetLinkedLobby", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmaking_SetLinkedLobby", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmaking_SetLinkedLobby(IntPtr instancePtr, ulong steamIDLobby, ulong steamIDLobbyDependent);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServerListResponse_ServerResponded", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServerListResponse_ServerResponded", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingServerListResponse_ServerResponded(IntPtr instancePtr, uint hRequest, int iServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServerListResponse_ServerFailedToRespond", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServerListResponse_ServerFailedToRespond", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingServerListResponse_ServerFailedToRespond(IntPtr instancePtr, uint hRequest, int iServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServerListResponse_RefreshComplete", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServerListResponse_RefreshComplete", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingServerListResponse_RefreshComplete(IntPtr instancePtr, uint hRequest, uint response);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingPingResponse_ServerResponded", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingPingResponse_ServerResponded", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingPingResponse_ServerResponded(IntPtr instancePtr, IntPtr server);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingPingResponse_ServerFailedToRespond", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingPingResponse_ServerFailedToRespond", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingPingResponse_ServerFailedToRespond(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingPlayersResponse_AddPlayerToList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingPlayersResponse_AddPlayerToList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingPlayersResponse_AddPlayerToList(IntPtr instancePtr, string pchName, int nScore, float flTimePlayed);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingPlayersResponse_PlayersFailedToRespond", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingPlayersResponse_PlayersFailedToRespond", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingPlayersResponse_PlayersFailedToRespond(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingPlayersResponse_PlayersRefreshComplete", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingPlayersResponse_PlayersRefreshComplete", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingPlayersResponse_PlayersRefreshComplete(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingRulesResponse_RulesResponded", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingRulesResponse_RulesResponded", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingRulesResponse_RulesResponded(IntPtr instancePtr, string pchRule, string pchValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingRulesResponse_RulesFailedToRespond", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingRulesResponse_RulesFailedToRespond", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingRulesResponse_RulesFailedToRespond(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingRulesResponse_RulesRefreshComplete", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingRulesResponse_RulesRefreshComplete", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingRulesResponse_RulesRefreshComplete(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestInternetServerList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestInternetServerList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_RequestInternetServerList(IntPtr instancePtr, uint iApp, [In, Out] MatchMakingKeyValuePair_t[] ppchFilters, uint nFilters, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestLANServerList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestLANServerList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_RequestLANServerList(IntPtr instancePtr, uint iApp, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestFriendsServerList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestFriendsServerList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_RequestFriendsServerList(IntPtr instancePtr, uint iApp, [In, Out] MatchMakingKeyValuePair_t[] ppchFilters, uint nFilters, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestFavoritesServerList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestFavoritesServerList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_RequestFavoritesServerList(IntPtr instancePtr, uint iApp, [In, Out] MatchMakingKeyValuePair_t[] ppchFilters, uint nFilters, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestHistoryServerList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestHistoryServerList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_RequestHistoryServerList(IntPtr instancePtr, uint iApp, [In, Out] MatchMakingKeyValuePair_t[] ppchFilters, uint nFilters, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestSpectatorServerList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_RequestSpectatorServerList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_RequestSpectatorServerList(IntPtr instancePtr, uint iApp, [In, Out] MatchMakingKeyValuePair_t[] ppchFilters, uint nFilters, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_ReleaseRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_ReleaseRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingServers_ReleaseRequest(IntPtr instancePtr, uint hServerListRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_GetServerDetails", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_GetServerDetails", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamMatchmakingServers_GetServerDetails(IntPtr instancePtr, uint hRequest, int iServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_CancelQuery", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_CancelQuery", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingServers_CancelQuery(IntPtr instancePtr, uint hRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_RefreshQuery", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_RefreshQuery", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingServers_RefreshQuery(IntPtr instancePtr, uint hRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_IsRefreshing", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_IsRefreshing", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMatchmakingServers_IsRefreshing(IntPtr instancePtr, uint hRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_GetServerCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_GetServerCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamMatchmakingServers_GetServerCount(IntPtr instancePtr, uint hRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_RefreshServer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_RefreshServer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingServers_RefreshServer(IntPtr instancePtr, uint hRequest, int iServer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_PingServer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_PingServer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_PingServer(IntPtr instancePtr, uint unIP, char usPort, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_PlayerDetails", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_PlayerDetails", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_PlayerDetails(IntPtr instancePtr, uint unIP, char usPort, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_ServerRules", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_ServerRules", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamMatchmakingServers_ServerRules(IntPtr instancePtr, uint unIP, char usPort, IntPtr pRequestServersResponse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMatchmakingServers_CancelServerQuery", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMatchmakingServers_CancelServerQuery", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMatchmakingServers_CancelServerQuery(IntPtr instancePtr, uint hServerQuery);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWrite", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWrite", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_FileWrite(IntPtr instancePtr, string pchFile, IntPtr pvData, int cubData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileRead", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileRead", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamRemoteStorage_FileRead(IntPtr instancePtr, string pchFile, IntPtr pvData, int cubDataToRead);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileForget", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileForget", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_FileForget(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileDelete", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileDelete", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_FileDelete(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileShare", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileShare", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_FileShare(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_SetSyncPlatforms", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_SetSyncPlatforms", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_SetSyncPlatforms(IntPtr instancePtr, string pchFile, uint eRemoteStoragePlatform);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWriteStreamOpen", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWriteStreamOpen", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_FileWriteStreamOpen(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWriteStreamWriteChunk", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWriteStreamWriteChunk", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_FileWriteStreamWriteChunk(IntPtr instancePtr, ulong writeHandle, IntPtr pvData, int cubData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWriteStreamClose", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWriteStreamClose", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_FileWriteStreamClose(IntPtr instancePtr, ulong writeHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWriteStreamCancel", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileWriteStreamCancel", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_FileWriteStreamCancel(IntPtr instancePtr, ulong writeHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FileExists", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FileExists", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_FileExists(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_FilePersisted", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_FilePersisted", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_FilePersisted(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetFileSize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetFileSize", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamRemoteStorage_GetFileSize(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetFileTimestamp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetFileTimestamp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern long SteamAPI_ISteamRemoteStorage_GetFileTimestamp(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetSyncPlatforms", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetSyncPlatforms", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamRemoteStorage_GetSyncPlatforms(IntPtr instancePtr, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetFileCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetFileCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamRemoteStorage_GetFileCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetFileNameAndSize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetFileNameAndSize", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamRemoteStorage_GetFileNameAndSize(IntPtr instancePtr, int iFile, ref int pnFileSizeInBytes);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetQuota", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetQuota", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_GetQuota(IntPtr instancePtr, ref int pnTotalBytes, ref int puAvailableBytes);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_IsCloudEnabledForAccount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_IsCloudEnabledForApp(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamRemoteStorage_SetCloudEnabledForApp(IntPtr instancePtr, bool bEnabled);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UGCDownload", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UGCDownload", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_UGCDownload(IntPtr instancePtr, ulong hContent, uint unPriority);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetUGCDownloadProgress", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetUGCDownloadProgress", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_GetUGCDownloadProgress(IntPtr instancePtr, ulong hContent, ref int pnBytesDownloaded, ref int pnBytesExpected);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetUGCDetails", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetUGCDetails", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_GetUGCDetails(IntPtr instancePtr, ulong hContent, ref uint pnAppID, string ppchName, ref int pnFileSizeInBytes, ref CSteamID pSteamIDOwner);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UGCRead", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UGCRead", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamRemoteStorage_UGCRead(IntPtr instancePtr, ulong hContent, IntPtr pvData, int cubDataToRead, uint cOffset, uint eAction);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetCachedUGCCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetCachedUGCCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamRemoteStorage_GetCachedUGCCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetCachedUGCHandle", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetCachedUGCHandle", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_GetCachedUGCHandle(IntPtr instancePtr, int iCachedContent);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_PublishWorkshopFile", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_PublishWorkshopFile", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_PublishWorkshopFile(IntPtr instancePtr, string pchFile, string pchPreviewFile, uint nConsumerAppId, string pchTitle, string pchDescription, uint eVisibility, ref SteamParamStringArray_t pTags, uint eWorkshopFileType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_CreatePublishedFileUpdateRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_CreatePublishedFileUpdateRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_CreatePublishedFileUpdateRequest(IntPtr instancePtr, ulong unPublishedFileId);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileFile", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileFile", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_UpdatePublishedFileFile(IntPtr instancePtr, ulong updateHandle, string pchFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFilePreviewFile", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFilePreviewFile", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_UpdatePublishedFilePreviewFile(IntPtr instancePtr, ulong updateHandle, string pchPreviewFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileTitle", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileTitle", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_UpdatePublishedFileTitle(IntPtr instancePtr, ulong updateHandle, string pchTitle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileDescription", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileDescription", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_UpdatePublishedFileDescription(IntPtr instancePtr, ulong updateHandle, string pchDescription);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileVisibility", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileVisibility", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_UpdatePublishedFileVisibility(IntPtr instancePtr, ulong updateHandle, uint eVisibility);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileTags", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileTags", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_UpdatePublishedFileTags(IntPtr instancePtr, ulong updateHandle, ref SteamParamStringArray_t pTags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_CommitPublishedFileUpdate", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_CommitPublishedFileUpdate", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_CommitPublishedFileUpdate(IntPtr instancePtr, ulong updateHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetPublishedFileDetails", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetPublishedFileDetails", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_GetPublishedFileDetails(IntPtr instancePtr, ulong unPublishedFileId, uint unMaxSecondsOld);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_DeletePublishedFile", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_DeletePublishedFile", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_DeletePublishedFile(IntPtr instancePtr, ulong unPublishedFileId);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumerateUserPublishedFiles", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumerateUserPublishedFiles", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_EnumerateUserPublishedFiles(IntPtr instancePtr, uint unStartIndex);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_SubscribePublishedFile", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_SubscribePublishedFile", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_SubscribePublishedFile(IntPtr instancePtr, ulong unPublishedFileId);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumerateUserSubscribedFiles", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumerateUserSubscribedFiles", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_EnumerateUserSubscribedFiles(IntPtr instancePtr, uint unStartIndex);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UnsubscribePublishedFile", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UnsubscribePublishedFile", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_UnsubscribePublishedFile(IntPtr instancePtr, ulong unPublishedFileId);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileSetChangeDescription", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdatePublishedFileSetChangeDescription", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamRemoteStorage_UpdatePublishedFileSetChangeDescription(IntPtr instancePtr, ulong updateHandle, string pchChangeDescription);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetPublishedItemVoteDetails", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetPublishedItemVoteDetails", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_GetPublishedItemVoteDetails(IntPtr instancePtr, ulong unPublishedFileId);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdateUserPublishedItemVote", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UpdateUserPublishedItemVote", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_UpdateUserPublishedItemVote(IntPtr instancePtr, ulong unPublishedFileId, bool bVoteUp);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_GetUserPublishedItemVoteDetails", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_GetUserPublishedItemVoteDetails", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_GetUserPublishedItemVoteDetails(IntPtr instancePtr, ulong unPublishedFileId);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumerateUserSharedWorkshopFiles", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumerateUserSharedWorkshopFiles", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_EnumerateUserSharedWorkshopFiles(IntPtr instancePtr, ulong steamId, uint unStartIndex, ref SteamParamStringArray_t pRequiredTags, ref SteamParamStringArray_t pExcludedTags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_PublishVideo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_PublishVideo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_PublishVideo(IntPtr instancePtr, uint eVideoProvider, string pchVideoAccount, string pchVideoIdentifier, string pchPreviewFile, uint nConsumerAppId, string pchTitle, string pchDescription, uint eVisibility, ref SteamParamStringArray_t pTags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_SetUserPublishedFileAction", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_SetUserPublishedFileAction", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_SetUserPublishedFileAction(IntPtr instancePtr, ulong unPublishedFileId, uint eAction);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumeratePublishedFilesByUserAction", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumeratePublishedFilesByUserAction", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_EnumeratePublishedFilesByUserAction(IntPtr instancePtr, uint eAction, uint unStartIndex);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumeratePublishedWorkshopFiles", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_EnumeratePublishedWorkshopFiles", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_EnumeratePublishedWorkshopFiles(IntPtr instancePtr, uint eEnumerationType, uint unStartIndex, uint unCount, uint unDays, ref SteamParamStringArray_t pTags, ref SteamParamStringArray_t pUserTags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamRemoteStorage_UGCDownloadToLocation", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamRemoteStorage_UGCDownloadToLocation", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamRemoteStorage_UGCDownloadToLocation(IntPtr instancePtr, ulong hContent, string pchLocation, uint unPriority);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_RequestCurrentStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_RequestCurrentStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_RequestCurrentStats(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetStat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetStat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetStat(IntPtr instancePtr, string pchName, ref int pData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetStat0", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetStat0", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetStat0(IntPtr instancePtr, string pchName, ref float pData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_SetStat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_SetStat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_SetStat(IntPtr instancePtr, string pchName, int nData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_SetStat0", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_SetStat0", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_SetStat0(IntPtr instancePtr, string pchName, float fData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_UpdateAvgRateStat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_UpdateAvgRateStat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_UpdateAvgRateStat(IntPtr instancePtr, string pchName, float flCountThisSession, double dSessionLength);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetAchievement", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetAchievement", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetAchievement(IntPtr instancePtr, string pchName, ref bool pbAchieved);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_SetAchievement", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_SetAchievement", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_SetAchievement(IntPtr instancePtr, string pchName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_ClearAchievement", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_ClearAchievement", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_ClearAchievement(IntPtr instancePtr, string pchName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementAndUnlockTime", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementAndUnlockTime", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetAchievementAndUnlockTime(IntPtr instancePtr, string pchName, ref bool pbAchieved, ref uint punUnlockTime);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_StoreStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_StoreStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_StoreStats(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementIcon", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementIcon", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUserStats_GetAchievementIcon(IntPtr instancePtr, string pchName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamUserStats_GetAchievementDisplayAttribute(IntPtr instancePtr, string pchName, string pchKey);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_IndicateAchievementProgress", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_IndicateAchievementProgress", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_IndicateAchievementProgress(IntPtr instancePtr, string pchName, uint nCurProgress, uint nMaxProgress);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetNumAchievements", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetNumAchievements", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUserStats_GetNumAchievements(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamUserStats_GetAchievementName(IntPtr instancePtr, uint iAchievement);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_RequestUserStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_RequestUserStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_RequestUserStats(IntPtr instancePtr, ulong steamIDUser);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetUserStat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetUserStat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetUserStat(IntPtr instancePtr, ulong steamIDUser, string pchName, ref int pData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetUserStat0", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetUserStat0", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetUserStat0(IntPtr instancePtr, ulong steamIDUser, string pchName, ref float pData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetUserAchievement", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetUserAchievement", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetUserAchievement(IntPtr instancePtr, ulong steamIDUser, string pchName, ref bool pbAchieved);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetUserAchievementAndUnlockTime", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetUserAchievementAndUnlockTime", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetUserAchievementAndUnlockTime(IntPtr instancePtr, ulong steamIDUser, string pchName, ref bool pbAchieved, ref uint punUnlockTime);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_ResetAllStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_ResetAllStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_ResetAllStats(IntPtr instancePtr, bool bAchievementsToo);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_FindOrCreateLeaderboard", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_FindOrCreateLeaderboard", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_FindOrCreateLeaderboard(IntPtr instancePtr, string pchLeaderboardName, uint eLeaderboardSortMethod, uint eLeaderboardDisplayType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_FindLeaderboard", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_FindLeaderboard", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_FindLeaderboard(IntPtr instancePtr, string pchLeaderboardName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetLeaderboardName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetLeaderboardName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamUserStats_GetLeaderboardName(IntPtr instancePtr, ulong hSteamLeaderboard);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetLeaderboardEntryCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetLeaderboardEntryCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUserStats_GetLeaderboardEntryCount(IntPtr instancePtr, ulong hSteamLeaderboard);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetLeaderboardSortMethod", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetLeaderboardSortMethod", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUserStats_GetLeaderboardSortMethod(IntPtr instancePtr, ulong hSteamLeaderboard);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetLeaderboardDisplayType", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetLeaderboardDisplayType", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUserStats_GetLeaderboardDisplayType(IntPtr instancePtr, ulong hSteamLeaderboard);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_DownloadLeaderboardEntries", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_DownloadLeaderboardEntries", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_DownloadLeaderboardEntries(IntPtr instancePtr, ulong hSteamLeaderboard, uint eLeaderboardDataRequest, int nRangeStart, int nRangeEnd);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_DownloadLeaderboardEntriesForUsers(IntPtr instancePtr, ulong hSteamLeaderboard, [In, Out] CSteamID[] prgUsers, int cUsers);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetDownloadedLeaderboardEntry", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetDownloadedLeaderboardEntry", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetDownloadedLeaderboardEntry(IntPtr instancePtr, ulong hSteamLeaderboardEntries, int index, ref LeaderboardEntry_t pLeaderboardEntry, ref int pDetails, int cDetailsMax);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_UploadLeaderboardScore", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_UploadLeaderboardScore", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_UploadLeaderboardScore(IntPtr instancePtr, ulong hSteamLeaderboard, uint eLeaderboardUploadScoreMethod, int nScore, ref int pScoreDetails, int cScoreDetailsCount);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_AttachLeaderboardUGC", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_AttachLeaderboardUGC", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_AttachLeaderboardUGC(IntPtr instancePtr, ulong hSteamLeaderboard, ulong hUGC);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_GetNumberOfCurrentPlayers(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_RequestGlobalAchievementPercentages", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_RequestGlobalAchievementPercentages", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_RequestGlobalAchievementPercentages(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetMostAchievedAchievementInfo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetMostAchievedAchievementInfo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUserStats_GetMostAchievedAchievementInfo(IntPtr instancePtr, string pchName, uint unNameBufLen, ref float pflPercent, ref bool pbAchieved);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetNextMostAchievedAchievementInfo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetNextMostAchievedAchievementInfo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUserStats_GetNextMostAchievedAchievementInfo(IntPtr instancePtr, int iIteratorPrevious, string pchName, uint unNameBufLen, ref float pflPercent, ref bool pbAchieved);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementAchievedPercent", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementAchievedPercent", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetAchievementAchievedPercent(IntPtr instancePtr, string pchName, ref float pflPercent);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_RequestGlobalStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_RequestGlobalStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUserStats_RequestGlobalStats(IntPtr instancePtr, int nHistoryDays);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetGlobalStat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetGlobalStat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetGlobalStat(IntPtr instancePtr, string pchStatName, ref long pData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetGlobalStat0", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetGlobalStat0", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUserStats_GetGlobalStat0(IntPtr instancePtr, string pchStatName, ref double pData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetGlobalStatHistory", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetGlobalStatHistory", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUserStats_GetGlobalStatHistory(IntPtr instancePtr, string pchStatName, [In, Out] long[] pData, uint cubData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUserStats_GetGlobalStatHistory0", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUserStats_GetGlobalStatHistory0", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamUserStats_GetGlobalStatHistory0(IntPtr instancePtr, string pchStatName, [In, Out] double[] pData, uint cubData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BIsSubscribed", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BIsSubscribed", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BIsSubscribed(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BIsLowViolence", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BIsLowViolence", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BIsLowViolence(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BIsCybercafe", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BIsCybercafe", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BIsCybercafe(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BIsVACBanned", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BIsVACBanned", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BIsVACBanned(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetCurrentGameLanguage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetCurrentGameLanguage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamApps_GetCurrentGameLanguage(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetAvailableGameLanguages", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetAvailableGameLanguages", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamApps_GetAvailableGameLanguages(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BIsSubscribedApp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BIsSubscribedApp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BIsSubscribedApp(IntPtr instancePtr, uint appID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BIsDlcInstalled", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BIsDlcInstalled", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BIsDlcInstalled(IntPtr instancePtr, uint appID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamApps_GetEarliestPurchaseUnixTime(IntPtr instancePtr, uint nAppID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BIsSubscribedFromFreeWeekend(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetDLCCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetDLCCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamApps_GetDLCCount(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BGetDLCDataByIndex", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BGetDLCDataByIndex", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BGetDLCDataByIndex(IntPtr instancePtr, int iDLC, ref uint pAppID, ref bool pbAvailable, string pchName, int cchNameBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_InstallDLC", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_InstallDLC", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamApps_InstallDLC(IntPtr instancePtr, uint nAppID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_UninstallDLC", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_UninstallDLC", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamApps_UninstallDLC(IntPtr instancePtr, uint nAppID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_RequestAppProofOfPurchaseKey", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_RequestAppProofOfPurchaseKey", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamApps_RequestAppProofOfPurchaseKey(IntPtr instancePtr, uint nAppID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetCurrentBetaName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetCurrentBetaName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_GetCurrentBetaName(IntPtr instancePtr, string pchName, int cchNameBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_MarkContentCorrupt", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_MarkContentCorrupt", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_MarkContentCorrupt(IntPtr instancePtr, bool bMissingFilesOnly);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetInstalledDepots", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetInstalledDepots", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamApps_GetInstalledDepots(IntPtr instancePtr, uint appID, ref uint pvecDepots, uint cMaxDepots);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetAppInstallDir", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetAppInstallDir", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamApps_GetAppInstallDir(IntPtr instancePtr, uint appID, string pchFolder, uint cchFolderBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_BIsAppInstalled", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_BIsAppInstalled", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_BIsAppInstalled(IntPtr instancePtr, uint appID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetAppOwner", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetAppOwner", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamApps_GetAppOwner(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetLaunchQueryParam", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetLaunchQueryParam", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAPI_ISteamApps_GetLaunchQueryParam(IntPtr instancePtr, string pchKey);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetDlcDownloadProgress", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetDlcDownloadProgress", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamApps_GetDlcDownloadProgress(IntPtr instancePtr, uint nAppID, ref ulong punBytesDownloaded, ref ulong punBytesTotal);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamApps_GetAppBuildId", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamApps_GetAppBuildId", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamApps_GetAppBuildId(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_SendP2PPacket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_SendP2PPacket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_SendP2PPacket(IntPtr instancePtr, ulong steamIDRemote, IntPtr pubData, uint cubData, uint eP2PSendType, int nChannel);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_IsP2PPacketAvailable", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_IsP2PPacketAvailable", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_IsP2PPacketAvailable(IntPtr instancePtr, ref uint pcubMsgSize, int nChannel);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_ReadP2PPacket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_ReadP2PPacket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_ReadP2PPacket(IntPtr instancePtr, IntPtr pubDest, uint cubDest, ref uint pcubMsgSize, ref CSteamID psteamIDRemote, int nChannel);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_AcceptP2PSessionWithUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_AcceptP2PSessionWithUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_AcceptP2PSessionWithUser(IntPtr instancePtr, ulong steamIDRemote);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_CloseP2PSessionWithUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_CloseP2PSessionWithUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_CloseP2PSessionWithUser(IntPtr instancePtr, ulong steamIDRemote);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_CloseP2PChannelWithUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_CloseP2PChannelWithUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_CloseP2PChannelWithUser(IntPtr instancePtr, ulong steamIDRemote, int nChannel);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_GetP2PSessionState", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_GetP2PSessionState", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_GetP2PSessionState(IntPtr instancePtr, ulong steamIDRemote, ref P2PSessionState_t pConnectionState);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_AllowP2PPacketRelay", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_AllowP2PPacketRelay", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_AllowP2PPacketRelay(IntPtr instancePtr, bool bAllow);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_CreateListenSocket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_CreateListenSocket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamNetworking_CreateListenSocket(IntPtr instancePtr, int nVirtualP2PPort, uint nIP, char nPort, bool bAllowUseOfPacketRelay);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_CreateP2PConnectionSocket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_CreateP2PConnectionSocket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamNetworking_CreateP2PConnectionSocket(IntPtr instancePtr, ulong steamIDTarget, int nVirtualPort, int nTimeoutSec, bool bAllowUseOfPacketRelay);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_CreateConnectionSocket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_CreateConnectionSocket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamNetworking_CreateConnectionSocket(IntPtr instancePtr, uint nIP, char nPort, int nTimeoutSec);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_DestroySocket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_DestroySocket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_DestroySocket(IntPtr instancePtr, uint hSocket, bool bNotifyRemoteEnd);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_DestroyListenSocket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_DestroyListenSocket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_DestroyListenSocket(IntPtr instancePtr, uint hSocket, bool bNotifyRemoteEnd);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_SendDataOnSocket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_SendDataOnSocket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_SendDataOnSocket(IntPtr instancePtr, uint hSocket, IntPtr pubData, uint cubData, bool bReliable);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_IsDataAvailableOnSocket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_IsDataAvailableOnSocket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_IsDataAvailableOnSocket(IntPtr instancePtr, uint hSocket, ref uint pcubMsgSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_RetrieveDataFromSocket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_RetrieveDataFromSocket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_RetrieveDataFromSocket(IntPtr instancePtr, uint hSocket, IntPtr pubDest, uint cubDest, ref uint pcubMsgSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_IsDataAvailable", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_IsDataAvailable", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_IsDataAvailable(IntPtr instancePtr, uint hListenSocket, ref uint pcubMsgSize, ref uint phSocket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_RetrieveData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_RetrieveData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_RetrieveData(IntPtr instancePtr, uint hListenSocket, IntPtr pubDest, uint cubDest, ref uint pcubMsgSize, ref uint phSocket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_GetSocketInfo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_GetSocketInfo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_GetSocketInfo(IntPtr instancePtr, uint hSocket, ref CSteamID pSteamIDRemote, ref int peSocketStatus, ref uint punIPRemote, ref char punPortRemote);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_GetListenSocketInfo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_GetListenSocketInfo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamNetworking_GetListenSocketInfo(IntPtr instancePtr, uint hListenSocket, ref uint pnIP, ref char pnPort);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_GetSocketConnectionType", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_GetSocketConnectionType", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamNetworking_GetSocketConnectionType(IntPtr instancePtr, uint hSocket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamNetworking_GetMaxPacketSize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamNetworking_GetMaxPacketSize", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamNetworking_GetMaxPacketSize(IntPtr instancePtr, uint hSocket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamScreenshots_WriteScreenshot", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamScreenshots_WriteScreenshot", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamScreenshots_WriteScreenshot(IntPtr instancePtr, IntPtr pubRGB, uint cubRGB, int nWidth, int nHeight);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamScreenshots_AddScreenshotToLibrary", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamScreenshots_AddScreenshotToLibrary", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamScreenshots_AddScreenshotToLibrary(IntPtr instancePtr, string pchFilename, string pchThumbnailFilename, int nWidth, int nHeight);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamScreenshots_TriggerScreenshot", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamScreenshots_TriggerScreenshot", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamScreenshots_TriggerScreenshot(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamScreenshots_HookScreenshots", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamScreenshots_HookScreenshots", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamScreenshots_HookScreenshots(IntPtr instancePtr, bool bHook);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamScreenshots_SetLocation", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamScreenshots_SetLocation", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamScreenshots_SetLocation(IntPtr instancePtr, uint hScreenshot, string pchLocation);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamScreenshots_TagUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamScreenshots_TagUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamScreenshots_TagUser(IntPtr instancePtr, uint hScreenshot, ulong steamID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamScreenshots_TagPublishedFile", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamScreenshots_TagPublishedFile", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamScreenshots_TagPublishedFile(IntPtr instancePtr, uint hScreenshot, ulong unPublishedFileID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_BIsEnabled", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_BIsEnabled", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusic_BIsEnabled(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_BIsPlaying", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_BIsPlaying", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusic_BIsPlaying(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_GetPlaybackStatus", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_GetPlaybackStatus", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamMusic_GetPlaybackStatus(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_Play", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_Play", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMusic_Play(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_Pause", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_Pause", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMusic_Pause(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_PlayPrevious", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_PlayPrevious", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMusic_PlayPrevious(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_PlayNext", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_PlayNext", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMusic_PlayNext(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_SetVolume", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_SetVolume", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamMusic_SetVolume(IntPtr instancePtr, float flVolume);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusic_GetVolume", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusic_GetVolume", CallingConvention = CallingConvention.Cdecl)]
         internal static extern float SteamAPI_ISteamMusic_GetVolume(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_RegisterSteamMusicRemote", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_RegisterSteamMusicRemote", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_RegisterSteamMusicRemote(IntPtr instancePtr, string pchName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_DeregisterSteamMusicRemote", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_DeregisterSteamMusicRemote", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_DeregisterSteamMusicRemote(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_BIsCurrentMusicRemote", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_BIsCurrentMusicRemote", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_BIsCurrentMusicRemote(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_BActivationSuccess", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_BActivationSuccess", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_BActivationSuccess(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_SetDisplayName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_SetDisplayName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_SetDisplayName(IntPtr instancePtr, string pchDisplayName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_SetPNGIcon_64x64", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_SetPNGIcon_64x64", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_SetPNGIcon_64x64(IntPtr instancePtr, IntPtr pvBuffer, uint cbBufferLength);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_EnablePlayPrevious", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_EnablePlayPrevious", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_EnablePlayPrevious(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_EnablePlayNext", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_EnablePlayNext", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_EnablePlayNext(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_EnableShuffled", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_EnableShuffled", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_EnableShuffled(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_EnableLooped", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_EnableLooped", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_EnableLooped(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_EnableQueue", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_EnableQueue", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_EnableQueue(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_EnablePlaylists", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_EnablePlaylists", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_EnablePlaylists(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_UpdatePlaybackStatus", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_UpdatePlaybackStatus", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_UpdatePlaybackStatus(IntPtr instancePtr, int nStatus);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateShuffled", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateShuffled", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_UpdateShuffled(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateLooped", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateLooped", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_UpdateLooped(IntPtr instancePtr, bool bValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateVolume", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateVolume", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_UpdateVolume(IntPtr instancePtr, float flValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_CurrentEntryWillChange", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_CurrentEntryWillChange", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_CurrentEntryWillChange(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_CurrentEntryIsAvailable", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_CurrentEntryIsAvailable", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_CurrentEntryIsAvailable(IntPtr instancePtr, bool bAvailable);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateCurrentEntryText", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateCurrentEntryText", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_UpdateCurrentEntryText(IntPtr instancePtr, string pchText);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateCurrentEntryElapsedSeconds", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateCurrentEntryElapsedSeconds", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_UpdateCurrentEntryElapsedSeconds(IntPtr instancePtr, int nValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateCurrentEntryCoverArt", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_UpdateCurrentEntryCoverArt", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_UpdateCurrentEntryCoverArt(IntPtr instancePtr, IntPtr pvBuffer, uint cbBufferLength);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_CurrentEntryDidChange", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_CurrentEntryDidChange", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_CurrentEntryDidChange(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_QueueWillChange", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_QueueWillChange", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_QueueWillChange(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_ResetQueueEntries", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_ResetQueueEntries", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_ResetQueueEntries(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_SetQueueEntry", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_SetQueueEntry", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_SetQueueEntry(IntPtr instancePtr, int nID, int nPosition, string pchEntryText);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_SetCurrentQueueEntry", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_SetCurrentQueueEntry", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_SetCurrentQueueEntry(IntPtr instancePtr, int nID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_QueueDidChange", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_QueueDidChange", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_QueueDidChange(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_PlaylistWillChange", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_PlaylistWillChange", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_PlaylistWillChange(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_ResetPlaylistEntries", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_ResetPlaylistEntries", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_ResetPlaylistEntries(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_SetPlaylistEntry", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_SetPlaylistEntry", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_SetPlaylistEntry(IntPtr instancePtr, int nID, int nPosition, string pchEntryText);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_SetCurrentPlaylistEntry", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_SetCurrentPlaylistEntry", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_SetCurrentPlaylistEntry(IntPtr instancePtr, int nID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamMusicRemote_PlaylistDidChange", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamMusicRemote_PlaylistDidChange", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamMusicRemote_PlaylistDidChange(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_CreateHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_CreateHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamHTTP_CreateHTTPRequest(IntPtr instancePtr, uint eHTTPRequestMethod, string pchAbsoluteURL);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestContextValue", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestContextValue", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestContextValue(IntPtr instancePtr, uint hRequest, ulong ulContextValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestNetworkActivityTimeout", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestNetworkActivityTimeout", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestNetworkActivityTimeout(IntPtr instancePtr, uint hRequest, uint unTimeoutSeconds);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestHeaderValue", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestHeaderValue", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestHeaderValue(IntPtr instancePtr, uint hRequest, string pchHeaderName, string pchHeaderValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestGetOrPostParameter", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestGetOrPostParameter", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestGetOrPostParameter(IntPtr instancePtr, uint hRequest, string pchParamName, string pchParamValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SendHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SendHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SendHTTPRequest(IntPtr instancePtr, uint hRequest, ref ulong pCallHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SendHTTPRequestAndStreamResponse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SendHTTPRequestAndStreamResponse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SendHTTPRequestAndStreamResponse(IntPtr instancePtr, uint hRequest, ref ulong pCallHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_DeferHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_DeferHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_DeferHTTPRequest(IntPtr instancePtr, uint hRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_PrioritizeHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_PrioritizeHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_PrioritizeHTTPRequest(IntPtr instancePtr, uint hRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPResponseHeaderSize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPResponseHeaderSize", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_GetHTTPResponseHeaderSize(IntPtr instancePtr, uint hRequest, string pchHeaderName, ref uint unResponseHeaderSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPResponseHeaderValue", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPResponseHeaderValue", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_GetHTTPResponseHeaderValue(IntPtr instancePtr, uint hRequest, string pchHeaderName, IntPtr pHeaderValueBuffer, uint unBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPResponseBodySize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPResponseBodySize", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_GetHTTPResponseBodySize(IntPtr instancePtr, uint hRequest, ref uint unBodySize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPResponseBodyData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPResponseBodyData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_GetHTTPResponseBodyData(IntPtr instancePtr, uint hRequest, IntPtr pBodyDataBuffer, uint unBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPStreamingResponseBodyData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPStreamingResponseBodyData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_GetHTTPStreamingResponseBodyData(IntPtr instancePtr, uint hRequest, uint cOffset, IntPtr pBodyDataBuffer, uint unBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_ReleaseHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_ReleaseHTTPRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_ReleaseHTTPRequest(IntPtr instancePtr, uint hRequest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPDownloadProgressPct", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPDownloadProgressPct", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_GetHTTPDownloadProgressPct(IntPtr instancePtr, uint hRequest, ref float pflPercentOut);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestRawPostBody", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestRawPostBody", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestRawPostBody(IntPtr instancePtr, uint hRequest, string pchContentType, IntPtr pubBody, uint unBodyLen);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_CreateCookieContainer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_CreateCookieContainer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamHTTP_CreateCookieContainer(IntPtr instancePtr, bool bAllowResponsesToModify);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_ReleaseCookieContainer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_ReleaseCookieContainer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_ReleaseCookieContainer(IntPtr instancePtr, uint hCookieContainer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetCookie", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetCookie", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetCookie(IntPtr instancePtr, uint hCookieContainer, string pchHost, string pchUrl, string pchCookie);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestCookieContainer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestCookieContainer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestCookieContainer(IntPtr instancePtr, uint hRequest, uint hCookieContainer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestUserAgentInfo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestUserAgentInfo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestUserAgentInfo(IntPtr instancePtr, uint hRequest, string pchUserAgentInfo);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestRequiresVerifiedCertificate", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestRequiresVerifiedCertificate", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestRequiresVerifiedCertificate(IntPtr instancePtr, uint hRequest, bool bRequireVerifiedCertificate);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestAbsoluteTimeoutMS", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_SetHTTPRequestAbsoluteTimeoutMS", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_SetHTTPRequestAbsoluteTimeoutMS(IntPtr instancePtr, uint hRequest, uint unMilliseconds);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPRequestWasTimedOut", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTTP_GetHTTPRequestWasTimedOut", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTTP_GetHTTPRequestWasTimedOut(IntPtr instancePtr, uint hRequest, ref bool pbWasTimedOut);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUnifiedMessages_SendMethod", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUnifiedMessages_SendMethod", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUnifiedMessages_SendMethod(IntPtr instancePtr, string pchServiceMethod, IntPtr pRequestBuffer, uint unRequestBufferSize, ulong unContext);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUnifiedMessages_GetMethodResponseInfo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUnifiedMessages_GetMethodResponseInfo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUnifiedMessages_GetMethodResponseInfo(IntPtr instancePtr, ulong hHandle, ref uint punResponseSize, ref uint peResult);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUnifiedMessages_GetMethodResponseData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUnifiedMessages_GetMethodResponseData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUnifiedMessages_GetMethodResponseData(IntPtr instancePtr, ulong hHandle, IntPtr pResponseBuffer, uint unResponseBufferSize, bool bAutoRelease);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUnifiedMessages_ReleaseMethod", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUnifiedMessages_ReleaseMethod", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUnifiedMessages_ReleaseMethod(IntPtr instancePtr, ulong hHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUnifiedMessages_SendNotification", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUnifiedMessages_SendNotification", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUnifiedMessages_SendNotification(IntPtr instancePtr, string pchServiceNotification, IntPtr pNotificationBuffer, uint unNotificationBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamController_Init", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamController_Init", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamController_Init(IntPtr instancePtr, string pchAbsolutePathToControllerConfigVDF);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamController_Shutdown", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamController_Shutdown", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamController_Shutdown(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamController_RunFrame", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamController_RunFrame", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamController_RunFrame(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamController_GetControllerState", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamController_GetControllerState", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamController_GetControllerState(IntPtr instancePtr, uint unControllerIndex, ref SteamControllerState001_t pState);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamController_TriggerHapticPulse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamController_TriggerHapticPulse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamController_TriggerHapticPulse(IntPtr instancePtr, uint unControllerIndex, uint eTargetPad, char usDurationMicroSec);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamController_SetOverrideMode", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamController_SetOverrideMode", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamController_SetOverrideMode(IntPtr instancePtr, string pchMode);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_CreateQueryUserUGCRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_CreateQueryUserUGCRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_CreateQueryUserUGCRequest(IntPtr instancePtr, uint unAccountID, uint eListType, uint eMatchingUGCType, uint eSortOrder, uint nCreatorAppID, uint nConsumerAppID, uint unPage);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_CreateQueryAllUGCRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_CreateQueryAllUGCRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_CreateQueryAllUGCRequest(IntPtr instancePtr, uint eQueryType, uint eMatchingeMatchingUGCTypeFileType, uint nCreatorAppID, uint nConsumerAppID, uint unPage);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_CreateQueryUGCDetailsRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_CreateQueryUGCDetailsRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_CreateQueryUGCDetailsRequest(IntPtr instancePtr, ref ulong pvecPublishedFileID, uint unNumPublishedFileIDs);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SendQueryUGCRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SendQueryUGCRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_SendQueryUGCRequest(IntPtr instancePtr, ulong handle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCResult", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCResult", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_GetQueryUGCResult(IntPtr instancePtr, ulong handle, uint index, ref SteamUGCDetails_t pDetails);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCPreviewURL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCPreviewURL", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_GetQueryUGCPreviewURL(IntPtr instancePtr, ulong handle, uint index, string pchURL, uint cchURLSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCMetadata", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCMetadata", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_GetQueryUGCMetadata(IntPtr instancePtr, ulong handle, uint index, string pchMetadata, uint cchMetadatasize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCChildren", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCChildren", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_GetQueryUGCChildren(IntPtr instancePtr, ulong handle, uint index, ref ulong pvecPublishedFileID, uint cMaxEntries);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCStatistic", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCStatistic", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_GetQueryUGCStatistic(IntPtr instancePtr, ulong handle, uint index, uint eStatType, ref uint pStatValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCNumAdditionalPreviews", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCNumAdditionalPreviews", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUGC_GetQueryUGCNumAdditionalPreviews(IntPtr instancePtr, ulong handle, uint index);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCAdditionalPreview", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCAdditionalPreview", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_GetQueryUGCAdditionalPreview(IntPtr instancePtr, ulong handle, uint index, uint previewIndex, string pchURLOrVideoID, uint cchURLSize, ref bool pbIsImage);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_ReleaseQueryUGCRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_ReleaseQueryUGCRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_ReleaseQueryUGCRequest(IntPtr instancePtr, ulong handle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_AddRequiredTag", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_AddRequiredTag", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_AddRequiredTag(IntPtr instancePtr, ulong handle, string pTagName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_AddExcludedTag", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_AddExcludedTag", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_AddExcludedTag(IntPtr instancePtr, ulong handle, string pTagName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetReturnLongDescription", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetReturnLongDescription", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetReturnLongDescription(IntPtr instancePtr, ulong handle, bool bReturnLongDescription);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetReturnMetadata", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetReturnMetadata", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetReturnMetadata(IntPtr instancePtr, ulong handle, bool bReturnMetadata);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetReturnChildren", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetReturnChildren", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetReturnChildren(IntPtr instancePtr, ulong handle, bool bReturnChildren);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetReturnAdditionalPreviews", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetReturnAdditionalPreviews", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetReturnAdditionalPreviews(IntPtr instancePtr, ulong handle, bool bReturnAdditionalPreviews);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetReturnTotalOnly", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetReturnTotalOnly", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetReturnTotalOnly(IntPtr instancePtr, ulong handle, bool bReturnTotalOnly);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetAllowCachedResponse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetAllowCachedResponse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetAllowCachedResponse(IntPtr instancePtr, ulong handle, uint unMaxAgeSeconds);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetCloudFileNameFilter", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetCloudFileNameFilter", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetCloudFileNameFilter(IntPtr instancePtr, ulong handle, string pMatchCloudFileName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetMatchAnyTag", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetMatchAnyTag", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetMatchAnyTag(IntPtr instancePtr, ulong handle, bool bMatchAnyTag);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetSearchText", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetSearchText", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetSearchText(IntPtr instancePtr, ulong handle, string pSearchText);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetRankedByTrendDays", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetRankedByTrendDays", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetRankedByTrendDays(IntPtr instancePtr, ulong handle, uint unDays);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_RequestUGCDetails", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_RequestUGCDetails", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_RequestUGCDetails(IntPtr instancePtr, ulong nPublishedFileID, uint unMaxAgeSeconds);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_CreateItem", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_CreateItem", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_CreateItem(IntPtr instancePtr, uint nConsumerAppId, uint eFileType);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_StartItemUpdate", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_StartItemUpdate", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_StartItemUpdate(IntPtr instancePtr, uint nConsumerAppId, ulong nPublishedFileID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetItemTitle", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetItemTitle", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetItemTitle(IntPtr instancePtr, ulong handle, string pchTitle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetItemDescription", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetItemDescription", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetItemDescription(IntPtr instancePtr, ulong handle, string pchDescription);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetItemMetadata", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetItemMetadata", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetItemMetadata(IntPtr instancePtr, ulong handle, string pchMetaData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetItemVisibility", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetItemVisibility", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetItemVisibility(IntPtr instancePtr, ulong handle, uint eVisibility);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetItemTags", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetItemTags", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetItemTags(IntPtr instancePtr, ulong updateHandle, ref SteamParamStringArray_t pTags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetItemContent", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetItemContent", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetItemContent(IntPtr instancePtr, ulong handle, string pszContentFolder);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SetItemPreview", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SetItemPreview", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_SetItemPreview(IntPtr instancePtr, ulong handle, string pszPreviewFile);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SubmitItemUpdate", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SubmitItemUpdate", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_SubmitItemUpdate(IntPtr instancePtr, ulong handle, string pchChangeNote);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetItemUpdateProgress", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetItemUpdateProgress", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUGC_GetItemUpdateProgress(IntPtr instancePtr, ulong handle, ref ulong punBytesProcessed, ref ulong punBytesTotal);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_AddItemToFavorites", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_AddItemToFavorites", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_AddItemToFavorites(IntPtr instancePtr, uint nAppId, ulong nPublishedFileID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_RemoveItemFromFavorites", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_RemoveItemFromFavorites", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_RemoveItemFromFavorites(IntPtr instancePtr, uint nAppId, ulong nPublishedFileID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_SubscribeItem", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_SubscribeItem", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_SubscribeItem(IntPtr instancePtr, ulong nPublishedFileID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_UnsubscribeItem", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_UnsubscribeItem", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamUGC_UnsubscribeItem(IntPtr instancePtr, ulong nPublishedFileID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetNumSubscribedItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetNumSubscribedItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUGC_GetNumSubscribedItems(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetSubscribedItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetSubscribedItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUGC_GetSubscribedItems(IntPtr instancePtr, ref ulong pvecPublishedFileID, uint cMaxEntries);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetItemState", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetItemState", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamUGC_GetItemState(IntPtr instancePtr, ulong nPublishedFileID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetItemInstallInfo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetItemInstallInfo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_GetItemInstallInfo(IntPtr instancePtr, ulong nPublishedFileID, ref ulong punSizeOnDisk, string pchFolder, uint cchFolderSize, ref uint punTimeStamp);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_GetItemDownloadInfo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_GetItemDownloadInfo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_GetItemDownloadInfo(IntPtr instancePtr, ulong nPublishedFileID, ref ulong punBytesDownloaded, ref ulong punBytesTotal);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamUGC_DownloadItem", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamUGC_DownloadItem", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamUGC_DownloadItem(IntPtr instancePtr, ulong nPublishedFileID, bool bHighPriority);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamAppList_GetNumInstalledApps", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamAppList_GetNumInstalledApps", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamAppList_GetNumInstalledApps(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamAppList_GetInstalledApps", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamAppList_GetInstalledApps", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamAppList_GetInstalledApps(IntPtr instancePtr, ref uint pvecAppID, uint unMaxAppIDs);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamAppList_GetAppName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamAppList_GetAppName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamAppList_GetAppName(IntPtr instancePtr, uint nAppID, string pchName, int cchNameMax);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamAppList_GetAppInstallDir", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamAppList_GetAppInstallDir", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamAppList_GetAppInstallDir(IntPtr instancePtr, uint nAppID, string pchDirectory, int cchNameMax);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamAppList_GetAppBuildId", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamAppList_GetAppBuildId", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamAppList_GetAppBuildId(IntPtr instancePtr, uint nAppID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_DestructISteamHTMLSurface", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_DestructISteamHTMLSurface", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_DestructISteamHTMLSurface(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_Init", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_Init", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTMLSurface_Init(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_Shutdown", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_Shutdown", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamHTMLSurface_Shutdown(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_CreateBrowser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_CreateBrowser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamHTMLSurface_CreateBrowser(IntPtr instancePtr, string pchUserAgent, string pchUserCSS);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_RemoveBrowser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_RemoveBrowser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_RemoveBrowser(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_LoadURL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_LoadURL", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_LoadURL(IntPtr instancePtr, uint unBrowserHandle, string pchURL, string pchPostData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_SetSize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_SetSize", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_SetSize(IntPtr instancePtr, uint unBrowserHandle, uint unWidth, uint unHeight);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_StopLoad", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_StopLoad", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_StopLoad(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_Reload", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_Reload", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_Reload(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_GoBack", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_GoBack", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_GoBack(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_GoForward", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_GoForward", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_GoForward(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_AddHeader", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_AddHeader", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_AddHeader(IntPtr instancePtr, uint unBrowserHandle, string pchKey, string pchValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_ExecuteJavascript", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_ExecuteJavascript", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_ExecuteJavascript(IntPtr instancePtr, uint unBrowserHandle, string pchScript);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseUp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseUp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_MouseUp(IntPtr instancePtr, uint unBrowserHandle, uint eMouseButton);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseDown", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseDown", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_MouseDown(IntPtr instancePtr, uint unBrowserHandle, uint eMouseButton);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseDoubleClick", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseDoubleClick", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_MouseDoubleClick(IntPtr instancePtr, uint unBrowserHandle, uint eMouseButton);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseMove", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseMove", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_MouseMove(IntPtr instancePtr, uint unBrowserHandle, int x, int y);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseWheel", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_MouseWheel", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_MouseWheel(IntPtr instancePtr, uint unBrowserHandle, int nDelta);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_KeyDown", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_KeyDown", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_KeyDown(IntPtr instancePtr, uint unBrowserHandle, uint nNativeKeyCode, uint eHTMLKeyModifiers);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_KeyUp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_KeyUp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_KeyUp(IntPtr instancePtr, uint unBrowserHandle, uint nNativeKeyCode, uint eHTMLKeyModifiers);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_KeyChar", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_KeyChar", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_KeyChar(IntPtr instancePtr, uint unBrowserHandle, uint cUnicodeChar, uint eHTMLKeyModifiers);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_SetHorizontalScroll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_SetHorizontalScroll", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_SetHorizontalScroll(IntPtr instancePtr, uint unBrowserHandle, uint nAbsolutePixelScroll);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_SetVerticalScroll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_SetVerticalScroll", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_SetVerticalScroll(IntPtr instancePtr, uint unBrowserHandle, uint nAbsolutePixelScroll);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_SetKeyFocus", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_SetKeyFocus", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_SetKeyFocus(IntPtr instancePtr, uint unBrowserHandle, bool bHasKeyFocus);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_ViewSource", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_ViewSource", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_ViewSource(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_CopyToClipboard", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_CopyToClipboard", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_CopyToClipboard(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_PasteFromClipboard", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_PasteFromClipboard", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_PasteFromClipboard(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_Find", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_Find", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_Find(IntPtr instancePtr, uint unBrowserHandle, string pchSearchStr, bool bCurrentlyInFind, bool bReverse);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_StopFind", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_StopFind", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_StopFind(IntPtr instancePtr, uint unBrowserHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_GetLinkAtPosition", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_GetLinkAtPosition", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_GetLinkAtPosition(IntPtr instancePtr, uint unBrowserHandle, int x, int y);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_SetCookie", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_SetCookie", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_SetCookie(IntPtr instancePtr, string pchHostname, string pchKey, string pchValue, string pchPath, ulong nExpires, bool bSecure, bool bHTTPOnly);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_SetPageScaleFactor", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_SetPageScaleFactor", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_SetPageScaleFactor(IntPtr instancePtr, uint unBrowserHandle, float flZoom, int nPointX, int nPointY);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_SetBackgroundMode", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_SetBackgroundMode", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_SetBackgroundMode(IntPtr instancePtr, uint unBrowserHandle, bool bBackgroundMode);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_AllowStartRequest", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_AllowStartRequest", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_AllowStartRequest(IntPtr instancePtr, uint unBrowserHandle, bool bAllowed);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_JSDialogResponse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_JSDialogResponse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_JSDialogResponse(IntPtr instancePtr, uint unBrowserHandle, bool bResult);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamHTMLSurface_FileLoadDialogResponse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamHTMLSurface_FileLoadDialogResponse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamHTMLSurface_FileLoadDialogResponse(IntPtr instancePtr, uint unBrowserHandle, string pchSelectedFiles);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GetResultStatus", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GetResultStatus", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamInventory_GetResultStatus(IntPtr instancePtr, int resultHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GetResultItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GetResultItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_GetResultItems(IntPtr instancePtr, int resultHandle, [In, Out] SteamItemDetails_t[] pOutItemsArray, ref uint punOutItemsArraySize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GetResultTimestamp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GetResultTimestamp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamInventory_GetResultTimestamp(IntPtr instancePtr, int resultHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_CheckResultSteamID", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_CheckResultSteamID", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_CheckResultSteamID(IntPtr instancePtr, int resultHandle, ulong steamIDExpected);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_DestroyResult", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_DestroyResult", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamInventory_DestroyResult(IntPtr instancePtr, int resultHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GetAllItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GetAllItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_GetAllItems(IntPtr instancePtr, ref int pResultHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GetItemsByID", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GetItemsByID", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_GetItemsByID(IntPtr instancePtr, ref int pResultHandle, [In, Out] ulong[] pInstanceIDs, uint unCountInstanceIDs);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_SerializeResult", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_SerializeResult", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_SerializeResult(IntPtr instancePtr, int resultHandle, IntPtr pOutBuffer, ref uint punOutBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_DeserializeResult", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_DeserializeResult", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_DeserializeResult(IntPtr instancePtr, ref int pOutResultHandle, IntPtr pBuffer, uint unBufferSize, bool bRESERVED_MUST_BE_FALSE);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GenerateItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GenerateItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_GenerateItems(IntPtr instancePtr, ref int pResultHandle, [In, Out] int[] pArrayItemDefs, [In, Out] uint[] punArrayQuantity, uint unArrayLength);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GrantPromoItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GrantPromoItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_GrantPromoItems(IntPtr instancePtr, ref int pResultHandle);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_AddPromoItem", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_AddPromoItem", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_AddPromoItem(IntPtr instancePtr, ref int pResultHandle, int itemDef);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_AddPromoItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_AddPromoItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_AddPromoItems(IntPtr instancePtr, ref int pResultHandle, [In, Out] int[] pArrayItemDefs, uint unArrayLength);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_ConsumeItem", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_ConsumeItem", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_ConsumeItem(IntPtr instancePtr, ref int pResultHandle, ulong itemConsume, uint unQuantity);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_ExchangeItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_ExchangeItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_ExchangeItems(IntPtr instancePtr, ref int pResultHandle, [In, Out] int[] pArrayGenerate, [In, Out] uint[] punArrayGenerateQuantity, uint unArrayGenerateLength, [In, Out] ulong[] pArrayDestroy, [In, Out] uint[] punArrayDestroyQuantity, uint unArrayDestroyLength);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_TransferItemQuantity", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_TransferItemQuantity", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_TransferItemQuantity(IntPtr instancePtr, ref int pResultHandle, ulong itemIdSource, uint unQuantity, ulong itemIdDest);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_SendItemDropHeartbeat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_SendItemDropHeartbeat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamInventory_SendItemDropHeartbeat(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_TriggerItemDrop", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_TriggerItemDrop", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_TriggerItemDrop(IntPtr instancePtr, ref int pResultHandle, int dropListDefinition);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_TradeItems", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_TradeItems", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_TradeItems(IntPtr instancePtr, ref int pResultHandle, ulong steamIDTradePartner, [In, Out] ulong[] pArrayGive, [In, Out] uint[] pArrayGiveQuantity, uint nArrayGiveLength, [In, Out] ulong[] pArrayGet, [In, Out] uint[] pArrayGetQuantity, uint nArrayGetLength);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_LoadItemDefinitions", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_LoadItemDefinitions", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_LoadItemDefinitions(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GetItemDefinitionIDs", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GetItemDefinitionIDs", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_GetItemDefinitionIDs(IntPtr instancePtr, [In, Out] int[] pItemDefIDs, ref uint punItemDefIDsArraySize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamInventory_GetItemDefinitionProperty", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamInventory_GetItemDefinitionProperty", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamInventory_GetItemDefinitionProperty(IntPtr instancePtr, int iDefinition, string pchPropertyName, System.Text.StringBuilder pchValueBuffer, ref uint punValueBufferSize);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamVideo_GetVideoURL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamVideo_GetVideoURL", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamVideo_GetVideoURL(IntPtr instancePtr, uint unVideoAppID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamVideo_IsBroadcasting", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamVideo_IsBroadcasting", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamVideo_IsBroadcasting(IntPtr instancePtr, ref int pnNumViewers);
         // dexter: commented out all the VR stuff - the structs are missing and cba to add em unused anyway
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetWindowBounds", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetWindowBounds", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_GetWindowBounds(IntPtr instancePtr, ref int pnX, ref int pnY, ref uint pnWidth, ref uint pnHeight);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetRecommendedRenderTargetSize", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetRecommendedRenderTargetSize", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_GetRecommendedRenderTargetSize(IntPtr instancePtr, ref uint pnWidth, ref uint pnHeight);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetEyeOutputViewport", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetEyeOutputViewport", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_GetEyeOutputViewport(IntPtr instancePtr, Hmd_Eye eEye, ref uint pnX, ref uint pnY, ref uint pnWidth, ref uint pnHeight);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetProjectionMatrix", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetProjectionMatrix", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern HmdMatrix44_t SteamAPI_vr_IVRSystem_GetProjectionMatrix(IntPtr instancePtr, Hmd_Eye eEye, float fNearZ, float fFarZ, GraphicsAPIConvention eProjType);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetProjectionRaw", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetProjectionRaw", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_GetProjectionRaw(IntPtr instancePtr, Hmd_Eye eEye, ref float pfLeft, ref float pfRight, ref float pfTop, ref float pfBottom);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_ComputeDistortion", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_ComputeDistortion", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern DistortionCoordinates_t SteamAPI_vr_IVRSystem_ComputeDistortion(IntPtr instancePtr, Hmd_Eye eEye, float fU, float fV);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetEyeToHeadTransform", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetEyeToHeadTransform", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern HmdMatrix34_t SteamAPI_vr_IVRSystem_GetEyeToHeadTransform(IntPtr instancePtr, Hmd_Eye eEye);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetTimeSinceLastVsync", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetTimeSinceLastVsync", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRSystem_GetTimeSinceLastVsync(IntPtr instancePtr, ref float pfSecondsSinceLastVsync, ref ulong pulFrameCounter);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetD3D9AdapterIndex", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetD3D9AdapterIndex", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern int SteamAPI_vr_IVRSystem_GetD3D9AdapterIndex(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetDXGIOutputInfo", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetDXGIOutputInfo", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_GetDXGIOutputInfo(IntPtr instancePtr, ref int pnAdapterIndex, ref int pnAdapterOutputIndex);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_AttachToWindow", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_AttachToWindow", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_AttachToWindow(IntPtr instancePtr, IntPtr hWnd);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetDeviceToAbsoluteTrackingPose", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetDeviceToAbsoluteTrackingPose", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_GetDeviceToAbsoluteTrackingPose(IntPtr instancePtr, TrackingUniverseOrigin eOrigin, float fPredictedSecondsToPhotonsFromNow,  [In, Out] TrackedDevicePose_t[] pTrackedDevicePoseArray, uint unTrackedDevicePoseArrayCount);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_ResetSeatedZeroPose", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_ResetSeatedZeroPose", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_ResetSeatedZeroPose(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetSeatedZeroPoseToStandingAbsoluteTrackingPose", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetSeatedZeroPoseToStandingAbsoluteTrackingPose", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern HmdMatrix34_t SteamAPI_vr_IVRSystem_GetSeatedZeroPoseToStandingAbsoluteTrackingPose(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_LoadRenderModel", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_LoadRenderModel", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRSystem_LoadRenderModel(IntPtr instancePtr, string pchRenderModelName, ref RenderModel_t pRenderModel);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_FreeRenderModel", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_FreeRenderModel", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRSystem_FreeRenderModel(IntPtr instancePtr, ref RenderModel_t pRenderModel);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetTrackedDeviceClass", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetTrackedDeviceClass", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern TrackedDeviceClass SteamAPI_vr_IVRSystem_GetTrackedDeviceClass(IntPtr instancePtr, TrackedDeviceIndex_t unDeviceIndex);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_IsTrackedDeviceConnected", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_IsTrackedDeviceConnected", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRSystem_IsTrackedDeviceConnected(IntPtr instancePtr, TrackedDeviceIndex_t unDeviceIndex);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetBoolTrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetBoolTrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRSystem_GetBoolTrackedDeviceProperty(IntPtr instancePtr, TrackedDeviceIndex_t unDeviceIndex, TrackedDeviceProperty prop, ref TrackedPropertyError pError);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetFloatTrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetFloatTrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern float SteamAPI_vr_IVRSystem_GetFloatTrackedDeviceProperty(IntPtr instancePtr, TrackedDeviceIndex_t unDeviceIndex, TrackedDeviceProperty prop, ref TrackedPropertyError pError);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetInt32TrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetInt32TrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern int SteamAPI_vr_IVRSystem_GetInt32TrackedDeviceProperty(IntPtr instancePtr, TrackedDeviceIndex_t unDeviceIndex, TrackedDeviceProperty prop, ref TrackedPropertyError pError);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetUint64TrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetUint64TrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern ulong SteamAPI_vr_IVRSystem_GetUint64TrackedDeviceProperty(IntPtr instancePtr, TrackedDeviceIndex_t unDeviceIndex, TrackedDeviceProperty prop, ref TrackedPropertyError pError);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetMatrix34TrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetMatrix34TrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern HmdMatrix34_t SteamAPI_vr_IVRSystem_GetMatrix34TrackedDeviceProperty(IntPtr instancePtr, TrackedDeviceIndex_t unDeviceIndex, TrackedDeviceProperty prop, ref TrackedPropertyError pError);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetStringTrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetStringTrackedDeviceProperty", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRSystem_GetStringTrackedDeviceProperty(IntPtr instancePtr, TrackedDeviceIndex_t unDeviceIndex, TrackedDeviceProperty prop, System.Text.StringBuilder pchValue, uint unBufferSize, ref TrackedPropertyError pError);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetPropErrorNameFromEnum", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetPropErrorNameFromEnum", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern IntPtr SteamAPI_vr_IVRSystem_GetPropErrorNameFromEnum(IntPtr instancePtr, TrackedPropertyError error);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_PollNextEvent", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_PollNextEvent", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRSystem_PollNextEvent(IntPtr instancePtr, ref VREvent_t pEvent);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetEventTypeNameFromEnum", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetEventTypeNameFromEnum", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern IntPtr SteamAPI_vr_IVRSystem_GetEventTypeNameFromEnum(IntPtr instancePtr, uint eType);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRSystem_GetHiddenAreaMesh", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRSystem_GetHiddenAreaMesh", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRSystem_GetHiddenAreaMesh(IntPtr instancePtr, Hmd_Eye eEye);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRChaperone_GetCalibrationState", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRChaperone_GetCalibrationState", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern ChaperoneCalibrationState SteamAPI_vr_IVRChaperone_GetCalibrationState(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRChaperone_GetSoftBoundsInfo", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRChaperone_GetSoftBoundsInfo", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRChaperone_GetSoftBoundsInfo(IntPtr instancePtr, ref ChaperoneSoftBoundsInfo_t pInfo);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRChaperone_GetHardBoundsInfo", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRChaperone_GetHardBoundsInfo", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRChaperone_GetHardBoundsInfo(IntPtr instancePtr,  [In, Out] HmdQuad_t[] pQuadsBuffer, ref uint punQuadsCount);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRChaperone_GetSeatedBoundsInfo", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRChaperone_GetSeatedBoundsInfo", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRChaperone_GetSeatedBoundsInfo(IntPtr instancePtr, ref ChaperoneSeatedBoundsInfo_t pInfo);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_GetLastError", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_GetLastError", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRCompositor_GetLastError(IntPtr instancePtr, System.Text.StringBuilder pchBuffer, uint unBufferSize);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_SetVSync", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_SetVSync", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_SetVSync(IntPtr instancePtr, bool bVSync);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_GetVSync", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_GetVSync", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRCompositor_GetVSync(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_SetGamma", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_SetGamma", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_SetGamma(IntPtr instancePtr, float fGamma);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_GetGamma", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_GetGamma", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern float SteamAPI_vr_IVRCompositor_GetGamma(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_SetGraphicsDevice", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_SetGraphicsDevice", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_SetGraphicsDevice(IntPtr instancePtr, Compositor_DeviceType eType, IntPtr pDevice);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_WaitGetPoses", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_WaitGetPoses", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_WaitGetPoses(IntPtr instancePtr,  [In, Out] TrackedDevicePose_t[] pPoseArray, uint unPoseArrayCount);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_Submit", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_Submit", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_Submit(IntPtr instancePtr, Hmd_Eye eEye, IntPtr pTexture, ref Compositor_TextureBounds pBounds);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_ClearLastSubmittedFrame", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_ClearLastSubmittedFrame", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_ClearLastSubmittedFrame(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_GetOverlayDefaults", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_GetOverlayDefaults", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_GetOverlayDefaults(IntPtr instancePtr, ref Compositor_OverlaySettings pSettings);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_SetOverlay", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_SetOverlay", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_SetOverlay(IntPtr instancePtr, IntPtr pTexture, ref Compositor_OverlaySettings pSettings);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_SetOverlayRaw", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_SetOverlayRaw", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_SetOverlayRaw(IntPtr instancePtr, IntPtr buffer, uint width, uint height, uint depth, ref Compositor_OverlaySettings pSettings);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_SetOverlayFromFile", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_SetOverlayFromFile", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_SetOverlayFromFile(IntPtr instancePtr, string pchFilePath, ref Compositor_OverlaySettings pSettings);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_ClearOverlay", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_ClearOverlay", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_ClearOverlay(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_GetFrameTiming", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_GetFrameTiming", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRCompositor_GetFrameTiming(IntPtr instancePtr, ref Compositor_FrameTiming pTiming, uint unFramesAgo);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_FadeToColor", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_FadeToColor", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_FadeToColor(IntPtr instancePtr, float fSeconds, float fRed, float fGreen, float fBlue, float fAlpha, bool bBackground);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_FadeGrid", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_FadeGrid", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_FadeGrid(IntPtr instancePtr, float fSeconds, bool bFadeIn);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_CompositorBringToFront", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_CompositorBringToFront", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_CompositorBringToFront(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_CompositorGoToBack", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_CompositorGoToBack", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_CompositorGoToBack(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_CompositorQuit", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_CompositorQuit", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRCompositor_CompositorQuit(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRCompositor_IsFullscreen", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRCompositor_IsFullscreen", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern bool SteamAPI_vr_IVRCompositor_IsFullscreen(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverCount", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverCount", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRControlPanel_GetDriverCount(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverId", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverId", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRControlPanel_GetDriverId(IntPtr instancePtr, uint unDriverIndex, string pchBuffer, uint unBufferLen);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverDisplayCount", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverDisplayCount", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRControlPanel_GetDriverDisplayCount(IntPtr instancePtr, string pchDriverId);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverDisplayId", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverDisplayId", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRControlPanel_GetDriverDisplayId(IntPtr instancePtr, string pchDriverId, uint unDisplayIndex, string pchBuffer, uint unBufferLen);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverDisplayModelNumber", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverDisplayModelNumber", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRControlPanel_GetDriverDisplayModelNumber(IntPtr instancePtr, string pchDriverId, string pchDisplayId, string pchBuffer, uint unBufferLen);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverDisplaySerialNumber", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_GetDriverDisplaySerialNumber", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRControlPanel_GetDriverDisplaySerialNumber(IntPtr instancePtr, string pchDriverId, string pchDisplayId, string pchBuffer, uint unBufferLen);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_LoadSharedResource", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_LoadSharedResource", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern uint SteamAPI_vr_IVRControlPanel_LoadSharedResource(IntPtr instancePtr, string pchResourceName, string pchBuffer, uint unBufferLen);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_GetIPD", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_GetIPD", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern float SteamAPI_vr_IVRControlPanel_GetIPD(IntPtr instancePtr);
-        //[DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_vr_IVRControlPanel_SetIPD", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "SteamAPI_vr_IVRControlPanel_SetIPD", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern void SteamAPI_vr_IVRControlPanel_SetIPD(IntPtr instancePtr, float fIPD);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_InitGameServer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_InitGameServer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServer_InitGameServer(IntPtr instancePtr, uint unIP, char usGamePort, char usQueryPort, uint unFlags, uint nGameAppId, string pchVersionString);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetProduct", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetProduct", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetProduct(IntPtr instancePtr, string pszProduct);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetGameDescription", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetGameDescription", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetGameDescription(IntPtr instancePtr, string pszGameDescription);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetModDir", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetModDir", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetModDir(IntPtr instancePtr, string pszModDir);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetDedicatedServer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetDedicatedServer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetDedicatedServer(IntPtr instancePtr, bool bDedicated);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_LogOn", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_LogOn", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_LogOn(IntPtr instancePtr, string pszToken);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_LogOnAnonymous", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_LogOnAnonymous", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_LogOnAnonymous(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_LogOff", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_LogOff", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_LogOff(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_BLoggedOn", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_BLoggedOn", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServer_BLoggedOn(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_BSecure", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_BSecure", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServer_BSecure(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_GetSteamID", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_GetSteamID", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamGameServer_GetSteamID(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_WasRestartRequested", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_WasRestartRequested", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServer_WasRestartRequested(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetMaxPlayerCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetMaxPlayerCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetMaxPlayerCount(IntPtr instancePtr, int cPlayersMax);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetBotPlayerCount", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetBotPlayerCount", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetBotPlayerCount(IntPtr instancePtr, int cBotplayers);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetServerName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetServerName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetServerName(IntPtr instancePtr, string pszServerName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetMapName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetMapName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetMapName(IntPtr instancePtr, string pszMapName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetPasswordProtected", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetPasswordProtected", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetPasswordProtected(IntPtr instancePtr, bool bPasswordProtected);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetSpectatorPort", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetSpectatorPort", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetSpectatorPort(IntPtr instancePtr, char unSpectatorPort);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetSpectatorServerName", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetSpectatorServerName", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetSpectatorServerName(IntPtr instancePtr, string pszSpectatorServerName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_ClearAllKeyValues", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_ClearAllKeyValues", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_ClearAllKeyValues(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetKeyValue", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetKeyValue", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetKeyValue(IntPtr instancePtr, string pKey, string pValue);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetGameTags", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetGameTags", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetGameTags(IntPtr instancePtr, string pchGameTags);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetGameData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetGameData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetGameData(IntPtr instancePtr, string pchGameData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetRegion", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetRegion", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetRegion(IntPtr instancePtr, string pszRegion);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SendUserConnectAndAuthenticate", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SendUserConnectAndAuthenticate", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServer_SendUserConnectAndAuthenticate(IntPtr instancePtr, uint unIPClient, IntPtr pvAuthBlob, uint cubAuthBlobSize, ref CSteamID pSteamIDUser);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_CreateUnauthenticatedUserConnection", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_CreateUnauthenticatedUserConnection", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamGameServer_CreateUnauthenticatedUserConnection(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SendUserDisconnect", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SendUserDisconnect", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SendUserDisconnect(IntPtr instancePtr, ulong steamIDUser);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_BUpdateUserData", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_BUpdateUserData", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServer_BUpdateUserData(IntPtr instancePtr, ulong steamIDUser, string pchPlayerName, uint uScore);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_GetAuthSessionTicket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_GetAuthSessionTicket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamGameServer_GetAuthSessionTicket(IntPtr instancePtr, IntPtr pTicket, int cbMaxTicket, ref uint pcbTicket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_BeginAuthSession", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_BeginAuthSession", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamGameServer_BeginAuthSession(IntPtr instancePtr, IntPtr pAuthTicket, int cbAuthTicket, ulong steamID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_EndAuthSession", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_EndAuthSession", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_EndAuthSession(IntPtr instancePtr, ulong steamID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_CancelAuthTicket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_CancelAuthTicket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_CancelAuthTicket(IntPtr instancePtr, uint hAuthTicket);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_UserHasLicenseForApp", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_UserHasLicenseForApp", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamGameServer_UserHasLicenseForApp(IntPtr instancePtr, ulong steamID, uint appID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_RequestUserGroupStatus", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_RequestUserGroupStatus", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServer_RequestUserGroupStatus(IntPtr instancePtr, ulong steamIDUser, ulong steamIDGroup);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_GetGameplayStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_GetGameplayStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_GetGameplayStats(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_GetServerReputation", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_GetServerReputation", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamGameServer_GetServerReputation(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_GetPublicIP", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_GetPublicIP", CallingConvention = CallingConvention.Cdecl)]
         internal static extern uint SteamAPI_ISteamGameServer_GetPublicIP(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_HandleIncomingPacket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_HandleIncomingPacket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServer_HandleIncomingPacket(IntPtr instancePtr, IntPtr pData, int cbData, uint srcIP, char srcPort);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_GetNextOutgoingPacket", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_GetNextOutgoingPacket", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int SteamAPI_ISteamGameServer_GetNextOutgoingPacket(IntPtr instancePtr, IntPtr pOut, int cbMaxOut, ref uint pNetAdr, ref char pPort);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_EnableHeartbeats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_EnableHeartbeats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_EnableHeartbeats(IntPtr instancePtr, bool bActive);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_SetHeartbeatInterval", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_SetHeartbeatInterval", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_SetHeartbeatInterval(IntPtr instancePtr, int iHeartbeatInterval);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_ForceHeartbeat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_ForceHeartbeat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_ISteamGameServer_ForceHeartbeat(IntPtr instancePtr);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_AssociateWithClan", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_AssociateWithClan", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamGameServer_AssociateWithClan(IntPtr instancePtr, ulong steamIDClan);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServer_ComputeNewPlayerCompatibility", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServer_ComputeNewPlayerCompatibility", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamGameServer_ComputeNewPlayerCompatibility(IntPtr instancePtr, ulong steamIDNewPlayer);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_RequestUserStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_RequestUserStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamGameServerStats_RequestUserStats(IntPtr instancePtr, ulong steamIDUser);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_GetUserStat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_GetUserStat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServerStats_GetUserStat(IntPtr instancePtr, ulong steamIDUser, string pchName, ref int pData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_GetUserStat0", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_GetUserStat0", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServerStats_GetUserStat0(IntPtr instancePtr, ulong steamIDUser, string pchName, ref float pData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_GetUserAchievement", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_GetUserAchievement", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServerStats_GetUserAchievement(IntPtr instancePtr, ulong steamIDUser, string pchName, ref bool pbAchieved);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_SetUserStat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_SetUserStat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServerStats_SetUserStat(IntPtr instancePtr, ulong steamIDUser, string pchName, int nData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_SetUserStat0", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_SetUserStat0", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServerStats_SetUserStat0(IntPtr instancePtr, ulong steamIDUser, string pchName, float fData);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_UpdateUserAvgRateStat", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_UpdateUserAvgRateStat", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServerStats_UpdateUserAvgRateStat(IntPtr instancePtr, ulong steamIDUser, string pchName, float flCountThisSession, double dSessionLength);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_SetUserAchievement", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_SetUserAchievement", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServerStats_SetUserAchievement(IntPtr instancePtr, ulong steamIDUser, string pchName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_ClearUserAchievement", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_ClearUserAchievement", CallingConvention = CallingConvention.Cdecl)]
         internal static extern bool SteamAPI_ISteamGameServerStats_ClearUserAchievement(IntPtr instancePtr, ulong steamIDUser, string pchName);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_ISteamGameServerStats_StoreUserStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_ISteamGameServerStats_StoreUserStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern ulong SteamAPI_ISteamGameServerStats_StoreUserStats(IntPtr instancePtr, ulong steamIDUser);
 
     }
@@ -6364,81 +6365,83 @@ namespace Valve.Steamworks
 
     public class SteamAPIInterop
     {
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_RestartAppIfNecessary", CallingConvention = CallingConvention.Cdecl)]
+        // dexter: rename the modern steam_api dll to avoid any confusion with source sdk base 2006 one
+        private const string dll = "steam_api_new.dll";
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_RestartAppIfNecessary", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_RestartAppIfNecessary(uint unOwnAppID);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_Init", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_Init", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_Init();
         // dexter: added this, was missing..... seriously
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_Shutdown", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_Shutdown", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_Shutdown();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_RunCallbacks", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_RunCallbacks", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_RunCallbacks();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_RegisterCallback", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_RegisterCallback", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_RegisterCallback(IntPtr pCallback, int iCallback);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAPI_UnregisterCallback", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAPI_UnregisterCallback", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void SteamAPI_UnregisterCallback(IntPtr pCallback);
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamClient", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamClient", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamClient();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamUser", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamUser", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamUser();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamFriends", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamFriends", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamFriends();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamUtils", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamUtils", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamUtils();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamMatchmaking", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamMatchmaking", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamMatchmaking();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamMatchmakingServerListResponse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamMatchmakingServerListResponse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamMatchmakingServerListResponse();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamMatchmakingPingResponse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamMatchmakingPingResponse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamMatchmakingPingResponse();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamMatchmakingPlayersResponse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamMatchmakingPlayersResponse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamMatchmakingPlayersResponse();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamMatchmakingRulesResponse", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamMatchmakingRulesResponse", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamMatchmakingRulesResponse();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamMatchmakingServers", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamMatchmakingServers", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamMatchmakingServers();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamRemoteStorage", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamRemoteStorage", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamRemoteStorage();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamUserStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamUserStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamUserStats();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamApps", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamApps", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamApps();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamNetworking", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamNetworking", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamNetworking();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamScreenshots", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamScreenshots", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamScreenshots();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamMusic", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamMusic", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamMusic();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamMusicRemote", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamMusicRemote", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamMusicRemote();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamHTTP", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamHTTP", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamHTTP();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamUnifiedMessages", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamUnifiedMessages", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamUnifiedMessages();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamController", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamController", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamController();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamUGC", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamUGC", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamUGC();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamAppList", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamAppList", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamAppList();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamHTMLSurface", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamHTMLSurface", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamHTMLSurface();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamInventory", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamInventory", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamInventory();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamVideo", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamVideo", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamVideo();
-        [DllImportAttribute("Steam_api", EntryPoint = "CV", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "CV", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr CV();
         // dexter: commented these duplicates out .. 
-        //[DllImportAttribute("Steam_api", EntryPoint = "CV", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "CV", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern IntPtr CV();
-        //[DllImportAttribute("Steam_api", EntryPoint = "CV", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "CV", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern IntPtr CV();
-        //[DllImportAttribute("Steam_api", EntryPoint = "CV", CallingConvention = CallingConvention.Cdecl)]
+        //[DllImportAttribute(dll, EntryPoint = "CV", CallingConvention = CallingConvention.Cdecl)]
         //internal static extern IntPtr CV();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamGameServer", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamGameServer", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamGameServer();
-        [DllImportAttribute("Steam_api", EntryPoint = "SteamGameServerStats", CallingConvention = CallingConvention.Cdecl)]
+        [DllImportAttribute(dll, EntryPoint = "SteamGameServerStats", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SteamGameServerStats();
     }
 
