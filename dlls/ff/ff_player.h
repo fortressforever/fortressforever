@@ -107,6 +107,14 @@ enum eBurnType
 	BURNTYPE_NALPALMGRENADE,
 };
 
+// add a simple way to keep track of recent attackers (by player owner for buildables) for assists
+struct RecentAttackerInfo
+{
+	int playerIndex;
+	float totalDamage; // note: before armor scale. dont really care. just tracks raw damage received
+	float fTimestamp;
+};
+
 class CFFRagdoll : public CBaseAnimatingOverlay
 {
 public:
@@ -1001,6 +1009,9 @@ private:
 	CNetworkHandle( CBaseEntity, m_hObjectiveEntity );
 	// Location of player's current objective (also set by Lua)
 	CNetworkVector( m_vecObjectiveOrigin );
+
+	// added for kill assists tracking
+	CUtlVector<RecentAttackerInfo> m_recentAttackers;
 };
 
 
