@@ -603,6 +603,7 @@ CFFPlayer::CFFPlayer()
 
 	m_SpawnPointOverride = 0;
 
+	m_recentAttackers.Purge();
 	//m_iStatsID = -1;
 
 #endif // FF_BETA_TEST_COMPILE
@@ -1698,6 +1699,8 @@ void CFFPlayer::SetupClassVariables()
 	}
 
 	ClearSpeedEffects();
+
+	m_recentAttackers.Purge();
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1707,6 +1710,8 @@ void CFFPlayer::InitialSpawn( void )
 	// Make sure they are dead
 	m_lifeState = LIFE_DEAD;
 	pl.deadflag = true;
+
+	m_recentAttackers.Purge();
 
 	m_Locations.Purge();
 	m_iClientLocation = 0;
