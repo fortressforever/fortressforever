@@ -5550,6 +5550,10 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		pAttacker->m_flHitTime = gpGlobals->curtime;
 	}
 
+	// update assist tracking. NOTE: no kill assists for buildables. who cares
+	// NOTE: change this to the copy, info to use effectively armor scaled dmg values
+	UpdateRecentAttackers( inputInfo );
+	
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
 
@@ -7996,4 +8000,40 @@ void CFFPlayer::UpdateCamera( bool bUnassigned )
 			}
 		}				
 	}
+}
+
+
+// purpose: update our vector of recent attackers for kill assists
+void CFFPlayer::UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo )
+{
+	CFFPlayer *pAttacker = ToFFPlayer( dmgInfo.GetAttacker() );
+
+	if( !pAttacker ) // || pAttacker == this )
+		return;
+
+#ifndef _DEBUG
+	if ( pAttacker == this ) 
+		return;
+#endif
+
+	int attackerIdx = pAttacker->entindex( );
+	float dmg = dmgInfo.GetDamage( );
+	float timestamp = gpGlobals->curtime;
+
+	DevMsg( "CFFPlayer::UpdateRecentAttackers0: index = %d dmg = %f timestamp = %f\n", attackerIdx, dmg, timestamp );
+	// search for existing or create new
+	for (int i = 0; i < m_recentAttackers.Count( ); ++i)
+	{
+		if ( m_recentAttackers[i].playerIndex == attackerIdx )
+		{
+			m_recentAttackers[i].totalDamage += dmg;
+			m_recentAttackers[i].timestamp = timestamp;
+			DevMsg( "CFFPlayer::UpdateRecentAttackers1: totalDamage = %f\n", m_recentAttackers[i].totalDamage );
+			return;
+		}
+	}
+
+	// if we didnt find a match, create & add new
+	DevMsg( "CFFPlayer::UpdateRecentAttackers2\n" );
+	m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp ) );
 }

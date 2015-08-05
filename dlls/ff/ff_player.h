@@ -112,7 +112,13 @@ struct RecentAttackerInfo
 {
 	int playerIndex;
 	float totalDamage; // note: before armor scale. dont really care. just tracks raw damage received
-	float fTimestamp;
+	float timestamp;
+	RecentAttackerInfo( int idx, float dmg, float ts )
+	{
+		playerIndex = idx;
+		totalDamage = dmg;
+		timestamp = ts;
+	}
 };
 
 class CFFRagdoll : public CBaseAnimatingOverlay
@@ -1012,6 +1018,7 @@ private:
 
 	// added for kill assists tracking
 	CUtlVector<RecentAttackerInfo> m_recentAttackers;
+	void UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo );
 };
 
 
