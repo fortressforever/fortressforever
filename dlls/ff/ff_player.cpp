@@ -8024,7 +8024,7 @@ void CFFPlayer::UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo )
 	// search for existing or create new
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
-		if ( m_recentAttackers[i].playerIndex == attackerIdx )
+		if ( m_recentAttackers[i].playerIndex == attackerIdx || pAttacker == m_recentAttackers[i].pFFPlayer )
 		{
 			m_recentAttackers[i].totalDamage += dmg;
 			m_recentAttackers[i].timestamp = timestamp;
@@ -8035,7 +8035,7 @@ void CFFPlayer::UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo )
 
 	// if we didnt find a match, create & add new
 	DevMsg( "CFFPlayer::UpdateRecentAttackers2\n" );
-	m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp ) );
+	m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
 }
 
 RecentAttackerInfo* CFFPlayer::GetTopKillAssister( )

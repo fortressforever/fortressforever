@@ -113,11 +113,15 @@ struct RecentAttackerInfo
 	int playerIndex;
 	float totalDamage; // note: before armor scale. dont really care. just tracks raw damage received
 	float timestamp;
-	RecentAttackerInfo( int idx, float dmg, float ts )
+
+	CFFPlayer *pFFPlayer;
+
+	RecentAttackerInfo( int idx, float dmg, float ts, CFFPlayer *pPlayer)
 	{
 		playerIndex = idx;
 		totalDamage = dmg;
 		timestamp = ts;
+		pFFPlayer = pPlayer;
 	}
 };
 

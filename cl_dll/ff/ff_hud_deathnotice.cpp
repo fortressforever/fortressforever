@@ -595,10 +595,12 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 		// kill assister
 		int killassisterIdx = event->GetInt( "killassister", -1 );
-		const char *kill_assister_name = "";
+		const char *kill_assister_name = NULL;
 		if (killassisterIdx != -1)
 		{
 			kill_assister_name = g_PR->GetPlayerName( killassisterIdx );
+			if ( kill_assister_name ) 
+				DevMsg(" !!! kill_assister_name = %s\n", kill_assister_name );
 		}
 
 		// going to make these use icons instead of text
