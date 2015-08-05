@@ -765,7 +765,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 			if ( deathMsg.Assister.iEntIndex != -1 )
 			{
-				Q_strncat( sDeathMsg, VarArgs( " , assisted by %s.\n", deathMsg.Assister.szName ), sizeof ( sDeathMsg ), COPY_ALL_CHARACTERS );
+				Q_strncat( sDeathMsg, VarArgs( ", assisted by %s.\n", deathMsg.Assister.szName ), sizeof ( sDeathMsg ), COPY_ALL_CHARACTERS );
 			}
 			else
 			{
@@ -784,7 +784,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 			if ( deathMsg.Assister.iEntIndex != -1 )
 			{
-				Q_strncat( sDeathMsg, VarArgs( " , assisted by %s.\n", deathMsg.Assister.szName ), sizeof ( sDeathMsg ), COPY_ALL_CHARACTERS );
+				Q_strncat( sDeathMsg, VarArgs( ", assisted by %s.\n", deathMsg.Assister.szName ), sizeof ( sDeathMsg ), COPY_ALL_CHARACTERS );
 			}
 			else
 			{
