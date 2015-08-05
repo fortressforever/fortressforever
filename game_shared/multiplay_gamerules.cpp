@@ -786,6 +786,20 @@ bool CMultiplayRules::IsMultiplayer( void )
 			// send the damage type
 			event->SetInt("damagetype", info.GetDamageType() );	
 			
+			// send assist info if any
+			CFFPlayer *pFFPlayer = ToFFPlayer( pVictim );
+			//event->SetInt("killassister", -1);
+			if ( pFFPlayer )
+			{
+				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( );
+				if ( pTopAssister )
+				{
+					event->SetInt("killassister", pTopAssister->playerIndex );
+				}
+			}
+
+			event->SetString("teststr", "dickfart");
+
 			gameeventmanager->FireEvent( event );
 		}
 

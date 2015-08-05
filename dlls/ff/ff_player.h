@@ -1019,6 +1019,8 @@ private:
 	// added for kill assists tracking
 	CUtlVector<RecentAttackerInfo> m_recentAttackers;
 	void UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo );
+public:
+	RecentAttackerInfo* GetTopKillAssister( );
 };
 
 

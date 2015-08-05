@@ -8008,7 +8008,7 @@ void CFFPlayer::UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo )
 {
 	CFFPlayer *pAttacker = ToFFPlayer( dmgInfo.GetAttacker() );
 
-	if( !pAttacker ) // || pAttacker == this )
+	if ( !pAttacker ) // || pAttacker == this )
 		return;
 
 #ifndef _DEBUG
@@ -8022,7 +8022,7 @@ void CFFPlayer::UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo )
 
 	DevMsg( "CFFPlayer::UpdateRecentAttackers0: index = %d dmg = %f timestamp = %f\n", attackerIdx, dmg, timestamp );
 	// search for existing or create new
-	for (int i = 0; i < m_recentAttackers.Count( ); ++i)
+	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
 		if ( m_recentAttackers[i].playerIndex == attackerIdx )
 		{
@@ -8036,4 +8036,15 @@ void CFFPlayer::UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo )
 	// if we didnt find a match, create & add new
 	DevMsg( "CFFPlayer::UpdateRecentAttackers2\n" );
 	m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp ) );
+}
+
+RecentAttackerInfo* CFFPlayer::GetTopKillAssister( )
+{
+	RecentAttackerInfo* ret = NULL;
+	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
+	{
+		if ( !ret || m_recentAttackers[i].totalDamage > ret->totalDamage )
+			ret = &m_recentAttackers[i];
+	}
+	return ret;
 }
