@@ -828,6 +828,10 @@ void CFFPlayer::PostThink()
 		m_angEyeAngles = EyeAngles();
 
 		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+
+		// check kill assists, drop off old ones
+		// this is actually done when queried when a player dies instead of every frame
+		//UpdateRecentAttackers( );
 	}
 #endif // FF_BETA_TEST_COMPILE
 }
@@ -5557,7 +5561,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	// update assist tracking. NOTE: no kill assists for buildables. who cares
 	// NOTE: change this to the copy, info to use effectively armor scaled dmg values
-	UpdateRecentAttackers( inputInfo );
+	AddRecentAttacker( inputInfo );
 	
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
@@ -8007,25 +8011,20 @@ void CFFPlayer::UpdateCamera( bool bUnassigned )
 	}
 }
 
-
 // purpose: update our vector of recent attackers for kill assists
-void CFFPlayer::UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo )
+void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 {
 	CFFPlayer *pAttacker = ToFFPlayer( dmgInfo.GetAttacker() );
 
-	if ( !pAttacker ) // || pAttacker == this )
+	// dont track our own client in recent attacks, otherwise we would show up as an assist when the world kills us
+	if ( !pAttacker || pAttacker == this )
 		return;
-
-#ifndef _DEBUG
-	if ( pAttacker == this ) 
-		return;
-#endif
 
 	int attackerIdx = pAttacker->entindex( );
 	float dmg = dmgInfo.GetDamage( );
 	float timestamp = gpGlobals->curtime;
 
-	DevMsg( "CFFPlayer::UpdateRecentAttackers0: index = %d dmg = %f timestamp = %f\n", attackerIdx, dmg, timestamp );
+	DevMsg( "CFFPlayer::AddRecentAttacker0: index = %d dmg = %f timestamp = %f\n", attackerIdx, dmg, timestamp );
 	// search for existing or create new
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
@@ -8033,23 +8032,35 @@ void CFFPlayer::UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo )
 		{
 			m_recentAttackers[i].totalDamage += dmg;
 			m_recentAttackers[i].timestamp = timestamp;
-			DevMsg( "CFFPlayer::UpdateRecentAttackers1: totalDamage = %f\n", m_recentAttackers[i].totalDamage );
+			DevMsg( "CFFPlayer::AddRecentAttacker1: totalDamage = %f\n", m_recentAttackers[i].totalDamage );
 			return;
 		}
 	}
 
 	// if we didnt find a match, create & add new
-	DevMsg( "CFFPlayer::UpdateRecentAttackers2\n" );
+	DevMsg( "CFFPlayer::AddRecentAttacker2\n" );
 	m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
 }
 
-RecentAttackerInfo* CFFPlayer::GetTopKillAssister( )
+// returns assisted attacker that did most damage within the last 5 seconds or NULL if nothing found
+RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 {
 	RecentAttackerInfo* ret = NULL;
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
-		if ( !ret || m_recentAttackers[i].totalDamage > ret->totalDamage )
+		// added simple filter: if they last dmged us more than 5 seconds ago, ignore
+		if (gpGlobals->curtime - m_recentAttackers[i].timestamp > 5000)
+			continue;
+
+		// if its the killer, dont report also as an assist
+		if (m_recentAttackers[i].pFFPlayer == killerToIgnore )
+			continue;
+
+		if (!ret || m_recentAttackers[i].totalDamage > ret->totalDamage )
+		{	
 			ret = &m_recentAttackers[i];
+		}
 	}
+
 	return ret;
 }

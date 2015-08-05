@@ -568,7 +568,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 			if ( pFFPlayer )
 			{
 				// if we have a top assister give em some fort points
-				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( );
+				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
 				if ( pTopAssister && pTopAssister->pFFPlayer ) 
 				{
 					if ( PlayerRelationship( pVictim, pTopAssister->pFFPlayer ) != GR_TEAMMATE )
@@ -798,19 +798,18 @@ bool CMultiplayRules::IsMultiplayer( void )
 			// send the damage type
 			event->SetInt("damagetype", info.GetDamageType() );	
 			
+			// make sure to always send somethign here, otherwise client will get default 0 which is world
+			event->SetInt("killassister", -1);
 			// send assist info if any
 			CFFPlayer *pFFPlayer = ToFFPlayer( pVictim );
-			//event->SetInt("killassister", -1);
 			if ( pFFPlayer )
 			{
-				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( );
+				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
 				if ( pTopAssister )
 				{
 					event->SetInt("killassister", pTopAssister->playerIndex );
 				}
 			}
-
-			event->SetString("teststr", "dickfart");
 
 			gameeventmanager->FireEvent( event );
 		}

@@ -1022,9 +1022,11 @@ private:
 
 	// added for kill assists tracking
 	CUtlVector<RecentAttackerInfo> m_recentAttackers;
-	void UpdateRecentAttackers( const CTakeDamageInfo &dmgInfo );
+	void AddRecentAttacker( const CTakeDamageInfo &dmgInfo );
+	// actually dont bother. we check timestamps when queried
+	//void UpdateRecentAttackers( );
 public:
-	RecentAttackerInfo* GetTopKillAssister( );
+	RecentAttackerInfo* GetTopKillAssister( CBasePlayer *killerToIgnore );
 };
 
 
