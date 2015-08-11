@@ -1419,21 +1419,32 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 		return NULL;
 }
 
+/** If we're specing someone in first person, then return the target
+*/
 C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrObserverTarget()
 {
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	
-	if (pLocalPlayer)
-	{
-		// if we're specing someone in first person, then return the target
-		if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
-			return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
-		// else return local player
-		else
-			return pLocalPlayer;
-	}
-	else
+	if (!pLocalPlayer)
 		return NULL;
+	else if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+		return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
+
+	return pLocalPlayer;
+}
+
+/** If we're specing someone at all, then return the target
+*/
+C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget()
+{
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if (!pLocalPlayer)
+		return NULL;
+	else if (pLocalPlayer->IsObserver() && (pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE || pLocalPlayer->GetObserverMode() == OBS_MODE_CHASE))
+		return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
+
+	return pLocalPlayer;
 }
 
 /** Maps a spy slot to a weapon that will be shown while disguised for the given class
