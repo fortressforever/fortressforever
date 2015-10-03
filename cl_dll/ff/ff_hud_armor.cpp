@@ -72,8 +72,7 @@ DECLARE_HUD_MESSAGE( CHudArmor, PlayerAddArmor );
 //-----------------------------------------------------------------------------
 CHudArmor::CHudArmor( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay(NULL, "HudArmor")
 {
-	//SetHiddenBits(HIDEHUD_PLAYERDEAD);
-	SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 	//updating armor is fairly important!
 	//the only reason we need the tick signal is for when we respawn and get a new armor value
 	ivgui()->AddTickSignal( GetVPanel(), 250 ); 

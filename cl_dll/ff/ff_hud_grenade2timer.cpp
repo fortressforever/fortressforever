@@ -28,7 +28,7 @@ DECLARE_HUDELEMENT(CHudGrenade2Timer);
 CHudGrenade2Timer::CHudGrenade2Timer(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudGrenade2Timer") 
 {
 	SetParent( g_pClientMode->GetViewport() );
-	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 }
 
 CHudGrenade2Timer::~CHudGrenade2Timer() 

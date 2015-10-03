@@ -340,6 +340,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFPlayerObserver )
 	SendPropFloat(SENDINFO(m_flNextClassSpecificSkill)),
 	SendPropFloat(SENDINFO(m_flTrueAimTime)),
 	SendPropFloat(SENDINFO(m_flHitTime)),
+	SendPropInt(SENDINFO(m_nButtons)),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )

@@ -45,15 +45,8 @@ private:
 public:
 	CHudLocation( const char *pElementName ) : vgui::FFPanel( NULL, "HudLocation" ), CHudElement( pElementName )
 	{
-		// Set our parent window
-		//SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		//SetHiddenBits( HIDEHUD_PLAYERDEAD );
-
 		SetParent(g_pClientMode->GetViewport());
-		SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
-
+		SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED);
 	}
 
 	~CHudLocation( void ) {}
@@ -112,17 +105,6 @@ void CHudLocation::MsgFunc_SetPlayerLocation( bf_read &msg )
 
 void CHudLocation::Paint( void )
 {
-	if( !engine->IsInGame() )
-		return;
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-	if( !pPlayer )
-		return;
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
-		return;
-
 	if( g_iHudLocation2Pos == 0 )
 	{
 		// We do a bit of hackery here... location block takes a total
@@ -171,14 +153,8 @@ private:
 public:
 	CHudLocation2( const char *pElementName ) : vgui::FFPanel( NULL, "HudLocation2" ), CHudElement( pElementName )
 	{
-		// Set our parent window
-		//SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		//SetHiddenBits( HIDEHUD_PLAYERDEAD );
-
 		SetParent(g_pClientMode->GetViewport());
-		SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
+		SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED);
 	}
 
 	~CHudLocation2( void ) {}
@@ -205,9 +181,6 @@ void CHudLocation2::VidInit( void )
 
 void CHudLocation2::Paint( void )
 {
-	if( !engine->IsInGame() )
-		return;
-
 	if( g_iHudLocation2Pos == 0 )
 		return;
 
@@ -220,14 +193,6 @@ void CHudLocation2::Paint( void )
 
 		m_bSetup = true;
 	}
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-	if( !pPlayer )
-		return;
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
-		return;
 
 	BaseClass::Paint();
 }

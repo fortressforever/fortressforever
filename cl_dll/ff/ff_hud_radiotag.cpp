@@ -67,11 +67,8 @@ public:
 
 	CHudRadioTag( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudRadioTag" ) 
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_UNASSIGNED );
 	};
 
 	void	Init( void );
@@ -208,34 +205,6 @@ void CHudRadioTag::Paint( void )
 					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
 					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 				}
-
-
-				//if( flDist <= 300 )
-				//{
-				//	surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
-				//	surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
-				//	surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-				//	surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
-				//}
-				//else
-				//{
-				//	// Jiggles: We're using a different "distant" glyph now, rather than just drawing a box
-				//	//surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-				//	//surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
-				//	surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId, g_ClassGlyphs[ iIndex ].m_szDistMaterial, true, false );
-				//	surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId );
-				//	surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-				//	surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
-				//}
-
-				// Get the current frame we're supposed to draw
-				//int iFrame = m_hList[ i ].UpdateFrame();
-
-				// Draw the radio tower thing
-				//surface()->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
-				//surface()->DrawSetTexture( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId );
-				//surface()->DrawSetColor( 255, 255, 255, flAlpha );
-				//surface()->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
 			}
 		}
 	}

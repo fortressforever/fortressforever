@@ -44,11 +44,8 @@ public:
 
 	CHudPlayerTotalScore( const char *pElementName ) : vgui::FFPanel( NULL, "HudPlayerTotalScore" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 	}
 
 	virtual ~CHudPlayerTotalScore( void )
@@ -59,7 +56,6 @@ public:
 	virtual void Paint( void );
 	virtual void Init( void );
 	virtual void VidInit( void );
-	virtual bool ShouldDraw( void );
 	void MsgFunc_SetPlayerTotalFortPoints( bf_read &msg );
 	
 protected:
@@ -104,25 +100,6 @@ void CHudPlayerTotalScore::VidInit( void )
 	m_pTextTotalDesc[ 0 ] = '\0';
 	
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Should we draw? (Are we ingame? have we picked a class, etc)
-//-----------------------------------------------------------------------------
-bool CHudPlayerTotalScore::ShouldDraw() 
-{ 
-   if( !engine->IsInGame() ) 
-      return false; 
-
-   C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
-
-   if( !pPlayer ) 
-      return false; 
-
-   if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) ) 
-      return false; 
-
-   return true; 
-} 
 
 void CHudPlayerTotalScore::MsgFunc_SetPlayerTotalFortPoints( bf_read &msg )
 {

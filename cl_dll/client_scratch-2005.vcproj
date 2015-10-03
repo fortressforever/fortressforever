@@ -675,6 +675,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\ff\ff_hud_keystate.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_keystate.h"
+					>
+				</File>
+				<File
 					RelativePath=".\ff\ff_hud_location.cpp"
 					>
 				</File>

@@ -837,6 +837,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFPlayerObserver )
 	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
 	RecvPropFloat(RECVINFO(m_flTrueAimTime)),
 	RecvPropFloat(RECVINFO(m_flHitTime)),
+	RecvPropInt(RECVINFO(m_nButtons)),
 END_RECV_TABLE()
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
@@ -1419,21 +1420,37 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 		return NULL;
 }
 
+/** If we're specing someone in first person, then return the target
+*/
 C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrObserverTarget()
 {
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	
-	if (pLocalPlayer)
-	{
-		// if we're specing someone in first person, then return the target
-		if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
-			return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
-		// else return local player
-		else
-			return pLocalPlayer;
-	}
-	else
+	if (!pLocalPlayer)
 		return NULL;
+	else if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+		return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
+
+	return pLocalPlayer;
+}
+
+/** If we're specing someone at all, then return the target
+*/
+C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget()
+{
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if (!pLocalPlayer)
+		return NULL;
+	else if (pLocalPlayer->IsObserver() 
+			&& (pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE || pLocalPlayer->GetObserverMode() == OBS_MODE_CHASE) 
+			&& pLocalPlayer->GetObserverTarget() != NULL 
+			&& pLocalPlayer->GetObserverTarget()->IsPlayer())
+	{
+		return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
+	}
+
+	return pLocalPlayer;
 }
 
 /** Maps a spy slot to a weapon that will be shown while disguised for the given class

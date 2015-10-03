@@ -70,12 +70,9 @@ public:
 
 	CHudObjectiveIcon( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudObjectiveIcon" ) 
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_UNASSIGNED );
 
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
-		
 		m_pIconTexture = NULL;
 		m_pObscuredIconTexture = NULL;
 		m_pArrow = NULL;

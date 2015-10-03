@@ -44,11 +44,8 @@ public:
 
 	CHudRoundInfo( const char *pElementName ) : vgui::FFPanel( NULL, "HudRoundInfo" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		// SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_UNASSIGNED );
 	}
 
 	virtual ~CHudRoundInfo( void )
@@ -104,17 +101,7 @@ void CHudRoundInfo::VidInit( void )
 //-----------------------------------------------------------------------------
 bool CHudRoundInfo::ShouldDraw( void )
 {
-	if( !engine->IsInGame() )
-		return false;
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
-		return false;
-
-	// Don't want to draw this over the class selection panel
-	// so we'll wait until they select a class (unless guys
-	// want it regardless)
-	if( pPlayer->GetTeamNumber() == TEAM_UNASSIGNED || (!FF_HasPlayerPickedClass( pPlayer ) && !FF_IsPlayerSpec( pPlayer )) )
+	if( !CHudElement::ShouldDraw() )
 		return false;
 
 	// Convert to minutes

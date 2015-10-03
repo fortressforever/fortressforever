@@ -125,8 +125,12 @@ public:
 #define	HIDEHUD_CROSSHAIR			( 1<<8 )	// Hide crosshairs
 #define	HIDEHUD_VEHICLE_CROSSHAIR	( 1<<9 )	// Hide vehicle crosshair
 #define HIDEHUD_INVEHICLE			( 1<<10 )
+// --> FF
+#define HIDEHUD_SPECTATING			( 1<<11 )	// Hide while spectating
+#define HIDEHUD_UNASSIGNED			( 1<<12 )	// Hide while the local player has not chosen a class or team
+// <-- FF
 
-#define HIDEHUD_BITCOUNT			11
+#define HIDEHUD_BITCOUNT			13
 
 //===================================================================================================================
 // suit usage bits
