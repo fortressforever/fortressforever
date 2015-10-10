@@ -26,14 +26,20 @@ class CHudKeyStateElement : public vgui::FFPanel
 public:
 	DECLARE_CLASS_SIMPLE( CHudKeyStateElement, vgui::FFPanel );
 
-	CHudKeyStateElement(Panel *parent, const char *unlocalizedText, int buttonBit, vgui::HFont font) : BaseClass(parent)
+	CHudKeyStateElement(Panel *parent, const char *unlocalizedText, int buttonBit) : BaseClass(parent)
 	{
-		m_text = vgui::localize()->Find( unlocalizedText );
 		m_buttonBit = buttonBit;
-		m_font = font;
+
+		const wchar_t *tempString = vgui::localize()->Find(unlocalizedText);
+
+		if ( !tempString )
+			tempString = L"?";
+
+		wcsncpy( m_text, tempString, sizeof(m_text)/sizeof(wchar_t) );
+		m_text[sizeof(m_text)/sizeof(wchar_t)-1] = 0;
 	}
 
-	const wchar_t *m_text;
+	wchar_t m_text[32];
 	int m_buttonBit;
 	vgui::HFont m_font;
 	Color m_activeColor;
@@ -42,6 +48,7 @@ public:
 	{
 		BaseClass::ApplySchemeSettings(pScheme);
 		m_activeColor = GetSchemeColor( "KeyStatePressed", pScheme );
+		m_font = pScheme->GetFont( "Default" );
 	}
 
 	bool IsKeyPressedByPlayer(C_FFPlayer *pPlayer) { return pPlayer->m_nButtons & m_buttonBit; }
@@ -123,11 +130,8 @@ public:
 	}
 
 	virtual void Init( void );
-	virtual void VidInit( void );
 	virtual bool ShouldDraw( void );
 	virtual void PerformLayout( void );
-
-	CPanelAnimationVar( vgui::HFont, m_hKeyFont, "font", "Default" );
 	
 	CPanelAnimationVarAliasType( float, forward_xpos, "forward_xpos", "22", "proportional_float" );
 	CPanelAnimationVarAliasType( float, forward_ypos, "forward_ypos", "0", "proportional_float" );
@@ -171,6 +175,12 @@ DECLARE_HUDELEMENT( CHudKeyState );
 
 void CHudKeyState::Init( void )
 {
+	m_pForwardState = new CHudKeyStateElement(this, "#FF_HUD_KEYSTATE_UPARROW", IN_FORWARD);
+	m_pBackwardState = new CHudKeyStateElement(this, "#FF_HUD_KEYSTATE_DOWNARROW", IN_BACK);
+	m_pLeftState = new CHudKeyStateElement(this, "#FF_HUD_KEYSTATE_LEFTARROW", IN_MOVELEFT);
+	m_pRightState = new CHudKeyStateElement(this, "#FF_HUD_KEYSTATE_RIGHTARROW", IN_MOVERIGHT);
+	m_pJumpState = new CHudKeyStateElement(this, "#Valve_Jump", IN_JUMP);
+	m_pDuckState = new CHudKeyStateElement(this, "#Valve_Duck", IN_DUCK);
 }
 
 void CHudKeyState::PerformLayout()
@@ -209,40 +219,8 @@ void CHudKeyState::PerformLayout()
 	}
 }
 
-/** Called each map load
-*/
-void CHudKeyState::VidInit( void )
-{
-	if (!m_pForwardState)
-	{
-		m_pForwardState = new CHudKeyStateElement(this, "#FF_HUD_KEYSTATE_UPARROW", IN_FORWARD, m_hKeyFont);
-	}
-	if (!m_pBackwardState)
-	{
-		m_pBackwardState = new CHudKeyStateElement(this, "#FF_HUD_KEYSTATE_DOWNARROW", IN_BACK, m_hKeyFont);
-	}
-	if (!m_pLeftState)
-	{
-		m_pLeftState = new CHudKeyStateElement(this, "#FF_HUD_KEYSTATE_LEFTARROW", IN_MOVELEFT, m_hKeyFont);
-	}
-	if (!m_pRightState)
-	{
-		m_pRightState = new CHudKeyStateElement(this, "#FF_HUD_KEYSTATE_RIGHTARROW", IN_MOVERIGHT, m_hKeyFont);
-	}
-	if (!m_pJumpState)
-	{
-		m_pJumpState = new CHudKeyStateElement(this, "#Valve_Jump", IN_JUMP, m_hKeyFont);
-	}
-	if (!m_pDuckState)
-	{
-		m_pDuckState = new CHudKeyStateElement(this, "#Valve_Duck", IN_DUCK, m_hKeyFont);
-	}
-
-	PerformLayout();
-}
-
 bool CHudKeyState::ShouldDraw() 
-{ 
+{
 	if( !CHudElement::ShouldDraw() ) 
 		return false;
 
