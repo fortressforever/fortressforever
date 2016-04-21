@@ -20,64 +20,64 @@
 	#include "te_effect_dispatch.h"
 #endif
 
-ConVar ffdev_jumpgun_chargeuptime("ffdev_jumpgun_chargeuptime", "6", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JUMPGUN_CHARGEUPTIME ffdev_jumpgun_chargeuptime.GetFloat()
+//ConVar ffdev_jumpgun_chargeuptime("ffdev_jumpgun_chargeuptime", "6", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JUMPGUN_CHARGEUPTIME 6 //ffdev_jumpgun_chargeuptime.GetFloat()
 
-ConVar ffdev_jumpgun_allowunchargedshot("ffdev_jumpgun_allowunchargedshot", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JUMPGUN_ALLOWUNCHARGEDSHOT ffdev_jumpgun_allowunchargedshot.GetBool()
+//ConVar ffdev_jumpgun_allowunchargedshot("ffdev_jumpgun_allowunchargedshot", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JUMPGUN_ALLOWUNCHARGEDSHOT 0 //ffdev_jumpgun_allowunchargedshot.GetBool()
 
-ConVar ffdev_jumpgun_verticalpush("ffdev_jumpgun_verticalpush", "500", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JUMPGUN_VERTICALPUSH ffdev_jumpgun_verticalpush.GetFloat()
+//ConVar ffdev_jumpgun_verticalpush("ffdev_jumpgun_verticalpush", "500", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JUMPGUN_VERTICALPUSH 500 //ffdev_jumpgun_verticalpush.GetFloat()
 
-ConVar ffdev_jumpgun_horizontalpush("ffdev_jumpgun_horizontalpush", "450", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JUMPGUN_HORIZONTALPUSH ffdev_jumpgun_horizontalpush.GetFloat()
+//ConVar ffdev_jumpgun_horizontalpush("ffdev_jumpgun_horizontalpush", "450", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JUMPGUN_HORIZONTALPUSH 450 //ffdev_jumpgun_horizontalpush.GetFloat()
 
-ConVar ffdev_jumpgun_horizontalsetvelocity("ffdev_jumpgun_horizontalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JUMPGUN_HORIZONTALSETVELOCITY ffdev_jumpgun_horizontalsetvelocity.GetBool()
+//ConVar ffdev_jumpgun_horizontalsetvelocity("ffdev_jumpgun_horizontalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JUMPGUN_HORIZONTALSETVELOCITY 1//ffdev_jumpgun_horizontalsetvelocity.GetBool()
 
-ConVar ffdev_jumpgun_verticalsetvelocity("ffdev_jumpgun_verticalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JUMPGUN_VERTICALSETVELOCITY ffdev_jumpgun_verticalsetvelocity.GetBool()
+//ConVar ffdev_jumpgun_verticalsetvelocity("ffdev_jumpgun_verticalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JUMPGUN_VERTICALSETVELOCITY 1//ffdev_jumpgun_verticalsetvelocity.GetBool()
 
 //effect vars
 
-ConVar ffdev_jumpgun_fx_radius("ffdev_jumpgun_fx_radius", "128", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_RADIUS ffdev_jumpgun_fx_radius.GetFloat()
+//ConVar ffdev_jumpgun_fx_radius("ffdev_jumpgun_fx_radius", "128", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_RADIUS 128 //ffdev_jumpgun_fx_radius.GetFloat()
 
-ConVar ffdev_jumpgun_fx_lifetime("ffdev_jumpgun_fx_lifetime", ".5", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_LIFETIME ffdev_jumpgun_fx_lifetime.GetFloat()
+//ConVar ffdev_jumpgun_fx_lifetime("ffdev_jumpgun_fx_lifetime", ".3", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_LIFETIME 0.3 // ffdev_jumpgun_fx_lifetime.GetFloat()
 
-ConVar ffdev_jumpgun_fx_width("ffdev_jumpgun_fx_width", "16", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_WIDTH ffdev_jumpgun_fx_width.GetFloat()
+//ConVar ffdev_jumpgun_fx_width("ffdev_jumpgun_fx_width", "16", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_WIDTH 16 //ffdev_jumpgun_fx_width.GetFloat()
 
-ConVar ffdev_jumpgun_fx_spread("ffdev_jumpgun_fx_spread", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_SPREAD ffdev_jumpgun_fx_spread.GetFloat()
+//ConVar ffdev_jumpgun_fx_spread("ffdev_jumpgun_fx_spread", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_SPREAD 0 //ffdev_jumpgun_fx_spread.GetFloat()
 
-ConVar ffdev_jumpgun_fx_amplitude("ffdev_jumpgun_fx_amplitude", "10", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_AMPLITUDE ffdev_jumpgun_fx_amplitude.GetFloat()
+//ConVar ffdev_jumpgun_fx_amplitude("ffdev_jumpgun_fx_amplitude", "10", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_AMPLITUDE 10 //ffdev_jumpgun_fx_amplitude.GetFloat()
 
-ConVar ffdev_jumpgun_fx_r("ffdev_jumpgun_fx_r", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_R ffdev_jumpgun_fx_r.GetInt()
+//ConVar ffdev_jumpgun_fx_r("ffdev_jumpgun_fx_r", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_R 255 //ffdev_jumpgun_fx_r.GetInt()
 
-ConVar ffdev_jumpgun_fx_g("ffdev_jumpgun_fx_g", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_G ffdev_jumpgun_fx_g.GetInt()
+//ConVar ffdev_jumpgun_fx_g("ffdev_jumpgun_fx_g", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_G 255 //ffdev_jumpgun_fx_g.GetInt()
 
-ConVar ffdev_jumpgun_fx_b("ffdev_jumpgun_fx_b", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_B ffdev_jumpgun_fx_b.GetInt()
+//ConVar ffdev_jumpgun_fx_b("ffdev_jumpgun_fx_b", "255", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_B 255 //ffdev_jumpgun_fx_b.GetInt()
 
-ConVar ffdev_jumpgun_fx_alpha("ffdev_jumpgun_fx_alpha", "100", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_ALPHA ffdev_jumpgun_fx_alpha.GetInt()
+//ConVar ffdev_jumpgun_fx_alpha("ffdev_jumpgun_fx_alpha", "100", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_ALPHA 100 //ffdev_jumpgun_fx_alpha.GetInt()
 
-ConVar ffdev_jumpgun_fx_speed("ffdev_jumpgun_fx_speed", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_SPEED ffdev_jumpgun_fx_speed.GetFloat()
+//ConVar ffdev_jumpgun_fx_speed("ffdev_jumpgun_fx_speed", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_SPEED 0 //ffdev_jumpgun_fx_speed.GetFloat()
 
-ConVar ffdev_jumpgun_fx_offset_x("ffdev_jumpgun_fx_offset_x", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_X_OFFSET ffdev_jumpgun_fx_offset_x.GetFloat()
+//ConVar ffdev_jumpgun_fx_offset_x("ffdev_jumpgun_fx_offset_x", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_X_OFFSET 0 //ffdev_jumpgun_fx_offset_x.GetFloat()
 
-ConVar ffdev_jumpgun_fx_offset_y("ffdev_jumpgun_fx_offset_y", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_Y_OFFSET ffdev_jumpgun_fx_offset_y.GetFloat()
+//ConVar ffdev_jumpgun_fx_offset_y("ffdev_jumpgun_fx_offset_y", "0", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_Y_OFFSET 0 //ffdev_jumpgun_fx_offset_y.GetFloat()
 
-ConVar ffdev_jumpgun_fx_offset_z("ffdev_jumpgun_fx_offset_z", "-32", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
-#define JUMPGUN_EFFECT_Z_OFFSET ffdev_jumpgun_fx_offset_z.GetFloat()
+//ConVar ffdev_jumpgun_fx_offset_z("ffdev_jumpgun_fx_offset_z", "-32", FCVAR_REPLICATED /* | FCVAR_CHEAT */);
+#define JUMPGUN_EFFECT_Z_OFFSET -32 //ffdev_jumpgun_fx_offset_z.GetFloat()
 
 #ifdef CLIENT_DLL
 
