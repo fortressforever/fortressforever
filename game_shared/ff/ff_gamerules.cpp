@@ -1469,23 +1469,6 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 				
 				flCalculatedForce = GetAdjustedPushForce(flCalculatedForce, pEntity, adjustedInfo);
 
-						case CLASS_RAIL_PROJECTILE:
-							flPushClamp = 300.0f;
-							// Don't want people jumpin' real high with the Rail Gun :)
-							flCalculatedForce /= 3;
-							break;
-
-						case CLASS_GREN_EMP:
-						case CLASS_GREN_SHOCKEMP:
-							if (flCalculatedForce > 700.0f )
-								flCalculatedForce = 700.0f;
-							break;
-					}
-				}	
-
-				if (flCalculatedForce < flPushClamp)
-					flCalculatedForce = flPushClamp;
-
 				CFFPlayer *pPlayer = NULL;
 
 				if( pEntity->IsPlayer() )
@@ -1593,6 +1576,7 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 					break;
 
 				case CLASS_GREN_EMP:
+				case CLASS_GREN_SHOCKEMP:
 					if (flAdjustedPushForce > 700.0f )
 						flAdjustedPushForce = 700.0f;
 					break;
