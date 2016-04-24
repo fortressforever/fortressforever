@@ -66,7 +66,9 @@ private:
 
 	// For the disguising progress bar
 	CPanelAnimationVar( Color, m_BarColor, "HUD_Tone_Default", "HUD_Tone_Default" );
-	CPanelAnimationVar( Color, m_FadedBarColor, "196 196 196 196", "196 196 196 196" );
+	CPanelAnimationVar( Color, m_FadedBarColor, "196 196 196 64", "196 196 196 64" );
+	CPanelAnimationVar( Color, m_MediumBarColor, "196 196 196 128", "196 196 196 128" );
+	CPanelAnimationVar( Color, m_SolidBarColor, "196 196 196 196", "196 196 196 196" );
 	CPanelAnimationVarAliasType( float, bar_width, "bar_width", "70", "proportional_float" );
 	CPanelAnimationVarAliasType( float, bar_height, "bar_height", "24", "proportional_float" );
 };
@@ -115,7 +117,20 @@ void CHudElectricKnifeChargeBar::Paint( void )
 	BaseClass::PaintBackground();
 
 	// Draw progress bar
-	surface()->DrawSetColor( m_FadedBarColor );
+    
+	if (pKnife->IsElectrified())
+	{	
+	    surface()->DrawSetColor( m_MediumBarColor );
+	}
+	else if (flProgressPercent == 1.0f)
+	{
+	    surface()->DrawSetColor( m_SolidBarColor );
+	}
+    else
+    {
+	    surface()->DrawSetColor( m_FadedBarColor );
+    }
+        
 	surface()->DrawFilledRect( image1_xpos, image1_ypos, image1_xpos + bar_width * flProgressPercent, image1_ypos + bar_height );
 }
 
