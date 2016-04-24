@@ -91,6 +91,7 @@ public:
 };
 
 void FX_Tesla( const CTeslaInfo &teslaInfo );
+void FX_BuildTeslaHitbox( const CEffectData &data );
 extern ConVar r_decals;
 
 #endif // FX_H

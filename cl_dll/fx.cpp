@@ -1093,7 +1093,7 @@ void FX_Tesla( const CTeslaInfo &teslaInfo )
 		Vector vecEnd = tr.endpos - (vecForward * 8);
 
 		// Only spark & glow if we hit something
-		if ( tr.fraction < 1.0 )
+		/*if ( tr.fraction < 1.0 )
 		{
 			if ( !EffectOccluded( tr.endpos, 0 ) )
 			{
@@ -1128,7 +1128,7 @@ void FX_Tesla( const CTeslaInfo &teslaInfo )
 					pParticle->m_flRollDelta	= 0;
 				}
 			}
-		}
+		}*/
 
 		// Build the tesla
 		FX_BuildTesla( pEntity, teslaInfo.m_vPos, tr.endpos, teslaInfo.m_pszSpriteName, teslaInfo.m_flBeamWidth, teslaInfo.m_vColor, FBEAM_ONLYNOISEONCE, teslaInfo.m_flTimeVisible );
@@ -1210,7 +1210,7 @@ void FX_BuildTeslaHitbox(
 	randomDir = RandomVector( -1.0f, 1.0f );
 	VectorNormalize( randomDir );
 
-	UTIL_TraceLine( pEntity->WorldSpaceCenter(), pEntity->WorldSpaceCenter() + ( randomDir * 100 ), MASK_SOLID_BRUSHONLY, pEntity, COLLISION_GROUP_NONE, &tr );
+	UTIL_TraceLine( pEntity->WorldSpaceCenter(), pEntity->WorldSpaceCenter() + ( randomDir * 48 ), MASK_SOLID_BRUSHONLY, pEntity, COLLISION_GROUP_NONE, &tr );
 
 	if ( tr.fraction < 1.0f )
 	{
@@ -1266,7 +1266,7 @@ void FX_BuildTeslaHitbox(
 //-----------------------------------------------------------------------------
 void FX_BuildTeslaHitbox( const CEffectData &data )
 {
-	Vector vColor( 1, 1, 1 );
+	Vector vColor( .25, .25, .25 );
 
 	C_BaseEntity *pEntity = ClientEntityList().GetEnt( data.entindex() );
 	C_BaseAnimating *pAnimating = pEntity ? pEntity->GetBaseAnimating() : NULL;

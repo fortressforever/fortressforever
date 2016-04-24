@@ -2492,6 +2492,97 @@ void C_FFPlayer::ClientThink( void )
 	// Hopefully when the particles die the ::Create()
 	// stuff gets removed automagically?
 
+	static float flNextTesla = gpGlobals->curtime;
+	if( IsCloaked() && gpGlobals->curtime >= flNextTesla )
+	{
+		float flCloakTime = gpGlobals->curtime - GetCloakTime();
+		flCloakTime = clamp( flCloakTime / ffdev_cloaktime.GetFloat(), 0.0f, 1.0f );
+		Color teamcolor = g_PR->GetTeamColor(GetTeamNumber());
+
+		/*
+		C_FFPlayer *pLocalPlayer = GetLocalFFPlayerOrObserverTarget();
+		if (pLocalPlayer == this)
+		{
+			CBaseViewModel *pVM = pLocalPlayer->GetViewModel();
+			if (pVM)
+			{
+				CTeslaInfo teslaInfo;
+
+				teslaInfo.m_vPos = Weapon_ShootPosition() + Vector(random->RandomFloat( -8, 8 ), random->RandomFloat( -8, 8 ), random->RandomFloat( -8, 8 ));
+				teslaInfo.m_vAngles = EyeAngles();
+				teslaInfo.m_nEntIndex = entindex();
+				teslaInfo.m_flBeamWidth = 8 * flCloakTime;
+				teslaInfo.m_vColor.Init( teamcolor.r() / 255.0f, teamcolor.g() / 255.0f, teamcolor.b() / 255.0f );
+				teslaInfo.m_flTimeVisible = 0.1 * flCloakTime + 0.1;
+				teslaInfo.m_flRadius = 16 * flCloakTime + 8;
+				teslaInfo.m_nBeams = (int)(1.5 * flCloakTime + 3);
+				teslaInfo.m_pszSpriteName = "sprites/lgtning.vmt";
+
+				FX_Tesla(teslaInfo);
+			}
+		}
+		else
+		{
+		*/
+			CTeslaInfo teslaInfo;
+
+			teslaInfo.m_vPos = GetAbsOrigin() + Vector(random->RandomFloat( -8, 8 ), random->RandomFloat( -8, 8 ), random->RandomFloat( -24, 24 ));
+			teslaInfo.m_vAngles = EyeAngles();
+			teslaInfo.m_nEntIndex = entindex();
+			teslaInfo.m_flBeamWidth = 1;
+			teslaInfo.m_vColor.Init( teamcolor.r() / 255.0f, teamcolor.g() / 255.0f, teamcolor.b() / 255.0f );
+			teslaInfo.m_flTimeVisible = 0.05;
+			teslaInfo.m_flRadius = 16 * flCloakTime + 8;
+			teslaInfo.m_nBeams = (int)(1.5 * flCloakTime + 3);
+			teslaInfo.m_pszSpriteName = "sprites/lgtning.vmt";
+
+			FX_Tesla(teslaInfo);
+
+			CEffectData	data;
+			
+			data.m_hEntity = this;
+			data.m_flMagnitude = 4;
+			data.m_flScale = 1.0f;
+
+			FX_BuildTeslaHitbox( data );
+			
+			/*
+			BeamInfo_t beamInfo;
+			beamInfo.m_nType = TE_BEAMTESLA;
+			beamInfo.m_pStartEnt = this;
+			beamInfo.m_nStartAttachment = 0;
+			beamInfo.m_vecEnd = GetAbsOrigin() + Vector(0,0,100);
+			beamInfo.m_pszModelName = "sprites/lgtning.vmt";
+			beamInfo.m_flHaloScale = 0.0;
+			beamInfo.m_flLife = 1;
+			beamInfo.m_flWidth = 2;
+			beamInfo.m_flEndWidth = 1;
+			beamInfo.m_flFadeLength = 0.3;
+			beamInfo.m_flAmplitude = 16;
+			beamInfo.m_flBrightness = 200.0;
+			beamInfo.m_flSpeed = 0.0;
+			beamInfo.m_nStartFrame = 0.0;
+			beamInfo.m_flFrameRate = 1.0;
+			beamInfo.m_flRed = 255.0;
+			beamInfo.m_flGreen = 255.0;
+			beamInfo.m_flBlue = 255.0;
+			beamInfo.m_nSegments = 20;
+			beamInfo.m_bRenderable = true;
+			beamInfo.m_nFlags = 0;
+			
+			beams->CreateBeamEntPoint( int nStartEntity, const Vector *pStart, int nEndEntity, const Vector* pEnd,
+										   int modelIndex, int haloIndex, float haloScale, float life,  float width, 
+										   float endWidth, float fadeLength, float amplitude, float brightness, float speed, int startFrame, 
+										   float framerate, float r, float g, float b );
+			*/
+		/*
+		}
+		*/
+		
+
+		flNextTesla = gpGlobals->curtime + .025;
+	}
+
 	if (cl_rampslidefx.GetBool() && (cl_rampslidefx_debug.GetBool() || IsRampsliding()) && gpGlobals->curtime >= m_flNextRampslideFX && GetAbsVelocity().LengthSqr() > 0)
 	{
 		bool bIsSlidingOnMetal = false;
