@@ -585,10 +585,6 @@ void CHudCrosshairInfo::OnTick( void )
 					int iScreenWide, iScreenTall;
 					surface()->GetScreenSize( iScreenWide, iScreenTall );
 
-					// "map" screen res to 640/480
-					float iXScale = 640.0f / iScreenWide;
-					float iYScale = 480.0f / iScreenTall;
-
 					int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
 					int iTall = surface()->GetFontTall( m_hTextFont );
 
@@ -596,12 +592,9 @@ void CHudCrosshairInfo::OnTick( void )
 					m_flXOffset = ( float )( iScreenWide / 2 ) - ( iWide / 2 );
 					m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + 75; // 75 to get it below the crosshair and not right on it
 
-					// Scale by "map" scale values
-					m_flXOffset *= iXScale;
+					// proportionally scale the Y offset so that it is the same distance from the crosshair on any resolution
+					float iYScale = 480.0f / iScreenTall;
 					m_flYOffset *= iYScale;
-
-					// Scale to screen co-ords
-					m_flXOffset = scheme()->GetProportionalScaledValue( m_flXOffset );
 					m_flYOffset = scheme()->GetProportionalScaledValue( m_flYOffset );
 				}
 
