@@ -583,7 +583,7 @@ void CHudCrosshairInfo::OnTick( void )
 				{
 					// Get the screen width/height
 					int iScreenWide, iScreenTall;
-					surface()->GetScreenSize( iScreenWide, iScreenTall );
+					GetHudSize( iScreenWide, iScreenTall );
 
 					int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
 					int iTall = surface()->GetFontTall( m_hTextFont );
