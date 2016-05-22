@@ -307,7 +307,6 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f)
 		{
-			// Changed 130 to 65 because:
 			// Bug #0000333: Buildable Behavior (non build slot) while building
 			pPlayer->GiveAmmo( (FF_BUILDCOST_DISPENSER/2) , AMMO_CELLS, true);
 
@@ -413,7 +412,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f )
 		{
 			// Bug #0000333: Buildable Behavior (non build slot) while building
-			pPlayer->GiveAmmo(65.0f, AMMO_CELLS, true);
+			pPlayer->GiveAmmo(FF_BUILDCOST_DISPENSER/2, AMMO_CELLS, true);
 
 			// Bug #0000426: Buildables Dismantle Sounds Missing
 			CPASAttenuationFilter sndFilter( pDispenser );
