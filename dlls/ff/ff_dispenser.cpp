@@ -665,3 +665,28 @@ void CFFDispenser::PhysicsSimulate()
 		m_iLastState = iState;
 	}
 }
+    
+bool CFFDispenser::CloseEnoughToDismantle( CFFPlayer *pPlayer)
+{
+    return (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < 6400.0f;
+}
+
+void CFFDispenser::Dismantle( CFFPlayer *pPlayer)
+{
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	pPlayer->GiveAmmo( (FF_BUILDCOST_DISPENSER/2) , AMMO_CELLS, true);
+
+	// Bug #0000426: Buildables Dismantle Sounds Missing
+	CPASAttenuationFilter sndFilter( this );
+	EmitSound( sndFilter, entindex(), "Dispenser.unbuild" );
+
+	// Fire an event.
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_dismantled");		
+	if(pEvent)
+	{
+		pEvent->SetInt("userid", pPlayer->GetUserID());
+		gameeventmanager->FireEvent(pEvent, true);
+	}
+
+	RemoveQuietly();
+}
