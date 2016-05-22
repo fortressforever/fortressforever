@@ -147,6 +147,7 @@
 #define FF_BUILDCOST_SENTRYGUN 130
 #define FF_BUILDCOST_DISPENSER 100
 #define FF_BUILDCOST_UPGRADE_SENTRYGUN 130
+#define FF_REPAIRAMOUNTPERCELL_SENTRYGUN 3.5f
 
 //Enum for the jumppad states - GreenMushy
 enum JumpPadState_t
