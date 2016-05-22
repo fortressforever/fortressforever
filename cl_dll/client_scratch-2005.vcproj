@@ -1219,6 +1219,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\game_shared\ff\ff_weapon_jumpgun.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\game_shared\ff\ff_weapon_knife.cpp"
 					>
 				</File>

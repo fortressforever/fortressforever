@@ -233,6 +233,19 @@ bool CFFWeaponDeployManCannon::Holster( CBaseCombatWeapon *pSwitchingTo )
 	HudContextShow(false);
 #endif
 
+#ifdef GAME_DLL
+	//Set the player's last weapon to whatever we are changing to unless it is a jumpgun -GreenMushy
+	//This is so when you deploy the jumpgun, it checks if the last weapon was a jumppad, and doesnt reset the
+	//jump values, but it wont work right if the last weapon is set to the very jumpgun we are switching to
+	if( pSwitchingTo != NULL )
+	{
+		if( ((CFFWeaponBase*)pSwitchingTo)->GetWeaponID() != FF_WEAPON_JUMPGUN )
+		{
+			ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon( (CFFWeaponBase*)pSwitchingTo );
+		}
+	}
+#endif
+
 	return BaseClass::Holster( pSwitchingTo );
 }
 
@@ -283,6 +296,11 @@ bool CFFWeaponDeployManCannon::Deploy()
 {
 #ifdef CLIENT_DLL	
 	FF_SendHint( DEMOMAN_DETPACK, 1, PRIORITY_LOW, "#FF_HINT_SCOUT_MANCANNON" );
+#endif
+
+#ifdef GAME_DLL
+	//If this successfuly deploys, this is the last weapon
+	ToFFPlayer(GetOwnerEntity())->SetLastFFWeapon(this);
 #endif
 
 	return BaseClass::Deploy();
