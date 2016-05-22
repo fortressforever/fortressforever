@@ -183,7 +183,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				if( pDispenser->NeedsHealth() ) 
 				{
 					// We get 5 health for each cell
-					int iHealthGiven = min( pDispenser->NeedsHealth(), 5 * pPlayer->GetAmmoCount( AMMO_CELLS ) );
+					int iHealthGiven = min( pDispenser->NeedsHealth(), FF_REPAIRAMOUNTPERCELL_DISPENSER * pPlayer->GetAmmoCount( AMMO_CELLS ) );
 
 					// If we give health, play a special sound. Pun intended.
 					if( iHealthGiven > 0 )
@@ -194,7 +194,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					// AfterShock - scoring system: Added this for if we later want to give points for repairing friendly dispensers
 					if ( bFriendly && !bMine )
 						pPlayer->AddFortPoints(iHealthGiven*0.1, "#FF_FORTPOINTS_REPAIRTEAMDISPENSER");
-					pPlayer->RemoveAmmo( iHealthGiven / 5, AMMO_CELLS );
+					pPlayer->RemoveAmmo( iHealthGiven / FF_REPAIRAMOUNTPERCELL_DISPENSER, AMMO_CELLS );
 #endif
 				}
 				else
