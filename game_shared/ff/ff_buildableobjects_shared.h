@@ -578,6 +578,9 @@ public:
 	virtual void MaliciouslySabotage(CFFPlayer *pSaboteur);
 	virtual void Detonate();
 
+    bool CloseEnoughToDismantle( CFFPlayer *pPlayer);
+    void Dismantle( CFFPlayer *pPlayer);
+
 	CNetworkVar( unsigned int, m_iAmmoPercent );
 
 	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets );
