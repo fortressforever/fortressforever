@@ -208,7 +208,8 @@ void CFFGrenadeHoverTurret::Precache()
 
 		// Should this maybe be noclip?
 		SetMoveType(MOVETYPE_FLY);
-			
+
+		m_bIsOn = true;
 		SetDamage(80.0f);
 
 		SetThink(&CFFGrenadeHoverTurret::HoverThink);
@@ -557,11 +558,11 @@ void CFFGrenadeHoverTurret::Precache()
 			pBeam[0]->LiveForTime( 1  );
 			pBeam[0]->SetBrightness( 255 );
 			pBeam[0]->SetColor( laserColor.r(), laserColor.g(), laserColor.b() );
-				}
-			}
+		}
+	}
 
 	void CFFGrenadeHoverTurret::UpdateOnRemove( void )
-		{
+	{
 		if( pBeam[0] )
 		{
 			delete pBeam[0];
