@@ -76,6 +76,10 @@ ConVar ffdev_hovergren_canbeshot("ffdev_hovergren_canbeshot", "0", FCVAR_REPLICA
 	#define HOVERGREN_WIDTHCREATE ffdev_hovergren_widthcreate.GetFloat()
 	#define HOVERGREN_WIDTHSTART ffdev_hovergren_widthstart.GetFloat()
 	#define HOVERGREN_WIDTHEND ffdev_hovergren_widthend.GetFloat()
+
+	ConVar ffdev_hovergren_sparktime("ffdev_hovergren_sparktime", "0.1", FCVAR_REPLICATED /* FCVAR_REPLICATED | FCVAR_CHEAT */, "Hover turret grenade: Time between spark effects at the base of the laser ");
+	#define FFDEV_HOVERGREN_SPARKTIME ffdev_hovergren_sparktime.GetFloat()
+
 #endif
 
 
@@ -102,6 +106,7 @@ protected:
 	CBeam		*pBeam[1];
 	IMaterial	*m_pMaterial;
 private:
+	float		m_flLastSparkTime;
 	void CreateLaserAndSparksEffects();
 	void CreateNewHoverTurretLaser();
 	Color GetTeamColorForLaser(CFFPlayer* pgrenOwner); 	
@@ -230,6 +235,7 @@ void CFFGrenadeHoverTurret::Precache()
 		{
 			flRisingspeed = FFDEV_HOVERGREN_RISESPEED;
 		}
+
 		SetAbsVelocity(Vector(0, 0, flRisingspeed));
 		SetAbsAngles( QAngle(0, (GetAbsAngles().y + 50), 90) );
 
@@ -522,13 +528,19 @@ void CFFGrenadeHoverTurret::Precache()
 			Color laserColor = GetTeamColorForLaser(pgrenOwner);
 			CreateNewHoverTurretLaser(laserColor);
 		}
-		if (pBeam[0])
-			pBeam[0]->PointsInit( vecOrigin, tr.endpos );
 
-		if ( tr.fraction == 1.0f )
-			g_pEffects->MetalSparks( tr.endpos, vecDirection );
-		else
-			g_pEffects->MetalSparks( tr.endpos, -vecDirection );
+		if (pBeam[0])
+			pBeam[0]->PointsInit( vecOrigin, tr.endpos ); // need to update the origin point as it moves upwards after 1st creation
+
+		if ( gpGlobals->curtime > m_flLastSparkTime + FFDEV_HOVERGREN_SPARKTIME )
+		{
+			if ( tr.fraction == 1.0f )
+				g_pEffects->MetalSparks( tr.endpos, vecDirection );
+			else
+				g_pEffects->MetalSparks( tr.endpos, -vecDirection );
+			
+			m_flLastSparkTime = gpGlobals->curtime;
+		}
 	}
 		
 	Color CFFGrenadeHoverTurret::GetTeamColorForLaser(CFFPlayer* pgrenOwner) 
