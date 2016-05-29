@@ -790,7 +790,7 @@ CFFDispenser::CFFDispenser( void )
 	m_ppszSounds = g_pszFFDispenserSounds;
 
 	// Time in seconds between generating shiz
-	m_flThinkTime = 2.0f;
+	m_flThinkTime = 3.0f;
 
 	// Initialize
 	m_pLastTouch = NULL;
