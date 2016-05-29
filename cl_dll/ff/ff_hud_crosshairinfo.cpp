@@ -583,19 +583,15 @@ void CHudCrosshairInfo::OnTick( void )
 				{
 					// Get the screen width/height
 					int iScreenWide, iScreenTall;
-					surface()->GetScreenSize( iScreenWide, iScreenTall );
+					GetHudSize( iScreenWide, iScreenTall );
 
 					int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
 					int iTall = surface()->GetFontTall( m_hTextFont );
+					int yOffset = 75; // 75 to get it below the crosshair and not right on it
 
 					// Adjust values to get below the crosshair and offset correctly
 					m_flXOffset = ( float )( iScreenWide / 2 ) - ( iWide / 2 );
-					m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + 75; // 75 to get it below the crosshair and not right on it
-
-					// proportionally scale the Y offset so that it is the same distance from the crosshair on any resolution
-					float iYScale = 480.0f / iScreenTall;
-					m_flYOffset *= iYScale;
-					m_flYOffset = scheme()->GetProportionalScaledValue( m_flYOffset );
+					m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + yOffset;
 				}
 
 				// Start drawing

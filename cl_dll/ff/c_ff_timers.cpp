@@ -27,7 +27,7 @@ C_FFTimer::C_FFTimer( std::string strName, const float flDuration )
 	SetHiddenBits( 0 );
 
 	int iScreenWidth, iScreenHeight;
-	surface()->GetScreenSize( iScreenWidth, iScreenHeight );
+	GetHudSize( iScreenWidth, iScreenHeight );
 
 	int iWidth = iScreenWidth / 4 + 2, iHeight = 22;
 	int nTimers = g_FFTimers.Count();

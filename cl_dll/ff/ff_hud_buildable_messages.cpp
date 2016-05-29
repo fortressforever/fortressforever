@@ -223,7 +223,7 @@ void CHudBuildableMessages::CalculateWidthHeight( void )
 
 	// Get the screen width/height
 	int iScreenWide, iScreenTall;
-	surface()->GetScreenSize( iScreenWide, iScreenTall );
+	GetHudSize( iScreenWide, iScreenTall );
 
 	// Get our current x/y position of this 'panel'
 	int x, y;

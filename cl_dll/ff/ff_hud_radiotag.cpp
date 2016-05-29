@@ -87,7 +87,7 @@ void CHudRadioTag::VidInit( void )
 
 	// Set up our screen position and stuff before drawing
 	int iWide, iTall;
-	surface()->GetScreenSize( iWide, iTall );
+	GetHudSize( iWide, iTall );
 
 	// Set up the panel to take up the WHOLE screen
 	SetPos( 0, 0 );

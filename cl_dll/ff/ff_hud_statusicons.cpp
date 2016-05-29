@@ -166,7 +166,7 @@ void CStatusIcons::Init( void )
 void CStatusIcons::OnTick( void )
 {
 /*	int iWide, iTall;
-	surface()->GetScreenSize( iWide, iTall );
+	GetHudSize( iWide, iTall );
 
 	int displayed = 0;
 	for (int i=0; i<MAX_STATUSICONS; i++) 
