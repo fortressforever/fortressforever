@@ -200,10 +200,10 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				else
 				{
 					// On subsequent clangs, we gotta give it ammo and stuff!
-					int iCells = min( min( 40, pPlayer->GetAmmoCount( AMMO_CELLS ) ), pDispenser->NeedsCells() );
-					int iShells = min( min( 40, pPlayer->GetAmmoCount( AMMO_SHELLS ) ), pDispenser->NeedsShells() );
-					int iNails = min( min( 30, pPlayer->GetAmmoCount( AMMO_NAILS ) ), pDispenser->NeedsNails() );
-					int iRockets = min( min( 10, pPlayer->GetAmmoCount( AMMO_ROCKETS ) ), pDispenser->NeedsRockets() );
+					int iCells = min( 5, pDispenser->NeedsCells() );
+					int iShells = min( 5, pDispenser->NeedsShells() );
+					int iNails = min( 5, pDispenser->NeedsNails() );
+					int iRockets = min( 5, pDispenser->NeedsRockets() );
 
 					// If we give it anything, play a special sound. Pun intended.
 					if( ( iCells > 0 ) || ( iShells > 0 ) || ( iNails > 0 ) || ( iRockets > 0 ) )
@@ -212,10 +212,10 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 #ifdef GAME_DLL
 					pDispenser->AddAmmo( 0, iCells, iShells, iNails, iRockets );
 
-					pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
-					pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
-					pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
-					pPlayer->RemoveAmmo( iRockets, AMMO_ROCKETS );
+					//pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
+					//pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
+					//pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
+					//pPlayer->RemoveAmmo( iRockets, AMMO_ROCKETS );
 #endif
 				}
 
