@@ -203,7 +203,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					int iCells = min( 5, pDispenser->NeedsCells() );
 					int iShells = min( 5, pDispenser->NeedsShells() );
 					int iNails = min( 5, pDispenser->NeedsNails() );
-					int iRockets = min( 5, pDispenser->NeedsRockets() );
+					int iRockets = min( 3, pDispenser->NeedsRockets() );
 
 					// If we give it anything, play a special sound. Pun intended.
 					if( ( iCells > 0 ) || ( iShells > 0 ) || ( iNails > 0 ) || ( iRockets > 0 ) )
