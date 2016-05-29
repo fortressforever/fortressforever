@@ -117,6 +117,18 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 //ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_IGNOREFRIENDLY false //ffdev_overpressure_friendlyignore.GetBool()
 
+ConVar ffdev_jetpack_verticalpush("ffdev_jetpack_verticalpush", "500", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_VERTICALPUSH ffdev_jetpack_verticalpush.GetFloat()
+ConVar ffdev_jetpack_horizontalpush("ffdev_jetpack_horizontalpush", "450", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_HORIZONTALPUSH ffdev_jetpack_horizontalpush.GetFloat()
+ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_VERTICALPUSH_OFFGROUND ffdev_jetpack_verticalpush_offground.GetFloat()
+ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "5", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_HORIZONTALPUSH_OFFGROUND ffdev_jetpack_horizontalpush_offground.GetFloat()
+ConVar ffdev_jetpack_horizontalsetvelocity("ffdev_jetpack_horizontalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_HORIZONTALSETVELOCITY ffdev_jetpack_horizontalsetvelocity.GetBool()
+ConVar ffdev_jetpack_verticalsetvelocity("ffdev_jetpack_verticalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_VERTICALSETVELOCITY ffdev_jetpack_verticalsetvelocity.GetBool()
 
 //ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_BULLETSIZE 1.0f //ffdev_ac_bulletsize.GetFloat()
@@ -694,18 +706,11 @@ void CFFPlayer::ClassSpecificSkill()
 
 			break;
 
-#ifdef CLIENT_DLL
-
 		case CLASS_PYRO:
-			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_IC) )
-			{
-				SwapToWeapon(FF_WEAPON_FLAMETHROWER);
-			}
-			else 
-			{
-				SwapToWeapon(FF_WEAPON_IC);
-			}
+			JetpackJump();
 			break;
+
+#ifdef CLIENT_DLL
 
 		case CLASS_SOLDIER:
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_RPG) )
@@ -734,6 +739,22 @@ void CFFPlayer::ClassSpecificSkill()
 
 #endif
 		default:
+			break;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Handle all class specific skills
+//-----------------------------------------------------------------------------
+void CFFPlayer::ClassSpecificSkillHold()
+{
+	if (m_flNextClassSpecificSkill > gpGlobals->curtime)
+		return;
+
+	switch (GetClassSlot())
+	{
+		case CLASS_PYRO:
+			JetpackJump();
 			break;
 	}
 }
@@ -1749,11 +1770,94 @@ void CFFPlayer::Overpressure( void )
 				}
 			}
 #endif
-			//pPlayer->SetAbsOrigin( vecPlayerOrigin );
 			pPlayer->SetAbsVelocity(vecResult);
 		}
-		
+	}
+}
 
+
+//-----------------------------------------------------------------------------
+// Purpose: HW attack2
+//-----------------------------------------------------------------------------
+void CFFPlayer::JetpackJump( void )
+{
+	if (!IsAlive())
+	{
+		return;
+	}
+
+	CEffectData data;
+	data.m_vOrigin = GetAbsOrigin();
+	
+	DispatchEffect("WheelDust", data); // TODO: Make jetpack effect
+		
+	// Flamejet entity doesn't exist yet, so make it now
+	//if (!m_hFlameJet)
+	//{
+	//	QAngle angAiming;
+
+	//	VectorAngles(GetAutoaimVector(0), angAiming);
+	//	
+	//	// Create a flamejet emitter
+	//	m_hFlameJet = dynamic_cast<CFFFlameJet *> (CBaseEntity::Create("env_flamejet", Weapon_ShootPosition(), angAiming, this));
+
+	//	// Should inherit it's angles & position from the player for now
+	//	m_hFlameJet->SetOwnerEntity(this);
+	//	m_hFlameJet->FollowEntity(this);
+	//}
+
+	//// Spawn the FlameJet if necessary
+	//if(m_hFlameJet)
+	//	m_hFlameJet->FlameEmit(bEmit);
+
+	// Play a sound
+	EmitSoundShared("flamethrower.loop_shot"); // TODO: Make jetpack noise
+
+	Vector vecForward, vecRight, vecUp;
+	EyeVectors( &vecForward, &vecRight, &vecUp);
+	VectorNormalizeFast( vecForward );
+	VectorNormalizeFast( vecRight );
+	
+	Vector vecSrc = Weapon_ShootPosition();
+
+	// get only the direction the player is looking (ignore any z)
+	Vector horizPush = CrossProduct(Vector( 0.0f, 0.0f, 1.0f ), vecRight);
+
+	float flPercent = 1.0f;
+	if (!(GetFlags() & FL_ONGROUND))
+	{
+		horizPush *= JETPACK_HORIZONTALPUSH_OFFGROUND;
+		ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH_OFFGROUND) * flPercent);
+		return;
+	}
+
+	horizPush *= JETPACK_HORIZONTALPUSH;
+
+	if (!JETPACK_VERTICALSETVELOCITY && !JETPACK_HORIZONTALSETVELOCITY)
+		ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH) * flPercent);
+	else if (JETPACK_VERTICALSETVELOCITY && JETPACK_HORIZONTALSETVELOCITY)
+	    SetAbsVelocity(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH) * flPercent);
+	else
+	{
+		if (JETPACK_VERTICALSETVELOCITY)
+		{
+			Vector vecVelocity = GetAbsVelocity();
+			SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, JETPACK_VERTICALPUSH * flPercent));
+		}
+		else
+		{
+			ApplyAbsVelocityImpulse(Vector(0, 0, JETPACK_VERTICALPUSH) * flPercent);
+		}
+		
+		if (JETPACK_HORIZONTALSETVELOCITY)
+		{
+			Vector vecVelocity = GetAbsVelocity();
+			SetAbsVelocity(Vector(horizPush.x * flPercent, horizPush.y * flPercent, vecVelocity.z));
+		}
+		else
+		{
+			ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, 0) * flPercent);
+		}
 	}
 }
 

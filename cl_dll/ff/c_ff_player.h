@@ -424,6 +424,7 @@ public:
 	int GetClassSlot( void ) const;
 
 	void ClassSpecificSkill();
+	void ClassSpecificSkillHold();
 	void ClassSpecificSkill_Post();
 	// <-- Mirv: Hold some class info on the player side
 
@@ -572,6 +573,7 @@ private:
     // Overpressure stuff
 public:
 	void Overpressure( void );
+	void JetpackJump( void );
 	// ----------------------------------
 	
 	// ----------------------------------
