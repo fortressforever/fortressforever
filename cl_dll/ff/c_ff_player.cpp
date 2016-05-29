@@ -1485,6 +1485,10 @@ void C_FFPlayer::PreThink( void )
 	if (m_afButtonPressed & IN_ATTACK2)
 		ClassSpecificSkill();
 
+	// Do we need to do a class specific skill?
+	if (m_nButtons & IN_ATTACK2)
+		ClassSpecificSkillHold();
+
 	else if (m_afButtonReleased & IN_ATTACK2)
 		ClassSpecificSkill_Post();
 

@@ -713,6 +713,7 @@ private:
 	CNetworkVar( unsigned int, m_iCloaked );
 public:
 	void Overpressure( void );
+	void JetpackJump( void );
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)
@@ -760,6 +761,7 @@ public:
 	void UpdateCamera( bool bUnassigned );
 
 	void ClassSpecificSkill();
+	void ClassSpecificSkillHold();
 	void ClassSpecificSkill_Post();
 
 	CNetworkVar( float, m_flNextClassSpecificSkill );
