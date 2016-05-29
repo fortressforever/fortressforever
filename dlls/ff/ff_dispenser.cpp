@@ -328,21 +328,22 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 
 			if ( pBackpack && pBackpack->GetSpawnFlags() & SF_NORESPAWN )
 			{
+				int iCells = clamp( m_iCells + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ) ) ) , 0, m_iMaxCells );
+				int iNails = clamp( m_iNails + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ) ) ), 0, m_iMaxNails );
+				int iShells = clamp( m_iShells + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ) ) ), 0, m_iMaxShells );
+				int iRockets = clamp( m_iRockets + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ) ) ), 0, m_iMaxRockets );
 
-				m_iCells = clamp( m_iCells + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_CELLS ) ) ) , 0, m_iMaxCells );
-				m_iNails = clamp( m_iNails + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_NAILS ) ) ), 0, m_iMaxNails );
-				m_iShells = clamp( m_iShells + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_SHELLS ) ) ), 0, m_iMaxShells );
-				m_iRockets = clamp( m_iRockets + ( pBackpack->GetAmmoCount( GetAmmoDef()->Index( AMMO_ROCKETS ) ) ), 0, m_iMaxRockets );
+				if (iCells > m_iCells || iNails > m_iNails || iShells > m_iShells || iRockets > m_iRockets)
+				{
+					UTIL_Remove( pBackpack );
 
-				UTIL_Remove( pBackpack );
+					// Update ammo percentage
+					UpdateAmmoPercentage();	
 
-				// Update ammo percentage
-				UpdateAmmoPercentage();	
+					SendStatsToBot();
 
-				SendStatsToBot();
-
-				EmitSound( "Dispenser.omnomnom" );
-
+					EmitSound( "Dispenser.omnomnom" );
+				}
 			}
 		}
 	}
