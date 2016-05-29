@@ -790,7 +790,7 @@ CFFDispenser::CFFDispenser( void )
 	m_ppszSounds = g_pszFFDispenserSounds;
 
 	// Time in seconds between generating shiz
-	m_flThinkTime = 10.0f;
+	m_flThinkTime = 3.0f;
 
 	// Initialize
 	m_pLastTouch = NULL;
@@ -805,27 +805,27 @@ CFFDispenser::CFFDispenser( void )
 
 	// Initial values
 	m_iCells = 30;
-	m_iNails = 40;
-	m_iShells = 40;
-	m_iRockets = 20;
-	m_iArmor = 40;
+	m_iNails = 30;
+	m_iShells = 30;
+	m_iRockets = 15;
+	m_iArmor = 30;
 
 	// Max values
-	m_iMaxCells		= 400;
-	m_iMaxNails		= 500;
-	m_iMaxShells	= 400;
-	m_iMaxRockets	= 250;
-	m_iMaxArmor		= 500;
+	m_iMaxCells		= 100;
+	m_iMaxNails		= 100;
+	m_iMaxShells	= 100;
+	m_iMaxRockets	= 50;
+	m_iMaxArmor		= 100;
 
 	// Give values - values to give a player when they touch us
-	m_iGiveCells	= 20; // Give engies 75, though
-	m_iGiveNails	= 40;
-	m_iGiveShells	= 40;
-	m_iGiveRockets	= 20;
-	m_iGiveArmor	= 40;
+	m_iGiveCells	= 30; // Give engies 75, though
+	m_iGiveNails	= 30;
+	m_iGiveShells	= 30;
+	m_iGiveRockets	= 15;
+	m_iGiveArmor	= 30;
 
 	// Health
-	m_iMaxHealth = m_iHealth = 150;
+	m_iMaxHealth = m_iHealth = 75;
 }
 
 //-----------------------------------------------------------------------------
