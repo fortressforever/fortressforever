@@ -126,7 +126,7 @@ ConVar ff_defaultweapon_civy("cl_spawnweapon_civilian", "umbrella", FCVAR_USERIN
 ConVar cl_gib_count("cl_gib_count", "6", FCVAR_ARCHIVE, "Number of gibs to spawn");
 ConVar cl_gib_force_scale("cl_gib_force_scale", "1", FCVAR_ARCHIVE);
 ConVar cl_gib_force_randomness("cl_gib_force_randomness", "300", FCVAR_ARCHIVE);
-ConVar cl_gib_lifetime("cl_gib_lifetime", "10", FCVAR_ARCHIVE);
+ConVar cl_gib_lifetime("cl_gib_lifetime", "4", FCVAR_ARCHIVE);
 
 // gib blood settings
 ConVar cl_gib_blood_scale("cl_gib_blood_scale", "20", FCVAR_ARCHIVE);
