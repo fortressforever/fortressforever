@@ -1739,7 +1739,7 @@ bool CFFSentryGun::CanBeUpgradedBy(CFFPlayer *pPlayer)
 	if (!CanUpgrade())
 		return false;
 
-	return pPlayer->GetAmmoCount(AMMO_CELLS) >= 130;
+	return pPlayer->GetAmmoCount(AMMO_CELLS) >= FF_BUILDCOST_UPGRADE_SENTRYGUN;
 }
 
 void CFFSentryGun::Upgrade() 
