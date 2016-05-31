@@ -1081,7 +1081,7 @@ void C_FFRagdoll::CreateRagdoll()
 		// We can also spawn a valid weapon
 		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
-			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), cl_gib_lifetime.GetFloat());
 
 			if (pGib)
 			{

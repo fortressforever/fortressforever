@@ -2188,15 +2188,13 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 
 	// not everything that gets here has an info
 	// when we change class we dont have an inflictor either
+	pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 	if ( info ) 
 	{
-		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_vecForce = info->GetDamageForce();
 	}
 	else
 	{
-		//use whatever the players velocity was
-		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_vecForce = Vector(0, 0, 0);
 	}
 
