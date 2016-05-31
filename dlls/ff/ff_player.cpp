@@ -4800,13 +4800,14 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		case BURNTYPE_ICCANNON: m_bBurnFlagIC= true; break;
 	}
 	
-	int newburnlevel = 0;
-	if (m_bBurnFlagNG == true) 
-		++newburnlevel;
-	if (m_bBurnFlagFT == true) 
-		++newburnlevel;
-	if (m_bBurnFlagIC == true) 
-		++newburnlevel;
+	// No more burn levels
+	int newburnlevel = 1;
+	//if (m_bBurnFlagNG == true) 
+	//	++newburnlevel;
+	//if (m_bBurnFlagFT == true) 
+	//	++newburnlevel;
+	//if (m_bBurnFlagIC == true) 
+	//	++newburnlevel;
 	
 	if(oldburnlevel != newburnlevel)
 		Omnibot::Notify_BurnLevel(this, hIgniter, newburnlevel);
