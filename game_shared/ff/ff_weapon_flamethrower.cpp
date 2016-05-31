@@ -33,7 +33,7 @@
 #endif
 
 //ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_FF_FFDEV_REPLICATED, "Flame bbox");
-#define FLAME_BBOX 24.0f
+#define FLAME_BBOX 16.0f
 //ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "17.5", FCVAR_FF_FFDEV_REPLICATED, "Force of backwards push when shooting while off ground");
 #define FLAME_PUSHFORCE 0.0f
 //ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "110.0", FCVAR_FF_FFDEV_REPLICATED, "Force of upwards push when shooting while off ground");
