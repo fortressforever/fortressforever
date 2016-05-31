@@ -139,6 +139,9 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 ConVar ffdev_gibdamage("ffdev_gibdamage", "50", FCVAR_FF_FFDEV_REPLICATED, "If a players health is -(ffdev_gibdamage's value) or less after death, then they will gib instead of ragdoll");
 #define FFDEV_GIBDAMAGE ffdev_gibdamage.GetFloat()
 
+ConVar ffdev_gibdamage_explosions("ffdev_gibdamage_explosions", "30", FCVAR_FF_FFDEV_REPLICATED, "If a players health is -(ffdev_gibdamage's value) or less after death, then they will gib instead of ragdoll");
+#define FFDEV_GIBDAMAGE_EXPLOSIONS ffdev_gibdamage_explosions.GetFloat()
+
 extern ConVar sv_maxspeed;
 extern ConVar mp_friendlyfire_armorstrip;
 
@@ -5865,6 +5868,9 @@ void CFFPlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 bool CFFPlayer::ShouldGib( const CTakeDamageInfo &info )
 {
+	if (info.GetDamageType() & DMG_BLAST)
+		return (GetHealth() <= -FFDEV_GIBDAMAGE_EXPLOSIONS);
+
 	return (GetHealth() <= -FFDEV_GIBDAMAGE);
 }
 
