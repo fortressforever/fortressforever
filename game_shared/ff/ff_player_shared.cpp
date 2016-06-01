@@ -121,6 +121,8 @@ ConVar ffdev_jetpack_verticalpush("ffdev_jetpack_verticalpush", "500", FCVAR_REP
 #define JETPACK_VERTICALPUSH ffdev_jetpack_verticalpush.GetFloat()
 ConVar ffdev_jetpack_horizontalpush("ffdev_jetpack_horizontalpush", "450", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_HORIZONTALPUSH ffdev_jetpack_horizontalpush.GetFloat()
+ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_HORIZONTALPUSH_CAP ffdev_jetpack_horizontalpush_cap.GetFloat()
 ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_VERTICALPUSH_OFFGROUND ffdev_jetpack_verticalpush_offground.GetFloat()
 ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "5", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -1826,7 +1828,17 @@ void CFFPlayer::JetpackJump( void )
 	float flPercent = 1.0f;
 	if (!(GetFlags() & FL_ONGROUND))
 	{
-		horizPush *= JETPACK_HORIZONTALPUSH_OFFGROUND;
+		Vector vecLatVelocity = GetAbsVelocity() * Vector(1.0f, 1.0f, 0.0f);
+
+		if (vecLatVelocity.IsLengthGreaterThan(JETPACK_HORIZONTALPUSH_CAP))
+		{
+			horizPush *= 0;
+		}
+		else
+		{
+			horizPush *= JETPACK_HORIZONTALPUSH_OFFGROUND;
+		}
+
 		ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH_OFFGROUND) * flPercent);
 		return;
 	}
