@@ -123,6 +123,14 @@ ConVar ffdev_jetpack_horizontalpush("ffdev_jetpack_horizontalpush", "450", FCVAR
 #define JETPACK_HORIZONTALPUSH ffdev_jetpack_horizontalpush.GetFloat()
 ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_HORIZONTALPUSH_CAP ffdev_jetpack_horizontalpush_cap.GetFloat()
+ConVar ffdev_jetpack_jumpleeway("ffdev_jetpack_jumpleeway", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_JUMPLEEWAY ffdev_jetpack_jumpleeway.GetFloat()
+
+ConVar ffdev_jetpack_jumpleeway_pushmult_horiz("ffdev_jetpack_jumpleeway_pushmult_horiz", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_JUMPLEEWAY_PUSHMULT_HORIZ ffdev_jetpack_jumpleeway_pushmult_horiz.GetFloat()
+ConVar ffdev_jetpack_jumpleeway_pushmult_vert("ffdev_jetpack_jumpleeway_pushmult_vert", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_JUMPLEEWAY_PUSHMULT_VERT ffdev_jetpack_jumpleeway_pushmult_vert.GetFloat()
+
 ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_VERTICALPUSH_OFFGROUND ffdev_jetpack_verticalpush_offground.GetFloat()
 ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "5", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -521,10 +529,10 @@ void CFFPlayer::PlayJumpSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 	if (!psurface)
 		return;
 
-	if (m_flJumpTime > gpGlobals->curtime)
+	if (m_flJumpTime + 0.2f > gpGlobals->curtime)
 		return;
 
-	m_flJumpTime = gpGlobals->curtime + 0.2f;
+	m_flJumpTime = gpGlobals->curtime;
 
 	CRecipientFilter filter;
 	filter.AddRecipientsByPAS(vecOrigin);
@@ -1824,6 +1832,43 @@ void CFFPlayer::JetpackJump( void )
 	float flPercent = 1.0f;
 	if (!(GetFlags() & FL_ONGROUND))
 	{
+		float timeSinceJumping = gpGlobals->curtime - m_flJumpTime;
+		float horizMult = 1 + (timeSinceJumping / JETPACK_JUMPLEEWAY)*JETPACK_JUMPLEEWAY_PUSHMULT_HORIZ; // extra length when jumping late
+		float vertMult = timeSinceJumping+JETPACK_JUMPLEEWAY_PUSHMULT_VERT / JETPACK_JUMPLEEWAY + JETPACK_JUMPLEEWAY_PUSHMULT_VERT; // less height when jumping late
+		if (timeSinceJumping < JETPACK_JUMPLEEWAY)
+		{
+			m_flJumpTime = 0.0f;
+			horizPush *= JETPACK_HORIZONTALPUSH;
+			if (!JETPACK_VERTICALSETVELOCITY && !JETPACK_HORIZONTALSETVELOCITY)
+				ApplyAbsVelocityImpulse(Vector(horizPush.x*horizMult, horizPush.y*horizMult, JETPACK_VERTICALPUSH * vertMult) * flPercent);
+			else if (JETPACK_VERTICALSETVELOCITY && JETPACK_HORIZONTALSETVELOCITY)
+				SetAbsVelocity(Vector(horizPush.x*horizMult, horizPush.y*horizMult, JETPACK_VERTICALPUSH * vertMult) * flPercent);
+			else
+			{
+				if (JETPACK_VERTICALSETVELOCITY)
+				{
+					Vector vecVelocity = GetAbsVelocity();
+					SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, JETPACK_VERTICALPUSH * flPercent));
+				}
+				else
+				{
+					ApplyAbsVelocityImpulse(Vector(0, 0, JETPACK_VERTICALPUSH) * flPercent);
+				}
+				
+				if (JETPACK_HORIZONTALSETVELOCITY)
+				{
+					Vector vecVelocity = GetAbsVelocity();
+					SetAbsVelocity(Vector(horizPush.x * flPercent, horizPush.y * flPercent, vecVelocity.z));
+				}
+				else
+				{
+					ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, 0) * flPercent);
+				}
+			}
+
+			return;
+		}
+
 		Vector vecLatVelocity = GetAbsVelocity() * Vector(1.0f, 1.0f, 0.0f);
 
 		if (vecLatVelocity.IsLengthGreaterThan(JETPACK_HORIZONTALPUSH_CAP))
