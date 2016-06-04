@@ -999,18 +999,15 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 	TraceBleed(20, dir, pTrace, DMG_BLAST);
 
 
+	dir *= 4000;  // adjust impact strenght
 	if ( iDamageType & DMG_BLAST )
 	{
-		dir *= 40000;  // adjust impact strength
-
 		Vector vecVelocity, vecAngularVelocity;
 		pPhysicsObject->CalculateVelocityOffset(dir, pTrace->endpos, &vecVelocity, &vecAngularVelocity);
 		pPhysicsObject->AddVelocity(&vecVelocity, &vecAngularVelocity);
 	}
 	else
 	{
-		dir *= 4000;  // adjust impact strenght
-
 		// apply force where we hit it
 		pPhysicsObject->ApplyForceOffset( dir, hitpos );	
 	}
