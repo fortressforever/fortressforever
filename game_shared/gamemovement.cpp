@@ -3490,7 +3490,7 @@ void CGameMovement::CheckFalling( void )
 			// #0000599: footstep continues to play after cratering
 			// #0000401: Oddity with the fall sound.
 			pFFPlayer->m_flStepSoundTime = gpGlobals->curtime + 0.600f;
-			pFFPlayer->m_flJumpTime = gpGlobals->curtime + 0.600f;
+			pFFPlayer->m_flJumpTime = gpGlobals->curtime + 0.600f; // bug?
 
 			// Play step sound for current texture.
 			//player->PlayStepSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, fvol, true );
