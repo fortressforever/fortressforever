@@ -440,18 +440,6 @@ bool CFFGameMovement::CheckJumpButton(void)
 
 	FinishGravity();
 
-//	mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
-//	mv->m_outStepHeight += 0.15f;
-
-	// Set jump time.
-/*
-	if ( gpGlobals->maxClients == 1 )
-	{
-		player->m_Local.m_flJumpTime = GAMEMOVEMENT_JUMP_TIME;
-		player->m_Local.m_bInDuckJump = true;
-	}
-*/
-
 	// Flag that we jumped.
 	mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
 	return true;
@@ -533,8 +521,6 @@ void CFFGameMovement::FullBuildMove( void )
 //-----------------------------------------------------------------------------
 void CFFGameMovement::WalkMove( void )
 {
-	int i;
-
 	Vector wishvel;
 	float spd;
 	float fmove, smove;
@@ -582,7 +568,7 @@ void CFFGameMovement::WalkMove( void )
 		VectorNormalize (right);    // 
 	}
 
-	for (i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
+	for (int i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
 		wishvel[i] = forward[i]*fmove + right[i]*smove;
 	
 	wishvel[2] = 0;             // Zero out z part of velocity
