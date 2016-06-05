@@ -548,14 +548,17 @@ void CFFWeaponJumpgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 
 	float effectScale = flPercent == 1.0f ? 5.0f : 2.0f;
 
-	DrawBeamQuadratic(vecStart, vecControl, vecEnd, effectScale * flPercent, Vector(0.91f, 0.17f, 0.05f), flScrollOffset);
+	float JUMPGUN_BARRELCOLOR_R = 0.4f;
+	float JUMPGUN_BARRELCOLOR_G = 0.8f;
+	float JUMPGUN_BARRELCOLOR_B = 0.1f;
+	DrawBeamQuadratic(vecStart, vecControl, vecEnd, effectScale * flPercent, Vector(JUMPGUN_BARRELCOLOR_R, JUMPGUN_BARRELCOLOR_G, JUMPGUN_BARRELCOLOR_B), flScrollOffset);
 
-	float colour[3] = { 0.91f, 0.17f, 0.05f };
+	float colour[3] = { JUMPGUN_BARRELCOLOR_R, JUMPGUN_BARRELCOLOR_G, JUMPGUN_BARRELCOLOR_B };
 
 	pMat = materials->FindMaterial("effects/stunstick", TEXTURE_GROUP_CLIENT_EFFECTS);
 	materials->Bind(pMat);
 	
-	DrawHalo(pMat, vecMuzzle, 1.9f * flPercent, colour);
+	DrawHalo(pMat, vecMuzzle, 0.58f * effectScale, colour);
 }
 
 //----------------------------------------------------------------------------
