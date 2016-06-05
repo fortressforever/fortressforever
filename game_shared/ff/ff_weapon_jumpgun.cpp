@@ -127,6 +127,8 @@ public:
 
 #else
 
+	virtual void	ViewModelDrawn( C_BaseViewModel *pBaseViewModel );
+
 private:
 	int	m_iAttachment1;
 	int m_iAttachment2;
@@ -503,6 +505,58 @@ float CFFWeaponJumpgun::GetClampedCharge( void )
 }
 
 #ifdef CLIENT_DLL
+
+//-----------------------------------------------------------------------------
+// Purpose: This takes place after the viewmodel is drawn. We use this to
+//			create the glowing glob of stuff inside the model and the faint
+//			glow at the barrel.
+//-----------------------------------------------------------------------------
+void CFFWeaponJumpgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
+{
+	// Not charging at all or even much, so no need to draw shit
+	if (m_flClampedChargeTimeBuffered <= 0.0)
+		return;
+
+	// We'll get these done and out of the way
+	if (m_iAttachment1 == -1 || m_iAttachment2 == -1)
+	{
+		m_iAttachment1 = pBaseViewModel->LookupAttachment("railgunFX1");
+		m_iAttachment2 = pBaseViewModel->LookupAttachment("railgunFX2");
+	}
+
+	Vector vecStart, vecEnd, vecMuzzle;
+	QAngle tmpAngle;
+
+	pBaseViewModel->GetAttachment(m_iAttachment1, vecStart, tmpAngle);
+	pBaseViewModel->GetAttachment(m_iAttachment2, vecEnd, tmpAngle);
+	pBaseViewModel->GetAttachment(1, vecMuzzle, tmpAngle);
+
+	::FormatViewModelAttachment(vecStart, true);
+	::FormatViewModelAttachment(vecEnd, true);
+	::FormatViewModelAttachment(vecMuzzle, true);
+
+	float flPercent = clamp( m_flClampedChargeTimeBuffered / JUMPGUN_CHARGEUPTIME, 0.0f, 1.0f);
+	flPercent = sqrtf( flPercent );
+
+	// Haha, clean this up pronto!
+	Vector vecControl = (vecStart + vecEnd) * 0.5f + Vector(random->RandomFloat(-flPercent, flPercent), random->RandomFloat(-flPercent, flPercent), random->RandomFloat(-flPercent, flPercent));
+
+	float flScrollOffset = gpGlobals->curtime - (int) gpGlobals->curtime;
+
+	IMaterial *pMat = materials->FindMaterial("sprites/physbeam", TEXTURE_GROUP_CLIENT_EFFECTS);
+	materials->Bind(pMat);
+
+	float effectScale = flPercent == 1.0f ? 5.0f : 2.0f;
+
+	DrawBeamQuadratic(vecStart, vecControl, vecEnd, effectScale * flPercent, Vector(0.91f, 0.17f, 0.05f), flScrollOffset);
+
+	float colour[3] = { 0.91f, 0.17f, 0.05f };
+
+	pMat = materials->FindMaterial("effects/stunstick", TEXTURE_GROUP_CLIENT_EFFECTS);
+	materials->Bind(pMat);
+	
+	DrawHalo(pMat, vecMuzzle, 1.9f * flPercent, colour);
+}
 
 //----------------------------------------------------------------------------
 // Purpose: Get charge
