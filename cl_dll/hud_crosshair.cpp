@@ -344,6 +344,9 @@ void CHudCrosshair::Paint( void )
 		if( flCharge <= 0.0f )
 			return;
 
+		x = ScreenWidth()/2;
+		y = ScreenHeight()/2;
+
 		int iLeft = x - charOffsetX;
 		int iTop = y + charOffsetY;
 		int iRight = iLeft + (charOffsetX * 2);
