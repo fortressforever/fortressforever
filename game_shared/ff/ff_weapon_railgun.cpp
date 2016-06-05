@@ -701,6 +701,7 @@ void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 
 	float flPercent = clamp( m_flClampedChargeTimeBuffered / RAILGUN_MAXCHARGETIME, 0.0f, 1.0f);
 	flPercent = sqrtf( flPercent );
+	float effectScale = flPercent == 1.0f ? 5.0f : 2.0f;
 
 	// Haha, clean this up pronto!
 	Vector vecControl = (vecStart + vecEnd) * 0.5f + Vector(random->RandomFloat(-flPercent, flPercent), random->RandomFloat(-flPercent, flPercent), random->RandomFloat(-flPercent, flPercent));
@@ -710,13 +711,13 @@ void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 	IMaterial *pMat = materials->FindMaterial("sprites/physbeam", TEXTURE_GROUP_CLIENT_EFFECTS);
 	materials->Bind(pMat);
 
-	DrawBeamQuadratic(vecStart, vecControl, vecEnd, 2.0f * flPercent, Vector(0.51f, 0.89f, 0.95f), flScrollOffset);
+	DrawBeamQuadratic(vecStart, vecControl, vecEnd, effectScale * flPercent, Vector(0.51f, 0.89f, 0.95f), flScrollOffset);
 
 	float colour[3] = { 0.51f, 0.89f, 0.95f };
 
 	pMat = materials->FindMaterial("effects/stunstick", TEXTURE_GROUP_CLIENT_EFFECTS);
 	materials->Bind(pMat);
 	
-	DrawHalo(pMat, vecMuzzle, 1.9f * flPercent, colour);
+	DrawHalo(pMat, vecMuzzle, 0.58f * effectScale, colour);
 }
 #endif
