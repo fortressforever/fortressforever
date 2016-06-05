@@ -549,8 +549,8 @@ void CFFWeaponJumpgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 	float effectScale = flPercent == 1.0f ? 5.0f : 2.0f;
 
 	float JUMPGUN_BARRELCOLOR_R = 0.4f;
-	float JUMPGUN_BARRELCOLOR_G = 0.8f;
-	float JUMPGUN_BARRELCOLOR_B = 0.1f;
+	float JUMPGUN_BARRELCOLOR_G = 0.7f;
+	float JUMPGUN_BARRELCOLOR_B = 0.2f;
 	DrawBeamQuadratic(vecStart, vecControl, vecEnd, effectScale * flPercent, Vector(JUMPGUN_BARRELCOLOR_R, JUMPGUN_BARRELCOLOR_G, JUMPGUN_BARRELCOLOR_B), flScrollOffset);
 
 	float colour[3] = { JUMPGUN_BARRELCOLOR_R, JUMPGUN_BARRELCOLOR_G, JUMPGUN_BARRELCOLOR_B };
