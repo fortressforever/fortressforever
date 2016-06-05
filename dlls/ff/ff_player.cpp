@@ -1585,7 +1585,7 @@ void CFFPlayer::Spawn( void )
 		CBaseCombatWeapon *pSpawnWeapon = Weapon_OwnsThisType(weaponSpawn);
 		if(pSpawnWpn && pSpawnWeapon)
 		{
-			if(Weapon_Switch(pSpawnWeapon))
+			if(pSpawnWeapon == GetActiveWeapon() || Weapon_Switch(pSpawnWeapon))
 				break;
 		}
 
