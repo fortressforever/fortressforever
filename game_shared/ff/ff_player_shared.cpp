@@ -131,6 +131,9 @@ ConVar ffdev_jetpack_jumpleeway_pushmult_horiz("ffdev_jetpack_jumpleeway_pushmul
 ConVar ffdev_jetpack_jumpleeway_pushmult_vert("ffdev_jetpack_jumpleeway_pushmult_vert", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_JUMPLEEWAY_PUSHMULT_VERT ffdev_jetpack_jumpleeway_pushmult_vert.GetFloat()
 
+ConVar ffdev_jetpack_hoveronground("ffdev_jetpack_hoveronground", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_JETPACK_HOVERONGROUND ffdev_jetpack_hoveronground.GetBool()
+
 ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_VERTICALPUSH_OFFGROUND ffdev_jetpack_verticalpush_offground.GetFloat()
 ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "5", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -717,7 +720,7 @@ void CFFPlayer::ClassSpecificSkill()
 			break;
 
 		case CLASS_PYRO:
-			JetpackJump();
+			JetpackClick();
 			break;
 
 #ifdef CLIENT_DLL
@@ -764,7 +767,7 @@ void CFFPlayer::ClassSpecificSkillHold()
 	switch (GetClassSlot())
 	{
 		case CLASS_PYRO:
-			JetpackJump();
+			JetpackHold();
 			break;
 	}
 }
@@ -1785,13 +1788,83 @@ void CFFPlayer::Overpressure( void )
 	}
 }
 
-
 //-----------------------------------------------------------------------------
-// Purpose: HW attack2
+// Purpose: 
 //-----------------------------------------------------------------------------
-void CFFPlayer::JetpackJump( void )
+void CFFPlayer::JetpackClick( void )
 {
 	if (!IsAlive())
+	{
+		return;
+	}
+
+	CEffectData data;
+	data.m_vOrigin = GetAbsOrigin();
+	
+	DispatchEffect("WheelDust", data); // TODO: Make jetpack effect
+
+	EmitSoundShared("flamethrower.loop_shot"); // TODO: Make jetpack noise
+	
+	Vector vecForward, vecRight, vecUp;
+	EyeVectors( &vecForward, &vecRight, &vecUp);
+	VectorNormalizeFast( vecForward );
+	VectorNormalizeFast( vecRight );
+	
+	Vector vecSrc = Weapon_ShootPosition();
+
+	// get only the direction the player is looking (ignore any z)
+	Vector horizPush = CrossProduct(Vector( 0.0f, 0.0f, 1.0f ), vecRight);
+
+	float flPercent = 1.0f;
+	if (!(GetFlags() & FL_ONGROUND))
+	{
+		float timeSinceJumping = gpGlobals->curtime - m_flJumpTime;
+		float horizMult = 1 + (timeSinceJumping / JETPACK_JUMPLEEWAY)*JETPACK_JUMPLEEWAY_PUSHMULT_HORIZ; // extra length when jumping late
+		float vertMult = timeSinceJumping+JETPACK_JUMPLEEWAY_PUSHMULT_VERT / JETPACK_JUMPLEEWAY + JETPACK_JUMPLEEWAY_PUSHMULT_VERT; // less height when jumping late
+		if (timeSinceJumping < JETPACK_JUMPLEEWAY)
+		{
+			// Do the big jump
+			m_flJumpTime = 0.0f;
+			horizPush *= JETPACK_HORIZONTALPUSH;
+
+			SetAbsVelocity(Vector(horizPush.x*horizMult, horizPush.y*horizMult, JETPACK_VERTICALPUSH * vertMult) * flPercent);
+
+			return;
+		}
+
+		Vector vecLatVelocity = GetAbsVelocity() * Vector(1.0f, 1.0f, 0.0f);
+
+		if (vecLatVelocity.IsLengthGreaterThan(JETPACK_HORIZONTALPUSH_CAP))
+		{
+			horizPush *= 0;
+		}
+		else
+		{
+			horizPush *= JETPACK_HORIZONTALPUSH_OFFGROUND;
+		}
+
+		// Small hover boost
+		ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH_OFFGROUND) * flPercent);
+		return;
+	}
+
+	// Big jump
+	horizPush *= JETPACK_HORIZONTALPUSH;
+
+	SetAbsVelocity(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH) * flPercent);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Jetpack jump
+//-----------------------------------------------------------------------------
+void CFFPlayer::JetpackHold( void )
+{
+	if (!IsAlive())
+	{
+		return;
+	}
+
+	if ((GetFlags() & FL_ONGROUND) && !FFDEV_JETPACK_HOVERONGROUND)
 	{
 		return;
 	}
@@ -1834,88 +1907,19 @@ void CFFPlayer::JetpackJump( void )
 	Vector horizPush = CrossProduct(Vector( 0.0f, 0.0f, 1.0f ), vecRight);
 
 	float flPercent = 1.0f;
-	if (!(GetFlags() & FL_ONGROUND))
+
+	Vector vecLatVelocity = GetAbsVelocity() * Vector(1.0f, 1.0f, 0.0f);
+
+	if (vecLatVelocity.IsLengthGreaterThan(JETPACK_HORIZONTALPUSH_CAP))
 	{
-		float timeSinceJumping = gpGlobals->curtime - m_flJumpTime;
-		float horizMult = 1 + (timeSinceJumping / JETPACK_JUMPLEEWAY)*JETPACK_JUMPLEEWAY_PUSHMULT_HORIZ; // extra length when jumping late
-		float vertMult = timeSinceJumping+JETPACK_JUMPLEEWAY_PUSHMULT_VERT / JETPACK_JUMPLEEWAY + JETPACK_JUMPLEEWAY_PUSHMULT_VERT; // less height when jumping late
-		if (timeSinceJumping < JETPACK_JUMPLEEWAY)
-		{
-			m_flJumpTime = 0.0f;
-			horizPush *= JETPACK_HORIZONTALPUSH;
-			if (!JETPACK_VERTICALSETVELOCITY && !JETPACK_HORIZONTALSETVELOCITY)
-				ApplyAbsVelocityImpulse(Vector(horizPush.x*horizMult, horizPush.y*horizMult, JETPACK_VERTICALPUSH * vertMult) * flPercent);
-			else if (JETPACK_VERTICALSETVELOCITY && JETPACK_HORIZONTALSETVELOCITY)
-				SetAbsVelocity(Vector(horizPush.x*horizMult, horizPush.y*horizMult, JETPACK_VERTICALPUSH * vertMult) * flPercent);
-			else
-			{
-				if (JETPACK_VERTICALSETVELOCITY)
-				{
-					Vector vecVelocity = GetAbsVelocity();
-					SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, JETPACK_VERTICALPUSH * flPercent));
-				}
-				else
-				{
-					ApplyAbsVelocityImpulse(Vector(0, 0, JETPACK_VERTICALPUSH) * flPercent);
-				}
-				
-				if (JETPACK_HORIZONTALSETVELOCITY)
-				{
-					Vector vecVelocity = GetAbsVelocity();
-					SetAbsVelocity(Vector(horizPush.x * flPercent, horizPush.y * flPercent, vecVelocity.z));
-				}
-				else
-				{
-					ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, 0) * flPercent);
-				}
-			}
-
-			return;
-		}
-
-		Vector vecLatVelocity = GetAbsVelocity() * Vector(1.0f, 1.0f, 0.0f);
-
-		if (vecLatVelocity.IsLengthGreaterThan(JETPACK_HORIZONTALPUSH_CAP))
-		{
-			horizPush *= 0;
-		}
-		else
-		{
-			horizPush *= JETPACK_HORIZONTALPUSH_OFFGROUND;
-		}
-
-		ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH_OFFGROUND) * flPercent);
-		return;
+		horizPush *= 0;
 	}
-
-	horizPush *= JETPACK_HORIZONTALPUSH;
-
-	if (!JETPACK_VERTICALSETVELOCITY && !JETPACK_HORIZONTALSETVELOCITY)
-		ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH) * flPercent);
-	else if (JETPACK_VERTICALSETVELOCITY && JETPACK_HORIZONTALSETVELOCITY)
-	    SetAbsVelocity(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH) * flPercent);
 	else
 	{
-		if (JETPACK_VERTICALSETVELOCITY)
-		{
-			Vector vecVelocity = GetAbsVelocity();
-			SetAbsVelocity(Vector(vecVelocity.x, vecVelocity.y, JETPACK_VERTICALPUSH * flPercent));
-		}
-		else
-		{
-			ApplyAbsVelocityImpulse(Vector(0, 0, JETPACK_VERTICALPUSH) * flPercent);
-		}
-		
-		if (JETPACK_HORIZONTALSETVELOCITY)
-		{
-			Vector vecVelocity = GetAbsVelocity();
-			SetAbsVelocity(Vector(horizPush.x * flPercent, horizPush.y * flPercent, vecVelocity.z));
-		}
-		else
-		{
-			ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, 0) * flPercent);
-		}
+		horizPush *= JETPACK_HORIZONTALPUSH_OFFGROUND;
 	}
+
+	ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH_OFFGROUND) * flPercent);
 }
 
 //-----------------------------------------------------------------------------
