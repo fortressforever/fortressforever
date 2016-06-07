@@ -713,7 +713,8 @@ private:
 	CNetworkVar( unsigned int, m_iCloaked );
 public:
 	void Overpressure( void );
-	void JetpackJump( void );
+	void JetpackClick( void );
+	void JetpackHold( void );
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)

@@ -573,7 +573,8 @@ private:
     // Overpressure stuff
 public:
 	void Overpressure( void );
-	void JetpackJump( void );
+	void JetpackClick( void );
+	void JetpackHold( void );
 	// ----------------------------------
 	
 	// ----------------------------------
