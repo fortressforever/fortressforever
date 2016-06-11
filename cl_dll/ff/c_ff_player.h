@@ -40,15 +40,6 @@ class C_FFManCannon;
 #define FF_BUILD_DETPACK	3
 #define FF_BUILD_MANCANNON	4
 
-// BEG: Added by Mulchman for team junk
-#define FF_TEAM_UNASSIGNED	0
-#define FF_TEAM_SPEC		1
-#define FF_TEAM_BLUE		2
-#define FF_TEAM_RED			3
-#define FF_TEAM_YELLOW		4
-#define FF_TEAM_GREEN		5
-// END: Added by Mulchman for team junk
-
 // moved this here from ff_shareddefs.h, because it's client-only and needs to stop wasting server compile time
 #define FF_CLOAK_MATERIAL "effects/cloak"
 #define FF_CLOAK_TEXTURE_GROUP TEXTURE_GROUP_CLIENT_EFFECTS
