@@ -1481,11 +1481,13 @@ void C_FFPlayer::PreThink( void )
 	//	We really don't need per-frame accuracy here
 	g_FFHintTimers.SimulateTimers();
 
+	SharedPreThink();
+
 	// Do we need to do a class specific skill?
 	if (m_afButtonPressed & IN_ATTACK2)
 		ClassSpecificSkill();
 
-	// Do we need to do a class specific skill?
+	// Do we need to do a class specific skill hold-button?
 	if (m_nButtons & IN_ATTACK2)
 		ClassSpecificSkillHold();
 
