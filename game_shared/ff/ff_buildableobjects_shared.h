@@ -102,12 +102,6 @@
 #define FF_BUILDABLE_TIMER_BUILD_STRING		"FF_Building"
 #define FF_BUILDABLE_TIMER_DETPACK_STRING	"FF_Detpack_Primed"
 
-#define FF_BUILD_NONE		0
-#define FF_BUILD_DISPENSER	1
-#define FF_BUILD_SENTRYGUN	2
-#define FF_BUILD_DETPACK	3
-#define FF_BUILD_MANCANNON	4
-
 // The *_BUILD_DIST means how far in front of the player
 // the object is built
 #define FF_BUILD_DISP_BUILD_DIST	36.0f

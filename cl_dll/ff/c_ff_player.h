@@ -34,12 +34,6 @@ class C_FFDispenser;
 class C_FFSentryGun;
 class C_FFManCannon;
 
-#define FF_BUILD_NONE		0
-#define FF_BUILD_DISPENSER	1
-#define FF_BUILD_SENTRYGUN	2
-#define FF_BUILD_DETPACK	3
-#define FF_BUILD_MANCANNON	4
-
 // moved this here from ff_shareddefs.h, because it's client-only and needs to stop wasting server compile time
 #define FF_CLOAK_MATERIAL "effects/cloak"
 #define FF_CLOAK_TEXTURE_GROUP TEXTURE_GROUP_CLIENT_EFFECTS
