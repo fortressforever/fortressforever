@@ -18,4 +18,6 @@
 #define FF_TEAM_GREEN		5
 // END: Added by Mulchman for team junk
 
+#define INVALID_OBJECTIVE_LOCATION -9515.2f
+
 #endif	// FF_PLAYER_H

@@ -38,8 +38,6 @@ class CFFGrenadeBase;
 
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
-#define INVALID_OBJECTIVE_LOCATION -9515.2f
-
 #define FF_BUILD_DISP_STRING_LEN	256
 
 // Speed effect type
