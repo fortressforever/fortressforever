@@ -26,6 +26,7 @@
 #include "ff_modelglyph.h"
 #include "in_buttons.h"
 #include "ff_radiotagdata.h"
+#include "ff_player_shared.h"
 
 class CFFBuildableObject;
 class CFFDetpack;

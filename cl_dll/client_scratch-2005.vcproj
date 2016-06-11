@@ -952,6 +952,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_player_shared.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_playeranimstate.cpp"
 				>
 			</File>
@@ -2140,11 +2144,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui\IInput.h"
+					RelativePath="iinput.h"
 					>
 				</File>
 				<File
-					RelativePath="iinput.h"
+					RelativePath="..\public\vgui\IInput.h"
 					>
 				</File>
 				<File
@@ -2468,11 +2472,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h"
+					RelativePath="menu.h"
 					>
 				</File>
 				<File
-					RelativePath="menu.h"
+					RelativePath="..\public\vgui_controls\Menu.h"
 					>
 				</File>
 				<File

@@ -26,6 +26,7 @@
 #include "ff_radiotagdata.h"
 #include "model_types.h"
 #include "IEffects.h"
+#include "ff_player_shared.h"
 
 class C_FFBuildableObject;
 class C_FFDetpack;
