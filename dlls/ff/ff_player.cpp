@@ -580,6 +580,7 @@ CFFPlayer::CFFPlayer()
 
 	m_flSlidingTime = 0;		// Not sliding on creation
 	m_bSliding = false;
+	m_flJetpackFinishChargingTime = 0.0f;
 
 	m_bIsRampsliding = false;
 
@@ -790,16 +791,7 @@ void CFFPlayer::PreThink(void)
 		SpyCloakFadeThink();
 	}
 
-	// Do we need to do a class specific skill?
-	if( m_afButtonPressed & IN_ATTACK2 )
-		ClassSpecificSkill();
-
-	// Do we need to do a class specific skill?
-	if (m_nButtons & IN_ATTACK2)
-		ClassSpecificSkillHold();
-
-	else if (m_afButtonReleased & IN_ATTACK2)
-		ClassSpecificSkill_Post();
+	SharedPreThink();
 
 	if (m_iSabotagedSentries == 0)
 		m_iActiveSabotages &= ~2;
@@ -1899,6 +1891,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if( m_bSliding )
 		m_bSliding = false;
 
+	m_flJetpackFinishChargingTime = 0.0f;
 	m_flSaveMeTime = 0.0f;
 
 	if( GetClassSlot() == CLASS_SPY )

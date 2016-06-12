@@ -1273,6 +1273,7 @@ C_FFPlayer::C_FFPlayer() :
 	
 	m_flSlidingTime = 0;
 	m_bSliding = false;
+	m_flJetpackFinishChargingTime = 0.0f;
 
 	m_bIsRampsliding = false;
 
@@ -1484,20 +1485,6 @@ void C_FFPlayer::PreThink( void )
 	g_FFHintTimers.SimulateTimers();
 
 	SharedPreThink();
-
-	// Do we need to do a class specific skill?
-	if (m_afButtonPressed & IN_ATTACK2)
-		ClassSpecificSkill();
-
-	// Do we need to do a class specific skill hold-button?
-	if (m_nButtons & IN_ATTACK2)
-		ClassSpecificSkillHold();
-
-	else if (m_afButtonReleased & IN_ATTACK2)
-		ClassSpecificSkill_Post();
-
-	//if (m_afButtonPressed & IN_RELOAD && !IsAlive())
-	//	engine->ClientCmd("-reload");
 
 	// New possible fix
 	if( ::input && !IsAlive() )
