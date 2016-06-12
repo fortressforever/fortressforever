@@ -134,7 +134,7 @@ ConVar ffdev_jetpack_jumpleeway_pushmult_vert("ffdev_jetpack_jumpleeway_pushmult
 ConVar ffdev_jetpack_hoveronground("ffdev_jetpack_hoveronground", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define FFDEV_JETPACK_HOVERONGROUND ffdev_jetpack_hoveronground.GetBool()
 
-ConVar ffdev_jetpack_chargetime("ffdev_jetpack_chargetime", "1.0", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jetpack_chargetime("ffdev_jetpack_chargetime", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_CHARGETIME ffdev_jetpack_chargetime.GetFloat()
 
 ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -1788,6 +1788,24 @@ void CFFPlayer::Overpressure( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Shared pre think code
+//-----------------------------------------------------------------------------
+void CFFPlayer::SharedPreThink( void )
+{
+	// Do we need to do a class specific skill?
+	if( m_afButtonPressed & IN_ATTACK2 )
+		ClassSpecificSkill();
+	else if (m_afButtonReleased & IN_ATTACK2)
+		ClassSpecificSkill_Post();
+
+	// Do we need to do a class specific skill?
+	if (m_nButtons & IN_ATTACK2)
+		ClassSpecificSkillHold();
+
+	JetpackChargeThink();
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CFFPlayer::JetpackChargeThink( void )
@@ -1836,9 +1854,9 @@ void CFFPlayer::JetpackTriggerGroundBoost( float flTimeInAir )
 	CEffectData data;
 	data.m_vOrigin = GetAbsOrigin();
 	
-	DispatchEffect("WheelDust", data); // TODO: Make jetpack effect
+	DispatchEffect("FF_EmpZap", data); // TODO: Make jetpack effect
 
-	EmitSoundShared("flamethrower.loop_shot"); // TODO: Make jetpack noise
+	EmitSoundShared("JumpPad.Fire"); // TODO: Make jetpack noise
 	
 	Vector vecForward, vecRight, vecUp;
 	EyeVectors( &vecForward, &vecRight, &vecUp);
@@ -1849,7 +1867,7 @@ void CFFPlayer::JetpackTriggerGroundBoost( float flTimeInAir )
 
 	// get only the direction the player is looking (ignore any z)
 	Vector horizPush = CrossProduct(Vector( 0.0f, 0.0f, 1.0f ), vecRight);
-	Vector vertPush = JETPACK_VERTICALPUSH;
+	float vertPush = JETPACK_VERTICALPUSH;
 
 	float flPercent = 1.0f;
 	if (flTimeInAir != 0.0f)
@@ -1873,6 +1891,7 @@ void CFFPlayer::JetpackTriggerGroundBoost( float flTimeInAir )
 void CFFPlayer::JetpackCancelCharge( void )
 {
 	m_flJetpackFinishChargingTime = 0.0f;
+	EmitSoundShared("SniperRifle.zoom_out"); // TODO: Make jetpack noise
 	// Play discharge sound?
 }
 
@@ -1894,6 +1913,7 @@ void CFFPlayer::JetpackClick( void )
 	if (m_flJetpackFinishChargingTime == 0.0f)
 	{
 		m_flJetpackFinishChargingTime = gpGlobals->curtime + JETPACK_CHARGETIME;
+		EmitSoundShared("SniperRifle.zoom_in"); // TODO: Make jetpack noise
 		// TODO: Emit sound and effect
 		// TODO: Reduce fuel amount?
 	}
@@ -1938,8 +1958,10 @@ void CFFPlayer::JetpackHold( void )
 	//if(m_hFlameJet)
 	//	m_hFlameJet->FlameEmit(bEmit);
 
+
+
 	// Play a sound
-	EmitSoundShared("flamethrower.loop_shot"); // TODO: Make jetpack noise
+	//EmitSoundShared("Slowfield.LaserLoop"); // TODO: Make jetpack noise
 
 	Vector vecForward, vecRight, vecUp;
 	EyeVectors( &vecForward, &vecRight, &vecUp);

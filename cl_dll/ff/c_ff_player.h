@@ -534,8 +534,10 @@ protected:
 public:
 	bool IsSliding( void ) const { return m_bSliding; }
 	float m_flSlidingTime;
+
 protected:
 	bool m_bSliding;
+	float m_flJetpackFinishChargingTime;
 	// ----------------------------------
 // *** SQUEEK
 
@@ -575,6 +577,10 @@ public:
 	void Overpressure( void );
 	void JetpackClick( void );
 	void JetpackHold( void );
+	void JetpackChargeThink( void );
+	void JetpackTriggerGroundBoost(float flTimeInAir);
+	void JetpackCancelCharge( void );
+	void SharedPreThink( void );
 	// ----------------------------------
 	
 	// ----------------------------------

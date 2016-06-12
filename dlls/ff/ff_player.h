@@ -542,6 +542,8 @@ public:
 protected:
 	void StopSliding( void ); // stop the overpressure friction/acceleration effect
 	CNetworkVar( bool, m_bSliding );
+	float m_flJetpackFinishChargingTime;
+
 
 public:
 	bool IsRampsliding( void ) const { return m_bIsRampsliding; }
@@ -715,6 +717,10 @@ public:
 	void Overpressure( void );
 	void JetpackClick( void );
 	void JetpackHold( void );
+	void JetpackChargeThink( void );
+	void JetpackTriggerGroundBoost(float flTimeInAir);
+	void JetpackCancelCharge( void );
+	void SharedPreThink( void );
 
 public:	
 	// Will uncloak you (w/o going the Command_ route)
