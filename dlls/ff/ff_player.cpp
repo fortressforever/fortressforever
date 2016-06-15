@@ -341,6 +341,7 @@ PRECACHE_REGISTER(player);
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFPlayerObserver )
 	SendPropFloat(SENDINFO(m_flNextClassSpecificSkill)),
+	SendPropFloat( SENDINFO( m_flJetpackFuel )),
 	SendPropFloat(SENDINFO(m_flTrueAimTime)),
 	SendPropFloat(SENDINFO(m_flHitTime)),
 	SendPropInt(SENDINFO(m_nButtons)),
@@ -1361,6 +1362,8 @@ void CFFPlayer::Spawn( void )
 	m_flSlidingTime		= 0.0f;
 	m_flSpeedModifier	= 1.0f;
 	m_flNextClassSpecificSkill = 0.0f;
+	m_flJetpackFuel		= 100.0f;
+	m_flJetpackNextFuelRechargeTime = 0.0f;
 	m_hActiveSlowfield	= NULL;
 	
 	m_flSpeedModifierOld		= 1.0f;

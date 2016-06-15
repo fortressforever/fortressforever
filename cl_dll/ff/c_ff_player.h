@@ -429,6 +429,8 @@ public:
 	// <-- Mirv: Hold some class info on the player side
 
 	CNetworkVar( float, m_flNextClassSpecificSkill );
+	CNetworkVar( float, m_flJetpackFuel );
+	float m_flJetpackNextFuelRechargeTime;
 
 	int	  m_iSpawnInterpCounter;
 	int	  m_iSpawnInterpCounterCache;
