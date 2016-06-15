@@ -134,7 +134,7 @@ ConVar ffdev_jetpack_jumpleeway_pushmult_vert("ffdev_jetpack_jumpleeway_pushmult
 ConVar ffdev_jetpack_hoveronground("ffdev_jetpack_hoveronground", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define FFDEV_JETPACK_HOVERONGROUND ffdev_jetpack_hoveronground.GetBool()
 
-ConVar ffdev_jetpack_chargetime("ffdev_jetpack_chargetime", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jetpack_chargetime("ffdev_jetpack_chargetime", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT); // 0 is basically disabled
 #define JETPACK_CHARGETIME ffdev_jetpack_chargetime.GetFloat()
 
 ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -145,6 +145,13 @@ ConVar ffdev_jetpack_horizontalsetvelocity("ffdev_jetpack_horizontalsetvelocity"
 #define JETPACK_HORIZONTALSETVELOCITY ffdev_jetpack_horizontalsetvelocity.GetBool()
 ConVar ffdev_jetpack_verticalsetvelocity("ffdev_jetpack_verticalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_VERTICALSETVELOCITY ffdev_jetpack_verticalsetvelocity.GetBool()
+
+ConVar ffdev_jetpack_fuelboostcost("ffdev_jetpack_fuelboostcost", "50", FCVAR_REPLICATED | FCVAR_CHEAT); // Total fuel is 100
+#define JETPACK_FUELBOOSTCOST ffdev_jetpack_fuelboostcost.GetInt()
+ConVar ffdev_jetpack_fuelrechargetime("ffdev_jetpack_fuelrechargetime", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_FUELRECHARGETIME ffdev_jetpack_fuelrechargetime.GetFloat()
+ConVar ffdev_jetpack_fuelhovercost("ffdev_jetpack_fuelhovercost", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_FUELHOVERCOST ffdev_jetpack_fuelhovercost.GetFloat()
 
 //ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_BULLETSIZE 1.0f //ffdev_ac_bulletsize.GetFloat()
@@ -1810,6 +1817,20 @@ void CFFPlayer::SharedPreThink( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::JetpackChargeThink( void )
 {
+	if (GetClassSlot() != CLASS_PYRO)
+	{
+		return;
+	}
+
+	if (m_flJetpackNextFuelRechargeTime < gpGlobals->curtime)
+	{
+		if (m_flJetpackFuel < 100)
+		{
+			m_flJetpackNextFuelRechargeTime = gpGlobals->curtime + JETPACK_FUELRECHARGETIME;
+			m_flJetpackFuel++;
+		}
+	}
+
 	if (m_flJetpackFinishChargingTime == 0.0f)
 	{
 		return;
@@ -1850,6 +1871,12 @@ void CFFPlayer::JetpackTriggerGroundBoost( float flTimeInAir )
 		return;
 	}
 
+	if (m_flJetpackFuel < JETPACK_FUELBOOSTCOST)
+	{
+		return;
+	}
+
+	m_flJetpackFuel -= JETPACK_FUELBOOSTCOST;
 	m_flJetpackFinishChargingTime = 0.0f;
 	CEffectData data;
 	data.m_vOrigin = GetAbsOrigin();
@@ -1934,10 +1961,16 @@ void CFFPlayer::JetpackHold( void )
 		return;
 	}
 
+	if (m_flJetpackFuel < 1)
+	{
+		return;
+	}
+
 	CEffectData data;
 	data.m_vOrigin = GetAbsOrigin();
 	
 	DispatchEffect("WheelDust", data); // TODO: Make jetpack effect
+	m_flJetpackFuel -= JETPACK_FUELHOVERCOST;
 		
 	// Flamejet entity doesn't exist yet, so make it now
 	//if (!m_hFlameJet)

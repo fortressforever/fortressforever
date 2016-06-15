@@ -772,6 +772,8 @@ public:
 	void ClassSpecificSkill_Post();
 
 	CNetworkVar( float, m_flNextClassSpecificSkill );
+	CNetworkVar( float, m_flJetpackFuel );
+	float m_flJetpackNextFuelRechargeTime;
 
 	CNetworkVar( float, m_flConcTime );
 	void UnConcuss( void );
