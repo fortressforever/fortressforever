@@ -5403,14 +5403,11 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	//		pAttacker->AddFortPoints(10,true);
 	//}
 
-	// if it's a pyro, they take half damage
-	// AfterShock: pyros now take full damage. They can't be lit on fire tho, and thats a big enough differnce!
-	/*
-	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN )
+	// if it's a pyro shooting themself (i.e. the IC) they take less damage
+	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN && (info.GetInflictor() == this || info.GetAttacker() == this))
 	{
-		info.SetDamage(info.GetDamage()/1.3); //Instead of taking 50% damage, pyros now take 75% - AfterShock
+		info.SetDamage(4);
 	}
-	*/
 
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = info.GetDamage();
