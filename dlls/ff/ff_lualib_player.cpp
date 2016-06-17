@@ -39,6 +39,11 @@ namespace FFLib
 	{
 		return pPlayer->FlashlightIsOn() != 0;
 	}
+
+	const char *GetConVarValue(CFFPlayer *pPlayer, const char *cvarName)
+	{
+		return engine->GetClientConVarValue( pPlayer->entindex(), cvarName );
+	}
 }
 
 //---------------------------------------------------------------------------
@@ -165,6 +170,7 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("GetDispenser",		&CFFPlayer::GetDispenser)
 			.def("GetDetpack",			&CFFPlayer::GetDetpack)
 			.def("GetJumpPad",			&CFFPlayer::GetManCannon)
+			.def("GetConVarValue",		&FFLib::GetConVarValue)
 
 			.enum_("ClassId")
 			[

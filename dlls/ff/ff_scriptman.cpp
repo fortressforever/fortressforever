@@ -42,6 +42,9 @@ extern bool g_Disable_Timelimit;
 ConVar sv_mapluasuffix( "sv_mapluasuffix", "", FCVAR_ARCHIVE, "Have a custom lua file (game mode) loaded when the map loads. If this suffix string is set, maps\\mapname__suffix__.lua (if it exists) is used instead of maps\\mapname.lua. To reset this cvar, make it \"\".");
 ConVar sv_globalluascript( "sv_globalluascript", "", FCVAR_ARCHIVE, "Load a custom lua file globally after map scripts. Will overwrite map script. Will be loaded from maps\\globalscripts. To disable, set to \"\".");
 
+ConVar serverluacfgfile( "serverluacfgfile","server.lua.cfg" );
+ConVar lserverluacfgfile( "lserverluacfgfile","listenserver.lua.cfg" );
+
 // redirect Lua's print function to the console
 // based on the default Lua 5.1 print implementation in lbaselib.c
 static int print(lua_State *L)
@@ -382,6 +385,46 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 
 	// spawn the helper entity
 	CFFEntitySystemHelper::Create();
+
+	ExecuteLuaConfigs(szMapName);
+}
+
+void CFFScriptManager::ExecuteLuaConfigs(const char* szMapName)
+{
+	// Auto-execute lua server cfg file
+	if ( engine->IsDedicatedServer() )
+	{
+		// dedicated server
+		const char *cfgfile = serverluacfgfile.GetString();
+
+		if ( cfgfile && cfgfile[0] )
+		{
+			char szCommand[256];
+
+			Q_snprintf( szCommand,sizeof(szCommand), "exec %s\n", cfgfile );
+			engine->ServerCommand( szCommand );
+		}
+	}
+	else
+	{
+		// listen server
+		const char *cfgfile = lserverluacfgfile.GetString();
+
+		if ( cfgfile && cfgfile[0] )
+		{
+			char szCommand[256];
+
+			Q_snprintf( szCommand,sizeof(szCommand), "exec %s\n", cfgfile );
+			engine->ServerCommand( szCommand );
+		}
+	}
+
+	// Auto-execute <mapname>.lua.cfg
+	char szExecMapConfig[128];
+	Q_snprintf(szExecMapConfig, 127, "exec %.20s.lua.cfg\n", szMapName);
+
+	engine->ServerCommand(szExecMapConfig);
+	engine->ServerExecute();
 }
 
 /////////////////////////////////////////////////////////////////////////////
