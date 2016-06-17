@@ -73,6 +73,9 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
 #define BURN_MULTIPLIER_2BURNS 2.0f
 
+ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","4.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
+#define FFDEV_PYRO_BURNTIME ffdev_pyro_burntime.GetFloat()
+
 //ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
 #define FFDEV_FLAMESIZE_BURN1 0.015f //ffdev_flamesize_burn1.GetFloat()
 //ConVar ffdev_flamesize_burn2("ffdev_flamesize_burn2","0.04", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 2");
@@ -3961,7 +3964,8 @@ void CFFPlayer::StatusEffectsThink( void )
 			case 3:info.SetCustomKill(KILLTYPE_BURN_LEVEL3);break;
 			}
 
-			TakeDamage( info );
+			// No more burn damage for now - TODO: Remove all this code
+			//TakeDamage( info );
 
 			// remove a tick
 			m_iBurnTicks--;
@@ -4758,7 +4762,7 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 }
 
 // scale = damage per tick :: Scale currently ignored - use cvars for weapon damage!
-void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDuration, eBurnType BurnType)
+void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnType)
 {
 	// Okay, now pyros don't catch fire at all
 	if (GetClassSlot() == CLASS_PYRO)
@@ -4840,10 +4844,10 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		}
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING3 );
-			WRITE_FLOAT( flIconDuration );
+			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
 		MessageEnd();
 
-		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN3, false );
+		Ignite( FFDEV_PYRO_BURNTIME, false, FFDEV_FLAMESIZE_BURN3, false );
 	}
 	// if we're on fire from 2 flame weapons, burn a bit more
 	else if (newburnlevel == 2)
@@ -4858,19 +4862,19 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		}
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING2 );
-			WRITE_FLOAT( flIconDuration );
+			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
 		MessageEnd();
 
-		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN2, false );
+		Ignite( FFDEV_PYRO_BURNTIME, false, FFDEV_FLAMESIZE_BURN2, false );
 	}
 	else // burn level 1
 	{
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING1 );
-			WRITE_FLOAT( flIconDuration );
+			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
 		MessageEnd();
 
-		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN1, false );
+		Ignite( FFDEV_PYRO_BURNTIME, false, FFDEV_FLAMESIZE_BURN1, false );
 	}
 
 	DevMsg("Burn: %f",m_flBurningDamage);
@@ -6017,10 +6021,10 @@ void CFFPlayer::Extinguish( void )
 		CSingleUserRecipientFilter user2( ( CBasePlayer * )this );
 		user2.MakeReliable();
 
-		UserMessageBegin( user2, "FFViewEffect" );
-			WRITE_BYTE( FF_VIEWEFFECT_BURNING );
-			WRITE_FLOAT( 0.0 );
-		MessageEnd();
+		//UserMessageBegin( user2, "FFViewEffect" );
+		//	WRITE_BYTE( FF_VIEWEFFECT_BURNING );
+		//	WRITE_FLOAT( 0.0 );
+		//MessageEnd();
 
 		// Play sound!
 		CSingleUserRecipientFilter hFilter( ( CBasePlayer * )this );
@@ -7830,10 +7834,10 @@ void CFFPlayer::DamageEffect(float flDamage, int fDamageType)
 		CSingleUserRecipientFilter user(this);
 		user.MakeReliable();
 
-		UserMessageBegin(user, "FFViewEffect");
-		WRITE_BYTE(FF_VIEWEFFECT_BURNING);
-		WRITE_BYTE(min(30.0f * flDamage, 255));
-		MessageEnd();
+		//UserMessageBegin(user, "FFViewEffect");
+		//WRITE_BYTE(FF_VIEWEFFECT_BURNING);
+		//WRITE_BYTE(min(30.0f * flDamage, 255));
+		//MessageEnd();
 
 		ViewPunch(QAngle(random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f)));
 	}
@@ -7884,8 +7888,6 @@ void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime, float flFlameSize)
 			pFlame = CEntityFlame::Create(this, true, flFlameSize); // make a brand new bigger flame
 			SetEffectEntity(pFlame);
 		}
-			
-
 	}
 
 	Assert(pFlame);

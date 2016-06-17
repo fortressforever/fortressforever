@@ -252,7 +252,7 @@ void CFFWeaponFlamethrower::Fire()
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
 
 					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
-					pPlayerTarget->ApplyBurning( pPlayer, 0.5f, 10.0f, BURNTYPE_FLAMETHROWER);
+					pPlayerTarget->ApplyBurning( pPlayer, 0.5f, BURNTYPE_FLAMETHROWER);
 				}
 				// TODO: Check water level for dispensers & sentryguns!
 				else if( FF_IsDispenser( pTarget ) )

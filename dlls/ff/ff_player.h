@@ -522,7 +522,7 @@ protected:
 public:
 	bool Infect( CFFPlayer *pPlayer );
 	bool Cure( CFFPlayer *pPlayer );
-	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, float flIconDuration = 10.0f, eBurnType BurnType = BURNTYPE_NONE);
+	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, eBurnType BurnType = BURNTYPE_NONE);
 	bool IsBurning( void ) const { return m_bBurnFlagNG|m_bBurnFlagFT|m_bBurnFlagIC; }
 
 	void Gas( float flDuration, float flIconDuration, CFFPlayer *pGasser);
