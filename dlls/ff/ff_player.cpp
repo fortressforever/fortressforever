@@ -7208,6 +7208,10 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 	// Find out when we'll finish the cloak fade
 	m_flCloakFadeStart = gpGlobals->curtime;
 	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? FFDEV_SPY_SCLOAKFADESPEED : FFDEV_SPY_CLOAKFADESPEED );
+		
+	// Hint Code	
+	// Event: Player successfully cloaks for the first time
+	FF_SendHint( this, SPY_GAINCLOAK, 1, PRIORITY_NORMAL, "#FF_HINT_SPY_GAINCLOAK" );
 
 	// If instant, set alpha back to normal and bail
 	if( bInstant )

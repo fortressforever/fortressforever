@@ -218,6 +218,7 @@ enum HintType
 	SPY_NODISGUISE,		// Event: Player plays for 5 minutes without disguising.
 	SPY_GANKDISGUISE,	// Event: Player successfully backstabs from disguise to steal enemy disguise 
 	SPY_LOSEDISGUISE,	// Event: Player's disguise is removed by proximity to an enemy spy or scout
+	SPY_GAINCLOAK,		// Event: Player successfully cloaks for the first time
 	SPY_LOSECLOAK,		// Event: Player's cloak is removed by proximity to an enemy spy
 	SPY_SGCLOAK,		// Event: Player, while cloaked, is shot by an SG
 	SPY_KNIFE,			// Event: Player selects the knife
