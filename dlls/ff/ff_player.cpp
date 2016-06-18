@@ -6039,7 +6039,6 @@ void CFFPlayer::Extinguish( void )
 
 	StopSound( "General.BurningFlesh" );
 	StopSound( "General.BurningObject" );
-	//EmitSound( "General.StopBurning" );
 }
 
 //-----------------------------------------------------------------------------
