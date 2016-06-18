@@ -2246,9 +2246,15 @@ int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget
 {
 	if( !pPlayer || !pTarget )
 		return GR_NOTTEAMMATE;
-	
-	if( pPlayer->GetTeamNumber() == pTarget->GetTeamNumber() )
+
+	if( pPlayer == pTarget )
 		return GR_TEAMMATE;
+
+	if( pPlayer->GetTeamNumber() == pTarget->GetTeamNumber() )
+	{
+		CFFTeam *pTeam = ( CFFTeam * )GetGlobalTeam( pPlayer->GetTeamNumber() );
+		return pTeam->IsFFA() ? GR_NOTTEAMMATE : GR_TEAMMATE;
+	}
 
 	if( pPlayer->IsPlayer() && pTarget->IsPlayer() )
 	{
@@ -2301,7 +2307,10 @@ int CFFGameRules::IsTeam1AlliedToTeam2( int iTeam1, int iTeam2 )
 
 	// Same team, but still the result we're looking for
 	if( iTeam1 == iTeam2 )
-		return GR_TEAMMATE;
+	{
+		CFFTeam *pTeam = ( CFFTeam * )GetGlobalTeam( iTeam1 );
+		return pTeam->IsFFA() ? GR_NOTTEAMMATE : GR_TEAMMATE;
+	}
 	else
 	{
 		// Use mirv's allies stuff...
