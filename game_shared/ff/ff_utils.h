@@ -201,6 +201,7 @@ enum HintType
 	MEDIC_CONC1,		// Event: First thrown conc(this hint should play only once for the player. See identical entry under Scout)
 	MEDIC_CONC2,		// Event: Conc hint #2
 	MEDIC_NOINFECT,		// Event: Medic tries to infect an enemy player who is Immune.
+	MEDIC_PLAYTIME,		// Event: Player logs 10 minutes of medic class
 	// HW
 	HWGUY_SPAWN,		// Event: First spawn +5 seconds
 	HWGUY_OVERHEAT,		// Event: AC overheats
