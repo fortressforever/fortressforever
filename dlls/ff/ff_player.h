@@ -801,7 +801,7 @@ public:
 	//float m_flNextSpawnDelay;
 
 	virtual int TakeEmp();
-	virtual void Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner );
+	virtual void Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner );
 
 	void SetFlameSpritesLifetime(float flLifeTime, float flFlameSize = 1.0f);
 
