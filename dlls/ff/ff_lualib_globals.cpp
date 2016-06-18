@@ -2969,6 +2969,22 @@ namespace FFLib
 		_menuman.RemoveLuaMenuOption( szMenuName, iSlot );
 	}
 
+	CBaseEntity* SpawnEntity(const char *szEntityClassName, const char *szEntityName)
+	{
+		CBaseEntity *pEntity = CreateEntityByName(szEntityClassName);
+		if (szEntityName && pEntity)
+		{
+			pEntity->SetName( MAKE_STRING(szEntityName) );
+		}
+		int status = DispatchSpawn(pEntity);
+		return status == 0 ? pEntity : NULL;
+	}
+
+	CBaseEntity* SpawnEntity(const char *szEntityClassName)
+	{
+		return SpawnEntity(szEntityClassName, NULL);
+	}
+
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -3238,6 +3254,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("DestroyMenu",				&FFLib::DestroyMenu),
 		def("SetMenuTitle",				&FFLib::SetMenuTitle),
 		def("AddMenuOption",			&FFLib::AddMenuOption),
-		def("RemoveMenuOption",			&FFLib::RemoveMenuOption)
+		def("RemoveMenuOption",			&FFLib::RemoveMenuOption),
+		def("SpawnEntity",				(CBaseEntity*(*)(const char *))&FFLib::SpawnEntity),
+		def("SpawnEntity",				(CBaseEntity*(*)(const char *, const char *))&FFLib::SpawnEntity)
 	];
 }
