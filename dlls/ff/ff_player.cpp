@@ -5002,6 +5002,9 @@ void CFFPlayer::Command_PrimeTwo(void)
 					case CLASS_SOLDIER: 
 						FF_SendHint( this, SOLDIER_LASERGREN, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_LASERGREN" );
 						break;
+					case CLASS_HWGUY:
+						FF_SendHint( this, HWGUY_SLOWFIELD, 1, PRIORITY_NORMAL, "#FF_HINT_HWGUY_SLOWFIELD" );
+						break;
 					case CLASS_MEDIC:
 					case CLASS_SCOUT:
 						FF_SendHint( this, SCOUT_CONC1, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_CONC1" );
