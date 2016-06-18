@@ -1656,145 +1656,151 @@ void CFFPlayer::Cloak( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::Overpressure( void )
 {
-	if (IsAlive())
+	if (!IsAlive())
 	{
-		CEffectData data;
-		data.m_vOrigin = GetAbsOrigin();
-		
-		DispatchEffect(OVERPRESSURE_EFFECT, data);
+		return;
+	}
 
-		// Play a sound
-		EmitSoundShared("overpressure.explode");
+	CEffectData data;
+	data.m_vOrigin = GetAbsOrigin();
+	
+	DispatchEffect(OVERPRESSURE_EFFECT, data);
+
+	// Play a sound
+	EmitSoundShared("overpressure.explode");
 
 #ifdef CLIENT_DLL
-			FF_SendHint( HWGUY_OVERPRESS, 3, PRIORITY_NORMAL, "#FF_HINT_HWGUY_OVERPRESS" );
+	FF_SendHint( HWGUY_OVERPRESS, 3, PRIORITY_NORMAL, "#FF_HINT_HWGUY_OVERPRESS" );
 #endif
 
-		for (int i=1; i<=gpGlobals->maxClients; i++)
+	Extinguish(); // Overpressure stops you burning
+
+	for (int i=1; i<=gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
+
+		if (!pPlayer)
+			continue;
+
+		if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+			continue;
+		
+		// People who are building shouldn't be pushed around by anything
+		if (pPlayer->IsStaticBuilding())
+			continue;
+
+		pPlayer->Extinguish(); // Overpressure extinguishes fire from everyone
+		
+		// Ignore people that can't take damage (teammates when friendly fire is off)
+		if (OVERPRESSURE_IGNOREFRIENDLY && !g_pGameRules->FCanTakeDamage( pPlayer, this ))
+			continue;
+
+		// Some useful things to know
+		Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
+		Vector vecDisplacement = vecPlayerOrigin - GetAbsOrigin();
+		float flDistance = vecDisplacement.Length();
+
+		if (flDistance > OVERPRESSURE_RADIUS)
+			continue;
+
+		Vector vecDir = vecDisplacement;
+		vecDir.NormalizeInPlace();
+
+		Vector vecResult;
+		if (pPlayer == this)
 		{
-			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
+			float flSelfLateral = OVERPRESSURE_SELFPUSH_HORIZONTAL;
+			float flSelfVertical = OVERPRESSURE_SELFPUSH_VERTICAL;
 
-			if (!pPlayer)
-				continue;
-
-			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
-				continue;
-			
-			// People who are building shouldn't be pushed around by anything
-			if (pPlayer->IsStaticBuilding())
-				continue;
-			
-			// Ignore people that can't take damage (teammates when friendly fire is off)
-			if (OVERPRESSURE_IGNOREFRIENDLY && !g_pGameRules->FCanTakeDamage( pPlayer, this ))
-				continue;
-
-			// Some useful things to know
-			Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
-			Vector vecDisplacement = vecPlayerOrigin - GetAbsOrigin();
-			float flDistance = vecDisplacement.Length();
-
-			if (flDistance > OVERPRESSURE_RADIUS)
-				continue;
-
-			Vector vecDir = vecDisplacement;
-			vecDir.NormalizeInPlace();
-
-			Vector vecResult;
-			if (pPlayer == this)
-			{
-				float flSelfLateral = OVERPRESSURE_SELFPUSH_HORIZONTAL;
-				float flSelfVertical = OVERPRESSURE_SELFPUSH_VERTICAL;
-
-				Vector vecVelocity = pPlayer->GetAbsVelocity();
-				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-				float flHorizontalSpeed = vecLatVelocity.Length();
+			Vector vecVelocity = pPlayer->GetAbsVelocity();
+			Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+			float flHorizontalSpeed = vecLatVelocity.Length();
 
 #ifdef GAME_DLL
-				if (OVERPRESSURE_SLIDE_AFFECTSSELF)
-					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
+			if (OVERPRESSURE_SLIDE_AFFECTSSELF)
+				pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
 #endif
 
-				// apply push force
-				if (pPlayer->GetFlags() & FL_ONGROUND)
-				{
-					vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y  * flSelfLateral, (vecVelocity.z + 90)* flSelfVertical);
-					DevMsg("[HW attack2] on ground (%f)\n", flHorizontalSpeed);
-				}
-				else
-				{
-					vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y * flSelfLateral, vecVelocity.z * flSelfVertical);
-					DevMsg("[HW attack2] in air (%f)\n", flHorizontalSpeed);
-				}
+			// apply push force
+			if (pPlayer->GetFlags() & FL_ONGROUND)
+			{
+				vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y  * flSelfLateral, (vecVelocity.z + 90)* flSelfVertical);
+				DevMsg("[HW attack2] on ground (%f)\n", flHorizontalSpeed);
 			}
 			else
 			{
-				float flFriendlyScale = 1.0f;
+				vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y * flSelfLateral, vecVelocity.z * flSelfVertical);
+				DevMsg("[HW attack2] in air (%f)\n", flHorizontalSpeed);
+			}
+		}
+		else
+		{
+			float flFriendlyScale = 1.0f;
 
-				// Check if is a teammate and scale accordingly
-				if (g_pGameRules->PlayerRelationship(pPlayer, this) == GR_TEAMMATE)
-					flFriendlyScale = OVERPRESSURE_FRIENDLYSCALE;
+			// Check if is a teammate and scale accordingly
+			if (g_pGameRules->PlayerRelationship(pPlayer, this) == GR_TEAMMATE)
+				flFriendlyScale = OVERPRESSURE_FRIENDLYSCALE;
 
-				QAngle angDirection;
-				VectorAngles(vecDir, angDirection);
+			QAngle angDirection;
+			VectorAngles(vecDir, angDirection);
 
-				pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
+			pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
 
 #ifdef GAME_DLL
-				if (OVERPRESSURE_SLIDE)
-					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
+			if (OVERPRESSURE_SLIDE)
+				pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
 #endif
 
 
-				Vector vecVelocity = pPlayer->GetAbsVelocity();
-				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-				float flHorizontalSpeed = vecLatVelocity.Length();
+			Vector vecVelocity = pPlayer->GetAbsVelocity();
+			Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+			float flHorizontalSpeed = vecLatVelocity.Length();
 
-				float flSpeedPercent = OVERPRESSURE_SPEED_PERCENT;
+			float flSpeedPercent = OVERPRESSURE_SPEED_PERCENT;
 
-				float flLateral = OVERPRESSURE_PUSH_HORIZONTAL * flFriendlyScale;
-				float flVertical = OVERPRESSURE_PUSH_VERTICAL * flFriendlyScale;
+			float flLateral = OVERPRESSURE_PUSH_HORIZONTAL * flFriendlyScale;
+			float flVertical = OVERPRESSURE_PUSH_VERTICAL * flFriendlyScale;
 
-				if (flHorizontalSpeed > pPlayer->MaxSpeed() * flSpeedPercent)
+			if (flHorizontalSpeed > pPlayer->MaxSpeed() * flSpeedPercent)
+			{
+				float flSpeedMultiplier = flHorizontalSpeed / pPlayer->MaxSpeed() - flSpeedPercent + 1;
+
+				float flSpeedMultiplierHorizontal = OVERPRESSURE_SPEED_MULTIPLIER_HORIZONTAL * flSpeedMultiplier;
+				float flSpeedMultiplierVertical = OVERPRESSURE_SPEED_MULTIPLIER_VERTICAL * flSpeedMultiplier;
+
+				vecResult = Vector(vecDir.x * flLateral * flSpeedMultiplierHorizontal, vecDir.y * flLateral * flSpeedMultiplierHorizontal, vecDir.z * flVertical * flSpeedMultiplierVertical);
+				DevMsg("[HW attack2] enemy going supersonic (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+			}
+			else
+			{
+				// apply push force
+				if (pPlayer->GetFlags() & FL_ONGROUND)
 				{
-					float flSpeedMultiplier = flHorizontalSpeed / pPlayer->MaxSpeed() - flSpeedPercent + 1;
+					float flGroundPush = OVERPRESSURE_GROUNDPUSH_MULTIPLIER;
 
-					float flSpeedMultiplierHorizontal = OVERPRESSURE_SPEED_MULTIPLIER_HORIZONTAL * flSpeedMultiplier;
-					float flSpeedMultiplierVertical = OVERPRESSURE_SPEED_MULTIPLIER_VERTICAL * flSpeedMultiplier;
-
-					vecResult = Vector(vecDir.x * flLateral * flSpeedMultiplierHorizontal, vecDir.y * flLateral * flSpeedMultiplierHorizontal, vecDir.z * flVertical * flSpeedMultiplierVertical);
-					DevMsg("[HW attack2] enemy going supersonic (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+					vecResult = Vector(vecDir.x * flLateral * flGroundPush, vecDir.y  * flLateral * flGroundPush, vecDir.z * flVertical);
+					DevMsg("[HW attack2] enemy on ground, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
 				}
 				else
 				{
-					// apply push force
-					if (pPlayer->GetFlags() & FL_ONGROUND)
-					{
-						float flGroundPush = OVERPRESSURE_GROUNDPUSH_MULTIPLIER;
-
-						vecResult = Vector(vecDir.x * flLateral * flGroundPush, vecDir.y  * flLateral * flGroundPush, vecDir.z * flVertical);
-						DevMsg("[HW attack2] enemy on ground, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
-					}
-					else
-					{
-						vecResult = Vector(vecDir.x * flLateral, vecDir.y * flLateral, vecDir.z * flVertical);
-						DevMsg("[HW attack2] enemy in air, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
-					}
+					vecResult = Vector(vecDir.x * flLateral, vecDir.y * flLateral, vecDir.z * flVertical);
+					DevMsg("[HW attack2] enemy in air, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
 				}
 			}
+		}
 
 #ifdef GAME_DLL
-			// cap mancannon + overpressure speed
-			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
+		// cap mancannon + overpressure speed
+		if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
+		{
+			if ( vecResult.Length() > 1700.0f )
 			{
-				if ( vecResult.Length() > 1700.0f )
-				{
-					vecResult.NormalizeInPlace();
-					vecResult *= 1700.0f;
-				}
+				vecResult.NormalizeInPlace();
+				vecResult *= 1700.0f;
 			}
-#endif
-			pPlayer->SetAbsVelocity(vecResult);
 		}
+#endif
+		pPlayer->SetAbsVelocity(vecResult);
 	}
 }
 
