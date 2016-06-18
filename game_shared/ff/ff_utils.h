@@ -204,6 +204,7 @@ enum HintType
 	// HW
 	HWGUY_SPAWN,		// Event: First spawn +5 seconds
 	HWGUY_OVERHEAT,		// Event: AC overheats
+	HWGUY_OVERPRESS,	// Event: First use of overpressure 
 	HWGUY_SLOWFIELD,	// Event: First thrown slowfield grenade
 	// PYRO
 	PYRO_SPAWN,			// Event: First spawn +5 seconds
