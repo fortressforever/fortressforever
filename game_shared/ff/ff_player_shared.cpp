@@ -1668,8 +1668,9 @@ void CFFPlayer::Overpressure( void )
 
 	// Play a sound
 	EmitSoundShared("overpressure.explode");
-
+#ifdef GAME_DLL
 	Extinguish(); // Overpressure stops you burning
+#endif
 
 	for (int i=1; i<=gpGlobals->maxClients; i++)
 	{
@@ -1684,9 +1685,9 @@ void CFFPlayer::Overpressure( void )
 		// People who are building shouldn't be pushed around by anything
 		if (pPlayer->IsStaticBuilding())
 			continue;
-
+#ifdef GAME_DLL
 		pPlayer->Extinguish(); // Overpressure extinguishes fire from everyone
-		
+#endif
 		// Ignore people that can't take damage (teammates when friendly fire is off)
 		if (OVERPRESSURE_IGNOREFRIENDLY && !g_pGameRules->FCanTakeDamage( pPlayer, this ))
 			continue;

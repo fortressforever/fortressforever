@@ -31,6 +31,7 @@
 // When changing jump height, recalculate the FF_MUL_CONSTANT!!!
 #define FF_JUMP_HEIGHT 27.5f // Modified by Mulch 10/20/2005 so we could jump on 63 but not 64 unit high stuff
 #define FF_MUL_CONSTANT 209.76177f //sqrt(2.0f * 800.0f * FF_JUMP_HEIGHT);
+#define EXTINGUISH_FIRE_SPEED 500.0f
 //static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5", FCVAR_FF_FFDEV );
 
 //static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -920,7 +921,12 @@ void CFFGameMovement::CheckVelocity( void )
 		return;
 
 	pPlayer->SetRampsliding(IsRampSliding(pPlayer));
-
+#ifdef GAME_DLL
+	if ( mv->m_vecVelocity.LengthSqr() > (EXTINGUISH_FIRE_SPEED * EXTINGUISH_FIRE_SPEED ))
+	{
+		pPlayer->Extinguish();
+	}
+#endif
 	if( !pPlayer->IsCloaked() )
 		return;
 
