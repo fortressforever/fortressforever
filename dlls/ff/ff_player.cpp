@@ -60,14 +60,11 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 #define GREN_SPAWN_ANG_X 18.5f
 //ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");
 
-
-#define BURN_TICK_INTERVAL 1.25f
 //ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
 //ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
 //ConVar burn_damage_ft("ffdev_burn_damage_ft","15.0",0,"Burn damage of the Flamethrower (per tick)");
 #define BURN_DAMAGE_BASE 13.0f
-//ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
-#define BURN_TICKS 6
+
 //ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","5",0,"Burn damage multiplier for all 3 burn types.");
 #define BURN_MULTIPLIER_3BURNS 5.0f
 //ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
@@ -75,6 +72,10 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
 ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","4.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
 #define FFDEV_PYRO_BURNTIME ffdev_pyro_burntime.GetFloat()
+
+#define BURN_TICK_INTERVAL FFDEV_PYRO_BURNTIME
+//ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
+#define BURN_TICKS 1
 
 //ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
 #define FFDEV_FLAMESIZE_BURN1 0.015f //ffdev_flamesize_burn1.GetFloat()
@@ -3972,7 +3973,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			m_flBurningDamage -= damage;
 
 			// schedule the next tick
-			m_flNextBurnTick = gpGlobals->curtime + 1.25f;
+			m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
 		}
 		else
 		{
@@ -4774,9 +4775,14 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnTy
 	CSingleUserRecipientFilter user( (CBasePlayer *)this );
 	user.MakeReliable();
 	
-	// set them on fire
-	if (!m_iBurnTicks)
-		m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
+	float burnTickInterval = BURN_TICK_INTERVAL; 
+	if (GetClassSlot() == CLASS_MEDIC)
+	{
+		burnTickInterval *= 0.5;
+	}
+
+	m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
+
 	// multiply damage left to burn by number of remaining ticks, then divide it out among the new 8 ticks
 	// This prevents damage being incorrectly multiplied - shok
 	// ignore this now - instead we use burn levels and simply reset the timer
@@ -4847,7 +4853,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnTy
 			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
 		MessageEnd();
 
-		Ignite( FFDEV_PYRO_BURNTIME, false, FFDEV_FLAMESIZE_BURN3, false );
+		Ignite( false, FFDEV_FLAMESIZE_BURN3, false );
 	}
 	// if we're on fire from 2 flame weapons, burn a bit more
 	else if (newburnlevel == 2)
@@ -4865,7 +4871,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnTy
 			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
 		MessageEnd();
 
-		Ignite( FFDEV_PYRO_BURNTIME, false, FFDEV_FLAMESIZE_BURN2, false );
+		Ignite( false, FFDEV_FLAMESIZE_BURN2, false );
 	}
 	else // burn level 1
 	{
@@ -4874,29 +4880,12 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnTy
 			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
 		MessageEnd();
 
-		Ignite( FFDEV_PYRO_BURNTIME, false, FFDEV_FLAMESIZE_BURN1, false );
+		Ignite( false, FFDEV_FLAMESIZE_BURN1, false );
 	}
 
 	DevMsg("Burn: %f",m_flBurningDamage);
 
 	m_BurnType = BurnType;
-
-	/*
-	this may cause less damage to happen..
-	implemented differently above - fryguy 
-
-	// --> Mirv: Pyros safer against fire
-	//	# 50% damage reduction when being hurt by fire.
-	//	# Once on fire, burn time reduced by 50%.
-	if (GetClassSlot() == CLASS_PYRO)
-	{
-	m_iBurnTicks *= 0.5f;
-	m_flBurningDamage *= 0.5f;
-	}
-	// <-- Mirv: Pyros safer against fire
-	*/
-
-	// set up the igniter
 	m_hIgniter = hIgniter;
 }
 
@@ -5979,9 +5968,15 @@ void CFFPlayer::SetClassForClient( int classnum )
 	m_iClassStatus |= ( 0x0000000F & classnum );
 }
 
-void CFFPlayer::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
+void CFFPlayer::Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
 {
 	AddFlag( FL_ONFIRE );
+
+	float flFlameLifetime = FFDEV_PYRO_BURNTIME;
+	if (GetClassSlot() == CLASS_MEDIC)
+	{
+		flFlameLifetime *= 0.5;
+	}
 
 	SetFlameSpritesLifetime(flFlameLifetime, flSize);
 
