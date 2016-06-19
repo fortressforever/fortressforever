@@ -125,9 +125,12 @@ public:
 	void			LUA_SetAngles( const QAngle& vecAngles );
 
 	void			LUA_SetModel( const char *szModel );
+	const char *	LUA_GetModel();
 
 	void			LUA_SetStartOrigin(const Vector& vecOrigin);
+	Vector			LUA_GetStartOrigin() const;
 	void			LUA_SetStartAngles(const QAngle& vecAngles);
+	QAngle			LUA_GetStartAngles() const;
 
 	void			Pickup( CBaseEntity *pEntity );
 	void			Drop( float delay, Vector pos, Vector velocity );
