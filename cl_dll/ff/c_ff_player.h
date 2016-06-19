@@ -405,7 +405,6 @@ public:
 	// --> Mirv: Conc stuff
 	float m_flConcTime;
 	QAngle m_angConced, m_angConcedTest;
-
 	
 	CNetworkVar( float, m_flTrueAimTime );
 	CNetworkVar( float, m_flHitTime );
