@@ -70,7 +70,7 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
 #define BURN_MULTIPLIER_2BURNS 2.0f
 
-ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","4.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
+ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
 #define FFDEV_PYRO_BURNTIME ffdev_pyro_burntime.GetFloat()
 
 #define BURN_TICK_INTERVAL FFDEV_PYRO_BURNTIME
@@ -85,7 +85,7 @@ ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","4.0", FCVAR_FF_FFDEV_REPLICATE
 #define FFDEV_FLAMESIZE_BURN3 0.045f //ffdev_flamesize_burn3.GetFloat()
 
 
-ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.5", FCVAR_FF_FFDEV_REPLICATED, "Self damage multipler for IC jumping");
+ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.25", FCVAR_FF_FFDEV_REPLICATED, "Self damage multipler for IC jumping");
 #define FFDEV_PYRO_IC_MULTIPLIER ffdev_ic_selfdamagemultiplier.GetFloat()
 
 // [integer] Max distance a player can be from us to be shown
