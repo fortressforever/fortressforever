@@ -20,6 +20,11 @@
 
 extern CEngineSprite *Draw_SetSpriteTexture( const model_t *pSpriteModel, int frame, int rendermode );
 
+ConVar grenadetrails("cl_grenadetrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar pipetrails("cl_pipetrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+ConVar flagtrails("cl_flagtrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Turns on/off all trails attached to flags and all other Lua-based INFO_FF_SCRIPT objects.");
+ConVar cl_spritetrail_maxlength("cl_spritetrail_maxlength", "1000", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "The maximum length of a sprite trail segment; setting this too high can lead to performance issues.");
+
 #endif // CLIENT_DLL
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -276,6 +281,9 @@ void CSpriteTrail::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 void CSpriteTrail::ClientThink()
 {
+	if (!IsEnabledByClient())
+		return;
+
 	// Update the trail + bounding box
 	UpdateTrail();
 	UpdateBoundingBox();
@@ -336,6 +344,27 @@ void CSpriteTrail::ComputeScreenPosition( Vector *pScreenPos )
 #endif
 }
 
+//-----------------------------------------------------------------------------
+// Returns true if the client has this trail enabled
+//-----------------------------------------------------------------------------
+bool CSpriteTrail::IsEnabledByClient( void )
+{
+	CBaseEntity *pParent = GetMoveParent();
+
+	if (grenadetrails.GetBool() == false && 
+		pParent && pParent->Classify() >= CLASS_GREN && pParent->Classify() <= CLASS_GREN_LASER)
+		return false;
+
+	if (pipetrails.GetBool() == false && 
+		pParent && pParent->Classify() >= CLASS_PIPEBOMB && pParent->Classify() <= CLASS_GLGRENADE)
+		return false;
+
+	if (flagtrails.GetBool() == false &&
+		pParent && pParent->Classify() == CLASS_INFOSCRIPT)
+		return false;
+
+	return true;
+}
 
 //-----------------------------------------------------------------------------
 // Compute position	+ bounding box
@@ -356,6 +385,13 @@ void CSpriteTrail::UpdateBoundingBox( void )
 	for ( int i = 0; i < m_nStepCount; ++i )
 	{
 		TrailPoint_t *pPoint = GetTrailPoint(i);
+
+		// The render origin can move in between updates, so skip points
+		// that are now too far away
+		if ( pPoint->m_vecScreenPos.DistToSqr( vecRenderOrigin ) > cl_spritetrail_maxlength.GetFloat() * cl_spritetrail_maxlength.GetFloat() )
+		{
+			continue;
+		}
 
 		float flActualWidth = (flMaxWidth + pPoint->m_flWidthVariance) * 0.5f;
 		Vector size( flActualWidth, flActualWidth, flActualWidth );
@@ -383,6 +419,15 @@ void CSpriteTrail::UpdateTrail( void )
 	Vector	screenPos;
 	ComputeScreenPosition( &screenPos );
 	TrailPoint_t *pLast = m_nStepCount ? GetTrailPoint( m_nStepCount-1 ) : NULL;
+
+	// If the sprite trail is too long, just start over
+	if ( pLast && pLast->m_vecScreenPos.DistToSqr( screenPos ) > cl_spritetrail_maxlength.GetFloat() * cl_spritetrail_maxlength.GetFloat() )
+	{
+		m_nFirstStep = 0;
+		m_nStepCount = 0;
+		pLast = NULL;
+	}
+
 	if ( ( pLast == NULL ) || ( pLast->m_vecScreenPos.DistToSqr( screenPos ) > 4.0f ) )
 	{
 		// If we're over our limit, steal the last point and put it up front
@@ -413,10 +458,6 @@ void CSpriteTrail::UpdateTrail( void )
 	m_flUpdateTime = gpGlobals->curtime + ( m_flLifeTime / (float) MAX_SPRITE_TRAIL_POINTS );
 }
 
-ConVar grenadetrails("cl_grenadetrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-ConVar pipetrails("cl_pipetrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-ConVar flagtrails("cl_flagtrails", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Turns on/off all trails attached to flags and all other Lua-based INFO_FF_SCRIPT objects.");
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -429,38 +470,31 @@ int CSpriteTrail::DrawModel( int flags )
 		return 1;
 
 	//See if we should draw
-	if ( !IsVisible() || ( m_bReadyToDraw == false ) )
+	if ( !IsVisible() || ( m_bReadyToDraw == false ) || !IsEnabledByClient() )
 		return 0;
-
-	CBaseEntity *pParent = GetMoveParent();
-
-	if (grenadetrails.GetBool() == false && 
-		pParent && pParent->Classify() >= CLASS_GREN && pParent->Classify() <= CLASS_GREN_LASER)
-		return 0;
-
-	if (pipetrails.GetBool() == false && 
-		pParent && pParent->Classify() >= CLASS_PIPEBOMB && pParent->Classify() <= CLASS_GLGRENADE)
-		return 0;
-
-    if (flagtrails.GetBool() == false &&
-        pParent && pParent->Classify() == CLASS_INFOSCRIPT)
-        return 0;
 
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( GetModel(), m_flFrame, GetRenderMode() );
 	if ( pSprite == NULL )
 		return 0;
 
-	// Specify all the segments.
-	CBeamSegDraw segDraw;
-	segDraw.Start( m_nStepCount + 1, pSprite->GetMaterial() );
-	
 	// Setup the first point, always emanating from the attachment point
 	TrailPoint_t *pLast = GetTrailPoint( m_nStepCount-1 );
 	TrailPoint_t currentPoint;
-	currentPoint.m_flDieTime = gpGlobals->curtime + m_flLifeTime;
 	ComputeScreenPosition( &currentPoint.m_vecScreenPos );
+
+	// if the current point is too far away from the last point, then don't draw anything
+	if (pLast->m_vecScreenPos.DistToSqr( currentPoint.m_vecScreenPos ) > cl_spritetrail_maxlength.GetFloat() * cl_spritetrail_maxlength.GetFloat())
+	{
+		return 0;
+	}
+
+	currentPoint.m_flDieTime = gpGlobals->curtime + m_flLifeTime;
 	currentPoint.m_flTexCoord = pLast->m_flTexCoord + currentPoint.m_vecScreenPos.DistTo(pLast->m_vecScreenPos) * m_flTextureRes;
 	currentPoint.m_flWidthVariance = 0.0f;
+
+	// Specify all the segments.
+	CBeamSegDraw segDraw;
+	segDraw.Start( m_nStepCount + 1, pSprite->GetMaterial() );
 
 #if SCREEN_SPACE_TRAILS
 	VMatrix	viewMatrix;
