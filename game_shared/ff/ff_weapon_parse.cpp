@@ -56,7 +56,7 @@ void CFFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	m_flRange			= pKeyValuesData->GetFloat( "Range", 75.0 );
 
 	m_flRecoilAmount	= pKeyValuesData->GetFloat( "RecoilAmount", 0 );
-	m_flDeployDelay		= pKeyValuesData->GetFloat( "DeployDelay", 0.5f );
+	m_flDeployDelay		= pKeyValuesData->GetFloat( "DeployDelay", 0.25f );
 
 	const char *pAnimEx = pKeyValuesData->GetString( "PlayerAnimationExtension", "mp5" );
 	Q_strncpy( m_szAnimExtension, pAnimEx, sizeof( m_szAnimExtension ) );
