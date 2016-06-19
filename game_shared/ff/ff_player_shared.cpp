@@ -1623,7 +1623,7 @@ void CFFPlayer::Overpressure( void )
 		EmitSoundShared("overpressure.explode");
 
 #ifdef CLIENT_DLL
-			FF_SendHint( HWGUY_OVERPRESS, 3, PRIORITY_NORMAL, "#FF_HINT_HWGUY_OVERPRESSURE" );
+			FF_SendHint( HWGUY_OVERPRESS, 3, PRIORITY_NORMAL, "#FF_HINT_HWGUY_OVERPRESS" );
 #endif
 
 		for (int i=1; i<=gpGlobals->maxClients; i++)
