@@ -25,9 +25,6 @@
 	#include "ff_player.h"
 #endif
 
-//ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "0", FCVAR_FF_FFDEV_REPLICATED);
-#define IC_BLASTPUSH 0.0f
-
 //=============================================================================
 // CFFWeaponIC
 //=============================================================================
@@ -114,13 +111,4 @@ void CFFWeaponIC::Fire()
 #ifdef GAME_DLL
 	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_NAPALMCANNON, pRocket);
 #endif
-
-	// Push player but don't add to upwards force
-	// 0000936 - reduce the blast push
-	Vector vecImpulse = vForward * (IC_BLASTPUSH * -1.0f);
-
-	if (vecImpulse.z > 0)
-		vecImpulse.z = 0;
-
-	pPlayer->ApplyAbsVelocityImpulse(vecImpulse);
 }
