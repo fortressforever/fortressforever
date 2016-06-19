@@ -84,6 +84,10 @@ ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","4.0", FCVAR_FF_FFDEV_REPLICATE
 //ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 3");
 #define FFDEV_FLAMESIZE_BURN3 0.045f //ffdev_flamesize_burn3.GetFloat()
 
+
+ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.5", FCVAR_FF_FFDEV_REPLICATED, "Self damage multipler for IC jumping");
+#define FFDEV_PYRO_IC_MULTIPLIER ffdev_ic_selfdamagemultiplier.GetFloat()
+
 // [integer] Max distance a player can be from us to be shown
 //static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
 #define RADIOTAG_DISTANCE 1024
@@ -5399,7 +5403,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// if it's a pyro shooting themself (i.e. the IC) they take less damage
 	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN && (info.GetInflictor() == this || info.GetAttacker() == this))
 	{
-		info.SetDamage(4);
+		info.SetDamage(info.GetDamage() * FFDEV_PYRO_IC_MULTIPLIER);
 	}
 
 	// keep track of amount of damage last sustained

@@ -169,10 +169,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	SetAbsVelocity( vec3_origin );
 	SetNextThink( gpGlobals->curtime );
 #endif
-
-
 }
-
 
 #ifdef GAME_DLL
 
