@@ -90,6 +90,8 @@ void CFFLuaLib::InitTeam(lua_State* L)
 			.def("GetClassLimit",		&CFFTeam::GetClassLimit)
 			.def("SetPlayerLimit",		&CFFTeam::SetTeamLimits)
 			.def("GetPlayerLimit",		&CFFTeam::GetTeamLimits)
+			.def("IsFFA",				&CFFTeam::IsFFA)
+			.def("SetFFA",				&CFFTeam::SetFFA)
 			.enum_("TeamId")
 			[
 				value("kUnassigned",	TEAM_UNASSIGNED),
