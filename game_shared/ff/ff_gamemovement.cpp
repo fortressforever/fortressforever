@@ -922,7 +922,7 @@ void CFFGameMovement::CheckVelocity( void )
 
 	pPlayer->SetRampsliding(IsRampSliding(pPlayer));
 #ifdef GAME_DLL
-	if ( mv->m_vecVelocity.LengthSqr() > (EXTINGUISH_FIRE_SPEED * EXTINGUISH_FIRE_SPEED ))
+	if ( pPlayer->GetMovementSpeed() > EXTINGUISH_FIRE_SPEED)
 	{
 		pPlayer->Extinguish();
 	}
