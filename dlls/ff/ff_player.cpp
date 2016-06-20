@@ -5002,6 +5002,9 @@ void CFFPlayer::Command_PrimeTwo(void)
 					case CLASS_SOLDIER: 
 						FF_SendHint( this, SOLDIER_LASERGREN, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_LASERGREN" );
 						break;
+					case CLASS_HWGUY:
+						FF_SendHint( this, HWGUY_SLOWFIELD, 1, PRIORITY_NORMAL, "#FF_HINT_HWGUY_SLOWFIELD" );
+						break;
 					case CLASS_MEDIC:
 					case CLASS_SCOUT:
 						FF_SendHint( this, SCOUT_CONC1, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_CONC1" );
@@ -7205,6 +7208,10 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 	// Find out when we'll finish the cloak fade
 	m_flCloakFadeStart = gpGlobals->curtime;
 	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? FFDEV_SPY_SCLOAKFADESPEED : FFDEV_SPY_CLOAKFADESPEED );
+		
+	// Hint Code	
+	// Event: Player successfully cloaks for the first time
+	FF_SendHint( this, SPY_GAINCLOAK, 1, PRIORITY_NORMAL, "#FF_HINT_SPY_GAINCLOAK" );
 
 	// If instant, set alpha back to normal and bail
 	if( bInstant )

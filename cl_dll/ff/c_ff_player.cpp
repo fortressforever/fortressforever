@@ -245,6 +245,8 @@ void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
 
 	if ( name == "RJHint" )	// Player logged 10 minutes as a Soldier
 		FF_SendHint( SOLDIER_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_PLAYTIME" );
+	else if ( name == "MedHint" ) // Player logged 10 mintes as a Medic
+		FF_SendHint( MEDIC_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_MEDIC_PLAYTIME" );
 	else if ( name == "ICJHint" ) // Player logged 5 minutes as a Pyro
 		FF_SendHint( PYRO_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_PYRO_PLAYTIME" );
 	else if ( name == "scoutSpawn" )
@@ -1625,6 +1627,24 @@ void C_FFPlayer::Spawn( void )
 		pHintTimer->Unpause();
 	else
 		pHintTimer->Pause();
+
+	// Medic Playtime hint -- triggered after player has logged 10 minutes (total) as a Medic
+	C_FFHintTimer *pMedHintTimer = g_FFHintTimers.FindTimer( "MedHint" );
+	if ( pMedHintTimer == NULL ) // Setup timer
+	{	
+		pMedHintTimer = g_FFHintTimers.Create( "MedHint", 600.0f );
+		if ( pMedHintTimer )
+		{
+			pMedHintTimer->SetHintExpiredCallback( OnHintTimerExpired, false );
+			pMedHintTimer->StartTimer();
+			if ( GetClassSlot() != CLASS_MEDIC ) // Pause the timer if player isn't a Medic
+				pMedHintTimer->Pause();
+		}
+	}
+	else if ( GetClassSlot() == CLASS_MEDIC ) // Unpause the timer if the player is now a Medic
+		pMedHintTimer->Unpause();
+	else
+		pMedHintTimer->Pause();
 
 	// IC Jump hint -- triggered after player has logged 5 minutes (total) as a Pyro
 	C_FFHintTimer *pICHintTimer = g_FFHintTimers.FindTimer( "ICJHint" );
