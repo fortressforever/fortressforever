@@ -4884,7 +4884,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnTy
 			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
 		MessageEnd();
 
-		Ignite( false, FFDEV_FLAMESIZE_BURN1, false );
+		Ignite( false, FFDEV_FLAMESIZE_BURN2, false ); // Now no burn levels, make flames more visible
 	}
 
 	DevMsg("Burn: %f",m_flBurningDamage);
