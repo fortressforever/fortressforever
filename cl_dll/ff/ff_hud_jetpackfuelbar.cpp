@@ -102,14 +102,7 @@ void CHudJetpackFuelBar::Paint( void )
 	BaseClass::PaintBackground();
 
 	float iProgressPercent = pPlayer->m_flJetpackFuel / 100.0f;
-	if (iProgressPercent > 0.5f)
-	{
-		surface()->DrawSetColor( m_BarColor );
-	}
-	else
-	{
-		surface()->DrawSetColor( m_FadedBarColor );
-	}
+	surface()->DrawSetColor( m_BarColor );
 
 	surface()->DrawFilledRect( image1_xpos, image1_ypos, image1_xpos + bar_width * iProgressPercent, image1_ypos + bar_height );
 }
