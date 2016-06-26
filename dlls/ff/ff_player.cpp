@@ -72,7 +72,6 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
 ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
 #define FFDEV_PYRO_BURNTIME ffdev_pyro_burntime.GetFloat()
-
 #define BURN_TICK_INTERVAL FFDEV_PYRO_BURNTIME
 //ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
 #define BURN_TICKS 1
@@ -4780,9 +4779,13 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnTy
 	user.MakeReliable();
 	
 	float burnTickInterval = BURN_TICK_INTERVAL; 
-	if (GetClassSlot() == CLASS_MEDIC)
+	switch (GetClassSlot())
 	{
-		burnTickInterval *= 0.5;
+		case CLASS_SCOUT:
+		case CLASS_MEDIC:
+		case CLASS_SPY:
+			burnTickInterval *= 0.25; 
+			break;
 	}
 
 	m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
@@ -4795,6 +4798,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnTy
 	//m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
 
 	m_iBurnTicks = BURN_TICKS;
+
 	int oldburnlevel = 0;
 	if (m_bBurnFlagNG == true) 
 		++oldburnlevel;
