@@ -778,6 +778,11 @@ void CFFPlayer::ClassSpecificSkillHold()
 	{
 		case CLASS_PYRO:
 			JetpackHold();
+			if (m_flJetpackFuel < 1)
+			{
+				m_bJetpacking = false;
+				m_flNextClassSpecificSkill = gpGlobals->curtime + 0.25f;
+			}
 			break;
 	}
 }
