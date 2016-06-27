@@ -787,18 +787,21 @@ void CFFPlayer::ClassSpecificSkillHold()
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post()
 {
-#ifdef CLIENT_DLL
 	switch (GetClassSlot())
 	{
+#ifdef CLIENT_DLL
 		case CLASS_ENGINEER:
 		case CLASS_SPY:
 			HudContextShow(false);
+			break;
+#endif
+		case CLASS_PYRO:
+			m_bJetpacking = false;
 			break;
 
 		default:
 			break;
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1958,6 +1961,8 @@ void CFFPlayer::JetpackClick( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::JetpackHold( void )
 {
+	m_bJetpacking = false;
+
 	if (!IsAlive())
 	{
 		return;
@@ -1973,32 +1978,8 @@ void CFFPlayer::JetpackHold( void )
 		return;
 	}
 
-	CEffectData data;
-	data.m_vOrigin = GetAbsOrigin();
-	
-	DispatchEffect("WheelDust", data); // TODO: Make jetpack effect
+	m_bJetpacking = true;
 	m_flJetpackFuel -= JETPACK_FUELHOVERCOST;
-		
-	// Flamejet entity doesn't exist yet, so make it now
-	//if (!m_hFlameJet)
-	//{
-	//	QAngle angAiming;
-
-	//	VectorAngles(GetAutoaimVector(0), angAiming);
-	//	
-	//	// Create a flamejet emitter
-	//	m_hFlameJet = dynamic_cast<CFFFlameJet *> (CBaseEntity::Create("env_flamejet", Weapon_ShootPosition(), angAiming, this));
-
-	//	// Should inherit it's angles & position from the player for now
-	//	m_hFlameJet->SetOwnerEntity(this);
-	//	m_hFlameJet->FollowEntity(this);
-	//}
-
-	//// Spawn the FlameJet if necessary
-	//if(m_hFlameJet)
-	//	m_hFlameJet->FlameEmit(bEmit);
-
-
 
 	// Play a sound
 	//EmitSoundShared("Slowfield.LaserLoop"); // TODO: Make jetpack noise
@@ -2007,8 +1988,6 @@ void CFFPlayer::JetpackHold( void )
 	EyeVectors( &vecForward, &vecRight, &vecUp);
 	VectorNormalizeFast( vecForward );
 	VectorNormalizeFast( vecRight );
-	
-	Vector vecSrc = Weapon_ShootPosition();
 
 	// get only the direction the player is looking (ignore any z)
 	Vector horizPush = CrossProduct(Vector( 0.0f, 0.0f, 1.0f ), vecRight);

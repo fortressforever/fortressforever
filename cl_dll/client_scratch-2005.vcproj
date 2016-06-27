@@ -839,6 +839,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\ff\ff_fx_jetpack.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ff\ff_fx_jetpack.h"
+					>
+				</File>
+				<File
 					RelativePath=".\ff\ff_fx_napalm_emitter.cpp"
 					>
 				</File>
@@ -2144,11 +2152,11 @@
 					>
 				</File>
 				<File
-					RelativePath="iinput.h"
+					RelativePath="..\public\vgui\IInput.h"
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui\IInput.h"
+					RelativePath="iinput.h"
 					>
 				</File>
 				<File
@@ -2472,11 +2480,11 @@
 					>
 				</File>
 				<File
-					RelativePath="menu.h"
+					RelativePath="..\public\vgui_controls\Menu.h"
 					>
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h"
+					RelativePath="menu.h"
 					>
 				</File>
 				<File

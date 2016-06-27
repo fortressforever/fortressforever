@@ -39,7 +39,7 @@ public:
 
 	PMaterialHandle		GetPMaterial(const char *name);
 	
-	Particle*			AddParticle( unsigned int particleSize, PMaterialHandle material, const Vector &origin );
+	Particle*			AddParticle( unsigned int particleSize, PMaterialHandle material, const Vector &origin, int iMaxParticleSizeOverride=0 );
 
 	CParticleEffectBinding&	GetBinding()	{ return m_ParticleEffect; }
 
