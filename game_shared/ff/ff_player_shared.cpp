@@ -1956,25 +1956,34 @@ void CFFPlayer::JetpackClick( void )
 	}
 }
 
+bool CFFPlayer::CanJetpack()
+{
+	if (!IsAlive())
+	{
+		return false;
+	}
+
+	if ((GetFlags() & FL_ONGROUND) && !FFDEV_JETPACK_HOVERONGROUND)
+	{
+		return false;
+	}
+
+	if (m_flJetpackFuel < 1)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Jetpack jump
 //-----------------------------------------------------------------------------
 void CFFPlayer::JetpackHold( void )
 {
-	m_bJetpacking = false;
-
-	if (!IsAlive())
+	if (!CanJetpack())
 	{
-		return;
-	}
-
-	if ((GetFlags() & FL_ONGROUND) && !FFDEV_JETPACK_HOVERONGROUND)
-	{
-		return;
-	}
-
-	if (m_flJetpackFuel < 1)
-	{
+		m_bJetpacking = false;
 		return;
 	}
 

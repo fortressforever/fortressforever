@@ -718,6 +718,7 @@ private:
 	CNetworkVar( unsigned int, m_iCloaked );
 public:
 	void Overpressure( void );
+	bool CanJetpack( void );
 	void JetpackClick( void );
 	void JetpackHold( void );
 	void JetpackChargeThink( void );
