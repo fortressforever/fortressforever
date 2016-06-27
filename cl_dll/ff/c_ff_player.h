@@ -22,6 +22,7 @@
 #include "Sprite.h"
 #include "ff_fx_infection.h"
 #include "ff_fx_immunity.h"
+#include "ff_fx_jetpack.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_radiotagdata.h"
 #include "model_types.h"
@@ -237,11 +238,15 @@ public:
 	bool IsImmune( void ) const		{ return m_bImmune; }
 	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter1;
 	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter2;
+	
+	bool IsJetpacking( void ) const		{ return m_bJetpacking; }
+	CSmartPtr< CJetpackEmitter >	m_pJetpackEmitter;
 private:
 	bool m_bInfected;
 	bool m_bImmune;
 	int m_iActiveSabotages;
 	int m_iSpyDisguising;
+	bool m_bJetpacking;
 // Called by shared code.
 	// for HUD ammo pickup history
 	int m_iOldPrimary;

@@ -874,6 +874,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropEHandle( RECVINFO( m_hActiveSlowfield ) ),
 	RecvPropBool( RECVINFO( m_bInfected ) ),
 	RecvPropBool( RECVINFO( m_bImmune ) ),
+	RecvPropBool( RECVINFO( m_bJetpacking ) ),
 	RecvPropInt( RECVINFO( m_iInfectTick ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
 	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
@@ -2411,6 +2412,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		m_pInfectionEmitter2 = NULL;
 		m_pImmunityEmitter1 = NULL;
 		m_pImmunityEmitter2 = NULL;
+		m_pJetpackEmitter = NULL;
 	}
 
 	if (IsLocalPlayer())
@@ -2626,6 +2628,19 @@ void C_FFPlayer::ClientThink( void )
 			m_pImmunityEmitter2->SetDieTime( 0.0f );
 			m_pImmunityEmitter2 = NULL;
 		}
+	}
+
+	if ( IsAlive() && IsJetpacking() && !IsDormant() )
+	{
+		if (!m_pJetpackEmitter)
+			m_pJetpackEmitter = CJetpackEmitter::Create( "JetpackEmitter", this );
+		
+		m_pJetpackEmitter->SetDieTime( gpGlobals->curtime + 5.0f );
+	}
+	else if (!!m_pJetpackEmitter)
+	{
+		m_pJetpackEmitter->SetDieTime( 0.0f );
+		m_pJetpackEmitter = NULL;
 	}
 
 	_mathackman.Update();

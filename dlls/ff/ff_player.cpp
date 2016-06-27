@@ -454,6 +454,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropEHandle( SENDINFO( m_hActiveSlowfield ) ),
 	SendPropBool( SENDINFO( m_bInfected ) ),
 	SendPropBool( SENDINFO( m_bImmune ) ),
+	SendPropBool( SENDINFO( m_bJetpacking ) ),
 	SendPropInt( SENDINFO( m_iInfectTick ) ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),

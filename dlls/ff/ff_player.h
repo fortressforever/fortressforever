@@ -560,6 +560,8 @@ public:
 	bool GetSpecialInfectedDeath( void ) const { return m_bSpecialInfectedDeath; }
 	void SetSpecialInfectedDeath( void ) { m_bSpecialInfectedDeath = true; }
 
+	bool IsJetpacking( void ) const		{ return m_bJetpacking; }
+
 	int m_iSabotagedSentries;
 	int m_iSabotagedDispensers;
 
@@ -575,6 +577,7 @@ private:
 	CNetworkVar( int, m_iActiveSabotages );			// Jiggles: So the client's sabotage menu knows when to be active
 	CNetworkVar( int, m_iSpyDisguising );			// Jiggles: So the spy HUD can calculate disguise progress
 	CNetworkVar( int, m_iInfectTick );				// infection : number of infection ticks that have occured -Green Mushy
+	CNetworkVar( bool, m_bJetpacking );
 	float m_flImmuneTime;							// Mulch: immunity: time in the future of when the immunity ends
 	int m_iInfectedTeam;							// Mulch: team the medic who infected us was on
 	float m_fNextInfectedTickDamage;				// Infection damage to deal the next tick
