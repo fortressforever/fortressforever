@@ -2636,11 +2636,18 @@ void C_FFPlayer::ClientThink( void )
 			m_pJetpackEmitter = CJetpackEmitter::Create( "JetpackEmitter", this );
 		
 		m_pJetpackEmitter->SetDieTime( gpGlobals->curtime + 5.0f );
+		EmitSound("Player.JetpackLoop");
 	}
-	else if (!!m_pJetpackEmitter)
+	else
 	{
-		m_pJetpackEmitter->SetDieTime( 0.0f );
-		m_pJetpackEmitter = NULL;
+		if (!!m_pJetpackEmitter)
+		{
+			m_pJetpackEmitter->SetDieTime( 0.0f );
+			m_pJetpackEmitter = NULL;
+		}
+		// TODO: Is StopSound expensive?
+		// Should this only be called if we know the sound is playing?
+		StopSound("Player.JetpackLoop");
 	}
 
 	_mathackman.Update();

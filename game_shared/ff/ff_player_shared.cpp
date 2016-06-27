@@ -1995,9 +1995,6 @@ void CFFPlayer::JetpackHold( void )
 	m_bJetpacking = true;
 	m_flJetpackFuel -= JETPACK_FUELHOVERCOST;
 
-	// Play a sound
-	//EmitSoundShared("Slowfield.LaserLoop"); // TODO: Make jetpack noise
-
 	Vector vecForward, vecRight, vecUp;
 	EyeVectors( &vecForward, &vecRight, &vecUp);
 	VectorNormalizeFast( vecForward );
