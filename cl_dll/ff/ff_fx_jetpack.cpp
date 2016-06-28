@@ -14,7 +14,7 @@
 // re-use the flamethrower dlight cvar for jetpack
 extern ConVar cl_ffdlight_flamethrower;
 static ConVar ffdev_flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"10", 	0, 	"How fast the flames spread outwards");
-static ConVar ffdev_flame_speed(			"ffdev_flame_speed", 			"400", 	0, 	"How fast the flames go forwards");
+static ConVar ffdev_flame_speed(			"ffdev_flame_speed", 			"200", 	0, 	"How fast the flames go forwards");
 static ConVar ffdev_flame_speedrandom(			"ffdev_flame_speedrandom", 			"100", 	0, 	"Additional random amount How fast the flames go forwards");
 static ConVar ffdev_flame_startsize(		"ffdev_flame_startsize", 		"3", 	0, 	"How big the flame starts(0-255) ");
 static ConVar ffdev_flame_endsize(		"ffdev_flame_endsize", 		"32", 	0, 	"How big the flame finishes(0-255) ");
@@ -22,6 +22,10 @@ static ConVar ffdev_flame_rate(			"ffdev_flame_rate", 			"128", 	0, 	"Number of 
 static ConVar ffdev_flame_alpha(			"ffdev_flame_alpha", 			"0.7", 	0, 	"Alpha value of the flame(0 - 1.0) ");
 static ConVar ffdev_flame_randvertical(			"ffdev_flame_randvertical", 			"5.0", 	0, 	"sdsd ");
 static ConVar ffdev_flame_numparticles(			"ffdev_flame_numparticles", 			"5", 	0, 	"sdsd ");
+static ConVar ffdev_flame_playervelocity("ffdev_flame_playervelocity",	"0.75", 0, "Percentage of player velocity to add to particle speed (1.0 = constant flamejet regardless of player speed)");
+static ConVar ffdev_flame_updatetime("ffdev_flame_updatetime",	"0.01", 0, "Number of seconds between particle creation updates");
+static ConVar ffdev_flame_offsethorizontal("ffdev_flame_offsethorizontal",	"6.0", 0, "Offset from the center for each jet");
+static ConVar ffdev_flame_offsetvertical("ffdev_flame_offsetvertical",	"8.0", 0, "Vertical offset from the origin for the start of each jet");
 
 // Behaviour
 enum
@@ -303,7 +307,7 @@ JetpackParticle *CJetpackEmitter::AddJetpackParticle( const Vector& vecStart, co
 		return NULL;
 	
 	m_SpreadSpeed	= ffdev_flame_spreadspeed.GetInt(); // 100;
-	m_Speed			= ffdev_flame_speed.GetInt() + random->RandomFloat(-ffdev_flame_speedrandom.GetFloat(), ffdev_flame_speedrandom.GetFloat()); // 800; ffdev_flame_speedrandom
+	m_Speed			= ffdev_flame_speed.GetInt() + random->RandomFloat(0, ffdev_flame_speedrandom.GetFloat()); // 800; ffdev_flame_speedrandom
 	m_StartSize		= ffdev_flame_startsize.GetInt(); // 3;
 	m_EndSize		= ffdev_flame_endsize.GetInt(); // 192;
 	float flDLightScale = cl_ffdlight_flamethrower.GetFloat();
@@ -319,6 +323,7 @@ JetpackParticle *CJetpackEmitter::AddJetpackParticle( const Vector& vecStart, co
 	pParticle->m_Velocity		= FRand(-m_SpreadSpeed, m_SpreadSpeed) * vecRight +
 								  FRand(-m_SpreadSpeed, m_SpreadSpeed) * vecUp +
 								  m_Speed * vecForward;
+	pParticle->m_Velocity += GetOwnerEntity()->GetAbsVelocity() * ffdev_flame_playervelocity.GetFloat();
 
 	pParticle->m_Lifetime		= 0;
 	pParticle->m_Dietime		= random->RandomFloat(0.18/*ffdev_flame_dietime_min.GetFloat()*/, 0.24/*ffdev_flame_dietime_max.GetFloat()*/ );
@@ -400,10 +405,11 @@ void CJetpackEmitter::Update( float flTimeDelta )
 	if( gpGlobals->curtime < m_flNextParticle )
 		return;
 
-	m_flNextParticle = gpGlobals->curtime + 0.05f;
+	m_flNextParticle = gpGlobals->curtime + ffdev_flame_updatetime.GetFloat();
 
 	// Default positions and angles
 	Vector vecStart = GetOwnerEntity()->GetAbsOrigin();
+	vecStart.z += ffdev_flame_offsetvertical.GetFloat();
 	Vector vecForward;
 	AngleVectors( GetOwnerEntity()->EyeAngles(), &vecForward );
 	vecForward.z = 0.0f;
@@ -426,10 +432,10 @@ void CJetpackEmitter::Update( float flTimeDelta )
 	float originRandOffset = ffdev_flame_randvertical.GetFloat();
 	for (int i=0; i<ffdev_flame_numparticles.GetInt(); i++)
 	{
-		AddJetpackParticle( vecStart - vecFacingDir * 8.0f + vecRight * 8.0f + FRand(-originRandOffset, originRandOffset) * Vector(0.0f, 0.0f, 1.0f), vecForward );
+		AddJetpackParticle( vecStart - vecFacingDir * 8.0f + vecRight * ffdev_flame_offsethorizontal.GetFloat() + FRand(-originRandOffset, originRandOffset) * Vector(0.0f, 0.0f, 1.0f), vecForward );
 	}
 	for (int i=0; i<ffdev_flame_numparticles.GetInt(); i++)
 	{
-		AddJetpackParticle( vecStart - vecFacingDir * 8.0f - vecRight * 8.0f + FRand(-originRandOffset, originRandOffset) * Vector(0.0f, 0.0f, 1.0f), vecForward );
+		AddJetpackParticle( vecStart - vecFacingDir * 8.0f - vecRight * ffdev_flame_offsethorizontal.GetFloat() + FRand(-originRandOffset, originRandOffset) * Vector(0.0f, 0.0f, 1.0f), vecForward );
 	}
 }
