@@ -56,11 +56,8 @@ private:
 public:
 	CHudCrosshairInfo( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudCrosshairInfo" )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 
 		vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 
@@ -74,7 +71,6 @@ public:
 	void VidInit( void );
 	void OnTick( void );
 	void Paint( void );
-	virtual	bool	ShouldDraw( void );
 
 	void Reset( void )
 	{ 
@@ -587,26 +583,15 @@ void CHudCrosshairInfo::OnTick( void )
 				{
 					// Get the screen width/height
 					int iScreenWide, iScreenTall;
-					surface()->GetScreenSize( iScreenWide, iScreenTall );
-
-					// "map" screen res to 640/480
-					float iXScale = 640.0f / iScreenWide;
-					float iYScale = 480.0f / iScreenTall;
+					GetHudSize( iScreenWide, iScreenTall );
 
 					int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
 					int iTall = surface()->GetFontTall( m_hTextFont );
+					int yOffset = 75; // 75 to get it below the crosshair and not right on it
 
 					// Adjust values to get below the crosshair and offset correctly
 					m_flXOffset = ( float )( iScreenWide / 2 ) - ( iWide / 2 );
-					m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + 75; // 75 to get it below the crosshair and not right on it
-
-					// Scale by "map" scale values
-					m_flXOffset *= iXScale;
-					m_flYOffset *= iYScale;
-
-					// Scale to screen co-ords
-					m_flXOffset = scheme()->GetProportionalScaledValue( m_flXOffset );
-					m_flYOffset = scheme()->GetProportionalScaledValue( m_flYOffset );
+					m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + yOffset;
 				}
 
 				// Start drawing
@@ -627,28 +612,12 @@ void CHudCrosshairInfo::OnTick( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: See if we should draw stuff or not
-//-----------------------------------------------------------------------------
-bool CHudCrosshairInfo::ShouldDraw( void )
-{
-	if( !engine->IsInGame() )
-		return false;
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
-		return false;
-
-	return pPlayer->IsAlive();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Draw stuff
 //-----------------------------------------------------------------------------
 void CHudCrosshairInfo::Paint( void )
 {
 	if( ( m_flDrawTime + m_flDrawDuration ) > gpGlobals->curtime )
 	{
-
 		// draw xhair info
 		if( hud_centerid.GetInt() )
 			surface()->DrawSetTextPos( m_flXOffset, m_flYOffset );
@@ -663,8 +632,5 @@ void CHudCrosshairInfo::Paint( void )
 
 		for( wchar_t *wch = m_pText; *wch != 0; wch++ )
 			surface()->DrawUnicodeChar( *wch );
-
-
-		
 	}
 }

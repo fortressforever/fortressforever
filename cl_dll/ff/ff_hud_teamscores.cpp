@@ -44,11 +44,8 @@ public:
 
 	CHudTeamScores( const char *pElementName ) : vgui::FFPanel( NULL, "HudTeamScores" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_UNASSIGNED );
 	}
 
 	virtual ~CHudTeamScores( void )
@@ -59,7 +56,6 @@ public:
 	virtual void Paint( void );
 	virtual void Init( void );
 	virtual void VidInit( void );
-	virtual bool ShouldDraw( void );
 	
 protected:
 
@@ -68,10 +64,10 @@ protected:
 
 private:
 	// Stuff we need to know	
-		CPanelAnimationVar( vgui::HFont, m_hTeamScoreBlueFont, "TeamScoreBlueFont", "Default" );
-		CPanelAnimationVar( vgui::HFont, m_hTeamScoreRedFont, "TeamScoreRedFont", "Default" );
-		CPanelAnimationVar( vgui::HFont, m_hTeamScoreGreenFont, "TeamScoreGreenFont", "Default" );
-		CPanelAnimationVar( vgui::HFont, m_hTeamScoreYellowFont, "TeamScoreYellowFont", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hTeamScoreBlueFont, "TeamScoreBlueFont", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hTeamScoreRedFont, "TeamScoreRedFont", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hTeamScoreGreenFont, "TeamScoreGreenFont", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hTeamScoreYellowFont, "TeamScoreYellowFont", "Default" );
 
 	CPanelAnimationVarAliasType( float, TeamScoreBlue_xpos, "TeamScoreBlue_xpos", "0", "proportional_float" );
 	CPanelAnimationVarAliasType( float, TeamScoreBlue_ypos, "TeamScoreBlue_ypos", "0", "proportional_float" );
@@ -99,40 +95,20 @@ void CHudTeamScores::Init( void )
 void CHudTeamScores::VidInit( void )
 {
 	SetPaintBackgroundEnabled( false );
-	
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Should we draw? (Are we ingame? have we picked a class, etc)
-//-----------------------------------------------------------------------------
-bool CHudTeamScores::ShouldDraw() 
-{ 
-	if( !engine->IsInGame() ) 
-		return false; 
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
-
-	if( !pPlayer ) 
-		return false; 
-
-	if( pPlayer->GetTeamNumber() == TEAM_UNASSIGNED || (!FF_HasPlayerPickedClass( pPlayer ) && !FF_IsPlayerSpec( pPlayer )) )
-		return false; 
-
-	return true; 
-} 
 
 //-----------------------------------------------------------------------------
 // Purpose: Draw stuff!
 //-----------------------------------------------------------------------------
 void CHudTeamScores::Paint() 
 { 
-   FFPanel::Paint(); // Draws the background glyphs 
+	FFPanel::Paint(); // Draws the background glyphs 
 
-      C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
-      if ( !pPlayer ) 
-         return; 
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
+	if ( !pPlayer ) 
+		return; 
 
-	  	IGameResources *pGR = GameResources();
+	IGameResources *pGR = GameResources();
 	if( !pGR )
 		return;
 	

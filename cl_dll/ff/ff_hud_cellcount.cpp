@@ -81,7 +81,7 @@ DECLARE_HUDELEMENT( CHudCellCount );
 CHudCellCount::CHudCellCount( const char *pElementName ) : CHudElement( pElementName ), vgui::FFPanel( NULL, "HudCellCount" )
 {
 	SetParent( g_pClientMode->GetViewport() );
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 }
 
 CHudCellCount::~CHudCellCount()
@@ -164,16 +164,7 @@ void CHudCellCount::OnThink()
 
 void CHudCellCount::Paint()
 {
-	if( !engine->IsInGame() )
-		return;
-
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-	if( !pPlayer )
-		return;
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
-		return;
 
 	if(pPlayer->GetClassSlot() != CLASS_ENGINEER)
 		return;

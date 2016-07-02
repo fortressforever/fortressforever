@@ -99,11 +99,8 @@ static CStatusIcons *g_pStatusIcons = NULL;
 
 CStatusIcons::CStatusIcons( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudStatusIcons" )
 {
-	// Set our parent window
 	SetParent( g_pClientMode->GetViewport( ) );
-
-	// Hide when player is dead
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 
 	// initialize the status icons
 	for (int i = 0; i < FF_STATUSICON_MAX; i++)
@@ -169,7 +166,7 @@ void CStatusIcons::Init( void )
 void CStatusIcons::OnTick( void )
 {
 /*	int iWide, iTall;
-	surface()->GetScreenSize( iWide, iTall );
+	GetHudSize( iWide, iTall );
 
 	int displayed = 0;
 	for (int i=0; i<MAX_STATUSICONS; i++) 

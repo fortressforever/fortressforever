@@ -70,12 +70,9 @@ public:
 
 	CHudObjectiveIcon( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudObjectiveIcon" ) 
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_UNASSIGNED );
 
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
-		
 		m_pIconTexture = NULL;
 		m_pObscuredIconTexture = NULL;
 		m_pArrow = NULL;
@@ -106,7 +103,7 @@ void CHudObjectiveIcon::VidInit( void )
 
 	// Set up our screen position and stuff before drawing
 	int iWide, iTall;
-	surface()->GetScreenSize( iWide, iTall );
+	GetHudSize( iWide, iTall );
 
 	// Set up the panel to take up the WHOLE screen
 	SetPos( 0, 0 );

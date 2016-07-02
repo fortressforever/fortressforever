@@ -165,6 +165,7 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("GetDispenser",		&CFFPlayer::GetDispenser)
 			.def("GetDetpack",			&CFFPlayer::GetDetpack)
 			.def("GetJumpPad",			&CFFPlayer::GetManCannon)
+			.def("GetEyeAngles",		&CFFPlayer::EyeAngles)
 
 			.enum_("ClassId")
 			[

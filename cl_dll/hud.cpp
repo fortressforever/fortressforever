@@ -26,6 +26,10 @@
 #include <vgui_controls/AnimationController.h>
 #include <vgui/iSurface.h>
 #include "materialsystem/IMaterialSystemHardwareConfig.h"
+// --> FF
+#include "c_ff_player.h"
+#include "ff_utils.h"
+// <-- FF
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -741,8 +745,29 @@ bool CHud::IsHidden( int iHudFlags )
 	if ( iHideHud & HIDEHUD_ALL )
 		return true;
 
+	// --> FF
+	if ( ( iHudFlags & HIDEHUD_SPECTATING ) && ( pPlayer->IsObserver() ) )
+		return true;
+
+	C_BasePlayer *pLocalPlayer = pPlayer;
+	C_FFPlayer *pFFPlayer = ToFFPlayer(pPlayer);
+	
+	if ( ( iHudFlags & HIDEHUD_UNASSIGNED ) && ( (!FF_HasPlayerPickedClass( pFFPlayer ) && !FF_IsPlayerSpec( pFFPlayer )) || pPlayer->GetTeamNumber() <= TEAM_UNASSIGNED ) )
+		return true;
+
+	// use the spectating target for any checks from here on out
+	pFFPlayer = C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget();
+	pPlayer = pFFPlayer;
+
+	if ( !pPlayer )
+		return true;
+
+	// if we're an observer, we shouldn't count as dead unless our target is
+	bool canBeDead = !pLocalPlayer->IsObserver() || pPlayer != pLocalPlayer;
+	// <-- FF
+
 	// Local player dead?
-	if ( ( iHudFlags & HIDEHUD_PLAYERDEAD ) && ( pPlayer->GetHealth() <= 0 ) )
+	if ( ( iHudFlags & HIDEHUD_PLAYERDEAD ) && (canBeDead && pPlayer->GetHealth() <= 0 ) )
 		return true;
 
 	// Need the HEV suit ( HL2 )

@@ -21,6 +21,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_FFTeam, DT_FFTeam, CFFTeam)
 	// --> Mirv: Some limits that the client needs to know about for the menu
 	RecvPropInt( RECVINFO( m_iAllies ) ),
 	RecvPropInt( RECVINFO( m_iMaxPlayers ) ),
+	RecvPropBool( RECVINFO( m_bFFA ) ),
 	RecvPropArray3( RECVINFO_ARRAY(m_iClasses), RecvPropInt( RECVINFO(m_iClasses[0]))),
 	// <-- Mirv: Some limits that the client needs to know about for the menu
 END_RECV_TABLE()

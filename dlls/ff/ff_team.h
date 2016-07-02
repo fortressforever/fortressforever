@@ -38,6 +38,9 @@ public:
 	int m_iClassesMap[12];					// this is just the map limits
 
 	CNetworkVar( int, m_iMaxPlayers );
+
+private:
+	CNetworkVar( bool, m_bFFA );
 	
 
 public:
@@ -53,6 +56,9 @@ public:
 	int GetAllies( void );
 
 	void UpdateLimits( void );
+
+	bool IsFFA() { return m_bFFA; };
+	void SetFFA( bool bFFA ) { m_bFFA = bFFA; };
 	// <-- Mirv: Team classes available and allies
 };
 

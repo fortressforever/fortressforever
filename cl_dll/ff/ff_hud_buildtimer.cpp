@@ -27,7 +27,7 @@ DECLARE_HUD_MESSAGE(CHudBuildTimer, FF_BuildTimer);
 CHudBuildTimer::CHudBuildTimer(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildTimer") 
 {
 	SetParent( g_pClientMode->GetViewport() );
-	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 }
 
 CHudBuildTimer::~CHudBuildTimer() 

@@ -57,8 +57,7 @@ DECLARE_HUD_MESSAGE( CHudHintCenter, FF_SendHint );
 CHudHintCenter::CHudHintCenter( const char *pElementName ) : CHudElement( pElementName ), vgui::Frame( NULL, "HudHintCenter" ) 
 {
 	SetParent( g_pClientMode->GetViewport() );
-	// Hide when player is dead
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 	
 	m_pRichText = NULL;
 
@@ -490,21 +489,11 @@ void CHudHintCenter::HideSelection( void )
 //-----------------------------------------------------------------------------
 bool CHudHintCenter::ShouldDraw( void )
 {
-	if( !engine->IsInGame() )
+	if( !CHudElement::ShouldDraw() )
 		return false;
 
 	if( !m_bHintCenterVisible )
 		return false;
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( !pPlayer )
-		return false;
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
-		return false;
-
-	//if( !pPlayer->IsAlive() )
-	//	return false;
 
 	return true;
 }

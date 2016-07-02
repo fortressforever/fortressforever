@@ -26,12 +26,35 @@ extern "C"
 //---------------------------------------------------------------------------
 using namespace luabind;
 
-// Valve, you fucking suck
-//std::ostream& operator<<(std::ostream&s, const Vector&v)
-//{
-//	s << v.x << " " << v.y << " " << v.z;
-//	return s;
-//}
+/// tostring implemenation for Vector
+std::ostream& operator<<(std::ostream& stream, const Vector& vec)
+{
+	return stream << "Vector(" << vec.x << "," << vec.y << "," << vec.z << ")";
+}
+/// tostring implemenation for QAngle
+std::ostream& operator<<(std::ostream& stream, const QAngle& angle)
+{
+	return stream << "QAngle(" << angle.x << "," << angle.y << "," << angle.z << ")";
+}
+
+namespace FFLib
+{
+	void AngleVectors(::lua_State* L, const QAngle &angle)
+	{
+		Vector forward, right, up;
+		::AngleVectors(angle, &forward, &right, &up);
+		luabind::adl::object(L, forward).push(L);
+		luabind::adl::object(L, right).push(L);
+		luabind::adl::object(L, up).push(L);
+	}
+
+	void VectorAngles(::lua_State* L, const Vector &forward)
+	{
+		QAngle angles;
+		::VectorAngles(forward, angles);
+		luabind::adl::object(L, angles).push(L);
+	}
+}
 
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitMath(lua_State* L)
@@ -40,11 +63,11 @@ void CFFLuaLib::InitMath(lua_State* L)
 
 	module(L)
 	[
-		def("AngleVectors",		(void(*)(const QAngle&, Vector*))&AngleVectors),
-		def("AngleVectors",		(void(*)(const QAngle&, Vector*, Vector*, Vector*))&AngleVectors),
-		def("VectorAngles",		(void(*)(const Vector&, QAngle&))&VectorAngles),
+		def("AngleVectors",		(void(*)(lua_State*, const QAngle&))&FFLib::AngleVectors, raw(_1)),
+		def("VectorAngles",		(void(*)(lua_State*, const Vector&))&FFLib::VectorAngles, raw(_1)),
 
 		class_<Vector>("Vector")
+			.def(tostring(const_self))
 			.def(constructor<>())
 			.def(constructor<float, float, float>())
 			.def(self * float())
@@ -73,6 +96,7 @@ void CFFLuaLib::InitMath(lua_State* L)
 			.def("Negate",				&Vector::Negate),
 
 		class_<QAngle>("QAngle")
+			.def(tostring(const_self))
 			.def(constructor<>())
 			.def(constructor<float, float, float>())
 			.def(self * float())

@@ -38,11 +38,15 @@ public:
 	virtual int		Get_Teams( void );
 	virtual int		GetAllies( void );
 
+	bool IsFFA() { return m_bFFA; };
+	void SetFFA( bool bFFA ) { m_bFFA = bFFA; };
+
 private:
 
 	int		m_iClasses[12];
 	int		m_iMaxPlayers;
 	int		m_iAllies;
+	bool	m_bFFA;
 	// <-- Mirv: Menus need to know limits
 
 };

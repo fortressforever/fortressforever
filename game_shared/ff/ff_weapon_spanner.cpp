@@ -183,7 +183,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				if( pDispenser->NeedsHealth() ) 
 				{
 					// We get 5 health for each cell
-					int iHealthGiven = min( pDispenser->NeedsHealth(), 5 * pPlayer->GetAmmoCount( AMMO_CELLS ) );
+					int iHealthGiven = min( pDispenser->NeedsHealth(), FF_REPAIRAMOUNTPERCELL_DISPENSER * pPlayer->GetAmmoCount( AMMO_CELLS ) );
 
 					// If we give health, play a special sound. Pun intended.
 					if( iHealthGiven > 0 )
@@ -194,16 +194,16 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					// AfterShock - scoring system: Added this for if we later want to give points for repairing friendly dispensers
 					if ( bFriendly && !bMine )
 						pPlayer->AddFortPoints(iHealthGiven*0.1, "#FF_FORTPOINTS_REPAIRTEAMDISPENSER");
-					pPlayer->RemoveAmmo( iHealthGiven / 5, AMMO_CELLS );
+					pPlayer->RemoveAmmo( iHealthGiven / FF_REPAIRAMOUNTPERCELL_DISPENSER, AMMO_CELLS );
 #endif
 				}
 				else
 				{
 					// On subsequent clangs, we gotta give it ammo and stuff!
-					int iCells = min( min( 40, pPlayer->GetAmmoCount( AMMO_CELLS ) ), pDispenser->NeedsCells() );
-					int iShells = min( min( 40, pPlayer->GetAmmoCount( AMMO_SHELLS ) ), pDispenser->NeedsShells() );
-					int iNails = min( min( 30, pPlayer->GetAmmoCount( AMMO_NAILS ) ), pDispenser->NeedsNails() );
-					int iRockets = min( min( 10, pPlayer->GetAmmoCount( AMMO_ROCKETS ) ), pDispenser->NeedsRockets() );
+					int iCells = min( 5, pDispenser->NeedsCells() );
+					int iShells = min( 5, pDispenser->NeedsShells() );
+					int iNails = min( 5, pDispenser->NeedsNails() );
+					int iRockets = min( 3, pDispenser->NeedsRockets() );
 
 					// If we give it anything, play a special sound. Pun intended.
 					if( ( iCells > 0 ) || ( iShells > 0 ) || ( iNails > 0 ) || ( iRockets > 0 ) )
@@ -212,10 +212,10 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 #ifdef GAME_DLL
 					pDispenser->AddAmmo( 0, iCells, iShells, iNails, iRockets );
 
-					pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
-					pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
-					pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
-					pPlayer->RemoveAmmo( iRockets, AMMO_ROCKETS );
+					//pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
+					//pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
+					//pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
+					//pPlayer->RemoveAmmo( iRockets, AMMO_ROCKETS );
 #endif
 				}
 
@@ -242,7 +242,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					return;
 
 				// Try to upgrade first
-				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= 130)) 
+				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= FF_BUILDCOST_UPGRADE_SENTRYGUN)) 
 				{
 					// If we upgrade, play a special sound. Pun intended.
 					if( pSentryGun->Upgrade() )
@@ -266,19 +266,19 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 #endif
 					}
 #ifdef GAME_DLL
-					pPlayer->RemoveAmmo(130, AMMO_CELLS);
+					pPlayer->RemoveAmmo(FF_BUILDCOST_UPGRADE_SENTRYGUN, AMMO_CELLS);
 #endif
 				}
 				else
 				{
 
 #ifdef CLIENT_DLL
-					if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) < 130))
+					if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) < FF_BUILDCOST_UPGRADE_SENTRYGUN))
 						FF_SendHint( ENGY_NOUPGRADE, 1, PRIORITY_NORMAL, "#FF_HINT_ENGY_NOUPGRADE" );
 #endif
 
 					// Calculate if it needs anything...
-					int cells = min(ceil(pSentryGun->NeedsHealth() / 3.5f), pPlayer->GetAmmoCount(AMMO_CELLS));
+					int cells = min(ceil(pSentryGun->NeedsHealth() / FF_REPAIRAMOUNTPERCELL_SENTRYGUN), pPlayer->GetAmmoCount(AMMO_CELLS));
 					int shells = min(pSentryGun->NeedsShells(), pPlayer->GetAmmoCount(AMMO_SHELLS));
 					int rockets = 0; 
 

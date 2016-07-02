@@ -1337,14 +1337,34 @@ void CFFInfoScript::LUA_SetModel( const char *szModel )
 	}
 }
 
+const char * CFFInfoScript::LUA_GetModel()
+{
+	const model_t *model = GetModel();
+	if (model)
+	{
+		return modelinfo->GetModelName( model );
+	}
+	return NULL;
+}
+
 void CFFInfoScript::LUA_SetStartOrigin(const Vector& vecOrigin)
 {
 	m_vStartOrigin = vecOrigin;
 }
 
+Vector CFFInfoScript::LUA_GetStartOrigin() const
+{
+	return m_vStartOrigin;
+}
+
 void CFFInfoScript::LUA_SetStartAngles(const QAngle& vecAngles)
 {
 	m_vStartAngles = vecAngles;
+}
+
+QAngle CFFInfoScript::LUA_GetStartAngles() const
+{
+	return m_vStartAngles;
 }
 
 //-----------------------------------------------------------------------------

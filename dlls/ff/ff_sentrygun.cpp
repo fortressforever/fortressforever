@@ -1732,7 +1732,7 @@ void CFFSentryGun::Repair( int iCells )
 {
 	VPROF_BUDGET( "CFFSentryGun::Repair", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	SetHealth( GetHealth() + iCells * 3.5f );
+	SetHealth( GetHealth() + iCells * FF_REPAIRAMOUNTPERCELL_SENTRYGUN );
 
 	// Bug #0000238: Repairing sg doesn't remove damage decals
 	if( iCells > 0 )

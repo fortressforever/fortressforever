@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -109,7 +109,7 @@ static ConVar concuss_alwaysOn("cl_concuss_alwaysOn", "0", FCVAR_CLIENTDLL | FCV
 //extern ConVar ffdev_softclip_asdisguisedteam;
 #define SOFTCLIP_ASDISGUISEDTEAM false // in util_shared.cpp
 
-ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "shotgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
+ConVar ff_defaultweapon_scout("cl_spawnweapon_scout", "jumpgun", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Scout spawn.");
 ConVar ff_defaultweapon_sniper("cl_spawnweapon_sniper", "sniperrifle", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Sniper spawn.");
 ConVar ff_defaultweapon_soldier("cl_spawnweapon_soldier", "rpg", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Soldier spawn.");
 ConVar ff_defaultweapon_demoman("cl_spawnweapon_demoman", "grenadelauncher", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default weapon on Demo-man spawn.");
@@ -126,7 +126,7 @@ ConVar ff_defaultweapon_civy("cl_spawnweapon_civilian", "umbrella", FCVAR_USERIN
 ConVar cl_gib_count("cl_gib_count", "6", FCVAR_ARCHIVE, "Number of gibs to spawn");
 ConVar cl_gib_force_scale("cl_gib_force_scale", "1", FCVAR_ARCHIVE);
 ConVar cl_gib_force_randomness("cl_gib_force_randomness", "300", FCVAR_ARCHIVE);
-ConVar cl_gib_lifetime("cl_gib_lifetime", "10", FCVAR_ARCHIVE);
+ConVar cl_gib_lifetime("cl_gib_lifetime", "4", FCVAR_ARCHIVE);
 
 // gib blood settings
 ConVar cl_gib_blood_scale("cl_gib_blood_scale", "20", FCVAR_ARCHIVE);
@@ -245,6 +245,8 @@ void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
 
 	if ( name == "RJHint" )	// Player logged 10 minutes as a Soldier
 		FF_SendHint( SOLDIER_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_PLAYTIME" );
+	else if ( name == "MedHint" ) // Player logged 10 mintes as a Medic
+		FF_SendHint( MEDIC_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_MEDIC_PLAYTIME" );
 	else if ( name == "ICJHint" ) // Player logged 5 minutes as a Pyro
 		FF_SendHint( PYRO_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_PYRO_PLAYTIME" );
 	else if ( name == "scoutSpawn" )
@@ -837,6 +839,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFPlayerObserver )
 	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
 	RecvPropFloat(RECVINFO(m_flTrueAimTime)),
 	RecvPropFloat(RECVINFO(m_flHitTime)),
+	RecvPropInt(RECVINFO(m_nButtons)),
 END_RECV_TABLE()
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
@@ -998,18 +1001,15 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 	TraceBleed(20, dir, pTrace, DMG_BLAST);
 
 
+	dir *= 4000;  // adjust impact strenght
 	if ( iDamageType & DMG_BLAST )
 	{
-		dir *= 40000;  // adjust impact strength
-
 		Vector vecVelocity, vecAngularVelocity;
 		pPhysicsObject->CalculateVelocityOffset(dir, pTrace->endpos, &vecVelocity, &vecAngularVelocity);
 		pPhysicsObject->AddVelocity(&vecVelocity, &vecAngularVelocity);
 	}
 	else
 	{
-		dir *= 4000;  // adjust impact strenght
-
 		// apply force where we hit it
 		pPhysicsObject->ApplyForceOffset( dir, hitpos );	
 	}
@@ -1080,7 +1080,7 @@ void C_FFRagdoll::CreateRagdoll()
 		// We can also spawn a valid weapon
 		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
-			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), cl_gib_lifetime.GetFloat());
 
 			if (pGib)
 			{
@@ -1419,21 +1419,37 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 		return NULL;
 }
 
+/** If we're specing someone in first person, then return the target
+*/
 C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrObserverTarget()
 {
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	
-	if (pLocalPlayer)
-	{
-		// if we're specing someone in first person, then return the target
-		if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
-			return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
-		// else return local player
-		else
-			return pLocalPlayer;
-	}
-	else
+	if (!pLocalPlayer)
 		return NULL;
+	else if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+		return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
+
+	return pLocalPlayer;
+}
+
+/** If we're specing someone at all, then return the target
+*/
+C_FFPlayer* C_FFPlayer::GetLocalFFPlayerOrAnyObserverTarget()
+{
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if (!pLocalPlayer)
+		return NULL;
+	else if (pLocalPlayer->IsObserver() 
+			&& (pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE || pLocalPlayer->GetObserverMode() == OBS_MODE_CHASE) 
+			&& pLocalPlayer->GetObserverTarget() != NULL 
+			&& pLocalPlayer->GetObserverTarget()->IsPlayer())
+	{
+		return ToFFPlayer( pLocalPlayer->GetObserverTarget() );
+	}
+
+	return pLocalPlayer;
 }
 
 /** Maps a spy slot to a weapon that will be shown while disguised for the given class
@@ -1611,6 +1627,24 @@ void C_FFPlayer::Spawn( void )
 		pHintTimer->Unpause();
 	else
 		pHintTimer->Pause();
+
+	// Medic Playtime hint -- triggered after player has logged 10 minutes (total) as a Medic
+	C_FFHintTimer *pMedHintTimer = g_FFHintTimers.FindTimer( "MedHint" );
+	if ( pMedHintTimer == NULL ) // Setup timer
+	{	
+		pMedHintTimer = g_FFHintTimers.Create( "MedHint", 600.0f );
+		if ( pMedHintTimer )
+		{
+			pMedHintTimer->SetHintExpiredCallback( OnHintTimerExpired, false );
+			pMedHintTimer->StartTimer();
+			if ( GetClassSlot() != CLASS_MEDIC ) // Pause the timer if player isn't a Medic
+				pMedHintTimer->Pause();
+		}
+	}
+	else if ( GetClassSlot() == CLASS_MEDIC ) // Unpause the timer if the player is now a Medic
+		pMedHintTimer->Unpause();
+	else
+		pMedHintTimer->Pause();
 
 	// IC Jump hint -- triggered after player has logged 5 minutes (total) as a Pyro
 	C_FFHintTimer *pICHintTimer = g_FFHintTimers.FindTimer( "ICJHint" );

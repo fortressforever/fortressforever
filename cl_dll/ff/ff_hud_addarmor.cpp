@@ -45,11 +45,8 @@ public:
 
 	CHudPlayerAddArmor( const char *pElementName ) : vgui::FFPanel( NULL, "HudPlayerAddArmor" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED );
 	}
 
 	virtual ~CHudPlayerAddArmor( void )
@@ -60,7 +57,6 @@ public:
 	virtual void Paint( void );
 	virtual void Init( void );
 	virtual void VidInit( void );
-	virtual bool ShouldDraw( void );
 	void MsgFunc_PlayerAddArmor( bf_read &msg );
 
 protected:
@@ -103,25 +99,6 @@ void CHudPlayerAddArmor::VidInit( void )
 	
 	m_pTextArmor[ 0 ] = '\0'; 
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Should we draw? (Are we ingame? have we picked a class, etc)
-//-----------------------------------------------------------------------------
-bool CHudPlayerAddArmor::ShouldDraw() 
-{ 
-	if( !engine->IsInGame() ) 
-		return false; 
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
-
-	if( !pPlayer ) 
-		return false; 
-
-	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) ) 
-		return false; 
-
-	return true; 
-} 
 
 void CHudPlayerAddArmor::MsgFunc_PlayerAddArmor( bf_read &msg )
 {

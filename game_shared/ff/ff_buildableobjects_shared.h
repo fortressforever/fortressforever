@@ -144,6 +144,12 @@
 
 #define FF_BUILD_SABOTAGE_TIMEOUT 90.0f
 
+#define FF_BUILDCOST_SENTRYGUN 130
+#define FF_BUILDCOST_DISPENSER 30
+#define FF_BUILDCOST_UPGRADE_SENTRYGUN 130
+#define FF_REPAIRAMOUNTPERCELL_SENTRYGUN 3.5f
+#define FF_REPAIRAMOUNTPERCELL_DISPENSER 5.0f
+
 //Enum for the jumppad states - GreenMushy
 enum JumpPadState_t
 { 
@@ -571,6 +577,9 @@ public:
 	virtual void Sabotage(CFFPlayer *pSaboteur);
 	virtual void MaliciouslySabotage(CFFPlayer *pSaboteur);
 	virtual void Detonate();
+
+    bool CloseEnoughToDismantle( CFFPlayer *pPlayer);
+    void Dismantle( CFFPlayer *pPlayer);
 
 	CNetworkVar( unsigned int, m_iAmmoPercent );
 

@@ -201,9 +201,12 @@ enum HintType
 	MEDIC_CONC1,		// Event: First thrown conc(this hint should play only once for the player. See identical entry under Scout)
 	MEDIC_CONC2,		// Event: Conc hint #2
 	MEDIC_NOINFECT,		// Event: Medic tries to infect an enemy player who is Immune.
+	MEDIC_PLAYTIME,		// Event: Player logs 10 minutes of medic class
 	// HW
 	HWGUY_SPAWN,		// Event: First spawn +5 seconds
 	HWGUY_OVERHEAT,		// Event: AC overheats
+	HWGUY_OVERPRESS,	// Event: First use of overpressure 
+	HWGUY_SLOWFIELD,	// Event: First thrown slowfield grenade
 	// PYRO
 	PYRO_SPAWN,			// Event: First spawn +5 seconds
 	PYRO_FLAMER,		// Event: Select flamethrower
@@ -215,6 +218,7 @@ enum HintType
 	SPY_NODISGUISE,		// Event: Player plays for 5 minutes without disguising.
 	SPY_GANKDISGUISE,	// Event: Player successfully backstabs from disguise to steal enemy disguise 
 	SPY_LOSEDISGUISE,	// Event: Player's disguise is removed by proximity to an enemy spy or scout
+	SPY_GAINCLOAK,		// Event: Player successfully cloaks for the first time
 	SPY_LOSECLOAK,		// Event: Player's cloak is removed by proximity to an enemy spy
 	SPY_SGCLOAK,		// Event: Player, while cloaked, is shot by an SG
 	SPY_KNIFE,			// Event: Player selects the knife

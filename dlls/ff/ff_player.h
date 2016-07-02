@@ -393,7 +393,7 @@ protected:
 	// Origin of where we started to build at
 	Vector m_vecBuildOrigin;
 
-	CFFWeaponBase *m_pBuildLastWeapon;
+	CFFWeaponBase *m_pLastWeapon;
 
 public:
 	bool AnyActiveDispenserSabotages() const { return (m_iActiveSabotages & 1); }
@@ -409,6 +409,8 @@ public:
 	CFFSentryGun *GetSentryGun( void ) const;
 	CFFManCannon *GetManCannon( void ) const;
 	CFFBuildableObject *GetBuildable( int iBuildable ) const;
+	CFFWeaponBase* GetLastFFWeapon(){ return m_pLastWeapon; }
+	void SetLastFFWeapon( CFFWeaponBase* _pLastWeapon ){ m_pLastWeapon = _pLastWeapon; }
 
 	void PreBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
 	void PostBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
@@ -786,6 +788,8 @@ public:
 	
 	CNetworkVar( float, m_flTrueAimTime );
 	CNetworkVar( float, m_flHitTime );
+
+	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_nButtons );
 
 	CNetworkVar( int, m_iClassStatus );
 	int GetClassForClient() const { return (0x0000000F & m_iClassStatus); }

@@ -16,7 +16,7 @@
 CHudBuildState::CHudBuildState(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudBuildState") 
 {
 	SetParent(g_pClientMode->GetViewport());
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_UNASSIGNED );
 }
 
 CHudBuildState::~CHudBuildState()

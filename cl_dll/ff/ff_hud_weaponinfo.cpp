@@ -37,11 +37,8 @@ public:
 
 	CHudWeaponInfo( const char *pElementName ) : BaseClass( NULL, "HudWeaponInfo" ), CHudElement( pElementName )
 	{
-		// Set our parent window
 		SetParent( g_pClientMode->GetViewport() );
-
-		// Hide when player is dead
-		SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
+		SetHiddenBits(HIDEHUD_PLAYERDEAD | HIDEHUD_SPECTATING | HIDEHUD_UNASSIGNED);
 	}
 
 	virtual ~CHudWeaponInfo( void )
