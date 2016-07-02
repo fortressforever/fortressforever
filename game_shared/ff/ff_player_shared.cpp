@@ -125,7 +125,7 @@ ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "100
 #define JETPACK_HORIZONTALPUSH_CAP ffdev_jetpack_horizontalpush_cap.GetFloat()
 ConVar ffdev_jetpack_jumpleeway("ffdev_jetpack_jumpleeway", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_JUMPLEEWAY ffdev_jetpack_jumpleeway.GetFloat()
-ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT ffdev_jetpack_verticalpush_downwardslimit.GetFloat()
 
 ConVar ffdev_jetpack_jumpleeway_pushmult_horiz("ffdev_jetpack_jumpleeway_pushmult_horiz", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT);
