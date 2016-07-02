@@ -1024,6 +1024,7 @@ private:
 	// Location of player's current objective (also set by Lua)
 	CNetworkVector( m_vecObjectiveOrigin );
 
+	// kill assist stuff
 	// added for kill assists tracking
 	CUtlVector<RecentAttackerInfo> m_recentAttackers;
 	void AddRecentAttacker( const CTakeDamageInfo &dmgInfo );
@@ -1031,8 +1032,8 @@ private:
 	//void UpdateRecentAttackers( );
 public:
 	RecentAttackerInfo* GetTopKillAssister( CBasePlayer *killerToIgnore );
+	void RemoveMeFromKillAssists( );
 };
-
 
 inline CFFPlayer *ToFFPlayer( CBaseEntity *pEntity )
 {

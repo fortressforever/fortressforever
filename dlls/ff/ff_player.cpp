@@ -1717,6 +1717,7 @@ void CFFPlayer::SetupClassVariables()
 
 	ClearSpeedEffects();
 
+	// clear recent attacker (kill assist) info
 	m_recentAttackers.Purge();
 #endif // FF_BETA_TEST_COMPILE
 }
@@ -1728,6 +1729,7 @@ void CFFPlayer::InitialSpawn( void )
 	m_lifeState = LIFE_DEAD;
 	pl.deadflag = true;
 
+	// clear recent attacker (kill assist) info
 	m_recentAttackers.Purge();
 
 	m_Locations.Purge();
@@ -2876,6 +2878,9 @@ void CFFPlayer::Command_Team( void )
 		_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 	}
 	
+	// drop my damage contributions on any assists right away
+	RemoveMeFromKillAssists();
+
 	ChangeTeam(iTeam);
 
 	// Bug #0001686: Possible to spectate outside of spectator mode
@@ -8082,3 +8087,13 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 
 	return ret;
 }
+
+void CFFPlayer::RemoveMeFromKillAssists( ) 
+{
+	// im disconnecting or switching teams or something, so 
+	// remove my contributions from assists. we can revisit this 
+	// if its too aggressive for eg, team switch and then having assist come through friendly fire
+	DevMsg( "CFFPlayer::RemoveMeFromKillAssists0\n" );
+
+	// TODO:
+}	
