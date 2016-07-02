@@ -99,6 +99,9 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar ffdev_changeclass_graceperiod( "ffdev_changeclass_graceperiod", "", "5", FCVAR_CHEATS | FCVAR_NOTIFY, "You can only change class once per grace period without getting a 5 second respawn delay" );
 #define CHANGECLASS_GRACEPERIOD 5.0f
 
+// only consider people who attacked in the last this many millisecs for kill assists
+#define MAX_ASSIST_TIME_MS 5000
+
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 #define FFDEV_INFECT_FREQ 2.0f
@@ -8028,7 +8031,7 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 {
 	CFFPlayer *pAttacker = ToFFPlayer( dmgInfo.GetAttacker() );
 
-	// dont track our own client in recent attacks, otherwise we would show up as an assist when the world kills us
+	// dont track our own client in recent attacks, otherwise we would show up as an assist when the world kills us & suicides
 	if ( !pAttacker || pAttacker == this )
 		return;
 
@@ -8054,14 +8057,17 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 	m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
 }
 
-// returns assisted attacker that did most damage within the last 5 seconds or NULL if nothing found
+// returns assisted attacker that did most damage within the last MAX_ASSIST_TIME_MS or NULL if nothing found
 RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 {
+	DevMsg( "CFFPlayer::GetTopKillAssister\n" );
+
 	RecentAttackerInfo* ret = NULL;
+
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
-		// added simple filter: if they last dmged us more than 5 seconds ago, ignore
-		if (gpGlobals->curtime - m_recentAttackers[i].timestamp > 5000)
+		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_MS ago, ignore
+		if (gpGlobals->curtime - m_recentAttackers[i].timestamp > MAX_ASSIST_TIME_MS)
 			continue;
 
 		// if its the killer, dont report also as an assist
