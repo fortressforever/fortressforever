@@ -125,6 +125,8 @@ ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "100
 #define JETPACK_HORIZONTALPUSH_CAP ffdev_jetpack_horizontalpush_cap.GetFloat()
 ConVar ffdev_jetpack_jumpleeway("ffdev_jetpack_jumpleeway", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_JUMPLEEWAY ffdev_jetpack_jumpleeway.GetFloat()
+ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "500", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT ffdev_jetpack_verticalpush_downwardslimit.GetFloat()
 
 ConVar ffdev_jetpack_jumpleeway_pushmult_horiz("ffdev_jetpack_jumpleeway_pushmult_horiz", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_JUMPLEEWAY_PUSHMULT_HORIZ ffdev_jetpack_jumpleeway_pushmult_horiz.GetFloat()
@@ -2011,6 +2013,7 @@ void CFFPlayer::JetpackHold( void )
 	float flPercent = 1.0f;
 
 	Vector vecLatVelocity = GetAbsVelocity() * Vector(1.0f, 1.0f, 0.0f);
+	float curVertical = GetAbsVelocity().z;
 
 	if (vecLatVelocity.IsLengthGreaterThan(JETPACK_HORIZONTALPUSH_CAP))
 	{
@@ -2021,7 +2024,17 @@ void CFFPlayer::JetpackHold( void )
 		horizPush *= JETPACK_HORIZONTALPUSH_OFFGROUND;
 	}
 
-	ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, JETPACK_VERTICALPUSH_OFFGROUND) * flPercent);
+	float verticalPush = JETPACK_VERTICALPUSH_OFFGROUND;
+	if (curVertical < 0)
+	{
+		float verticalScale = (FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT + curVertical) / FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT;
+		if (verticalScale < 0.0f)
+			verticalScale = 0.0f;
+
+		verticalPush *= verticalScale;
+	}
+
+	ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, verticalPush) * flPercent);
 }
 
 //-----------------------------------------------------------------------------
