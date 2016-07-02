@@ -125,7 +125,7 @@ ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "100
 #define JETPACK_HORIZONTALPUSH_CAP ffdev_jetpack_horizontalpush_cap.GetFloat()
 ConVar ffdev_jetpack_jumpleeway("ffdev_jetpack_jumpleeway", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_JUMPLEEWAY ffdev_jetpack_jumpleeway.GetFloat()
-ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "500", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT ffdev_jetpack_verticalpush_downwardslimit.GetFloat()
 
 ConVar ffdev_jetpack_jumpleeway_pushmult_horiz("ffdev_jetpack_jumpleeway_pushmult_horiz", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -141,6 +141,8 @@ ConVar ffdev_jetpack_chargetime("ffdev_jetpack_chargetime", "0.0", FCVAR_REPLICA
 
 ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_VERTICALPUSH_OFFGROUND ffdev_jetpack_verticalpush_offground.GetFloat()
+ConVar ffdev_jetpack_verticalpush_offground_downscale("ffdev_jetpack_verticalpush_offground_downscale", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE ffdev_jetpack_verticalpush_offground_downscale.GetFloat()
 ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_HORIZONTALPUSH_OFFGROUND ffdev_jetpack_horizontalpush_offground.GetFloat()
 ConVar ffdev_jetpack_horizontalsetvelocity("ffdev_jetpack_horizontalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -2028,8 +2030,8 @@ void CFFPlayer::JetpackHold( void )
 	if (curVertical < 0)
 	{
 		float verticalScale = (FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT + curVertical) / FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT;
-		if (verticalScale < 0.0f)
-			verticalScale = 0.0f;
+		if (verticalScale < JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE)
+			verticalScale = JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE;
 
 		verticalPush *= verticalScale;
 	}
