@@ -8065,7 +8065,10 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 // returns assisted attacker that did most damage within the last MAX_ASSIST_TIME_MS or NULL if nothing found
 RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 {
-	DevMsg( "CFFPlayer::GetTopKillAssister0: %s killer='%s'\n", GetPlayerName( ), killerToIgnore->GetPlayerName( ) );
+	// oops: world kills will come in null
+	bool killedByWorld = killerToIgnore == NULL;
+	const char* killerName = killedByWorld ? "world" : killerToIgnore->GetPlayerName( );
+	DevMsg( "CFFPlayer::GetTopKillAssister0: %s killer='%s'\n", GetPlayerName( ), killerName );
 
 	RecentAttackerInfo* ret = NULL;
 
@@ -8073,10 +8076,12 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 	{
 		CFFPlayer* pFFAssister = m_recentAttackers[i].pFFPlayer;
 		// this shouldnt happen, but you know
-		if ( pFFAssister == NULL)
+		if ( pFFAssister == NULL )
 			continue;
 
-		bool isKiller = pFFAssister == killerToIgnore;
+		// if this was a suicide and we are killerToIgnore, we dont have to check here
+		// because previous logic prevents adding ourselves to the assist list
+		bool isKiller = !killedByWorld && pFFAssister == killerToIgnore;
 
 #ifdef _DEBUG
 		DevMsg( "CFFPlayer::GetTopKillAssister1: assister='%s' cum dmg='%f' isKiller='%s'\n",
@@ -8106,6 +8111,16 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 		}
 	}
 
+#ifdef _DEBUG
+	if ( ret ) 
+	{
+		DevMsg( "CFFPlayer::GetTopKillAssister4: top assister='%s':%f\n", ret->pFFPlayer->GetPlayerName( ), ret->totalDamage );
+	}
+	else 
+	{
+		DevMsg( "CFFPlayer::GetTopKillAssister5\n" );
+	}
+#endif
 	return ret;
 }
 
