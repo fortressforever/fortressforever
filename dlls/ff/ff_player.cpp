@@ -8065,21 +8065,42 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 // returns assisted attacker that did most damage within the last MAX_ASSIST_TIME_MS or NULL if nothing found
 RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 {
-	DevMsg( "CFFPlayer::GetTopKillAssister\n" );
+	DevMsg( "CFFPlayer::GetTopKillAssister0: %s killer='%s'\n", GetPlayerName( ), killerToIgnore->GetPlayerName( ) );
 
 	RecentAttackerInfo* ret = NULL;
 
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
-		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_MS ago, ignore
-		if (gpGlobals->curtime - m_recentAttackers[i].timestamp > MAX_ASSIST_TIME_MS)
+		CFFPlayer* pFFAssister = m_recentAttackers[i].pFFPlayer;
+		// this shouldnt happen, but you know
+		if ( pFFAssister == NULL)
 			continue;
+
+		bool isKiller = pFFAssister == killerToIgnore;
+
+#ifdef _DEBUG
+		DevMsg( "CFFPlayer::GetTopKillAssister1: assister='%s' cum dmg='%f' isKiller='%s'\n",
+			pFFAssister->GetPlayerName( ), m_recentAttackers[i].totalDamage, isKiller ? "yes" : "no" );
+#endif
+		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_MS ago, ignore
+		if ( gpGlobals->curtime - m_recentAttackers[i].timestamp > MAX_ASSIST_TIME_MS )
+		{
+#ifdef _DEBUG
+			DevMsg( "CFFPlayer::GetTopKillAssister2" );
+#endif
+			continue;
+		}
 
 		// if its the killer, dont report also as an assist
-		if (m_recentAttackers[i].pFFPlayer == killerToIgnore )
+		if ( isKiller )
+		{
+#ifdef _DEBUG
+			DevMsg( "CFFPlayer::GetTopKillAssister3" );
+#endif
 			continue;
+		}
 
-		if (!ret || m_recentAttackers[i].totalDamage > ret->totalDamage )
+		if ( !ret || m_recentAttackers[i].totalDamage > ret->totalDamage )
 		{	
 			ret = &m_recentAttackers[i];
 		}
