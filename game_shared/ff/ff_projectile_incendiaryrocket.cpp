@@ -25,12 +25,12 @@
 
 #endif
 
+ConVar ffdev_ic_bonusdamage("ffdev_ic_bonusdamage", "40", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE ffdev_ic_bonusdamage.GetFloat()
+
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
 extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
 extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
-
-ConVar ffdev_ic_bonusdamage("ffdev_ic_bonusdamage", "80", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define IC_BONUSDAMAGE ffdev_ic_bonusdamage.GetFloat()
 
 //=============================================================================
 // CFFProjectileIncendiaryRocket tables
@@ -78,15 +78,9 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		CFFPlayer *pPlayer = ToFFPlayer( pEntity );
 		if( g_pGameRules->FCanTakeDamage( pPlayer, pBurninator ) )
 		{
-			Vector vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
-			float flDistance = vecDisplacement.Length();
-			float percentage = (m_DmgRadius - flDistance) / m_DmgRadius;
-			float scaledPercent = (percentage / 2) + 0.5f;
-			DevMsg("IC damage percent: %f\n", scaledPercent*100);
-
-			if (pPlayer->IsBurning() && percentage > 0.05f)
+			if (pPlayer->IsBurning())
 			{
-				pPlayer->TakeDamage(CTakeDamageInfo( this, pBurninator, IC_BONUSDAMAGE * scaledPercent, DMG_BURN ) );
+				pPlayer->TakeDamage(CTakeDamageInfo( this, pBurninator, IC_BONUSDAMAGE, DMG_BURN ) );
 			}
 		}
 	}
