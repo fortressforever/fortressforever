@@ -25,7 +25,7 @@
 
 #endif
 
-ConVar ffdev_ic_bonusdamage("ffdev_ic_bonusdamage", "40", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar ffdev_ic_bonusdamage("ffdev_ic_bonusdamage", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define IC_BONUSDAMAGE ffdev_ic_bonusdamage.GetFloat()
 
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
