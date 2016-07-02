@@ -8059,7 +8059,8 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 
 	// if we didnt find a match, create & add new
 	DevMsg( "CFFPlayer::AddRecentAttacker2\n" );
-	m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
+	//m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
+	m_recentAttackers.AddToTail( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
 }
 
 // returns assisted attacker that did most damage within the last MAX_ASSIST_TIME_MS or NULL if nothing found
@@ -8088,7 +8089,8 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 			pFFAssister->GetPlayerName( ), m_recentAttackers[i].totalDamage, isKiller ? "yes" : "no" );
 #endif
 		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_MS ago, ignore
-		if ( gpGlobals->curtime - m_recentAttackers[i].timestamp > MAX_ASSIST_TIME_MS )
+		// if its the killer, dont report also as an assist
+		if ( gpGlobals->curtime - m_recentAttackers[i].timestamp > MAX_ASSIST_TIME_MS || isKiller )
 		{
 #ifdef _DEBUG
 			DevMsg( "CFFPlayer::GetTopKillAssister2" );
@@ -8096,29 +8098,21 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 			continue;
 		}
 
-		// if its the killer, dont report also as an assist
-		if ( isKiller )
-		{
-#ifdef _DEBUG
-			DevMsg( "CFFPlayer::GetTopKillAssister3" );
-#endif
-			continue;
-		}
-
 		if ( !ret || m_recentAttackers[i].totalDamage > ret->totalDamage )
 		{	
 			ret = &m_recentAttackers[i];
+			// consider in case of exact tie, take newest timestamp attacker here
 		}
 	}
 
 #ifdef _DEBUG
 	if ( ret ) 
 	{
-		DevMsg( "CFFPlayer::GetTopKillAssister4: top assister='%s':%f\n", ret->pFFPlayer->GetPlayerName( ), ret->totalDamage );
+		DevMsg( "CFFPlayer::GetTopKillAssister3: top assister='%s':%f\n", ret->pFFPlayer->GetPlayerName( ), ret->totalDamage );
 	}
 	else 
 	{
-		DevMsg( "CFFPlayer::GetTopKillAssister5\n" );
+		DevMsg( "CFFPlayer::GetTopKillAssister4\n" );
 	}
 #endif
 	return ret;
@@ -8129,7 +8123,39 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 	// im disconnecting or switching teams or something, so 
 	// remove my contributions from assists. we can revisit this 
 	// if its too aggressive for eg, team switch and then having assist come through friendly fire
-	DevMsg( "CFFPlayer::RemoveMeFromKillAssists0\n" );
 
-	// TODO:
+	// if coming from spec or whatever, dont do anything because we couldnt have possibly damaged anything
+	// we are called before team is changed, so we don't have to worry about switching TO spec
+	if( GetTeamNumber() < TEAM_BLUE )
+		return;
+
+#ifdef _DEBUG
+	DevMsg( "CFFPlayer::RemoveMeFromKillAssists0: '%s'\n", GetPlayerName( ) );
+#endif
+
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pFFPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
+
+		if ( !pFFPlayer )
+			continue;
+
+		// skip ourselves, self dmg is not added to dmg table
+		if ( pFFPlayer == this )
+			continue;
+
+		for ( int i = 0; i < pFFPlayer->m_recentAttackers.Count(); ++i )
+		{
+			if ( pFFPlayer->m_recentAttackers[i].pFFPlayer == this )
+			{
+				// remove right away. this would screw up indexing for future loops, but 
+				// in reality we should only be in this list once for each player
+				pFFPlayer->m_recentAttackers.Remove( i );
+#ifdef _DEBUG
+				DevMsg( "CFFPlayer::RemoveMeFromKillAssists1: removed from '%s' dmg\n", pFFPlayer->GetPlayerName( ) );
+#endif
+				break;
+			}
+		}
+	}
 }	
