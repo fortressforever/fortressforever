@@ -15,13 +15,13 @@
 
 // re-use the flamethrower dlight cvar for jetpack
 extern ConVar cl_ffdlight_flamethrower;
-static ConVar ffdev_flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"10", 	0, 	"How fast the flames spread outwards");
+static ConVar ffdev_flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"35", 	0, 	"How fast the flames spread outwards");
 static ConVar ffdev_flame_speed(			"ffdev_flame_speed", 			"200", 	0, 	"How fast the flames go forwards");
 static ConVar ffdev_flame_speedrandom(			"ffdev_flame_speedrandom", 			"100", 	0, 	"Additional random amount How fast the flames go forwards");
 static ConVar ffdev_flame_startsize(		"ffdev_flame_startsize", 		"3", 	0, 	"How big the flame starts(0-255) ");
 static ConVar ffdev_flame_endsize(		"ffdev_flame_endsize", 		"32", 	0, 	"How big the flame finishes(0-255) ");
 static ConVar ffdev_flame_rate(			"ffdev_flame_rate", 			"128", 	0, 	"Number of flame particles per second");
-static ConVar ffdev_flame_alpha(			"ffdev_flame_alpha", 			"0.7", 	0, 	"Alpha value of the flame(0 - 1.0) ");
+static ConVar ffdev_flame_alpha(			"ffdev_flame_alpha", 			"0.6", 	0, 	"Alpha value of the flame(0 - 1.0) ");
 static ConVar ffdev_flame_randvertical(			"ffdev_flame_randvertical", 			"5.0", 	0, 	"sdsd ");
 static ConVar ffdev_flame_numparticles(			"ffdev_flame_numparticles", 			"5", 	0, 	"sdsd ");
 static ConVar ffdev_flame_playervelocity("ffdev_flame_playervelocity",	"0.75", 0, "Percentage of player velocity to add to particle speed (1.0 = constant flamejet regardless of player speed)");
