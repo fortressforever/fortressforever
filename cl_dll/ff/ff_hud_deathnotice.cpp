@@ -266,14 +266,11 @@ void CHudDeathNotice::Paint()
 		else
 		{
 			wchar_t victim[ 256 ];			
-			wchar_t killer[ 256 ];
-			wchar_t topAssister[ 256 ];
-
+			wchar_t killer[ 512 ]; // bumped this up for kill-assist msgs 
+		
 			// Get the team numbers for the players involved
 			int iKillerTeam = 0;
 			int iVictimTeam = 0;
-
-			bool hasAssister = m_DeathNotices[i].Assister.iEntIndex != -1;
 
 			if( g_PR )
 			{
@@ -282,11 +279,20 @@ void CHudDeathNotice::Paint()
 			}
 
 			vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Victim.szName, victim, sizeof( victim ) );
-			vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Killer.szName, killer, sizeof( killer ) );
 			
-			if ( hasAssister )
+			if ( m_DeathNotices[i].Assister.iEntIndex != -1 )
 			{
-				vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Assister.szName, topAssister, sizeof( topAssister ) );
+				// if we have an assist with the kill, stick it in killer name right away
+				// alignment below uses killer string length for alignment
+
+				// might be a better way to do this?
+				char concatbuff[512];
+				Q_snprintf( concatbuff, sizeof( concatbuff ), "%s + %s", m_DeathNotices[i].Killer.szName, m_DeathNotices[i].Assister.szName );
+				vgui::localize()->ConvertANSIToUnicode( concatbuff, killer, sizeof( killer ) );
+			}
+			else 
+			{
+				vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Killer.szName, killer, sizeof( killer ) );
 			}
 			//bool bSelfKill = ( (  == GR_TEAMMATE ) && ( m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex ) );
 
@@ -328,7 +334,6 @@ void CHudDeathNotice::Paint()
 					iconModifierTall = (int)( scale * (float)iconModifier->Height() );
 				}
 			}
-
 
 			int iconBuildableWide = 0;
 			int iconBuildableTall = 0;
@@ -392,20 +397,8 @@ void CHudDeathNotice::Paint()
 				// Draw killer's name
 				surface()->DrawSetTextPos( x, y );
 				surface()->DrawSetTextFont( m_hTextFont );
-				// dexter: kill assist first pass, if we have assister just wedge it into killer name for now
-				// we could do somethin fancy like smaller new line etc, but i didnt want to adust the entire obit layout
-				if ( hasAssister ) 
-				{
-					wchar_t wideAssistedKillMsg[512];
-					char asciiBuffer[512];
-					Q_snprintf(asciiBuffer, sizeof ( asciiBuffer ), "%s + %s", m_DeathNotices[i].Killer.szName, m_DeathNotices[i].Assister.szName );
-					vgui::localize()->ConvertANSIToUnicode( asciiBuffer, wideAssistedKillMsg, sizeof( wideAssistedKillMsg ) );
-					surface()->DrawUnicodeString( wideAssistedKillMsg );
-				}
-				else 
-				{
-					surface()->DrawUnicodeString( killer );
-				}
+				surface()->DrawUnicodeString( killer );
+				
 				surface()->DrawGetTextPos( x, y );
 
 				x += 5;	// |-- Mirv: 5px gap
