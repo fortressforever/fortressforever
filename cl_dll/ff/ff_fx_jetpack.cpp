@@ -4,6 +4,8 @@
 #include "c_te_effect_dispatch.h"
 #include "cliententitylist.h"
 #include "iefx.h"
+#include "c_ff_player.h"
+#include "iinput.h"
 
 #include "ff_fx_jetpack.h"
 
@@ -162,6 +164,12 @@ void CJetpackEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 
 		// Normal alpha
 		float alpha = ffdev_flame_alpha.GetFloat(); // 0.3f; // 0.95f; // 180.0f;
+
+		if (GetOwnerEntity() == C_FFPlayer::GetLocalFFPlayerOrObserverTarget() && !input->CAM_IsThirdPerson())
+		{
+			float lifeTimePercent = pParticle->m_Lifetime / pParticle->m_Dietime;
+			alpha *= lifeTimePercent * lifeTimePercent;
+		}
 
 		// Fade out everything in its last moments
 		if (/*pParticle->m_Type != SMOKE &&*/ pParticle->m_Dietime - pParticle->m_Lifetime < /*ffdev_flame_fadeout_time.GetFloat()*/ 0.2f ) 
