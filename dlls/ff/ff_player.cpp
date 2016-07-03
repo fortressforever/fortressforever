@@ -324,17 +324,17 @@ public:
 
 LINK_ENTITY_TO_CLASS( info_ff_teamspawn , CFFTeamSpawn );
 
-#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-static void *SendProxy_NonLocalOrigin(const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID)
+static void *SendProxy_NonLocal(const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID)
 {
 	pRecipients->ClearRecipient(objectID - 1);
 	return (void *) pVarData;
 }
-REGISTER_SEND_PROXY_NON_MODIFIED_POINTER(SendProxy_NonLocalOrigin);
+REGISTER_SEND_PROXY_NON_MODIFIED_POINTER(SendProxy_NonLocal);
 
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 BEGIN_SEND_TABLE_NOBASE(CBaseEntity, DT_NonLocalOrigin)
 	SendPropVector(SENDINFO(m_vecOrigin), -1,  SPROP_COORD|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin),
 END_SEND_TABLE()
@@ -408,6 +408,12 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropVector( SENDINFO( m_vecObjectiveOrigin ), SPROP_COORD ),
 END_SEND_TABLE( )
 
+BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFNonLocalPlayerExclusive )
+	// Send m_bJetpacking only to other players, so that the jetpacking client is its own authority for effects/sounds.
+	// This stops the jetpack sound playing twice when you have high ping.
+	SendPropBool( SENDINFO( m_bJetpacking ) ),
+END_SEND_TABLE()
+
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
 	SendPropExclude( "DT_BaseAnimating", "m_flPlaybackRate" ),	
@@ -425,9 +431,11 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 
 	// Data that only gets sent to the local player.
 	SendPropDataTable( "fflocaldata", 0, &REFERENCE_SEND_TABLE(DT_FFLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
+	// Data that only gets sent to the other players.
+	SendPropDataTable( "ffnonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_FFNonLocalPlayerExclusive), SendProxy_NonLocal ),
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
-	SendPropDataTable("fforigin", 0, &REFERENCE_SEND_TABLE(DT_NonLocalOrigin), SendProxy_NonLocalOrigin),
+	SendPropDataTable("fforigin", 0, &REFERENCE_SEND_TABLE(DT_NonLocalOrigin), SendProxy_NonLocal),
 #endif
 	
 	// Data that only gets sent to the player as well as observers of the player
@@ -454,7 +462,6 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropEHandle( SENDINFO( m_hActiveSlowfield ) ),
 	SendPropBool( SENDINFO( m_bInfected ) ),
 	SendPropBool( SENDINFO( m_bImmune ) ),
-	SendPropBool( SENDINFO( m_bJetpacking ) ),
 	SendPropInt( SENDINFO( m_iInfectTick ) ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
