@@ -562,7 +562,19 @@ bool CMultiplayRules::IsMultiplayer( void )
 
 			// Allow the scorer to immediately paint a decal
 			pScorer->AllowImmediateDecalPainting();
-
+			
+			// if there was a kill assister, give them some fort point as long as they're not a teammate from prior team dmg
+			CFFPlayer *pFFPlayer = ToFFPlayer( pVictim );
+			if ( pFFPlayer )
+			{
+				// if we have a top assister give em some fort points
+				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
+				if ( pTopAssister && pTopAssister->pFFPlayer ) 
+				{
+					if ( PlayerRelationship( pVictim, pTopAssister->pFFPlayer ) != GR_TEAMMATE )
+						pTopAssister->pFFPlayer->AddFortPoints( 25, "#FF_FORTPOINTS_ASSIST" );
+				}
+			}
 
 			// dvsents2: uncomment when removing all FireTargets
 			//variant_t value;
@@ -786,6 +798,19 @@ bool CMultiplayRules::IsMultiplayer( void )
 			// send the damage type
 			event->SetInt("damagetype", info.GetDamageType() );	
 			
+			// make sure to always send somethign here, otherwise client will get default 0 which is world
+			event->SetInt("killassister", -1);
+			// send assist info if any
+			CFFPlayer *pFFPlayer = ToFFPlayer( pVictim );
+			if ( pFFPlayer )
+			{
+				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
+				if ( pTopAssister )
+				{
+					event->SetInt("killassister", pTopAssister->playerIndex );
+				}
+			}
+
 			gameeventmanager->FireEvent( event );
 		}
 

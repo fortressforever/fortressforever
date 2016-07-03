@@ -516,6 +516,8 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 			pPlayer->RemoveProjectiles();
 			pPlayer->RemoveBackpacks();
 			pPlayer->RemoveBuildables();
+			
+			pPlayer->RemoveMeFromKillAssists();
 
 			const char *szCurrentLuaMenu = pPlayer->GetCurrentLuaMenu();
 			if (szCurrentLuaMenu[0])
