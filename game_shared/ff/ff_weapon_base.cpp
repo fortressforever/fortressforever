@@ -179,6 +179,7 @@ void CFFWeaponBase::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0
 //----------------------------------------------------------------------------
 void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime )
 {
+#ifdef CLIENT_DLL 
 	// If we have some sounds from the weapon classname.txt file, play a random one of them
 	const char *shootsound = GetWpnData().aShootSounds[ sound_type ];
 	if( !shootsound || !shootsound[0] )
@@ -191,8 +192,7 @@ void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime 
 
 	CSingleUserRecipientFilter filter( GetPlayerOwner() );
 
-#ifdef CLIENT_DLL 
-	if( GetPlayerOwner() == C_FFPlayer::GetLocalFFPlayer() )
+	if( GetPlayerOwner() == C_FFPlayer::GetLocalFFPlayerOrObserverTarget() )
 	{
 		// Not sure why we're checking tempents... but we did it above^^
 		if( !te->CanPredict() )
@@ -203,9 +203,7 @@ void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime 
 
 		EmitSound( filter, GetPlayerOwner()->entindex(), shootsound, NULL, soundtime );
 	}
-#else
-	EmitSound( filter, GetPlayerOwner()->entindex(), shootsound, NULL, soundtime );
-#endif	
+#endif
 }
 
 //----------------------------------------------------------------------------
