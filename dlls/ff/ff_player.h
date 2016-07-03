@@ -123,6 +123,12 @@ struct RecentAttackerInfo
 		timestamp = ts;
 		pFFPlayer = pPlayer;
 	}
+
+	/* debugging
+	~RecentAttackerInfo( ) 
+	{
+		//
+	}*/
 };
 
 class CFFRagdoll : public CBaseAnimatingOverlay
