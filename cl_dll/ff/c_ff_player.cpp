@@ -829,6 +829,10 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropVector( RECVINFO( m_vecObjectiveOrigin ) ),
 END_RECV_TABLE( )
 
+BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFNonLocalPlayerExclusive )
+	RecvPropBool( RECVINFO( m_bJetpacking ) ),
+END_RECV_TABLE( )
+
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 BEGIN_RECV_TABLE_NOBASE(C_FFPlayer, DT_NonLocalOrigin)
 	RecvPropVector(RECVINFO_NAME(m_vecNetworkOrigin, m_vecOrigin)),
@@ -845,6 +849,8 @@ END_RECV_TABLE()
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropDataTable( "fflocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFLocalPlayerExclusive) ),
+	// Data that only gets sent to the other players.
+	RecvPropDataTable( "ffnonlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFNonLocalPlayerExclusive) ),
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 	RecvPropDataTable("fforigin", 0, 0, &REFERENCE_RECV_TABLE(DT_NonLocalOrigin)),
@@ -874,7 +880,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropEHandle( RECVINFO( m_hActiveSlowfield ) ),
 	RecvPropBool( RECVINFO( m_bInfected ) ),
 	RecvPropBool( RECVINFO( m_bImmune ) ),
-	RecvPropBool( RECVINFO( m_bJetpacking ) ),
 	RecvPropInt( RECVINFO( m_iInfectTick ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
 	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
