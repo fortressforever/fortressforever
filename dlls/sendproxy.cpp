@@ -139,7 +139,9 @@ void* SendProxy_OnlyToObservers( const SendProp *pProp, const void *pStruct, con
 			CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
 			if (pPlayer)
 			{
-				if (pPlayer->IsObserver() && pPlayer->GetObserverTarget() == pRecipient)
+				bool isHLTV = pPlayer->IsHLTV();
+				bool isObserverOfTarget = pPlayer->IsObserver() && pPlayer->GetObserverTarget() == pRecipient;
+				if (isHLTV || isObserverOfTarget)
 					pRecipients->SetRecipient( pPlayer->GetClientIndex() );
 			}
 		}
