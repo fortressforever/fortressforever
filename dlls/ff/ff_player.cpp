@@ -8035,9 +8035,8 @@ void CFFPlayer::UpdateCamera( bool bUnassigned )
 void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 {
 	// make sure to get the effective scorer incase dmg is from
-	// a buildable - det, sg, disp, etc
-	CFFPlayer *pAttacker = ToFFPlayer(dynamic_cast<CMultiplayRules *>(g_pGameRules)->GetDeathScorer( dmgInfo.GetAttacker(), dmgInfo.GetInflictor() ));
-	//CFFPlayer *pAttacker = ToFFPlayer( dmgInfo.GetAttacker() );
+	// a buildable - det, sg, dispenser, probably nades etc	
+	CFFPlayer *pAttacker = ToFFPlayer( FFGameRules()->GetDeathScorer( dmgInfo.GetAttacker(), dmgInfo.GetInflictor() ) );
 
 	// dont track our own client in recent attacks, otherwise we would show up as an assist when the world kills us & suicides
 	// note: world dmg comes in as null here.
