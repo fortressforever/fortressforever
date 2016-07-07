@@ -8034,9 +8034,13 @@ void CFFPlayer::UpdateCamera( bool bUnassigned )
 // purpose: update our vector of recent attackers for kill assists
 void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 {
-	CFFPlayer *pAttacker = ToFFPlayer( dmgInfo.GetAttacker() );
+	// make sure to get the effective scorer incase dmg is from
+	// a buildable - det, sg, disp, etc
+	CFFPlayer *pAttacker = ToFFPlayer(dynamic_cast<CMultiplayRules *>(g_pGameRules)->GetDeathScorer( dmgInfo.GetAttacker(), dmgInfo.GetInflictor() ));
+	//CFFPlayer *pAttacker = ToFFPlayer( dmgInfo.GetAttacker() );
 
 	// dont track our own client in recent attacks, otherwise we would show up as an assist when the world kills us & suicides
+	// note: world dmg comes in as null here.
 	if ( !pAttacker || pAttacker == this )
 		return;
 
