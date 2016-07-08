@@ -355,10 +355,10 @@ LINK_ENTITY_TO_CLASS( player, CFFPlayer );
 PRECACHE_REGISTER(player);
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFPlayerObserver )
-	SendPropFloat(SENDINFO(m_flNextClassSpecificSkill)),
+	SendPropTime(SENDINFO(m_flNextClassSpecificSkill)),
 	SendPropFloat( SENDINFO( m_flJetpackFuel )),
-	SendPropFloat(SENDINFO(m_flTrueAimTime)),
-	SendPropFloat(SENDINFO(m_flHitTime)),
+	SendPropTime(SENDINFO(m_flTrueAimTime)),
+	SendPropTime(SENDINFO(m_flHitTime)),
 	SendPropInt(SENDINFO(m_nButtons)),
 END_SEND_TABLE()
 
@@ -5306,7 +5306,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 					data.m_flScale = damage;
 					data.m_nEntIndex = entindex();
 					DispatchEffect("BonusFire", data);
-				}
+	}
 			}
 		}
 	}
