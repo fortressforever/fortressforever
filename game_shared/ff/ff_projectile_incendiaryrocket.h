@@ -47,6 +47,7 @@ public:
 	virtual Class_T Classify( void ) { return CLASS_IC_ROCKET; }
 
 	void ArcThink();
+	virtual bool			CanClipOwnerEntity() const { return gpGlobals->curtime - m_flSpawnTime > 0.5; }
 
 #ifdef CLIENT_DLL
 
