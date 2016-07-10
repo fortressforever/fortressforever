@@ -1,16 +1,3 @@
-/// =============== Fortress Forever ==============
-/// ======== A modification for Half-Life 2 =======
-///
-/// @file ff_projectile_rocket.h
-/// @author Gavin "Mirvin_Monkey" Bramhill
-/// @date December 21, 2004
-/// @brief Declaration of the class for rocket projectiles
-///
-/// REVISIONS
-/// ---------
-/// Dec 21, 2004 Mirv: First created
-
-
 #ifndef FF_PROJECTILE_ROCKET_H
 #define FF_PROJECTILE_ROCKET_H
 #ifdef _WIN32

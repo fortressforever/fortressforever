@@ -1,16 +1,3 @@
-/// =============== Fortress Forever ==============
-/// ======== A modification for Half-Life 2 =======
-///
-/// @file ff_projectile_rocket.cpp
-/// @author Gavin "Mirvin_Monkey" Bramhill
-/// @date August 3, 2005
-/// @brief The FF incendiary rocket projectile code.
-///
-/// REVISIONS
-/// ---------
-/// Dec 21, 2004 Mirv: First creation logged
-
-
 #include "cbase.h"
 #include "ff_utils.h"
 #include "ff_projectile_incendiaryrocket.h"
