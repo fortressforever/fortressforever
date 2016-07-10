@@ -30,10 +30,9 @@
 	ConVar ffdev_nap_distance_min("ffdev_nap_distance_min","250.0",FCVAR_FF_FFDEV,"Min launch velocity of a napalmlet.");
 	#define FFDEV_NAP_DISTANCE_MIN ffdev_nap_distance_min.GetFloat() //250.0f
 	ConVar ffdev_nap_distance_max("ffdev_nap_distance_max","350.0",FCVAR_FF_FFDEV,"Max launch velocity of a napalmlet.");
-	#define FFDEV_NAP_DISTANCE_MAX 250.0f // 350.0f
+	#define FFDEV_NAP_DISTANCE_MAX ffdev_nap_distance_max.GetFloat() // 350.0f
 
 	#include "EntityFlame.h"
-	#include "smoke_trail.h"
 	#include "ff_grenade_napalmlet.h"
 #endif
 
@@ -63,14 +62,11 @@ public:
 	DECLARE_DATADESC()
 	virtual void Spawn();
 	virtual void Explode( trace_t *pTrace, int bitsDamageType );
-	void SmokeThink(void);
-	SmokeTrail *m_pSmokeTrail;
 #endif
 };
 
 #ifdef GAME_DLL
 	BEGIN_DATADESC(CFFGrenadeNapalm)
-		DEFINE_THINKFUNC( SmokeThink ),
 	END_DATADESC()
 #endif
 
@@ -81,8 +77,6 @@ END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_grenade_napalm, CFFGrenadeNapalm );
 PRECACHE_WEAPON_REGISTER( ff_grenade_napalm );
-
-
 
 void CFFGrenadeNapalm::UpdateOnRemove( void )
 {
@@ -100,7 +94,6 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 	void CFFGrenadeNapalm::Spawn()
 	{
 		SetModel(NAPALMGRENADE_MODEL);
-		m_pSmokeTrail=NULL;
 
 		BaseClass::Spawn();
 	}
@@ -117,11 +110,6 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 			UTIL_Remove(this);
 			return;
 		}
-		
-		// Jiggles: This is a paste of BaseClass::Explode() code, modified to remove the standard grenade explosion
-		//			 and damage / blastforce
-		SetModelName( NULL_STRING );//invisible
-		AddSolidFlags( FSOLID_NOT_SOLID );
 
 		m_takedamage = DAMAGE_NO;
 
@@ -177,13 +165,6 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 			CTakeDamageInfo info( this, pThrower, GetBlastForce()/4, GetAbsOrigin(), 0.0f/*m_flDamage*/, bitsDamageType, 0, &vecReported );
 			RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 		}
-
-		SetThink( &CFFGrenadeNapalm::SmokeThink );
-		SetTouch( NULL );
-
-		AddEffects( EF_NODRAW );
-	
-		SetNextThink( gpGlobals->curtime );
 
 		CBaseEntity *pOwner = GetOwnerEntity();
 
@@ -241,54 +222,7 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 			pNaplet->SetFriction( GetGrenadeFriction() );
 		}
 
-		// Now do a napalm burning think
-		SetDetonateTimerLength(NAP_FLAME_TIME);
-		m_bIsOn = true;
-
-		// Should this maybe be noclip?
-		SetMoveType( MOVETYPE_NONE );
-
-		//m_flLastBurnCheck = 0;
-		SetThink(&CFFGrenadeNapalm::SmokeThink);
-		SetNextThink(gpGlobals->curtime);
-	}
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Generate Smoke
-	//			Jiggles: This used to be FlameThink, but I changed it so that each
-	//					 Naplet does its own FlameThink
-	//-----------------------------------------------------------------------------
-	void CFFGrenadeNapalm::SmokeThink()
-	{
-		// Remove if we've reached the end of our fuse
-		if( gpGlobals->curtime > m_flDetonateTime )
-		{
-			UTIL_Remove(this);
-			return;
-		}
-
-		if (!m_pSmokeTrail)
-		{
-			m_pSmokeTrail =  SmokeTrail::CreateSmokeTrail();
-			if (m_pSmokeTrail)
-			{
-				m_pSmokeTrail->FollowEntity( this );
-				m_pSmokeTrail->m_SpawnRate = 4;
-				m_pSmokeTrail->m_ParticleLifetime = 3.0f;
-				m_pSmokeTrail->m_StartColor.Init( 0.7f, 0.7f, 0.7f );
-				m_pSmokeTrail->m_EndColor.Init( 0.6, 0.6, 0.6 );
-				m_pSmokeTrail->m_StartSize = 86;
-				m_pSmokeTrail->m_EndSize = 196;
-				m_pSmokeTrail->m_SpawnRadius = 4;
-				m_pSmokeTrail->m_Opacity = 0.5f;
-				m_pSmokeTrail->m_MinSpeed = 16;
-				m_pSmokeTrail->m_MaxSpeed = 16;
-				m_pSmokeTrail->m_MinDirectedSpeed	= 16.0f;
-				m_pSmokeTrail->m_MaxDirectedSpeed	= 16.0f;
-				m_pSmokeTrail->SetLifetime( 5.0f );
-			}
-		}
-		SetNextThink( m_flDetonateTime );
+		UTIL_Remove(this);
 	}
 #endif
 
