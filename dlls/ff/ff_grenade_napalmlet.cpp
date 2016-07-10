@@ -9,7 +9,7 @@
 #endif
 
 //ConVar burn_standon_ng("ffdev_burn_standon_ng", "7.0", 0, "Damage you take when standing on a burning napalmlet");
-ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "50.0", 0, "Napalmlet flame size");
+ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "30.0", 0, "Napalmlet flame size");
 #define FFDEV_NAP_FLAMESIZE ffdev_nap_flamesize.GetFloat() // 50.0f
 #define BURN_STANDON_NG 7
 
