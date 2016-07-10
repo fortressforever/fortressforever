@@ -14,6 +14,22 @@
 
 ConVar ffdev_ic_bonusdamage("ffdev_ic_bonusdamage", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define IC_BONUSDAMAGE ffdev_ic_bonusdamage.GetFloat()
+ConVar ffdev_ic_flarescale("ffdev_ic_flarescale", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_FLARESCALE ffdev_ic_flarescale.GetFloat()
+ConVar ffdev_ic_smoke_opacity("ffdev_ic_smoke_opacity", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_OPACITY ffdev_ic_smoke_opacity.GetFloat()
+ConVar ffdev_ic_smoke_startsize("ffdev_ic_smoke_startsize", "3", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_STARTSIZE ffdev_ic_smoke_startsize.GetFloat()
+ConVar ffdev_ic_smoke_endsize("ffdev_ic_smoke_endsize", "5", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_ENDSIZE ffdev_ic_smoke_endsize.GetFloat()
+ConVar ffdev_ic_smoke_spawnradius("ffdev_ic_smoke_spawnradius", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_SPAWNRADIUS ffdev_ic_smoke_spawnradius.GetFloat()
+ConVar ffdev_ic_smoke_minspeed("ffdev_ic_smoke_minspeed", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_MINSPEED ffdev_ic_smoke_minspeed.GetFloat()
+ConVar ffdev_ic_smoke_maxspeed("ffdev_ic_smoke_maxspeed", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_MAXSPEED ffdev_ic_smoke_maxspeed.GetFloat()
+
+
 
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
 extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
@@ -163,16 +179,17 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		// Smoke trail.
 		if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL)
 		{
-			m_hRocketTrail->m_Opacity = 0.2f;
+			m_hRocketTrail->m_Opacity = FFDEV_IC_SMOKE_OPACITY;
 			m_hRocketTrail->m_SpawnRate = 100;
-			m_hRocketTrail->m_ParticleLifetime = 0.5f;
+			m_hRocketTrail->m_ParticleLifetime = 0.3f;
 			m_hRocketTrail->m_StartColor.Init(1.0f, 0.3f, 0.0f);
 			m_hRocketTrail->m_EndColor.Init(0.0f, 0.0f, 0.0f);
-			m_hRocketTrail->m_StartSize = 8;
-			m_hRocketTrail->m_EndSize = 32;
-			m_hRocketTrail->m_SpawnRadius = 4;
-			m_hRocketTrail->m_MinSpeed = 2;
-			m_hRocketTrail->m_MaxSpeed = 16;
+			m_hRocketTrail->m_StartSize = FFDEV_IC_SMOKE_STARTSIZE; // 4
+			m_hRocketTrail->m_EndSize = FFDEV_IC_SMOKE_ENDSIZE; // 32
+			m_hRocketTrail->m_SpawnRadius = FFDEV_IC_SMOKE_SPAWNRADIUS; // 4
+			m_hRocketTrail->m_MinSpeed = FFDEV_IC_SMOKE_MINSPEED; // 2
+			m_hRocketTrail->m_MaxSpeed = FFDEV_IC_SMOKE_MAXSPEED; // 16
+			m_hRocketTrail->m_flFlareScale = FFDEV_IC_FLARESCALE;
 			
 			m_hRocketTrail->SetLifetime(999);
 			m_hRocketTrail->FollowEntity(this, "0");
