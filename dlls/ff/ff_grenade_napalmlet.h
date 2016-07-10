@@ -20,12 +20,6 @@
 #ifdef GAME_DLL
 	#include "ff_player.h"
 	#include "ff_buildableobjects_shared.h"
-	//#include "baseentity.h"
-	//#include "ff_entity_system.h"
-	//#include "te_effect_dispatch.h"
-
-	//extern short g_sModelIndexFireball;
-	//extern short g_sModelIndexWExplosion;
 #endif
 
 //=============================================================================
@@ -57,16 +51,7 @@ private:
 	float m_flLastBurnCheck;
 	float m_flBurnRadius;
 	float m_flBurnDamage;
-	//bool m_bFlameSwitch;
 	CEntityFlame *m_pFlame;
 };
-
-//#ifdef GAME_DLL
-//	BEGIN_DATADESC(CFFGrenadeNapalmlet)
-//		DEFINE_THINKFUNC( FlameThink ),
-//	END_DATADESC()
-//#endif
-
-
 
 #endif
