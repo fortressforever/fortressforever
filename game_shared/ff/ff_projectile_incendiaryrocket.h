@@ -44,8 +44,8 @@ public:
 
 protected:
 
-	// Creates the smoke trail
-	void CreateSmokeTrail();
+	// Creates the rocket trail
+	void CreateRocketTrail();
 
 	CHandle<RocketTrail>	m_hRocketTrail;
 

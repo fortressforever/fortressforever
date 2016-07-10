@@ -158,7 +158,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	//----------------------------------------------------------------------------
 	// Purpose: Creata a trail of smoke for the rocket
 	//----------------------------------------------------------------------------
-	void CFFProjectileIncendiaryRocket::CreateSmokeTrail()
+	void CFFProjectileIncendiaryRocket::CreateRocketTrail()
 	{
 		// Smoke trail.
 		if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL)
@@ -199,8 +199,8 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		// Next think
 		SetNextThink(gpGlobals->curtime);
 
-		// Creates the smoke trail
-		CreateSmokeTrail();
+		// Creates the rocket trail
+		CreateRocketTrail();
 
 		BaseClass::Spawn();
 	}
