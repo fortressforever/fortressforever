@@ -1,17 +1,3 @@
-/// =============== Fortress Forever ==============
-/// ======== A modification for Half-Life 2 =======
-///
-/// @file ff_weapon_ic.cpp
-/// @author Gavin "Mirvin_Monkey" Bramhill
-/// @date December 21, 2004
-/// @brief The FF Rocket launcher code & class declaration.
-///
-/// REVISIONS
-/// ---------
-/// Dec 21, 2004 Mirv: First creation logged
-/// Jan 16, 2005 Mirv: Moved all repeated code to base class
-
-
 #include "cbase.h"
 #include "ff_weapon_baseclip.h"
 #include "ff_projectile_incendiaryrocket.h"
