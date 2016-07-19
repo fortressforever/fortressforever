@@ -25,7 +25,7 @@
 
 ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
 ConVar hud_deathnotice_selfonly( "hud_deathnotice_selfonly", "0", FCVAR_ARCHIVE );
-ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "0", FCVAR_ARCHIVE );
+ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "1", FCVAR_ARCHIVE );
 ConVar cl_spec_killbeep( "cl_spec_killbeep", "1", FCVAR_ARCHIVE, "Determines whether or not the kill beep gets played while spectating someone in first-person mode" );
 
 extern ConVar cl_killbeepwav;
