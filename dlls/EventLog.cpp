@@ -182,12 +182,16 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 			{
 				// NOTE: i put the teaminfo in here, in case we ever switch around assists for friendly fire, etc
 				CTeam *assisterTeam = pAssister->GetTeam();
-				
-				UTIL_LogPrintf("assisted by \"%s<%i><%s><%s>\"\n",
+				// copy pasta
+				UTIL_LogPrintf("\"%s<%i><%s><%s>\" assisted in killing \"%s<%i><%s><%s>\"\n",
 					pAssister->GetPlayerName(),
 					assisterid,
 					pAssister->GetNetworkIDString(),
-					assisterTeam ? assisterTeam->GetName() : "");
+					assisterTeam ? assisterTeam->GetName() : "",
+					pPlayer->GetPlayerName(),
+					userid,
+					pPlayer->GetNetworkIDString(),
+					team ? team->GetName() : "");
 			}
 
 /*#else
