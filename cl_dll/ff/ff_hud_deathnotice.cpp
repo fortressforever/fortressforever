@@ -266,7 +266,7 @@ void CHudDeathNotice::Paint()
 		else
 		{
 			wchar_t victim[ 256 ];			
-			wchar_t killer[ 512 ]; // bumped this up for kill-assist msgs 
+			wchar_t killer[ 256 ];
 		
 			// Get the team numbers for the players involved
 			int iKillerTeam = 0;
