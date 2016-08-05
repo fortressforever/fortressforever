@@ -835,10 +835,6 @@ void CFFPlayer::PostThink()
 		m_angEyeAngles = EyeAngles();
 
 		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
-
-		// check kill assists, drop off old ones
-		// this is actually done when queried when a player dies instead of every frame
-		//UpdateRecentAttackers( );
 	}
 #endif // FF_BETA_TEST_COMPILE
 }
@@ -8047,7 +8043,6 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 	float dmg = dmgInfo.GetDamage( );
 	float timestamp = gpGlobals->curtime;
 
-	DevMsg( "CFFPlayer::AddRecentAttacker0: index = %d dmg = %f timestamp = %f\n", attackerIdx, dmg, timestamp );
 	// search for existing or create new
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
@@ -8061,8 +8056,6 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 	}
 
 	// if we didnt find a match, create & add new
-	DevMsg( "CFFPlayer::AddRecentAttacker2\n" );
-	//m_recentAttackers.AddToHead( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
 	m_recentAttackers.AddToTail( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
 }
 
@@ -8072,7 +8065,7 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 	// oops: world kills will come in null
 	bool killedByWorld = killerToIgnore == NULL;
 	const char* killerName = killedByWorld ? "world" : killerToIgnore->GetPlayerName( );
-	DevMsg( "CFFPlayer::GetTopKillAssister0: %s killer='%s'\n", GetPlayerName( ), killerName );
+	//DevMsg( "CFFPlayer::GetTopKillAssister0: %s killer='%s'\n", GetPlayerName( ), killerName );
 
 	RecentAttackerInfo* ret = NULL;
 
@@ -8087,17 +8080,11 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 		// because previous logic prevents adding ourselves to the assist list
 		bool isKiller = !killedByWorld && pFFAssister == killerToIgnore;
 
-#ifdef _DEBUG
-		DevMsg( "CFFPlayer::GetTopKillAssister1: assister='%s' cum dmg='%f' isKiller='%s'\n",
-			pFFAssister->GetPlayerName( ), m_recentAttackers[i].totalDamage, isKiller ? "yes" : "no" );
-#endif
+
 		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_MS ago, ignore
 		// if its the killer, dont report also as an assist
 		if ( gpGlobals->curtime - m_recentAttackers[i].timestamp > MAX_ASSIST_TIME_MS || isKiller )
 		{
-#ifdef _DEBUG
-			DevMsg( "CFFPlayer::GetTopKillAssister2" );
-#endif
 			continue;
 		}
 
@@ -8108,16 +8095,6 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 		}
 	}
 
-#ifdef _DEBUG
-	if ( ret ) 
-	{
-		DevMsg( "CFFPlayer::GetTopKillAssister3: top assister='%s':%f\n", ret->pFFPlayer->GetPlayerName( ), ret->totalDamage );
-	}
-	else 
-	{
-		DevMsg( "CFFPlayer::GetTopKillAssister4\n" );
-	}
-#endif
 	return ret;
 }
 
@@ -8131,10 +8108,6 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 	// we are called before team is changed, so we don't have to worry about switching TO spec
 	if( GetTeamNumber() < TEAM_BLUE )
 		return;
-
-#ifdef _DEBUG
-	DevMsg( "CFFPlayer::RemoveMeFromKillAssists0: '%s'\n", GetPlayerName( ) );
-#endif
 
 	for( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
@@ -8154,9 +8127,6 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 				// remove right away. this would screw up indexing for future loops, but 
 				// in reality we should only be in this list once for each player
 				pFFPlayer->m_recentAttackers.Remove( i );
-#ifdef _DEBUG
-				DevMsg( "CFFPlayer::RemoveMeFromKillAssists1: removed from '%s' dmg\n", pFFPlayer->GetPlayerName( ) );
-#endif
 				break;
 			}
 		}
