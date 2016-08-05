@@ -8106,8 +8106,10 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 
 	// if coming from spec or whatever, dont do anything because we couldnt have possibly damaged anything
 	// we are called before team is changed, so we don't have to worry about switching TO spec
-	if( GetTeamNumber() < TEAM_BLUE )
-		return;
+	// removed this check for now, lets just always remove it 
+	// https://github.com/fortressforever/fortressforever/pull/288#discussion_r71942743
+	// if( GetTeamNumber() < TEAM_BLUE )
+	//	return;
 
 	for( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
