@@ -8074,7 +8074,9 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 		CFFPlayer* pFFAssister = m_recentAttackers[i].pFFPlayer;
 		// this shouldnt happen, but you know
 		if ( pFFAssister == NULL )
+		{
 			continue;
+		}
 
 		// if this was a suicide and we are killerToIgnore, we dont have to check here
 		// because previous logic prevents adding ourselves to the assist list
