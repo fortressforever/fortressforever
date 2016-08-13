@@ -544,6 +544,7 @@ CFFPlayer::CFFPlayer()
 	m_bBurnFlagNG = false; // AfterShock - burning flags for multiplying flames and damage for combos!
 	m_bBurnFlagFT = false;
 	m_bBurnFlagIC = false;
+	m_iBurnLevel = 0;
 
 	m_bACDamageHint = true;  // For triggering the "Pyro takes damage from HWGuy" hint only once
 	m_bSGDamageHint = true;	 // For triggering the "Spy takes damage from SG while cloaked" hint only once
@@ -1984,6 +1985,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_bBurnFlagNG = false;
 	m_bBurnFlagIC = false;
 	m_bBurnFlagFT = false;
+	m_iBurnLevel = 0;
 
 	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 	{
@@ -4773,6 +4775,86 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 	return bCured;
 }
 
+/*void CFFPlayer::RemoveStatusIcon(CSingleUserRecipientFilter user)
+{
+	UserMessageBegin(user, "StatusIconUpdate");
+		WRITE_BYTE( FF_STATUSICON_BURNING2 );
+		WRITE_FLOAT( 0.0f );
+	MessageEnd();
+}*/
+
+void CFFPlayer::IncreaseBurnLevel( int iAmount )
+{
+	if (GetClassSlot() == CLASS_PYRO) // Pyros dont catch fire
+	{
+		return;
+	}
+
+	int iOldBurnlevel = m_iBurnLevel;
+	m_iBurnLevel += iAmount;
+
+	CSingleUserRecipientFilter user( (CBasePlayer *)this );
+	user.MakeReliable();
+	
+	float flBurnTime = FFDEV_PYRO_BURNTIME; 
+	switch (GetClassSlot())
+	{
+		case CLASS_SCOUT:
+		case CLASS_MEDIC:
+		case CLASS_SPY:
+			flBurnTime *= 0.25; 
+			break;
+	}
+
+	// Tell the player they're on fire - status icons, sounds and flames
+	if (m_iBurnLevel > 200)
+	{
+		if (gpGlobals->curtime > m_flScreamTime + 1.7f)
+		{
+			EmitSound("Player.Scream"); // haha
+			m_flScreamTime = gpGlobals->curtime;
+		}
+		if (iOldBurnlevel <= 200) 
+		{
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE( FF_STATUSICON_BURNING2 );
+				WRITE_FLOAT( 0.0f );
+			MessageEnd();
+		}
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING3 );
+			WRITE_FLOAT( flBurnTime );
+		MessageEnd();
+
+		Ignite( false, FFDEV_FLAMESIZE_BURN3, false, flBurnTime );
+	}
+	else if (m_iBurnLevel > 100)
+	{
+		if (iOldBurnlevel <= 100) 
+		{
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE( FF_STATUSICON_BURNING1 );
+				WRITE_FLOAT( 0.0f );
+			MessageEnd();
+		}
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING2 );
+			WRITE_FLOAT( flBurnTime );
+		MessageEnd();
+
+		Ignite( false, FFDEV_FLAMESIZE_BURN2, false, flBurnTime );
+	}
+	else // burn level 1
+	{
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING1 );
+			WRITE_FLOAT( flBurnTime );
+		MessageEnd();
+
+		Ignite( false, FFDEV_FLAMESIZE_BURN1, false, flBurnTime );
+	}
+}
+
 // scale = damage per tick :: Scale currently ignored - use cvars for weapon damage!
 void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnType)
 {
@@ -4871,8 +4953,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnTy
 
 		Ignite( false, FFDEV_FLAMESIZE_BURN3, false );
 	}
-	// if we're on fire from 2 flame weapons, burn a bit more
-	else if (newburnlevel == 2)
+	else if (newburnlevel == 2) // if we're on fire from 2 flame weapons, burn a bit more
 	{
 		m_flBurningDamage *= BURN_MULTIPLIER_2BURNS;
 		if (oldburnlevel == 1) 
@@ -5987,19 +6068,26 @@ void CFFPlayer::SetClassForClient( int classnum )
 	m_iClassStatus |= ( 0x0000000F & classnum );
 }
 
-void CFFPlayer::Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
+void CFFPlayer::Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner, float flameLifetime )
 {
 	AddFlag( FL_ONFIRE );
 
+	float flFlameLifetime = flameLifetime;
+
+	SetFlameSpritesLifetime(flFlameLifetime, flSize);
+
+	m_OnIgnite.FireOutput( this, this );
+}
+
+void CFFPlayer::Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
+{
 	float flFlameLifetime = FFDEV_PYRO_BURNTIME;
 	if (GetClassSlot() == CLASS_MEDIC)
 	{
 		flFlameLifetime *= 0.5;
 	}
 
-	SetFlameSpritesLifetime(flFlameLifetime, flSize);
-
-	m_OnIgnite.FireOutput( this, this );
+	Ignite(bNPCOnly, flSize, bCalledByLevelDesigner, flFlameLifetime);
 }
 
 //-----------------------------------------------------------------------------
@@ -6051,6 +6139,7 @@ void CFFPlayer::Extinguish( void )
 	m_bBurnFlagNG = false;
 	m_bBurnFlagIC = false;
 	m_bBurnFlagFT = false;
+	m_iBurnLevel = 0;
 	SetFlameSpritesLifetime( -1.0f );
 
 	StopSound( "General.BurningFlesh" );

@@ -45,6 +45,8 @@
 	//ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_FF_FFDEV, "Show flame trace");
 	#define FLAME_SHOWTRACE false
 	//ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "18", FCVAR_FF_FFDEV );
+	ConVar ffdev_flame_burnamount("ffdev_flame_burnamount", "20.0", FCVAR_FF_FFDEV_REPLICATED, "Amount to increase burn level of player by, per hit from flamethrower (100 is 1 burn level)");
+	#define FFDEV_FLAMETHROWER_BURNAMOUNT ffdev_flame_burnamount.GetFloat()
 #endif
 
 //=============================================================================
@@ -252,7 +254,8 @@ void CFFWeaponFlamethrower::Fire()
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
 
 					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
-					pPlayerTarget->ApplyBurning( pPlayer, 0.5f, BURNTYPE_FLAMETHROWER);
+					//pPlayerTarget->ApplyBurning( pPlayer, 0.5f, BURNTYPE_FLAMETHROWER);
+					pPlayerTarget->IncreaseBurnLevel( FFDEV_FLAMETHROWER_BURNAMOUNT );
 				}
 				// TODO: Check water level for dispensers & sentryguns!
 				else if( FF_IsDispenser( pTarget ) )

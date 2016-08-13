@@ -12,8 +12,15 @@
 
 #endif
 
-ConVar ffdev_ic_bonusdamage("ffdev_ic_bonusdamage", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define IC_BONUSDAMAGE ffdev_ic_bonusdamage.GetFloat()
+ConVar ffdev_ic_bonusdamage_burn1("ffdev_ic_bonusdamage_burn1", "20", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN1 ffdev_ic_bonusdamage_burn1.GetFloat()
+
+ConVar ffdev_ic_bonusdamage_burn2("ffdev_ic_bonusdamage_burn2", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN2 ffdev_ic_bonusdamage_burn2.GetFloat()
+
+ConVar ffdev_ic_bonusdamage_burn3("ffdev_ic_bonusdamage_burn3", "40", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN3 ffdev_ic_bonusdamage_burn3.GetFloat()
+
 //ConVar ffdev_ic_flarescale("ffdev_ic_flarescale", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define FFDEV_IC_FLARESCALE 0.8f //ffdev_ic_flarescale.GetFloat()
 //ConVar ffdev_ic_smoke_opacity("ffdev_ic_smoke_opacity", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -81,9 +88,11 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		CFFPlayer *pPlayer = ToFFPlayer( pEntity );
 		if( g_pGameRules->FCanTakeDamage( pPlayer, pBurninator ) )
 		{
-			if (pPlayer->IsBurning())
+			if (pPlayer->GetBurnLevel() > 0)
 			{
-				pPlayer->TakeDamage(CTakeDamageInfo( this, pBurninator, IC_BONUSDAMAGE, DMG_BURN ) );
+				float damage = CalculateBonusIcBurnDamage(pPlayer->GetBurnLevel());
+				pPlayer->TakeDamage(CTakeDamageInfo( this, pBurninator, damage /*IC_BONUSDAMAGE*/, DMG_BURN ) );
+				pPlayer->IncreaseBurnLevel(100);
 			}
 		}
 	}
@@ -170,6 +179,23 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 }
 
 #ifdef GAME_DLL
+
+	//----------------------------------------------------------------------------
+	// Purpose: Calculate the bonus damage for the IC based on the players current burn level
+	//----------------------------------------------------------------------------
+	float CFFProjectileIncendiaryRocket::CalculateBonusIcBurnDamage(int burnLevel)
+	{
+		if (burnLevel <100)
+		{
+			return IC_BONUSDAMAGE_BURN1;
+		}
+		if (burnLevel <200)
+		{
+			return IC_BONUSDAMAGE_BURN2;
+		}
+
+		return IC_BONUSDAMAGE_BURN3;
+	}
 
 	//----------------------------------------------------------------------------
 	// Purpose: Creata a trail of smoke for the rocket

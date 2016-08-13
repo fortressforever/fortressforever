@@ -522,8 +522,12 @@ protected:
 public:
 	bool Infect( CFFPlayer *pPlayer );
 	bool Cure( CFFPlayer *pPlayer );
-	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, eBurnType BurnType = BURNTYPE_NONE);
-	bool IsBurning( void ) const { return m_bBurnFlagNG|m_bBurnFlagFT|m_bBurnFlagIC; }
+	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, eBurnType BurnType = BURNTYPE_NONE); // TO REMOVE
+	bool IsBurning( void ) const { return m_bBurnFlagNG|m_bBurnFlagFT|m_bBurnFlagIC; } // TO REMOVE
+
+	// New pyro burn functions
+	int GetBurnLevel( void ) const { return m_iBurnLevel; }
+	void IncreaseBurnLevel( int iAmount );
 
 	void Gas( float flDuration, float flIconDuration, CFFPlayer *pGasser);
 	bool IsGassed( void ) const { return m_bGassed; }
@@ -604,6 +608,7 @@ private:
 	bool m_bBurnFlagNG; // AfterShock - burning flags for multiplying flames and damage for combos!
 	bool m_bBurnFlagFT;
 	bool m_bBurnFlagIC;
+	int m_iBurnLevel;
 
 	void StatusEffectsThink( void );
 	void RecalculateSpeed( );
@@ -805,6 +810,7 @@ public:
 	//float m_flNextSpawnDelay;
 
 	virtual int TakeEmp();
+	virtual void Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner, float flameLifetime );
 	virtual void Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner );
 
 	void SetFlameSpritesLifetime(float flLifeTime, float flFlameSize = 1.0f);

@@ -11,6 +11,10 @@
 //ConVar burn_standon_ng("ffdev_burn_standon_ng", "7.0", 0, "Damage you take when standing on a burning napalmlet");
 ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "30.0", 0, "Napalmlet flame size");
 #define FFDEV_NAP_FLAMESIZE ffdev_nap_flamesize.GetFloat() // 50.0f
+
+ConVar ffdev_nap_burnamount("ffdev_nap_burnamount", "20.0", 0, "Napalmlet burn increase per tick, 100 is a full burn level");
+#define FFDEV_NAPALM_BURNAMOUNT ffdev_nap_burnamount.GetFloat() // 50.0f
+
 #define BURN_STANDON_NG 7
 
 BEGIN_DATADESC( CFFGrenadeNapalmlet )
@@ -238,7 +242,8 @@ void CFFGrenadeNapalmlet::FlameThink()
 					if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 					{
 						pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
-						pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 1.0f, BURNTYPE_NALPALMGRENADE);
+						//pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 1.0f, BURNTYPE_NALPALMGRENADE);
+						pPlayer->IncreaseBurnLevel ( FFDEV_NAPALM_BURNAMOUNT );
 					}
 				}
 				break;
