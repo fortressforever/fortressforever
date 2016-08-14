@@ -99,14 +99,6 @@ struct LocationInfo
 #define SEM_ACCUMULATIVE		(1 << 1)
 #define SEM_HEALABLE			(1 << 2)
 
-enum eBurnType
-{
-	BURNTYPE_NONE = 0,
-	BURNTYPE_FLAMETHROWER,
-	BURNTYPE_ICCANNON,
-	BURNTYPE_NALPALMGRENADE,
-};
-
 class CFFRagdoll : public CBaseAnimatingOverlay
 {
 public:
@@ -597,7 +589,6 @@ private:
 
 	float m_flNextBurnTick;   // when the next burn tick should fire
 	int m_iBurnTicks;         // how many more ticks are left to fire
-	eBurnType m_BurnType;		 //type of burning damage
 
 	int m_iBurnLevel;
 
