@@ -522,7 +522,6 @@ protected:
 public:
 	bool Infect( CFFPlayer *pPlayer );
 	bool Cure( CFFPlayer *pPlayer );
-	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, eBurnType BurnType = BURNTYPE_NONE); // TO REMOVE
 
 	// New pyro burn functions
 	int GetBurnLevel( void ) const { return m_iBurnLevel; }
@@ -604,9 +603,6 @@ private:
 	float m_flBurningDamage;  // how much total damage is left to take
 	eBurnType m_BurnType;		 //type of burning damage
 
-	bool m_bBurnFlagNG; // AfterShock - burning flags for multiplying flames and damage for combos!
-	bool m_bBurnFlagFT;
-	bool m_bBurnFlagIC;
 	int m_iBurnLevel;
 
 	void StatusEffectsThink( void );

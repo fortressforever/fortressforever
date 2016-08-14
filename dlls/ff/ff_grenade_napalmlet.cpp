@@ -242,7 +242,6 @@ void CFFGrenadeNapalmlet::FlameThink()
 					if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 					{
 						pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
-						//pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 1.0f, BURNTYPE_NALPALMGRENADE);
 						pPlayer->IncreaseBurnLevel ( FFDEV_NAPALM_BURNAMOUNT );
 					}
 				}

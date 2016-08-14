@@ -540,9 +540,6 @@ CFFPlayer::CFFPlayer()
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0.0;
 
-	m_bBurnFlagNG = false; // AfterShock - burning flags for multiplying flames and damage for combos!
-	m_bBurnFlagFT = false;
-	m_bBurnFlagIC = false;
 	m_iBurnLevel = 0;
 
 	m_bACDamageHint = true;  // For triggering the "Pyro takes damage from HWGuy" hint only once
@@ -1981,9 +1978,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0.0;
 	
-	m_bBurnFlagNG = false;
-	m_bBurnFlagIC = false;
-	m_bBurnFlagFT = false;
 	m_iBurnLevel = 0;
 
 	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
@@ -3950,39 +3944,14 @@ void CFFPlayer::StatusEffectsThink( void )
 	// if we're on fire, then do something about it
 	if (m_iBurnTicks && (m_flNextBurnTick < gpGlobals->curtime))
 	{
-		// EmitSound( "General.BurningFlesh" );	// |-- Mirv: Dunno it just sounds odd using the emp sound!
-
-		float damage = m_flBurningDamage / (float)m_iBurnTicks;
-
 		// do damage. If igniter is NULL lets just kill the fire, it
 		// means the guy has left the server and just makes bad stuff
 		// happen.
 		CFFPlayer *pIgniter = GetIgniter();
 		if( pIgniter )
 		{
-			CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
-
-			int iBurnLevel = 0;
-			if (m_bBurnFlagNG == true) 
-				++iBurnLevel;
-			if (m_bBurnFlagFT == true) 
-				++iBurnLevel;
-			if (m_bBurnFlagIC == true) 
-				++iBurnLevel;
-
-			switch(iBurnLevel)
-			{
-			case 1:info.SetCustomKill(KILLTYPE_BURN_LEVEL1);break;
-			case 2:info.SetCustomKill(KILLTYPE_BURN_LEVEL2);break;
-			case 3:info.SetCustomKill(KILLTYPE_BURN_LEVEL3);break;
-			}
-
-			// No more burn damage for now - TODO: Remove all this code
-			//TakeDamage( info );
-
 			// remove a tick
 			m_iBurnTicks--;
-			m_flBurningDamage -= damage;
 
 			// schedule the next tick
 			m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
@@ -4852,137 +4821,6 @@ void CFFPlayer::IncreaseBurnLevel( int iAmount )
 
 		Ignite( false, FFDEV_FLAMESIZE_BURN1, false, flBurnTime );
 	}
-}
-
-// scale = damage per tick :: Scale currently ignored - use cvars for weapon damage!
-void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, eBurnType BurnType)
-{
-	// Okay, now pyros don't catch fire at all
-	if (GetClassSlot() == CLASS_PYRO)
-	{
-		return;
-	}
-
-	// send the status icon to be displayed
-	CSingleUserRecipientFilter user( (CBasePlayer *)this );
-	user.MakeReliable();
-	
-	float burnTickInterval = BURN_TICK_INTERVAL; 
-	switch (GetClassSlot())
-	{
-		case CLASS_SCOUT:
-		case CLASS_MEDIC:
-		case CLASS_SPY:
-			burnTickInterval *= 0.25; 
-			break;
-	}
-
-	m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
-
-	// multiply damage left to burn by number of remaining ticks, then divide it out among the new 8 ticks
-	// This prevents damage being incorrectly multiplied - shok
-	// ignore this now - instead we use burn levels and simply reset the timer
-	
-	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
-	//m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
-
-	m_iBurnTicks = BURN_TICKS;
-
-	int oldburnlevel = 0;
-	if (m_bBurnFlagNG == true) 
-		++oldburnlevel;
-	if (m_bBurnFlagFT == true) 
-		++oldburnlevel;
-	if (m_bBurnFlagIC == true) 
-		++oldburnlevel;
-
-	switch (BurnType)
-	{
-		case BURNTYPE_NALPALMGRENADE: m_bBurnFlagNG = true; break;
-		case BURNTYPE_FLAMETHROWER: m_bBurnFlagFT = true; break;
-		case BURNTYPE_ICCANNON: m_bBurnFlagIC= true; break;
-	}
-	
-	// No more burn levels
-	int newburnlevel = 1;
-	//if (m_bBurnFlagNG == true) 
-	//	++newburnlevel;
-	//if (m_bBurnFlagFT == true) 
-	//	++newburnlevel;
-	//if (m_bBurnFlagIC == true) 
-	//	++newburnlevel;
-	
-	if(oldburnlevel != newburnlevel)
-		Omnibot::Notify_BurnLevel(this, hIgniter, newburnlevel);
-
-	// each weapons burn damage can only stack once. (else you set them on 999 fire with the FT)
-	/** Uncomment this to use different burn damages depending on the weapon - AfterShock
-	m_flBurningDamage = 0;
-	if (m_bBurnFlagNG) 
-		m_flBurningDamage += burn_damage_ng.GetFloat();
-	if (m_bBurnFlagFT)
-		m_flBurningDamage += burn_damage_ft.GetFloat();
-	if (m_bBurnFlagIC)
-		m_flBurningDamage += burn_damage_ic.GetFloat();
-	*/
-	// Else use this single value (from flamethrower) and multiply it by the burn multipliers
-	m_flBurningDamage = BURN_DAMAGE_BASE * newburnlevel;
-	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
-	
-	// if we're on fire from all 3 flame weapons, holy shit BURN! - shok
-	if (newburnlevel == 3)
-	{
-		m_flBurningDamage *= BURN_MULTIPLIER_3BURNS;
-		if (gpGlobals->curtime > m_flScreamTime + 1.7f)
-		{
-			EmitSound("Player.Scream"); // haha
-			m_flScreamTime = gpGlobals->curtime;
-		}
-		if (oldburnlevel == 2) 
-		{
-			UserMessageBegin(user, "StatusIconUpdate");
-				WRITE_BYTE( FF_STATUSICON_BURNING2 );
-				WRITE_FLOAT( 0.0f );
-			MessageEnd();
-		}
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE( FF_STATUSICON_BURNING3 );
-			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
-		MessageEnd();
-
-		Ignite( false, FFDEV_FLAMESIZE_BURN3, false );
-	}
-	else if (newburnlevel == 2) // if we're on fire from 2 flame weapons, burn a bit more
-	{
-		m_flBurningDamage *= BURN_MULTIPLIER_2BURNS;
-		if (oldburnlevel == 1) 
-		{
-			UserMessageBegin(user, "StatusIconUpdate");
-				WRITE_BYTE( FF_STATUSICON_BURNING1 );
-				WRITE_FLOAT( 0.0f );
-			MessageEnd();
-		}
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE( FF_STATUSICON_BURNING2 );
-			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
-		MessageEnd();
-
-		Ignite( false, FFDEV_FLAMESIZE_BURN2, false );
-	}
-	else // burn level 1
-	{
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE( FF_STATUSICON_BURNING1 );
-			WRITE_FLOAT( FFDEV_PYRO_BURNTIME );
-		MessageEnd();
-
-		Ignite( false, FFDEV_FLAMESIZE_BURN2, false ); // Now no burn levels, make flames more visible
-	}
-
-	DevMsg("Burn: %f",m_flBurningDamage);
-
-	m_BurnType = BurnType;
-	m_hIgniter = hIgniter;
 }
 
 // Toggle grenades (requested by defrag)
@@ -6135,9 +5973,6 @@ void CFFPlayer::Extinguish( void )
 	// Make sure these are turned off
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0;
-	m_bBurnFlagNG = false;
-	m_bBurnFlagIC = false;
-	m_bBurnFlagFT = false;
 	m_iBurnLevel = 0;
 	SetFlameSpritesLifetime( -1.0f );
 
