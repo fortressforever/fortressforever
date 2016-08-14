@@ -523,7 +523,6 @@ public:
 	bool Infect( CFFPlayer *pPlayer );
 	bool Cure( CFFPlayer *pPlayer );
 	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, eBurnType BurnType = BURNTYPE_NONE); // TO REMOVE
-	bool IsBurning( void ) const { return m_bBurnFlagNG|m_bBurnFlagFT|m_bBurnFlagIC; } // TO REMOVE
 
 	// New pyro burn functions
 	int GetBurnLevel( void ) const { return m_iBurnLevel; }

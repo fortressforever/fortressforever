@@ -1333,7 +1333,7 @@ namespace Omnibot
 							
 							if(pffPlayer->IsInfected())
 								_flags.SetFlag(TF_ENT_FLAG_INFECTED);
-							if(pffPlayer->IsBurning())
+							if(pffPlayer->GetBurnLevel() > 0)
 								_flags.SetFlag(TF_ENT_FLAG_BURNING);
 							if(pffPlayer->IsSpeedEffectSet(SE_LEGSHOT))
 								_flags.SetFlag(TF_ENT_FLAG_LEGSHOT);
