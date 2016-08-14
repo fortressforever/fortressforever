@@ -592,13 +592,10 @@ private:
 	// get to gamerules. If we didn't have to note this properly in
 	// a hud death msg (and logs) it'd be a lot easier.
 	bool m_bSpecialInfectedDeath; 
-public:	
 
-	CFFPlayer *GetIgniter( void );
 private:
 
-	EHANDLE m_hIgniter;			// Wrap this cause the guy can leave the server!
-	 float m_flNextBurnTick;   // when the next burn tick should fire
+	float m_flNextBurnTick;   // when the next burn tick should fire
 	int m_iBurnTicks;         // how many more ticks are left to fire
 	eBurnType m_BurnType;		 //type of burning damage
 

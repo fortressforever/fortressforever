@@ -3941,22 +3941,11 @@ void CFFPlayer::StatusEffectsThink( void )
 	// if we're on fire, then do something about it
 	if (m_iBurnTicks && (m_flNextBurnTick < gpGlobals->curtime))
 	{
-		// do damage. If igniter is NULL lets just kill the fire, it
-		// means the guy has left the server and just makes bad stuff
-		// happen.
-		CFFPlayer *pIgniter = GetIgniter();
-		if( pIgniter )
-		{
-			// remove a tick
-			m_iBurnTicks--;
+		// remove a tick
+		m_iBurnTicks--;
 
-			// schedule the next tick
-			m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
-		}
-		else
-		{
-			Extinguish();
-		}		
+		// schedule the next tick
+		m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
 	}
 
 	// check if the player needs a little health/armor (because they are a medic/engy)
@@ -5551,21 +5540,6 @@ CFFPlayer *CFFPlayer::GetPlayerWhoTaggedMe( void )
 	if( m_pWhoTaggedMe != NULL )
 	{
 		CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
-		if( pEntity && pEntity->IsPlayer() )
-			return ToFFPlayer( pEntity );
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get the player who set us on fire!
-//-----------------------------------------------------------------------------
-CFFPlayer *CFFPlayer::GetIgniter( void )
-{
-	if( m_hIgniter != NULL )
-	{
-		CBaseEntity *pEntity = ( CBaseEntity * )m_hIgniter;
 		if( pEntity && pEntity->IsPlayer() )
 			return ToFFPlayer( pEntity );
 	}

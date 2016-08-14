@@ -397,7 +397,6 @@ public:
 	// Beg: Added by FryGuy for status effect stuff
 	CNetworkVar(float, m_flNextBurnTick);   // when the next burn tick should fire
 	CNetworkVar(int, m_iBurnTicks);         // how many more ticks are left to fire
-	CNetworkVar(float, m_flBurningDamage);  // how much total damage is left to take
 	// End: Added by FryGuy
 
 	// --> Mirv: Map guide stuff

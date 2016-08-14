@@ -806,7 +806,6 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	// Beg: Added by FryGuy - Status Effects related
 	RecvPropFloat( RECVINFO( m_flNextBurnTick ) ),
 	RecvPropInt( RECVINFO( m_iBurnTicks ) ),
-	RecvPropFloat( RECVINFO( m_flBurningDamage ) ),
 	// End: Added by FryGuy
 
 	RecvPropEHandle( RECVINFO( m_hNextMapGuide ) ),
