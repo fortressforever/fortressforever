@@ -538,7 +538,6 @@ CFFPlayer::CFFPlayer()
 	// Status Effects
 	m_flNextBurnTick = 0.0;
 	m_iBurnTicks = 0;
-	m_flBurningDamage = 0.0;
 
 	m_iBurnLevel = 0;
 
@@ -1362,7 +1361,6 @@ void CFFPlayer::Spawn( void )
 	m_pWhoTaggedMe		= NULL;
 	m_flNextBurnTick	= 0.0f;
 	m_iBurnTicks		= 0.0f;
-	m_flBurningDamage	= 0.0f;
 	m_fLastHealTick		= 0.0f;
 	m_fLastInfectedTick = 0.0f;
 	m_bInfected			= false;
@@ -1976,7 +1974,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// reset their status effects
 	m_flNextBurnTick = 0.0;
 	m_iBurnTicks = 0;
-	m_flBurningDamage = 0.0;
 	
 	m_iBurnLevel = 0;
 
@@ -5972,7 +5969,6 @@ void CFFPlayer::Extinguish( void )
 
 	// Make sure these are turned off
 	m_iBurnTicks = 0;
-	m_flBurningDamage = 0;
 	m_iBurnLevel = 0;
 	SetFlameSpritesLifetime( -1.0f );
 
