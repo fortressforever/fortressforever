@@ -40,6 +40,7 @@
 	//static ConVar mirvlet_dmg("ffdev_mirvlet_dmg","180.0",FCVAR_FF_FFDEV,"Damage a single mirvlet does");
 	#define MIRVLET_DMG 145.0f
 	#define MIRV_DMG 145.0f
+	#define MIRV_RADIUS 270.0f
 #endif
 
 class CFFGrenadeMirv : public CFFGrenadeBase
@@ -61,6 +62,7 @@ public:
 	virtual void Spawn();
 	virtual void Explode( trace_t *pTrace, int bitsDamageType );
 	virtual float GetGrenadeDamage()		{ return MIRV_DMG; }
+	virtual float GetGrenadeRadius()		{ return MIRV_RADIUS; }
 #endif
 };
 
