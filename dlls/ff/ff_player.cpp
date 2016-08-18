@@ -536,9 +536,6 @@ CFFPlayer::CFFPlayer()
 	m_bWantToThrowGrenade = false;
 
 	// Status Effects
-	m_flNextBurnTick = 0.0;
-	m_iBurnTicks = 0;
-
 	m_iBurnLevel = 0;
 
 	m_bACDamageHint = true;  // For triggering the "Pyro takes damage from HWGuy" hint only once
@@ -1359,8 +1356,6 @@ void CFFPlayer::Spawn( void )
 
 	// First initalise a bunch of player data
 	m_pWhoTaggedMe		= NULL;
-	m_flNextBurnTick	= 0.0f;
-	m_iBurnTicks		= 0.0f;
 	m_fLastHealTick		= 0.0f;
 	m_fLastInfectedTick = 0.0f;
 	m_bInfected			= false;
@@ -1971,10 +1966,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	WRITE_BYTE(FF_VIEWEFFECT_MAX);
 	MessageEnd();
 
-	// reset their status effects
-	m_flNextBurnTick = 0.0;
-	m_iBurnTicks = 0;
-	
 	m_iBurnLevel = 0;
 
 	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
@@ -3935,18 +3926,8 @@ void CFFPlayer::StatusEffectsThink( void )
 	}
 
 	// If we jump in water up to waist level, extinguish ourselves
-	if (m_iBurnTicks && GetWaterLevel() >= WL_Waist)
+	if (GetBurnLevel() > 0 && GetWaterLevel() >= WL_Waist)
 		Extinguish();
-
-	// if we're on fire, then do something about it
-	if (m_iBurnTicks && (m_flNextBurnTick < gpGlobals->curtime))
-	{
-		// remove a tick
-		m_iBurnTicks--;
-
-		// schedule the next tick
-		m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
-	}
 
 	// check if the player needs a little health/armor (because they are a medic/engy)
 	if ( IsAlive() ) // AfterShock: possible fix for medic crouch bug? Regen health the same tick you die?
@@ -4209,7 +4190,7 @@ bool CFFPlayer::LuaIsEffectActive( int iEffect )
 {
 	switch( iEffect )
 	{
-		case LUA_EF_ONFIRE: return ( m_iBurnTicks ? true : false ); break;
+		case LUA_EF_ONFIRE: return ( GetBurnLevel() > 0 ); break;
 		case LUA_EF_CONC: return IsConcussed(); break;
 		case LUA_EF_GAS: return IsGassed(); break;
 		case LUA_EF_INFECT: return IsInfected(); break;
@@ -5942,7 +5923,6 @@ void CFFPlayer::Extinguish( void )
 	}
 
 	// Make sure these are turned off
-	m_iBurnTicks = 0;
 	m_iBurnLevel = 0;
 	SetFlameSpritesLifetime( -1.0f );
 

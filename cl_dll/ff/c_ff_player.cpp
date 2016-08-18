@@ -803,11 +803,6 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_flServerPrimeTime ), 0, RecvProxy_PrimeTime ),
 	// End: Added by L0ki
 
-	// Beg: Added by FryGuy - Status Effects related
-	RecvPropFloat( RECVINFO( m_flNextBurnTick ) ),
-	RecvPropInt( RECVINFO( m_iBurnTicks ) ),
-	// End: Added by FryGuy
-
 	RecvPropEHandle( RECVINFO( m_hNextMapGuide ) ),
 	RecvPropEHandle( RECVINFO( m_hLastMapGuide ) ),
 	RecvPropFloat( RECVINFO( m_flNextMapGuideTime ) ),

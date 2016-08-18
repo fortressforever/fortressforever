@@ -587,9 +587,6 @@ private:
 
 private:
 
-	float m_flNextBurnTick;   // when the next burn tick should fire
-	int m_iBurnTicks;         // how many more ticks are left to fire
-
 	int m_iBurnLevel;
 
 	void StatusEffectsThink( void );
