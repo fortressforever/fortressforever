@@ -1,0 +1,311 @@
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+C:\Program Files (x86)\MSBuild\14.0\bin\msbuild.exe /p:UseEnv=true /tv:2.0 /v:diag Game_Scratch-2005.sln
+Building the projects in this solution one at a time. To enable parallel build, please add the "/m" switch.
+Build started 8/17/2016 10:09:31 PM.
+Environment at start of build:
+ALLUSERSPROFILE = C:\ProgramData
+APPDATA = C:\Users\Dexter\AppData\Roaming
+CommonProgramFiles = C:\Program Files (x86)\Common Files
+CommonProgramFiles(x86) = C:\Program Files (x86)\Common Files
+CommonProgramW6432 = C:\Program Files\Common Files
+COMPUTERNAME = SLAG
+ComSpec = C:\Windows\system32\cmd.exe
+DOCKER_TOOLBOX_INSTALL_PATH = C:\Program Files\Docker Toolbox
+FP_NO_HOST_CHECK = NO
+HOMEDRIVE = C:
+HOMEPATH = \Users\Dexter
+INCLUDE = C:\Program Files\Microsoft Platform SDK\Include;C:\Program Files (x86)\Microsoft Visual Studio 8\VC\INCLUDE;
+LOCALAPPDATA = C:\Users\Dexter\AppData\Local
+LOGONSERVER = \\SLAG
+MSBuildLoadMicrosoftTargetsReadOnly = true
+NETFXSDKDir = C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\
+NUMBER_OF_PROCESSORS = 16
+OS = Windows_NT
+Path = C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Windows\system32\config\systemprofile\.dnx\bin;C:\Program Files\Microsoft DNX\Dnvm\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\Git\cmd;C:\Program Files (x86)\FAHClient;C:\Program Files\Docker Toolbox
+PATHEXT = .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+PROCESSOR_ARCHITECTURE = x86
+PROCESSOR_ARCHITEW6432 = AMD64
+PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 79 Stepping 1, GenuineIntel
+PROCESSOR_LEVEL = 6
+PROCESSOR_REVISION = 4f01
+ProgramData = C:\ProgramData
+ProgramFiles = C:\Program Files (x86)
+ProgramFiles(x86) = C:\Program Files (x86)
+ProgramW6432 = C:\Program Files
+PROMPT = $P$G
+PSModulePath = C:\Windows\system32\WindowsPowerShell\v1.0\Modules\;C:\Program Files\Intel\
+PUBLIC = C:\Users\Public
+SESSIONNAME = Console
+SystemDrive = C:
+SystemRoot = C:\Windows
+TEMP = C:\Users\Dexter\AppData\Local\Temp
+TMP = C:\Users\Dexter\AppData\Local\Temp
+UCRTVersion = 10.0.10240.0
+UniversalCRTSdkDir = C:\Program Files (x86)\Windows Kits\10\
+USERDOMAIN = Slag
+USERDOMAIN_ROAMINGPROFILE = Slag
+USERNAME = Dexter
+USERPROFILE = C:\Users\Dexter
+VBOX_MSI_INSTALL_PATH = C:\Program Files\Oracle\VirtualBox\
+VisualStudioVersion = 14.0
+VS140COMNTOOLS = C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
+VS80COMNTOOLS = C:\Program Files (x86)\Microsoft Visual Studio 8\Common7\Tools\
+windir = C:\Windows
+WindowsLibPath = C:\Program Files (x86)\Windows Kits\8.1\References\CommonConfiguration\Neutral
+WindowsSDKLibVersion = winv6.3\
+WindowsSDKVersion = \
+
+Using the MSBuild v3.5 solution wrapper generator because the tools version was set to 2.0.
+Project "D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" on node 1 (default targets).
+Initial Properties:
+_SolutionProjectCacheVersion = 14.0
+_SolutionProjectConfiguration = Debug FF|Win32
+_SolutionProjectToolsVersion = 2.0
+ALLUSERSPROFILE = C:\ProgramData
+APPDATA = C:\Users\Dexter\AppData\Roaming
+AspNetConfiguration = Debug FF
+CommonProgramFiles = C:\Program Files (x86)\Common Files
+CommonProgramW6432 = C:\Program Files\Common Files
+COMPUTERNAME = SLAG
+ComSpec = C:\Windows\system32\cmd.exe
+Configuration = Debug FF
+CurrentSolutionConfigurationContents = <SolutionConfiguration xmlns=""><ProjectConfiguration Project="{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}">Debug FF|Win32</ProjectConfiguration><ProjectConfiguration Project="{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}">Debug FF|Win32</ProjectConfiguration></SolutionConfiguration>
+DOCKER_TOOLBOX_INSTALL_PATH = C:\Program Files\Docker Toolbox
+FP_NO_HOST_CHECK = NO
+HOMEDRIVE = C:
+HOMEPATH = \Users\Dexter
+INCLUDE = C:\Program Files\Microsoft Platform SDK\Include;C:\Program Files (x86)\Microsoft Visual Studio 8\VC\INCLUDE;
+LOCALAPPDATA = C:\Users\Dexter\AppData\Local
+LOGONSERVER = \\SLAG
+MSBuildAssemblyVersion = 14.0
+MSBuildBinPath = C:\Windows\Microsoft.NET\Framework\v2.0.50727
+MSBuildExtensionsPath = C:\Program Files (x86)\MSBuild
+MSBuildExtensionsPath32 = C:\Program Files (x86)\MSBuild
+MSBuildExtensionsPath64 = C:\Program Files\MSBuild
+MSBuildLoadMicrosoftTargetsReadOnly = true
+MSBuildNodeCount = 1
+MSBuildProgramFiles32 = C:\Program Files (x86)
+MSBuildProjectDefaultTargets = Build
+MSBuildProjectDirectory = D:\Dexter\Documents\GitHub\fortressforever
+MSBuildStartupDirectory = D:\Dexter\Documents\GitHub\fortressforever
+MSBuildToolsPath = C:\Windows\Microsoft.NET\Framework\v2.0.50727
+MSBuildToolsVersion = 2.0
+MSBuildUserExtensionsPath = C:\Users\Dexter\AppData\Local\Microsoft\MSBuild
+NETFXSDKDir = C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\
+NUMBER_OF_PROCESSORS = 16
+OS = Windows_NT
+Path = C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Windows\system32\config\systemprofile\.dnx\bin;C:\Program Files\Microsoft DNX\Dnvm\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\Git\cmd;C:\Program Files (x86)\FAHClient;C:\Program Files\Docker Toolbox
+PATHEXT = .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+Platform = Win32
+PROCESSOR_ARCHITECTURE = x86
+PROCESSOR_ARCHITEW6432 = AMD64
+PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 79 Stepping 1, GenuineIntel
+PROCESSOR_LEVEL = 6
+PROCESSOR_REVISION = 4f01
+ProgramData = C:\ProgramData
+ProgramFiles = C:\Program Files (x86)
+ProgramW6432 = C:\Program Files
+PROMPT = $P$G
+PSModulePath = C:\Windows\system32\WindowsPowerShell\v1.0\Modules\;C:\Program Files\Intel\
+PUBLIC = C:\Users\Public
+SESSIONNAME = Console
+SolutionDir = D:\Dexter\Documents\GitHub\fortressforever\
+SolutionExt = .sln
+SolutionFileName = Game_Scratch-2005.sln
+SolutionName = Game_Scratch-2005
+SolutionPath = D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln
+SystemDrive = C:
+SystemRoot = C:\Windows
+TargetFrameworkVersion = v2.0
+TEMP = C:\Users\Dexter\AppData\Local\Temp
+TMP = C:\Users\Dexter\AppData\Local\Temp
+UCRTVersion = 10.0.10240.0
+UniversalCRTSdkDir = C:\Program Files (x86)\Windows Kits\10\
+UseEnv = true
+USERDOMAIN = Slag
+USERDOMAIN_ROAMINGPROFILE = Slag
+USERNAME = Dexter
+USERPROFILE = C:\Users\Dexter
+VBOX_MSI_INSTALL_PATH = C:\Program Files\Oracle\VirtualBox\
+VisualStudioVersion = 14.0
+VS140COMNTOOLS = C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
+VS80COMNTOOLS = C:\Program Files (x86)\Microsoft Visual Studio 8\Common7\Tools\
+windir = C:\Windows
+WindowsLibPath = C:\Program Files (x86)\Windows Kits\8.1\References\CommonConfiguration\Neutral
+WindowsSDKLibVersion = winv6.3\
+WindowsSDKVersion = \
+
+Initial Items:
+_SolutionProjectProjects
+    cl_dll\client_scratch-2005.vcproj
+    dlls\server_scratch-2005.vcproj
+
+Building with tools version "2.0".
+Target "ValidateSolutionConfiguration: (TargetId:2)" in file "" from project "D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" (entry point):
+Task "Error" skipped, due to false condition; (('$(CurrentSolutionConfigurationContents)' == '') and ('$(SkipInvalidConfigurations)' != 'true')) was evaluated as (('<SolutionConfiguration xmlns=""><ProjectConfiguration Project="{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}">Debug FF|Win32</ProjectConfiguration><ProjectConfiguration Project="{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}">Debug FF|Win32</ProjectConfiguration></SolutionConfiguration>' == '') and ('' != 'true')).
+Task "Warning" skipped, due to false condition; (('$(CurrentSolutionConfigurationContents)' == '') and ('$(SkipInvalidConfigurations)' == 'true')) was evaluated as (('<SolutionConfiguration xmlns=""><ProjectConfiguration Project="{E44D6502-2BB4-47F8-85CF-ACDD4FC18329}">Debug FF|Win32</ProjectConfiguration><ProjectConfiguration Project="{1AA0213B-2B68-40CD-90F8-CFDFD37C1550}">Debug FF|Win32</ProjectConfiguration></SolutionConfiguration>' == '') and ('' == 'true')).
+Using "Message" task from assembly "Microsoft.Build.Tasks, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "Message" (TaskId:2)
+  Task Parameter:Text=Building solution configuration "Debug FF|Win32". (TaskId:2)
+  Building solution configuration "Debug FF|Win32". (TaskId:2)
+Done executing task "Message". (TaskId:2)
+Done building target "ValidateSolutionConfiguration" in project "Game_Scratch-2005.sln".: (TargetId:2)
+Target "ValidateToolsVersions: (TargetId:3)" in file "" from project "D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" (entry point):
+Task "Error" skipped, due to false condition; ('$(MSBuildToolsVersion)' == '2.0' and ('$(ProjectToolsVersion)' != '2.0' and '$(ProjectToolsVersion)' != '')) was evaluated as ('2.0' == '2.0' and ('' != '2.0' and '' != '')).
+Done building target "ValidateToolsVersions" in project "Game_Scratch-2005.sln".: (TargetId:3)
+Target "Build: (TargetId:4)" in file "" from project "D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" (entry point):
+Task "MSBuild" skipped, due to false condition; (@(BuildLevel0) != '') was evaluated as ( != '').
+Task "Message" skipped, due to false condition; (@(SkipLevel0) != '') was evaluated as ( != '').
+Task "Warning" skipped, due to false condition; (@(MissingConfigLevel0) != '') was evaluated as ( != '').
+Using "CallTarget" task from assembly "Microsoft.Build.Tasks, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "CallTarget" (TaskId:3)
+  Task Parameter:
+      Targets=
+          client_ff
+          server_ff (TaskId:3)
+  Task Parameter:RunEachTargetSeparately=True (TaskId:3)
+Target "client_ff: (TargetId:5)" in file "" from project "D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" (target "Build" depends on it):
+Using "VCBuild" task from assembly "Microsoft.Build.Tasks, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "VCBuild" (TaskId:4)
+  Task Parameter:Projects=D:\Dexter\Documents\GitHub\fortressforever\cl_dll\client_scratch-2005.vcproj (TaskId:4)
+  Task Parameter:Configuration=Debug FF|Win32 (TaskId:4)
+  Task Parameter:SolutionFile=D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln (TaskId:4)
+
+  Locating vcbuild.exe: found at "C:\Program Files (x86)\Microsoft Visual Studio 8\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe". (TaskId:4)
+  Command: (TaskId:4)
+  C:\Program Files (x86)\Microsoft Visual Studio 8\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe D:\Dexter\Documents\GitHub\fortressforever\cl_dll\client_scratch-2005.vcproj "Debug FF|Win32"  (TaskId:4)
+  The "VCBuild" task is using "VCBuild.exe" from "C:\Program Files (x86)\Microsoft Visual Studio 8\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe". (TaskId:4)
+  Microsoft (R) Visual C++ Project Builder - Command Line Version 8.00.50727 (TaskId:4)
+  Copyright (C) Microsoft Corp 1993-2003. All rights reserved. (TaskId:4)
+   (TaskId:4)
+  Build started: Project: client_ff, Configuration: Debug FF|Win32 (TaskId:4)
+  Compiling... (TaskId:4)
+  Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.762 for 80x86 (TaskId:4)
+  Copyright (C) Microsoft Corporation.  All rights reserved. (TaskId:4)
+  cl /Od /I "../Public/tier1" /I ".\ff\vgui" /I ".\ff" /I "..\game_shared\ff" /I "." /I ".\..\Public" /I ".\..\vgui2\include" /I ".\..\vgui2\controls" /I "..\game_shared" /I ".\game_controls" /D "_DEBUG" /D "fopen=dont_use_fopen" /D "FF_DLL" /D "NO_STRING_T" /D "CLIENT_DLL" /D "_WINDOWS" /D "VECTOR" /D "strncpy=use_Q_strncpy_instead" /D "_snprintf=use_Q_snprintf_instead" /D "_WIN32" /D "PROTECTED_THINGS_ENABLE" /D "_VC80_UPGRADE=0x0710" /D "_WINDLL" /D "_MBCS" /FD /MTd /Fp"Debug FF/2005/client.pch" /Fo"Debug FF/2005/" /Fd"Debug FF/2005/" /FR"Debug FF/2005/" /W4 /c /ZI ..\public\tier0\memoverride.cpp (TaskId:4)
+     .\in_mouse.cpp (TaskId:4)
+     .\in_joystick.cpp (TaskId:4)
+     ..\game_shared\choreoscene.cpp (TaskId:4)
+  memoverride.cpp (TaskId:4)
+d:\dexter\documents\github\fortressforever\public\tier0\memoverride.cpp(16): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  in_mouse.cpp (TaskId:4)
+d:\dexter\documents\github\fortressforever\cl_dll\in_mouse.cpp(9): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  in_joystick.cpp (TaskId:4)
+d:\dexter\documents\github\fortressforever\cl_dll\in_joystick.cpp(10): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  choreoscene.cpp (TaskId:4)
+d:\dexter\documents\github\fortressforever\game_shared\choreoscene.cpp(11): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  Generating Code... (TaskId:4)
+  Creating browse information file... (TaskId:4)
+  Microsoft Browse Information Maintenance Utility Version 8.00.50727 (TaskId:4)
+  Copyright (C) Microsoft Corporation. All rights reserved. (TaskId:4)
+BSCMAKE : error BK1506: cannot open file '.\Debug FF\2005\choreoscene.sbr': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  Build log was saved at "file://d:\Dexter\Documents\GitHub\fortressforever\cl_dll\Debug FF\2005\BuildLog.htm" (TaskId:4)
+  client_ff - 5 error(s), 0 warning(s) (TaskId:4)
+  The command exited with code 1. (TaskId:4)
+
+Done executing task "VCBuild" -- FAILED. (TaskId:4)
+Done building target "client_ff" in project "Game_Scratch-2005.sln" -- FAILED.: (TargetId:5)
+Target "server_ff: (TargetId:6)" in file "" from project "D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" (target "Build" depends on it):
+Task "VCBuild" (TaskId:5)
+  Task Parameter:Projects=D:\Dexter\Documents\GitHub\fortressforever\dlls\server_scratch-2005.vcproj (TaskId:5)
+  Task Parameter:Configuration=Debug FF|Win32 (TaskId:5)
+  Task Parameter:SolutionFile=D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln (TaskId:5)
+
+  Locating vcbuild.exe: found at "C:\Program Files (x86)\Microsoft Visual Studio 8\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe". (TaskId:5)
+  Command: (TaskId:5)
+  C:\Program Files (x86)\Microsoft Visual Studio 8\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe D:\Dexter\Documents\GitHub\fortressforever\dlls\server_scratch-2005.vcproj "Debug FF|Win32"  (TaskId:5)
+  The "VCBuild" task is using "VCBuild.exe" from "C:\Program Files (x86)\Microsoft Visual Studio 8\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe". (TaskId:5)
+  Microsoft (R) Visual C++ Project Builder - Command Line Version 8.00.50727 (TaskId:5)
+  Copyright (C) Microsoft Corp 1993-2003. All rights reserved. (TaskId:5)
+   (TaskId:5)
+  Build started: Project: server_ff, Configuration: Debug FF|Win32 (TaskId:5)
+  Compiling... (TaskId:5)
+  memoverride.cpp (TaskId:5)
+d:\dexter\documents\github\fortressforever\public\tier0\memoverride.cpp(16): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  KeyValues.cpp (TaskId:5)
+d:\dexter\documents\github\fortressforever\tier1\keyvalues.cpp(14): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  interface.cpp (TaskId:5)
+d:\dexter\documents\github\fortressforever\tier1\interface.cpp(9): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  h_export.cpp (TaskId:5)
+d:\dexter\documents\github\fortressforever\public\winlite.h(22): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  gamehandle.cpp (TaskId:5)
+d:\dexter\documents\github\fortressforever\public\winlite.h(22): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  editor_sendcommand.cpp (TaskId:5)
+d:\dexter\documents\github\fortressforever\public\editor_sendcommand.cpp(17): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  BotLoadLibrary.cpp (TaskId:5)
+d:\dexter\documents\github\fortressforever\omnibot\botloadlibrary.cpp(114): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  Generating Code... (TaskId:5)
+  Creating browse information file... (TaskId:5)
+  Microsoft Browse Information Maintenance Utility Version 8.00.50727 (TaskId:5)
+  Copyright (C) Microsoft Corporation. All rights reserved. (TaskId:5)
+BSCMAKE : error BK1506: cannot open file '.\Debug FF\2005\BotLoadLibrary.sbr': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  Build log was saved at "file://d:\Dexter\Documents\GitHub\fortressforever\dlls\Debug FF\2005\BuildLog.htm" (TaskId:5)
+  server_ff - 8 error(s), 0 warning(s) (TaskId:5)
+  The command exited with code 1. (TaskId:5)
+
+Done executing task "VCBuild" -- FAILED. (TaskId:5)
+Done building target "server_ff" in project "Game_Scratch-2005.sln" -- FAILED.: (TargetId:6)
+Done executing task "CallTarget" -- FAILED. (TaskId:3)
+Done building target "Build" in project "Game_Scratch-2005.sln" -- FAILED.: (TargetId:4)
+Done Building Project "D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" (default targets) -- FAILED.
+Deferred Messages
+
+Detailed Build Summary
+======================
+     (TaskId:0)
+  
+  ============================== Build Hierarchy (IDs represent configurations) =====================================================
+  Id                  : Exclusive Time   Total Time   Path (Targets)
+  ----------------------------------------------------------------------------------------------------------------------------------- (TaskId:0)
+  0                   : 6.342s           6.342s       D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln ()  (TaskId:0)
+  
+  ============================== Node Utilization (IDs represent configurations) ====================================================
+  Timestamp:            1        Duration   Cumulative
+  ----------------------------------------------------------------------------------------------------------------------------------- (TaskId:0)
+  636070901713604209:   0        6.343s     6.343s ############################################################################################################################## (TaskId:0)
+  -----------------------------------------------------------------------------------------------------------------------------------
+  Utilization:          100.0    Average Utilization: 100.0 (TaskId:0)
+
+Project Performance Summary:
+     6341 ms  D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln   1 calls
+
+Target Performance Summary:
+        1 ms  ValidateToolsVersions                      1 calls
+       14 ms  ValidateSolutionConfiguration              1 calls
+     3113 ms  client_ff                                  1 calls
+     3207 ms  server_ff                                  1 calls
+     6322 ms  Build                                      1 calls
+
+Task Performance Summary:
+        2 ms  Message                                    1 calls
+     6320 ms  VCBuild                                    2 calls
+     6322 ms  CallTarget                                 1 calls
+
+Build FAILED.
+
+"D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" (default target) (1) ->
+(client_ff target) -> 
+  d:\dexter\documents\github\fortressforever\public\tier0\memoverride.cpp(16): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\cl_dll\in_mouse.cpp(9): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\cl_dll\in_joystick.cpp(10): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\game_shared\choreoscene.cpp(11): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  BSCMAKE : error BK1506: cannot open file '.\Debug FF\2005\choreoscene.sbr': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+
+
+"D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln" (default target) (1) ->
+(server_ff target) -> 
+  d:\dexter\documents\github\fortressforever\public\tier0\memoverride.cpp(16): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\tier1\keyvalues.cpp(14): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\tier1\interface.cpp(9): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\public\winlite.h(22): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\public\winlite.h(22): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\public\editor_sendcommand.cpp(17): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  d:\dexter\documents\github\fortressforever\omnibot\botloadlibrary.cpp(114): fatal error C1083: Cannot open include file: 'windows.h': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+  BSCMAKE : error BK1506: cannot open file '.\Debug FF\2005\BotLoadLibrary.sbr': No such file or directory [D:\Dexter\Documents\GitHub\fortressforever\Game_Scratch-2005.sln]
+
+    0 Warning(s)
+    13 Error(s)
+
+Time Elapsed 00:00:06.36
