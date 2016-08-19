@@ -43,6 +43,9 @@
 	#define GREN_ELAS 0.4f
 	#define GREN_FRIC_CONC 0.3f
 	#define GREN_ELAS_CONC 0.7f
+
+	#define FRAG_GREN_DAMAGE 145.0f
+	#define FRAG_GREN_RADIUS 270.0f
 #endif
 
 //=============================================================================
