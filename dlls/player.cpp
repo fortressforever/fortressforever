@@ -2917,6 +2917,16 @@ void CBasePlayer::IncrementFortPointsCount( int nCount )
 	//pl.fortpoints = m_iFortPoints;
 }
 
+void CBasePlayer::ResetAsisstsCount()
+{
+	m_iAssists = 0;
+}
+
+void CBasePlayer::IncrementAssistsCount( int nCount ) 
+{
+	m_iAssists += nCount;
+}
+
 void CBasePlayer::ResetDeathCount()
 {
 	m_iDeaths = 0;

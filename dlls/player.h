@@ -571,6 +571,9 @@ public:
 	void	ResetFortPointsCount();
 	void	IncrementFortPointsCount( int nCount );
 
+	void	ResetAsisstsCount();
+	void	IncrementAssistsCount( int nCount );
+
 	void	SetArmorValue( int value );
 	void	IncrementArmorValue( int nCount, int nMaxValue = -1 );
 
