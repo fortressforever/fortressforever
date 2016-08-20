@@ -41,6 +41,7 @@ public:
 	virtual int		GetTeam( int index ) = 0;
 	virtual int		GetHealth( int index ) = 0;
 	virtual int		GetArmor( int index ) = 0;
+	virtual int		GetAssists( int index ) = 0;
 
 	// --> Mirv: Extra's needed for menus
 	virtual int		GetClass( int index ) = 0;
