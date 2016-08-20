@@ -315,6 +315,8 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_iFortPoints, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iDeaths, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flNextDecalTime, FIELD_TIME ),
+	DEFINE_FIELD( m_iAssists, FIELD_INTEGER ),
+
 	//DEFINE_AUTO_ARRAY( m_szTeamName, FIELD_STRING ), // mp
 
 	//DEFINE_FIELD( m_iConnected, FIELD_INTEGER ),

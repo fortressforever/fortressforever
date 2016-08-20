@@ -31,6 +31,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	
 	SendPropArray3( SENDINFO_ARRAY3(m_iChannel), SendPropInt( SENDINFO_ARRAY(m_iChannel), 4 ) ), // |-- Mirv: Channel info
 
+	SendPropArray3( SENDINFO_ARRAY3(m_iAssists), SendPropInt( SENDINFO_ARRAY(m_iAssists), 12) ),
+
 	SendPropBool(SENDINFO(m_bIsIntermission)),
 
 END_SEND_TABLE()
@@ -74,6 +76,8 @@ void CPlayerResource::Spawn( void )
 		m_iClass.Set( i, 0 );	// |-- Mirv: Current class
 		
 		m_iChannel.Set( i, 0 );	// |-- Mirv: Channel info
+
+		m_iAssists.Set( i, 0 );
 	}
 
 	m_bIsIntermission = false;
@@ -128,6 +132,7 @@ void CPlayerResource::UpdatePlayerData( void )
 			m_iHealth.Set(i, max( 0, pPlayer->GetHealth() ) );
 			m_iArmor.Set(i, max( 0, pPlayer->GetArmor() ) );
 			m_iClass.Set(i, pPlayer->GetClassSlot() );	// |-- Mirv: Update our class
+			m_iAssists.Set( i, pPlayer->AssistsCount() ) );
 
 			// Don't update ping / packetloss everytime
 
