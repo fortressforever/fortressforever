@@ -572,7 +572,10 @@ bool CMultiplayRules::IsMultiplayer( void )
 				if ( pTopAssister && pTopAssister->pFFPlayer ) 
 				{
 					if ( PlayerRelationship( pVictim, pTopAssister->pFFPlayer ) != GR_TEAMMATE )
+					{
 						pTopAssister->pFFPlayer->AddFortPoints( 25, "#FF_FORTPOINTS_ASSIST" );
+						pTopAssister->pFFPlayer->IncrementAssistsCount( 1 );
+					}
 				}
 			}
 
