@@ -72,9 +72,6 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
 ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
 #define FFDEV_PYRO_BURNTIME ffdev_pyro_burntime.GetFloat()
-#define BURN_TICK_INTERVAL FFDEV_PYRO_BURNTIME
-//ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
-#define BURN_TICKS 1
 
 //ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
 #define FFDEV_FLAMESIZE_BURN1 0.015f //ffdev_flamesize_burn1.GetFloat()
