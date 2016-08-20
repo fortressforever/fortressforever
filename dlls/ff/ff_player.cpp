@@ -872,7 +872,6 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Player.bodysplat");
 	PrecacheScriptSound("Item.Toss");
 	PrecacheScriptSound("Player.Pain");
-	PrecacheScriptSound("Player.Scream");
 	PrecacheScriptSound("Player.Flameout");
 	PrecacheScriptSound("medical.saveme");
 	PrecacheScriptSound("maintenance.saveme");
@@ -1639,7 +1638,6 @@ void CFFPlayer::SetupClassVariables()
 
 	m_bSpecialInfectedDeath = false;
 
-	m_flScreamTime = 0.0f;
 	m_flMancannonTime = 0.0f;
 	m_flMancannonDetTime = 0.0f;
 	// Reset Spy stuff
@@ -4744,11 +4742,6 @@ void CFFPlayer::IncreaseBurnLevel( int iAmount )
 	// Tell the player they're on fire - status icons, sounds and flames
 	if (m_iBurnLevel > 200)
 	{
-		if (gpGlobals->curtime > m_flScreamTime + 1.7f)
-		{
-			EmitSound("Player.Scream"); // haha
-			m_flScreamTime = gpGlobals->curtime;
-		}
 		if (iOldBurnlevel <= 200) 
 		{
 			UserMessageBegin(user, "StatusIconUpdate");
@@ -5861,9 +5854,7 @@ void CFFPlayer::Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner
 {
 	AddFlag( FL_ONFIRE );
 
-	float flFlameLifetime = flameLifetime;
-
-	SetFlameSpritesLifetime(flFlameLifetime, flSize);
+	SetFlameSpritesLifetime(flameLifetime, flSize); // NOTE: This calls Extinguish on the player when the CEntityFlame lifetime runs out
 
 	m_OnIgnite.FireOutput( this, this );
 }

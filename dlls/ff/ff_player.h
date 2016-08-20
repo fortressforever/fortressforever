@@ -688,9 +688,6 @@ private:
 	// Time until player can cloak again
 	float m_flNextCloak;
 	
-	// time before allowed to scream again
-	float m_flScreamTime;
-	
 	// Shared stuffs:
 public:
 	void Command_SpyCloak( void );
