@@ -554,6 +554,8 @@ CBasePlayer::CBasePlayer( )
 	// -1 = just joined map/need to force spawn once team/class have been chosen
 	// 0 - x = respawn delay (like when typing "kill" in the console)
 	m_flNextSpawnDelay = -1.0f;
+
+	ResetAsisstsCount();
 }
 
 CBasePlayer::~CBasePlayer( )
