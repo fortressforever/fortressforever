@@ -86,7 +86,7 @@ protected:
 		        CLASS_WIDTH = 60, 
 		   FORTPOINTS_WIDTH = 60, 
 		        SCORE_WIDTH = 35,  
-		        DEATH_WIDTH = 70, 
+		        DEATH_WIDTH = 35, 
 				ASSIST_WIDTH = 35,
 		         PING_WIDTH = 30, 
 		        VOICE_WIDTH = 30, 
