@@ -29,7 +29,7 @@
 
 	ConVar ffdev_nap_distance_min("ffdev_nap_distance_min","250.0",FCVAR_FF_FFDEV,"Min launch velocity of a napalmlet.");
 	#define FFDEV_NAP_DISTANCE_MIN ffdev_nap_distance_min.GetFloat() //250.0f
-	ConVar ffdev_nap_distance_max("ffdev_nap_distance_max","350.0",FCVAR_FF_FFDEV,"Max launch velocity of a napalmlet.");
+	ConVar ffdev_nap_distance_max("ffdev_nap_distance_max","250.0",FCVAR_FF_FFDEV,"Max launch velocity of a napalmlet.");
 	#define FFDEV_NAP_DISTANCE_MAX ffdev_nap_distance_max.GetFloat() // 350.0f
 
 	#include "EntityFlame.h"
@@ -182,17 +182,22 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 			QAngle angSpawn;
 
 			angSpawn.x = RandomFloat(45.0f,75.0f);
-			if (i == 0)
+			if (i == 8)
 			{
 				angSpawn.x = 90;
 			}
 
-			angSpawn.y = RandomFloat(0.0f, 360.0f);
+			angSpawn.y = RandomFloat(i*45.0f, (i+1)*45.0f);
 			angSpawn.z = 0.0f;
 
 			Vector vecVelocity;
 			AngleVectors(angSpawn,&vecVelocity);
 			vecVelocity *= RandomFloat(FFDEV_NAP_DISTANCE_MIN,FFDEV_NAP_DISTANCE_MAX);
+
+			if (i % 2)
+			{
+				vecVelocity *= 0.8f;
+			}
 
 			// So they don't begin moving down, I guess
 			if (vecVelocity.z < 0)
