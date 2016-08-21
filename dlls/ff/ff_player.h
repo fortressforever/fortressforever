@@ -223,8 +223,7 @@ private:
 	IFFPlayerAnimState *m_PlayerAnimState;
 
 	// ---> FF class stuff (billdoor)
-	CNetworkVar(int, m_iArmorType);
-	int m_iBaseArmorType;
+	int m_iArmorType;
 
 	// BEG: Added by Mulchman for armor stuff
 public:

@@ -367,9 +367,6 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropBool( SENDINFO( m_bBuilding ) ),
 	SendPropInt( SENDINFO( m_iCurBuild ), 3, SPROP_UNSIGNED ),
 
-	// health/armor	
-	SendPropInt(SENDINFO( m_iArmorType ), 4, SPROP_UNSIGNED ),
-
 	// random player class 
 	SendPropBool( SENDINFO ( m_fRandomPC ) ),
 
@@ -1671,8 +1668,6 @@ void CFFPlayer::SetupClassVariables()
 	m_iArmor		= pPlayerClassInfo.m_iInitialArmour;
 	m_iMaxArmor		= pPlayerClassInfo.m_iMaxArmour;
 	m_iArmorType	= pPlayerClassInfo.m_iArmourType;
-	m_iBaseArmorType = m_iArmorType;
-
 	m_flMaxspeed	= pPlayerClassInfo.m_iSpeed;
 	m_iPrimary		= pPlayerClassInfo.m_iPrimaryInitial;
 	m_iSecondary	= pPlayerClassInfo.m_iSecondaryInitial;

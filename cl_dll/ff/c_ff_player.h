@@ -302,12 +302,9 @@ public:
 
 	// ---> added by billdoor
 public:
-	CNetworkVar( int, m_iArmorType);
 	CNetworkVar( bool, m_fRandomPC );
 	
 	int NeedsArmor( void ) const { return GetMaxArmor() - GetArmor(); }
-
-	int GetArmorType() const { return m_iArmorType; };
 	// ---> end
 
 	// ---> Jiggles: Tracks priming times for hint logic
