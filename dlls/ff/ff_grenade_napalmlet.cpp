@@ -15,7 +15,7 @@ ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "30.0", 0, "Napalmlet flame si
 ConVar ffdev_nap_burnamount("ffdev_nap_burnamount", "20.0", 0, "Napalmlet burn increase per tick, 100 is a full burn level");
 #define FFDEV_NAPALM_BURNAMOUNT ffdev_nap_burnamount.GetFloat() // 50.0f
 
-#define BURN_STANDON_NG 7
+#define BURN_STANDON_NG 2
 
 BEGIN_DATADESC( CFFGrenadeNapalmlet )
 	DEFINE_THINKFUNC( FlameThink ),
@@ -200,65 +200,60 @@ void CFFGrenadeNapalmlet::FlameThink()
 		return;
 	}
 
-	if((gpGlobals->curtime - m_flLastBurnCheck) >= 1.0f)
+	Vector	vecSrc = GetAbsOrigin();
+	vecSrc.z += 1;
+
+	CBaseEntity *pEntity = NULL;
+
+	for( CEntitySphereQuery sphere( vecSrc, m_flBurnRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 	{
-		m_flLastBurnCheck = gpGlobals->curtime;
+		if( !pEntity )
+			continue;
 
-		Vector	vecSrc = GetAbsOrigin();
-		vecSrc.z += 1;
+		// Bug #0000269: Napalm through walls.
+		// Mulch: if we hit water w/ the trace, abort too!
+		trace_t tr;
+		UTIL_TraceLine(GetAbsOrigin(), pEntity->GetAbsOrigin(), MASK_SOLID_BRUSHONLY | CONTENTS_WATER, this, COLLISION_GROUP_DEBRIS, &tr);
 
-		CBaseEntity *pEntity = NULL;
+		if (tr.fraction < 1.0f)
+			continue;
 
-		for( CEntitySphereQuery sphere( vecSrc, m_flBurnRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		// Bug #0000270: Napalm grenade burn radius reaches unrealisticly high.
+		float height = tr.startpos.z - tr.endpos.z;
+		if (height < -40.0f || height > 40.0f)
+			continue;
+
+		// Don't damage if entity is more than feet deep in water
+		if( pEntity->GetWaterLevel() >= 2 )
+			continue;
+
+		switch( pEntity->Classify() )
 		{
-			if( !pEntity )
-				continue;
-
-			// Bug #0000269: Napalm through walls.
-			// Mulch: if we hit water w/ the trace, abort too!
-			trace_t tr;
-			UTIL_TraceLine(GetAbsOrigin(), pEntity->GetAbsOrigin(), MASK_SOLID_BRUSHONLY | CONTENTS_WATER, this, COLLISION_GROUP_DEBRIS, &tr);
-
-			if (tr.fraction < 1.0f)
-				continue;
-
-			// Bug #0000270: Napalm grenade burn radius reaches unrealisticly high.
-			float height = tr.startpos.z - tr.endpos.z;
-			if (height < -40.0f || height > 40.0f)
-				continue;
-
-			// Don't damage if entity is more than feet deep in water
-			if( pEntity->GetWaterLevel() >= 2 )
-				continue;
-
-			switch( pEntity->Classify() )
+			case CLASS_PLAYER:
 			{
-				case CLASS_PLAYER:
-				{
-					CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-					if( !pPlayer )
-						continue;
+				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+				if( !pPlayer )
+					continue;
 
-					if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
-					{
-						pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
-						pPlayer->IncreaseBurnLevel ( FFDEV_NAPALM_BURNAMOUNT );
-					}
-				}
-				break;
-				case CLASS_SENTRYGUN:
-				case CLASS_MANCANNON://Adding napalm damage to jumppad -GreenMushy
-				case CLASS_DISPENSER:
+				if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 				{
-					if (g_pGameRules->FCanTakeDamage( pEntity, GetOwnerEntity()))
-						pEntity->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
+					pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
+					pPlayer->IncreaseBurnLevel ( FFDEV_NAPALM_BURNAMOUNT );
 				}
-				
-				default:
-					break;
 			}
+			break;
+			case CLASS_SENTRYGUN:
+			case CLASS_MANCANNON://Adding napalm damage to jumppad -GreenMushy
+			case CLASS_DISPENSER:
+			{
+				if (g_pGameRules->FCanTakeDamage( pEntity, GetOwnerEntity()))
+					pEntity->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
+			}
+			
+			default:
+				break;
 		}
 	}
 
-	SetNextThink( gpGlobals->curtime + 1.0f );
+	SetNextThink( gpGlobals->curtime + 0.25f );
 }

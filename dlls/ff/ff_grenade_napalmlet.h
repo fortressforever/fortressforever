@@ -33,24 +33,19 @@ public:
 	DECLARE_CLASS( CFFGrenadeNapalmlet, CBaseAnimating );
 	void Precache();
 
-
-	CFFGrenadeNapalmlet( void ){m_flBurnTime = gpGlobals->curtime + 5.0f; m_flLastBurnCheck = 0; m_flBurnDamage = 15; /*m_bFlameSwitch = true;*/}
+	CFFGrenadeNapalmlet( void ){m_flBurnTime = gpGlobals->curtime + 5.0f;}
 	void UpdateOnRemove( void );
 
 	void Spawn();
 	void SetBurnRadius( float burnRadius ){ m_flBurnRadius = burnRadius;  }
 	void SetBurnTime( float burnTime ){ m_flBurnTime = gpGlobals->curtime + burnTime; if (m_pFlame) m_pFlame->SetLifetime( m_flBurnTime );}
-	void SetBurnDamage( float burnDamage ){ m_flBurnDamage = burnDamage; }
-
 	
 	void ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
 	void FlameThink(void);
 	DECLARE_DATADESC();
 private:
 	float m_flBurnTime;
-	float m_flLastBurnCheck;
 	float m_flBurnRadius;
-	float m_flBurnDamage;
 	CEntityFlame *m_pFlame;
 };
 
