@@ -47,6 +47,14 @@
 	//ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "18", FCVAR_FF_FFDEV );
 	ConVar ffdev_flame_burnamount("ffdev_flame_burnamount", "20.0", FCVAR_FF_FFDEV_REPLICATED, "Amount to increase burn level of player by, per hit from flamethrower (100 is 1 burn level)");
 	#define FFDEV_FLAMETHROWER_BURNAMOUNT ffdev_flame_burnamount.GetFloat()
+	
+	ConVar ffdev_flamethrower_bonusdamage_burn1("ffdev_flamethrower_bonusdamage_burn1", "4", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN1 ffdev_flamethrower_bonusdamage_burn1.GetInt()
+	ConVar ffdev_flamethrower_bonusdamage_burn2("ffdev_flamethrower_bonusdamage_burn2", "6", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN2 ffdev_flamethrower_bonusdamage_burn2.GetInt()
+	ConVar ffdev_flamethrower_bonusdamage_burn3("ffdev_flamethrower_bonusdamage_burn3", "8", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN3 ffdev_flamethrower_bonusdamage_burn3.GetInt()
+
 #endif
 
 //=============================================================================
@@ -72,6 +80,10 @@ public:
 
 	void EmitFlames(bool bEmit);
 	void Cleanup( void );
+
+#ifdef GAME_DLL
+	int CalculateBonusBurnDamage( int iBurnLevel );
+#endif
 
 	virtual ~CFFWeaponFlamethrower();
 
@@ -151,6 +163,25 @@ void CFFWeaponFlamethrower::Cleanup( void )
 	}
 #endif
 }
+
+#ifdef GAME_DLL
+//----------------------------------------------------------------------------
+// Purpose: Calculate the bonus damage for the flamethrower based on the players current burn level
+//----------------------------------------------------------------------------
+int CFFWeaponFlamethrower::CalculateBonusBurnDamage(int burnLevel)
+{
+	if (burnLevel <100)
+	{
+		return FT_BONUSDAMAGE_BURN1;
+	}
+	if (burnLevel <200)
+	{
+		return FT_BONUSDAMAGE_BURN2;
+	}
+
+	return FT_BONUSDAMAGE_BURN3;
+}
+#endif
 
 //----------------------------------------------------------------------------
 // Purpose: Turns on the flame stream, creates it if it doesn't yet exist
@@ -252,8 +283,10 @@ void CFFWeaponFlamethrower::Fire()
 				if (traceHit.m_pEnt->IsPlayer() && ( pTarget->GetWaterLevel() < 3 ) )
 				{
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+					
+					int damage = GetFFWpnData().m_iDamage + CalculateBonusBurnDamage(pPlayerTarget->GetBurnLevel());
 
-					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
+					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, damage, DMG_BURN ) );
 					pPlayerTarget->IncreaseBurnLevel( FFDEV_FLAMETHROWER_BURNAMOUNT );
 				}
 				// TODO: Check water level for dispensers & sentryguns!
