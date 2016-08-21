@@ -8,6 +8,8 @@
 	#include "smoke_trail.h"
 	#include "ff_buildableobjects_shared.h"
 	#include "soundent.h"
+	#include "effect_dispatch_data.h"
+	#include "te_effect_dispatch.h"
 #else
 
 #endif
@@ -93,6 +95,12 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 				float damage = CalculateBonusIcBurnDamage(pPlayer->GetBurnLevel());
 				pPlayer->TakeDamage(CTakeDamageInfo( this, pBurninator, damage /*IC_BONUSDAMAGE*/, DMG_BURN ) );
 				pPlayer->IncreaseBurnLevel(100);
+
+				CEffectData data;
+				data.m_vOrigin = GetAbsOrigin();
+				data.m_flScale = damage;
+				data.m_nEntIndex = pPlayer->entindex();
+				DispatchEffect("BonusFire", data);
 			}
 		}
 	}
