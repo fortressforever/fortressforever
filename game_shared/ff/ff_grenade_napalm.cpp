@@ -176,12 +176,17 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 
 		EmitSound("Napalm.Explode");
 
-		for ( int i = 0; i < 8; i++ )
+		for ( int i = 0; i < 9; i++ )
 		{
 			Vector vecSrc = GetAbsOrigin();
 			QAngle angSpawn;
 
 			angSpawn.x = RandomFloat(45.0f,75.0f);
+			if (i == 0)
+			{
+				angSpawn.x = 90;
+			}
+
 			angSpawn.y = RandomFloat(0.0f, 360.0f);
 			angSpawn.z = 0.0f;
 
