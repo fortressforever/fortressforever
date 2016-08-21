@@ -12,7 +12,7 @@
 ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "30.0", 0, "Napalmlet flame size");
 #define FFDEV_NAP_FLAMESIZE ffdev_nap_flamesize.GetFloat() // 50.0f
 
-ConVar ffdev_nap_burnamount("ffdev_nap_burnamount", "20.0", 0, "Napalmlet burn increase per tick, 100 is a full burn level");
+ConVar ffdev_nap_burnamount("ffdev_nap_burnamount", "10.0", 0, "Napalmlet burn increase per tick, 100 is a full burn level");
 #define FFDEV_NAPALM_BURNAMOUNT ffdev_nap_burnamount.GetFloat() // 50.0f
 
 #define BURN_STANDON_NG 2
@@ -247,7 +247,7 @@ void CFFGrenadeNapalmlet::FlameThink()
 			case CLASS_DISPENSER:
 			{
 				if (g_pGameRules->FCanTakeDamage( pEntity, GetOwnerEntity()))
-					pEntity->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
+					pEntity->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
 			}
 			
 			default:
