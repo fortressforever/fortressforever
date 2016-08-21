@@ -220,7 +220,6 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 
 			pNaplet->SetBurnRadius( NAP_BURN_RADIUS );
 			pNaplet->SetBurnTime( NAP_FLAME_TIME );
-			pNaplet->SetBurnDamage( NAP_BURN_DAMAGE );
 			pNaplet->SetOwnerEntity( pOwner );
 
 
