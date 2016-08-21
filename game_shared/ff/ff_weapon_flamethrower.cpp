@@ -232,7 +232,7 @@ void CFFWeaponFlamethrower::Fire()
 	// 320 is about how far the flames are drawn on the client
 	// 0.4f is the time taken to reach end of flame jet
 	// EDIT: Both are 20% longer now
-	Vector vecEnd = vecStart + ( vecForward * 320.0f ) - GetAbsVelocity() * 0.4f;
+	Vector vecEnd = vecStart + ( vecForward * 350.0f ) - GetAbsVelocity() * 0.4f;
 
 	// Visualise trace
 	if (FLAME_SHOWTRACE)
