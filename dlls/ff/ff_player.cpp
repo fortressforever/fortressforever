@@ -74,11 +74,11 @@ ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATE
 #define FFDEV_PYRO_BURNTIME ffdev_pyro_burntime.GetFloat()
 
 //ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
-#define FFDEV_FLAMESIZE_BURN1 0.015f //ffdev_flamesize_burn1.GetFloat()
+#define FFDEV_FLAMESIZE_BURN1 0.025f //ffdev_flamesize_burn1.GetFloat()
 //ConVar ffdev_flamesize_burn2("ffdev_flamesize_burn2","0.04", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 2");
-#define FFDEV_FLAMESIZE_BURN2 0.03f //ffdev_flamesize_burn2.GetFloat()
+#define FFDEV_FLAMESIZE_BURN2 0.033f //ffdev_flamesize_burn2.GetFloat()
 //ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 3");
-#define FFDEV_FLAMESIZE_BURN3 0.045f //ffdev_flamesize_burn3.GetFloat()
+#define FFDEV_FLAMESIZE_BURN3 0.040f //ffdev_flamesize_burn3.GetFloat()
 
 ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.45", FCVAR_FF_FFDEV_REPLICATED, "Self damage multipler for IC jumping");
 #define FFDEV_PYRO_IC_MULTIPLIER ffdev_ic_selfdamagemultiplier.GetFloat()
