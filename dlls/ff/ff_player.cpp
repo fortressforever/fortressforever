@@ -583,7 +583,6 @@ CFFPlayer::CFFPlayer()
 
 	m_flSlidingTime = 0;		// Not sliding on creation
 	m_bSliding = false;
-	m_flJetpackFinishChargingTime = 0.0f;
 
 	m_bIsRampsliding = false;
 
@@ -1889,7 +1888,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if( m_bSliding )
 		m_bSliding = false;
 
-	m_flJetpackFinishChargingTime = 0.0f;
 	m_flSaveMeTime = 0.0f;
 
 	if( GetClassSlot() == CLASS_SPY )

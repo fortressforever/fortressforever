@@ -534,7 +534,6 @@ public:
 
 protected:
 	bool m_bSliding;
-	float m_flJetpackFinishChargingTime;
 	// ----------------------------------
 // *** SQUEEK
 
@@ -573,11 +572,8 @@ private:
 public:
 	void Overpressure( void );
 	bool CanJetpack( void );
-	void JetpackClick( void );
 	void JetpackHold( void );
-	void JetpackChargeThink( void );
-	void JetpackTriggerGroundBoost(float flTimeInAir);
-	void JetpackCancelCharge( void );
+	void JetpackRechargeThink( void );
 	void SharedPreThink( void );
 	// ----------------------------------
 	

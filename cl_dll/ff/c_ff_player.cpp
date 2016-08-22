@@ -1272,7 +1272,6 @@ C_FFPlayer::C_FFPlayer() :
 	
 	m_flSlidingTime = 0;
 	m_bSliding = false;
-	m_flJetpackFinishChargingTime = 0.0f;
 
 	m_bIsRampsliding = false;
 

@@ -117,27 +117,13 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 //ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_IGNOREFRIENDLY false //ffdev_overpressure_friendlyignore.GetBool()
 
-ConVar ffdev_jetpack_verticalpush("ffdev_jetpack_verticalpush", "500", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_VERTICALPUSH ffdev_jetpack_verticalpush.GetFloat()
-ConVar ffdev_jetpack_horizontalpush("ffdev_jetpack_horizontalpush", "450", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_HORIZONTALPUSH ffdev_jetpack_horizontalpush.GetFloat()
 ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_HORIZONTALPUSH_CAP ffdev_jetpack_horizontalpush_cap.GetFloat()
-ConVar ffdev_jetpack_jumpleeway("ffdev_jetpack_jumpleeway", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_JUMPLEEWAY ffdev_jetpack_jumpleeway.GetFloat()
 ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT ffdev_jetpack_verticalpush_downwardslimit.GetFloat()
 
-ConVar ffdev_jetpack_jumpleeway_pushmult_horiz("ffdev_jetpack_jumpleeway_pushmult_horiz", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_JUMPLEEWAY_PUSHMULT_HORIZ ffdev_jetpack_jumpleeway_pushmult_horiz.GetFloat()
-ConVar ffdev_jetpack_jumpleeway_pushmult_vert("ffdev_jetpack_jumpleeway_pushmult_vert", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_JUMPLEEWAY_PUSHMULT_VERT ffdev_jetpack_jumpleeway_pushmult_vert.GetFloat()
-
 ConVar ffdev_jetpack_hoveronground("ffdev_jetpack_hoveronground", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define FFDEV_JETPACK_HOVERONGROUND ffdev_jetpack_hoveronground.GetBool()
-
-ConVar ffdev_jetpack_chargetime("ffdev_jetpack_chargetime", "0.0", FCVAR_REPLICATED | FCVAR_CHEAT); // 0 is basically disabled
-#define JETPACK_CHARGETIME ffdev_jetpack_chargetime.GetFloat()
 
 ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_VERTICALPUSH_OFFGROUND ffdev_jetpack_verticalpush_offground.GetFloat()
@@ -145,13 +131,7 @@ ConVar ffdev_jetpack_verticalpush_offground_downscale("ffdev_jetpack_verticalpus
 #define JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE ffdev_jetpack_verticalpush_offground_downscale.GetFloat()
 ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_HORIZONTALPUSH_OFFGROUND ffdev_jetpack_horizontalpush_offground.GetFloat()
-ConVar ffdev_jetpack_horizontalsetvelocity("ffdev_jetpack_horizontalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_HORIZONTALSETVELOCITY ffdev_jetpack_horizontalsetvelocity.GetBool()
-ConVar ffdev_jetpack_verticalsetvelocity("ffdev_jetpack_verticalsetvelocity", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_VERTICALSETVELOCITY ffdev_jetpack_verticalsetvelocity.GetBool()
 
-ConVar ffdev_jetpack_fuelboostcost("ffdev_jetpack_fuelboostcost", "50", FCVAR_REPLICATED | FCVAR_CHEAT); // Total fuel is 100
-#define JETPACK_FUELBOOSTCOST ffdev_jetpack_fuelboostcost.GetInt()
 ConVar ffdev_jetpack_fuelrechargetime("ffdev_jetpack_fuelrechargetime", "0.08", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_FUELRECHARGETIME ffdev_jetpack_fuelrechargetime.GetFloat()
 ConVar ffdev_jetpack_fuelhovercost("ffdev_jetpack_fuelhovercost", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -734,7 +714,6 @@ void CFFPlayer::ClassSpecificSkill()
 			break;
 
 		case CLASS_PYRO:
-			//JetpackClick(); // removing ground clicking for now, hold in air only
 			break;
 
 #ifdef CLIENT_DLL
@@ -1833,13 +1812,13 @@ void CFFPlayer::SharedPreThink( void )
 	if (m_nButtons & IN_ATTACK2)
 		ClassSpecificSkillHold();
 
-	JetpackChargeThink();
+	JetpackRechargeThink();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CFFPlayer::JetpackChargeThink( void )
+void CFFPlayer::JetpackRechargeThink( void )
 {
 	if (GetClassSlot() != CLASS_PYRO)
 	{
@@ -1853,120 +1832,6 @@ void CFFPlayer::JetpackChargeThink( void )
 			m_flJetpackNextFuelRechargeTime = gpGlobals->curtime + JETPACK_FUELRECHARGETIME;
 			m_flJetpackFuel++;
 		}
-	}
-
-	if (m_flJetpackFinishChargingTime == 0.0f)
-	{
-		return;
-	}
-
-	bool bPlayerOnGround = GetFlags() & FL_ONGROUND;
-	bool bJetpackFullyCharged = m_flJetpackFinishChargingTime < gpGlobals->curtime;
-	if (!bPlayerOnGround)
-	{
-		float timeSinceJumping = gpGlobals->curtime - m_flJumpTime;
-		if (timeSinceJumping > JETPACK_JUMPLEEWAY)
-		{
-			JetpackCancelCharge();
-			return;
-		}
-
-		if (bJetpackFullyCharged)
-		{
-			JetpackTriggerGroundBoost(timeSinceJumping);
-			return;
-		}
-	}
-	
-	if (bJetpackFullyCharged)
-	{
-		JetpackTriggerGroundBoost(0.0f);
-		return;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CFFPlayer::JetpackTriggerGroundBoost( float flTimeInAir ) 
-{
-	if (!IsAlive())
-	{
-		return;
-	}
-
-	if (m_flJetpackFuel < JETPACK_FUELBOOSTCOST)
-	{
-		return;
-	}
-
-	m_flJetpackFuel -= JETPACK_FUELBOOSTCOST;
-	m_flJetpackFinishChargingTime = 0.0f;
-	CEffectData data;
-	data.m_vOrigin = GetAbsOrigin();
-	
-	DispatchEffect("FF_EmpZap", data); // TODO: Make jetpack effect
-
-	EmitSoundShared("JumpPad.Fire"); // TODO: Make jetpack noise
-	
-	Vector vecForward, vecRight, vecUp;
-	EyeVectors( &vecForward, &vecRight, &vecUp);
-	VectorNormalizeFast( vecForward );
-	VectorNormalizeFast( vecRight );
-	
-	Vector vecSrc = Weapon_ShootPosition();
-
-	// get only the direction the player is looking (ignore any z)
-	Vector horizPush = CrossProduct(Vector( 0.0f, 0.0f, 1.0f ), vecRight);
-	float vertPush = JETPACK_VERTICALPUSH;
-
-	float flPercent = 1.0f;
-	if (flTimeInAir != 0.0f)
-	{
-		float horizMult = 1 + (flTimeInAir / JETPACK_JUMPLEEWAY)*JETPACK_JUMPLEEWAY_PUSHMULT_HORIZ; // extra length when jumping late
-		float vertMult = flTimeInAir+JETPACK_JUMPLEEWAY_PUSHMULT_VERT / JETPACK_JUMPLEEWAY + JETPACK_JUMPLEEWAY_PUSHMULT_VERT; // less height when jumping late
-		m_flJumpTime = 0.0f;
-		horizPush *= horizMult;
-		vertPush *= vertMult;
-	}
-
-	// Big jump
-	horizPush *= JETPACK_HORIZONTALPUSH;
-
-	SetAbsVelocity(Vector(horizPush.x, horizPush.y, vertPush) * flPercent);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CFFPlayer::JetpackCancelCharge( void )
-{
-	m_flJetpackFinishChargingTime = 0.0f;
-	EmitSoundShared("SniperRifle.zoom_out"); // TODO: Make jetpack noise
-	// Play discharge sound?
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CFFPlayer::JetpackClick( void )
-{
-	if (!IsAlive())
-	{
-		return;
-	}
-
-	if (!(GetFlags() & FL_ONGROUND))
-	{
-		return;
-	}
-	
-	if (m_flJetpackFinishChargingTime == 0.0f)
-	{
-		m_flJetpackFinishChargingTime = gpGlobals->curtime + JETPACK_CHARGETIME;
-		EmitSoundShared("SniperRifle.zoom_in"); // TODO: Make jetpack noise
-		// TODO: Emit sound and effect
-		// TODO: Reduce fuel amount?
 	}
 }
 
