@@ -1962,6 +1962,17 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 
 bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
+	// HACK: bullet/hull traces use COLLISION_GROUP_NONE, so make them not collide
+	// with rockets/projectiles/weapons. Doing this before the sorting makes sure that
+	// normal objects can still collide
+	if (collisionGroup0 == COLLISION_GROUP_NONE && (
+		collisionGroup1 == COLLISION_GROUP_ROCKET ||
+		collisionGroup1 == COLLISION_GROUP_PROJECTILE ||
+		collisionGroup1 == COLLISION_GROUP_WEAPON))
+	{
+		return false;
+	}
+
 	// Do this before the groups are re-ordered. This way we can check only when
 	// one entity pushing on another, and not the other way round.
 	// This is checking for players moving into grenades
