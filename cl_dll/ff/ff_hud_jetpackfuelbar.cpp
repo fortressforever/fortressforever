@@ -1,22 +1,8 @@
-//	=============== Fortress Forever ==============
-//	======== A modification for Half-Life 2 =======
-//
-//	@file ff_hud_spydisguise.cpp
-//	@author Patrick O'Leary (Mulchman)
-//	@date 09/01/2006
-//	@brief Hud Disguise Indicator
-//
-//	REVISIONS
-//	---------
-//	09/01/2006, Mulchman: 
-//		First created
-
 #include "cbase.h"
 #include "hud.h"
 #include "hudelement.h"
 #include "hud_macros.h"
 
-//#include <KeyValues.h>
 #include <vgui/ISurface.h>
 #include <vgui/ISystem.h>
 
@@ -32,11 +18,10 @@
 
 using namespace vgui;
 
-//extern ConVar ffdev_overpressure_delay;
-#define JETPACK_MAXFUEL 100	//ffdev_overpressure_delay.GetFloat()
+#define JETPACK_MAXFUEL 100
 
 //-----------------------------------------------------------------------------
-// Purpose: Displays current disguised class
+// Purpose: Displays jetpack fuel remaining on the HUD
 //-----------------------------------------------------------------------------
 class CHudJetpackFuelBar : public CHudElement, public vgui::FFPanel
 {
@@ -59,7 +44,6 @@ public:
 protected:
 
 private:
-	// Stuff we need to know
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HUD_TextSmall" );
 
 	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "34", "proportional_float" );
@@ -68,9 +52,7 @@ private:
 	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "2", "proportional_float" );
 	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "4", "proportional_float" );
 
-	// For the disguising progress bar
 	CPanelAnimationVar( Color, m_BarColor, "HUD_Tone_Default", "HUD_Tone_Default" );
-	CPanelAnimationVar( Color, m_FadedBarColor, "196 196 196 64", "196 196 196 64" );
 	CPanelAnimationVarAliasType( float, bar_width, "bar_width", "75", "proportional_float" );
 	CPanelAnimationVarAliasType( float, bar_height, "bar_height", "24", "proportional_float" );
 };
