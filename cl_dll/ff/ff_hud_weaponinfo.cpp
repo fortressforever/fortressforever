@@ -63,6 +63,7 @@ public:
 protected:
 	CHudTexture		*m_pWeaponIcon;
 	CHudTexture		*m_pAmmoIcon;
+	C_BaseCombatWeapon *m_pWeapon;
 
 private:
 	// Stuff we need to know
@@ -81,13 +82,14 @@ DECLARE_HUDELEMENT( CHudWeaponInfo );
 void CHudWeaponInfo::Init( void )
 {
 	ivgui()->AddTickSignal( GetVPanel(), 100 );
+	m_pWeaponIcon = new CHudTexture();
+	m_pAmmoIcon = new CHudTexture();
 }
 
 
 void CHudWeaponInfo::VidInit( void )
 {
-	m_pWeaponIcon = new CHudTexture();
-	m_pAmmoIcon = new CHudTexture();
+	m_pWeapon = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -100,17 +102,38 @@ void CHudWeaponInfo::OnTick()
 	if(!m_pFFPlayer)
 		return;
 	
-	C_BaseCombatWeapon *pSelectedWeapon = m_pFFPlayer->GetActiveWeapon();
+	C_BaseCombatWeapon *lastWeapon = m_pWeapon;
+	m_pWeapon = m_pFFPlayer->GetActiveWeapon();
 
-	if (!pSelectedWeapon)
+	if (m_pWeapon == lastWeapon)
+		return;
+
+	if (!m_pWeapon)
 	{
 		SetPaintEnabled(false);
 		SetPaintBackgroundEnabled(false);
 	}
 	else
 	{
-		*m_pWeaponIcon = *pSelectedWeapon->GetSpriteInactive();
-		*m_pAmmoIcon = *pSelectedWeapon->GetSpriteAmmo();
+		if (m_pWeapon->GetSpriteInactive())
+		{
+			*m_pWeaponIcon = *m_pWeapon->GetSpriteInactive();
+
+			// Change the font so it uses 28 size instead of 64
+			m_pWeaponIcon->hFont = m_hIconFont;
+			m_pWeaponIcon->bRenderUsingFont = true;
+		}
+		else
+			*m_pWeaponIcon = CHudTexture();
+
+		if (m_pWeapon->GetSpriteAmmo())
+		{
+			*m_pAmmoIcon = *m_pWeapon->GetSpriteAmmo();
+			m_pAmmoIcon->hFont = m_hAmmoIconFont;
+		}
+		else
+			*m_pAmmoIcon = CHudTexture();
+
 		SetPaintEnabled(true);
 		SetPaintBackgroundEnabled(true);
 	}
@@ -123,25 +146,13 @@ void CHudWeaponInfo::Paint()
 { 
 	if(m_pWeaponIcon)
 	{
-		// Shallow copy of the weapon scrolling icon
-		// Change the font so it uses 28 size instead of 64
-		m_pWeaponIcon->hFont = m_hIconFont;
-		m_pWeaponIcon->bRenderUsingFont = true;
-
-		// Draw itself in the bottom right corner
-		//m_pWeaponIcon->DrawSelf(cl_box1.GetInt(), cl_box2.GetInt(), col);
 		// for widescreen stuff we take width scaled, then subtract the X not scaled (as we dont stretch the hud)
 		// then we add the 44 not scaled (GetProportionalScaledValue is scaled due to height but not width)
-
 		m_pWeaponIcon->DrawSelf( scheme()->GetProportionalScaledValue(44) , 0, GetFgColor());
 	}
 
 	if(m_pAmmoIcon)
 	{
-		// Shallow copy of the ammo icon
-		m_pAmmoIcon->hFont = m_hAmmoIconFont;
-
-		// Draw itself in the bottom right corner
 		m_pAmmoIcon->DrawSelf(ammo_xpos, ammo_ypos, GetFgColor());
 	}
 }
