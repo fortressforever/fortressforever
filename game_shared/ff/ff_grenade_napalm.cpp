@@ -24,8 +24,6 @@
 	#define NAP_FLAME_TIME 5.0f
 	//ConVar nap_burn_damage("ffdev_nap_burn_damage","15.0",FCVAR_FF_FFDEV,"How much damage being in the radius of a napalm grenade deals.");
 	#define NAP_BURN_DAMAGE 15.0f
-	//ConVar nap_burn_radius("ffdev_nap_burn_radius","98.0",FCVAR_FF_FFDEV,"Burn radius of a napalmlet.");
-	#define NAP_BURN_RADIUS 98.0f
 
 	ConVar ffdev_nap_distance_min("ffdev_nap_distance_min","250.0",FCVAR_FF_FFDEV,"Min launch velocity of a napalmlet.");
 	#define FFDEV_NAP_DISTANCE_MIN ffdev_nap_distance_min.GetFloat() //250.0f
@@ -218,10 +216,8 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 			pNaplet->SetLocalAngularVelocity(angRotate);
 			pNaplet->Spawn();
 
-			pNaplet->SetBurnRadius( NAP_BURN_RADIUS );
 			pNaplet->SetBurnTime( NAP_FLAME_TIME );
 			pNaplet->SetOwnerEntity( pOwner );
-
 
 			pNaplet->SetAbsVelocity( vecVelocity );
 			pNaplet->SetElasticity( 0.2f );
