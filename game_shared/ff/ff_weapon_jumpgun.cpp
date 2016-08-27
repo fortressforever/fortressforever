@@ -398,9 +398,6 @@ void CFFWeaponJumpgun::Fire( void )
 
 	// Player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
-	
-	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
-	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
 
 	m_flNextPrimaryAttack = (JUMPGUN_ALLOWUNCHARGEDSHOT) ? (gpGlobals->curtime + 0.2f) : (gpGlobals->curtime + JUMPGUN_CHARGEUPTIME);
 
@@ -448,13 +445,10 @@ void CFFWeaponJumpgun::ItemPostFrame( void )
 
 #ifdef GAME_DLL
 	// Not currently charging, but wanting to start it up
-	if (m_flStartTime == -1.0f && pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0)
+	if (m_flStartTime == -1.0f)
 	{
 		m_flStartTime = m_flLastUpdate = gpGlobals->curtime;
 		m_flTotalChargeTime = m_flClampedChargeTime = 0.0f;
-
-		// remove ammo immediately
-		//pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
 	}
 
 	else
@@ -462,27 +456,16 @@ void CFFWeaponJumpgun::ItemPostFrame( void )
 		m_flTotalChargeTime += gpGlobals->curtime - m_flLastUpdate;
 		m_flLastUpdate = gpGlobals->curtime;
 
-		// curtime - start time instead of total time, because start time can change if you don't have enough ammo to get to full charge
 		m_flClampedChargeTime = clamp(gpGlobals->curtime - m_flStartTime, 0, JUMPGUN_CHARGEUPTIME);
 
 	}
 #endif
 
-    if ((pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0))
+    if ((pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
 		CANCEL_IF_BUILDING();
 		CANCEL_IF_CLOAKED();
 		Fire();
-	}
-
-	// allow players to continue to charge if they've hit the halfway mark
-	// and don't make it immediately switch, causing shot sounds to stop
-	if (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0 && m_flNextPrimaryAttack <= gpGlobals->curtime)
-	{
-		HandleFireOnEmpty();
-
-		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
 	}
 
 #ifdef CLIENT_DLL
