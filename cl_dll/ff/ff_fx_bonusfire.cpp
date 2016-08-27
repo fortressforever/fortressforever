@@ -52,19 +52,26 @@ void BonusFireCallback( const CEffectData &data )
 	Vector deltaVec = (affectedOrigin - projectileOrigin);
 	VectorNormalize( deltaVec );
 
+	Vector particleVec = Vector(deltaVec.x, deltaVec.y, 4);
+	VectorNormalize(particleVec);
+
 	// Set our sort origin to make the system cull properly
 	pEmitter->SetSortOrigin( affectedOrigin );
 
 	SimpleParticle *pParticle;
 
-	for ( int i = 0; i < 64; i++ )
+	int numParticles = 3 * scale;
+	int numHeatParticles = numParticles - 3;
+	int numOfEachFlameParticle = (numParticles - numHeatParticles) / 2;
+	for ( int i = 0; i < numParticles; i++ )
 	{
+		bool isHeatParticle = i < numHeatParticles;
 		PMaterialHandle hMaterial = CBonusFireEffect::m_hHeatwaveMaterial;
-		if (i >= 48) hMaterial = CBonusFireEffect::m_hFlameMaterial1;
-		else if (i >= 32) hMaterial = CBonusFireEffect::m_hFlameMaterial2;
+		if (i >= numParticles - numOfEachFlameParticle) hMaterial = CBonusFireEffect::m_hFlameMaterial1;
+		else if (!isHeatParticle) hMaterial = CBonusFireEffect::m_hFlameMaterial2;
 
 		// offset vertically based on the bounding radius
-		float dV = random->RandomFloat(-pAffectedEntity->BoundingRadius(), pAffectedEntity->BoundingRadius());
+		float dV = random->RandomFloat(pAffectedEntity->BoundingRadius() / 2.0f, pAffectedEntity->BoundingRadius());
 		Vector origin = Vector(affectedOrigin.x, affectedOrigin.y, affectedOrigin.z + dV);
 
 		pParticle = pEmitter->AddSimpleParticle( hMaterial, origin );
@@ -72,7 +79,7 @@ void BonusFireCallback( const CEffectData &data )
 		if ( pParticle == NULL )
 			return;
 
-		pParticle->m_uchStartSize = (unsigned char) random->RandomInt(10, 15);
+		pParticle->m_uchStartSize = (unsigned char) (isHeatParticle ? random->RandomInt(24, 50) : random->RandomInt(10, 15));
 		pParticle->m_uchEndSize = random->RandomInt(0, 5);
 
 		pParticle->m_flRoll = random->RandomFloat( 0, 2*M_PI );
@@ -84,16 +91,12 @@ void BonusFireCallback( const CEffectData &data )
 
 		pParticle->m_uchStartAlpha = 100;
 		pParticle->m_uchEndAlpha = 255;
-		
-		// Create a random vector
-		Vector velocity = deltaVec; //RandomVector( -1.0f, 1.0f );
-		//VectorNormalize( velocity );
 
 		// Find a random speed for the particle
-		float speed = random->RandomFloat( 4.0f, 8.0f ) * scale;
+		float speed = random->RandomFloat( 140.0f, 280.0f );
 
 		// Build and set the velocity of the particle
-		pParticle->m_vecVelocity = velocity * speed;
+		pParticle->m_vecVelocity = particleVec * speed;
 
 		// Declare our lifetime
 		pParticle->m_flDieTime = random->RandomFloat(0.25f, 0.5f);
