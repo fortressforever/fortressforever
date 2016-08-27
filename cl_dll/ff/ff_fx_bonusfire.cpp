@@ -6,6 +6,9 @@
 #define BONUSFIRE_FLAME_MATERIAL_1 "sprites/flamelet4"
 #define BONUSFIRE_FLAME_MATERIAL_2 "effects/flame"
 
+ConVar ffdev_ic_bonusfire_numparticles_mult("ffdev_ic_bonusfire_numparticles_mult", "5", FCVAR_CHEAT);
+#define IC_BONUSFIRE_NUMPARTICLES_MULT ffdev_ic_bonusfire_numparticles_mult.GetFloat()
+
 class CBonusFireEffect : public CEmberEffect
 {
 public:
@@ -52,7 +55,7 @@ void BonusFireCallback( const CEffectData &data )
 	Vector deltaVec = (affectedOrigin - projectileOrigin);
 	VectorNormalize( deltaVec );
 
-	Vector particleVec = Vector(deltaVec.x, deltaVec.y, 4);
+	Vector particleVec = Vector(deltaVec.x, deltaVec.y, 1);
 	VectorNormalize(particleVec);
 
 	// Set our sort origin to make the system cull properly
@@ -60,8 +63,8 @@ void BonusFireCallback( const CEffectData &data )
 
 	SimpleParticle *pParticle;
 
-	int numParticles = 3 * scale;
-	int numHeatParticles = numParticles - 3;
+	int numParticles = IC_BONUSFIRE_NUMPARTICLES_MULT * scale;
+	int numHeatParticles = numParticles / 3;
 	int numOfEachFlameParticle = (numParticles - numHeatParticles) / 2;
 	for ( int i = 0; i < numParticles; i++ )
 	{
