@@ -4,9 +4,14 @@
 #include "ff_grenade_napalmlet.h"
 #include "ff_utils.h"
 
-#ifndef CLIENT_DLL
-	#include "ff_player.h"
-#endif
+#include "ff_player.h"
+
+ConVar ffdev_nap_bonusdamage_burn1("ffdev_nap_bonusdamage_burn1", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN1 ffdev_nap_bonusdamage_burn1.GetInt()
+ConVar ffdev_nap_bonusdamage_burn2("ffdev_nap_bonusdamage_burn2", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN2 ffdev_nap_bonusdamage_burn2.GetInt()
+ConVar ffdev_nap_bonusdamage_burn3("ffdev_nap_bonusdamage_burn3", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN3 ffdev_nap_bonusdamage_burn3.GetInt()
 
 //ConVar burn_standon_ng("ffdev_burn_standon_ng", "7.0", 0, "Damage you take when standing on a burning napalmlet");
 ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "30.0", 0, "Napalmlet flame size");
@@ -241,7 +246,8 @@ void CFFGrenadeNapalmlet::FlameThink()
 
 				if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
 				{
-					pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
+					int damage = BURN_STANDON_NG + CalculateBonusBurnDamage(pPlayer->GetBurnLevel());
+					pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), damage, DMG_BURN ) );
 					pPlayer->IncreaseBurnLevel ( FFDEV_NAPALM_BURNAMOUNT );
 				}
 			}
@@ -260,4 +266,21 @@ void CFFGrenadeNapalmlet::FlameThink()
 	}
 
 	SetNextThink( gpGlobals->curtime + 0.25f );
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Calculate the bonus damage for the napalmlet based on the players current burn level
+//----------------------------------------------------------------------------
+int CFFGrenadeNapalmlet::CalculateBonusBurnDamage(int burnLevel)
+{
+	if (burnLevel <100)
+	{
+		return NAP_BONUSDAMAGE_BURN1;
+	}
+	if (burnLevel <200)
+	{
+		return NAP_BONUSDAMAGE_BURN2;
+	}
+
+	return NAP_BONUSDAMAGE_BURN3;
 }

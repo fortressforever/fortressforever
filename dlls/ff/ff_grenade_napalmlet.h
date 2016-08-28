@@ -17,10 +17,8 @@
 	#define CFFGrenadeNapalmlet C_FFGrenadeNapalmlet
 #endif
 
-#ifdef GAME_DLL
-	#include "ff_player.h"
-	#include "ff_buildableobjects_shared.h"
-#endif
+#include "ff_player.h"
+#include "ff_buildableobjects_shared.h"
 
 //=============================================================================
 //
@@ -45,6 +43,7 @@ public:
 private:
 	float m_flBurnTime;
 	CEntityFlame *m_pFlame;
+	int CalculateBonusBurnDamage(int burnLevel);
 };
 
 #endif
