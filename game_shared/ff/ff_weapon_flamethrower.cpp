@@ -48,11 +48,11 @@
 	ConVar ffdev_flame_burnamount("ffdev_flame_burnamount", "20.0", FCVAR_FF_FFDEV_REPLICATED, "Amount to increase burn level of player by, per hit from flamethrower (100 is 1 burn level)");
 	#define FFDEV_FLAMETHROWER_BURNAMOUNT ffdev_flame_burnamount.GetFloat()
 	
-	ConVar ffdev_flamethrower_bonusdamage_burn1("ffdev_flamethrower_bonusdamage_burn1", "4", FCVAR_REPLICATED | FCVAR_CHEAT);
+	ConVar ffdev_flamethrower_bonusdamage_burn1("ffdev_flamethrower_bonusdamage_burn1", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
 	#define FT_BONUSDAMAGE_BURN1 ffdev_flamethrower_bonusdamage_burn1.GetInt()
-	ConVar ffdev_flamethrower_bonusdamage_burn2("ffdev_flamethrower_bonusdamage_burn2", "6", FCVAR_REPLICATED | FCVAR_CHEAT);
+	ConVar ffdev_flamethrower_bonusdamage_burn2("ffdev_flamethrower_bonusdamage_burn2", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
 	#define FT_BONUSDAMAGE_BURN2 ffdev_flamethrower_bonusdamage_burn2.GetInt()
-	ConVar ffdev_flamethrower_bonusdamage_burn3("ffdev_flamethrower_bonusdamage_burn3", "8", FCVAR_REPLICATED | FCVAR_CHEAT);
+	ConVar ffdev_flamethrower_bonusdamage_burn3("ffdev_flamethrower_bonusdamage_burn3", "4", FCVAR_REPLICATED | FCVAR_CHEAT);
 	#define FT_BONUSDAMAGE_BURN3 ffdev_flamethrower_bonusdamage_burn3.GetInt()
 
 #endif
