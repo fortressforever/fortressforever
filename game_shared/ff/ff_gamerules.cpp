@@ -1273,6 +1273,11 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 		{
 			flDmg *= 0.5f;
 		}
+
+		if (pFFPlayer->IsJetpacking())
+		{
+			flDmg *= 0.75f;
+		}
 		
 		return flDmg;
 	} 
