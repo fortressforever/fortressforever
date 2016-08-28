@@ -312,13 +312,17 @@ void CHudCrosshair::Paint( void )
 		int iRight = iLeft + (iWidth);
 		int iBottom = iTop + iHeight;
 		int iAlpha = 25 + (1.0f - fuelPercent * fuelPercent) * 200;
+		float flRightInner = iLeft + ((float)(iRight - iLeft) * (fuelPercent));
+
 		Color fuelBarColor = ColorFade( fuelPercent * 100, 0, 100, INTENSITYSCALE_COLOR_RED, INTENSITYSCALE_COLOR_GREEN );
 
 		surface()->DrawSetColor( fuelBarColor.r(), fuelBarColor.g(), fuelBarColor.b(), iAlpha );
-		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (fuelPercent)), iBottom );
+		surface()->DrawFilledRect( iLeft, iTop, flRightInner, iBottom );
 
 		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), min(255, iAlpha + 50) );		
 		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+
+		surface()->DrawLine( flRightInner, iTop, flRightInner, iBottom );
 	}
 
 	// Mulch: Draw charge bar!
