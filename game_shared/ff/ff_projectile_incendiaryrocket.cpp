@@ -14,15 +14,6 @@
 
 #endif
 
-ConVar ffdev_ic_bonusdamage_burn1("ffdev_ic_bonusdamage_burn1", "20", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define IC_BONUSDAMAGE_BURN1 ffdev_ic_bonusdamage_burn1.GetFloat()
-
-ConVar ffdev_ic_bonusdamage_burn2("ffdev_ic_bonusdamage_burn2", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define IC_BONUSDAMAGE_BURN2 ffdev_ic_bonusdamage_burn2.GetFloat()
-
-ConVar ffdev_ic_bonusdamage_burn3("ffdev_ic_bonusdamage_burn3", "40", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define IC_BONUSDAMAGE_BURN3 ffdev_ic_bonusdamage_burn3.GetFloat()
-
 //ConVar ffdev_ic_flarescale("ffdev_ic_flarescale", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define FFDEV_IC_FLARESCALE 0.8f //ffdev_ic_flarescale.GetFloat()
 //ConVar ffdev_ic_smoke_opacity("ffdev_ic_smoke_opacity", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
@@ -75,39 +66,10 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	CFFPlayer *pBurninator = ToFFPlayer( GetOwnerEntity() );
 	if ( !pBurninator )
 		return;
-	// Do normal radius damage then do a trace sphere to set things alight
+	// Do normal radius damage
 	Vector vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	CTakeDamageInfo info(this, pBurninator, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, m_iKillType, &vecReported);
 	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
-	
-	// Sorry, not fond of the BEGIN_ENTITY_SPHERE_QUERY macro
-	CBaseEntity *pEntity = NULL;
-	for( CEntitySphereQuery sphere( vecSrc, m_DmgRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-	{
-		if( !pEntity || !pEntity->IsPlayer() )
-			continue;
-
-		CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-		if( g_pGameRules->FCanTakeDamage( pPlayer, pBurninator ) )
-		{
-			if (pPlayer->GetBurnLevel() > 0)
-			{
-				float damage = CalculateBonusIcBurnDamage(pPlayer->GetBurnLevel());
-				pPlayer->TakeDamage(CTakeDamageInfo( this, pBurninator, damage /*IC_BONUSDAMAGE*/, DMG_BURN ) );
-				pPlayer->IncreaseBurnLevel(100);
-
-				CEffectData data;
-				data.m_vOrigin = GetAbsOrigin();
-				data.m_flScale = damage;
-				data.m_nEntIndex = pPlayer->entindex();
-				DispatchEffect("BonusFire", data);
-			}
-		}
-	}
-
-	// We don't use this and it also caused a NULL pointer assert from
-	// GetOwnerEntity()
-	//Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
 
 #endif
 	// 0000936: go through the explode code but don't apply damage! from basegrenade.cpp
@@ -187,23 +149,6 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 }
 
 #ifdef GAME_DLL
-
-	//----------------------------------------------------------------------------
-	// Purpose: Calculate the bonus damage for the IC based on the players current burn level
-	//----------------------------------------------------------------------------
-	float CFFProjectileIncendiaryRocket::CalculateBonusIcBurnDamage(int burnLevel)
-	{
-		if (burnLevel <100)
-		{
-			return IC_BONUSDAMAGE_BURN1;
-		}
-		if (burnLevel <200)
-		{
-			return IC_BONUSDAMAGE_BURN2;
-		}
-
-		return IC_BONUSDAMAGE_BURN3;
-	}
 
 	//----------------------------------------------------------------------------
 	// Purpose: Creata a trail of smoke for the rocket

@@ -80,6 +80,15 @@ ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATE
 //ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 3");
 #define FFDEV_FLAMESIZE_BURN3 0.040f //ffdev_flamesize_burn3.GetFloat()
 
+ConVar ffdev_ic_bonusdamage_burn1("ffdev_ic_bonusdamage_burn1", "20", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN1 ffdev_ic_bonusdamage_burn1.GetFloat()
+
+ConVar ffdev_ic_bonusdamage_burn2("ffdev_ic_bonusdamage_burn2", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN2 ffdev_ic_bonusdamage_burn2.GetFloat()
+
+ConVar ffdev_ic_bonusdamage_burn3("ffdev_ic_bonusdamage_burn3", "40", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN3 ffdev_ic_bonusdamage_burn3.GetFloat()
+
 ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.45", FCVAR_FF_FFDEV_REPLICATED, "Self damage multipler for IC jumping");
 #define FFDEV_PYRO_IC_MULTIPLIER ffdev_ic_selfdamagemultiplier.GetFloat()
 
@@ -5161,6 +5170,23 @@ static float DamageForce( const Vector &size, float damage )
 	return force;
 }
 
+//----------------------------------------------------------------------------
+// Purpose: Calculate the bonus damage for the IC based on the players current burn level
+//----------------------------------------------------------------------------
+float CalculateBonusIcBurnDamage(int burnLevel)
+{
+	if (burnLevel <100)
+	{
+		return IC_BONUSDAMAGE_BURN1;
+	}
+	if (burnLevel <200)
+	{
+		return IC_BONUSDAMAGE_BURN2;
+	}
+
+	return IC_BONUSDAMAGE_BURN3;
+}
+
 int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
 	// have suit diagnose the problem - ie: report damage type
@@ -5248,6 +5274,27 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 				if (!IsRadioTagged())
 					pAttacker->AddFortPoints(10,"#FF_FORTPOINTS_RADIOTAG");
 			}			
+		}
+
+		CFFProjectileBase *pProjectile = dynamic_cast<CFFProjectileBase *>( inputInfo.GetInflictor() );
+		if (pProjectile && pProjectile->Classify() == CLASS_IC_ROCKET)
+		{
+			if (GetBurnLevel() > 0)
+			{
+				CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
+				if( pAttacker )
+				{
+					float damage = CalculateBonusIcBurnDamage(GetBurnLevel());
+					TakeDamage(CTakeDamageInfo( this, pAttacker, damage /*IC_BONUSDAMAGE*/, DMG_BURN ) );
+					IncreaseBurnLevel(100);
+
+					CEffectData data;
+					data.m_vOrigin = GetAbsOrigin();
+					data.m_flScale = damage;
+					data.m_nEntIndex = entindex();
+					DispatchEffect("BonusFire", data);
+				}
+			}
 		}
 	}
 

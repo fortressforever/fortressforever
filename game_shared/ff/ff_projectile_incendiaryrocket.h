@@ -24,7 +24,6 @@ public:
 
 #ifdef GAME_DLL
 	DECLARE_DATADESC();
-	virtual float CFFProjectileIncendiaryRocket::CalculateBonusIcBurnDamage(int burnLevel);
 #endif
 
 public:
