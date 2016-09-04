@@ -25,7 +25,7 @@
 
 ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
 ConVar hud_deathnotice_selfonly( "hud_deathnotice_selfonly", "0", FCVAR_ARCHIVE );
-ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "0", FCVAR_ARCHIVE );
+ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "1", FCVAR_ARCHIVE );
 ConVar cl_spec_killbeep( "cl_spec_killbeep", "1", FCVAR_ARCHIVE, "Determines whether or not the kill beep gets played while spectating someone in first-person mode" );
 
 extern ConVar cl_killbeepwav;
@@ -70,6 +70,8 @@ public:
 
 	void SetColorForNoticePlayer( int iTeamNumber );
 	void RetireExpiredDeathNotices( void );
+	void DrawObjectiveBackground( int xStart, int yStart, int xEnd, int yEnd );
+	void DrawHighlightBackground( int xStart, int yStart, int xEnd, int yEnd );
 	
 	virtual void FireGameEvent( IGameEvent * event );
 
@@ -83,7 +85,8 @@ private:
 
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudNumbersTimer" );
 
-	CPanelAnimationVar( Color, m_HighlightColor, "HighlightColor", "255 255 255 180" );
+	CPanelAnimationVar( Color, m_HighlightColor, "HighlightColor", "0 0 0 180" );
+	CPanelAnimationVar( Color, m_HighlightBorderColor, "HighlightBorderColor", "HUD_Border_Default" );
 	CPanelAnimationVar( Color, m_ObjectiveNoticeColor, "ObjectiveNoticeColor", "0 0 0 180" );
 
 	// Texture for skull symbol
@@ -154,6 +157,22 @@ bool CHudDeathNotice::ShouldDraw( void )
 void CHudDeathNotice::SetColorForNoticePlayer( int iTeamNumber )
 {
 	surface()->DrawSetTextColor( GameResources()->GetTeamColor( iTeamNumber ) );
+}
+
+void CHudDeathNotice::DrawObjectiveBackground( int xStart, int yStart, int xEnd, int yEnd )
+{
+	surface()->DrawSetColor( m_ObjectiveNoticeColor );
+	surface()->DrawFilledRect( xStart, yStart, xEnd, yEnd );
+}
+
+void CHudDeathNotice::DrawHighlightBackground( int xStart, int yStart, int xEnd, int yEnd )
+{
+	surface()->DrawSetColor( m_HighlightColor );
+	surface()->DrawFilledRect( xStart, yStart, xEnd, yEnd );
+
+	surface()->DrawSetColor( m_HighlightBorderColor );
+	surface()->DrawOutlinedRect( xStart, yStart, xEnd, yEnd );
+	surface()->DrawOutlinedRect( xStart - 1, yStart - 1, xEnd + 1, yEnd + 1 );
 }
 
 //-----------------------------------------------------------------------------
@@ -231,12 +250,15 @@ void CHudDeathNotice::Paint()
 			x -= 28;
 			// <--
 			
-			if (hud_deathnotice_highlightself.GetBool() && selfInvolved)
-				surface()->DrawSetColor( m_HighlightColor );
-			else
-				surface()->DrawSetColor( m_ObjectiveNoticeColor );
+			int x_start = x - 5;
+			int x_end = x + iconWide + 5 + len + 10;
+			int y_start = y - (iconTall / 4) - 3;
+			int y_end = y + iconTall/2 + 6;
 
-			surface()->DrawFilledRect( x - 5, y - (iconTall / 4) - 3, x + iconWide + 5 + len + 10, y + iconTall/2 + 6 );
+			if (hud_deathnotice_highlightself.GetBool() && selfInvolved)
+				DrawHighlightBackground(x_start, y_start, x_end, y_end);
+			else
+				DrawObjectiveBackground(x_start, y_start, x_end, y_end);
 
 			Color iconColor( 255, 80, 0, 255 );
 			
@@ -378,10 +400,11 @@ void CHudDeathNotice::Paint()
 			
 			if (hud_deathnotice_highlightself.GetBool() && selfInvolved)
 			{
-				surface()->DrawSetColor( m_HighlightColor );
 				int x_start = (m_DeathNotices[i].iSuicide) ? x - 5 : x - len2 - 5;
 				int x_end = x + 5 + iconWide + 5 + len + 5 + ((iconBuildableWide) ? iconBuildableWide + 5 : 0) + ((iconModifierWide) ? iconModifierWide + 5 : 0);
-				surface()->DrawFilledRect( x_start, y - (iconTall / 4) - 3, x_end, y + iconTall/2 + 6 );
+				int y_start = y - (iconTall / 4) - 3;
+				int y_end = y + iconTall/2 + 6;
+				DrawHighlightBackground(x_start, y_start, x_end, y_end);
 			}
 
 			// Only draw killers name if it wasn't a suicide
