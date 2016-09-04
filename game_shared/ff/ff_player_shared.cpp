@@ -117,6 +117,25 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 //ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_IGNOREFRIENDLY false //ffdev_overpressure_friendlyignore.GetBool()
 
+ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_HORIZONTALPUSH_CAP ffdev_jetpack_horizontalpush_cap.GetFloat()
+ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT ffdev_jetpack_verticalpush_downwardslimit.GetFloat()
+
+ConVar ffdev_jetpack_hoveronground("ffdev_jetpack_hoveronground", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_JETPACK_HOVERONGROUND ffdev_jetpack_hoveronground.GetBool()
+
+ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_VERTICALPUSH_OFFGROUND ffdev_jetpack_verticalpush_offground.GetFloat()
+ConVar ffdev_jetpack_verticalpush_offground_downscale("ffdev_jetpack_verticalpush_offground_downscale", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE ffdev_jetpack_verticalpush_offground_downscale.GetFloat()
+ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_HORIZONTALPUSH_OFFGROUND ffdev_jetpack_horizontalpush_offground.GetFloat()
+
+ConVar ffdev_jetpack_fuelrechargetime("ffdev_jetpack_fuelrechargetime", "0.08", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_FUELRECHARGETIME ffdev_jetpack_fuelrechargetime.GetFloat()
+ConVar ffdev_jetpack_fuelhovercost("ffdev_jetpack_fuelhovercost", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_FUELHOVERCOST ffdev_jetpack_fuelhovercost.GetFloat()
 
 //ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_BULLETSIZE 1.0f //ffdev_ac_bulletsize.GetFloat()
@@ -507,10 +526,10 @@ void CFFPlayer::PlayJumpSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 	if (!psurface)
 		return;
 
-	if (m_flJumpTime > gpGlobals->curtime)
+	if (m_flJumpTime + 0.2f > gpGlobals->curtime)
 		return;
 
-	m_flJumpTime = gpGlobals->curtime + 0.2f;
+	m_flJumpTime = gpGlobals->curtime;
 
 	CRecipientFilter filter;
 	filter.AddRecipientsByPAS(vecOrigin);
@@ -694,18 +713,10 @@ void CFFPlayer::ClassSpecificSkill()
 
 			break;
 
-#ifdef CLIENT_DLL
-
 		case CLASS_PYRO:
-			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_IC) )
-			{
-				SwapToWeapon(FF_WEAPON_FLAMETHROWER);
-			}
-			else 
-			{
-				SwapToWeapon(FF_WEAPON_IC);
-			}
 			break;
+
+#ifdef CLIENT_DLL
 
 		case CLASS_SOLDIER:
 			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_RPG) )
@@ -739,22 +750,46 @@ void CFFPlayer::ClassSpecificSkill()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Handle all class specific skills
+//-----------------------------------------------------------------------------
+void CFFPlayer::ClassSpecificSkillHold()
+{
+	if (m_flNextClassSpecificSkill > gpGlobals->curtime)
+		return;
+
+	switch (GetClassSlot())
+	{
+		case CLASS_PYRO:
+			JetpackHold();
+			if (m_flJetpackFuel < 1)
+			{
+				m_bJetpacking = false;
+				m_flNextClassSpecificSkill = gpGlobals->curtime + 0.25f;
+			}
+			break;
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Anything to do after they've stopped pressing
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post()
 {
-#ifdef CLIENT_DLL
 	switch (GetClassSlot())
 	{
+#ifdef CLIENT_DLL
 		case CLASS_ENGINEER:
 		case CLASS_SPY:
 			HudContextShow(false);
+			break;
+#endif
+		case CLASS_PYRO:
+			m_bJetpacking = false;
 			break;
 
 		default:
 			break;
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1612,149 +1647,261 @@ void CFFPlayer::Cloak( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::Overpressure( void )
 {
-	if (IsAlive())
+	if (!IsAlive())
 	{
-		CEffectData data;
-		data.m_vOrigin = GetAbsOrigin();
-		
-		DispatchEffect(OVERPRESSURE_EFFECT, data);
+		return;
+	}
 
-		// Play a sound
-		EmitSoundShared("overpressure.explode");
+	CEffectData data;
+	data.m_vOrigin = GetAbsOrigin();
+	
+	DispatchEffect(OVERPRESSURE_EFFECT, data);
+
+	// Play a sound
+	EmitSoundShared("overpressure.explode");
 
 #ifdef CLIENT_DLL
-			FF_SendHint( HWGUY_OVERPRESS, 3, PRIORITY_NORMAL, "#FF_HINT_HWGUY_OVERPRESS" );
+	FF_SendHint( HWGUY_OVERPRESS, 3, PRIORITY_NORMAL, "#FF_HINT_HWGUY_OVERPRESS" );
 #endif
-
-		for (int i=1; i<=gpGlobals->maxClients; i++)
-		{
-			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
-
-			if (!pPlayer)
-				continue;
-
-			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
-				continue;
-			
-			// People who are building shouldn't be pushed around by anything
-			if (pPlayer->IsStaticBuilding())
-				continue;
-			
-			// Ignore people that can't take damage (teammates when friendly fire is off)
-			if (OVERPRESSURE_IGNOREFRIENDLY && !g_pGameRules->FCanTakeDamage( pPlayer, this ))
-				continue;
-
-			// Some useful things to know
-			Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
-			Vector vecDisplacement = vecPlayerOrigin - GetAbsOrigin();
-			float flDistance = vecDisplacement.Length();
-
-			if (flDistance > OVERPRESSURE_RADIUS)
-				continue;
-
-			Vector vecDir = vecDisplacement;
-			vecDir.NormalizeInPlace();
-
-			Vector vecResult;
-			if (pPlayer == this)
-			{
-				float flSelfLateral = OVERPRESSURE_SELFPUSH_HORIZONTAL;
-				float flSelfVertical = OVERPRESSURE_SELFPUSH_VERTICAL;
-
-				Vector vecVelocity = pPlayer->GetAbsVelocity();
-				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-				float flHorizontalSpeed = vecLatVelocity.Length();
 
 #ifdef GAME_DLL
-				if (OVERPRESSURE_SLIDE_AFFECTSSELF)
-					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
+	Extinguish(); // Overpressure stops you burning
 #endif
 
-				// apply push force
-				if (pPlayer->GetFlags() & FL_ONGROUND)
-				{
-					vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y  * flSelfLateral, (vecVelocity.z + 90)* flSelfVertical);
-					DevMsg("[HW attack2] on ground (%f)\n", flHorizontalSpeed);
-				}
-				else
-				{
-					vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y * flSelfLateral, vecVelocity.z * flSelfVertical);
-					DevMsg("[HW attack2] in air (%f)\n", flHorizontalSpeed);
-				}
+	for (int i=1; i<=gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
+
+		if (!pPlayer)
+			continue;
+
+		if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+			continue;
+		
+		// People who are building shouldn't be pushed around by anything
+		if (pPlayer->IsStaticBuilding())
+			continue;
+#ifdef GAME_DLL
+		pPlayer->Extinguish(); // Overpressure extinguishes fire from everyone
+#endif
+		// Ignore people that can't take damage (teammates when friendly fire is off)
+		if (OVERPRESSURE_IGNOREFRIENDLY && !g_pGameRules->FCanTakeDamage( pPlayer, this ))
+			continue;
+
+		// Some useful things to know
+		Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
+		Vector vecDisplacement = vecPlayerOrigin - GetAbsOrigin();
+		float flDistance = vecDisplacement.Length();
+
+		if (flDistance > OVERPRESSURE_RADIUS)
+			continue;
+
+		Vector vecDir = vecDisplacement;
+		vecDir.NormalizeInPlace();
+
+		Vector vecResult;
+		if (pPlayer == this)
+		{
+			float flSelfLateral = OVERPRESSURE_SELFPUSH_HORIZONTAL;
+			float flSelfVertical = OVERPRESSURE_SELFPUSH_VERTICAL;
+
+			Vector vecVelocity = pPlayer->GetAbsVelocity();
+			Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+			float flHorizontalSpeed = vecLatVelocity.Length();
+
+#ifdef GAME_DLL
+			if (OVERPRESSURE_SLIDE_AFFECTSSELF)
+				pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
+#endif
+
+			// apply push force
+			if (pPlayer->GetFlags() & FL_ONGROUND)
+			{
+				vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y  * flSelfLateral, (vecVelocity.z + 90)* flSelfVertical);
+				DevMsg("[HW attack2] on ground (%f)\n", flHorizontalSpeed);
 			}
 			else
 			{
-				float flFriendlyScale = 1.0f;
+				vecResult = Vector(vecVelocity.x * flSelfLateral, vecVelocity.y * flSelfLateral, vecVelocity.z * flSelfVertical);
+				DevMsg("[HW attack2] in air (%f)\n", flHorizontalSpeed);
+			}
+		}
+		else
+		{
+			float flFriendlyScale = 1.0f;
 
-				// Check if is a teammate and scale accordingly
-				if (g_pGameRules->PlayerRelationship(pPlayer, this) == GR_TEAMMATE)
-					flFriendlyScale = OVERPRESSURE_FRIENDLYSCALE;
+			// Check if is a teammate and scale accordingly
+			if (g_pGameRules->PlayerRelationship(pPlayer, this) == GR_TEAMMATE)
+				flFriendlyScale = OVERPRESSURE_FRIENDLYSCALE;
 
-				QAngle angDirection;
-				VectorAngles(vecDir, angDirection);
+			QAngle angDirection;
+			VectorAngles(vecDir, angDirection);
 
-				pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
+			pPlayer->ViewPunch(angDirection * OVERPRESSURE_JERKMULTI * flDistance);
 
 #ifdef GAME_DLL
-				if (OVERPRESSURE_SLIDE)
-					pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
+			if (OVERPRESSURE_SLIDE)
+				pPlayer->StartSliding( OVERPRESSURE_SLIDE_DURATION, OVERPRESSURE_SLIDE_DURATION );
 #endif
 
 
-				Vector vecVelocity = pPlayer->GetAbsVelocity();
-				Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-				float flHorizontalSpeed = vecLatVelocity.Length();
+			Vector vecVelocity = pPlayer->GetAbsVelocity();
+			Vector vecLatVelocity = vecVelocity * Vector(1.0f, 1.0f, 0.0f);
+			float flHorizontalSpeed = vecLatVelocity.Length();
 
-				float flSpeedPercent = OVERPRESSURE_SPEED_PERCENT;
+			float flSpeedPercent = OVERPRESSURE_SPEED_PERCENT;
 
-				float flLateral = OVERPRESSURE_PUSH_HORIZONTAL * flFriendlyScale;
-				float flVertical = OVERPRESSURE_PUSH_VERTICAL * flFriendlyScale;
+			float flLateral = OVERPRESSURE_PUSH_HORIZONTAL * flFriendlyScale;
+			float flVertical = OVERPRESSURE_PUSH_VERTICAL * flFriendlyScale;
 
-				if (flHorizontalSpeed > pPlayer->MaxSpeed() * flSpeedPercent)
+			if (flHorizontalSpeed > pPlayer->MaxSpeed() * flSpeedPercent)
+			{
+				float flSpeedMultiplier = flHorizontalSpeed / pPlayer->MaxSpeed() - flSpeedPercent + 1;
+
+				float flSpeedMultiplierHorizontal = OVERPRESSURE_SPEED_MULTIPLIER_HORIZONTAL * flSpeedMultiplier;
+				float flSpeedMultiplierVertical = OVERPRESSURE_SPEED_MULTIPLIER_VERTICAL * flSpeedMultiplier;
+
+				vecResult = Vector(vecDir.x * flLateral * flSpeedMultiplierHorizontal, vecDir.y * flLateral * flSpeedMultiplierHorizontal, vecDir.z * flVertical * flSpeedMultiplierVertical);
+				DevMsg("[HW attack2] enemy going supersonic (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+			}
+			else
+			{
+				// apply push force
+				if (pPlayer->GetFlags() & FL_ONGROUND)
 				{
-					float flSpeedMultiplier = flHorizontalSpeed / pPlayer->MaxSpeed() - flSpeedPercent + 1;
+					float flGroundPush = OVERPRESSURE_GROUNDPUSH_MULTIPLIER;
 
-					float flSpeedMultiplierHorizontal = OVERPRESSURE_SPEED_MULTIPLIER_HORIZONTAL * flSpeedMultiplier;
-					float flSpeedMultiplierVertical = OVERPRESSURE_SPEED_MULTIPLIER_VERTICAL * flSpeedMultiplier;
-
-					vecResult = Vector(vecDir.x * flLateral * flSpeedMultiplierHorizontal, vecDir.y * flLateral * flSpeedMultiplierHorizontal, vecDir.z * flVertical * flSpeedMultiplierVertical);
-					DevMsg("[HW attack2] enemy going supersonic (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
+					vecResult = Vector(vecDir.x * flLateral * flGroundPush, vecDir.y  * flLateral * flGroundPush, vecDir.z * flVertical);
+					DevMsg("[HW attack2] enemy on ground, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
 				}
 				else
 				{
-					// apply push force
-					if (pPlayer->GetFlags() & FL_ONGROUND)
-					{
-						float flGroundPush = OVERPRESSURE_GROUNDPUSH_MULTIPLIER;
-
-						vecResult = Vector(vecDir.x * flLateral * flGroundPush, vecDir.y  * flLateral * flGroundPush, vecDir.z * flVertical);
-						DevMsg("[HW attack2] enemy on ground, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
-					}
-					else
-					{
-						vecResult = Vector(vecDir.x * flLateral, vecDir.y * flLateral, vecDir.z * flVertical);
-						DevMsg("[HW attack2] enemy in air, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
-					}
+					vecResult = Vector(vecDir.x * flLateral, vecDir.y * flLateral, vecDir.z * flVertical);
+					DevMsg("[HW attack2] enemy in air, under speed (speed: %f direction: %f,%f,%f)\n", flHorizontalSpeed, vecDir.x, vecDir.y, vecDir.z);
 				}
 			}
+		}
 
 #ifdef GAME_DLL
-			// cap mancannon + overpressure speed
-			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
+		// cap mancannon + overpressure speed
+		if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 5.2f )
+		{
+			if ( vecResult.Length() > 1700.0f )
 			{
-				if ( vecResult.Length() > 1700.0f )
-				{
-					vecResult.NormalizeInPlace();
-					vecResult *= 1700.0f;
-				}
+				vecResult.NormalizeInPlace();
+				vecResult *= 1700.0f;
 			}
-#endif
-			//pPlayer->SetAbsOrigin( vecPlayerOrigin );
-			pPlayer->SetAbsVelocity(vecResult);
 		}
-		
-
+#endif
+		pPlayer->SetAbsVelocity(vecResult);
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared pre think code
+//-----------------------------------------------------------------------------
+void CFFPlayer::SharedPreThink( void )
+{
+	// Do we need to do a class specific skill?
+	if( m_afButtonPressed & IN_ATTACK2 )
+		ClassSpecificSkill();
+	else if (m_afButtonReleased & IN_ATTACK2)
+		ClassSpecificSkill_Post();
+
+	// Do we need to do a class specific skill?
+	if (m_nButtons & IN_ATTACK2)
+		ClassSpecificSkillHold();
+
+	JetpackRechargeThink();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFPlayer::JetpackRechargeThink( void )
+{
+	if (GetClassSlot() != CLASS_PYRO)
+	{
+		return;
+	}
+
+	if (m_flJetpackNextFuelRechargeTime < gpGlobals->curtime)
+	{
+		if (m_flJetpackFuel < 100)
+		{
+			m_flJetpackNextFuelRechargeTime = gpGlobals->curtime + JETPACK_FUELRECHARGETIME;
+			m_flJetpackFuel++;
+		}
+	}
+}
+
+bool CFFPlayer::CanJetpack()
+{
+	if (!IsAlive())
+	{
+		return false;
+	}
+
+	if ((GetFlags() & FL_ONGROUND) && !FFDEV_JETPACK_HOVERONGROUND)
+	{
+		return false;
+	}
+
+	if (m_flJetpackFuel < 1)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Jetpack jump
+//-----------------------------------------------------------------------------
+void CFFPlayer::JetpackHold( void )
+{
+	if (!CanJetpack())
+	{
+		m_bJetpacking = false;
+		return;
+	}
+
+	m_bJetpacking = true;
+	m_flJetpackFuel -= JETPACK_FUELHOVERCOST;
+
+	Vector vecForward, vecRight, vecUp;
+	EyeVectors( &vecForward, &vecRight, &vecUp);
+	VectorNormalizeFast( vecForward );
+	VectorNormalizeFast( vecRight );
+
+	// get only the direction the player is looking (ignore any z)
+	Vector horizPush = CrossProduct(Vector( 0.0f, 0.0f, 1.0f ), vecRight);
+
+	float flPercent = 1.0f;
+
+	Vector vecLatVelocity = GetAbsVelocity() * Vector(1.0f, 1.0f, 0.0f);
+	float curVertical = GetAbsVelocity().z;
+
+	if (vecLatVelocity.IsLengthGreaterThan(JETPACK_HORIZONTALPUSH_CAP))
+	{
+		horizPush *= 0;
+	}
+	else
+	{
+		horizPush *= JETPACK_HORIZONTALPUSH_OFFGROUND;
+	}
+
+	float verticalPush = JETPACK_VERTICALPUSH_OFFGROUND;
+	if (curVertical < 0)
+	{
+		float verticalScale = (FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT + curVertical) / FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT;
+		if (verticalScale < JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE)
+			verticalScale = JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE;
+
+		verticalPush *= verticalScale;
+	}
+
+	ApplyAbsVelocityImpulse(Vector(horizPush.x, horizPush.y, verticalPush) * flPercent);
 }
 
 //-----------------------------------------------------------------------------

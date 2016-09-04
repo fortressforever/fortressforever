@@ -1,16 +1,3 @@
-/// =============== Fortress Forever ==============
-/// ======== A modification for Half-Life 2 =======
-///
-/// @file ff_projectile_rocket.cpp
-/// @author Gavin "Mirvin_Monkey" Bramhill
-/// @date August 3, 2005
-/// @brief The FF incendiary rocket projectile code.
-///
-/// REVISIONS
-/// ---------
-/// Dec 21, 2004 Mirv: First creation logged
-
-
 #include "cbase.h"
 #include "ff_utils.h"
 #include "ff_projectile_incendiaryrocket.h"
@@ -21,14 +8,32 @@
 	#include "smoke_trail.h"
 	#include "ff_buildableobjects_shared.h"
 	#include "soundent.h"
+	#include "effect_dispatch_data.h"
+	#include "te_effect_dispatch.h"
 #else
 
 #endif
 
+//ConVar ffdev_ic_flarescale("ffdev_ic_flarescale", "0.8", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_FLARESCALE 0.8f //ffdev_ic_flarescale.GetFloat()
+//ConVar ffdev_ic_smoke_opacity("ffdev_ic_smoke_opacity", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_OPACITY 0.1f //ffdev_ic_smoke_opacity.GetFloat()
+//ConVar ffdev_ic_smoke_startsize("ffdev_ic_smoke_startsize", "3", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_STARTSIZE 3.0f //ffdev_ic_smoke_startsize.GetFloat()
+//ConVar ffdev_ic_smoke_endsize("ffdev_ic_smoke_endsize", "5", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_ENDSIZE 5.0f //ffdev_ic_smoke_endsize.GetFloat()
+//ConVar ffdev_ic_smoke_spawnradius("ffdev_ic_smoke_spawnradius", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_SPAWNRADIUS 1.0f //ffdev_ic_smoke_spawnradius.GetFloat()
+//ConVar ffdev_ic_smoke_minspeed("ffdev_ic_smoke_minspeed", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_MINSPEED 2.0f //ffdev_ic_smoke_minspeed.GetFloat()
+//ConVar ffdev_ic_smoke_maxspeed("ffdev_ic_smoke_maxspeed", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_IC_SMOKE_MAXSPEED 10.0f //ffdev_ic_smoke_maxspeed.GetFloat()
+
+
+
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
 extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
 extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
-
 
 //=============================================================================
 // CFFProjectileIncendiaryRocket tables
@@ -61,28 +66,10 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	CFFPlayer *pBurninator = ToFFPlayer( GetOwnerEntity() );
 	if ( !pBurninator )
 		return;
-	// Do normal radius damage then do a trace sphere to set things alight
+	// Do normal radius damage
 	Vector vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	CTakeDamageInfo info(this, pBurninator, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, m_iKillType, &vecReported);
 	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
-	
-	// Sorry, not fond of the BEGIN_ENTITY_SPHERE_QUERY macro
-	CBaseEntity *pEntity = NULL;
-	for( CEntitySphereQuery sphere( vecSrc, m_DmgRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-	{
-		if( !pEntity || !pEntity->IsPlayer() )
-			continue;
-
-		CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-		if( g_pGameRules->FCanTakeDamage( pPlayer, pBurninator ) )
-		{
-			pPlayer->ApplyBurning(pBurninator, 0.5f, 10.0f, BURNTYPE_ICCANNON);
-		}
-	}
-
-	// We don't use this and it also caused a NULL pointer assert from
-	// GetOwnerEntity()
-	//Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
 
 #endif
 	// 0000936: go through the explode code but don't apply damage! from basegrenade.cpp
@@ -159,31 +146,29 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	SetAbsVelocity( vec3_origin );
 	SetNextThink( gpGlobals->curtime );
 #endif
-
-
 }
-
 
 #ifdef GAME_DLL
 
 	//----------------------------------------------------------------------------
 	// Purpose: Creata a trail of smoke for the rocket
 	//----------------------------------------------------------------------------
-	void CFFProjectileIncendiaryRocket::CreateSmokeTrail()
+	void CFFProjectileIncendiaryRocket::CreateRocketTrail()
 	{
 		// Smoke trail.
 		if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL)
 		{
-			m_hRocketTrail->m_Opacity = 0.2f;
+			m_hRocketTrail->m_Opacity = FFDEV_IC_SMOKE_OPACITY;
 			m_hRocketTrail->m_SpawnRate = 100;
-			m_hRocketTrail->m_ParticleLifetime = 0.5f;
+			m_hRocketTrail->m_ParticleLifetime = 0.3f;
 			m_hRocketTrail->m_StartColor.Init(1.0f, 0.3f, 0.0f);
 			m_hRocketTrail->m_EndColor.Init(0.0f, 0.0f, 0.0f);
-			m_hRocketTrail->m_StartSize = 8;
-			m_hRocketTrail->m_EndSize = 32;
-			m_hRocketTrail->m_SpawnRadius = 4;
-			m_hRocketTrail->m_MinSpeed = 2;
-			m_hRocketTrail->m_MaxSpeed = 16;
+			m_hRocketTrail->m_StartSize = FFDEV_IC_SMOKE_STARTSIZE;
+			m_hRocketTrail->m_EndSize = FFDEV_IC_SMOKE_ENDSIZE;
+			m_hRocketTrail->m_SpawnRadius = FFDEV_IC_SMOKE_SPAWNRADIUS;
+			m_hRocketTrail->m_MinSpeed = FFDEV_IC_SMOKE_MINSPEED;
+			m_hRocketTrail->m_MaxSpeed = FFDEV_IC_SMOKE_MAXSPEED;
+			m_hRocketTrail->m_flFlareScale = FFDEV_IC_FLARESCALE;
 			
 			m_hRocketTrail->SetLifetime(999);
 			m_hRocketTrail->FollowEntity(this, "0");
@@ -210,8 +195,8 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		// Next think
 		SetNextThink(gpGlobals->curtime);
 
-		// Creates the smoke trail
-		CreateSmokeTrail();
+		// Creates the rocket trail
+		CreateRocketTrail();
 
 		BaseClass::Spawn();
 	}

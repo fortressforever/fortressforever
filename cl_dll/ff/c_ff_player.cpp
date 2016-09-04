@@ -786,8 +786,6 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	// End: Added by Mulchman for building objects and such
 
 	// ---> added by billdoor
-	RecvPropInt(RECVINFO(m_iArmorType)),
-
 	// ---> added by defrag
 	RecvPropBool( RECVINFO( m_fRandomPC ) ),
 
@@ -802,12 +800,6 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iGrenadeState ) ),
 	RecvPropFloat( RECVINFO( m_flServerPrimeTime ), 0, RecvProxy_PrimeTime ),
 	// End: Added by L0ki
-
-	// Beg: Added by FryGuy - Status Effects related
-	RecvPropFloat( RECVINFO( m_flNextBurnTick ) ),
-	RecvPropInt( RECVINFO( m_iBurnTicks ) ),
-	RecvPropFloat( RECVINFO( m_flBurningDamage ) ),
-	// End: Added by FryGuy
 
 	RecvPropEHandle( RECVINFO( m_hNextMapGuide ) ),
 	RecvPropEHandle( RECVINFO( m_hLastMapGuide ) ),
@@ -829,6 +821,10 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropVector( RECVINFO( m_vecObjectiveOrigin ) ),
 END_RECV_TABLE( )
 
+BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFNonLocalPlayerExclusive )
+	RecvPropBool( RECVINFO( m_bJetpacking ) ),
+END_RECV_TABLE( )
+
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 BEGIN_RECV_TABLE_NOBASE(C_FFPlayer, DT_NonLocalOrigin)
 	RecvPropVector(RECVINFO_NAME(m_vecNetworkOrigin, m_vecOrigin)),
@@ -837,6 +833,7 @@ END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFPlayerObserver )
 	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
+	RecvPropFloat(RECVINFO(m_flJetpackFuel)),
 	RecvPropFloat(RECVINFO(m_flTrueAimTime)),
 	RecvPropFloat(RECVINFO(m_flHitTime)),
 	RecvPropInt(RECVINFO(m_nButtons)),
@@ -844,6 +841,8 @@ END_RECV_TABLE()
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropDataTable( "fflocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFLocalPlayerExclusive) ),
+	// Data that only gets sent to the other players.
+	RecvPropDataTable( "ffnonlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFNonLocalPlayerExclusive) ),
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 	RecvPropDataTable("fforigin", 0, 0, &REFERENCE_RECV_TABLE(DT_NonLocalOrigin)),
@@ -1483,15 +1482,7 @@ void C_FFPlayer::PreThink( void )
 	//	We really don't need per-frame accuracy here
 	g_FFHintTimers.SimulateTimers();
 
-	// Do we need to do a class specific skill?
-	if (m_afButtonPressed & IN_ATTACK2)
-		ClassSpecificSkill();
-
-	else if (m_afButtonReleased & IN_ATTACK2)
-		ClassSpecificSkill_Post();
-
-	//if (m_afButtonPressed & IN_RELOAD && !IsAlive())
-	//	engine->ClientCmd("-reload");
+	SharedPreThink();
 
 	// New possible fix
 	if( ::input && !IsAlive() )
@@ -1543,6 +1534,8 @@ void C_FFPlayer::Spawn( void )
 
 	m_flNextCloak = 0.0f;
 	m_flNextClassSpecificSkill = 0.0f;
+	m_flJetpackFuel = 100.0f;
+	m_flJetpackNextFuelRechargeTime = 0.0f;
 
 	// Bug #0001448: Spy menu stuck on screen.  |----> Defrag
 	HudContextForceClose();
@@ -2415,6 +2408,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		m_pInfectionEmitter2 = NULL;
 		m_pImmunityEmitter1 = NULL;
 		m_pImmunityEmitter2 = NULL;
+		m_pJetpackEmitter = NULL;
 	}
 
 	if (IsLocalPlayer())
@@ -2630,6 +2624,26 @@ void C_FFPlayer::ClientThink( void )
 			m_pImmunityEmitter2->SetDieTime( 0.0f );
 			m_pImmunityEmitter2 = NULL;
 		}
+	}
+
+	if ( IsAlive() && IsJetpacking() && !IsDormant() )
+	{
+		if (!m_pJetpackEmitter)
+			m_pJetpackEmitter = CJetpackEmitter::Create( "JetpackEmitter", this );
+		
+		m_pJetpackEmitter->SetDieTime( gpGlobals->curtime + 5.0f );
+		EmitSound("Player.JetpackLoop");
+	}
+	else
+	{
+		if (!!m_pJetpackEmitter)
+		{
+			m_pJetpackEmitter->SetDieTime( 0.0f );
+			m_pJetpackEmitter = NULL;
+		}
+		// TODO: Is StopSound expensive?
+		// Should this only be called if we know the sound is playing?
+		StopSound("Player.JetpackLoop");
 	}
 
 	_mathackman.Update();

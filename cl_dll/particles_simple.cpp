@@ -200,12 +200,12 @@ PMaterialHandle CParticleEffect::GetPMaterial(const char *name)
 //			material - 
 // Output : SimpleParticle
 //-----------------------------------------------------------------------------
-Particle *CParticleEffect::AddParticle( unsigned int particleSize, PMaterialHandle material, const Vector &origin )
+Particle *CParticleEffect::AddParticle( unsigned int particleSize, PMaterialHandle material, const Vector &origin, int iMaxParticleSizeOverride )
 {
 	// If you get here, then you must call SetSortOrigin before adding particles.
 	Assert( m_vSortOrigin.IsValid() );
 
-	Particle *pParticle = (Particle *) m_ParticleEffect.AddParticle( particleSize, material );
+	Particle *pParticle = (Particle *) m_ParticleEffect.AddParticle( particleSize, material, iMaxParticleSizeOverride );
 
 	if( pParticle == NULL )
 		return NULL;

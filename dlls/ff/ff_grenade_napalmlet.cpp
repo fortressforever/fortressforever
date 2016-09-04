@@ -1,17 +1,30 @@
-
-
 #include "cbase.h"
 #include "ff_grenade_base.h"
 
 #include "ff_grenade_napalmlet.h"
 #include "ff_utils.h"
 
-#ifndef CLIENT_DLL
-	#include "ff_player.h"
-#endif
+#include "ff_player.h"
+
+ConVar ffdev_nap_bonusdamage_burn1("ffdev_nap_bonusdamage_burn1", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN1 ffdev_nap_bonusdamage_burn1.GetInt()
+ConVar ffdev_nap_bonusdamage_burn2("ffdev_nap_bonusdamage_burn2", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN2 ffdev_nap_bonusdamage_burn2.GetInt()
+ConVar ffdev_nap_bonusdamage_burn3("ffdev_nap_bonusdamage_burn3", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN3 ffdev_nap_bonusdamage_burn3.GetInt()
 
 //ConVar burn_standon_ng("ffdev_burn_standon_ng", "7.0", 0, "Damage you take when standing on a burning napalmlet");
-#define BURN_STANDON_NG 7
+ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "30.0", 0, "Napalmlet flame size");
+#define FFDEV_NAP_FLAMESIZE ffdev_nap_flamesize.GetFloat() // 50.0f
+ConVar nap_burn_radius("ffdev_nap_burn_radius","70.0",FCVAR_FF_FFDEV,"Burn radius of a napalmlet.");
+#define NAP_BURN_RADIUS nap_burn_radius.GetFloat() //98.0f
+
+ConVar ffdev_nap_burnamount("ffdev_nap_burnamount", "10.0", 0, "Napalmlet burn increase per tick, 100 is a full burn level");
+#define FFDEV_NAPALM_BURNAMOUNT ffdev_nap_burnamount.GetFloat() // 50.0f
+ConVar ffdev_nap_height("ffdev_nap_height", "70.0", 0, "Napalmlet maximum burn height above the ground");
+#define FFDEV_NAP_HEIGHT ffdev_nap_height.GetFloat() // 50.0f
+
+#define BURN_STANDON_NG 2
 
 BEGIN_DATADESC( CFFGrenadeNapalmlet )
 	DEFINE_THINKFUNC( FlameThink ),
@@ -26,15 +39,9 @@ void CFFGrenadeNapalmlet::UpdateOnRemove( void )
 {
 	StopSound( "General.BurningFlesh" );
 	StopSound( "General.BurningObject" );
-	//EmitSound( "General.StopBurning" );
 
 	BaseClass::UpdateOnRemove();
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-//CFFGrenadeNapalmlet::CFFGrenadeNapalmlet( void ){}
 
 //-----------------------------------------------------------------------------
 // Purpose: Precache assets
@@ -50,7 +57,6 @@ void CFFGrenadeNapalmlet::Precache ( void )
 //-----------------------------------------------------------------------------
 void CFFGrenadeNapalmlet::Spawn( void )
 {
-	//m_flSpawnTime = gpGlobals->curtime;
 	BaseClass::Spawn();
 
 	SetModel ( NAPALMLET_MODEL );
@@ -70,7 +76,7 @@ void CFFGrenadeNapalmlet::Spawn( void )
 		m_pFlame->SetLifetime( m_flBurnTime );
 		AddFlag( FL_ONFIRE );
 		SetEffectEntity( m_pFlame );
-		m_pFlame->SetSize( 50.0f );
+		m_pFlame->SetSize( FFDEV_NAP_FLAMESIZE );
 	}
 }
 
@@ -153,18 +159,7 @@ void CFFGrenadeNapalmlet::ResolveFlyCollisionCustom( trace_t &trace, Vector &vec
 
 			// Reset velocities.
 			SetAbsVelocity( vec3_origin );
-			SetLocalAngularVelocity( vec3_angle );
-
-			/*//align to the ground so we're not standing on end
-			QAngle angle;
-			VectorAngles( trace.plane.normal, angle );
-
-			// rotate randomly in yaw
-			angle[1] = random->RandomFloat( 0, 360 );
-
-			// TODO: rotate around trace.plane.normal
-
-			SetAbsAngles( angle );	*/		
+			SetLocalAngularVelocity( vec3_angle );	
 		}
 		else
 		{
@@ -199,110 +194,93 @@ void CFFGrenadeNapalmlet::ResolveFlyCollisionCustom( trace_t &trace, Vector &vec
 // Purpose: Burninate the players
 //-----------------------------------------------------------------------------
 void CFFGrenadeNapalmlet::FlameThink()
+{
+	// Remove if we've reached the end of our fuse
+	if( gpGlobals->curtime > m_flBurnTime )
 	{
-		// Remove if we've reached the end of our fuse
-		if( gpGlobals->curtime > m_flBurnTime )
-		{
-			UTIL_Remove(this);
-			return;
-		}
-
-		// Bug #0001664: Pyro napalm flames in water shouldnt exist
-		// Ideally add some fancy smouldering effect for when they are extinguished, but this will do for now |---> Defrag		
-		if( GetWaterLevel() != 0  )
-		{
-			UTIL_Remove(this);
-			return;
-		}
-
-		// Jiggles: We stopped moving; let's switch to a standing flame
-		// Nevermind, this doesn't work.
-		//if( m_bFlameSwitch && GetAbsVelocity() == vec3_origin )
-		//{
-		//	if (m_pFlame)
-		//		m_pFlame->SetUseHitboxes(true);
-		//	m_bFlameSwitch = false;
-		//}
-
-
-		//SetAbsVelocity( Vector( 0, 0, 10 + 20 * sin( DEG2RAD( GetAbsAngles().y ) ) ) );
-		//SetAbsAngles( GetAbsAngles() + QAngle( 0, 15, 0 ) );
-
-		//Vector vecForward;
-		//AngleVectors( GetAbsAngles(), &vecForward );
-
-		if((gpGlobals->curtime - m_flLastBurnCheck) >= 1.0f)
-		{
-			m_flLastBurnCheck = gpGlobals->curtime;
-
-			Vector	vecSrc = GetAbsOrigin();
-			vecSrc.z += 1;
-
-			CBaseEntity *pEntity = NULL;
-
-			for( CEntitySphereQuery sphere( vecSrc, m_flBurnRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-			{
-				if( !pEntity )
-					continue;
-
-				// Bug #0000269: Napalm through walls.
-				// Mulch: if we hit water w/ the trace, abort too!
-				trace_t tr;
-				UTIL_TraceLine(GetAbsOrigin(), pEntity->GetAbsOrigin(), MASK_SOLID_BRUSHONLY | CONTENTS_WATER, this, COLLISION_GROUP_DEBRIS, &tr);
-
-				if (tr.fraction < 1.0f)
-					continue;
-
-				// Bug #0000270: Napalm grenade burn radius reaches unrealisticly high.
-				float height = tr.startpos.z - tr.endpos.z;
-				if (height < -40.0f || height > 40.0f)
-					continue;
-
-				// Don't damage if entity is more than feet deep in water
-				if( pEntity->GetWaterLevel() >= 2 )
-					continue;
-
-				switch( pEntity->Classify() )
-				{
-					case CLASS_PLAYER:
-					{
-						CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-						if( !pPlayer )
-							continue;
-
-						if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
-						{
-							pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
-							pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 1.0f, 10.0f, BURNTYPE_NALPALMGRENADE);
-						}
-					}
-					break;
-					case CLASS_SENTRYGUN:
-					case CLASS_MANCANNON://Adding napalm damage to jumppad -GreenMushy
-					case CLASS_DISPENSER:
-					{
-						// don't have to bother casting this here anymore, just pass the buildable and the FCanTakeDamage function will sort it
-
-						/*
-						CFFBuildableObject *pBuildable = dynamic_cast< CFFBuildableObject * >( pEntity );
-						if( !pBuildable )
-							continue;
-						*/
-						
-						//CFFPlayer *pPlayer = pBuildable->GetOwnerPlayer();
-						//if( !pPlayer )
-						//	continue;
-
-						if (g_pGameRules->FCanTakeDamage( pEntity, GetOwnerEntity()))
-							pEntity->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
-					}
-					
-					default:
-						break;
-				}
-			}
-		}
-
-		SetNextThink( gpGlobals->curtime + 1.0f );
+		UTIL_Remove(this);
+		return;
 	}
 
+	// Bug #0001664: Pyro napalm flames in water shouldnt exist
+	if( GetWaterLevel() != 0  )
+	{
+		UTIL_Remove(this);
+		return;
+	}
+
+	Vector	vecSrc = GetAbsOrigin();
+	vecSrc.z += 1;
+
+	CBaseEntity *pEntity = NULL;
+
+	for( CEntitySphereQuery sphere( vecSrc, NAP_BURN_RADIUS ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
+		if( !pEntity )
+			continue;
+
+		// Bug #0000269: Napalm through walls.
+		// Mulch: if we hit water w/ the trace, abort too!
+		trace_t tr;
+		UTIL_TraceLine(GetAbsOrigin(), pEntity->GetAbsOrigin(), MASK_SOLID_BRUSHONLY | CONTENTS_WATER, this, COLLISION_GROUP_DEBRIS, &tr);
+
+		if (tr.fraction < 1.0f)
+			continue;
+
+		// Bug #0000270: Napalm grenade burn radius reaches unrealisticly high.
+		float height = tr.startpos.z - tr.endpos.z;
+		if (height < -FFDEV_NAP_HEIGHT || height > FFDEV_NAP_HEIGHT)
+			continue;
+
+		// Don't damage if entity is more than feet deep in water
+		if( pEntity->GetWaterLevel() >= 2 )
+			continue;
+
+		switch( pEntity->Classify() )
+		{
+			case CLASS_PLAYER:
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+				if( !pPlayer )
+					continue;
+
+				if (g_pGameRules->FCanTakeDamage(pPlayer, GetOwnerEntity()))
+				{
+					int damage = BURN_STANDON_NG + CalculateBonusBurnDamage(pPlayer->GetBurnLevel());
+					pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), damage, DMG_BURN ) );
+					pPlayer->IncreaseBurnLevel ( FFDEV_NAPALM_BURNAMOUNT );
+				}
+			}
+			break;
+			case CLASS_SENTRYGUN:
+			case CLASS_MANCANNON://Adding napalm damage to jumppad -GreenMushy
+			case CLASS_DISPENSER:
+			{
+				if (g_pGameRules->FCanTakeDamage( pEntity, GetOwnerEntity()))
+					pEntity->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), BURN_STANDON_NG, DMG_BURN ) );
+			}
+			
+			default:
+				break;
+		}
+	}
+
+	SetNextThink( gpGlobals->curtime + 0.25f );
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Calculate the bonus damage for the napalmlet based on the players current burn level
+//----------------------------------------------------------------------------
+int CFFGrenadeNapalmlet::CalculateBonusBurnDamage(int burnLevel)
+{
+	if (burnLevel <100)
+	{
+		return NAP_BONUSDAMAGE_BURN1;
+	}
+	if (burnLevel <200)
+	{
+		return NAP_BONUSDAMAGE_BURN2;
+	}
+
+	return NAP_BONUSDAMAGE_BURN3;
+}

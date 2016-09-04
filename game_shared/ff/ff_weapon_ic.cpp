@@ -1,17 +1,3 @@
-/// =============== Fortress Forever ==============
-/// ======== A modification for Half-Life 2 =======
-///
-/// @file ff_weapon_ic.cpp
-/// @author Gavin "Mirvin_Monkey" Bramhill
-/// @date December 21, 2004
-/// @brief The FF Rocket launcher code & class declaration.
-///
-/// REVISIONS
-/// ---------
-/// Dec 21, 2004 Mirv: First creation logged
-/// Jan 16, 2005 Mirv: Moved all repeated code to base class
-
-
 #include "cbase.h"
 #include "ff_weapon_baseclip.h"
 #include "ff_projectile_incendiaryrocket.h"
@@ -25,17 +11,14 @@
 	#include "ff_player.h"
 #endif
 
-//ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "0", FCVAR_FF_FFDEV_REPLICATED);
-#define IC_BLASTPUSH 0.0f
-
 //=============================================================================
 // CFFWeaponIC
 //=============================================================================
 
-class CFFWeaponIC : public CFFWeaponBase
+class CFFWeaponIC : public CFFWeaponBaseClip
 {
 public:
-	DECLARE_CLASS(CFFWeaponIC, CFFWeaponBase);
+	DECLARE_CLASS(CFFWeaponIC, CFFWeaponBaseClip);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
@@ -114,13 +97,4 @@ void CFFWeaponIC::Fire()
 #ifdef GAME_DLL
 	Omnibot::Notify_PlayerShoot(pPlayer, Omnibot::TF_WP_NAPALMCANNON, pRocket);
 #endif
-
-	// Push player but don't add to upwards force
-	// 0000936 - reduce the blast push
-	Vector vecImpulse = vForward * (IC_BLASTPUSH * -1.0f);
-
-	if (vecImpulse.z > 0)
-		vecImpulse.z = 0;
-
-	pPlayer->ApplyAbsVelocityImpulse(vecImpulse);
 }

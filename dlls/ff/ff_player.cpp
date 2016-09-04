@@ -60,25 +60,37 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 #define GREN_SPAWN_ANG_X 18.5f
 //ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");
 
-
-#define BURN_TICK_INTERVAL 1.25f
 //ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
 //ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
 //ConVar burn_damage_ft("ffdev_burn_damage_ft","15.0",0,"Burn damage of the Flamethrower (per tick)");
 #define BURN_DAMAGE_BASE 13.0f
-//ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
-#define BURN_TICKS 6
+
 //ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","5",0,"Burn damage multiplier for all 3 burn types.");
 #define BURN_MULTIPLIER_3BURNS 5.0f
 //ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
 #define BURN_MULTIPLIER_2BURNS 2.0f
 
+ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
+#define FFDEV_PYRO_BURNTIME ffdev_pyro_burntime.GetFloat()
+
 //ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
-#define FFDEV_FLAMESIZE_BURN1 0.015f //ffdev_flamesize_burn1.GetFloat()
+#define FFDEV_FLAMESIZE_BURN1 0.025f //ffdev_flamesize_burn1.GetFloat()
 //ConVar ffdev_flamesize_burn2("ffdev_flamesize_burn2","0.04", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 2");
-#define FFDEV_FLAMESIZE_BURN2 0.03f //ffdev_flamesize_burn2.GetFloat()
+#define FFDEV_FLAMESIZE_BURN2 0.033f //ffdev_flamesize_burn2.GetFloat()
 //ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 3");
-#define FFDEV_FLAMESIZE_BURN3 0.045f //ffdev_flamesize_burn3.GetFloat()
+#define FFDEV_FLAMESIZE_BURN3 0.040f //ffdev_flamesize_burn3.GetFloat()
+
+ConVar ffdev_ic_bonusdamage_burn1("ffdev_ic_bonusdamage_burn1", "20", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN1 ffdev_ic_bonusdamage_burn1.GetFloat()
+
+ConVar ffdev_ic_bonusdamage_burn2("ffdev_ic_bonusdamage_burn2", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN2 ffdev_ic_bonusdamage_burn2.GetFloat()
+
+ConVar ffdev_ic_bonusdamage_burn3("ffdev_ic_bonusdamage_burn3", "40", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN3 ffdev_ic_bonusdamage_burn3.GetFloat()
+
+ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.45", FCVAR_FF_FFDEV_REPLICATED, "Self damage multipler for IC jumping");
+#define FFDEV_PYRO_IC_MULTIPLIER ffdev_ic_selfdamagemultiplier.GetFloat()
 
 // [integer] Max distance a player can be from us to be shown
 //static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
@@ -317,17 +329,17 @@ public:
 
 LINK_ENTITY_TO_CLASS( info_ff_teamspawn , CFFTeamSpawn );
 
-#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-static void *SendProxy_NonLocalOrigin(const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID)
+static void *SendProxy_NonLocal(const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID)
 {
 	pRecipients->ClearRecipient(objectID - 1);
 	return (void *) pVarData;
 }
-REGISTER_SEND_PROXY_NON_MODIFIED_POINTER(SendProxy_NonLocalOrigin);
+REGISTER_SEND_PROXY_NON_MODIFIED_POINTER(SendProxy_NonLocal);
 
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
 BEGIN_SEND_TABLE_NOBASE(CBaseEntity, DT_NonLocalOrigin)
 	SendPropVector(SENDINFO(m_vecOrigin), -1,  SPROP_COORD|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin),
 END_SEND_TABLE()
@@ -341,6 +353,7 @@ PRECACHE_REGISTER(player);
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFPlayerObserver )
 	SendPropFloat(SENDINFO(m_flNextClassSpecificSkill)),
+	SendPropFloat( SENDINFO( m_flJetpackFuel )),
 	SendPropFloat(SENDINFO(m_flTrueAimTime)),
 	SendPropFloat(SENDINFO(m_flHitTime)),
 	SendPropInt(SENDINFO(m_nButtons)),
@@ -362,9 +375,6 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropBool( SENDINFO( m_bStaticBuilding ) ),
 	SendPropBool( SENDINFO( m_bBuilding ) ),
 	SendPropInt( SENDINFO( m_iCurBuild ), 3, SPROP_UNSIGNED ),
-
-	// health/armor	
-	SendPropInt(SENDINFO( m_iArmorType ), 4, SPROP_UNSIGNED ),
 
 	// random player class 
 	SendPropBool( SENDINFO ( m_fRandomPC ) ),
@@ -400,6 +410,12 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropVector( SENDINFO( m_vecObjectiveOrigin ), SPROP_COORD ),
 END_SEND_TABLE( )
 
+BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFNonLocalPlayerExclusive )
+	// Send m_bJetpacking only to other players, so that the jetpacking client is its own authority for effects/sounds.
+	// This stops the jetpack sound playing twice when you have high ping.
+	SendPropBool( SENDINFO( m_bJetpacking ) ),
+END_SEND_TABLE()
+
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
 	SendPropExclude( "DT_BaseAnimating", "m_flPlaybackRate" ),	
@@ -417,9 +433,11 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 
 	// Data that only gets sent to the local player.
 	SendPropDataTable( "fflocaldata", 0, &REFERENCE_SEND_TABLE(DT_FFLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
+	// Data that only gets sent to the other players.
+	SendPropDataTable( "ffnonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_FFNonLocalPlayerExclusive), SendProxy_NonLocal ),
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
-	SendPropDataTable("fforigin", 0, &REFERENCE_SEND_TABLE(DT_NonLocalOrigin), SendProxy_NonLocalOrigin),
+	SendPropDataTable("fforigin", 0, &REFERENCE_SEND_TABLE(DT_NonLocalOrigin), SendProxy_NonLocal),
 #endif
 	
 	// Data that only gets sent to the player as well as observers of the player
@@ -521,13 +539,7 @@ CFFPlayer::CFFPlayer()
 	m_bWantToThrowGrenade = false;
 
 	// Status Effects
-	m_flNextBurnTick = 0.0;
-	m_iBurnTicks = 0;
-	m_flBurningDamage = 0.0;
-
-	m_bBurnFlagNG = false; // AfterShock - burning flags for multiplying flames and damage for combos!
-	m_bBurnFlagFT = false;
-	m_bBurnFlagIC = false;
+	m_iBurnLevel = 0;
 
 	m_bACDamageHint = true;  // For triggering the "Pyro takes damage from HWGuy" hint only once
 	m_bSGDamageHint = true;	 // For triggering the "Spy takes damage from SG while cloaked" hint only once
@@ -790,12 +802,7 @@ void CFFPlayer::PreThink(void)
 		SpyCloakFadeThink();
 	}
 
-	// Do we need to do a class specific skill?
-	if( m_afButtonPressed & IN_ATTACK2 )
-		ClassSpecificSkill();
-
-	else if (m_afButtonReleased & IN_ATTACK2)
-		ClassSpecificSkill_Post();
+	SharedPreThink();
 
 	if (m_iSabotagedSentries == 0)
 		m_iActiveSabotages &= ~2;
@@ -867,7 +874,6 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Player.bodysplat");
 	PrecacheScriptSound("Item.Toss");
 	PrecacheScriptSound("Player.Pain");
-	PrecacheScriptSound("Player.Scream");
 	PrecacheScriptSound("Player.Flameout");
 	PrecacheScriptSound("medical.saveme");
 	PrecacheScriptSound("maintenance.saveme");
@@ -1351,9 +1357,6 @@ void CFFPlayer::Spawn( void )
 
 	// First initalise a bunch of player data
 	m_pWhoTaggedMe		= NULL;
-	m_flNextBurnTick	= 0.0f;
-	m_iBurnTicks		= 0.0f;
-	m_flBurningDamage	= 0.0f;
 	m_fLastHealTick		= 0.0f;
 	m_fLastInfectedTick = 0.0f;
 	m_bInfected			= false;
@@ -1365,6 +1368,8 @@ void CFFPlayer::Spawn( void )
 	m_flSlidingTime		= 0.0f;
 	m_flSpeedModifier	= 1.0f;
 	m_flNextClassSpecificSkill = 0.0f;
+	m_flJetpackFuel		= 100.0f;
+	m_flJetpackNextFuelRechargeTime = 0.0f;
 	m_hActiveSlowfield	= NULL;
 	
 	m_flSpeedModifierOld		= 1.0f;
@@ -1635,7 +1640,6 @@ void CFFPlayer::SetupClassVariables()
 
 	m_bSpecialInfectedDeath = false;
 
-	m_flScreamTime = 0.0f;
 	m_flMancannonTime = 0.0f;
 	m_flMancannonDetTime = 0.0f;
 	// Reset Spy stuff
@@ -1672,8 +1676,6 @@ void CFFPlayer::SetupClassVariables()
 	m_iArmor		= pPlayerClassInfo.m_iInitialArmour;
 	m_iMaxArmor		= pPlayerClassInfo.m_iMaxArmour;
 	m_iArmorType	= pPlayerClassInfo.m_iArmourType;
-	m_iBaseArmorType = m_iArmorType;
-
 	m_flMaxspeed	= pPlayerClassInfo.m_iSpeed;
 	m_iPrimary		= pPlayerClassInfo.m_iPrimaryInitial;
 	m_iSecondary	= pPlayerClassInfo.m_iSecondaryInitial;
@@ -1961,14 +1963,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	WRITE_BYTE(FF_VIEWEFFECT_MAX);
 	MessageEnd();
 
-	// reset their status effects
-	m_flNextBurnTick = 0.0;
-	m_iBurnTicks = 0;
-	m_flBurningDamage = 0.0;
-	
-	m_bBurnFlagNG = false;
-	m_bBurnFlagIC = false;
-	m_bBurnFlagFT = false;
+	m_iBurnLevel = 0;
 
 	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 	{
@@ -3928,53 +3923,8 @@ void CFFPlayer::StatusEffectsThink( void )
 	}
 
 	// If we jump in water up to waist level, extinguish ourselves
-	if (m_iBurnTicks && GetWaterLevel() >= WL_Waist)
+	if (GetBurnLevel() > 0 && GetWaterLevel() >= WL_Waist)
 		Extinguish();
-
-	// if we're on fire, then do something about it
-	if (m_iBurnTicks && (m_flNextBurnTick < gpGlobals->curtime))
-	{
-		// EmitSound( "General.BurningFlesh" );	// |-- Mirv: Dunno it just sounds odd using the emp sound!
-
-		float damage = m_flBurningDamage / (float)m_iBurnTicks;
-
-		// do damage. If igniter is NULL lets just kill the fire, it
-		// means the guy has left the server and just makes bad stuff
-		// happen.
-		CFFPlayer *pIgniter = GetIgniter();
-		if( pIgniter )
-		{
-			CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
-
-			int iBurnLevel = 0;
-			if (m_bBurnFlagNG == true) 
-				++iBurnLevel;
-			if (m_bBurnFlagFT == true) 
-				++iBurnLevel;
-			if (m_bBurnFlagIC == true) 
-				++iBurnLevel;
-
-			switch(iBurnLevel)
-			{
-			case 1:info.SetCustomKill(KILLTYPE_BURN_LEVEL1);break;
-			case 2:info.SetCustomKill(KILLTYPE_BURN_LEVEL2);break;
-			case 3:info.SetCustomKill(KILLTYPE_BURN_LEVEL3);break;
-			}
-
-			TakeDamage( info );
-
-			// remove a tick
-			m_iBurnTicks--;
-			m_flBurningDamage -= damage;
-
-			// schedule the next tick
-			m_flNextBurnTick = gpGlobals->curtime + 1.25f;
-		}
-		else
-		{
-			Extinguish();
-		}		
-	}
 
 	// check if the player needs a little health/armor (because they are a medic/engy)
 	if ( IsAlive() ) // AfterShock: possible fix for medic crouch bug? Regen health the same tick you die?
@@ -4237,7 +4187,7 @@ bool CFFPlayer::LuaIsEffectActive( int iEffect )
 {
 	switch( iEffect )
 	{
-		case LUA_EF_ONFIRE: return ( m_iBurnTicks ? true : false ); break;
+		case LUA_EF_ONFIRE: return ( GetBurnLevel() > 0 ); break;
 		case LUA_EF_CONC: return IsConcussed(); break;
 		case LUA_EF_GAS: return IsGassed(); break;
 		case LUA_EF_INFECT: return IsInfected(); break;
@@ -4757,80 +4707,41 @@ bool CFFPlayer::Cure( CFFPlayer *pCurer )
 	return bCured;
 }
 
-// scale = damage per tick :: Scale currently ignored - use cvars for weapon damage!
-void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDuration, eBurnType BurnType)
+/*void CFFPlayer::RemoveStatusIcon(CSingleUserRecipientFilter user)
 {
-	// Okay, now pyros don't catch fire at all
-	if (GetClassSlot() == CLASS_PYRO)
+	UserMessageBegin(user, "StatusIconUpdate");
+		WRITE_BYTE( FF_STATUSICON_BURNING2 );
+		WRITE_FLOAT( 0.0f );
+	MessageEnd();
+}*/
+
+void CFFPlayer::IncreaseBurnLevel( int iAmount )
+{
+	if (GetClassSlot() == CLASS_PYRO) // Pyros dont catch fire
 	{
 		return;
 	}
 
-	// send the status icon to be displayed
+	int iOldBurnlevel = m_iBurnLevel;
+	m_iBurnLevel += iAmount;
+
 	CSingleUserRecipientFilter user( (CBasePlayer *)this );
 	user.MakeReliable();
 	
-	// set them on fire
-	if (!m_iBurnTicks)
-		m_flNextBurnTick = gpGlobals->curtime + BURN_TICK_INTERVAL;
-	// multiply damage left to burn by number of remaining ticks, then divide it out among the new 8 ticks
-	// This prevents damage being incorrectly multiplied - shok
-	// ignore this now - instead we use burn levels and simply reset the timer
-	
-	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
-	//m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
-
-	m_iBurnTicks = BURN_TICKS;
-	int oldburnlevel = 0;
-	if (m_bBurnFlagNG == true) 
-		++oldburnlevel;
-	if (m_bBurnFlagFT == true) 
-		++oldburnlevel;
-	if (m_bBurnFlagIC == true) 
-		++oldburnlevel;
-
-	switch (BurnType)
+	float flBurnTime = FFDEV_PYRO_BURNTIME; 
+	switch (GetClassSlot())
 	{
-		case BURNTYPE_NALPALMGRENADE: m_bBurnFlagNG = true; break;
-		case BURNTYPE_FLAMETHROWER: m_bBurnFlagFT = true; break;
-		case BURNTYPE_ICCANNON: m_bBurnFlagIC= true; break;
+		case CLASS_SCOUT:
+		case CLASS_MEDIC:
+		case CLASS_SPY:
+			flBurnTime *= 0.25; 
+			break;
 	}
-	
-	int newburnlevel = 0;
-	if (m_bBurnFlagNG == true) 
-		++newburnlevel;
-	if (m_bBurnFlagFT == true) 
-		++newburnlevel;
-	if (m_bBurnFlagIC == true) 
-		++newburnlevel;
-	
-	if(oldburnlevel != newburnlevel)
-		Omnibot::Notify_BurnLevel(this, hIgniter, newburnlevel);
 
-	// each weapons burn damage can only stack once. (else you set them on 999 fire with the FT)
-	/** Uncomment this to use different burn damages depending on the weapon - AfterShock
-	m_flBurningDamage = 0;
-	if (m_bBurnFlagNG) 
-		m_flBurningDamage += burn_damage_ng.GetFloat();
-	if (m_bBurnFlagFT)
-		m_flBurningDamage += burn_damage_ft.GetFloat();
-	if (m_bBurnFlagIC)
-		m_flBurningDamage += burn_damage_ic.GetFloat();
-	*/
-	// Else use this single value (from flamethrower) and multiply it by the burn multipliers
-	m_flBurningDamage = BURN_DAMAGE_BASE * newburnlevel;
-	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
-	
-	// if we're on fire from all 3 flame weapons, holy shit BURN! - shok
-	if (newburnlevel == 3)
+	// Tell the player they're on fire - status icons, sounds and flames
+	if (m_iBurnLevel > 200)
 	{
-		m_flBurningDamage *= BURN_MULTIPLIER_3BURNS;
-		if (gpGlobals->curtime > m_flScreamTime + 1.7f)
-		{
-			EmitSound("Player.Scream"); // haha
-			m_flScreamTime = gpGlobals->curtime;
-		}
-		if (oldburnlevel == 2) 
+		if (iOldBurnlevel <= 200) 
 		{
 			UserMessageBegin(user, "StatusIconUpdate");
 				WRITE_BYTE( FF_STATUSICON_BURNING2 );
@@ -4839,16 +4750,14 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		}
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING3 );
-			WRITE_FLOAT( flIconDuration );
+			WRITE_FLOAT( flBurnTime );
 		MessageEnd();
 
-		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN3, false );
+		Ignite( false, FFDEV_FLAMESIZE_BURN3, false, flBurnTime );
 	}
-	// if we're on fire from 2 flame weapons, burn a bit more
-	else if (newburnlevel == 2)
+	else if (m_iBurnLevel > 100)
 	{
-		m_flBurningDamage *= BURN_MULTIPLIER_2BURNS;
-		if (oldburnlevel == 1) 
+		if (iOldBurnlevel <= 100) 
 		{
 			UserMessageBegin(user, "StatusIconUpdate");
 				WRITE_BYTE( FF_STATUSICON_BURNING1 );
@@ -4857,42 +4766,20 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		}
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING2 );
-			WRITE_FLOAT( flIconDuration );
+			WRITE_FLOAT( flBurnTime );
 		MessageEnd();
 
-		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN2, false );
+		Ignite( false, FFDEV_FLAMESIZE_BURN2, false, flBurnTime );
 	}
 	else // burn level 1
 	{
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING1 );
-			WRITE_FLOAT( flIconDuration );
+			WRITE_FLOAT( flBurnTime );
 		MessageEnd();
 
-		Ignite( 10.0, false, FFDEV_FLAMESIZE_BURN1, false );
+		Ignite( false, FFDEV_FLAMESIZE_BURN1, false, flBurnTime );
 	}
-
-	DevMsg("Burn: %f",m_flBurningDamage);
-
-	m_BurnType = BurnType;
-
-	/*
-	this may cause less damage to happen..
-	implemented differently above - fryguy 
-
-	// --> Mirv: Pyros safer against fire
-	//	# 50% damage reduction when being hurt by fire.
-	//	# Once on fire, burn time reduced by 50%.
-	if (GetClassSlot() == CLASS_PYRO)
-	{
-	m_iBurnTicks *= 0.5f;
-	m_flBurningDamage *= 0.5f;
-	}
-	// <-- Mirv: Pyros safer against fire
-	*/
-
-	// set up the igniter
-	m_hIgniter = hIgniter;
 }
 
 // Toggle grenades (requested by defrag)
@@ -5283,6 +5170,23 @@ static float DamageForce( const Vector &size, float damage )
 	return force;
 }
 
+//----------------------------------------------------------------------------
+// Purpose: Calculate the bonus damage for the IC based on the players current burn level
+//----------------------------------------------------------------------------
+float CalculateBonusIcBurnDamage(int burnLevel)
+{
+	if (burnLevel <100)
+	{
+		return IC_BONUSDAMAGE_BURN1;
+	}
+	if (burnLevel <200)
+	{
+		return IC_BONUSDAMAGE_BURN2;
+	}
+
+	return IC_BONUSDAMAGE_BURN3;
+}
+
 int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
 	// have suit diagnose the problem - ie: report damage type
@@ -5371,6 +5275,27 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 					pAttacker->AddFortPoints(10,"#FF_FORTPOINTS_RADIOTAG");
 			}			
 		}
+
+		CFFProjectileBase *pProjectile = dynamic_cast<CFFProjectileBase *>( inputInfo.GetInflictor() );
+		if (pProjectile && pProjectile->Classify() == CLASS_IC_ROCKET)
+		{
+			if (GetBurnLevel() > 0)
+			{
+				CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
+				if( pAttacker )
+				{
+					float damage = CalculateBonusIcBurnDamage(GetBurnLevel());
+					TakeDamage(CTakeDamageInfo( this, pAttacker, damage /*IC_BONUSDAMAGE*/, DMG_BURN ) );
+					IncreaseBurnLevel(100);
+
+					CEffectData data;
+					data.m_vOrigin = GetAbsOrigin();
+					data.m_flScale = damage;
+					data.m_nEntIndex = entindex();
+					DispatchEffect("BonusFire", data);
+				}
+			}
+		}
 	}
 
 	// check to see if the shield should block this incoming damage
@@ -5405,14 +5330,11 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	//		pAttacker->AddFortPoints(10,true);
 	//}
 
-	// if it's a pyro, they take half damage
-	// AfterShock: pyros now take full damage. They can't be lit on fire tho, and thats a big enough differnce!
-	/*
-	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN )
+	// if it's a pyro shooting themself (i.e. the IC) they take less damage
+	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN && (info.GetInflictor() == this || info.GetAttacker() == this))
 	{
-		info.SetDamage(info.GetDamage()/1.3); //Instead of taking 50% damage, pyros now take 75% - AfterShock
+		info.SetDamage(info.GetDamage() * FFDEV_PYRO_IC_MULTIPLIER);
 	}
-	*/
 
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = info.GetDamage();
@@ -5629,21 +5551,6 @@ CFFPlayer *CFFPlayer::GetPlayerWhoTaggedMe( void )
 	if( m_pWhoTaggedMe != NULL )
 	{
 		CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
-		if( pEntity && pEntity->IsPlayer() )
-			return ToFFPlayer( pEntity );
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get the player who set us on fire!
-//-----------------------------------------------------------------------------
-CFFPlayer *CFFPlayer::GetIgniter( void )
-{
-	if( m_hIgniter != NULL )
-	{
-		CBaseEntity *pEntity = ( CBaseEntity * )m_hIgniter;
 		if( pEntity && pEntity->IsPlayer() )
 			return ToFFPlayer( pEntity );
 	}
@@ -5980,13 +5887,24 @@ void CFFPlayer::SetClassForClient( int classnum )
 	m_iClassStatus |= ( 0x0000000F & classnum );
 }
 
-void CFFPlayer::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
+void CFFPlayer::Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner, float flameLifetime )
 {
 	AddFlag( FL_ONFIRE );
 
-	SetFlameSpritesLifetime(flFlameLifetime, flSize);
+	SetFlameSpritesLifetime(flameLifetime, flSize); // NOTE: This calls Extinguish on the player when the CEntityFlame lifetime runs out
 
 	m_OnIgnite.FireOutput( this, this );
+}
+
+void CFFPlayer::Ignite( bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
+{
+	float flFlameLifetime = FFDEV_PYRO_BURNTIME;
+	if (GetClassSlot() == CLASS_MEDIC)
+	{
+		flFlameLifetime *= 0.5;
+	}
+
+	Ignite(bNPCOnly, flSize, bCalledByLevelDesigner, flFlameLifetime);
 }
 
 //-----------------------------------------------------------------------------
@@ -6022,10 +5940,10 @@ void CFFPlayer::Extinguish( void )
 		CSingleUserRecipientFilter user2( ( CBasePlayer * )this );
 		user2.MakeReliable();
 
-		UserMessageBegin( user2, "FFViewEffect" );
-			WRITE_BYTE( FF_VIEWEFFECT_BURNING );
-			WRITE_FLOAT( 0.0 );
-		MessageEnd();
+		//UserMessageBegin( user2, "FFViewEffect" );
+		//	WRITE_BYTE( FF_VIEWEFFECT_BURNING );
+		//	WRITE_FLOAT( 0.0 );
+		//MessageEnd();
 
 		// Play sound!
 		CSingleUserRecipientFilter hFilter( ( CBasePlayer * )this );
@@ -6033,16 +5951,11 @@ void CFFPlayer::Extinguish( void )
 	}
 
 	// Make sure these are turned off
-	m_iBurnTicks = 0;
-	m_flBurningDamage = 0;
-	m_bBurnFlagNG = false;
-	m_bBurnFlagIC = false;
-	m_bBurnFlagFT = false;
+	m_iBurnLevel = 0;
 	SetFlameSpritesLifetime( -1.0f );
 
 	StopSound( "General.BurningFlesh" );
 	StopSound( "General.BurningObject" );
-	//EmitSound( "General.StopBurning" );
 }
 
 //-----------------------------------------------------------------------------
@@ -7839,10 +7752,10 @@ void CFFPlayer::DamageEffect(float flDamage, int fDamageType)
 		CSingleUserRecipientFilter user(this);
 		user.MakeReliable();
 
-		UserMessageBegin(user, "FFViewEffect");
-		WRITE_BYTE(FF_VIEWEFFECT_BURNING);
-		WRITE_BYTE(min(30.0f * flDamage, 255));
-		MessageEnd();
+		//UserMessageBegin(user, "FFViewEffect");
+		//WRITE_BYTE(FF_VIEWEFFECT_BURNING);
+		//WRITE_BYTE(min(30.0f * flDamage, 255));
+		//MessageEnd();
 
 		ViewPunch(QAngle(random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f)));
 	}
@@ -7893,8 +7806,6 @@ void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime, float flFlameSize)
 			pFlame = CEntityFlame::Create(this, true, flFlameSize); // make a brand new bigger flame
 			SetEffectEntity(pFlame);
 		}
-			
-
 	}
 
 	Assert(pFlame);

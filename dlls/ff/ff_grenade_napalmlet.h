@@ -17,16 +17,8 @@
 	#define CFFGrenadeNapalmlet C_FFGrenadeNapalmlet
 #endif
 
-#ifdef GAME_DLL
-	#include "ff_player.h"
-	#include "ff_buildableobjects_shared.h"
-	//#include "baseentity.h"
-	//#include "ff_entity_system.h"
-	//#include "te_effect_dispatch.h"
-
-	//extern short g_sModelIndexFireball;
-	//extern short g_sModelIndexWExplosion;
-#endif
+#include "ff_player.h"
+#include "ff_buildableobjects_shared.h"
 
 //=============================================================================
 //
@@ -39,34 +31,19 @@ public:
 	DECLARE_CLASS( CFFGrenadeNapalmlet, CBaseAnimating );
 	void Precache();
 
-
-	CFFGrenadeNapalmlet( void ){m_flBurnTime = gpGlobals->curtime + 5.0f; m_flLastBurnCheck = 0; m_flBurnDamage = 15; /*m_bFlameSwitch = true;*/}
+	CFFGrenadeNapalmlet( void ){m_flBurnTime = gpGlobals->curtime + 5.0f;}
 	void UpdateOnRemove( void );
 
 	void Spawn();
-	void SetBurnRadius( float burnRadius ){ m_flBurnRadius = burnRadius;  }
 	void SetBurnTime( float burnTime ){ m_flBurnTime = gpGlobals->curtime + burnTime; if (m_pFlame) m_pFlame->SetLifetime( m_flBurnTime );}
-	void SetBurnDamage( float burnDamage ){ m_flBurnDamage = burnDamage; }
-
 	
 	void ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
 	void FlameThink(void);
 	DECLARE_DATADESC();
 private:
 	float m_flBurnTime;
-	float m_flLastBurnCheck;
-	float m_flBurnRadius;
-	float m_flBurnDamage;
-	//bool m_bFlameSwitch;
 	CEntityFlame *m_pFlame;
+	int CalculateBonusBurnDamage(int burnLevel);
 };
-
-//#ifdef GAME_DLL
-//	BEGIN_DATADESC(CFFGrenadeNapalmlet)
-//		DEFINE_THINKFUNC( FlameThink ),
-//	END_DATADESC()
-//#endif
-
-
 
 #endif

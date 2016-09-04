@@ -22,6 +22,7 @@
 #include "Sprite.h"
 #include "ff_fx_infection.h"
 #include "ff_fx_immunity.h"
+#include "ff_fx_jetpack.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_radiotagdata.h"
 #include "model_types.h"
@@ -237,11 +238,15 @@ public:
 	bool IsImmune( void ) const		{ return m_bImmune; }
 	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter1;
 	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter2;
+	
+	bool IsJetpacking( void ) const		{ return m_bJetpacking; }
+	CSmartPtr< CJetpackEmitter >	m_pJetpackEmitter;
 private:
 	bool m_bInfected;
 	bool m_bImmune;
 	int m_iActiveSabotages;
 	int m_iSpyDisguising;
+	bool m_bJetpacking;
 // Called by shared code.
 	// for HUD ammo pickup history
 	int m_iOldPrimary;
@@ -297,12 +302,9 @@ public:
 
 	// ---> added by billdoor
 public:
-	CNetworkVar( int, m_iArmorType);
 	CNetworkVar( bool, m_fRandomPC );
 	
 	int NeedsArmor( void ) const { return GetMaxArmor() - GetArmor(); }
-
-	int GetArmorType() const { return m_iArmorType; };
 	// ---> end
 
 	// ---> Jiggles: Tracks priming times for hint logic
@@ -389,12 +391,6 @@ public:
 	// 0000818: Grenade timer not playing on second of double primes
 	float m_flLastServerPrimeTime;
 
-	// Beg: Added by FryGuy for status effect stuff
-	CNetworkVar(float, m_flNextBurnTick);   // when the next burn tick should fire
-	CNetworkVar(int, m_iBurnTicks);         // how many more ticks are left to fire
-	CNetworkVar(float, m_flBurningDamage);  // how much total damage is left to take
-	// End: Added by FryGuy
-
 	// --> Mirv: Map guide stuff
 	CNetworkHandle( CFFMapGuide, m_hNextMapGuide );
 	CNetworkHandle( CFFMapGuide, m_hLastMapGuide );
@@ -405,7 +401,6 @@ public:
 	// --> Mirv: Conc stuff
 	float m_flConcTime;
 	QAngle m_angConced, m_angConcedTest;
-
 	
 	CNetworkVar( float, m_flTrueAimTime );
 	CNetworkVar( float, m_flHitTime );
@@ -424,10 +419,13 @@ public:
 	int GetClassSlot( void ) const;
 
 	void ClassSpecificSkill();
+	void ClassSpecificSkillHold();
 	void ClassSpecificSkill_Post();
 	// <-- Mirv: Hold some class info on the player side
 
 	CNetworkVar( float, m_flNextClassSpecificSkill );
+	CNetworkVar( float, m_flJetpackFuel );
+	float m_flJetpackNextFuelRechargeTime;
 
 	int	  m_iSpawnInterpCounter;
 	int	  m_iSpawnInterpCounterCache;
@@ -533,6 +531,7 @@ protected:
 public:
 	bool IsSliding( void ) const { return m_bSliding; }
 	float m_flSlidingTime;
+
 protected:
 	bool m_bSliding;
 	// ----------------------------------
@@ -572,6 +571,10 @@ private:
     // Overpressure stuff
 public:
 	void Overpressure( void );
+	bool CanJetpack( void );
+	void JetpackHold( void );
+	void JetpackRechargeThink( void );
+	void SharedPreThink( void );
 	// ----------------------------------
 	
 	// ----------------------------------

@@ -33,11 +33,11 @@
 #endif
 
 //ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_FF_FFDEV_REPLICATED, "Flame bbox");
-#define FLAME_BBOX 24.0f
+#define FLAME_BBOX 16.0f
 //ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "17.5", FCVAR_FF_FFDEV_REPLICATED, "Force of backwards push when shooting while off ground");
-#define FLAME_PUSHFORCE 17.5f
+#define FLAME_PUSHFORCE 0.0f
 //ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "110.0", FCVAR_FF_FFDEV_REPLICATED, "Force of upwards push when shooting while off ground");
-#define FLAME_UPPUSHFORCE 110.0f
+#define FLAME_UPPUSHFORCE 0.0f
 //ConVar ffdev_flame_boostcap("ffdev_flame_boostcap", "850.0", FCVAR_FF_FFDEV_REPLICATED, "Speed at which the flamethrower will stop boosting you");
 #define FLAME_BOOSTCAP 850.0f
 
@@ -45,6 +45,16 @@
 	//ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_FF_FFDEV, "Show flame trace");
 	#define FLAME_SHOWTRACE false
 	//ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "18", FCVAR_FF_FFDEV );
+	ConVar ffdev_flame_burnamount("ffdev_flame_burnamount", "20.0", FCVAR_FF_FFDEV_REPLICATED, "Amount to increase burn level of player by, per hit from flamethrower (100 is 1 burn level)");
+	#define FFDEV_FLAMETHROWER_BURNAMOUNT ffdev_flame_burnamount.GetFloat()
+	
+	ConVar ffdev_flamethrower_bonusdamage_burn1("ffdev_flamethrower_bonusdamage_burn1", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN1 ffdev_flamethrower_bonusdamage_burn1.GetInt()
+	ConVar ffdev_flamethrower_bonusdamage_burn2("ffdev_flamethrower_bonusdamage_burn2", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN2 ffdev_flamethrower_bonusdamage_burn2.GetInt()
+	ConVar ffdev_flamethrower_bonusdamage_burn3("ffdev_flamethrower_bonusdamage_burn3", "4", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN3 ffdev_flamethrower_bonusdamage_burn3.GetInt()
+
 #endif
 
 //=============================================================================
@@ -70,6 +80,10 @@ public:
 
 	void EmitFlames(bool bEmit);
 	void Cleanup( void );
+
+#ifdef GAME_DLL
+	int CalculateBonusBurnDamage( int iBurnLevel );
+#endif
 
 	virtual ~CFFWeaponFlamethrower();
 
@@ -150,6 +164,25 @@ void CFFWeaponFlamethrower::Cleanup( void )
 #endif
 }
 
+#ifdef GAME_DLL
+//----------------------------------------------------------------------------
+// Purpose: Calculate the bonus damage for the flamethrower based on the players current burn level
+//----------------------------------------------------------------------------
+int CFFWeaponFlamethrower::CalculateBonusBurnDamage(int burnLevel)
+{
+	if (burnLevel <100)
+	{
+		return FT_BONUSDAMAGE_BURN1;
+	}
+	if (burnLevel <200)
+	{
+		return FT_BONUSDAMAGE_BURN2;
+	}
+
+	return FT_BONUSDAMAGE_BURN3;
+}
+#endif
+
 //----------------------------------------------------------------------------
 // Purpose: Turns on the flame stream, creates it if it doesn't yet exist
 //----------------------------------------------------------------------------
@@ -199,7 +232,7 @@ void CFFWeaponFlamethrower::Fire()
 	// 320 is about how far the flames are drawn on the client
 	// 0.4f is the time taken to reach end of flame jet
 	// EDIT: Both are 20% longer now
-	Vector vecEnd = vecStart + ( vecForward * 320.0f ) - GetAbsVelocity() * 0.4f;
+	Vector vecEnd = vecStart + ( vecForward * 350.0f ) - GetAbsVelocity() * 0.4f;
 
 	// Visualise trace
 	if (FLAME_SHOWTRACE)
@@ -250,9 +283,11 @@ void CFFWeaponFlamethrower::Fire()
 				if (traceHit.m_pEnt->IsPlayer() && ( pTarget->GetWaterLevel() < 3 ) )
 				{
 					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+					
+					int damage = GetFFWpnData().m_iDamage + CalculateBonusBurnDamage(pPlayerTarget->GetBurnLevel());
 
-					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
-					pPlayerTarget->ApplyBurning( pPlayer, 0.5f, 10.0f, BURNTYPE_FLAMETHROWER);
+					pPlayerTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, damage, DMG_BURN ) );
+					pPlayerTarget->IncreaseBurnLevel( FFDEV_FLAMETHROWER_BURNAMOUNT );
 				}
 				// TODO: Check water level for dispensers & sentryguns!
 				else if( FF_IsDispenser( pTarget ) )

@@ -165,12 +165,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	//ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_FF_FFDEV_REPLICATED);
 	#define NODAMAGEPUSH_MULTIPLIER 0.80f
 	//ConVar push_clamp("ffdev_pushclamp", "450", FCVAR_FF_FFDEV_REPLICATED);
-	#define PUSH_CLAMP 450
-
-	// AfterShock - increase IC self damage to reduce number of jumps you can do
-	//ConVar ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier", "1.8", FCVAR_FF_FFDEV_REPLICATED);
-	#define IC_SELFDAMAGEMULTIPLIER 1.8f
-	
+	#define PUSH_CLAMP 450	
 #endif
 
 //ConVar ffdev_engi_build_expl_reduce("ffdev_engi_build_expl_reduce", "0.75", FCVAR_FF_FFDEV_REPLICATED);
@@ -1278,6 +1273,11 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 		{
 			flDmg *= 0.5f;
 		}
+
+		if (pFFPlayer->IsJetpacking())
+		{
+			flDmg *= 0.75f;
+		}
 		
 		return flDmg;
 	} 
@@ -1580,11 +1580,6 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 
 		CBaseEntity *pInflictor = info.GetInflictor();
 		bool bIsInflictorABuildable = dynamic_cast <CFFBuildableObject *> (pInflictor) != NULL;
-
-		if (pInflictor && pInflictor->Classify() == CLASS_IC_ROCKET && pVictim == info.GetAttacker())
-		{
-			flAdjustedDamage *= IC_SELFDAMAGEMULTIPLIER;
-		}
 
 		// In TFC players only do 2/3 damage to themselves
 		// This also affects forces by the same amount
