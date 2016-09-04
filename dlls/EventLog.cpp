@@ -121,17 +121,20 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 	}
 	else if ( !Q_strncmp( eventName, "player_death", Q_strlen("player_death") ) )
 	{
-		const int attackerid = event->GetInt("attacker" );
+		const int attackerid = event->GetInt( "attacker" );
 
+		const int assisterid = event->GetInt( "killassister" );
 //#ifdef HL2MP
 		const char *weapon = event->GetString( "weapon" );
-		int damagetype = event->GetInt("damagetype");
+		int damagetype = event->GetInt( "damagetype");
 //#endif
 		
 		CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
 		CTeam *team = pPlayer->GetTeam();
 		CTeam *attackerTeam = NULL;
 		
+		CBasePlayer *pAssister = assisterid > -1 ? UTIL_PlayerByUserId( assisterid ) : NULL;
+
 		if ( pAttacker )
 		{
 			attackerTeam = pAttacker->GetTeam();
@@ -146,7 +149,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 							pPlayer->GetNetworkIDString(),
 							team ? team->GetName() : "",
 							weapon
-							);
+							);			
 /*#else
 			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" committed suicide with \"%s\"\n",  
 							pPlayer->GetPlayerName(),
@@ -174,6 +177,23 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 							weapon,
 							damagetype & DMG_AIRSHOT ? " (modifier \"airshot\")" : ""
 							);
+
+			if (pAssister)
+			{
+				// NOTE: i put the teaminfo in here, in case we ever switch around assists for friendly fire, etc
+				CTeam *assisterTeam = pAssister->GetTeam();
+				// copy pasta
+				UTIL_LogPrintf("\"%s<%i><%s><%s>\" assisted in killing \"%s<%i><%s><%s>\"\n",
+					pAssister->GetPlayerName(),
+					assisterid,
+					pAssister->GetNetworkIDString(),
+					assisterTeam ? assisterTeam->GetName() : "",
+					pPlayer->GetPlayerName(),
+					userid,
+					pPlayer->GetNetworkIDString(),
+					team ? team->GetName() : "");
+			}
+
 /*#else
 			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed \"%s<%i><%s><%s>\"\n",  
 							pAttacker->GetPlayerName(),

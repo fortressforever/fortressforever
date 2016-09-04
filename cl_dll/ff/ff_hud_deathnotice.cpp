@@ -44,6 +44,7 @@ struct DeathNoticeItem
 {
 	DeathNoticePlayer	Killer;
 	DeathNoticePlayer   Victim;
+	DeathNoticePlayer   Assister;
 	CHudTexture *iconDeath; // draws before victims name
 	CHudTexture *iconBuildable; // draws after victim name, if it exists
 	CHudTexture *iconObjective; // draws before "victims" name
@@ -264,10 +265,9 @@ void CHudDeathNotice::Paint()
 		}
 		else
 		{
-
-			wchar_t victim[ 256 ];
+			wchar_t victim[ 256 ];			
 			wchar_t killer[ 256 ];
-
+		
 			// Get the team numbers for the players involved
 			int iKillerTeam = 0;
 			int iVictimTeam = 0;
@@ -279,8 +279,21 @@ void CHudDeathNotice::Paint()
 			}
 
 			vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Victim.szName, victim, sizeof( victim ) );
-			vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Killer.szName, killer, sizeof( killer ) );
+			
+			if ( m_DeathNotices[i].Assister.iEntIndex != -1 )
+			{
+				// if we have an assist with the kill, stick it in killer name right away
+				// alignment below uses killer string length for alignment
 
+				// might be a better way to do this?
+				char concatbuff[512];
+				Q_snprintf( concatbuff, sizeof( concatbuff ), "%s + %s", m_DeathNotices[i].Killer.szName, m_DeathNotices[i].Assister.szName );
+				vgui::localize()->ConvertANSIToUnicode( concatbuff, killer, sizeof( killer ) );
+			}
+			else 
+			{
+				vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Killer.szName, killer, sizeof( killer ) );
+			}
 			//bool bSelfKill = ( (  == GR_TEAMMATE ) && ( m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex ) );
 
 			// Get the local position for this notice
@@ -321,7 +334,6 @@ void CHudDeathNotice::Paint()
 					iconModifierTall = (int)( scale * (float)iconModifier->Height() );
 				}
 			}
-
 
 			int iconBuildableWide = 0;
 			int iconBuildableTall = 0;
@@ -386,6 +398,7 @@ void CHudDeathNotice::Paint()
 				surface()->DrawSetTextPos( x, y );
 				surface()->DrawSetTextFont( m_hTextFont );
 				surface()->DrawUnicodeString( killer );
+				
 				surface()->DrawGetTextPos( x, y );
 
 				x += 5;	// |-- Mirv: 5px gap
@@ -650,7 +663,22 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		else
 			deathMsg.iconBuildable = NULL;
 		
+		// old suicide logic:
 		deathMsg.iSuicide = ( !killer || ( ( killer == victim ) && ( !bBuildableKilled ) ) );
+
+		deathMsg.Assister.iEntIndex = -1;
+		int killassisterIdx = event->GetInt( "killassister", -1 );
+		if (killassisterIdx != -1)
+		{
+			//C_BaseEntity* pEnt = cl_entitylist->GetEnt( killassisterIdx );
+			//C_FFPlayer *pFFPlayer = ToFFPlayer( pEnt );
+			//if ( !pFFPlayer )
+			Q_strcpy( deathMsg.Assister.szName, g_PR->GetPlayerName( killassisterIdx ) );
+			deathMsg.Assister.iEntIndex = killassisterIdx;
+		}
+
+		// only consider suicide if there was no kill assist
+		//deathMsg.iSuicide = deathMsg.Assister.iEntIndex == -1 && ( !killer || ( ( killer == victim ) && ( !bBuildableKilled ) ) );
 
 		// 0000336: If we have a Detpack...
 		// NOTE: may need these changes for the SG and Dispenser in order for the death status icons to work right
@@ -740,11 +768,21 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		{
 			if ( !strcmp( fullkilledwith, "d_worldspawn" ) )
 			{
-				Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s died.\n", deathMsg.Victim.szName );
+				Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s died", deathMsg.Victim.szName );
 			}
 			else	//d_world
 			{
-				Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s suicided.\n", deathMsg.Victim.szName );
+				Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s suicided", deathMsg.Victim.szName );
+			}
+
+			if ( deathMsg.Assister.iEntIndex != -1 )
+			{
+				Q_strncat( sDeathMsg, VarArgs( ", assisted by %s.\n", deathMsg.Assister.szName ), sizeof ( sDeathMsg ), COPY_ALL_CHARACTERS );
+			}
+			else
+			{
+				// we still need to add new lien to msg
+				Q_strncat( sDeathMsg, ".\n", sizeof ( sDeathMsg ), COPY_ALL_CHARACTERS );
 			}
 		}
 		else
@@ -753,8 +791,19 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 			if ( fullkilledwith && *fullkilledwith && (*fullkilledwith > 13 ) )
 			{
-				Q_strncat( sDeathMsg, VarArgs( " with %s%s.\n", fullkilledwith+6, (bitsDamageType & DMG_AIRSHOT ? " (airshot)" : "") ), sizeof( sDeathMsg ), COPY_ALL_CHARACTERS );
+				Q_strncat( sDeathMsg, VarArgs( " with %s%s", fullkilledwith+6, (bitsDamageType & DMG_AIRSHOT ? " (airshot)" : "") ), sizeof( sDeathMsg ), COPY_ALL_CHARACTERS );
 			}
+
+			if ( deathMsg.Assister.iEntIndex != -1 )
+			{
+				Q_strncat( sDeathMsg, VarArgs( ", assisted by %s.\n", deathMsg.Assister.szName ), sizeof ( sDeathMsg ), COPY_ALL_CHARACTERS );
+			}
+			else
+			{
+				// we still need to add new lien to msg
+				Q_strncat( sDeathMsg, ".\n", sizeof ( sDeathMsg ), COPY_ALL_CHARACTERS );
+			}
+
 		}
 
 		// play the killbeep

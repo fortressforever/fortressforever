@@ -111,6 +111,9 @@ ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.45", FCV
 //ConVar ffdev_changeclass_graceperiod( "ffdev_changeclass_graceperiod", "", "5", FCVAR_CHEATS | FCVAR_NOTIFY, "You can only change class once per grace period without getting a 5 second respawn delay" );
 #define CHANGECLASS_GRACEPERIOD 5.0f
 
+// only consider people who attacked in the last this many millisecs for kill assists
+#define MAX_ASSIST_TIME_MS 5000
+
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 #define FFDEV_INFECT_FREQ 2.0f
@@ -619,6 +622,7 @@ CFFPlayer::CFFPlayer()
 
 	m_SpawnPointOverride = 0;
 
+	m_recentAttackers.Purge();
 	//m_iStatsID = -1;
 
 #endif // FF_BETA_TEST_COMPILE
@@ -1710,6 +1714,9 @@ void CFFPlayer::SetupClassVariables()
 	}
 
 	ClearSpeedEffects();
+
+	// clear recent attacker (kill assist) info
+	m_recentAttackers.Purge();
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1719,6 +1726,9 @@ void CFFPlayer::InitialSpawn( void )
 	// Make sure they are dead
 	m_lifeState = LIFE_DEAD;
 	pl.deadflag = true;
+
+	// clear recent attacker (kill assist) info
+	m_recentAttackers.Purge();
 
 	m_Locations.Purge();
 	m_iClientLocation = 0;
@@ -2859,6 +2869,9 @@ void CFFPlayer::Command_Team( void )
 		_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 	}
 	
+	// drop my damage contributions on any assists right away
+	RemoveMeFromKillAssists();
+
 	ChangeTeam(iTeam);
 
 	// Bug #0001686: Possible to spectate outside of spectator mode
@@ -5477,6 +5490,10 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		pAttacker->m_flHitTime = gpGlobals->curtime;
 	}
 
+	// update assist tracking. NOTE: no kill assists for buildables. who cares
+	// NOTE: change this to the copy, info to use effectively armor scaled dmg values
+	AddRecentAttacker( inputInfo );
+	
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
 
@@ -7920,3 +7937,118 @@ void CFFPlayer::UpdateCamera( bool bUnassigned )
 		}				
 	}
 }
+
+// purpose: update our vector of recent attackers for kill assists
+void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
+{
+	// make sure to get the effective scorer incase dmg is from
+	// a buildable - det, sg, dispenser, probably nades etc	
+	CFFPlayer *pAttacker = ToFFPlayer( FFGameRules()->GetDeathScorer( dmgInfo.GetAttacker(), dmgInfo.GetInflictor() ) );
+
+	// dont track our own client in recent attacks, otherwise we would show up as an assist when the world kills us & suicides
+	// note: world dmg comes in as null here.
+	if ( !pAttacker || pAttacker == this )
+		return;
+
+	int attackerIdx = pAttacker->entindex( );
+	float dmg = dmgInfo.GetDamage( );
+	float timestamp = gpGlobals->curtime;
+
+	// search for existing or create new
+	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
+	{
+		if ( m_recentAttackers[i].playerIndex == attackerIdx || pAttacker == m_recentAttackers[i].pFFPlayer )
+		{
+			m_recentAttackers[i].totalDamage += dmg;
+			m_recentAttackers[i].timestamp = timestamp;
+			DevMsg( "CFFPlayer::AddRecentAttacker1: totalDamage = %f\n", m_recentAttackers[i].totalDamage );
+			return;
+		}
+	}
+
+	// if we didnt find a match, create & add new
+	m_recentAttackers.AddToTail( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
+}
+
+// returns assisted attacker that did most damage within the last MAX_ASSIST_TIME_MS or NULL if nothing found
+RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
+{
+	// oops: world kills will come in null
+	bool killedByWorld = killerToIgnore == NULL;
+	const char* killerName = killedByWorld ? "world" : killerToIgnore->GetPlayerName( );
+	//DevMsg( "CFFPlayer::GetTopKillAssister0: %s killer='%s'\n", GetPlayerName( ), killerName );
+
+	RecentAttackerInfo* ret = NULL;
+
+	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
+	{
+		CFFPlayer* pFFAssister = m_recentAttackers[i].pFFPlayer;
+		// this shouldnt happen, but you know
+		if ( pFFAssister == NULL )
+		{
+			continue;
+		}
+
+		// if this was a suicide and we are killerToIgnore, we dont have to check here
+		// because previous logic prevents adding ourselves to the assist list
+		bool isKiller = !killedByWorld && pFFAssister == killerToIgnore;
+
+		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_MS ago, ignore
+		// if its the killer, dont report also as an assist
+		if ( gpGlobals->curtime - m_recentAttackers[i].timestamp > MAX_ASSIST_TIME_MS || isKiller )
+		{
+			continue;
+		}
+
+		// this also shouldnt happen, but sanity check. if the player is a spec, ignore em
+		if ( pFFAssister->GetTeamNumber() < TEAM_BLUE )
+		{
+			continue;
+		}
+
+		if ( !ret || m_recentAttackers[i].totalDamage > ret->totalDamage )
+		{	
+			ret = &m_recentAttackers[i];
+			// consider in case of exact tie, take newest timestamp attacker here
+		}
+	}
+
+	return ret;
+}
+
+void CFFPlayer::RemoveMeFromKillAssists( ) 
+{
+	// im disconnecting or switching teams or something, so 
+	// remove my contributions from assists. we can revisit this 
+	// if its too aggressive for eg, team switch and then having assist come through friendly fire
+
+	// if coming from spec or whatever, dont do anything because we couldnt have possibly damaged anything
+	// we are called before team is changed, so we don't have to worry about switching TO spec
+	// removed this check for now, lets just always remove our assist dmgs
+	// https://github.com/fortressforever/fortressforever/pull/288#discussion_r71942743
+	// if( GetTeamNumber() < TEAM_BLUE )
+	//	return;
+
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pFFPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
+
+		if ( !pFFPlayer )
+			continue;
+
+		// skip ourselves, self dmg is not added to dmg table
+		if ( pFFPlayer == this )
+			continue;
+
+		for ( int i = 0; i < pFFPlayer->m_recentAttackers.Count(); ++i )
+		{
+			if ( pFFPlayer->m_recentAttackers[i].pFFPlayer == this )
+			{
+				// remove right away. this would screw up indexing for future loops, but 
+				// in reality we should only be in this list once for each player
+				pFFPlayer->m_recentAttackers.Remove( i );
+				break;
+			}
+		}
+	}
+}	

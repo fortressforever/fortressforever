@@ -27,7 +27,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_iArmor), RecvPropInt( RECVINFO(m_iArmor[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iClass), RecvPropInt( RECVINFO(m_iClass[0]))), // |-- Mirv: Current class
 	RecvPropArray3( RECVINFO_ARRAY(m_iChannel), RecvPropInt( RECVINFO(m_iChannel[0]))), // |-- Mirv: Channel information
-
+	RecvPropArray3( RECVINFO_ARRAY(m_iAssists), RecvPropInt( RECVINFO(m_iAssists[0]) ) ),
 	RecvPropBool(RECVINFO(m_bIsIntermission)),
 
 END_RECV_TABLE()
@@ -55,6 +55,8 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_iClass, 0, sizeof( m_iClass ) );	// |-- Mirv: Current class
 
 	memset( m_iChannel, 0, sizeof( m_iChannel ) ); // |-- Mirv: Channel information
+
+	memset ( m_iAssists, 0, sizeof( m_iAssists ) );
 
 	for ( int i=0; i<MAX_TEAMS; i++ )
 	{
@@ -398,3 +400,14 @@ bool Client_IsIntermission()
 	return pr->m_bIsIntermission;
 }
 #endif
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int	C_PlayerResource::GetAssists( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_iAssists[iIndex];
+}

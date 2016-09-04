@@ -530,6 +530,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		m_pPlayerList->AddColumnToSection( iSection, "fortpoints" , "#FF_PlayerFortPoints" , 0, scheme()->GetProportionalScaledValue( FORTPOINTS_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "score" , "#FF_PlayerScore" , 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths" , "#FF_PlayerDeath" , 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "assists" , "#FF_PlayerAssist" , 0, scheme()->GetProportionalScaledValue( ASSIST_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping" , "#FF_PlayerPing" , 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "voice" , "#FF_PlayerVoice" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, scheme( )->GetProportionalScaledValue( VOICE_WIDTH ) );
 		//m_pPlayerList->AddColumnToSection( iSection, "channel" , "#FF_PlayerChannel" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ CHANNEL_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
@@ -543,6 +544,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		m_pPlayerList->AddColumnToSection( iSection, "fortpoints", "", 0, scheme()->GetProportionalScaledValue( FORTPOINTS_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "assists", "", 0, scheme()->GetProportionalScaledValue( ASSIST_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
 
 		// --> Mirv: Voice and channel images
@@ -561,6 +563,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		m_pPlayerList->AddColumnToSection( iSection, "fortpoints", "", 0, scheme()->GetProportionalScaledValue( FORTPOINTS_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "assists", "", 0, scheme()->GetProportionalScaledValue( ASSIST_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
 
 		iRetval = TEAM_SPECTATOR;
@@ -574,6 +577,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		m_pPlayerList->AddColumnToSection( iSection, "fortpoints", "", 0, scheme()->GetProportionalScaledValue( FORTPOINTS_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "assists", "", 0, scheme()->GetProportionalScaledValue( ASSIST_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
 
 		iRetval = TEAM_UNASSIGNED;
@@ -753,6 +757,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 	kv->SetInt( "score", pGR->GetFrags( playerIndex ) );
 	kv->SetInt( "ping", pGR->GetPing( playerIndex ) ) ;
 	kv->SetString( "name", pGR->GetPlayerName( playerIndex ) );
+	kv->SetInt( "assists", pGR->GetAssists( playerIndex ) );
 
 	if( bFriendly )
 		kv->SetString( "class", szClassName[ pGR->GetClass( playerIndex ) ] ); 	// |-- Mirv: Current class

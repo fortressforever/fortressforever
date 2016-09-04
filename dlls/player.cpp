@@ -315,6 +315,8 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_iFortPoints, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iDeaths, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flNextDecalTime, FIELD_TIME ),
+	DEFINE_FIELD( m_iAssists, FIELD_INTEGER ),
+
 	//DEFINE_AUTO_ARRAY( m_szTeamName, FIELD_STRING ), // mp
 
 	//DEFINE_FIELD( m_iConnected, FIELD_INTEGER ),
@@ -552,6 +554,8 @@ CBasePlayer::CBasePlayer( )
 	// -1 = just joined map/need to force spawn once team/class have been chosen
 	// 0 - x = respawn delay (like when typing "kill" in the console)
 	m_flNextSpawnDelay = -1.0f;
+
+	ResetAsisstsCount();
 }
 
 CBasePlayer::~CBasePlayer( )
@@ -2913,6 +2917,16 @@ void CBasePlayer::IncrementFortPointsCount( int nCount )
 	m_iFortPoints = min(m_iFortPoints, 9999999);	// |-- Mirv: Added to placate the trepids
 
 	//pl.fortpoints = m_iFortPoints;
+}
+
+void CBasePlayer::ResetAsisstsCount()
+{
+	m_iAssists = 0;
+}
+
+void CBasePlayer::IncrementAssistsCount( int nCount ) 
+{
+	m_iAssists += nCount;
 }
 
 void CBasePlayer::ResetDeathCount()

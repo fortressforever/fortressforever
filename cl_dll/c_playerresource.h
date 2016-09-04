@@ -52,6 +52,7 @@ public : // IGameResources intreface
 	virtual int		GetFortPoints( int index );
 	virtual int		GetHealth( int index );
 	virtual int		GetArmor( int index );
+	virtual int		GetAssists( int index );
 
 	// --> Mirv: Extra's needed for menus
 	virtual int		GetClass( int index );
@@ -76,7 +77,7 @@ protected:
 	Color	m_Colors[MAX_TEAMS];
 	int		m_iClass[MAX_PLAYERS+1];	// |-- Mirv: Current class
 	int		m_iChannel[MAX_PLAYERS+1];	// |-- Mirv: For voice channels
-
+	int		m_iAssists[MAX_PLAYERS+1];
 public:
 	bool	m_bIsIntermission;
 };
