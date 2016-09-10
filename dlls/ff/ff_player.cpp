@@ -7933,8 +7933,6 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 {
 	// oops: world kills will come in null
 	bool killedByWorld = killerToIgnore == NULL;
-	const char* killerName = killedByWorld ? "world" : killerToIgnore->GetPlayerName( );
-	//DevMsg( "CFFPlayer::GetTopKillAssister0: %s killer='%s'\n", GetPlayerName( ), killerName );
 
 	RecentAttackerInfo* ret = NULL;
 
