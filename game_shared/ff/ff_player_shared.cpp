@@ -117,25 +117,22 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 //ConVar ffdev_overpressure_friendlyignore( "ffdev_overpressure_friendlyignore", "0", FCVAR_FF_FFDEV_REPLICATED );
 #define OVERPRESSURE_IGNOREFRIENDLY false //ffdev_overpressure_friendlyignore.GetBool()
 
-ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_HORIZONTALPUSH_CAP ffdev_jetpack_horizontalpush_cap.GetFloat()
-ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT ffdev_jetpack_verticalpush_downwardslimit.GetFloat()
+//ConVar ffdev_jetpack_horizontalpush_cap("ffdev_jetpack_horizontalpush_cap", "1000", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_HORIZONTALPUSH_CAP 1000.0f // ffdev_jetpack_horizontalpush_cap.GetFloat()
+//ConVar ffdev_jetpack_verticalpush_downwardslimit("ffdev_jetpack_verticalpush_downwardslimit", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define FFDEV_JETPACK_VERTICALPUSH_DOWNWARDSLIMIT 1.0f //ffdev_jetpack_verticalpush_downwardslimit.GetFloat()
 
-ConVar ffdev_jetpack_hoveronground("ffdev_jetpack_hoveronground", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define FFDEV_JETPACK_HOVERONGROUND ffdev_jetpack_hoveronground.GetBool()
+//ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_VERTICALPUSH_OFFGROUND 10.0f //ffdev_jetpack_verticalpush_offground.GetFloat()
+//ConVar ffdev_jetpack_verticalpush_offground_downscale("ffdev_jetpack_verticalpush_offground_downscale", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE 0.1f //ffdev_jetpack_verticalpush_offground_downscale.GetFloat()
+//ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_HORIZONTALPUSH_OFFGROUND 2.0f //ffdev_jetpack_horizontalpush_offground.GetFloat()
 
-ConVar ffdev_jetpack_verticalpush_offground("ffdev_jetpack_verticalpush_offground", "10", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_VERTICALPUSH_OFFGROUND ffdev_jetpack_verticalpush_offground.GetFloat()
-ConVar ffdev_jetpack_verticalpush_offground_downscale("ffdev_jetpack_verticalpush_offground_downscale", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_VERTICALPUSH_OFFGROUND_DOWNSCALE ffdev_jetpack_verticalpush_offground_downscale.GetFloat()
-ConVar ffdev_jetpack_horizontalpush_offground("ffdev_jetpack_horizontalpush_offground", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_HORIZONTALPUSH_OFFGROUND ffdev_jetpack_horizontalpush_offground.GetFloat()
-
-ConVar ffdev_jetpack_fuelrechargetime("ffdev_jetpack_fuelrechargetime", "0.08", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_FUELRECHARGETIME ffdev_jetpack_fuelrechargetime.GetFloat()
-ConVar ffdev_jetpack_fuelhovercost("ffdev_jetpack_fuelhovercost", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_FUELHOVERCOST ffdev_jetpack_fuelhovercost.GetFloat()
+//ConVar ffdev_jetpack_fuelrechargetime("ffdev_jetpack_fuelrechargetime", "0.08", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_FUELRECHARGETIME 0.08f //ffdev_jetpack_fuelrechargetime.GetFloat()
+//ConVar ffdev_jetpack_fuelhovercost("ffdev_jetpack_fuelhovercost", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define JETPACK_FUELHOVERCOST 0.5f //ffdev_jetpack_fuelhovercost.GetFloat()
 
 //ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_BULLETSIZE 1.0f //ffdev_ac_bulletsize.GetFloat()
@@ -1842,7 +1839,7 @@ bool CFFPlayer::CanJetpack()
 		return false;
 	}
 
-	if ((GetFlags() & FL_ONGROUND) && !FFDEV_JETPACK_HOVERONGROUND)
+	if (GetFlags() & FL_ONGROUND) // no jetpacking on ground
 	{
 		return false;
 	}

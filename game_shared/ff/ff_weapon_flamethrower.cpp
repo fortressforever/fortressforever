@@ -34,26 +34,20 @@
 
 //ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_FF_FFDEV_REPLICATED, "Flame bbox");
 #define FLAME_BBOX 16.0f
-//ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "17.5", FCVAR_FF_FFDEV_REPLICATED, "Force of backwards push when shooting while off ground");
-#define FLAME_PUSHFORCE 0.0f
-//ConVar ffdev_flame_uppushforce("ffdev_flame_uppushforce", "110.0", FCVAR_FF_FFDEV_REPLICATED, "Force of upwards push when shooting while off ground");
-#define FLAME_UPPUSHFORCE 0.0f
-//ConVar ffdev_flame_boostcap("ffdev_flame_boostcap", "850.0", FCVAR_FF_FFDEV_REPLICATED, "Speed at which the flamethrower will stop boosting you");
-#define FLAME_BOOSTCAP 850.0f
 
 #ifdef GAME_DLL
 	//ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_FF_FFDEV, "Show flame trace");
 	#define FLAME_SHOWTRACE false
 	//ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "18", FCVAR_FF_FFDEV );
-	ConVar ffdev_flame_burnamount("ffdev_flame_burnamount", "20.0", FCVAR_FF_FFDEV_REPLICATED, "Amount to increase burn level of player by, per hit from flamethrower (100 is 1 burn level)");
-	#define FFDEV_FLAMETHROWER_BURNAMOUNT ffdev_flame_burnamount.GetFloat()
+	//ConVar ffdev_flame_burnamount("ffdev_flame_burnamount", "20.0", FCVAR_FF_FFDEV_REPLICATED, "Amount to increase burn level of player by, per hit from flamethrower (100 is 1 burn level)");
+	#define FFDEV_FLAMETHROWER_BURNAMOUNT 20 //ffdev_flame_burnamount.GetFloat()
 	
-	ConVar ffdev_flamethrower_bonusdamage_burn1("ffdev_flamethrower_bonusdamage_burn1", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
-	#define FT_BONUSDAMAGE_BURN1 ffdev_flamethrower_bonusdamage_burn1.GetInt()
-	ConVar ffdev_flamethrower_bonusdamage_burn2("ffdev_flamethrower_bonusdamage_burn2", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
-	#define FT_BONUSDAMAGE_BURN2 ffdev_flamethrower_bonusdamage_burn2.GetInt()
-	ConVar ffdev_flamethrower_bonusdamage_burn3("ffdev_flamethrower_bonusdamage_burn3", "4", FCVAR_REPLICATED | FCVAR_CHEAT);
-	#define FT_BONUSDAMAGE_BURN3 ffdev_flamethrower_bonusdamage_burn3.GetInt()
+	//ConVar ffdev_flamethrower_bonusdamage_burn1("ffdev_flamethrower_bonusdamage_burn1", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN1 0 //ffdev_flamethrower_bonusdamage_burn1.GetInt()
+	//ConVar ffdev_flamethrower_bonusdamage_burn2("ffdev_flamethrower_bonusdamage_burn2", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN2 2 //ffdev_flamethrower_bonusdamage_burn2.GetInt()
+	//ConVar ffdev_flamethrower_bonusdamage_burn3("ffdev_flamethrower_bonusdamage_burn3", "4", FCVAR_REPLICATED | FCVAR_CHEAT);
+	#define FT_BONUSDAMAGE_BURN3 4 //ffdev_flamethrower_bonusdamage_burn3.GetInt()
 
 #endif
 
@@ -195,25 +189,7 @@ void CFFWeaponFlamethrower::Fire()
 
 	// Normalize, or we get that weird epsilon assert
 	VectorNormalizeFast( vecForward );
-
-	float flCapSqr = FLAME_BOOSTCAP * FLAME_BOOSTCAP;
-
-	// Push them backwards if in air
-	if (!pPlayer->GetGroundEntity() && pPlayer->GetAbsVelocity().LengthSqr() < flCapSqr)
-	{
-		pPlayer->ApplyAbsVelocityImpulse(vecForward * -FLAME_PUSHFORCE);
-		pPlayer->ApplyAbsVelocityImpulse(vecForward * Vector(1,1, -FLAME_UPPUSHFORCE) );
-	}
 	Vector vecShootPos = pPlayer->Weapon_ShootPosition();
-
-	/*
-	IRecipientFilter& filter, float delay,
-	const Vector* org, int r, int g, int b, int exponent, float radius, float time, float decay
-	*/
-	/*
-	CBroadcastRecipientFilter filter;
-	te->DynamicLight( filter, 0.0f, &vecShootPos, 255, 255, 255, 3, 256, 0.1f, gpGlobals->curtime + 0.05f );
-	*/
 
 #ifdef GAME_DLL	
 

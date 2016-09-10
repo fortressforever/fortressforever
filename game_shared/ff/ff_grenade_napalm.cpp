@@ -25,10 +25,10 @@
 	//ConVar nap_burn_damage("ffdev_nap_burn_damage","15.0",FCVAR_FF_FFDEV,"How much damage being in the radius of a napalm grenade deals.");
 	#define NAP_BURN_DAMAGE 15.0f
 
-	ConVar ffdev_nap_distance_min("ffdev_nap_distance_min","250.0",FCVAR_FF_FFDEV,"Min launch velocity of a napalmlet.");
-	#define FFDEV_NAP_DISTANCE_MIN ffdev_nap_distance_min.GetFloat() //250.0f
-	ConVar ffdev_nap_distance_max("ffdev_nap_distance_max","250.0",FCVAR_FF_FFDEV,"Max launch velocity of a napalmlet.");
-	#define FFDEV_NAP_DISTANCE_MAX ffdev_nap_distance_max.GetFloat() // 350.0f
+	//ConVar ffdev_nap_distance_min("ffdev_nap_distance_min","250.0",FCVAR_FF_FFDEV,"Min launch velocity of a napalmlet.");
+	#define FFDEV_NAP_DISTANCE_MIN 250.0f //ffdev_nap_distance_min.GetFloat() //250.0f
+	//ConVar ffdev_nap_distance_max("ffdev_nap_distance_max","250.0",FCVAR_FF_FFDEV,"Max launch velocity of a napalmlet.");
+	#define FFDEV_NAP_DISTANCE_MAX 250.0f //ffdev_nap_distance_max.GetFloat() // 350.0f
 
 	#include "EntityFlame.h"
 	#include "ff_grenade_napalmlet.h"

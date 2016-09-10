@@ -6,23 +6,23 @@
 
 #include "ff_player.h"
 
-ConVar ffdev_nap_bonusdamage_burn1("ffdev_nap_bonusdamage_burn1", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define NAP_BONUSDAMAGE_BURN1 ffdev_nap_bonusdamage_burn1.GetInt()
-ConVar ffdev_nap_bonusdamage_burn2("ffdev_nap_bonusdamage_burn2", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define NAP_BONUSDAMAGE_BURN2 ffdev_nap_bonusdamage_burn2.GetInt()
-ConVar ffdev_nap_bonusdamage_burn3("ffdev_nap_bonusdamage_burn3", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define NAP_BONUSDAMAGE_BURN3 ffdev_nap_bonusdamage_burn3.GetInt()
+//ConVar ffdev_nap_bonusdamage_burn1("ffdev_nap_bonusdamage_burn1", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN1 0 //ffdev_nap_bonusdamage_burn1.GetInt()
+//ConVar ffdev_nap_bonusdamage_burn2("ffdev_nap_bonusdamage_burn2", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN2 1 //ffdev_nap_bonusdamage_burn2.GetInt()
+//ConVar ffdev_nap_bonusdamage_burn3("ffdev_nap_bonusdamage_burn3", "2", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define NAP_BONUSDAMAGE_BURN3 2 //ffdev_nap_bonusdamage_burn3.GetInt()
 
 //ConVar burn_standon_ng("ffdev_burn_standon_ng", "7.0", 0, "Damage you take when standing on a burning napalmlet");
-ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "30.0", 0, "Napalmlet flame size");
-#define FFDEV_NAP_FLAMESIZE ffdev_nap_flamesize.GetFloat() // 50.0f
-ConVar nap_burn_radius("ffdev_nap_burn_radius","70.0",FCVAR_FF_FFDEV,"Burn radius of a napalmlet.");
-#define NAP_BURN_RADIUS nap_burn_radius.GetFloat() //98.0f
+//ConVar ffdev_nap_flamesize("ffdev_nap_flamesize", "30.0", 0, "Napalmlet flame size");
+#define FFDEV_NAP_FLAMESIZE 30.0f //ffdev_nap_flamesize.GetFloat() // 50.0f
+//ConVar nap_burn_radius("ffdev_nap_burn_radius","70.0",FCVAR_FF_FFDEV,"Burn radius of a napalmlet.");
+#define NAP_BURN_RADIUS 70.0f //nap_burn_radius.GetFloat() //98.0f
 
-ConVar ffdev_nap_burnamount("ffdev_nap_burnamount", "10.0", 0, "Napalmlet burn increase per tick, 100 is a full burn level");
-#define FFDEV_NAPALM_BURNAMOUNT ffdev_nap_burnamount.GetFloat() // 50.0f
-ConVar ffdev_nap_height("ffdev_nap_height", "70.0", 0, "Napalmlet maximum burn height above the ground");
-#define FFDEV_NAP_HEIGHT ffdev_nap_height.GetFloat() // 50.0f
+//ConVar ffdev_nap_burnamount("ffdev_nap_burnamount", "10.0", 0, "Napalmlet burn increase per tick, 100 is a full burn level");
+#define FFDEV_NAPALM_BURNAMOUNT 10.0f //ffdev_nap_burnamount.GetFloat() // 50.0f
+//ConVar ffdev_nap_height("ffdev_nap_height", "70.0", 0, "Napalmlet maximum burn height above the ground");
+#define FFDEV_NAP_HEIGHT 70.0f //ffdev_nap_height.GetFloat() // 50.0f
 
 #define BURN_STANDON_NG 2
 

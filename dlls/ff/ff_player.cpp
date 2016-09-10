@@ -60,18 +60,8 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 #define GREN_SPAWN_ANG_X 18.5f
 //ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");
 
-//ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
-//ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
-//ConVar burn_damage_ft("ffdev_burn_damage_ft","15.0",0,"Burn damage of the Flamethrower (per tick)");
-#define BURN_DAMAGE_BASE 13.0f
-
-//ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","5",0,"Burn damage multiplier for all 3 burn types.");
-#define BURN_MULTIPLIER_3BURNS 5.0f
-//ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
-#define BURN_MULTIPLIER_2BURNS 2.0f
-
-ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
-#define FFDEV_PYRO_BURNTIME ffdev_pyro_burntime.GetFloat()
+//ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATED, "Time the flamethrower lights someone for");
+#define FFDEV_PYRO_BURNTIME 5.0f //ffdev_pyro_burntime.GetFloat()
 
 //ConVar ffdev_flamesize_burn1("ffdev_flamesize_burn1","0.015", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 1");
 #define FFDEV_FLAMESIZE_BURN1 0.025f //ffdev_flamesize_burn1.GetFloat()
@@ -80,17 +70,17 @@ ConVar ffdev_pyro_burntime("ffdev_pyro_burntime","5.0", FCVAR_FF_FFDEV_REPLICATE
 //ConVar ffdev_flamesize_burn3("ffdev_flamesize_burn3","0.055", FCVAR_FF_FFDEV_REPLICATED, "flame size multiplier for burn level 3");
 #define FFDEV_FLAMESIZE_BURN3 0.040f //ffdev_flamesize_burn3.GetFloat()
 
-ConVar ffdev_ic_bonusdamage_burn1("ffdev_ic_bonusdamage_burn1", "20", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define IC_BONUSDAMAGE_BURN1 ffdev_ic_bonusdamage_burn1.GetFloat()
+//ConVar ffdev_ic_bonusdamage_burn1("ffdev_ic_bonusdamage_burn1", "20", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN1 20 //ffdev_ic_bonusdamage_burn1.GetFloat()
 
-ConVar ffdev_ic_bonusdamage_burn2("ffdev_ic_bonusdamage_burn2", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define IC_BONUSDAMAGE_BURN2 ffdev_ic_bonusdamage_burn2.GetFloat()
+//ConVar ffdev_ic_bonusdamage_burn2("ffdev_ic_bonusdamage_burn2", "30", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN2 30 //ffdev_ic_bonusdamage_burn2.GetFloat()
 
-ConVar ffdev_ic_bonusdamage_burn3("ffdev_ic_bonusdamage_burn3", "40", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define IC_BONUSDAMAGE_BURN3 ffdev_ic_bonusdamage_burn3.GetFloat()
+//ConVar ffdev_ic_bonusdamage_burn3("ffdev_ic_bonusdamage_burn3", "40", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define IC_BONUSDAMAGE_BURN3 40 //ffdev_ic_bonusdamage_burn3.GetFloat()
 
-ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.45", FCVAR_FF_FFDEV_REPLICATED, "Self damage multipler for IC jumping");
-#define FFDEV_PYRO_IC_MULTIPLIER ffdev_ic_selfdamagemultiplier.GetFloat()
+//ConVar ffdev_ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier","0.45", FCVAR_FF_FFDEV_REPLICATED, "Self damage multipler for IC jumping");
+#define FFDEV_PYRO_IC_SELFDAMAGE_MULTIPLIER 0.45 //ffdev_ic_selfdamagemultiplier.GetFloat()
 
 // [integer] Max distance a player can be from us to be shown
 //static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
@@ -5250,19 +5240,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	{
 		// We need to apply the force first (since you should move a bit when damage is reduced)
 		ApplyAbsVelocityImpulse( info.GetDamageForce() );
-	}	
-
-	// Don't need this anymore due to Olah's new stuff!
-	//entsys.SetVar("info_damage", info.GetDamage());
-	//entsys.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
-	//entsys.SetVar("info_classname", info.GetInflictor()->GetClassname());
-    //CFFPlayer *player = ToFFPlayer(info.GetInflictor());
-    //if (player)
-    //{
-      //  CBaseCombatWeapon *weapon = player->GetActiveWeapon();
-        //if (weapon)
-		//	entsys.SetVar("info_classname", weapon->GetName());
-	//}
+	}
 
 	// go take the damage first
 	if ( !g_pGameRules->FCanTakeDamage( this, info.GetAttacker() ) )
@@ -5310,25 +5288,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 			}
 		}
 	}
-
-	// check to see if the shield should block this incoming damage
-
-		//Example code for how to use dot product to find angle between things -GreenMushy
-		//// get the displacement between the players
-		//Vector vDisplacement = pTarget->GetAbsOrigin() - pPlayer->GetAbsOrigin();
-		//vDisplacement.z = 0;
-		//vDisplacement.NormalizeInPlace();
-
-		//// get the direction the target is facing
-		//Vector vFacing;
-		//AngleVectors(pTarget->GetLocalAngles(), &vFacing);
-		//vFacing.z = 0;
-		//vFacing.NormalizeInPlace();
-
-		//// see if they are facing the same direction
-		//float angle = vFacing.Dot(vDisplacement);
-		//if (angle > ffdev_knife_backstab_angle.GetFloat() )
-		//{
 	
 	//// tag the player if hit by radio tag ammo 
 	//if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
@@ -5346,7 +5305,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// if it's a pyro shooting themself (i.e. the IC) they take less damage
 	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN && (info.GetInflictor() == this || info.GetAttacker() == this))
 	{
-		info.SetDamage(info.GetDamage() * FFDEV_PYRO_IC_MULTIPLIER);
+		info.SetDamage(info.GetDamage() * FFDEV_PYRO_IC_SELFDAMAGE_MULTIPLIER);
 	}
 
 	// keep track of amount of damage last sustained
@@ -5402,7 +5361,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// AfterShock - Reset sabotage timer on getting shot
 	SpyStopSabotaging();
 
-// COMMENTED - NOT READY YET (not fully tested)
 	// AfterShock: slow the player depending on how much damage they took, down to a minimum of standard run speed - mostly useful for slowing bhoppers and concers
 
 	// get damage that they took
