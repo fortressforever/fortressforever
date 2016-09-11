@@ -101,8 +101,8 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 //ConVar ffdev_changeclass_graceperiod( "ffdev_changeclass_graceperiod", "", "5", FCVAR_CHEATS | FCVAR_NOTIFY, "You can only change class once per grace period without getting a 5 second respawn delay" );
 #define CHANGECLASS_GRACEPERIOD 5.0f
 
-// only consider people who attacked in the last this many millisecs for kill assists
-#define MAX_ASSIST_TIME_MS 5000
+// only consider people who attacked in the last this many seconds for kill assists
+#define MAX_ASSIST_TIME_SECS 5
 
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
@@ -7909,14 +7909,13 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 	if ( !pAttacker || pAttacker == this )
 		return;
 
-	int attackerIdx = pAttacker->entindex( );
 	float dmg = dmgInfo.GetDamage( );
 	float timestamp = gpGlobals->curtime;
 
 	// search for existing or create new
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
-		if ( m_recentAttackers[i].playerIndex == attackerIdx || pAttacker == m_recentAttackers[i].pFFPlayer )
+		if ( pAttacker == m_recentAttackers[i].hPlayer )
 		{
 			m_recentAttackers[i].totalDamage += dmg;
 			m_recentAttackers[i].timestamp = timestamp;
@@ -7926,10 +7925,10 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 	}
 
 	// if we didnt find a match, create & add new
-	m_recentAttackers.AddToTail( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
+	m_recentAttackers.AddToTail( RecentAttackerInfo( pAttacker, dmg, timestamp ) );
 }
 
-// returns assisted attacker that did most damage within the last MAX_ASSIST_TIME_MS or NULL if nothing found
+// returns assisted attacker that did most damage within the last MAX_ASSIST_TIME_SECS or NULL if nothing found
 RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 {
 	// oops: world kills will come in null
@@ -7939,7 +7938,7 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
-		CFFPlayer* pFFAssister = m_recentAttackers[i].pFFPlayer;
+		CFFPlayer* pFFAssister = m_recentAttackers[i].hPlayer.Get();
 		// this shouldnt happen, but you know
 		if ( pFFAssister == NULL )
 		{
@@ -7950,9 +7949,9 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 		// because previous logic prevents adding ourselves to the assist list
 		bool isKiller = !killedByWorld && pFFAssister == killerToIgnore;
 
-		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_MS ago, ignore
+		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_SECS ago, ignore
 		// if its the killer, dont report also as an assist
-		if ( gpGlobals->curtime - m_recentAttackers[i].timestamp > MAX_ASSIST_TIME_MS || isKiller )
+		if ( gpGlobals->curtime - m_recentAttackers[i].timestamp >= MAX_ASSIST_TIME_SECS || isKiller )
 		{
 			continue;
 		}
@@ -7999,7 +7998,7 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 
 		for ( int i = 0; i < pFFPlayer->m_recentAttackers.Count(); ++i )
 		{
-			if ( pFFPlayer->m_recentAttackers[i].pFFPlayer == this )
+			if ( pFFPlayer->m_recentAttackers[i].hPlayer == this )
 			{
 				// remove right away. this would screw up indexing for future loops, but 
 				// in reality we should only be in this list once for each player

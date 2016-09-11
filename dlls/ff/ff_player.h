@@ -102,18 +102,15 @@ struct LocationInfo
 // add a simple way to keep track of recent attackers (by player owner for buildables) for assists
 struct RecentAttackerInfo
 {
-	int playerIndex;
+	CHandle<CFFPlayer> hPlayer;
 	float totalDamage; // note: before armor scale. dont really care. just tracks raw damage received
 	float timestamp;
 
-	CFFPlayer *pFFPlayer;
-
-	RecentAttackerInfo( int idx, float dmg, float ts, CFFPlayer *pPlayer)
+	RecentAttackerInfo(CFFPlayer *pPlayer, float dmg, float ts)
 	{
-		playerIndex = idx;
+		hPlayer = pPlayer;
 		totalDamage = dmg;
 		timestamp = ts;
-		pFFPlayer = pPlayer;
 	}
 
 	/* debugging
