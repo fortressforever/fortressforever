@@ -31,6 +31,9 @@ ConVar cl_spec_killbeep( "cl_spec_killbeep", "1", FCVAR_ARCHIVE, "Determines whe
 extern ConVar cl_killbeepwav;
 
 #define MAX_OBJECTIVE_TEXT_LENGTH 48
+#define DEATHNOTICE_ASSIST_SEPARATOR L" + " // this is a widechar string constant
+#define DEATHNOTICE_COLOR_DEFAULT Color( 255, 80, 0, 255 )
+#define DEATHNOTICE_COLOR_TEAMKILL Color(0, 185, 0, 250)
 
 // Player entries in a death notice
 struct DeathNoticePlayer
@@ -188,7 +191,6 @@ void CHudDeathNotice::Paint()
 	surface()->DrawSetTextFont( m_hTextFont );
 	surface()->DrawSetTextColor( GameResources()->GetTeamColor( 0 ) );
 
-
 	int iCount = m_DeathNotices.Count();
 	for ( int i = 0; i < iCount; i++ )
 	{
@@ -204,7 +206,7 @@ void CHudDeathNotice::Paint()
 			if (!icon)
 				continue;
 
-			wchar_t victim[ 256 ];
+			wchar_t victim[ MAX_PLAYER_NAME_LENGTH ];
 			wchar_t objectivetext[ 256 ];
 			int iVictimTeam = 0;
 
@@ -217,7 +219,7 @@ void CHudDeathNotice::Paint()
 			vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].objectiveText, objectivetext, sizeof( objectivetext ) );
 			
 			// Get the local position for this notice
-			int len = UTIL_ComputeStringWidth( m_hTextFont, victim ) + UTIL_ComputeStringWidth( m_hTextFont, objectivetext ) + 5;
+			int victimStringWidth = UTIL_ComputeStringWidth( m_hTextFont, victim ) + UTIL_ComputeStringWidth( m_hTextFont, objectivetext ) + 5;
 			int y = yStart + (m_flLineHeight * i);
 
 			int iconWide;
@@ -238,7 +240,7 @@ void CHudDeathNotice::Paint()
 			int x;
 			if ( m_bRightJustify )
 			{
-				x =	GetWide() - len - iconWide - 5;
+				x =	GetWide() - victimStringWidth - iconWide - 5;
 			}
 			else
 			{
@@ -251,7 +253,7 @@ void CHudDeathNotice::Paint()
 			// <--
 			
 			int x_start = x - 5;
-			int x_end = x + iconWide + 5 + len + 10;
+			int x_end = x + iconWide + 5 + victimStringWidth + 10;
 			int y_start = y - (iconTall / 4) - 3;
 			int y_end = y + iconTall/2 + 6;
 
@@ -259,12 +261,10 @@ void CHudDeathNotice::Paint()
 				DrawHighlightBackground(x_start, y_start, x_end, y_end);
 			else
 				DrawObjectiveBackground(x_start, y_start, x_end, y_end);
-
-			Color iconColor( 255, 80, 0, 255 );
 			
 			// Draw death weapon
 			//If we're using a font char, this will ignore iconTall and iconWide
-			icon->DrawSelf( x, y - (iconTall / 4), iconWide, iconTall, iconColor );
+			icon->DrawSelf( x, y - (iconTall / 4), iconWide, iconTall, DEATHNOTICE_COLOR_DEFAULT );
 			x += iconWide + 5;		// |-- Mirv: 5px gap
 
 			SetColorForNoticePlayer( iVictimTeam );
@@ -287,40 +287,37 @@ void CHudDeathNotice::Paint()
 		}
 		else
 		{
-			wchar_t victim[ 256 ];			
-			wchar_t killer[ 256 ];
+			bool hasAssister = m_DeathNotices[i].Assister.iEntIndex != -1;
+			wchar_t victim[ MAX_PLAYER_NAME_LENGTH ];
+			wchar_t killer[ MAX_PLAYER_NAME_LENGTH ];
+			wchar_t assister[ MAX_PLAYER_NAME_LENGTH ];
 		
 			// Get the team numbers for the players involved
 			int iKillerTeam = 0;
 			int iVictimTeam = 0;
+			int iAssisterTeam = 0;
 
 			if( g_PR )
 			{
 				iKillerTeam = g_PR->GetTeam( m_DeathNotices[i].Killer.iEntIndex );
 				iVictimTeam = g_PR->GetTeam( m_DeathNotices[i].Victim.iEntIndex );
+				iAssisterTeam = g_PR->GetTeam( m_DeathNotices[i].Assister.iEntIndex );
 			}
 
 			vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Victim.szName, victim, sizeof( victim ) );
+			vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Killer.szName, killer, sizeof( killer ) );
 			
-			if ( m_DeathNotices[i].Assister.iEntIndex != -1 )
+			if ( hasAssister )
 			{
-				// if we have an assist with the kill, stick it in killer name right away
-				// alignment below uses killer string length for alignment
-
-				// might be a better way to do this?
-				char concatbuff[512];
-				Q_snprintf( concatbuff, sizeof( concatbuff ), "%s + %s", m_DeathNotices[i].Killer.szName, m_DeathNotices[i].Assister.szName );
-				vgui::localize()->ConvertANSIToUnicode( concatbuff, killer, sizeof( killer ) );
+				vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Assister.szName, assister, sizeof( assister ) );
 			}
-			else 
-			{
-				vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Killer.szName, killer, sizeof( killer ) );
-			}
-			//bool bSelfKill = ( (  == GR_TEAMMATE ) && ( m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex ) );
 
 			// Get the local position for this notice
-			int len = UTIL_ComputeStringWidth( m_hTextFont, victim );
-			int len2 = UTIL_ComputeStringWidth( m_hTextFont, killer );
+			int victimStringWidth = UTIL_ComputeStringWidth( m_hTextFont, victim );
+			int killerStringWidth = UTIL_ComputeStringWidth( m_hTextFont, killer );
+			int assistSeparatorStringWidth = hasAssister ? UTIL_ComputeStringWidth( m_hTextFont, DEATHNOTICE_ASSIST_SEPARATOR ) : 0;
+			int assisterStringWidth = hasAssister ? UTIL_ComputeStringWidth( m_hTextFont, assister ) : 0;
+			int killerAndAssisterStringWidth = killerStringWidth + assistSeparatorStringWidth + assisterStringWidth;
 			int y = yStart + (m_flLineHeight * i);
 
 			int iconWide;
@@ -380,7 +377,7 @@ void CHudDeathNotice::Paint()
 			int x;
 			if ( m_bRightJustify )
 			{
-				x =	GetWide() - len - iconWide - 5;
+				x =	GetWide() - victimStringWidth - iconWide - 5;
 
 				// keep moving over for buildable icon
 				x -= iconBuildableWide ? iconBuildableWide + 5 : 0;
@@ -400,8 +397,8 @@ void CHudDeathNotice::Paint()
 			
 			if (hud_deathnotice_highlightself.GetBool() && selfInvolved)
 			{
-				int x_start = (m_DeathNotices[i].iSuicide) ? x - 5 : x - len2 - 5;
-				int x_end = x + 5 + iconWide + 5 + len + 5 + ((iconBuildableWide) ? iconBuildableWide + 5 : 0) + ((iconModifierWide) ? iconModifierWide + 5 : 0);
+				int x_start = (m_DeathNotices[i].iSuicide) ? x - 5 : x - killerAndAssisterStringWidth - 5;
+				int x_end = x + 5 + iconWide + 5 + victimStringWidth + 5 + ((iconBuildableWide) ? iconBuildableWide + 5 : 0) + ((iconModifierWide) ? iconModifierWide + 5 : 0);
 				int y_start = y - (iconTall / 4) - 3;
 				int y_end = y + iconTall/2 + 6;
 				DrawHighlightBackground(x_start, y_start, x_end, y_end);
@@ -412,22 +409,29 @@ void CHudDeathNotice::Paint()
 			{
 				if ( m_bRightJustify )
 				{
-					x -= UTIL_ComputeStringWidth( m_hTextFont, killer );
+					x -= killerAndAssisterStringWidth;
 				}
-
-				SetColorForNoticePlayer( iKillerTeam );
 
 				// Draw killer's name
 				surface()->DrawSetTextPos( x, y );
 				surface()->DrawSetTextFont( m_hTextFont );
+
+				SetColorForNoticePlayer( iKillerTeam );
 				surface()->DrawUnicodeString( killer );
-				
+
+				if (hasAssister)
+				{
+					surface()->DrawSetTextColor( DEATHNOTICE_COLOR_DEFAULT );
+					surface()->DrawUnicodeString( DEATHNOTICE_ASSIST_SEPARATOR );
+					
+					SetColorForNoticePlayer( iAssisterTeam );
+					surface()->DrawUnicodeString( assister );
+				}
+
 				surface()->DrawGetTextPos( x, y );
 
 				x += 5;	// |-- Mirv: 5px gap
 			}
-			Color iconTeamKillColor(0, 185, 0 , 250);
-			Color iconColor( 255, 80, 0, 255 );
 			
 			// Don't include self kills when determining if teamkill
 			//bool bTeamKill = (iKillerTeam == iVictimTeam && m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex);
@@ -435,13 +439,13 @@ void CHudDeathNotice::Paint()
 			
 			// Draw death weapon
 			//If we're using a font char, this will ignore iconTall and iconWide
-			icon->DrawSelf( x, y - (iconTall / 4), iconWide, iconTall, bTeamKill ? iconTeamKillColor : iconColor );
+			icon->DrawSelf( x, y - (iconTall / 4), iconWide, iconTall, bTeamKill ? DEATHNOTICE_COLOR_TEAMKILL : DEATHNOTICE_COLOR_DEFAULT );
 			x += iconWide + 5;		// |-- Mirv: 5px gap
 			
 			// draw the death modifier icon
 			if (iconModifier)
 			{
-				iconModifier->DrawSelf( x, y - (iconModifierTall / 4), iconModifierWide, iconModifierTall, bTeamKill ? iconTeamKillColor : iconColor );
+				iconModifier->DrawSelf( x, y - (iconModifierTall / 4), iconModifierWide, iconModifierTall, bTeamKill ? DEATHNOTICE_COLOR_TEAMKILL : DEATHNOTICE_COLOR_DEFAULT );
 				x += iconModifierWide + 5;		// |-- Mirv: 5px gap
 			}
 
