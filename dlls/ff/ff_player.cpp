@@ -7908,14 +7908,13 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 	if ( !pAttacker || pAttacker == this )
 		return;
 
-	int attackerIdx = pAttacker->entindex( );
 	float dmg = dmgInfo.GetDamage( );
 	float timestamp = gpGlobals->curtime;
 
 	// search for existing or create new
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
-		if ( m_recentAttackers[i].playerIndex == attackerIdx || pAttacker == m_recentAttackers[i].pFFPlayer )
+		if ( pAttacker == m_recentAttackers[i].hPlayer )
 		{
 			m_recentAttackers[i].totalDamage += dmg;
 			m_recentAttackers[i].timestamp = timestamp;
@@ -7925,7 +7924,7 @@ void CFFPlayer::AddRecentAttacker( const CTakeDamageInfo &dmgInfo )
 	}
 
 	// if we didnt find a match, create & add new
-	m_recentAttackers.AddToTail( RecentAttackerInfo( attackerIdx, dmg, timestamp, pAttacker ) );
+	m_recentAttackers.AddToTail( RecentAttackerInfo( pAttacker, dmg, timestamp ) );
 }
 
 // returns assisted attacker that did most damage within the last MAX_ASSIST_TIME_MS or NULL if nothing found
@@ -7938,7 +7937,7 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 
 	for ( int i = 0; i < m_recentAttackers.Count( ); ++i )
 	{
-		CFFPlayer* pFFAssister = m_recentAttackers[i].pFFPlayer;
+		CFFPlayer* pFFAssister = m_recentAttackers[i].hPlayer.Get();
 		// this shouldnt happen, but you know
 		if ( pFFAssister == NULL )
 		{
@@ -7998,7 +7997,7 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 
 		for ( int i = 0; i < pFFPlayer->m_recentAttackers.Count(); ++i )
 		{
-			if ( pFFPlayer->m_recentAttackers[i].pFFPlayer == this )
+			if ( pFFPlayer->m_recentAttackers[i].hPlayer == this )
 			{
 				// remove right away. this would screw up indexing for future loops, but 
 				// in reality we should only be in this list once for each player

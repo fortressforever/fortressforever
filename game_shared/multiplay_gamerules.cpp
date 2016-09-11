@@ -569,12 +569,12 @@ bool CMultiplayRules::IsMultiplayer( void )
 			{
 				// if we have a top assister give em some fort points
 				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
-				if ( pTopAssister && pTopAssister->pFFPlayer ) 
+				if ( pTopAssister && pTopAssister->hPlayer.Get() ) 
 				{
-					if ( PlayerRelationship( pVictim, pTopAssister->pFFPlayer ) != GR_TEAMMATE )
+					if ( PlayerRelationship( pVictim, pTopAssister->hPlayer.Get() ) != GR_TEAMMATE )
 					{
-						pTopAssister->pFFPlayer->AddFortPoints( 25, "#FF_FORTPOINTS_ASSIST" );
-						pTopAssister->pFFPlayer->IncrementAssistsCount( 1 );
+						pTopAssister->hPlayer->AddFortPoints( 25, "#FF_FORTPOINTS_ASSIST" );
+						pTopAssister->hPlayer->IncrementAssistsCount( 1 );
 					}
 				}
 			}
@@ -808,9 +808,11 @@ bool CMultiplayRules::IsMultiplayer( void )
 			if ( pFFPlayer )
 			{
 				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
-				if ( pTopAssister )
+				if ( pTopAssister && pTopAssister->hPlayer.Get() )
 				{
-					event->SetInt("killassister", pTopAssister->GetUserID() );
+					CFFPlayer *pAssister = pTopAssister->hPlayer.Get();
+					int assisterUserID = pAssister->GetUserID();
+					event->SetInt("killassister", assisterUserID );
 				}
 			}
 
