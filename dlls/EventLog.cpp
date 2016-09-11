@@ -133,7 +133,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 		CTeam *team = pPlayer->GetTeam();
 		CTeam *attackerTeam = NULL;
 		
-		CBasePlayer *pAssister = assisterid > -1 ? UTIL_PlayerByUserId( assisterid ) : NULL;
+		CBasePlayer *pAssister = assisterid > -1 ? UTIL_PlayerByIndex( assisterid ) : NULL;
 
 		if ( pAttacker )
 		{
