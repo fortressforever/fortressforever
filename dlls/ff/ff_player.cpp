@@ -5275,16 +5275,16 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 				CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
 				if( pAttacker )
 				{
-					float damage = CalculateBonusIcBurnDamage(GetBurnLevel());
-					TakeDamage(CTakeDamageInfo( this, pAttacker, damage /*IC_BONUSDAMAGE*/, DMG_BURN ) );
+					float bonusDamage = CalculateBonusIcBurnDamage(GetBurnLevel());
+					info.SetDamage(bonusDamage + info.GetDamage());
 					IncreaseBurnLevel(100);
 
 					CEffectData data;
 					data.m_vOrigin = GetAbsOrigin();
-					data.m_flScale = damage;
+					data.m_flScale = bonusDamage;
 					data.m_nEntIndex = entindex();
 					DispatchEffect("BonusFire", data);
-	}
+				}
 			}
 		}
 	}
