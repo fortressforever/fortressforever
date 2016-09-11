@@ -425,21 +425,6 @@ void CFFWeaponSniperRifle::PrimaryAttack()
 	// See: ItemBusyFrame / ItemPostFrame
 }
 
-void CFFWeaponSniperRifle::SecondaryAttack() 
-{
-	/*
-	DevMsg("CFFWeaponSniperRifle::SecondaryAttack\n");
-
-	BaseClass::SecondaryAttack();
-
-#ifdef GAME_DLL
-	ToggleZoom();
-#endif
-
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
-	*/
-}
-
 void CFFWeaponSniperRifle::Fire() 
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();

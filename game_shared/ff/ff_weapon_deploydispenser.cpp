@@ -60,7 +60,6 @@ public:
 #endif
 
 	virtual void PrimaryAttack( void );
-	virtual void SecondaryAttack( void );
 	virtual void WeaponIdle( void );
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
 	virtual bool CanBeSelected( void );
@@ -182,14 +181,6 @@ void CFFWeaponDeployDispenser::PrimaryAttack( void )
 		pPlayer->Command_BuildDispenser();
 #endif
 	}
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Handles whatever should be done when they scondary fire
-//----------------------------------------------------------------------------
-void CFFWeaponDeployDispenser::SecondaryAttack( void ) 
-{
-	m_flNextSecondaryAttack = gpGlobals->curtime;
 }
 
 //----------------------------------------------------------------------------

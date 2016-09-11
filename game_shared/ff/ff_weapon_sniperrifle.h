@@ -106,7 +106,6 @@ public:
 
 	virtual void Precache();
 	virtual void PrimaryAttack();
-	virtual void SecondaryAttack();
 	virtual void Spawn();
 	virtual void Fire();
 
