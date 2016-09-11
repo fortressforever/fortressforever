@@ -192,7 +192,7 @@ void CHudDeathNotice::Paint()
 	int iCount = m_DeathNotices.Count();
 	for ( int i = 0; i < iCount; i++ )
 	{
-		bool selfInvolved = m_DeathNotices[i].Victim.iEntIndex == GetLocalPlayerOrObserverTargetIndex() ||  m_DeathNotices[i].Killer.iEntIndex == GetLocalPlayerOrObserverTargetIndex();
+		bool selfInvolved = m_DeathNotices[i].Victim.iEntIndex == GetLocalPlayerOrObserverTargetIndex() ||  m_DeathNotices[i].Killer.iEntIndex == GetLocalPlayerOrObserverTargetIndex() || m_DeathNotices[i].Assister.iEntIndex == GetLocalPlayerOrObserverTargetIndex();
 		// if we should only draw notices that the local player is involved in and the local player isn't involved, then skip drawing this notice
 		if (hud_deathnotice_selfonly.GetBool() && !selfInvolved)
 			continue;
