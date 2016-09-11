@@ -1654,6 +1654,7 @@ void CFFPlayer::SetupClassVariables()
 	m_flNextSpySabotageThink = 0.0f;
 	m_flSpySabotageFinish = 0.0f;
 	m_hSabotaging = NULL;
+	m_bJetpacking = false;
 
 	m_Locations.Purge();
 	m_iClientLocation = 0;
