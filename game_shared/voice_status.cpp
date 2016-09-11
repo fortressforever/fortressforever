@@ -326,9 +326,9 @@ int CVoiceStatus::GetSpeakerStatus(int entindex)
 	if ( !engine->GetPlayerInfo( entindex, &pi ) )
 		return 0;
 
-	bool bTalking = !!m_VoicePlayers[entindex];
+	bool bTalking = !!m_VoicePlayers[entindex-1];
 	bool bBanned  = m_BanMgr.GetPlayerBan(pi.guid);
-	bool bNeverSpoken = !m_VoiceEnabledPlayers[entindex];
+	bool bNeverSpoken = !m_VoiceEnabledPlayers[entindex-1];
 
 	if (bBanned)
 		return VOICE_BANNED;
