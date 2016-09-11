@@ -62,7 +62,6 @@ public:
 #endif
 
 	virtual void PrimaryAttack( void );
-	virtual void SecondaryAttack( void );
 	virtual void WeaponIdle( void );
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
 	virtual bool CanBeSelected( void );
@@ -182,17 +181,6 @@ void CFFWeaponDeploySentryGun::PrimaryAttack( void )
 		CFFPlayer *pPlayer = GetPlayerOwner();
 		pPlayer->Command_BuildSentryGun();
 #endif
-	}
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Handles whatever should be done when they secondary fire
-//----------------------------------------------------------------------------
-void CFFWeaponDeploySentryGun::SecondaryAttack( void ) 
-{
-	if( m_flNextSecondaryAttack < gpGlobals->curtime )
-	{
-		m_flNextSecondaryAttack = gpGlobals->curtime;
 	}
 }
 

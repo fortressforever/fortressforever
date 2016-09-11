@@ -110,13 +110,6 @@ void CFFWeaponMeleeBase::PrimaryAttack()
 }
 
 //----------------------------------------------------------------------------
-// Purpose: None
-//----------------------------------------------------------------------------
-void CFFWeaponMeleeBase::SecondaryAttack() 
-{
-}
-
-//----------------------------------------------------------------------------
 // Purpose: Implement impact function
 //----------------------------------------------------------------------------
 void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity) 

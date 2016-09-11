@@ -52,7 +52,6 @@ public:
 	
 	//Attack functions
 	virtual	void	PrimaryAttack();
-	virtual void	SecondaryAttack();
 
 	virtual	float	GetFireRate() 								{	return	0.2f;	}
 	virtual float	GetRange() 								{	return	32.0f;	}

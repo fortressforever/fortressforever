@@ -47,7 +47,6 @@ public:
 #endif
 
 	virtual void PrimaryAttack( void );
-	virtual void SecondaryAttack( void );
 	virtual void WeaponIdle( void );
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual bool CanBeSelected( void );
@@ -172,16 +171,6 @@ void CFFWeaponDeployManCannon::PrimaryAttack( void )
 #endif
 	}
 }
-
-//----------------------------------------------------------------------------
-// Purpose: Handles whatever should be done when they scondary fire
-//----------------------------------------------------------------------------
-void CFFWeaponDeployManCannon::SecondaryAttack( void )
-{
-	if( m_flNextSecondaryAttack < gpGlobals->curtime )
-		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
-}
-
 
 //----------------------------------------------------------------------------
 // Purpose: Checks validity of ground at this point or whatever
