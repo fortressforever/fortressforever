@@ -810,7 +810,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
 				if ( pTopAssister )
 				{
-					event->SetInt("killassister", pTopAssister->playerIndex );
+					event->SetInt("killassister", pTopAssister->GetUserID() );
 				}
 			}
 
