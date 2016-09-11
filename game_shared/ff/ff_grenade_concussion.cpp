@@ -271,14 +271,13 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			// Some useful things to know
 			Vector vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
 			float flDistance = vecDisplacement.Length();
-			Vector vecDir = vecDisplacement / flDistance;
 
 #ifdef GAME_DLL			
 			// Concuss the player first
 			if (g_pGameRules->FCanTakeDamage(pPlayer, pConcOwner))
 			{
 				QAngle angDirection;
-				VectorAngles(vecDir, angDirection);
+				VectorAngles(vecDisplacement, angDirection);
 
 				float flDuration = 10.0f;
 				float flIconDuration = flDuration;
