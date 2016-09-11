@@ -706,12 +706,11 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		deathMsg.iSuicide = ( !killer || ( ( killer == victim ) && ( !bBuildableKilled ) ) );
 
 		deathMsg.Assister.iEntIndex = -1;
-		int killAssister = event->GetInt( "killassister", -1 );
-		if (killAssister != -1)
+		int killAssisterUserID = event->GetInt( "killassister", -1 );
+		if (killAssisterUserID != -1)
 		{
-			killAssister = engine->GetPlayerForUserID(killAssister);
-			Q_strncpy( deathMsg.Assister.szName, g_PR->GetPlayerName( killAssister ), MAX_PLAYER_NAME_LENGTH );
-			deathMsg.Assister.iEntIndex = killAssister;
+			deathMsg.Assister.iEntIndex = engine->GetPlayerForUserID(killAssisterUserID);
+			Q_strncpy( deathMsg.Assister.szName, g_PR->GetPlayerName( deathMsg.Assister.iEntIndex ), MAX_PLAYER_NAME_LENGTH );
 		}
 
 		// only consider suicide if there was no kill assist
