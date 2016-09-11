@@ -302,7 +302,10 @@ void CHudDeathNotice::Paint()
 			{
 				iKillerTeam = g_PR->GetTeam( m_DeathNotices[i].Killer.iEntIndex );
 				iVictimTeam = g_PR->GetTeam( m_DeathNotices[i].Victim.iEntIndex );
-				iAssisterTeam = g_PR->GetTeam( m_DeathNotices[i].Assister.iEntIndex );
+				if (hasAssister)
+				{
+					iAssisterTeam = g_PR->GetTeam( m_DeathNotices[i].Assister.iEntIndex );
+				}
 			}
 
 			vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Victim.szName, victim, sizeof( victim ) );
