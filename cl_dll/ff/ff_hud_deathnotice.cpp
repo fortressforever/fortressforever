@@ -26,6 +26,7 @@
 ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", FCVAR_ARCHIVE );
 ConVar hud_deathnotice_selfonly( "hud_deathnotice_selfonly", "0", FCVAR_ARCHIVE );
 ConVar hud_deathnotice_highlightself( "hud_deathnotice_highlightself", "1", FCVAR_ARCHIVE );
+ConVar hud_deathnotice_assister_color_modifier( "hud_deathnotice_assister_color_modifier", "0.9", FCVAR_ARCHIVE, "Multiplier for the RGB and alpha values of the assister's name in deathnotice messages" );
 ConVar cl_spec_killbeep( "cl_spec_killbeep", "1", FCVAR_ARCHIVE, "Determines whether or not the kill beep gets played while spectating someone in first-person mode" );
 
 extern ConVar cl_killbeepwav;
@@ -424,7 +425,15 @@ void CHudDeathNotice::Paint()
 					surface()->DrawSetTextColor( DEATHNOTICE_COLOR_DEFAULT );
 					surface()->DrawUnicodeString( DEATHNOTICE_ASSIST_SEPARATOR );
 					
-					SetColorForNoticePlayer( iAssisterTeam );
+					float assisterColorModifier = hud_deathnotice_assister_color_modifier.GetFloat();
+					Color assisterColor = GameResources()->GetTeamColor( iAssisterTeam );
+					assisterColor.SetColor(
+						assisterColor.r() * assisterColorModifier, 
+						assisterColor.g() * assisterColorModifier, 
+						assisterColor.b() * assisterColorModifier, 
+						assisterColor.a() * assisterColorModifier
+					);
+					surface()->DrawSetTextColor( assisterColor );
 					surface()->DrawUnicodeString( assister );
 				}
 
