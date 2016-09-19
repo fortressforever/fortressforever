@@ -1406,6 +1406,15 @@ C_FFPlayer::~C_FFPlayer()
 	m_PlayerAnimState->Release();
 
 	ReleaseFlashlight();
+
+	// TODO: This would probably be better solved by adding some safety to the jetpack particle effect 
+	// (probably related to the particle effect setting its OwnerEntity as the player), but this fixes 
+	// the crash when a jetpacking player disconnects so it's good enough for now
+	if (!!m_pJetpackEmitter)
+	{
+		m_pJetpackEmitter->SetDieTime( 0.0f );
+		m_pJetpackEmitter = NULL;
+	}
 }
 
 C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
