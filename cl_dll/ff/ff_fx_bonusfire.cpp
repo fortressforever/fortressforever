@@ -50,7 +50,11 @@ void BonusFireCallback( const CEffectData &data )
 
 	Vector	projectileOrigin = data.m_vOrigin;
 	float	scale = data.m_flScale;
-	CBaseEntity *pAffectedEntity = ClientEntityList().GetEnt( data.m_hEntity.GetEntryIndex() );
+	CBaseEntity *pAffectedEntity = data.getEntity();
+
+	if ( !pAffectedEntity )
+		return;
+
 	Vector affectedOrigin = pAffectedEntity->GetAbsOrigin();
 	Vector deltaVec = (affectedOrigin - projectileOrigin);
 	VectorNormalize( deltaVec );
