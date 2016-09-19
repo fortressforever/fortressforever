@@ -50,7 +50,7 @@ void BonusFireCallback( const CEffectData &data )
 
 	Vector	projectileOrigin = data.m_vOrigin;
 	float	scale = data.m_flScale;
-	CBaseEntity *pAffectedEntity = data.getEntity();
+	CBaseEntity *pAffectedEntity = data.GetEntity();
 
 	if ( !pAffectedEntity )
 		return;
