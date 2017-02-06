@@ -27,27 +27,13 @@
 #include "ff_radiotagdata.h"
 #include "model_types.h"
 #include "IEffects.h"
+#include "ff_player_shared.h"
 
 class C_FFBuildableObject;
 class C_FFDetpack;
 class C_FFDispenser;
 class C_FFSentryGun;
 class C_FFManCannon;
-
-#define FF_BUILD_NONE		0
-#define FF_BUILD_DISPENSER	1
-#define FF_BUILD_SENTRYGUN	2
-#define FF_BUILD_DETPACK	3
-#define FF_BUILD_MANCANNON	4
-
-// BEG: Added by Mulchman for team junk
-#define FF_TEAM_UNASSIGNED	0
-#define FF_TEAM_SPEC		1
-#define FF_TEAM_BLUE		2
-#define FF_TEAM_RED			3
-#define FF_TEAM_YELLOW		4
-#define FF_TEAM_GREEN		5
-// END: Added by Mulchman for team junk
 
 // moved this here from ff_shareddefs.h, because it's client-only and needs to stop wasting server compile time
 #define FF_CLOAK_MATERIAL "effects/cloak"

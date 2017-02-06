@@ -602,6 +602,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_player_shared.h"
+				>
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_playeranimstate.cpp"
 				>
 			</File>

@@ -26,6 +26,7 @@
 #include "ff_modelglyph.h"
 #include "in_buttons.h"
 #include "ff_radiotagdata.h"
+#include "ff_player_shared.h"
 
 class CFFBuildableObject;
 class CFFDetpack;
@@ -37,18 +38,7 @@ class CFFGrenadeBase;
 
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
-#define INVALID_OBJECTIVE_LOCATION -9515.2f
-
 #define FF_BUILD_DISP_STRING_LEN	256
-
-// BEG: Added by Mulchman for team junk
-#define FF_TEAM_UNASSIGNED	0
-#define FF_TEAM_SPEC		1
-#define FF_TEAM_BLUE		2
-#define FF_TEAM_RED			3
-#define FF_TEAM_YELLOW		4
-#define FF_TEAM_GREEN		5
-// END: Added by Mulchman for team junk
 
 // Speed effect type
 enum SpeedEffectType

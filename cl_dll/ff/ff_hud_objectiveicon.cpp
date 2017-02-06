@@ -33,8 +33,6 @@ using namespace vgui;
 #include "c_playerresource.h"
 #include "ff_hud_chat.h"
 
-#define INVALID_OBJECTIVE_LOCATION -9515.2f // If you change this, also change it in ff_player.h
-
 #define OBJECTIVE_ICON_TEXTURE			"glyphs/objective_icon"
 #define OBJECTIVE_ICON_TEXTURE_OBSCURED	"glyphs/objective_icon_obscured"
 #define	OBJECTIVE_ICON_ARROW			"glyphs/ff_damage_pitt"
