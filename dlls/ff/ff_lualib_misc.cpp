@@ -42,7 +42,9 @@ void CFFLuaLib::InitMisc(lua_State* L)
 	[
 		// CBeam
 		class_<CBeam, CBaseEntity>("Beam")
-			.def("SetColor",			&CBeam::SetColor),
+			.def("SetColor",				&CBeam::SetColor)
+			.def("SetStartAndEndEntities",				&CBeam::EntsInit)
+			.def("SetSpriteAndWidth",				&CBeam::BeamInit)
 			
 		class_<Color>("CustomColor")
 			.def(tostring(self))
