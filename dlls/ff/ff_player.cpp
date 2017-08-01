@@ -7949,6 +7949,12 @@ RecentAttackerInfo* CFFPlayer::GetTopKillAssister( CBasePlayer* killerToIgnore )
 		// because previous logic prevents adding ourselves to the assist list
 		bool isKiller = !killedByWorld && pFFAssister == killerToIgnore;
 
+		// assists by teammates of the victims don't count
+		if ( FFGameRules()->PlayerRelationship( this, pFFAssister ) == GR_TEAMMATE )
+		{
+			continue;
+		}
+
 		// added simple filter: if they last dmged us more than MAX_ASSIST_TIME_SECS ago, ignore
 		// if its the killer, dont report also as an assist
 		if ( gpGlobals->curtime - m_recentAttackers[i].timestamp >= MAX_ASSIST_TIME_SECS || isKiller )

@@ -571,11 +571,8 @@ bool CMultiplayRules::IsMultiplayer( void )
 				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
 				if ( pTopAssister && pTopAssister->hPlayer.Get() ) 
 				{
-					if ( PlayerRelationship( pVictim, pTopAssister->hPlayer.Get() ) != GR_TEAMMATE )
-					{
-						pTopAssister->hPlayer->AddFortPoints( 25, "#FF_FORTPOINTS_ASSIST" );
-						pTopAssister->hPlayer->IncrementAssistsCount( 1 );
-					}
+					pTopAssister->hPlayer->AddFortPoints( 25, "#FF_FORTPOINTS_ASSIST" );
+					pTopAssister->hPlayer->IncrementAssistsCount( 1 );
 				}
 			}
 
