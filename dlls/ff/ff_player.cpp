@@ -104,6 +104,10 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 // only consider people who attacked in the last this many seconds for kill assists
 #define MAX_ASSIST_TIME_SECS 5
 
+// delay before being able to fire your gun after spawning
+// this is longer than the default deploy delay to avoid accidentally shooting after spawning
+#define FF_SPAWN_DEPLOY_DELAY 0.5f
+
 // status effect
 //ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 #define FFDEV_INFECT_FREQ 2.0f
@@ -1596,6 +1600,11 @@ void CFFPlayer::Spawn( void )
 		}
 
 		break;
+	}
+
+	if (GetActiveWeapon())
+	{
+		GetActiveWeapon()->m_flNextPrimaryAttack = gpGlobals->curtime + FF_SPAWN_DEPLOY_DELAY;
 	}
 
 	//Set the last weapon to null on spawn -GreenMushy
