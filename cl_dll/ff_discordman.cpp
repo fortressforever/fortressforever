@@ -164,6 +164,7 @@ void CFFDiscordManager::UpdatePlayerInfo()
 	int frags = 0;
 	int deaths = 0;
 	int points = 0;
+	int teamPoints = 0;
 
 	for (int i = 1; i < maxPlayers; i++)
 	{
@@ -178,7 +179,7 @@ void CFFDiscordManager::UpdatePlayerInfo()
 				deaths = pGR->GetDeaths(i);
 				teamNum = pGR->GetTeam(i);
 				points = pGR->GetFortPoints(i);
-
+				teamPoints = pGR->GetTeamScore(teamNum);
 				// dont call Class_IntToPrintString as spec, its noisy
 				if (teamNum != TEAM_SPECTATOR)
 				{
@@ -218,7 +219,7 @@ void CFFDiscordManager::UpdatePlayerInfo()
 	}
 	else
 	{
-		Q_snprintf(m_szDetails, DISCORD_FIELD_SIZE, "%s %s %d PT %d:%d K:D", teamStr, className, points, frags, deaths);
+		Q_snprintf(m_szDetails, DISCORD_FIELD_SIZE, "%s (%d pts) - %s %d pts %d:%d K:D", teamStr, teamPoints, className, points, frags, deaths);
 	}
 
 	DevMsg("[Discord] sending details of '%s'\n", m_szDetails);
