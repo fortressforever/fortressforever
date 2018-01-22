@@ -40,14 +40,21 @@ typedef void (*pDiscord_Shutdown)(void);
 typedef void (*pDiscord_RunCallbacks)(void);
 typedef void (*pDiscord_UpdatePresence)(const DiscordRichPresence* presence);
 
-pDiscord_Initialize Discord_Initialize = NULL;
-pDiscord_Shutdown Discord_Shutdown = NULL;
-pDiscord_RunCallbacks Discord_RunCallbacks = NULL;
-pDiscord_UpdatePresence Discord_UpdatePresence = NULL;
+static pDiscord_Initialize Discord_Initialize = NULL;
+static pDiscord_Shutdown Discord_Shutdown = NULL;
+static pDiscord_RunCallbacks Discord_RunCallbacks = NULL;
+static pDiscord_UpdatePresence Discord_UpdatePresence = NULL;
 
+
+// this is here instead of a member because including windows.h on the class
+// causes C_FFPlayer to get compile errors. wew lawd
 static HINSTANCE hDiscordDLL;
 
-// NOTE: can not call discord from main menu thread. it will block
+// scratch buffers to send in api struct. they need to persist
+// for a short duration after api call it seemed, it must be async
+// using a stack allocated would occassionally corrupt
+static char szServerInfo[DISCORD_FIELD_SIZE];
+static char szDetails[DISCORD_FIELD_SIZE];
 
 CFFDiscordManager::CFFDiscordManager()
 {
@@ -62,20 +69,18 @@ CFFDiscordManager::CFFDiscordManager()
 	Discord_RunCallbacks = (pDiscord_RunCallbacks) GetProcAddress(hDiscordDLL, "Discord_RunCallbacks");
 	Discord_UpdatePresence = (pDiscord_UpdatePresence) GetProcAddress(hDiscordDLL, "Discord_UpdatePresence");
 
-	// dont run this yet. it will hang client
-	// InitializeDiscord();
 	Q_memset(m_szLatchedMapname, 0, MAX_MAP_NAME);
 	m_bApiReady = false;
 	m_bInitializeRequested = false;
-	Q_memset(&m_sDiscordRichPresence, 0, sizeof(m_sDiscordRichPresence));
 }
 
 CFFDiscordManager::~CFFDiscordManager()
 {
-	if (hDiscordDLL) 
+	if (hDiscordDLL)
 	{
-		// dont bother with clean exit, it will block. 
-		// Discord_Shutdown();
+		if (m_bApiReady)
+			Discord_Shutdown();
+
 		// i mean really, we could just let os handle since our dtor is called at game exit but
 		FreeLibrary(hDiscordDLL);
 	}
@@ -142,13 +147,14 @@ void CFFDiscordManager::Reset()
 {
 	if (m_bApiReady)
 	{
-		Q_memset(&m_sDiscordRichPresence, 0, sizeof(m_sDiscordRichPresence));
-		m_sDiscordRichPresence.state = "in menus";
-		Discord_UpdatePresence(&m_sDiscordRichPresence);
+		DiscordRichPresence presence;
+		Q_memset(&presence, 0, sizeof(presence));
+		presence.state = "in menus";
+		Discord_UpdatePresence(&presence);
 	}
 }
 
-void CFFDiscordManager::UpdatePlayerInfo()
+void CFFDiscordManager::UpdatePlayerInfo(DiscordRichPresence *pPresence)
 {
 	// FF_NumPlayers() from utils doesnt work client side because it doesnt use game resources :)
 	IGameResources *pGR = GameResources();
@@ -195,37 +201,35 @@ void CFFDiscordManager::UpdatePlayerInfo()
 	const char *szHostname = hostnameCvar->GetString();
 	if (szHostname)
 	{
-		char serverInfo[DISCORD_FIELD_SIZE];
-		Q_snprintf(serverInfo, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, szHostname);
-		DevMsg("[Discord] sending state of '%s'\n", serverInfo);
-		m_sDiscordRichPresence.state = serverInfo;
+		Q_snprintf(szServerInfo, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, szHostname);
+		DevMsg("[Discord] sending state of '%s'\n", szServerInfo);
+		pPresence->state = szServerInfo;
 	}
 
-	char details[DISCORD_FIELD_SIZE];
 	const char *teamStr = NULL;
 
 	switch (teamNum) 
 	{
 		// NOTE: this should eventually respect using lua teamnames
-		case TEAM_RED: teamStr = "red"; break;
-		case TEAM_BLUE: teamStr = "blue"; break;
-		case TEAM_YELLOW: teamStr = "yellow"; break;
-		case TEAM_GREEN: teamStr = "green"; break;
+		case TEAM_RED: teamStr = "Red"; break;
+		case TEAM_BLUE: teamStr = "Blue"; break;
+		case TEAM_YELLOW: teamStr = "Yellow"; break;
+		case TEAM_GREEN: teamStr = "Green"; break;
 	}
-
 	
 	if (!teamStr || Q_strlen(className) < 1)
 	{
-		Q_snprintf(details, DISCORD_FIELD_SIZE, "Spectating");
+		Q_snprintf(szDetails, DISCORD_FIELD_SIZE, "Spectating");
 	}
 	else
 	{
-		Q_snprintf(details, DISCORD_FIELD_SIZE, "%s %s: %d pts, %d:%d K:D", teamStr, className, points, frags, deaths);
+		Q_snprintf(szDetails, DISCORD_FIELD_SIZE, "%s %s: %d PT %d:%d K:D", teamStr, className, points, frags, deaths);
 	}
 
-	DevMsg("[Discord] sending details of '%s'\n", details);
-	m_sDiscordRichPresence.details = details;
+	DevMsg("[Discord] sending details of '%s'\n", szDetails);
+	pPresence->details = szDetails;
 }
+
 
 void CFFDiscordManager::UpdateRichPresence()
 {
@@ -241,27 +245,32 @@ void CFFDiscordManager::UpdateRichPresence()
 		return;
 	}
 
+	DiscordRichPresence presence;
+	Q_memset(&presence, 0, sizeof(presence));
+
 	// we cant use time() due to relative timestamps for VCR mode
 	// dont bother with elapsed timer. kinda pointless
 	// discordPresence.startTimestamp = //time(0);
-	m_sDiscordRichPresence.largeImageKey = m_szLatchedMapname;
-	m_sDiscordRichPresence.largeImageText = m_szLatchedMapname;
+	presence.largeImageKey = m_szLatchedMapname;
+	presence.largeImageText = m_szLatchedMapname;
 
-	UpdatePlayerInfo();
-	UpdateNetworkInfo();
+	UpdatePlayerInfo(&presence);
+	UpdateNetworkInfo(&presence);
 
-	m_sDiscordRichPresence.instance = 1;
-	Discord_UpdatePresence(&m_sDiscordRichPresence);
+	presence.instance = 1;
+	Discord_UpdatePresence(&presence);
 }
 
-void CFFDiscordManager::UpdateNetworkInfo()
+
+void CFFDiscordManager::UpdateNetworkInfo(DiscordRichPresence *pPresence)
 {
 	INetChannelInfo *ni = engine->GetNetChannelInfo();
-	//Warning(VarArgs("%s", ni->GetAddress()));
-
 	// set ip address as our cookie so if someone really wanted,
-	// they could connect through discord
-	// TODO: this wont work because discord is not initialized until client think
+	// they could connect directly through discord
+
+	// even in a private server (then needs password) this doesnt need to be secret,
+	// just set the address so other clients can get it in join request
+	pPresence->joinSecret = ni->GetAddress();
 }
 
 void CFFDiscordManager::LevelInit(const char *szMapname)

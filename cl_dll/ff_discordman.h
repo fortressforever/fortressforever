@@ -1,5 +1,8 @@
 // ff_discordman.h
 
+#ifndef FF_DISCORDMAN_H
+#define FF_DISCORDMAN_H
+
 typedef struct DiscordRichPresence {
     const char* state;   /* max 128 bytes */
     const char* details; /* max 128 bytes */
@@ -54,15 +57,16 @@ private:
 	bool NeedToUpdate();
 
 	void UpdateRichPresence();
-	void UpdatePlayerInfo();
-	void UpdateNetworkInfo();
+	void UpdatePlayerInfo(DiscordRichPresence *pPresence);
+	void UpdateNetworkInfo(DiscordRichPresence *pPresence);
 
 	char m_szLatchedMapname[MAX_MAP_NAME];
 	bool m_bApiReady;
 	bool m_bErrored;
 	bool m_bInitializeRequested;
 	float m_flLastUpdatedTime;
-	DiscordRichPresence m_sDiscordRichPresence;
 };
 
 extern CFFDiscordManager _discord;
+
+#endif // FF_DISCORDMAN_H
