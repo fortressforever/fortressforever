@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "ff_discordman.h"
 #include <windows.h>
+//#include "c_ff_player.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -55,6 +56,8 @@ CFFDiscordManager::CFFDiscordManager()
 
 	// dont run this yet. it will hang client
 	// InitializeDiscord();
+	Q_memset(m_szLatchedMapname, 0, MAX_MAP_NAME);
+	m_bApiReady = false;
 }
 
 CFFDiscordManager::~CFFDiscordManager()
@@ -83,6 +86,9 @@ void CFFDiscordManager::RunFrame()
 		}
 	}
 
+	//gpGlobals->curtime
+	UpdateRichPresence();
+
 	// always run this, otherwise we will chicken & egg waiting for ready
 	if (Discord_RunCallbacks)
 		Discord_RunCallbacks();
@@ -94,13 +100,13 @@ void CFFDiscordManager::OnReady()
 	_discord.m_bApiReady = true;
 }
 
-void CFFDiscordManager::OnDiscordError(int errorCode, const char* message)
+void CFFDiscordManager::OnDiscordError(int errorCode, const char *szMessage)
 {
 	_discord.m_bApiReady = false;
-	if (Q_strlen(message) < 1024)
+	if (Q_strlen(szMessage) < 1024)
 	{
 		char buff[1024];
-		Q_snprintf(buff, 1024, "Discord init failed. code %d - error: %s\n", errorCode, message);
+		Q_snprintf(buff, 1024, "Discord init failed. code %d - error: %s\n", errorCode, szMessage);
 		Warning(buff);
 	}
 }
@@ -108,7 +114,7 @@ void CFFDiscordManager::OnDiscordError(int errorCode, const char* message)
 void CFFDiscordManager::InitializeDiscord()
 {
 	DiscordEventHandlers handlers;
-	memset(&handlers, 0, sizeof(handlers));
+	Q_memset(&handlers, 0, sizeof(handlers));
 	handlers.ready = &CFFDiscordManager::OnReady;
 	handlers.errored = &CFFDiscordManager::OnDiscordError;
 //	handlers.disconnected = handleDiscordDisconnected;
@@ -118,22 +124,61 @@ void CFFDiscordManager::InitializeDiscord()
 	Discord_Initialize(DISCORD_APP_ID, &handlers, 1, "");// STEAM_ID);
 }
 
-void CFFDiscordManager::SetServer(const char *szName)
+void CFFDiscordManager::UpdateRichPresence() 
 {
+	//CFFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+	/*
+	CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+	if (!pPlayer)
+		return;
+
+	*/
+	//const ConVar *hostname = cvar->FindVar( "hostname" );
+
+	if (!Discord_UpdatePresence || !m_bApiReady)
+		return;
+
+
+	if (!m_szLatchedMapname || m_szLatchedMapname[0] == '\0')
+	{
+		// already handled this map change
+		return;
+	}
+
+	const ConVar *hostnameCvar = cvar->FindVar( "hostname" );
+	const char *szHostname = hostnameCvar->GetString();
+	char hostTrimmed[128];
+	// discord max for header is 128 bytes, so game mode would probably be better
+	Q_snprintf(hostTrimmed, 128, "Server: %s", szHostname);
+
+	// also funny, discord example has 256 byte buffer slammed into something they say is only 128
+	char buffer[128];
+	Q_snprintf(buffer, 128, "Map: %s", m_szLatchedMapname);
+
+	struct DiscordRichPresence discordPresence;
+	Q_memset(&discordPresence, 0, sizeof(discordPresence));
+	discordPresence.state = buffer;
+	discordPresence.details = hostTrimmed;
+	discordPresence.startTimestamp = time(0);
+
+	discordPresence.largeImageKey = m_szLatchedMapname;
+	discordPresence.largeImageText = m_szLatchedMapname;
+	//discordPresence.smallImageKey = "logo-small";
+	//discordPresence.smallImageText = "FF";
+	//discordPresence.partyId = "100000";// GameEngine.GetPartyId();
+	//discordPresence.partySize = 1;
+	//discordPresence.partyMax = 8;
+	//discordPresence.matchSecret = "4b2fdce12f639de8bfa7e3591b71a0d679d7c93f";
+	//discordPresence.spectateSecret = "e7eb30d2ee025ed05c71ea495f770b76454ee4e0";
+	discordPresence.instance = 1;
+	Discord_UpdatePresence(&discordPresence);
+
+	m_szLatchedMapname[0] = '\0';
 }
 
-void CFFDiscordManager::SetMapName(const char *szDetails)
+void CFFDiscordManager::LevelInit(const char *szMapname)
 {
-}
-
-void CFFDiscordManager::SetPlayerCounts(int min, int cur, int max)
-{
-}
-
-void CFFDiscordManager::SetSmallImage(const char *szName)
-{
-}
-
-void CFFDiscordManager::SetLargeImage(const char *szName)
-{
+	// we cant update our presence here, because if its the first map a client loaded,
+	// discord api may not yet be loaded, so latch
+	Q_strcpy(m_szLatchedMapname, szMapname);
 }

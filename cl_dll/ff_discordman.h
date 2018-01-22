@@ -60,25 +60,22 @@ public:
 	CFFDiscordManager();
 	~CFFDiscordManager();
 
-	void SetServer(const char *szName);
-	void SetMapName(const char *szDetails);
-	void SetPlayerCounts(int min, int cur, int max);
-
-	void SetSmallImage(const char *szName);
-	void SetLargeImage(const char *szName);
 	void RunFrame();
 
+	void LevelInit(const char *szMapname);
 	// these have to be static so that discord can use them
 	// as callbacks :-(
 	static void OnReady();
-	static void OnDiscordError(int errorCode, const char* message);
+	static void OnDiscordError(int errorCode, const char *szMessage);
 private:
-	
 	void InitializeDiscord();
+	void UpdateRichPresence();
 
 	// pulled out of here so we dont include windows.h
 	// including windows.h breaks CFFPlayer with a bunch of nonsense.
 	//HINSTANCE m_hDiscordDLL;
+
+	char m_szLatchedMapname[MAX_MAP_NAME];
 
 	bool m_bApiReady;
 	bool m_bInitializeRequested;
