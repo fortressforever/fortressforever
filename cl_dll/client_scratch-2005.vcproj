@@ -336,6 +336,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ff_discordman.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ff_discordman.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ff\ff_glyph.cpp"
 				>
 			</File>
