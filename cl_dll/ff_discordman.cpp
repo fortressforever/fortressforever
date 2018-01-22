@@ -50,17 +50,6 @@ static HINSTANCE hDiscordDLL;
 
 CFFDiscordManager::CFFDiscordManager()
 {
-	hDiscordDLL = LoadLibrary(DISCORD_LIBRARY_DLL);
-	if (!hDiscordDLL)
-	{
-		return;
-	}
-	
-	Discord_Initialize = (pDiscord_Initialize) GetProcAddress(hDiscordDLL, "Discord_Initialize");
-	Discord_Shutdown = (pDiscord_Shutdown) GetProcAddress(hDiscordDLL, "Discord_Shutdown");
-	Discord_RunCallbacks = (pDiscord_RunCallbacks) GetProcAddress(hDiscordDLL, "Discord_RunCallbacks");
-	Discord_UpdatePresence = (pDiscord_UpdatePresence) GetProcAddress(hDiscordDLL, "Discord_UpdatePresence");
-
 	Q_memset(m_szLatchedMapname, 0, MAX_MAP_NAME);
 	m_bApiReady = false;
 	m_bInitializeRequested = false;
@@ -68,6 +57,7 @@ CFFDiscordManager::CFFDiscordManager()
 
 CFFDiscordManager::~CFFDiscordManager()
 {
+	m_bApiReady = false;
 	if (hDiscordDLL)
 	{
 		// blocks :(
@@ -78,15 +68,29 @@ CFFDiscordManager::~CFFDiscordManager()
 		FreeLibrary(hDiscordDLL);
 	}
 	hDiscordDLL = NULL;
+	Discord_Initialize = NULL;
+	Discord_Shutdown = NULL;
+	Discord_RunCallbacks = NULL;
+	Discord_UpdatePresence = NULL;
 }
 
 void CFFDiscordManager::Init()
 {
-	if (!m_bApiReady && !m_bInitializeRequested)
+	hDiscordDLL = LoadLibrary(DISCORD_LIBRARY_DLL);
+	if (!hDiscordDLL)
 	{
-		InitializeDiscord();
-		m_bInitializeRequested = true;
+		m_bErrored = true;
+		Warning("failed to load discord DLL, ensure %s exists\n", DISCORD_LIBRARY_DLL);
+		return;
 	}
+	
+	Discord_Initialize = (pDiscord_Initialize) GetProcAddress(hDiscordDLL, "Discord_Initialize");
+	Discord_Shutdown = (pDiscord_Shutdown) GetProcAddress(hDiscordDLL, "Discord_Shutdown");
+	Discord_RunCallbacks = (pDiscord_RunCallbacks) GetProcAddress(hDiscordDLL, "Discord_RunCallbacks");
+	Discord_UpdatePresence = (pDiscord_UpdatePresence) GetProcAddress(hDiscordDLL, "Discord_UpdatePresence");
+
+	InitializeDiscord();
+	m_bInitializeRequested = true;
 
 	// make sure to call this after game system initialized
 	gameeventmanager->AddListener(this, "server_spawn", false );
@@ -124,6 +128,9 @@ void CFFDiscordManager::OnDiscordError(int errorCode, const char *szMessage)
 
 void CFFDiscordManager::InitializeDiscord()
 {
+	if (!Discord_Initialize)
+		return;
+
 	DiscordEventHandlers handlers;
 	Q_memset(&handlers, 0, sizeof(handlers));
 	handlers.ready = &CFFDiscordManager::OnReady;
