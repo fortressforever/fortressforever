@@ -8,7 +8,9 @@
 #include "cbase.h"
 #include "ff_discordman.h"
 #include <windows.h>
-//#include "c_ff_player.h"
+#include <igameresources.h>
+#include "c_ff_player.h"
+#include "ff_utils.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -16,6 +18,9 @@
 #define DISCORD_LIBRARY_DLL "discord-rpc.dll"
 #define DISCORD_APP_ID "404135974801637378"
 #define STEAM_ID "253530"
+
+// update once every 10 seconds. discord has an internal rate limiter of 15 seconds as well
+#define DISCORD_UPDATE_RATE 10.0f
 
 ConVar use_discord("cl_discord", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE | FCVAR_USERINFO, 
 				   "Enable discord rich presence integration (current, server, map etc)");
@@ -121,59 +126,98 @@ void CFFDiscordManager::InitializeDiscord()
 //	handlers.joinGame = handleDiscordJoinGame;
 //	handlers.spectateGame = handleDiscordSpectateGame;
 //	handlers.joinRequest = handleDiscordJoinRequest;
-	Discord_Initialize(DISCORD_APP_ID, &handlers, 1, "");// STEAM_ID);
+	Discord_Initialize(DISCORD_APP_ID, &handlers, 1, STEAM_ID);
 }
 
 void CFFDiscordManager::UpdateRichPresence() 
 {
-	//CFFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
-	/*
-	CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
-	if (!pPlayer)
-		return;
-
-	*/
-	//const ConVar *hostname = cvar->FindVar( "hostname" );
-
 	if (!Discord_UpdatePresence || !m_bApiReady)
 		return;
 
-
 	if (!m_szLatchedMapname || m_szLatchedMapname[0] == '\0')
 	{
-		// already handled this map change
 		return;
 	}
 
-	const ConVar *hostnameCvar = cvar->FindVar( "hostname" );
-	const char *szHostname = hostnameCvar->GetString();
-	char hostTrimmed[128];
-	// discord max for header is 128 bytes, so game mode would probably be better
-	Q_snprintf(hostTrimmed, 128, "Server: %s", szHostname);
+	if (gpGlobals->curtime < m_flLastUpdatedTime + DISCORD_UPDATE_RATE)
+		return;
 
-	// also funny, discord example has 256 byte buffer slammed into something they say is only 128
-	char buffer[128];
-	Q_snprintf(buffer, 128, "Map: %s", m_szLatchedMapname);
+	m_flLastUpdatedTime = gpGlobals->curtime;
 
 	struct DiscordRichPresence discordPresence;
 	Q_memset(&discordPresence, 0, sizeof(discordPresence));
-	discordPresence.state = buffer;
-	discordPresence.details = hostTrimmed;
-	discordPresence.startTimestamp = time(0);
 
+	
+	discordPresence.startTimestamp = time(0);
 	discordPresence.largeImageKey = m_szLatchedMapname;
 	discordPresence.largeImageText = m_szLatchedMapname;
+
+	// FF_NumPlayers doesnt work client side because it doesnt use game resources :)
+
+	IGameResources *pGR = GameResources();
+	if (pGR)
+	{
+		//int curPlayers = FF_NumPlayers();
+		int maxPlayers = gpGlobals->maxClients;
+		int curPlayers = 0;
+		char *className = NULL;
+		int teamNum = 0;
+
+		for (int i = 1; i < maxPlayers; i++)
+		{
+			if (pGR->IsConnected(i))
+			{
+				curPlayers++;
+				if (pGR->IsLocalPlayer(i)) 
+				{
+					// this will always return our hardcoded english string,
+					// we dont want to send a localized to discord (right?)
+					className = const_cast<char *>(Class_IntToPrintString(pGR->GetClass(i)));
+					teamNum = pGR->GetTeam(i);
+				}
+			}
+		}
+
+		// abuse 'party' to show server limits
+		discordPresence.partySize = curPlayers;
+		discordPresence.partyMax = maxPlayers;
+
+		const ConVar *hostnameCvar = cvar->FindVar( "hostname" );
+		const char *szHostname = hostnameCvar->GetString();
+		char hostTrimmed[128];
+		// discord max for header is 128 bytes, so game mode would probably be better
+		Q_snprintf(hostTrimmed, 128, "Server: %s", szHostname); //, curPlayers, maxPlayers);
+		discordPresence.state = hostTrimmed;
+		
+		char details[128];
+		char *teamStr = NULL;
+		switch (teamNum) 
+		{
+			case TEAM_RED: teamStr = "red"; break;
+			case TEAM_BLUE: teamStr = "blue"; break;
+			case TEAM_YELLOW: teamStr = "yellow"; break;
+			case TEAM_GREEN: teamStr = "green"; break;
+		}
+
+		if (!teamStr || Q_strlen(className) < 1)
+		{
+			Q_snprintf(details, 128, "Spectating");
+		}
+		else 
+		{
+			Q_snprintf(details, 128, "Playing a %s %s", teamStr, className);// m_szLatchedMapname);
+		}
+		discordPresence.details = details;
+	
+	}
+	
 	//discordPresence.smallImageKey = "logo-small";
 	//discordPresence.smallImageText = "FF";
 	//discordPresence.partyId = "100000";// GameEngine.GetPartyId();
-	//discordPresence.partySize = 1;
-	//discordPresence.partyMax = 8;
-	//discordPresence.matchSecret = "4b2fdce12f639de8bfa7e3591b71a0d679d7c93f";
+		//discordPresence.matchSecret = "4b2fdce12f639de8bfa7e3591b71a0d679d7c93f";
 	//discordPresence.spectateSecret = "e7eb30d2ee025ed05c71ea495f770b76454ee4e0";
 	discordPresence.instance = 1;
 	Discord_UpdatePresence(&discordPresence);
-
-	m_szLatchedMapname[0] = '\0';
 }
 
 void CFFDiscordManager::LevelInit(const char *szMapname)

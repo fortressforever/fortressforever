@@ -79,6 +79,8 @@ private:
 
 	bool m_bApiReady;
 	bool m_bInitializeRequested;
+	float m_flLastUpdatedTime;
+
 	DiscordRichPresence *m_pDiscordRichPresence;
 };
 
