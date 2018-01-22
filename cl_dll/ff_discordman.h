@@ -3,6 +3,9 @@
 #ifndef FF_DISCORDMAN_H
 #define FF_DISCORDMAN_H
 
+#include <igameevents.h>
+#define DISCORD_FIELD_SIZE 128
+
 typedef struct DiscordRichPresence {
     const char* state;   /* max 128 bytes */
     const char* details; /* max 128 bytes */
@@ -38,7 +41,7 @@ typedef struct DiscordEventHandlers {
 } DiscordEventHandlers;
 
 
-class CFFDiscordManager
+class CFFDiscordManager : public IGameEventListener2
 {
 public:
 	CFFDiscordManager();
@@ -52,6 +55,9 @@ public:
 	static void OnReady();
 	static void OnDiscordError(int errorCode, const char *szMessage);
 
+	// IGameEventListener interface:
+	virtual void FireGameEvent( IGameEvent *event);
+
 private:
 	void InitializeDiscord();
 	bool NeedToUpdate();
@@ -59,13 +65,20 @@ private:
 	void UpdateRichPresence();
 	void UpdatePlayerInfo();
 	void UpdateNetworkInfo();
-
-	char m_szLatchedMapname[MAX_MAP_NAME];
+	
 	bool m_bApiReady;
 	bool m_bErrored;
 	bool m_bInitializeRequested;
 	float m_flLastUpdatedTime;
 	DiscordRichPresence m_sDiscordRichPresence;
+
+	// scratch buffers to send in api struct. they need to persist
+	// for a short duration after api call it seemed, it must be async
+	// using a stack allocated would occassionally corrupt
+	char m_szServerInfo[DISCORD_FIELD_SIZE];
+	char m_szDetails[DISCORD_FIELD_SIZE];
+	char m_szLatchedHostname[255];
+	char m_szLatchedMapname[MAX_MAP_NAME];
 };
 
 extern CFFDiscordManager _discord;

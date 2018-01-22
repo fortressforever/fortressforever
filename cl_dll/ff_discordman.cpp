@@ -20,8 +20,6 @@
 #define DISCORD_APP_ID "404135974801637378"
 #define STEAM_ID "253530"
 
-#define DISCORD_FIELD_SIZE 128
-
 // update once every 10 seconds. discord has an internal rate limiter of 15 seconds as well
 #define DISCORD_UPDATE_RATE 10.0f
 
@@ -50,12 +48,6 @@ static pDiscord_UpdatePresence Discord_UpdatePresence = NULL;
 // causes C_FFPlayer to get compile errors. wew lawd
 static HINSTANCE hDiscordDLL;
 
-// scratch buffers to send in api struct. they need to persist
-// for a short duration after api call it seemed, it must be async
-// using a stack allocated would occassionally corrupt
-static char szServerInfo[DISCORD_FIELD_SIZE];
-static char szDetails[DISCORD_FIELD_SIZE];
-
 CFFDiscordManager::CFFDiscordManager()
 {
 	hDiscordDLL = LoadLibrary(DISCORD_LIBRARY_DLL);
@@ -78,8 +70,9 @@ CFFDiscordManager::~CFFDiscordManager()
 {
 	if (hDiscordDLL)
 	{
-		if (m_bApiReady)
-			Discord_Shutdown();
+		// blocks :(
+		//if (m_bApiReady)
+		//	Discord_Shutdown();
 
 		// i mean really, we could just let os handle since our dtor is called at game exit but
 		FreeLibrary(hDiscordDLL);
@@ -94,6 +87,9 @@ void CFFDiscordManager::Init()
 		InitializeDiscord();
 		m_bInitializeRequested = true;
 	}
+
+	// make sure to call this after game system initialized
+	gameeventmanager->AddListener(this, "server_spawn", false );
 }
 
 void CFFDiscordManager::RunFrame()
@@ -196,13 +192,13 @@ void CFFDiscordManager::UpdatePlayerInfo()
 	}
 
 	// state is top line, details is box below
-	const ConVar *hostnameCvar = cvar->FindVar("hostname");
-	const char *szHostname = hostnameCvar->GetString();
-	if (szHostname)
+	//const ConVar *hostnameCvar = cvar->FindVar("hostname");
+	//const char *szHostname = hostnameCvar->GetString();
+	if (m_szLatchedHostname[0] != '\0')
 	{
-		Q_snprintf(szServerInfo, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, szHostname);
-		DevMsg("[Discord] sending state of '%s'\n", szServerInfo);
-		m_sDiscordRichPresence.state = szServerInfo;
+		Q_snprintf(m_szServerInfo, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, m_szLatchedHostname);
+		DevMsg("[Discord] sending state of '%s'\n", m_szServerInfo);
+		m_sDiscordRichPresence.state = m_szServerInfo;
 	}
 
 	const char *teamStr = NULL;
@@ -218,15 +214,26 @@ void CFFDiscordManager::UpdatePlayerInfo()
 	
 	if (!teamStr || Q_strlen(className) < 1)
 	{
-		Q_snprintf(szDetails, DISCORD_FIELD_SIZE, "Spectating");
+		Q_snprintf(m_szDetails, DISCORD_FIELD_SIZE, "Spectating");
 	}
 	else
 	{
-		Q_snprintf(szDetails, DISCORD_FIELD_SIZE, "%s %s %d PT %d:%d K:D", teamStr, className, points, frags, deaths);
+		Q_snprintf(m_szDetails, DISCORD_FIELD_SIZE, "%s %s %d PT %d:%d K:D", teamStr, className, points, frags, deaths);
 	}
 
-	DevMsg("[Discord] sending details of '%s'\n", szDetails);
-	m_sDiscordRichPresence.details = szDetails;
+	DevMsg("[Discord] sending details of '%s'\n", m_szDetails);
+	m_sDiscordRichPresence.details = m_szDetails;
+}
+
+void CFFDiscordManager::FireGameEvent( IGameEvent *event )
+{
+	const char * type = event->GetName();
+
+	if ( Q_strcmp(type, "server_spawn") == 0 )
+	{
+		// copy from event, it is freed after
+		Q_strncpy( m_szLatchedHostname, event->GetString("hostname"), 255 );
+	}
 }
 
 void CFFDiscordManager::UpdateRichPresence()
