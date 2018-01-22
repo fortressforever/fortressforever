@@ -86,6 +86,7 @@
 #include "avi/iavi.h"
 #include "hltvcamera.h"
 #include "ff_vieweffects.h"
+#include "ff_discordman.h"
 
 // BEG: Added by Mulchman for team menu at level start up
 #include <cl_dll/iviewport.h>
@@ -764,6 +765,12 @@ void CHLClient::HudUpdate( bool bActive )
 	// I don't think this is necessary any longer, but I will leave it until
 	// I can check into this further.
 	C_BaseTempEntity::CheckDynamicTempEnts();
+
+	// FF: added discord frame run so we can initialize discord sitting
+	// at the main menu. otherwise it will not initialize until we join a 
+	// server , breaking join-from-discord functionality. this might
+	// be better in a game system
+	_discord.RunFrame();
 }
 
 //-----------------------------------------------------------------------------
@@ -1129,6 +1136,9 @@ void CHLClient::LevelShutdown( void )
 #ifdef _XBOX
 	ReleaseRenderTargets();
 #endif
+
+	// FF: reset discord state since we're no longer in a map
+	_discord.Reset();
 }
 
 

@@ -2657,7 +2657,6 @@ void C_FFPlayer::ClientThink( void )
 	}
 
 	_mathackman.Update();
-	_discord.RunFrame();
 
 	BaseClass::ClientThink();
 }

@@ -7,10 +7,11 @@
 
 #include "cbase.h"
 #include "ff_discordman.h"
-#include <windows.h>
-#include <igameresources.h>
 #include "c_ff_player.h"
 #include "ff_utils.h"
+#include <windows.h>
+#include <igameresources.h>
+#include <inetchannelinfo.h>
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -81,19 +82,19 @@ CFFDiscordManager::~CFFDiscordManager()
 	hDiscordDLL = NULL;
 }
 
+void CFFDiscordManager::Init()
+{
+	if (!m_bApiReady && !m_bInitializeRequested)
+	{
+		InitializeDiscord();
+		m_bInitializeRequested = true;
+	}
+}
+
 void CFFDiscordManager::RunFrame()
 {
 	if (m_bErrored)
 		return;
-
-	if (!m_bApiReady)
-	{
-		if (!m_bInitializeRequested)
-		{
-			InitializeDiscord();
-			m_bInitializeRequested = true;
-		}
-	}
 
 	// NOTE: we want to run this even if they have use_discord off, so we can clear
 	// any previous state that may have already been sent
@@ -108,6 +109,7 @@ void CFFDiscordManager::OnReady()
 {
 	DevMsg("discord ready");
 	_discord.m_bApiReady = true;
+	_discord.Reset();
 }
 
 void CFFDiscordManager::OnDiscordError(int errorCode, const char *szMessage)
@@ -130,13 +132,23 @@ void CFFDiscordManager::InitializeDiscord()
 
 bool CFFDiscordManager::NeedToUpdate()
 {
-	if (!m_bApiReady || m_szLatchedMapname[0] == '\0')
+	if (!m_bApiReady || m_bErrored || m_szLatchedMapname[0] == '\0')
 		return false;
 
 	return gpGlobals->curtime >= m_flLastUpdatedTime + DISCORD_UPDATE_RATE;
 }
 
-void CFFDiscordManager::FillPresenceDetails()
+void CFFDiscordManager::Reset()
+{
+	if (m_bApiReady)
+	{
+		Q_memset(&m_sDiscordRichPresence, 0, sizeof(m_sDiscordRichPresence));
+		m_sDiscordRichPresence.state = "in menus";
+		Discord_UpdatePresence(&m_sDiscordRichPresence);
+	}
+}
+
+void CFFDiscordManager::UpdatePlayerInfo()
 {
 	// FF_NumPlayers() from utils doesnt work client side because it doesnt use game resources :)
 	IGameResources *pGR = GameResources();
@@ -156,6 +168,7 @@ void CFFDiscordManager::FillPresenceDetails()
 			if (pGR->IsLocalPlayer(i))
 			{
 				teamNum = pGR->GetTeam(i);
+
 				// dont call Class_IntToPrintString as spec, its noisy
 				if (teamNum != TEAM_SPECTATOR)
 				{
@@ -168,15 +181,15 @@ void CFFDiscordManager::FillPresenceDetails()
 		}
 	}
 
+	// state is top line, details is box below
 	const ConVar *hostnameCvar = cvar->FindVar("hostname");
 	const char *szHostname = hostnameCvar->GetString();
+	const char *serverInfo = VarArgs("[%d/%d] - %s", curPlayers, maxPlayers, szHostname);
+	m_sDiscordRichPresence.state = serverInfo;
 
-	char hostTrimmed[DISCORD_FIELD_SIZE];
-	// discord max for header is 128 bytes, so game mode would probably be better
-	Q_snprintf(hostTrimmed, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, szHostname);
-	
-	char details[DISCORD_FIELD_SIZE];
-	char *teamStr = NULL;
+	const char *details;
+	const char *teamStr = NULL;
+
 	switch (teamNum) 
 	{
 		// NOTE: this should eventually respect using lua teamnames
@@ -188,17 +201,14 @@ void CFFDiscordManager::FillPresenceDetails()
 
 	if (!teamStr || Q_strlen(className) < 1)
 	{
-		Q_snprintf(details, DISCORD_FIELD_SIZE, "Spectating");
+		details = "Spectating";
 	}
 	else 
 	{
-		Q_snprintf(details, DISCORD_FIELD_SIZE, "Playing a %s %s", teamStr, className);
+		details = VarArgs("%s %s", teamStr, className);
 	}
 
-	// state is top line, details is box below
-	m_sDiscordRichPresence.state = hostTrimmed;
 	m_sDiscordRichPresence.details = details;
-	
 }
 
 void CFFDiscordManager::UpdateRichPresence()
@@ -210,9 +220,8 @@ void CFFDiscordManager::UpdateRichPresence()
 
 	if (!use_discord.GetBool())
 	{
-		// send the empty struct now to clear any previous state
-		Q_memset(&m_sDiscordRichPresence, 0, sizeof(m_sDiscordRichPresence));
-		Discord_UpdatePresence(&m_sDiscordRichPresence);
+		// Reset to clear any previous state
+		Reset();
 		return;
 	}
 
@@ -222,14 +231,26 @@ void CFFDiscordManager::UpdateRichPresence()
 	m_sDiscordRichPresence.largeImageKey = m_szLatchedMapname;
 	m_sDiscordRichPresence.largeImageText = m_szLatchedMapname;
 
-	FillPresenceDetails();
-	
+	UpdatePlayerInfo();
+	UpdateNetworkInfo();
+
 	m_sDiscordRichPresence.instance = 1;
 	Discord_UpdatePresence(&m_sDiscordRichPresence);
 }
 
+void CFFDiscordManager::UpdateNetworkInfo()
+{
+	INetChannelInfo *ni = engine->GetNetChannelInfo();
+	//Warning(VarArgs("%s", ni->GetAddress()));
+
+	// set ip address as our cookie so if someone really wanted,
+	// they could connect through discord
+	// TODO: this wont work because discord is not initialized until client think
+}
+
 void CFFDiscordManager::LevelInit(const char *szMapname)
 {
+	Reset();
 	// we cant update our presence here, because if its the first map a client loaded,
 	// discord api may not yet be loaded, so latch
 	Q_strcpy(m_szLatchedMapname, szMapname);

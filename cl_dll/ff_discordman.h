@@ -41,7 +41,9 @@ public:
 	CFFDiscordManager();
 	~CFFDiscordManager();
 	void RunFrame();
+	void Init();
 	void LevelInit(const char *szMapname);
+	void Reset();
 	// these have to be static so that discord can use them
 	// as callbacks :-(
 	static void OnReady();
@@ -49,9 +51,11 @@ public:
 
 private:
 	void InitializeDiscord();
-	void UpdateRichPresence();
 	bool NeedToUpdate();
-	void FillPresenceDetails();
+
+	void UpdateRichPresence();
+	void UpdatePlayerInfo();
+	void UpdateNetworkInfo();
 
 	char m_szLatchedMapname[MAX_MAP_NAME];
 	bool m_bApiReady;
