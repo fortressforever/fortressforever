@@ -157,17 +157,26 @@ void CFFDiscordManager::UpdatePlayerInfo()
 
 	int maxPlayers = gpGlobals->maxClients;
 	int curPlayers = 0;
-	char *className = NULL;
+	const char *className = NULL;
 	int teamNum = 0;
+	const char *playerName = NULL;
+	int frags = 0;
+	int deaths = 0;
+	int points = 0;
 
 	for (int i = 1; i < maxPlayers; i++)
 	{
 		if (pGR->IsConnected(i))
 		{
+			
 			curPlayers++;
 			if (pGR->IsLocalPlayer(i))
 			{
+				playerName = pGR->GetPlayerName(i);
+				frags = pGR->GetFrags(i);
+				deaths = pGR->GetDeaths(i);
 				teamNum = pGR->GetTeam(i);
+				points = pGR->GetFortPoints(i);
 
 				// dont call Class_IntToPrintString as spec, its noisy
 				if (teamNum != TEAM_SPECTATOR)
@@ -175,7 +184,7 @@ void CFFDiscordManager::UpdatePlayerInfo()
 					// this will always return our hardcoded english string,
 					// we dont want to send a localized to discord (right?)
 					int classNum = pGR->GetClass(i);
-					className = const_cast<char *>(Class_IntToPrintString(classNum));
+					className = Class_IntToPrintString(classNum);
 				}
 			}
 		}
@@ -184,10 +193,15 @@ void CFFDiscordManager::UpdatePlayerInfo()
 	// state is top line, details is box below
 	const ConVar *hostnameCvar = cvar->FindVar("hostname");
 	const char *szHostname = hostnameCvar->GetString();
-	const char *serverInfo = VarArgs("[%d/%d] - %s", curPlayers, maxPlayers, szHostname);
-	m_sDiscordRichPresence.state = serverInfo;
+	if (szHostname)
+	{
+		char serverInfo[DISCORD_FIELD_SIZE];
+		Q_snprintf(serverInfo, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, szHostname);
+		DevMsg("[Discord] sending state of '%s'\n", serverInfo);
+		m_sDiscordRichPresence.state = serverInfo;
+	}
 
-	const char *details;
+	char details[DISCORD_FIELD_SIZE];
 	const char *teamStr = NULL;
 
 	switch (teamNum) 
@@ -199,15 +213,17 @@ void CFFDiscordManager::UpdatePlayerInfo()
 		case TEAM_GREEN: teamStr = "green"; break;
 	}
 
+	
 	if (!teamStr || Q_strlen(className) < 1)
 	{
-		details = "Spectating";
+		Q_snprintf(details, DISCORD_FIELD_SIZE, "Spectating");
 	}
-	else 
+	else
 	{
-		details = VarArgs("%s %s", teamStr, className);
+		Q_snprintf(details, DISCORD_FIELD_SIZE, "%s %s: %d pts, %d:%d K:D", teamStr, className, points, frags, deaths);
 	}
 
+	DevMsg("[Discord] sending details of '%s'\n", details);
 	m_sDiscordRichPresence.details = details;
 }
 
