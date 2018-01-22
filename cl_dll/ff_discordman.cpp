@@ -147,14 +147,13 @@ void CFFDiscordManager::Reset()
 {
 	if (m_bApiReady)
 	{
-		DiscordRichPresence presence;
-		Q_memset(&presence, 0, sizeof(presence));
-		presence.state = "in menus";
-		Discord_UpdatePresence(&presence);
+		Q_memset(&m_sDiscordRichPresence, 0, sizeof(m_sDiscordRichPresence));
+		m_sDiscordRichPresence.state = "in menus";
+		Discord_UpdatePresence(&m_sDiscordRichPresence);
 	}
 }
 
-void CFFDiscordManager::UpdatePlayerInfo(DiscordRichPresence *pPresence)
+void CFFDiscordManager::UpdatePlayerInfo()
 {
 	// FF_NumPlayers() from utils doesnt work client side because it doesnt use game resources :)
 	IGameResources *pGR = GameResources();
@@ -203,7 +202,7 @@ void CFFDiscordManager::UpdatePlayerInfo(DiscordRichPresence *pPresence)
 	{
 		Q_snprintf(szServerInfo, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, szHostname);
 		DevMsg("[Discord] sending state of '%s'\n", szServerInfo);
-		pPresence->state = szServerInfo;
+		m_sDiscordRichPresence.state = szServerInfo;
 	}
 
 	const char *teamStr = NULL;
@@ -223,13 +222,12 @@ void CFFDiscordManager::UpdatePlayerInfo(DiscordRichPresence *pPresence)
 	}
 	else
 	{
-		Q_snprintf(szDetails, DISCORD_FIELD_SIZE, "%s %s: %d PT %d:%d K:D", teamStr, className, points, frags, deaths);
+		Q_snprintf(szDetails, DISCORD_FIELD_SIZE, "%s %s %d PT %d:%d K:D", teamStr, className, points, frags, deaths);
 	}
 
 	DevMsg("[Discord] sending details of '%s'\n", szDetails);
-	pPresence->details = szDetails;
+	m_sDiscordRichPresence.details = szDetails;
 }
-
 
 void CFFDiscordManager::UpdateRichPresence()
 {
@@ -245,24 +243,21 @@ void CFFDiscordManager::UpdateRichPresence()
 		return;
 	}
 
-	DiscordRichPresence presence;
-	Q_memset(&presence, 0, sizeof(presence));
-
 	// we cant use time() due to relative timestamps for VCR mode
 	// dont bother with elapsed timer. kinda pointless
 	// discordPresence.startTimestamp = //time(0);
-	presence.largeImageKey = m_szLatchedMapname;
-	presence.largeImageText = m_szLatchedMapname;
+	m_sDiscordRichPresence.largeImageKey = m_szLatchedMapname;
+	m_sDiscordRichPresence.largeImageText = m_szLatchedMapname;
 
-	UpdatePlayerInfo(&presence);
-	UpdateNetworkInfo(&presence);
+	UpdatePlayerInfo();
+	UpdateNetworkInfo();
 
-	presence.instance = 1;
-	Discord_UpdatePresence(&presence);
+	m_sDiscordRichPresence.instance = 1;
+	Discord_UpdatePresence(&m_sDiscordRichPresence);
 }
 
 
-void CFFDiscordManager::UpdateNetworkInfo(DiscordRichPresence *pPresence)
+void CFFDiscordManager::UpdateNetworkInfo()
 {
 	INetChannelInfo *ni = engine->GetNetChannelInfo();
 	// set ip address as our cookie so if someone really wanted,
@@ -270,7 +265,7 @@ void CFFDiscordManager::UpdateNetworkInfo(DiscordRichPresence *pPresence)
 
 	// even in a private server (then needs password) this doesnt need to be secret,
 	// just set the address so other clients can get it in join request
-	pPresence->joinSecret = ni->GetAddress();
+	m_sDiscordRichPresence.joinSecret = ni->GetAddress();
 }
 
 void CFFDiscordManager::LevelInit(const char *szMapname)

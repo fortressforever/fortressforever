@@ -57,14 +57,15 @@ private:
 	bool NeedToUpdate();
 
 	void UpdateRichPresence();
-	void UpdatePlayerInfo(DiscordRichPresence *pPresence);
-	void UpdateNetworkInfo(DiscordRichPresence *pPresence);
+	void UpdatePlayerInfo();
+	void UpdateNetworkInfo();
 
 	char m_szLatchedMapname[MAX_MAP_NAME];
 	bool m_bApiReady;
 	bool m_bErrored;
 	bool m_bInitializeRequested;
 	float m_flLastUpdatedTime;
+	DiscordRichPresence m_sDiscordRichPresence;
 };
 
 extern CFFDiscordManager _discord;
