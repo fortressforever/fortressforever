@@ -19,6 +19,8 @@
 #define DISCORD_APP_ID "404135974801637378"
 #define STEAM_ID "253530"
 
+#define DISCORD_FIELD_SIZE 128
+
 // update once every 10 seconds. discord has an internal rate limiter of 15 seconds as well
 #define DISCORD_UPDATE_RATE 10.0f
 
@@ -63,6 +65,8 @@ CFFDiscordManager::CFFDiscordManager()
 	// InitializeDiscord();
 	Q_memset(m_szLatchedMapname, 0, MAX_MAP_NAME);
 	m_bApiReady = false;
+	m_bInitializeRequested = false;
+	Q_memset(&m_sDiscordRichPresence, 0, sizeof(m_sDiscordRichPresence));
 }
 
 CFFDiscordManager::~CFFDiscordManager()
@@ -79,7 +83,7 @@ CFFDiscordManager::~CFFDiscordManager()
 
 void CFFDiscordManager::RunFrame()
 {
-	if (!use_discord.GetBool())
+	if (m_bErrored)
 		return;
 
 	if (!m_bApiReady)
@@ -91,7 +95,8 @@ void CFFDiscordManager::RunFrame()
 		}
 	}
 
-	//gpGlobals->curtime
+	// NOTE: we want to run this even if they have use_discord off, so we can clear
+	// any previous state that may have already been sent
 	UpdateRichPresence();
 
 	// always run this, otherwise we will chicken & egg waiting for ready
@@ -108,12 +113,10 @@ void CFFDiscordManager::OnReady()
 void CFFDiscordManager::OnDiscordError(int errorCode, const char *szMessage)
 {
 	_discord.m_bApiReady = false;
-	if (Q_strlen(szMessage) < 1024)
-	{
-		char buff[1024];
-		Q_snprintf(buff, 1024, "Discord init failed. code %d - error: %s\n", errorCode, szMessage);
-		Warning(buff);
-	}
+	_discord.m_bErrored = true;
+	char buff[1024];
+	Q_snprintf(buff, 1024, "Discord init failed. code %d - error: %s\n", errorCode, szMessage);
+	Warning(buff);
 }
 
 void CFFDiscordManager::InitializeDiscord()
@@ -122,99 +125,107 @@ void CFFDiscordManager::InitializeDiscord()
 	Q_memset(&handlers, 0, sizeof(handlers));
 	handlers.ready = &CFFDiscordManager::OnReady;
 	handlers.errored = &CFFDiscordManager::OnDiscordError;
-//	handlers.disconnected = handleDiscordDisconnected;
-//	handlers.joinGame = handleDiscordJoinGame;
-//	handlers.spectateGame = handleDiscordSpectateGame;
-//	handlers.joinRequest = handleDiscordJoinRequest;
 	Discord_Initialize(DISCORD_APP_ID, &handlers, 1, STEAM_ID);
 }
 
-void CFFDiscordManager::UpdateRichPresence() 
+bool CFFDiscordManager::NeedToUpdate()
 {
-	if (!Discord_UpdatePresence || !m_bApiReady)
+	if (!m_bApiReady || m_szLatchedMapname[0] == '\0')
+		return false;
+
+	return gpGlobals->curtime >= m_flLastUpdatedTime + DISCORD_UPDATE_RATE;
+}
+
+void CFFDiscordManager::FillPresenceDetails()
+{
+	// FF_NumPlayers() from utils doesnt work client side because it doesnt use game resources :)
+	IGameResources *pGR = GameResources();
+	if (!pGR)
 		return;
 
-	if (!m_szLatchedMapname || m_szLatchedMapname[0] == '\0')
+	int maxPlayers = gpGlobals->maxClients;
+	int curPlayers = 0;
+	char *className = NULL;
+	int teamNum = 0;
+
+	for (int i = 1; i < maxPlayers; i++)
 	{
-		return;
+		if (pGR->IsConnected(i))
+		{
+			curPlayers++;
+			if (pGR->IsLocalPlayer(i))
+			{
+				teamNum = pGR->GetTeam(i);
+				// dont call Class_IntToPrintString as spec, its noisy
+				if (teamNum != TEAM_SPECTATOR)
+				{
+					// this will always return our hardcoded english string,
+					// we dont want to send a localized to discord (right?)
+					int classNum = pGR->GetClass(i);
+					className = const_cast<char *>(Class_IntToPrintString(classNum));
+				}
+			}
+		}
 	}
 
-	if (gpGlobals->curtime < m_flLastUpdatedTime + DISCORD_UPDATE_RATE)
+	const ConVar *hostnameCvar = cvar->FindVar("hostname");
+	const char *szHostname = hostnameCvar->GetString();
+
+	char hostTrimmed[DISCORD_FIELD_SIZE];
+	// discord max for header is 128 bytes, so game mode would probably be better
+	Q_snprintf(hostTrimmed, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, szHostname);
+	
+	char details[DISCORD_FIELD_SIZE];
+	char *teamStr = NULL;
+	switch (teamNum) 
+	{
+		// NOTE: this should eventually respect using lua teamnames
+		case TEAM_RED: teamStr = "red"; break;
+		case TEAM_BLUE: teamStr = "blue"; break;
+		case TEAM_YELLOW: teamStr = "yellow"; break;
+		case TEAM_GREEN: teamStr = "green"; break;
+	}
+
+	if (!teamStr || Q_strlen(className) < 1)
+	{
+		Q_snprintf(details, DISCORD_FIELD_SIZE, "Spectating");
+	}
+	else 
+	{
+		Q_snprintf(details, DISCORD_FIELD_SIZE, "Playing a %s %s", teamStr, className);
+	}
+
+	// state is top line, details is box below
+	m_sDiscordRichPresence.state = hostTrimmed;
+	m_sDiscordRichPresence.details = details;
+	
+}
+
+void CFFDiscordManager::UpdateRichPresence()
+{
+	if (!NeedToUpdate())
 		return;
 
 	m_flLastUpdatedTime = gpGlobals->curtime;
 
-	struct DiscordRichPresence discordPresence;
-	Q_memset(&discordPresence, 0, sizeof(discordPresence));
+	if (!use_discord.GetBool())
+	{
+		// send the empty struct now to clear any previous state
+		Q_memset(&m_sDiscordRichPresence, 0, sizeof(m_sDiscordRichPresence));
+		Discord_UpdatePresence(&m_sDiscordRichPresence);
+		return;
+	}
 
-	
 	// we cant use time() due to relative timestamps for VCR mode
 	// dont bother with elapsed timer. kinda pointless
 	// discordPresence.startTimestamp = //time(0);
-	discordPresence.largeImageKey = m_szLatchedMapname;
-	discordPresence.largeImageText = m_szLatchedMapname;
+	m_sDiscordRichPresence.largeImageKey = m_szLatchedMapname;
+	m_sDiscordRichPresence.largeImageText = m_szLatchedMapname;
 
-	// FF_NumPlayers doesnt work client side because it doesnt use game resources :)
-
-	IGameResources *pGR = GameResources();
-	if (pGR)
-	{
-		//int curPlayers = FF_NumPlayers();
-		int maxPlayers = gpGlobals->maxClients;
-		int curPlayers = 0;
-		char *className = NULL;
-		int teamNum = 0;
-
-		for (int i = 1; i < maxPlayers; i++)
-		{
-			if (pGR->IsConnected(i))
-			{
-				curPlayers++;
-				if (pGR->IsLocalPlayer(i)) 
-				{
-					// this will always return our hardcoded english string,
-					// we dont want to send a localized to discord (right?)
-					className = const_cast<char *>(Class_IntToPrintString(pGR->GetClass(i)));
-					teamNum = pGR->GetTeam(i);
-				}
-			}
-		}
-
-		// abuse 'party' to show server limits
-		discordPresence.partySize = curPlayers;
-		discordPresence.partyMax = maxPlayers;
-
-		const ConVar *hostnameCvar = cvar->FindVar( "hostname" );
-		const char *szHostname = hostnameCvar->GetString();
-		char hostTrimmed[128];
-		// discord max for header is 128 bytes, so game mode would probably be better
-		Q_snprintf(hostTrimmed, 128, "Server: %s", szHostname); //, curPlayers, maxPlayers);
-		discordPresence.state = hostTrimmed;
-		
-		char details[128];
-		char *teamStr = NULL;
-		switch (teamNum) 
-		{
-			case TEAM_RED: teamStr = "red"; break;
-			case TEAM_BLUE: teamStr = "blue"; break;
-			case TEAM_YELLOW: teamStr = "yellow"; break;
-			case TEAM_GREEN: teamStr = "green"; break;
-		}
-
-		if (!teamStr || Q_strlen(className) < 1)
-		{
-			Q_snprintf(details, 128, "Spectating");
-		}
-		else 
-		{
-			Q_snprintf(details, 128, "Playing a %s %s", teamStr, className);// m_szLatchedMapname);
-		}
-		discordPresence.details = details;
+	FillPresenceDetails();
 	
-	}
-	
-	discordPresence.instance = 1;
-	Discord_UpdatePresence(&discordPresence);
+	m_sDiscordRichPresence.instance = 1;
+	Discord_UpdatePresence(&m_sDiscordRichPresence);
 }
 
 void CFFDiscordManager::LevelInit(const char *szMapname)

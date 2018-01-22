@@ -1,24 +1,5 @@
 // ff_discordman.h
 
-// lol has stdint which vc2005 doesnt have
-//#include "discord-api/discord-rpc.h"
-#include <ctime>
-
-
-// see ff_discordman.cpp for explaination of why all this is here
-/*
-// needs lib stubs which vc2005 ABI wont link against
-__declspec(dllimport) void Discord_Initialize(const char* applicationId,
-                                       DiscordEventHandlers* handlers,
-                                       int autoRegister,
-                                       const char* optionalSteamId);
-
-__declspec(dllimport) void Discord_Shutdown(void);
-__declspec(dllimport) void Discord_RunCallbacks(void);
-__declspec(dllimport) void Discord_UpdatePresence(const DiscordRichPresence* presence);
-*/
-
-
 typedef struct DiscordRichPresence {
     const char* state;   /* max 128 bytes */
     const char* details; /* max 128 bytes */
@@ -59,29 +40,25 @@ class CFFDiscordManager
 public:
 	CFFDiscordManager();
 	~CFFDiscordManager();
-
 	void RunFrame();
-
 	void LevelInit(const char *szMapname);
 	// these have to be static so that discord can use them
 	// as callbacks :-(
 	static void OnReady();
 	static void OnDiscordError(int errorCode, const char *szMessage);
+
 private:
 	void InitializeDiscord();
 	void UpdateRichPresence();
-
-	// pulled out of here so we dont include windows.h
-	// including windows.h breaks CFFPlayer with a bunch of nonsense.
-	//HINSTANCE m_hDiscordDLL;
+	bool NeedToUpdate();
+	void FillPresenceDetails();
 
 	char m_szLatchedMapname[MAX_MAP_NAME];
-
 	bool m_bApiReady;
+	bool m_bErrored;
 	bool m_bInitializeRequested;
 	float m_flLastUpdatedTime;
-
-	DiscordRichPresence *m_pDiscordRichPresence;
+	DiscordRichPresence m_sDiscordRichPresence;
 };
 
 extern CFFDiscordManager _discord;
