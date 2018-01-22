@@ -148,7 +148,9 @@ void CFFDiscordManager::UpdateRichPresence()
 	Q_memset(&discordPresence, 0, sizeof(discordPresence));
 
 	
-	discordPresence.startTimestamp = time(0);
+	// we cant use time() due to relative timestamps for VCR mode
+	// dont bother with elapsed timer. kinda pointless
+	// discordPresence.startTimestamp = //time(0);
 	discordPresence.largeImageKey = m_szLatchedMapname;
 	discordPresence.largeImageText = m_szLatchedMapname;
 
@@ -211,11 +213,6 @@ void CFFDiscordManager::UpdateRichPresence()
 	
 	}
 	
-	//discordPresence.smallImageKey = "logo-small";
-	//discordPresence.smallImageText = "FF";
-	//discordPresence.partyId = "100000";// GameEngine.GetPartyId();
-		//discordPresence.matchSecret = "4b2fdce12f639de8bfa7e3591b71a0d679d7c93f";
-	//discordPresence.spectateSecret = "e7eb30d2ee025ed05c71ea495f770b76454ee4e0";
 	discordPresence.instance = 1;
 	Discord_UpdatePresence(&discordPresence);
 }
@@ -225,4 +222,6 @@ void CFFDiscordManager::LevelInit(const char *szMapname)
 	// we cant update our presence here, because if its the first map a client loaded,
 	// discord api may not yet be loaded, so latch
 	Q_strcpy(m_szLatchedMapname, szMapname);
+	// important, clear last update time as well
+	m_flLastUpdatedTime = max(0, gpGlobals->curtime - DISCORD_UPDATE_RATE);
 }
