@@ -6,12 +6,12 @@
 // and loading the library functions manually at runtime.
 
 #include "cbase.h"
-#include "ff_discordman.h"
-#include "c_ff_player.h"
-#include "ff_utils.h"
-#include <windows.h>
 #include <igameresources.h>
 #include <inetchannelinfo.h>
+#include "c_ff_player.h"
+#include "ff_utils.h"
+
+#include "ff_discordman.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -43,11 +43,6 @@ static pDiscord_Shutdown Discord_Shutdown = NULL;
 static pDiscord_RunCallbacks Discord_RunCallbacks = NULL;
 static pDiscord_UpdatePresence Discord_UpdatePresence = NULL;
 
-
-// this is here instead of a member because including windows.h on the class
-// causes C_FFPlayer to get compile errors. wew lawd
-static HINSTANCE hDiscordDLL;
-
 CFFDiscordManager::CFFDiscordManager()
 {
 	Q_memset(m_szLatchedMapname, 0, MAX_MAP_NAME);
@@ -58,16 +53,16 @@ CFFDiscordManager::CFFDiscordManager()
 CFFDiscordManager::~CFFDiscordManager()
 {
 	m_bApiReady = false;
-	if (hDiscordDLL)
+	if (m_hDiscordDLL)
 	{
 		// blocks :(
 		//if (m_bApiReady)
 		//	Discord_Shutdown();
 
 		// i mean really, we could just let os handle since our dtor is called at game exit but
-		FreeLibrary(hDiscordDLL);
+		FreeLibrary(m_hDiscordDLL);
 	}
-	hDiscordDLL = NULL;
+	m_hDiscordDLL = NULL;
 	Discord_Initialize = NULL;
 	Discord_Shutdown = NULL;
 	Discord_RunCallbacks = NULL;
@@ -76,18 +71,18 @@ CFFDiscordManager::~CFFDiscordManager()
 
 void CFFDiscordManager::Init()
 {
-	hDiscordDLL = LoadLibrary(DISCORD_LIBRARY_DLL);
-	if (!hDiscordDLL)
+	m_hDiscordDLL = LoadLibrary(DISCORD_LIBRARY_DLL);
+	if (!m_hDiscordDLL)
 	{
 		m_bErrored = true;
 		Warning("failed to load discord DLL, ensure %s exists\n", DISCORD_LIBRARY_DLL);
 		return;
 	}
 	
-	Discord_Initialize = (pDiscord_Initialize) GetProcAddress(hDiscordDLL, "Discord_Initialize");
-	Discord_Shutdown = (pDiscord_Shutdown) GetProcAddress(hDiscordDLL, "Discord_Shutdown");
-	Discord_RunCallbacks = (pDiscord_RunCallbacks) GetProcAddress(hDiscordDLL, "Discord_RunCallbacks");
-	Discord_UpdatePresence = (pDiscord_UpdatePresence) GetProcAddress(hDiscordDLL, "Discord_UpdatePresence");
+	Discord_Initialize = (pDiscord_Initialize) GetProcAddress(m_hDiscordDLL, "Discord_Initialize");
+	Discord_Shutdown = (pDiscord_Shutdown) GetProcAddress(m_hDiscordDLL, "Discord_Shutdown");
+	Discord_RunCallbacks = (pDiscord_RunCallbacks) GetProcAddress(m_hDiscordDLL, "Discord_RunCallbacks");
+	Discord_UpdatePresence = (pDiscord_UpdatePresence) GetProcAddress(m_hDiscordDLL, "Discord_UpdatePresence");
 
 	InitializeDiscord();
 	m_bInitializeRequested = true;

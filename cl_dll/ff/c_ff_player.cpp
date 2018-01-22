@@ -49,7 +49,6 @@
 #include "collisionutils.h" // hlstriker: For player avoidance
 #include "history_resource.h" // squeek: For adding grens to the ammo pickups on the right
 #include "ff_mathackman.h" // squeek: For mathack manager update in ClientThink
-#include "ff_discordman.h" // for discord rich integration
 
 #if defined( CFFPlayer )
 	#undef CFFPlayer

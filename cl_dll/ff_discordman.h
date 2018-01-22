@@ -4,6 +4,8 @@
 #define FF_DISCORDMAN_H
 
 #include <igameevents.h>
+#include <windows.h>
+
 #define DISCORD_FIELD_SIZE 128
 
 typedef struct DiscordRichPresence {
@@ -79,6 +81,7 @@ private:
 	char m_szDetails[DISCORD_FIELD_SIZE];
 	char m_szLatchedHostname[255];
 	char m_szLatchedMapname[MAX_MAP_NAME];
+	HINSTANCE m_hDiscordDLL;
 };
 
 extern CFFDiscordManager _discord;
