@@ -207,11 +207,9 @@ void CFFDiscordManager::UpdatePlayerInfo()
 	}
 
 	// state is top line, details is box below
-	//const ConVar *hostnameCvar = cvar->FindVar("hostname");
-	//const char *szHostname = hostnameCvar->GetString();
 	if (m_szLatchedHostname[0] != '\0')
 	{
-		Q_snprintf(m_szServerInfo, DISCORD_FIELD_SIZE, "[%d/%d] %s", curPlayers, maxPlayers, m_szLatchedHostname);
+		Q_snprintf(m_szServerInfo, DISCORD_FIELD_SIZE, "[%d/%d] %s - %s", curPlayers, maxPlayers, m_szLatchedMapname, m_szLatchedHostname);
 		DevMsg("[Discord] sending state of '%s'\n", m_szServerInfo);
 		m_sDiscordRichPresence.state = m_szServerInfo;
 	}
