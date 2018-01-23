@@ -720,6 +720,10 @@ public:
 	bool CanJetpack( void );
 	void JetpackHold( void );
 	void JetpackRechargeThink( void );
+	// for exposure to lua for cap restock
+	void SetJetpackFuel( float );
+	float GetJetpackFuel( void );
+
 	void SharedPreThink( void );
 
 public:	

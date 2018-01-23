@@ -2291,6 +2291,8 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 		AddSecondaryGrenades( 4 );
 		SetHealth(m_iMaxHealth);
 		m_iArmor = m_iMaxArmor;
+
+		m_flJetpackFuel		= 100.0f;
 	}
 }
 
@@ -8023,3 +8025,13 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 		}
 	}
 }	
+
+float CFFPlayer::GetJetpackFuel()
+{
+	return m_flJetpackFuel;
+}
+
+void CFFPlayer::SetJetpackFuel(float newFuel)
+{
+	m_flJetpackFuel = max(100.0f, newFuel);
+}
