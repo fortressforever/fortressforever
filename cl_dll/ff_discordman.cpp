@@ -140,6 +140,7 @@ void CFFDiscordManager::InitializeDiscord()
 	Q_memset(&handlers, 0, sizeof(handlers));
 	handlers.ready = &CFFDiscordManager::OnReady;
 	handlers.errored = &CFFDiscordManager::OnDiscordError;
+	// the join api is based around parties. dont bother
 	Discord_Initialize(DISCORD_APP_ID, &handlers, 1, STEAM_ID);
 }
 
@@ -289,7 +290,9 @@ void CFFDiscordManager::UpdateNetworkInfo()
 
 	// even in a private server (then needs password) this doesnt need to be secret,
 	// just set the address so other clients can get it in join request
-	m_sDiscordRichPresence.joinSecret = ni->GetAddress();
+	// TODO: dont bother setting this, its based on a client challenge system
+	// for party joins, not servers. boo
+	// m_sDiscordRichPresence.joinSecret = ni->GetAddress();
 }
 
 void CFFDiscordManager::LevelInit(const char *szMapname)
