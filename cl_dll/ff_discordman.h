@@ -67,7 +67,8 @@ private:
 	void UpdateRichPresence();
 	void UpdatePlayerInfo();
 	void UpdateNetworkInfo();
-	
+	void SetLogo();
+
 	bool m_bApiReady;
 	bool m_bErrored;
 	bool m_bInitializeRequested;

@@ -121,6 +121,16 @@ void CFFDiscordManager::OnDiscordError(int errorCode, const char *szMessage)
 	Warning(buff);
 }
 
+void CFFDiscordManager::SetLogo()
+{
+	m_sDiscordRichPresence.largeImageKey = "logo-big";
+	m_sDiscordRichPresence.largeImageText = "";
+	// dont set big and small, small shows up bottom right like a notification. 
+	// class icon would be good
+	//m_sDiscordRichPresence.smallImageKey = "logo-small";
+	//m_sDiscordRichPresence.smallImageText = "";
+}
+
 void CFFDiscordManager::InitializeDiscord()
 {
 	if (!Discord_Initialize)
@@ -147,6 +157,7 @@ void CFFDiscordManager::Reset()
 	{
 		Q_memset(&m_sDiscordRichPresence, 0, sizeof(m_sDiscordRichPresence));
 		m_sDiscordRichPresence.state = "in menus";
+		SetLogo();
 		Discord_UpdatePresence(&m_sDiscordRichPresence);
 	}
 }
@@ -256,13 +267,16 @@ void CFFDiscordManager::UpdateRichPresence()
 	// we cant use time() due to relative timestamps for VCR mode
 	// dont bother with elapsed timer. kinda pointless
 	// discordPresence.startTimestamp = //time(0);
-	m_sDiscordRichPresence.largeImageKey = m_szLatchedMapname;
-	m_sDiscordRichPresence.largeImageText = m_szLatchedMapname;
+
+	// MAP THUMBNAILS
+	//m_sDiscordRichPresence.largeImageKey = m_szLatchedMapname;
+	//m_sDiscordRichPresence.largeImageText = m_szLatchedMapname;
 
 	UpdatePlayerInfo();
 	UpdateNetworkInfo();
 
-	m_sDiscordRichPresence.instance = 1;
+	//m_sDiscordRichPresence.instance = 1;
+	SetLogo();
 	Discord_UpdatePresence(&m_sDiscordRichPresence);
 }
 
