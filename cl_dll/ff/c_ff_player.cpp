@@ -1520,6 +1520,7 @@ void C_FFPlayer::Precache()
 	{
 		PrecacheModel(VarArgs("models/gibs/gib%d.mdl", i));
 	}
+	PrecacheScriptSound("Player.RampslideMetal");
 }
 
 extern void ClearStatusIcons();
@@ -2543,15 +2544,21 @@ void C_FFPlayer::ClientThink( void )
 			int iSparkMagnitude = 1.0f; // controls the width of the spark, but doesn't seem to affect much, so it's not particularly useful
 			int iSparkLength = cl_rampslidefx_spark_length.GetInt();
 			g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), iSparkMagnitude, iSparkLength, &vecDir);
+			EmitSound("Player.RampslideMetal");
 		}
 		else
 		{
 			float flDustSize = cl_rampslidefx_dust_size.GetFloat();
 			float flDustSpeed = 0.0f; // controls how far apart the dust particles get spawned in vecDir's direction; not particularly useful
 			g_pEffects->Dust(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), vecDir, flDustSize, flDustSpeed);
+			StopSound("Player.RampslideMetal");
 		}
 
 		m_flNextRampslideFX = gpGlobals->curtime + cl_rampslidefx_interval.GetFloat();
+	}
+	else if (!IsRampsliding())
+	{
+		StopSound("Player.RampslideMetal");
 	}
 
 	// Update infection emitters
