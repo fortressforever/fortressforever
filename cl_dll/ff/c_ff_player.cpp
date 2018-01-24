@@ -1768,7 +1768,9 @@ void C_FFPlayer::Spawn( void )
 		// Add a better message later (localised spawn message along the lines of "You spawned as <class>"		
 		ClientPrintMsg( this, HUD_PRINTCENTER, Class_IntToResourceString( GetClassSlot() ));
 	}
-	
+
+	m_flNextRampslideFX = 0;
+	m_flNextRampslideSound = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -2544,7 +2546,12 @@ void C_FFPlayer::ClientThink( void )
 			int iSparkMagnitude = 1.0f; // controls the width of the spark, but doesn't seem to affect much, so it's not particularly useful
 			int iSparkLength = cl_rampslidefx_spark_length.GetInt();
 			g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), iSparkMagnitude, iSparkLength, &vecDir);
-			EmitSound("Player.RampslideMetal");
+
+			if (gpGlobals->curtime >= m_flNextRampslideSound) 
+			{
+				EmitSound("Player.RampslideMetal");
+				m_flNextRampslideSound = gpGlobals->curtime + 0.850f;
+			}
 		}
 		else
 		{
