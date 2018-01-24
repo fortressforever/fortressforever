@@ -408,9 +408,6 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 END_SEND_TABLE( )
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFNonLocalPlayerExclusive )
-	// Send m_bJetpacking only to other players, so that the jetpacking client is its own authority for effects/sounds.
-	// This stops the jetpack sound playing twice when you have high ping.
-	SendPropBool( SENDINFO( m_bJetpacking ) ),
 END_SEND_TABLE()
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -464,6 +461,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iInfectTick ) ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bJetpacking ) ),
 END_SEND_TABLE( )
 
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );

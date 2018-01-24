@@ -822,7 +822,6 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 END_RECV_TABLE( )
 
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFNonLocalPlayerExclusive )
-	RecvPropBool( RECVINFO( m_bJetpacking ) ),
 END_RECV_TABLE( )
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
@@ -876,6 +875,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
 	//RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
 	RecvPropInt( RECVINFO( m_iActiveSabotages ) ),
+	RecvPropBool( RECVINFO( m_bJetpacking ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )
