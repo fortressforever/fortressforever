@@ -1770,7 +1770,6 @@ void C_FFPlayer::Spawn( void )
 	}
 
 	m_flNextRampslideFX = 0;
-	m_flNextRampslideSound = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -2547,11 +2546,7 @@ void C_FFPlayer::ClientThink( void )
 			int iSparkLength = cl_rampslidefx_spark_length.GetInt();
 			g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), iSparkMagnitude, iSparkLength, &vecDir);
 
-			if (gpGlobals->curtime >= m_flNextRampslideSound) 
-			{
-				EmitSound("Player.RampslideMetal");
-				m_flNextRampslideSound = gpGlobals->curtime + 0.850f;
-			}
+			EmitSound("Player.RampslideMetal");
 		}
 		else
 		{

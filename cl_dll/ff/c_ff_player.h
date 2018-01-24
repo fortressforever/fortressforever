@@ -543,7 +543,6 @@ public:
 protected:
 	bool m_bIsRampsliding;
 	float m_flNextRampslideFX;
-	float m_flNextRampslideSound;
 
 	// ----------------------------------
 	// Cloak stuff
