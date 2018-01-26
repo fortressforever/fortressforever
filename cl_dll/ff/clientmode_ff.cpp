@@ -39,6 +39,8 @@
 #include "filesystem.h"
 #include "KeyValues.h"
 
+#include "ff_discordman.h"
+
 // Bug #0000310: fov doesn't reset |-- Mulch
 //ConVar default_fov( "default_fov", "90", FCVAR_NONE );
 ConVar default_fov( "default_fov", "90", FCVAR_ARCHIVE, "Default FOV value", true, 80.0, true, 120.0 );
@@ -79,6 +81,8 @@ void CFFModeManager::Init()
 void CFFModeManager::LevelInit( const char *newmap )
 {
 	g_pClientMode->LevelInit( newmap );
+
+	_discord.LevelInit( newmap );
 
 	// Reset client timer to zero (otherwise it'll
 	// be where we left off with the last round)

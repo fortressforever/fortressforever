@@ -3,6 +3,7 @@
 
 #include "filesystem.h"
 #include "ff_utils.h"
+#include "ff_discordman.h"
 #include "steam/steam_api.h"
 
 #define CLASSCFG_PATH				"cfg/%s.cfg"
@@ -27,6 +28,8 @@ int CFFClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		pNameCvar->SetValue(SteamFriends()->GetPersonaName());
 	}
 
+	// initialize discord right away, so we can use join functionality
+	_discord.Init();
 	return ret;
 }
 
