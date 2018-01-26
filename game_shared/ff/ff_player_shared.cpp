@@ -758,7 +758,7 @@ void CFFPlayer::ClassSpecificSkillHold()
 	switch (GetClassSlot())
 	{
 		case CLASS_PYRO:
-//			note this is not needed, we *do* want to reduce fuel on prediction corrections
+//			note this is not needed, we *do* want to reduce fuel on prediction
 //#ifdef CLIENT_DLL
 //			if (!prediction->IsFirstTimePredicted())
 //				return;
@@ -767,7 +767,10 @@ void CFFPlayer::ClassSpecificSkillHold()
 			if (m_iJetpackFuel < 1)
 			{
 				m_bJetpacking = false;
-				m_flNextClassSpecificSkill = gpGlobals->curtime + 0.25f;
+				// note: bumped this up a little - 0.25f was too low w/ client side prediction,
+				// holding down m2 would spert it between 0/1 or 2 fuel and not play effects
+				// it can still happen on really high pings tho (150+)
+				m_flNextClassSpecificSkill = gpGlobals->curtime + 0.35f;
 			}
 			break;
 	}
