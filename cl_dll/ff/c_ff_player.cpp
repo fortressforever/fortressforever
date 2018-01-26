@@ -832,7 +832,7 @@ END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFPlayerObserver )
 	RecvPropFloat(RECVINFO(m_flNextClassSpecificSkill)),
-	RecvPropFloat(RECVINFO(m_flJetpackFuel)),
+	RecvPropInt(RECVINFO(m_iJetpackFuel)),
 	RecvPropFloat(RECVINFO(m_flTrueAimTime)),
 	RecvPropFloat(RECVINFO(m_flHitTime)),
 	RecvPropInt(RECVINFO(m_nButtons)),
@@ -1544,7 +1544,7 @@ void C_FFPlayer::Spawn( void )
 
 	m_flNextCloak = 0.0f;
 	m_flNextClassSpecificSkill = 0.0f;
-	m_flJetpackFuel = 100.0f;
+	m_iJetpackFuel = 200;
 	m_flJetpackNextFuelRechargeTime = 0.0f;
 
 	// Bug #0001448: Spy menu stuck on screen.  |----> Defrag

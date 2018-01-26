@@ -132,7 +132,8 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 //ConVar ffdev_jetpack_fuelrechargetime("ffdev_jetpack_fuelrechargetime", "0.08", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_FUELRECHARGETIME 0.08f //ffdev_jetpack_fuelrechargetime.GetFloat()
 //ConVar ffdev_jetpack_fuelhovercost("ffdev_jetpack_fuelhovercost", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_FUELHOVERCOST 0.5f //ffdev_jetpack_fuelhovercost.GetFloat()
+// changed jetpack fuel to scalar, and increased to 200 to have same values
+#define JETPACK_FUELHOVERCOST 1 //ffdev_jetpack_fuelhovercost.GetFloat()
 
 //ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_BULLETSIZE 1.0f //ffdev_ac_bulletsize.GetFloat()
@@ -758,7 +759,7 @@ void CFFPlayer::ClassSpecificSkillHold()
 	{
 		case CLASS_PYRO:
 			JetpackHold();
-			if (m_flJetpackFuel < 1)
+			if (m_iJetpackFuel < 1)
 			{
 				m_bJetpacking = false;
 				m_flNextClassSpecificSkill = gpGlobals->curtime + 0.25f;
@@ -1824,10 +1825,10 @@ void CFFPlayer::JetpackRechargeThink( void )
 
 	if (m_flJetpackNextFuelRechargeTime < gpGlobals->curtime)
 	{
-		if (m_flJetpackFuel < 100)
+		if (m_iJetpackFuel < 200)
 		{
 			m_flJetpackNextFuelRechargeTime = gpGlobals->curtime + JETPACK_FUELRECHARGETIME;
-			m_flJetpackFuel++;
+			m_iJetpackFuel++;
 		}
 	}
 }
@@ -1844,7 +1845,7 @@ bool CFFPlayer::CanJetpack()
 		return false;
 	}
 
-	if (m_flJetpackFuel < 1)
+	if (m_iJetpackFuel < 1)
 	{
 		return false;
 	}
@@ -1864,7 +1865,7 @@ void CFFPlayer::JetpackHold( void )
 	}
 
 	m_bJetpacking = true;
-	m_flJetpackFuel -= JETPACK_FUELHOVERCOST;
+	m_iJetpackFuel -= JETPACK_FUELHOVERCOST;
 
 	Vector vecForward, vecRight, vecUp;
 	EyeVectors( &vecForward, &vecRight, &vecUp);

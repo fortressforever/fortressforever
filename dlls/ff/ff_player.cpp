@@ -350,7 +350,7 @@ PRECACHE_REGISTER(player);
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFPlayerObserver )
 	SendPropTime(SENDINFO(m_flNextClassSpecificSkill)),
-	SendPropFloat( SENDINFO( m_flJetpackFuel )),
+	SendPropInt(SENDINFO( m_iJetpackFuel )),
 	SendPropTime(SENDINFO(m_flTrueAimTime)),
 	SendPropTime(SENDINFO(m_flHitTime)),
 	SendPropInt(SENDINFO(m_nButtons)),
@@ -1364,7 +1364,7 @@ void CFFPlayer::Spawn( void )
 	m_flSlidingTime		= 0.0f;
 	m_flSpeedModifier	= 1.0f;
 	m_flNextClassSpecificSkill = 0.0f;
-	m_flJetpackFuel		= 100.0f;
+	m_iJetpackFuel		= 200.0f;
 	m_flJetpackNextFuelRechargeTime = 0.0f;
 	m_hActiveSlowfield	= NULL;
 	
@@ -2290,7 +2290,7 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 		SetHealth(m_iMaxHealth);
 		m_iArmor = m_iMaxArmor;
 
-		m_flJetpackFuel		= 100.0f;
+		m_iJetpackFuel		= 200.0f;
 	}
 }
 
@@ -8024,12 +8024,12 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 	}
 }	
 
-float CFFPlayer::GetJetpackFuel()
+int CFFPlayer::GetJetpackFuel()
 {
-	return m_flJetpackFuel;
+	return m_iJetpackFuel;
 }
 
-void CFFPlayer::SetJetpackFuel(float newFuel)
+void CFFPlayer::SetJetpackFuel(int newFuel)
 {
-	m_flJetpackFuel = max(100.0f, newFuel);
+	m_iJetpackFuel = max(200, newFuel);
 }
