@@ -135,6 +135,9 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 // changed jetpack fuel to scalar, and increased to 200 to have same values
 #define JETPACK_FUELHOVERCOST 1 //ffdev_jetpack_fuelhovercost.GetFloat()
 
+#define JETPACK_MINFUEL 2
+#define JETPACK_MAXFUEL 200
+
 //ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_BULLETSIZE 1.0f //ffdev_ac_bulletsize.GetFloat()
 
@@ -764,7 +767,7 @@ void CFFPlayer::ClassSpecificSkillHold()
 //				return;
 //#endif
 			JetpackHold();
-			if (m_iJetpackFuel < 1)
+			if (m_iJetpackFuel < JETPACK_MINFUEL)
 			{
 				m_bJetpacking = false;
 				// note: bumped this up a little - 0.25f was too low w/ client side prediction,
@@ -1837,7 +1840,7 @@ void CFFPlayer::JetpackRechargeThink( void )
 //		if (!prediction->IsFirstTimePredicted())
 //			return;
 //#endif
-		if (m_iJetpackFuel < 200)
+		if (m_iJetpackFuel < JETPACK_MAXFUEL)
 		{
 			m_flJetpackNextFuelRechargeTime = gpGlobals->curtime + JETPACK_FUELRECHARGETIME;
 			m_iJetpackFuel++;
@@ -1857,7 +1860,7 @@ bool CFFPlayer::CanJetpack()
 		return false;
 	}
 
-	if (m_iJetpackFuel < 1)
+	if (m_iJetpackFuel < JETPACK_MINFUEL)
 	{
 		return false;
 	}

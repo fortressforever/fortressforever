@@ -18,7 +18,6 @@
 
 using namespace vgui;
 
-#define JETPACK_MAXFUEL 100
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays jetpack fuel remaining on the HUD
