@@ -17,7 +17,6 @@
 #include "ff_weapon_assaultcannon.h"
 
 #ifdef CLIENT_DLL
-	#include "prediction.h"
 	#include "c_ff_player.h"
 	#define CRecipientFilter C_RecipientFilter	// |-- For PlayJumpSound
 
@@ -761,11 +760,6 @@ void CFFPlayer::ClassSpecificSkillHold()
 	switch (GetClassSlot())
 	{
 		case CLASS_PYRO:
-//			note this is not needed, we *do* want to reduce fuel on prediction
-//#ifdef CLIENT_DLL
-//			if (!prediction->IsFirstTimePredicted())
-//				return;
-//#endif
 			JetpackHold();
 			if (m_iJetpackFuel < JETPACK_MINFUEL)
 			{
@@ -1836,10 +1830,6 @@ void CFFPlayer::JetpackRechargeThink( void )
 
 	if (m_flJetpackNextFuelRechargeTime < gpGlobals->curtime)
 	{
-//#ifdef CLIENT_DLL
-//		if (!prediction->IsFirstTimePredicted())
-//			return;
-//#endif
 		if (m_iJetpackFuel < JETPACK_MAXFUEL)
 		{
 			m_flJetpackNextFuelRechargeTime = gpGlobals->curtime + JETPACK_FUELRECHARGETIME;
