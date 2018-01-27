@@ -721,8 +721,8 @@ public:
 	void JetpackHold( void );
 	void JetpackRechargeThink( void );
 	// for exposure to lua for cap restock
-	void SetJetpackFuel( int );
-	int GetJetpackFuel( void );
+	void SetJetpackFuelPercent( float );
+	float GetJetpackFuelPercent( void );
 
 	void SharedPreThink( void );
 

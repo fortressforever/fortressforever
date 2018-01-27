@@ -8024,12 +8024,13 @@ void CFFPlayer::RemoveMeFromKillAssists( )
 	}
 }	
 
-int CFFPlayer::GetJetpackFuel()
+float CFFPlayer::GetJetpackFuelPercent()
 {
-	return m_iJetpackFuel;
+	return m_iJetpackFuel / 200.0f;
 }
 
-void CFFPlayer::SetJetpackFuel(int newFuel)
+void CFFPlayer::SetJetpackFuelPercent(float newPct)
 {
-	m_iJetpackFuel = max(200, newFuel);
+	float pctClamped = max(0.0f, min(newPct, 100.0f));
+	m_iJetpackFuel = (int)(200.0f * (pctClamped / 100.0f));
 }
