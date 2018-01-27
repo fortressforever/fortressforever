@@ -300,7 +300,7 @@ void CHudCrosshair::Paint( void )
 	// Draw pyro fuel
 	if (cl_pyro_fuelbar.GetBool() && pActivePlayer->GetClassSlot() == CLASS_PYRO)
 	{
-		float fuelPercent = pActivePlayer->m_flJetpackFuel / 100.0f;
+		float fuelPercent = pActivePlayer->m_iJetpackFuel / 200.0f;
 
 		x = ScreenWidth()/2;
 		y = ScreenHeight()/2;

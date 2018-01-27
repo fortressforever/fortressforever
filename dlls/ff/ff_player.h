@@ -721,8 +721,8 @@ public:
 	void JetpackHold( void );
 	void JetpackRechargeThink( void );
 	// for exposure to lua for cap restock
-	void SetJetpackFuel( float );
-	float GetJetpackFuel( void );
+	void SetJetpackFuelPercent( float );
+	float GetJetpackFuelPercent( void );
 
 	void SharedPreThink( void );
 
@@ -776,7 +776,7 @@ public:
 	void ClassSpecificSkill_Post();
 
 	CNetworkVar( float, m_flNextClassSpecificSkill );
-	CNetworkVar( float, m_flJetpackFuel );
+	CNetworkVar( int, m_iJetpackFuel );
 	float m_flJetpackNextFuelRechargeTime;
 
 	CNetworkVar( float, m_flConcTime );

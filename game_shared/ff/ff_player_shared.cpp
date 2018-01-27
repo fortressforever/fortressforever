@@ -17,7 +17,6 @@
 #include "ff_weapon_assaultcannon.h"
 
 #ifdef CLIENT_DLL
-	
 	#include "c_ff_player.h"
 	#define CRecipientFilter C_RecipientFilter	// |-- For PlayJumpSound
 
@@ -132,7 +131,11 @@ ConVar sv_motd_enable( "sv_motd_enable", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "
 //ConVar ffdev_jetpack_fuelrechargetime("ffdev_jetpack_fuelrechargetime", "0.08", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define JETPACK_FUELRECHARGETIME 0.08f //ffdev_jetpack_fuelrechargetime.GetFloat()
 //ConVar ffdev_jetpack_fuelhovercost("ffdev_jetpack_fuelhovercost", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT);
-#define JETPACK_FUELHOVERCOST 0.5f //ffdev_jetpack_fuelhovercost.GetFloat()
+// changed jetpack fuel to scalar, and increased to 200 to have same values
+#define JETPACK_FUELHOVERCOST 1 //ffdev_jetpack_fuelhovercost.GetFloat()
+
+#define JETPACK_MINFUEL 2
+#define JETPACK_MAXFUEL 200
 
 //ConVar ffdev_ac_bulletsize( "ffdev_ac_bulletsize", "1.0", FCVAR_FF_FFDEV_REPLICATED );
 #define FF_AC_BULLETSIZE 1.0f //ffdev_ac_bulletsize.GetFloat()
@@ -758,10 +761,13 @@ void CFFPlayer::ClassSpecificSkillHold()
 	{
 		case CLASS_PYRO:
 			JetpackHold();
-			if (m_flJetpackFuel < 1)
+			if (m_iJetpackFuel < JETPACK_MINFUEL)
 			{
 				m_bJetpacking = false;
-				m_flNextClassSpecificSkill = gpGlobals->curtime + 0.25f;
+				// note: bumped this up a little - 0.25f was too low w/ client side prediction,
+				// holding down m2 would spert it between 0/1 or 2 fuel and not play effects
+				// it can still happen on really high pings tho (150+)
+				m_flNextClassSpecificSkill = gpGlobals->curtime + 0.35f;
 			}
 			break;
 	}
@@ -1824,10 +1830,10 @@ void CFFPlayer::JetpackRechargeThink( void )
 
 	if (m_flJetpackNextFuelRechargeTime < gpGlobals->curtime)
 	{
-		if (m_flJetpackFuel < 100)
+		if (m_iJetpackFuel < JETPACK_MAXFUEL)
 		{
 			m_flJetpackNextFuelRechargeTime = gpGlobals->curtime + JETPACK_FUELRECHARGETIME;
-			m_flJetpackFuel++;
+			m_iJetpackFuel++;
 		}
 	}
 }
@@ -1844,7 +1850,7 @@ bool CFFPlayer::CanJetpack()
 		return false;
 	}
 
-	if (m_flJetpackFuel < 1)
+	if (m_iJetpackFuel < JETPACK_MINFUEL)
 	{
 		return false;
 	}
@@ -1864,7 +1870,7 @@ void CFFPlayer::JetpackHold( void )
 	}
 
 	m_bJetpacking = true;
-	m_flJetpackFuel -= JETPACK_FUELHOVERCOST;
+	m_iJetpackFuel -= JETPACK_FUELHOVERCOST;
 
 	Vector vecForward, vecRight, vecUp;
 	EyeVectors( &vecForward, &vecRight, &vecUp);
