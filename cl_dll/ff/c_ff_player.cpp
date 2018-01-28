@@ -2296,11 +2296,16 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 		if (GetObserverMode() == OBS_MODE_IN_EYE)
 		{
 			C_FFPlayer *pFFSpecTarget = ToFFPlayer( GetObserverTarget() );
-			if (pFFSpecTarget && !pFFSpecTarget->IsAlive())
+			if (pFFSpecTarget)
 			{
-				// dont worry about clearing these, they will be reset on next observer target
-				//m_flConcTime = 0;
-				//m_bConcussed = false;
+				// clear these now. if the spec doesnt change target
+				// they will still have conc time when target respawns (#284)
+				if (!pFFSpecTarget->IsAlive())
+				{
+					m_flConcTime = 0;
+					m_bConcussed = false;
+				}
+			
 				return;
 			}
 		}
