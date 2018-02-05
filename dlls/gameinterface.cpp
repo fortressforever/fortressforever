@@ -2044,10 +2044,6 @@ void CServerGameEnts::CheckTransmit( CCheckTransmitInfo *pInfo, const unsigned s
 CServerGameClients g_ServerGameClients;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameClients, IServerGameClients, INTERFACEVERSION_SERVERGAMECLIENTS, g_ServerGameClients );
 
-// Jon: reading from a file now
-//extern const char *MOD_SERVER_VERSION;
-char *GetModVersion();
-
 //-----------------------------------------------------------------------------
 // Purpose: called when a player tries to connect to the server
 // Input  : *pEdict - the new player
