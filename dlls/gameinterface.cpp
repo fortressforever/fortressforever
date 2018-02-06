@@ -2044,10 +2044,6 @@ void CServerGameEnts::CheckTransmit( CCheckTransmitInfo *pInfo, const unsigned s
 CServerGameClients g_ServerGameClients;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameClients, IServerGameClients, INTERFACEVERSION_SERVERGAMECLIENTS, g_ServerGameClients );
 
-// Jon: reading from a file now
-//extern const char *MOD_SERVER_VERSION;
-char *GetModVersion();
-
 //-----------------------------------------------------------------------------
 // Purpose: called when a player tries to connect to the server
 // Input  : *pEdict - the new player
@@ -2059,8 +2055,7 @@ char *GetModVersion();
 // Output : Returns TRUE if player is allowed to join, FALSE if connection is denied.
 //-----------------------------------------------------------------------------
 bool CServerGameClients::ClientConnect( edict_t *pEdict, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
-{	
-	engine->ClientCommand(pEdict, UTIL_VarArgs("sync_version %s\n", GetModVersion()));
+{
 	return g_pGameRules->ClientConnected( pEdict, pszName, pszAddress, reject, maxrejectlen );
 }
 
@@ -2070,8 +2065,6 @@ bool CServerGameClients::ClientConnect( edict_t *pEdict, const char *pszName, co
 //-----------------------------------------------------------------------------
 void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 {
-	engine->ClientCommand(pEdict, UTIL_VarArgs("sync_version %s\n", GetModVersion()));
-
 	MDLCACHE_CRITICAL_SECTION();
 	
 	::ClientActive( pEdict, bLoadGame );
