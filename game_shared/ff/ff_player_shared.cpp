@@ -1833,7 +1833,9 @@ void CFFPlayer::JetpackRechargeThink( void )
 		if (m_iJetpackFuel < JETPACK_MAXFUEL)
 		{
 			m_flJetpackNextFuelRechargeTime = gpGlobals->curtime + JETPACK_FUELRECHARGETIME;
-			m_iJetpackFuel++;
+			// dont forget: we doubled total fuel and hover cost when converrting to int,
+			// double fuel recharge rate to match old rates here
+			m_iJetpackFuel += 2;
 		}
 	}
 }
