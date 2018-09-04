@@ -41,6 +41,8 @@ extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 using namespace vgui;
 
+ConVar hud_lua( "hud_lua", "1", FCVAR_ARCHIVE, "When 0, stops drawing all HUD elements added by Lua" );
+
 DECLARE_HUDELEMENT(CHudLua);
 DECLARE_HUD_MESSAGE(CHudLua, FF_HudLua);
 
@@ -753,6 +755,9 @@ bool CHudLua::ShouldDraw()
 { 
 	if( !engine->IsInGame() ) 
 		return false; 
+
+	if ( !hud_lua.GetBool() )
+		return false;
 
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
 
