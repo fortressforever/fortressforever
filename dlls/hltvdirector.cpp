@@ -243,6 +243,13 @@ const char** CHLTVDirector::GetModEvents()
 		"player_chat",
 		"round_start",
 		"round_end",
+		// FF specific events that are listened for on the client, so 
+		// they need to be saved in SourceTV demos, sent to SourceTV clients, etc
+		"sentrygun_killed",
+		"dispenser_killed",
+		"mancannon_killed",
+		"ff_restartround",
+		"objective_event",
 		NULL
 	};
 
