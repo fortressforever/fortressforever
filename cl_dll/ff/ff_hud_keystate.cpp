@@ -230,13 +230,12 @@ bool CHudKeyState::ShouldDraw()
 	if( !pTarget ) 
 		return false;
 
-	bool isSpectating = pTarget != pLocalPlayer;
+	bool isSpectating = pLocalPlayer->IsObserver();
+	bool isSpectatingSomeone = pTarget != pLocalPlayer;
 
-	if( !isSpectating && !hud_keystate.GetBool() ) 
-		return false; 
+	// keystate in freecam is useless
+	if ( isSpectating && !isSpectatingSomeone )
+		return false;
 
-	if( isSpectating && !hud_keystate_spec.GetBool() ) 
-		return false; 
-
-	return true; 
+	return isSpectating ? hud_keystate_spec.GetBool() : hud_keystate.GetBool(); 
 } 
