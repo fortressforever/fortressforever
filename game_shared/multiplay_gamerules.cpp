@@ -533,20 +533,9 @@ bool CMultiplayRules::IsMultiplayer( void )
 		if( pVictim->GetTeam() )
 			pVictim->GetTeam()->AddDeaths( 1 );
 
-		// dvsents2: uncomment when removing all FireTargets
-		// variant_t value;
-		// g_EventQueue.AddEvent( "game_playerdie", "Use", value, 0, pVictim, pVictim );
 		FireTargets( "game_playerdie", pVictim, pVictim, USE_TOGGLE, 0 );
 
-		// Did the player kill himself?
-		if ( pVictim == pScorer )  
-		{
-			// Players lose a frag for killing themselves
-			//Commenting this out so players dont actually lose stuff on suicides
-			//pVictim->IncrementFragCount( -1 );
-			//pScorer->AddFortPoints( -100, "#FF_FORTPOINTS_SUICIDE" );
-		}
-		else if ( pScorer )
+		if ( pScorer && pVictim != pScorer )
 		{
 			// if a player dies in a deathmatch game and the killer is a client, award the killer some points
 			pScorer->IncrementFragCount( IPointsForKill( pScorer, pVictim ) );
@@ -562,23 +551,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 
 			// Allow the scorer to immediately paint a decal
 			pScorer->AllowImmediateDecalPainting();
-			
-			// if there was a kill assister, give them some fort point as long as they're not a teammate from prior team dmg
-			CFFPlayer *pFFPlayer = ToFFPlayer( pVictim );
-			if ( pFFPlayer )
-			{
-				// if we have a top assister give em some fort points
-				RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
-				if ( pTopAssister && pTopAssister->hPlayer.Get() ) 
-				{
-					pTopAssister->hPlayer->AddFortPoints( 25, "#FF_FORTPOINTS_ASSIST" );
-					pTopAssister->hPlayer->IncrementAssistsCount( 1 );
-				}
-			}
 
-			// dvsents2: uncomment when removing all FireTargets
-			//variant_t value;
-			//g_EventQueue.AddEvent( "game_playerkill", "Use", value, 0, pScorer, pScorer );
 			FireTargets( "game_playerkill", pScorer, pScorer, USE_TOGGLE, 0 );
 		}
 		else
@@ -589,6 +562,19 @@ bool CMultiplayRules::IsMultiplayer( void )
 
 			// Players lose a frag for letting the world kill them
 			pVictim->IncrementFragCount( -1 );
+		}
+
+		// if there was a kill assister, give them some fort point as long as they're not a teammate from prior team dmg
+		CFFPlayer *pFFPlayer = ToFFPlayer( pVictim );
+		if ( pFFPlayer )
+		{
+			// if we have a top assister give em some fort points
+			RecentAttackerInfo *pTopAssister = pFFPlayer->GetTopKillAssister( pScorer );
+			if ( pTopAssister && pTopAssister->hPlayer.Get() ) 
+			{
+				pTopAssister->hPlayer->AddFortPoints( 25, "#FF_FORTPOINTS_ASSIST" );
+				pTopAssister->hPlayer->IncrementAssistsCount( 1 );
+			}
 		}
 	}
 
