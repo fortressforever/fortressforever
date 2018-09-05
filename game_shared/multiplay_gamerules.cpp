@@ -581,15 +581,6 @@ bool CMultiplayRules::IsMultiplayer( void )
 			//g_EventQueue.AddEvent( "game_playerkill", "Use", value, 0, pScorer, pScorer );
 			FireTargets( "game_playerkill", pScorer, pScorer, USE_TOGGLE, 0 );
 		}
-		else
-		{  
-			// Bug #0000622: Dying by respawn turret gives you a suicide
-			if( pKiller && ( pKiller->Classify() == CLASS_TURRET ) )
-				return;
-
-			// Players lose a frag for letting the world kill them
-			pVictim->IncrementFragCount( -1 );
-		}
 	}
 
 	//=========================================================
