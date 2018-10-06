@@ -2138,7 +2138,13 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pAttacker);
 
 		if (pDispenser && pDispenser->IsSabotaged())
-			return true;
+		{
+			bool victimIsSabTeammate = FFGameRules()->IsTeam1AlliedToTeam2( 
+				pVictim->GetTeamNumber(), 
+				pDispenser->m_iSaboteurTeamNumber ) == GR_TEAMMATE;
+
+			return victimIsSabTeammate ? isFriendlyFireOn : true;
+		}
 	}
 
 	// Allow sabotaged dispensers to be destroyed by shooting
@@ -2147,7 +2153,13 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pVictim);
 
 		if (pDispenser && pDispenser->IsSabotaged())
-			return true;
+		{
+			bool attackerIsSabTeammate = FFGameRules()->IsTeam1AlliedToTeam2( 
+				pAttacker->GetTeamNumber(), 
+				pDispenser->m_iSaboteurTeamNumber ) == GR_TEAMMATE;
+
+			return attackerIsSabTeammate ? isFriendlyFireOn : true;
+		}
 
 		// if it's not sabotaged then we need to get its owner and use it later on
 		pBuildableOwner = dynamic_cast< CBasePlayer* > ( pDispenser->m_hOwner.Get() );
