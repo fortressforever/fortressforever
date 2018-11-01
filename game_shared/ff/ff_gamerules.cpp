@@ -2087,7 +2087,8 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 	// if it's a buildable, then we use the buildable's owner to perform the team checks etc. -> Defrag
 	CBasePlayer *pBuildableOwner = NULL;
 
-	bool isFriendlyFireOn = friendlyfire.GetInt() != 0;
+	bool isFriendlyFireOn = friendlyfire.GetBool();
+
 #ifdef GAME_DLL
 	// Special cases for sabotageable buildings
 	// Dexter 20181006: overhauled this section of code,
