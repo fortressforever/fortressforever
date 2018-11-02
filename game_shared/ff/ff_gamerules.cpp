@@ -2087,56 +2087,51 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 	// if it's a buildable, then we use the buildable's owner to perform the team checks etc. -> Defrag
 	CBasePlayer *pBuildableOwner = NULL;
 
+	bool isFriendlyFireOn = friendlyfire.GetBool();
+
 #ifdef GAME_DLL
 	// Special cases for sabotageable buildings
+	// Dexter 20181006: overhauled this section of code,
+	// it was a bit too sweeping, letting any sabotaged attackers or victims
+	// damage, or be damaged by anyone, regardless of friendly fire
+	// this fixes #327 , which was SG specific, but applied same
+	// treatment to detting dispensers
 
-	// If an SG is shooting its teammates then allow it to hurt them
-	if (pAttacker && pAttacker->Classify() == CLASS_SENTRYGUN)
-	{
-		CFFSentryGun *pSentry = dynamic_cast< CFFSentryGun* > (pAttacker);
-
-		if (pSentry && pSentry->IsMaliciouslySabotaged())
-			return true;
-	}
+	// if its a buildable, let it damage/be damaged by players based on team & friendly fire 
 	
-	if ( pVictim && pVictim->Classify() == CLASS_SENTRYGUN )
-	{
-		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pVictim);
+	CFFBuildableObject *pBuildableAttacker = dynamic_cast <CFFBuildableObject *> (pAttacker);
 
-		// Allow team to kill their own SG if it is sabotaged
-		if (pSentry && pSentry->IsSabotaged())
-			return true;
+	if ( pBuildableAttacker && pBuildableAttacker->IsMaliciouslySabotaged() )
+	{
+		bool victimIsSabTeammate = FFGameRules()->IsTeam1AlliedToTeam2( 
+				pVictim->GetTeamNumber(), 
+				pBuildableAttacker->m_iSaboteurTeamNumber ) == GR_TEAMMATE;
+
+		return victimIsSabTeammate ? isFriendlyFireOn : true;
+	}
+
+	CFFBuildableObject *pBuildableVictim = dynamic_cast <CFFBuildableObject *> (pVictim);
+
+	if ( pBuildableVictim )
+	{
+		// Allow actual team of engy to kill their own building if it is sabotaged
+		// regardless of FF settings. otherwise only damage if FF setting is on for team
+		if ( pBuildableVictim->IsSabotaged() ) 
+		{
+			bool attackerIsSabTeammate = FFGameRules()->IsTeam1AlliedToTeam2( 
+				pAttacker->GetTeamNumber(), 
+				pBuildableVictim->m_iSaboteurTeamNumber ) == GR_TEAMMATE;
+
+			return attackerIsSabTeammate ? isFriendlyFireOn : true;
+		}
 
 		// if it's not sabotaged then we need to get its owner and use it later on
-		pBuildableOwner = dynamic_cast< CBasePlayer* > ( pSentry->m_hOwner.Get() );
+		pBuildableOwner = dynamic_cast< CBasePlayer* > ( pBuildableVictim->m_hOwner.Get() );
 		
 		if( ! pBuildableOwner )
 			return false;
 	}
 
-	// Allow sabotaged dispensers to give out damage when they explode
-	if ( pAttacker && pAttacker->Classify() == CLASS_DISPENSER )
-	{
-		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pAttacker);
-
-		if (pDispenser && pDispenser->IsSabotaged())
-			return true;
-	}
-
-	// Allow sabotaged dispensers to be destroyed by shooting
-	if ( pVictim && pVictim->Classify() == CLASS_DISPENSER )
-	{
-		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pVictim);
-
-		if (pDispenser && pDispenser->IsSabotaged())
-			return true;
-
-		// if it's not sabotaged then we need to get its owner and use it later on
-		pBuildableOwner = dynamic_cast< CBasePlayer* > ( pDispenser->m_hOwner.Get() );
-
-		if( ! pBuildableOwner )
-			return false;
-	}
 #endif
 
 	if ( !pVictim )
@@ -2159,7 +2154,7 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 		// If friendly fire is off and I'm not attacking myself, then
 		// someone else on my team/an ally is attacking me - don't
 		// take damage
-		if (( friendlyfire.GetInt() == 0 ) && ( pVictim != pAttacker ))
+		if ( !isFriendlyFireOn && pVictim != pAttacker )
 			return false;
 	}
 

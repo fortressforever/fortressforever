@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Contains the implementation of game rules for multiplayer.
 //
@@ -553,15 +553,6 @@ bool CMultiplayRules::IsMultiplayer( void )
 			pScorer->AllowImmediateDecalPainting();
 
 			FireTargets( "game_playerkill", pScorer, pScorer, USE_TOGGLE, 0 );
-		}
-		else
-		{  
-			// Bug #0000622: Dying by respawn turret gives you a suicide
-			if( pKiller && ( pKiller->Classify() == CLASS_TURRET ) )
-				return;
-
-			// Players lose a frag for letting the world kill them
-			pVictim->IncrementFragCount( -1 );
 		}
 
 		// if there was a kill assister, give them some fort point as long as they're not a teammate from prior team dmg

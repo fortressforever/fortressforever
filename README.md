@@ -45,10 +45,21 @@ Windows Registry Editor Version 5.00
 ```
 
 ### Debugging
+To start the game from within VS debugger, right click `client_ff` or `server_ff` project (whichever you are working on)
+and click `properties`. Navigate to the 'Debugging' section.
+Set command to the 'hl2.exe' in your fortress forever installation directory. On a default steam installation it will look like this:
+
+- command `"C:\Program Files (x86)\Steam\steamapps\common\Fortress Forever\hl2.exe"`
+- arguments: `-game "FortressForever" -allowdebug -dev`
+
+ (you will need to set this up for both client/server, or whatever you need to debug)
+
+Now you can smack F5 to start the game with debugging ready to go. I recommend adding eg, `+map ff_2fort` to parameters save time.
+Here is an example with nonstandard steam path: ![example](https://i.imgur.com/98WRQDI.png) 
 
 #### Debugging an active session
 * Compile using the *Debug FF* configuration
-* Copy the built dlls to your Fortress Forever folder and launch Fortress Forever (need to use the launch parameter `-allowdebug`)
+* Launch Fortress Forever (need to use the launch parameter `-allowdebug` in steam)
 * In Visual C++, go to *Debug* -> *Attach to Process*
 * Find `hl2.exe` in the list and click *Attach*
 
