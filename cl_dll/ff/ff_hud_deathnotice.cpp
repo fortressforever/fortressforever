@@ -76,6 +76,7 @@ public:
 	void RetireExpiredDeathNotices( void );
 	void DrawObjectiveBackground( int xStart, int yStart, int xEnd, int yEnd );
 	void DrawHighlightBackground( int xStart, int yStart, int xEnd, int yEnd );
+	void DrawPlayerAndAssister( int &x, int &y, wchar_t* playerName, int iPlayerTeam, wchar_t* assisterName, int iAssisterTeam );
 	
 	virtual void FireGameEvent( IGameEvent * event );
 
@@ -322,6 +323,7 @@ void CHudDeathNotice::Paint()
 			int assistSeparatorStringWidth = hasAssister ? UTIL_ComputeStringWidth( m_hTextFont, DEATHNOTICE_ASSIST_SEPARATOR ) : 0;
 			int assisterStringWidth = hasAssister ? UTIL_ComputeStringWidth( m_hTextFont, assister ) : 0;
 			int killerAndAssisterStringWidth = killerStringWidth + assistSeparatorStringWidth + assisterStringWidth;
+			int victimAndAssisterStringWidth = victimStringWidth + (m_DeathNotices[i].iSuicide ? (assistSeparatorStringWidth + assisterStringWidth) : 0);
 			int y = yStart + (m_flLineHeight * i);
 
 			int iconWide;
@@ -381,7 +383,7 @@ void CHudDeathNotice::Paint()
 			int x;
 			if ( m_bRightJustify )
 			{
-				x =	GetWide() - victimStringWidth - iconWide - 5;
+				x =	GetWide() - victimAndAssisterStringWidth - iconWide - 5;
 
 				// keep moving over for buildable icon
 				x -= iconBuildableWide ? iconBuildableWide + 5 : 0;
@@ -402,7 +404,7 @@ void CHudDeathNotice::Paint()
 			if (hud_deathnotice_highlightself.GetBool() && selfInvolved)
 			{
 				int x_start = (m_DeathNotices[i].iSuicide) ? x - 5 : x - killerAndAssisterStringWidth - 5;
-				int x_end = x + 5 + iconWide + 5 + victimStringWidth + 5 + ((iconBuildableWide) ? iconBuildableWide + 5 : 0) + ((iconModifierWide) ? iconModifierWide + 5 : 0);
+				int x_end = x + 5 + iconWide + 5 + victimAndAssisterStringWidth + 5 + ((iconBuildableWide) ? iconBuildableWide + 5 : 0) + ((iconModifierWide) ? iconModifierWide + 5 : 0);
 				int y_start = y - (iconTall / 4) - 3;
 				int y_end = y + iconTall/2 + 6;
 				DrawHighlightBackground(x_start, y_start, x_end, y_end);
@@ -417,30 +419,7 @@ void CHudDeathNotice::Paint()
 				}
 
 				// Draw killer's name
-				surface()->DrawSetTextPos( x, y );
-				surface()->DrawSetTextFont( m_hTextFont );
-
-				SetColorForNoticePlayer( iKillerTeam );
-				surface()->DrawUnicodeString( killer );
-
-				if (hasAssister)
-				{
-					surface()->DrawSetTextColor( DEATHNOTICE_COLOR_DEFAULT );
-					surface()->DrawUnicodeString( DEATHNOTICE_ASSIST_SEPARATOR );
-					
-					float assisterColorModifier = hud_deathnotice_assister_color_modifier.GetFloat();
-					Color assisterColor = GameResources()->GetTeamColor( iAssisterTeam );
-					assisterColor.SetColor(
-						assisterColor.r() * assisterColorModifier, 
-						assisterColor.g() * assisterColorModifier, 
-						assisterColor.b() * assisterColorModifier, 
-						assisterColor.a() * assisterColorModifier
-					);
-					surface()->DrawSetTextColor( assisterColor );
-					surface()->DrawUnicodeString( assister );
-				}
-
-				surface()->DrawGetTextPos( x, y );
+				DrawPlayerAndAssister( x, y, killer, iKillerTeam, hasAssister ? assister : NULL, iAssisterTeam );
 
 				x += 5;	// |-- Mirv: 5px gap
 			}
@@ -461,13 +440,8 @@ void CHudDeathNotice::Paint()
 				x += iconModifierWide + 5;		// |-- Mirv: 5px gap
 			}
 
-			SetColorForNoticePlayer( iVictimTeam );
-
 			// Draw victims name
-			surface()->DrawSetTextPos( x, y );
-			surface()->DrawSetTextFont( m_hTextFont );	//reset the font, draw icon can change it
-			surface()->DrawUnicodeString( victim );
-			surface()->DrawGetTextPos( x, y );
+			DrawPlayerAndAssister( x, y, victim, iVictimTeam, (m_DeathNotices[i].iSuicide && hasAssister) ? assister : NULL, iAssisterTeam );
 
 			// draw a team colored buildable icon
 			if (iconBuildable)
@@ -480,6 +454,33 @@ void CHudDeathNotice::Paint()
 
 	// Now retire any death notices that have expired
 	RetireExpiredDeathNotices();
+}
+
+void CHudDeathNotice::DrawPlayerAndAssister( int &x, int &y, wchar_t* playerName, int iPlayerTeam, wchar_t* assisterName, int iAssisterTeam )
+{
+	SetColorForNoticePlayer( iPlayerTeam );
+	surface()->DrawSetTextPos( x, y );
+	surface()->DrawSetTextFont( m_hTextFont );
+	surface()->DrawUnicodeString( playerName );
+
+	if (assisterName != NULL)
+	{
+		surface()->DrawSetTextColor( DEATHNOTICE_COLOR_DEFAULT );
+		surface()->DrawUnicodeString( DEATHNOTICE_ASSIST_SEPARATOR );
+		
+		float assisterColorModifier = hud_deathnotice_assister_color_modifier.GetFloat();
+		Color assisterColor = GameResources()->GetTeamColor( iAssisterTeam );
+		assisterColor.SetColor(
+			assisterColor.r() * assisterColorModifier, 
+			assisterColor.g() * assisterColorModifier, 
+			assisterColor.b() * assisterColorModifier, 
+			assisterColor.a() * assisterColorModifier
+		);
+		surface()->DrawSetTextColor( assisterColor );
+		surface()->DrawUnicodeString( assisterName );
+	}
+
+	surface()->DrawGetTextPos( x, y );
 }
 
 //-----------------------------------------------------------------------------
