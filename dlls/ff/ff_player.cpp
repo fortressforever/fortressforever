@@ -6969,7 +6969,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 {
 	if (GetClassSlot() == CLASS_SCOUT || GetClassSlot() == CLASS_SPY)
 	{
-		CFFPlayer *ffplayer = dynamic_cast<CFFPlayer *> (pOther);
+		CFFPlayer *ffplayer = ToFFPlayer (pOther);
 
 		// Don't forget allies!
 		if (ffplayer && ffplayer->IsDisguised() && g_pGameRules->PlayerRelationship(this, ffplayer) == GR_NOTTEAMMATE)
@@ -7263,7 +7263,7 @@ void CFFPlayer::SpySabotageThink()
 	trace_t tr;
 	UTIL_TraceLine(EyePosition(), EyePosition() + vecForward * 100.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
 
-	CFFBuildableObject *pBuildable = dynamic_cast<CFFBuildableObject *> (tr.m_pEnt);
+	CFFBuildableObject *pBuildable = FF_ToBuildableObject (tr.m_pEnt);
 
 	// Our sabotage status has changed
 	if (pBuildable != m_hSabotaging)

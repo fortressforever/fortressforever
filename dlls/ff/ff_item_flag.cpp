@@ -416,7 +416,7 @@ bool CFFInfoScript::CanEntityTouch(CBaseEntity* pEntity)
 	int classMask = kAllowScout|kAllowSniper|kAllowSoldier|kAllowDemoman|kAllowMedic|kAllowHwguy|kAllowPyro|kAllowSpy|kAllowEngineer|kAllowCivilian;
 	if(classMask & m_disallowTouchFlags && pEntity->IsPlayer() )
 	{
-		CFFPlayer *pPlayer = dynamic_cast< CFFPlayer* > ( pEntity );
+		CFFPlayer *pPlayer = ToFFPlayer ( pEntity );
 		int iClass = pPlayer->GetClassSlot();
 		switch(iClass)
 		{
