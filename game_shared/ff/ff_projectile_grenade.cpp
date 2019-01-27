@@ -127,7 +127,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_gl);
 			// Explode on contact with people	
 			if (ExplodeOnHitPlayer()) 
 			{
-				CBasePlayer *pVictim = dynamic_cast< CBasePlayer* > ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to player here
+				CBasePlayer *pVictim = ToBasePlayer ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to player here
 
 				if (FF_IsAirshot(pVictim))
 					m_iDamageType |= DMG_AIRSHOT;
@@ -146,7 +146,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_gl);
 		{
 			if( m_bIsLive )
 			{
-				CFFBuildableObject *pVictim = dynamic_cast< CFFBuildableObject* > ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to buildable here
+				CFFBuildableObject *pVictim = FF_ToBuildableObject ( trace.m_pEnt ); // (AFTERSHOCK): Extra damage applied to buildable here
 				pVictim->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), FF_PROJECTILE_GREN_BONUSDIRECTDMG , m_iDamageType ) );
 							//CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
 				Detonate();

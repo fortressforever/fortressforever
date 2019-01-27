@@ -258,7 +258,7 @@ void CFFWeaponFlamethrower::Fire()
 				// Don't burn a guy who is underwater
 				if (traceHit.m_pEnt->IsPlayer() && ( pTarget->GetWaterLevel() < 3 ) )
 				{
-					CFFPlayer *pPlayerTarget = dynamic_cast< CFFPlayer* > ( pTarget );
+					CFFPlayer *pPlayerTarget = ToFFPlayer ( pTarget );
 					
 					int damage = GetFFWpnData().m_iDamage + CalculateBonusBurnDamage(pPlayerTarget->GetBurnLevel());
 

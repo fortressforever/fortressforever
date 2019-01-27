@@ -1242,7 +1242,7 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 				continue;
 
 			// Is this a buildable of some sort
-			CFFBuildableObject *pBuildable = dynamic_cast <CFFBuildableObject *> (info.GetInflictor());
+			CFFBuildableObject *pBuildable = FF_ToBuildableObject( info.GetInflictor() );
 
 			// Skip objects that are building
 			if(pBuildable && !pBuildable->IsBuilt()) // This is skipping buildables that are the inflictor, not the victim? Bug? - AfterShock
@@ -1500,7 +1500,7 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 		float flAdjustedDamage = flDamage;
 
 		CBaseEntity *pInflictor = info.GetInflictor();
-		bool bIsInflictorABuildable = dynamic_cast <CFFBuildableObject *> (pInflictor) != NULL;
+		bool bIsInflictorABuildable = FF_ToBuildableObject (pInflictor) != NULL;
 
 		// In TFC players only do 2/3 damage to themselves
 		// This also affects forces by the same amount
@@ -2099,7 +2099,7 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 
 	// if its a buildable, let it damage/be damaged by players based on team & friendly fire 
 	
-	CFFBuildableObject *pBuildableAttacker = dynamic_cast <CFFBuildableObject *> (pAttacker);
+	CFFBuildableObject *pBuildableAttacker = FF_ToBuildableObject( pAttacker );
 
 	if ( pBuildableAttacker && pBuildableAttacker->IsMaliciouslySabotaged() )
 	{
@@ -2110,7 +2110,7 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 		return victimIsSabTeammate ? isFriendlyFireOn : true;
 	}
 
-	CFFBuildableObject *pBuildableVictim = dynamic_cast <CFFBuildableObject *> (pVictim);
+	CFFBuildableObject *pBuildableVictim = FF_ToBuildableObject( pVictim );
 
 	if ( pBuildableVictim )
 	{
@@ -2126,7 +2126,7 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 		}
 
 		// if it's not sabotaged then we need to get its owner and use it later on
-		pBuildableOwner = dynamic_cast< CBasePlayer* > ( pBuildableVictim->m_hOwner.Get() );
+		pBuildableOwner = ToFFPlayer ( pBuildableVictim->m_hOwner.Get() );
 		
 		if( ! pBuildableOwner )
 			return false;
@@ -2142,7 +2142,7 @@ bool CFFGameRules::FCanTakeDamage( CBaseEntity *pVictim, CBaseEntity *pAttacker 
 	// Don't affect players who are chilling out
     if( pVictim->IsPlayer() )
 	{
-		CBasePlayer *pVictimPlayer = dynamic_cast< CBasePlayer* > ( pVictim );
+		CBasePlayer *pVictimPlayer = ToBasePlayer ( pVictim );
 		if( pVictimPlayer->IsObserver() || ! pVictimPlayer->IsAlive() ) 
 			return false;
 	}	

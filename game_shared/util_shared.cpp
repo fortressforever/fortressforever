@@ -452,7 +452,10 @@ bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 	{
 		if( pHandle->Classify() == CLASS_TRIGGER_CLIP )
 		{
-			CFFTriggerClip *pTriggerClip = dynamic_cast< CFFTriggerClip * >( pHandle );
+#ifdef _DEBUG
+			Assert( dynamic_cast< CFFTriggerClip * >( pHandle ) != 0 );
+#endif
+			CFFTriggerClip *pTriggerClip = static_cast< CFFTriggerClip * >( pHandle );
 			if( pTriggerClip && pTriggerClip->GetClipMask() )
 			{
 				if( pPassEnt )

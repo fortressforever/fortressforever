@@ -557,7 +557,7 @@ void CFFWeaponSniperRifle::CheckFire()
 			}
 			else
 			{
-				ClientPrint(dynamic_cast<CBasePlayer *> (GetOwnerEntity()), HUD_PRINTCENTER, "#FF_MUSTBEONGROUND");
+				ClientPrint(ToBasePlayer (GetOwnerEntity()), HUD_PRINTCENTER, "#FF_MUSTBEONGROUND");
 				const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 				m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
 			}
