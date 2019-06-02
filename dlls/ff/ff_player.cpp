@@ -5330,7 +5330,9 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		float fArmorDamage = fFullDamage * GetArmorAbsorption();
 		float fHealthDamage = fFullDamage - fArmorDamage;
 		float fArmorLeft = (float) m_iArmor;
-		bool shouldArmorstrip = mp_friendlyfire_armorstrip.GetFloat() > 0 && g_pGameRules->PlayerRelationship( this, info.GetAttacker() ) == GR_TEAMMATE;
+		bool shouldArmorstrip = mp_friendlyfire_armorstrip.GetFloat() > 0
+			&& this != info.GetAttacker() && this != info.GetInflictor()
+			&& g_pGameRules->PlayerRelationship( this, info.GetAttacker() ) == GR_TEAMMATE;
 
 		if (shouldArmorstrip)
 		{
