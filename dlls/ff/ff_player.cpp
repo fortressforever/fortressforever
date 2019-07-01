@@ -526,12 +526,9 @@ CFFPlayer::CFFPlayer()
 	m_flRadioTaggedDuration = RADIOTAG_DRAW_DURATION;
 
 	// Grenade Related
-	m_iGrenadeState = FF_GREN_NONE;
-	m_flServerPrimeTime = 0;
-	m_bEngyGrenWarned = false;
+	ResetGrenadeState();
 	m_iPrimary = 0;
 	m_iSecondary = 0;
-	m_bWantToThrowGrenade = false;
 
 	// Status Effects
 	m_iBurnLevel = 0;
@@ -1376,8 +1373,7 @@ void CFFPlayer::Spawn( void )
 	m_iSabotagedDispensers = 0;
 
 	// If we get spawned, kill any primed grenades!
-	m_flServerPrimeTime = 0.0f;
-	m_iGrenadeState = FF_GREN_NONE;
+	ResetGrenadeState();
 
 	// Fixes water bug
 	if (GetWaterLevel() == 3)
@@ -1938,9 +1934,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if (m_iGrenadeState != FF_GREN_NONE)
 	{
 		ThrowGrenade(GREN_TIMER - (gpGlobals->curtime - m_flServerPrimeTime), 0.0f);
-		m_iGrenadeState = FF_GREN_NONE;
-		m_flServerPrimeTime = 0;
-		m_bEngyGrenWarned = false;
+		ResetGrenadeState();
 	}
 	
 	/* Legshot scoring code - unfinished (ignore)
@@ -4957,6 +4951,12 @@ void CFFPlayer::Command_ThrowGren(void)
 
 	if(bThrowGrenade)
 		ThrowGrenade(fPrimeTimer);
+	
+	ResetGrenadeState();
+}
+
+void CFFPlayer::ResetGrenadeState( void )
+{
 	m_bWantToThrowGrenade = false;
 	m_iGrenadeState = FF_GREN_NONE;
 	m_flServerPrimeTime = 0.0f;
@@ -5040,9 +5040,7 @@ void CFFPlayer::GrenadeThink(void)
 	if ( (m_flServerPrimeTime != 0 ) && ( ( gpGlobals->curtime - m_flServerPrimeTime ) >= GREN_TIMER ) )
 	{
 		ThrowGrenade(0); // "throw" a grenade that immediately explodes at the player's origin
-		m_iGrenadeState = FF_GREN_NONE;
-		m_flServerPrimeTime = 0;
-		m_bEngyGrenWarned = false;
+		ResetGrenadeState();
 	}
 }
 
@@ -5155,9 +5153,7 @@ void CFFPlayer::RemovePrimedGrenades( void )
 {
 	if( IsGrenadePrimed() )
 	{
-		m_flServerPrimeTime = 0.0f;
-		m_iGrenadeState = FF_GREN_NONE;
-		m_bEngyGrenWarned = false;
+		ResetGrenadeState();
 
 		// dexter: stop all the timers beepin' away man
 		FF_SendStopGrenTimerMessage(this);
