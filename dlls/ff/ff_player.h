@@ -478,6 +478,7 @@ public:
 private:	
 	void GrenadeThink(void);
 	void ThrowGrenade(float fTimer, float speed = 630.0f);		// |-- Mirv: So we can drop grens
+	void ResetGrenadeState(void);
 public:
 	void RemovePrimedGrenades( void );
 private:
