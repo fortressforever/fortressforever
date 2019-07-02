@@ -296,16 +296,18 @@ void OnChangeToCTimerExpired( C_FFHintTimer *pHintTimer )
 }
 
 // --> Mirv: Toggle grenades (requested by defrag)
-void CC_ToggleOne()
+bool CC_ToggleOne()
 {
 	if (!engine->IsConnected() || !engine->IsInGame())
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if (pLocalPlayer->m_iGrenadeState != 0)
 	{
-		CC_ThrowGren();
+		bool thrown = CC_ThrowGren();
+		if (!thrown)
+			return false;
 
 		pLocalPlayer->m_iUnthrownGrenCount = 0;
 		pLocalPlayer->m_bLastPrimed = false;
@@ -313,7 +315,10 @@ void CC_ToggleOne()
 	}
 	else
 	{
-		CC_PrimeOne();
+		bool primed = CC_PrimeOne();
+		if (!primed)
+			return false;
+
 		// Hint Code: Check for 2 consecutive unthrown grenades (player got blowed up!)
 		if (pLocalPlayer->m_bLastPrimed == true)
 		{
@@ -328,18 +333,21 @@ void CC_ToggleOne()
 		else
 			pLocalPlayer->m_bLastPrimed = true;
 	}
+	return true;
 }
 
-void CC_ToggleTwo()
+bool CC_ToggleTwo()
 {
 	if (!engine->IsConnected() || !engine->IsInGame())
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if (pLocalPlayer->m_iGrenadeState != 0)
 	{
-		CC_ThrowGren();
+		bool thrown = CC_ThrowGren();
+		if (!thrown)
+			return false;
 
 		pLocalPlayer->m_iUnthrownGrenCount = 0;
 		pLocalPlayer->m_bLastPrimed = false;
@@ -347,7 +355,10 @@ void CC_ToggleTwo()
 	}
 	else
 	{
-		CC_PrimeTwo();
+		bool primed = CC_PrimeTwo();
+		if (!primed)
+			return false;
+
 		// Hint Code: Check for 2 consecutive unthrown grenades (player got blowed up!)
 		if (pLocalPlayer->m_bLastPrimed == true)
 		{
@@ -362,55 +373,56 @@ void CC_ToggleTwo()
 		else
 			pLocalPlayer->m_bLastPrimed = true;
 	}
+	return true;
 }
 // <-- Mirv: Toggle grenades (requested by defrag)
 
-void CC_PrimeOne( void )
+bool CC_PrimeOne( void )
 {
 	if(!engine->IsConnected() || !engine->IsInGame())
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	// Don't want timers going when frozen
 	if( pLocalPlayer->GetFlags() & FL_FROZEN )
-		return;
+		return false;
 
 	if( pLocalPlayer->IsStaticBuilding() )
-		return;
+		return false;
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
 	// Bug #0000064: Civilian has primary & secondary grenade.
 	if(pLocalPlayer->m_iPrimary <= 0)
 	{
 		//DevMsg("[Grenades] You are out of primary grenades!\n");
-		return;
+		return false;
 	}
 
 	// Bug #0000169: Grenade timer is played when player is dead and primes a grenade
 	if (!pLocalPlayer->IsAlive() || pLocalPlayer->GetTeamNumber() < TEAM_BLUE)
-		return;
+		return false;
 
 	// Bug #0000170: Grenade timer plays on gren2 command if the player is already priming a gren1
 	// 0000818: Grenade timer not playing on second of double primes
 	if ((pLocalPlayer->m_iGrenadeState != FF_GREN_NONE) &&
 		(pLocalPlayer->m_flLastServerPrimeTime >= pLocalPlayer->m_flServerPrimeTime))
-		return;
+		return false;
 
 	// Bug #0001308: Holding +gren1 then pressing +gren2 produces a new timer, without priming the 2nd gren
 	if (pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO)
-		return;
+		return false;
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
 	if( pLocalPlayer->IsCloaked() )
-		return;
+		return false;
 
 	// Make sure we can't insta-prime on the client either
 	// This can be anything really so long as it's less than the real delay
 	// This should be okay up to about ~400ms for the moment
 	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.4f)
-		return;
+		return false;
 
 	// 0000818: Grenade timer not playing on second of double primes
 	pLocalPlayer->m_flLastServerPrimeTime = pLocalPlayer->m_flServerPrimeTime;
@@ -453,54 +465,55 @@ void CC_PrimeOne( void )
 
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
+	return true;
 }
 
-void CC_PrimeTwo( void )
+bool CC_PrimeTwo( void )
 {
 	if(!engine->IsConnected() || !engine->IsInGame())
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	// Don't want timers going when frozen
 	if( pLocalPlayer->GetFlags() & FL_FROZEN )
-		return;
+		return false;
 
 	if( pLocalPlayer->IsStaticBuilding() )
-		return;
+		return false;
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
 	// Bug #0000064: Civilian has primary & secondary grenade.
 	if(pLocalPlayer->m_iSecondary <= 0)
 	{
 		//DevMsg("[Grenades] You are out of secondary grenades!\n");
-		return;
+		return false;
 	}
 
 	// Bug #0000169: Grenade timer is played when player is dead and primes a grenade
 	if (!pLocalPlayer->IsAlive() || pLocalPlayer->GetTeamNumber() < TEAM_BLUE)
-		return;
+		return false;
 
 	// Bug #0000170: Grenade timer plays on gren2 command if the player is already priming a gren1
 	// 0000818: Grenade timer not playing on second of double primes
 	if ((pLocalPlayer->m_iGrenadeState != FF_GREN_NONE) &&
 		(pLocalPlayer->m_flLastServerPrimeTime >= pLocalPlayer->m_flServerPrimeTime))
-		return;
+		return false;
 	
 	// Bug #0001308: Holding +gren1 then pressing +gren2 produces a new timer, without priming the 2nd gren
 	if (pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMEONE)
-		return;
+		return false;
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
 	if( pLocalPlayer->IsCloaked() )
-		return;
+		return false;
 
 	// Make sure we can't insta-prime on the client either
 	// This can be anything really so long as it's less than the real delay
 	// This should be okay up to about ~400ms for the moment
 	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.4f)
-		return;
+		return false;
 
 	// 0000818: Grenade timer not playing on second of double primes
 	pLocalPlayer->m_flLastServerPrimeTime = pLocalPlayer->m_flServerPrimeTime;
@@ -537,11 +550,12 @@ void CC_PrimeTwo( void )
 
 	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
 	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
+	return true;
 }
-void CC_ThrowGren( void )
+bool CC_ThrowGren( void )
 {
 	if(!engine->IsConnected() || !engine->IsInGame())
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if(
@@ -550,7 +564,7 @@ void CC_ThrowGren( void )
 		((pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO) && (pLocalPlayer->m_iSecondary == 0))
 		)
 	{
-		return;
+		return false;
 	}
 	
 	// Jiggles: Hint Code
@@ -570,125 +584,112 @@ void CC_ThrowGren( void )
 	// End hint code
 
 	pLocalPlayer->m_iGrenadeState = 0;
-}
-/* Jiggles: Doesn't seem to be used for anything
-void CC_TestTimers( void )
-{
-	//DevMsg("[L0ki] CC_TestTimers\n");
-	if(!engine->IsConnected() || !engine->IsInGame())
-	{
-		//DevMsg("[L0ki] \tNOT connected or NOT active!\n");
-		return;
-	}
-
-	C_FFTimer *pTimer = g_FFTimers.Create("ClientTimer0", 3.0f);
-	if(pTimer)
-	{
-		pTimer->SetExpiredCallback(OnTimerExpired, true);
-		pTimer->StartTimer();
-	}
+	return true;
 }
 
-ConCommand testtimers("cc_test_timers",CC_TestTimers,"Tests the basic timer classes.");
-*/
-
-void CC_SpyCloak( void )
+bool CC_SpyCloak( void )
 {
 	if( !engine->IsConnected() || !engine->IsInGame() )
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pLocalPlayer )
-		return;
+		return false;
 
 	if( !pLocalPlayer->IsAlive() )
-		return;
+		return false;
 	
 	if( pLocalPlayer->GetClassSlot() != CLASS_SPY )
-		return;
+		return false;
 
 	pLocalPlayer->Command_SpyCloak();
+	return true;
 }
 
-void CC_SpySilentCloak( void )
+bool CC_SpySilentCloak( void )
 {
 	if( !engine->IsConnected() || !engine->IsInGame() )
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pLocalPlayer )
-		return;
+		return false;
 
 	if( !pLocalPlayer->IsAlive() )
-		return;
+		return false;
 
 	if( pLocalPlayer->GetClassSlot() != CLASS_SPY )
-		return;
+		return false;
 
 	pLocalPlayer->Command_SpySilentCloak();
+	return true;
 }
 
-void CC_SpySmartCloak( void )
+bool CC_SpySmartCloak( void )
 {
 	if( !engine->IsConnected() || !engine->IsInGame() )
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pLocalPlayer )
-		return;
+		return false;
 
 	if( !pLocalPlayer->IsAlive() )
-		return;
+		return false;
 
 	if( pLocalPlayer->GetClassSlot() != CLASS_SPY )
-		return;
+		return false;
 
 	pLocalPlayer->Command_SpySmartCloak();
+	return true;
 }
 
-void CC_EngyMe( void )
+bool CC_EngyMe( void )
 {
 	if( !engine->IsConnected() || !engine->IsInGame() )
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pLocalPlayer )
-		return;
+		return false;
 
 	if( !pLocalPlayer->IsAlive() )
-		return;
+		return false;
 
 	pLocalPlayer->Command_EngyMe();
+	return true;
 }
 
-void CC_SaveMe( void )
+bool CC_SaveMe( void )
 {
 	if( !engine->IsConnected() || !engine->IsInGame() )
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pLocalPlayer )
-		return;
+		return false;
 
 	if( !pLocalPlayer->IsAlive() )
-		return;
+		return false;
 
 	pLocalPlayer->Command_SaveMe();
+	return true;
 }
 
-void CC_AmmoMe( void )
+bool CC_AmmoMe( void )
 {
 	if( !engine->IsConnected() || !engine->IsInGame() )
-		return;
+		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pLocalPlayer )
-		return;
+		return false;
 
 	if( !pLocalPlayer->IsAlive() )
-		return;
+		return false;
 
 	pLocalPlayer->Command_AmmoMe();
+	return true;
 }
 
 #define FF_PLAYER_MODEL "models/player/terror.mdl"

@@ -186,8 +186,8 @@ FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw
 #else
 	void CliCmdFunc_PlusGrenOne(void)
 	{
-		CC_PrimeOne();
-		if(engine->IsInGame())
+		bool shouldSend = CC_PrimeOne();
+		if(shouldSend && engine->IsInGame())
 		{
 			std::string fullcmd;
 			for(int i = 0; i < engine->Cmd_Argc(); i++)
@@ -202,8 +202,8 @@ FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw
 	static ConCommand CliCmd_PlusGrenOne("+gren1", CliCmdFunc_PlusGrenOne, "Primes a primary grenade while the key is held.");
 	void CliCmdFunc_MinusGrenOne(void)
 	{
-		CC_ThrowGren();
-		if(engine->IsInGame())
+		bool shouldSend = CC_ThrowGren();
+		if(shouldSend && engine->IsInGame())
 		{
 			std::string fullcmd;
 			for(int i = 0; i < engine->Cmd_Argc(); i++)
@@ -218,8 +218,8 @@ FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw
 	static ConCommand CliCmd_MinusGrenOne("-gren1", CliCmdFunc_MinusGrenOne, "Releases a primary grenade that was previously primed with +gren1.");
 	void CliCmdFunc_PlusGrenTwo(void)
 	{
-		CC_PrimeTwo();
-		if(engine->IsInGame())
+		bool shouldSend = CC_PrimeTwo();
+		if(shouldSend && engine->IsInGame())
 		{
 			std::string fullcmd;
 			for(int i = 0; i < engine->Cmd_Argc(); i++)
@@ -234,8 +234,8 @@ FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw
 	static ConCommand CliCmd_PlusGrenTwo("+gren2", CliCmdFunc_PlusGrenTwo, "Primes a secondary grenade while the key is held.");
 	void CliCmdFunc_MinusGrenTwo(void)
 	{
-		CC_ThrowGren();
-		if(engine->IsInGame())
+		bool shouldSend = CC_ThrowGren();
+		if(shouldSend && engine->IsInGame())
 		{
 			std::string fullcmd;
 			for(int i = 0; i < engine->Cmd_Argc(); i++)

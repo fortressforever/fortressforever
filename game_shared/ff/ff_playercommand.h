@@ -51,8 +51,8 @@
 #define FF_SHARED_COMMAND(cmd, ServerFunc, ClientFunc, Description, Flags) \
 	void CliCmdFunc_##cmd(void) \
 	{ \
-		ClientFunc(); \
-		if(engine->IsInGame()) \
+		bool shouldSend = ClientFunc(); \
+		if(shouldSend && engine->IsInGame()) \
 		{ \
 			std::string fullcmd; \
 			for(int i = 0; i < engine->Cmd_Argc(); i++) \

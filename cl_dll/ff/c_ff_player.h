@@ -61,22 +61,22 @@ bool CanStealMouseForAimSentry( void );
 //void SetStealMouseForCloak( bool bValue );
 //bool CanStealMouseForCloak( void );
 
-void CC_PrimeOne(void);
-void CC_PrimeTwo(void);
-void CC_ThrowGren(void);
+bool CC_PrimeOne(void);
+bool CC_PrimeTwo(void);
+bool CC_ThrowGren(void);
 
 // --> Mirv: More gren priming functions
-void CC_ToggleOne( void );
-void CC_ToggleTwo( void );
+bool CC_ToggleOne( void );
+bool CC_ToggleTwo( void );
 // <-- Mirv: More gren priming functions
 
-void CC_SpyCloak( void );
-void CC_SpySilentCloak( void );
-void CC_SpySmartCloak( void );
+bool CC_SpyCloak( void );
+bool CC_SpySilentCloak( void );
+bool CC_SpySmartCloak( void );
 
-void CC_EngyMe( void );
-void CC_SaveMe( void );
-void CC_AmmoMe( void );
+bool CC_EngyMe( void );
+bool CC_SaveMe( void );
+bool CC_AmmoMe( void );
 
 // Moved here from ff_shareddefs.h
 typedef struct SpyInfo_s
