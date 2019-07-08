@@ -558,15 +558,7 @@ bool CC_ThrowGren( void )
 		return false;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if(
-		((pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMEONE) && (pLocalPlayer->m_iPrimary == 0))
-		||
-		((pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO) && (pLocalPlayer->m_iSecondary == 0))
-		)
-	{
-		return false;
-	}
-	
+
 	// Jiggles: Hint Code
 	// Let's see if the player is throwing an "unprimed" grenade
 	if( ( gpGlobals->curtime - pLocalPlayer->m_flGrenPrimeTime ) < 0.5f )
