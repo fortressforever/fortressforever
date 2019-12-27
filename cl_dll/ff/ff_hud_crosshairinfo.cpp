@@ -391,11 +391,12 @@ void CHudCrosshairInfo::OnTick( void )
 									// that is playing the class this guy is disguised as
 
 									// Gonna generate an array of people on the team we're disguised as
-									// in case we have to randomly pick a name later
-									int iPlayers[ 128 ], iCount = 0;
-
+									// and a sub-array of people who share the same class we're disguised as
+									// so that we can randomly pick a name later
+									int iPlayers[ 128 ], iPlayersWithSameClass[ 128 ], iCount = 0, iSameClassCount = 0;
+	
 									bool bDone = false;
-									for( int i = 1; ( i < gpGlobals->maxClients ) && ( !bDone ); i++ )
+									for( int i = 1; i < gpGlobals->maxClients; i++ )
 									{
 										// Skip this spy - kind of useless if it tells us
 										// our real name, eh? Using our real name is a last resort
@@ -414,9 +415,9 @@ void CHudCrosshairInfo::OnTick( void )
 												// If the guy's playing as the class we're disguised as...
 												if( pGR->GetClass( i ) == m_iClass )
 												{
-													// We're stealing this guys name
-													Q_strcpy( szName, pGR->GetPlayerName( i ) ) ;
-													bDone = true; // bail
+													// Store off the player index since we found
+													// someone with the same class 
+													iPlayersWithSameClass[ iSameClassCount++ ] = i;
 												}
 											}
 										}
@@ -426,6 +427,16 @@ void CHudCrosshairInfo::OnTick( void )
 									// to the array of possible choices
 									if( iCount == 0 )
 										iPlayers[ iCount++ ] = pHitPlayer->index;
+									
+									// If someone was on the other team with the same class we're disguised as
+									// we steal a random name from one of the players in the set
+									if( iSameClassCount != 0 )
+									{			
+										// So we got an array of indexes to players of whom we can steal
+										// their name, so randomly steal one
+										Q_strcpy( szName, pGR->GetPlayerName( iPlayersWithSameClass[ random->RandomInt( 0, iSameClassCount - 1 ) ] ) );
+										bDone = true;
+									}
 	
 									// We iterated around and found no one on the team we're disguised as
 									// playing as the class we're disguised as so just pick a guy from
