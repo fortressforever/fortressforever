@@ -49,8 +49,9 @@ To start the game from within VS debugger, right click `client_ff` or `server_ff
 and click `properties`. Navigate to the 'Debugging' section.
 Set command to the 'hl2.exe' in your fortress forever installation directory. On a default steam installation it will look like this:
 
-- command `"C:\Program Files (x86)\Steam\steamapps\common\Fortress Forever\hl2.exe"`
+- command `C:\Program Files (x86)\Steam\steamapps\common\Fortress Forever\hl2.exe`
 - arguments: `-game "FortressForever" -allowdebug -dev`
+- working directory: `C:\Program Files (x86)\Steam\steamapps\common\Fortress Forever\`
 
  (you will need to set this up for both client/server, or whatever you need to debug)
 
