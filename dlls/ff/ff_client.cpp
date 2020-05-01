@@ -29,7 +29,7 @@
 #include "ff_gamerules.h"
 #include "ff_luacontext.h"
 #include "tier0/vprof.h"
-#include "ff_bot_temp.h"
+#include "ff_bot_debug.h"
 #include "viewport_panel_names.h"
 #include "ff_scriptman.h"
 
