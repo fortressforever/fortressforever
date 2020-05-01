@@ -44,8 +44,8 @@
 	#define GREN_FRIC_CONC 0.3f
 	#define GREN_ELAS_CONC 0.7f
 
-	#define FRAG_GREN_DAMAGE 145.0f
-	#define FRAG_GREN_RADIUS 270.0f
+	#define FRAG_GREN_DAMAGE 100.0f //145.0f //Previous damage
+	#define FRAG_GREN_RADIUS 175.0f //270.0f //Previous damage radius
 #endif
 
 //=============================================================================
