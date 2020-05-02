@@ -34,6 +34,7 @@ public:
 #ifdef GAME_DLL
 	virtual float GetGrenadeDamage()		{ return FRAG_GREN_DAMAGE; }
 	virtual float GetGrenadeRadius()		{ return FRAG_GREN_RADIUS; }
+	virtual float GetGrenadeFallOff()		{ return 0.25f; }
 #endif
 
 	virtual color32 GetColour() { color32 col = { 255, 64, 64, GREN_ALPHA_DEFAULT }; return col; }

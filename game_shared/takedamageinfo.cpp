@@ -57,6 +57,7 @@ void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, con
 	m_vecDamagePosition = damagePosition;
 	m_vecReportedPosition = reportedPosition;
 	m_iAmmoType = -1;
+	m_flFallOff = DEFAULT_FALLOFF;
 }
 
 CTakeDamageInfo::CTakeDamageInfo()
@@ -70,17 +71,18 @@ CTakeDamageInfo::CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacke
 	Set( pInflictor, pAttacker, flDamage, bitsDamageType, iKillType );
 }
 
-CTakeDamageInfo::CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType, Vector *reportedPosition )
+CTakeDamageInfo::CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType, Vector *reportedPosition, float flFallOff )
 {
-	Set( pInflictor, pAttacker, damageForce, damagePosition, flDamage, bitsDamageType, iKillType, reportedPosition );
+	Set( pInflictor, pAttacker, damageForce, damagePosition, flDamage, bitsDamageType, iKillType, reportedPosition, flFallOff );
 }
 
-void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType )
+void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType, float flFallOff )
 {
 	Init( pInflictor, pAttacker, vec3_origin, vec3_origin, vec3_origin, flDamage, bitsDamageType, iKillType );
+	m_flFallOff = flFallOff;
 }
 
-void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType, Vector *reportedPosition )
+void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType, Vector *reportedPosition, float flFallOff )
 {
 	Vector vecReported = vec3_origin;
 	if ( reportedPosition )
@@ -88,6 +90,7 @@ void CTakeDamageInfo::Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, cons
 		vecReported = *reportedPosition;
 	}
 	Init( pInflictor, pAttacker, damageForce, damagePosition, vecReported, flDamage, bitsDamageType, iKillType );
+	m_flFallOff = flFallOff;
 }
 
 //-----------------------------------------------------------------------------

@@ -1229,8 +1229,14 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 		//NDebugOverlay::Cross3D(vecSrc, 8.0f, 255, 0, 0, true, 5.0f);
 #endif
 
+		falloff = info.GetFallOff();
+		
+		char fallOffDebugBuff[32];
+		Q_snprintf(fallOffDebugBuff, 50, "Grenade fall off: %f \n", falloff);
+		Msg(fallOffDebugBuff);
+		
 		// TFC style falloff please.
-		falloff = 0.5f; // AfterShock: need to change this if you want to have a radius over 2x the damage
+		//falloff = 0.5f; // AfterShock: need to change this if you want to have a radius over 2x the damage
 
 		// iterate on all entities in the vicinity.
 		for (CEntitySphereQuery sphere(vecSrc, flRadius); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
