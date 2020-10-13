@@ -712,11 +712,6 @@ float CServerGameDLL::GetTickInterval( void ) const
 {
 	float tickinterval = DEFAULT_TICK_INTERVAL;
 
-//#if defined( CSTRIKE_DLL )
-	// in CS reduce tickrate/sec by defualt
-	tickinterval *= 2;
-//#endif
-
 	// override if tick rate specified in command line
 	if ( CommandLine()->CheckParm( "-tickrate" ) )
 	{
