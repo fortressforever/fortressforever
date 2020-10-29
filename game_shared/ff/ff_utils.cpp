@@ -713,7 +713,7 @@ bool FF_IsGrenade( CBaseEntity *pEntity )
 	if( !pEntity )
 		return false;
 
-	return ( pEntity->GetFlags() & FL_GRENADE ) ? true : false;
+	return !!( pEntity->GetFlags() & FL_GRENADE );
 }
 
 #ifdef GAME_DLL

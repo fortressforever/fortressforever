@@ -716,7 +716,7 @@ void Bot_UpdateDirection( CFFBot *pBot )
 			angle.y += 360;
 
 		pBot->m_flNextTurnTime = gpGlobals->curtime + 2.0;
-		pBot->m_bLastTurnToRight = random->RandomInt( 0, 1 ) == 0 ? true : false;
+		pBot->m_bLastTurnToRight = random->RandomInt( 0, 1 ) == 0;
 
 		pBot->m_ForwardAngle = angle;
 		pBot->m_LastAngles = angle;
