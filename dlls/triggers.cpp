@@ -4593,13 +4593,13 @@ public:
 
 	float LinearLimit();
 
-	inline bool HasGravityScale() { return m_gravityScale != 1.0 ? true : false; }
-	inline bool HasAirDensity() { return m_addAirDensity != 0 ? true : false; }
+	inline bool HasGravityScale() { return m_gravityScale != 1.0; }
+	inline bool HasAirDensity() { return m_addAirDensity != 0; }
 	inline bool HasLinearLimit() { return LinearLimit() != 0.0f; }
-	inline bool HasLinearScale() { return m_linearScale != 1.0 ? true : false; }
-	inline bool HasAngularLimit() { return m_angularLimit != 0 ? true : false; }
-	inline bool HasAngularScale() { return m_angularScale != 1.0 ? true : false; }
-	inline bool HasLinearForce() { return m_linearForce != 0.0 ? true : false; }
+	inline bool HasLinearScale() { return m_linearScale != 1.0; }
+	inline bool HasAngularLimit() { return m_angularLimit != 0; }
+	inline bool HasAngularScale() { return m_angularScale != 1.0; }
+	inline bool HasLinearForce() { return m_linearForce != 0.0; }
 
 	DECLARE_DATADESC();
 

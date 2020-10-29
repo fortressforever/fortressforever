@@ -481,7 +481,7 @@ int	C_StriderFX::DrawModel( int )
 	pixelvis_queryparams_t gunParams;
 	gunParams.Init(m_worldPosition, 4.0f);
 	float gunFractionVisible = PixelVisibility_FractionVisible( gunParams, &m_queryHandleGun );
-	bool gunVisible = gunFractionVisible > 0.0f ? true : false;
+	bool gunVisible = gunFractionVisible > 0.0f;
 
 	// draw the narrow beam
 	if ( hasParam[STRIDERFX_NARROW_BEAM_COLOR] && hasParam[STRIDERFX_NARROW_BEAM_SIZE] )
@@ -559,7 +559,7 @@ int	C_StriderFX::DrawModel( int )
 		pixelvis_queryparams_t endParams;
 		endParams.Init(wideBeamEnd, 4.0f, 0.001f);
 		float endFractionVisible = PixelVisibility_FractionVisible( endParams, &m_queryHandleBeamEnd );
-		bool endVisible = endFractionVisible > 0.0f ? true : false;
+		bool endVisible = endFractionVisible > 0.0f;
 
 		if ( endVisible )
 		{

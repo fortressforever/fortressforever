@@ -1870,7 +1870,7 @@ void CMP3Player::RestoreDirectory( KeyValues *dir, SoundDirectory_t *sd )
 		}
 		else if ( !Q_stricmp( kv->GetName(), "gamesounds" ) )
 		{
-			sd->m_bGameSound = kv->GetInt() ? true : false;
+			sd->m_bGameSound = kv->GetInt();
 		}
 		else if ( !Q_stricmp( kv->GetName(), "dirname" ) )
 		{

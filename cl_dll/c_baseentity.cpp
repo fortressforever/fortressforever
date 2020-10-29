@@ -1765,7 +1765,7 @@ int C_BaseEntity::DrawModel( int flags )
 	switch ( modelType )
 	{
 	case mod_brush:
-		drawn = DrawBrushModel( flags & STUDIO_TRANSPARENCY ? true : false );
+		drawn = DrawBrushModel( flags & STUDIO_TRANSPARENCY );
 		break;
 	case mod_studio:
 		// All studio models must be derived from C_BaseAnimating.  Issue warning.
@@ -2274,10 +2274,10 @@ void C_BaseEntity::PostDataUpdate( DataUpdateType_t updateType )
 		SetRenderMode( (RenderMode_t)m_nRenderMode, true );
 	}
 
-	bool animTimeChanged = ( m_flAnimTime != m_flOldAnimTime ) ? true : false;
-	bool originChanged = ( m_vecOldOrigin != GetLocalOrigin() ) ? true : false;
-	bool anglesChanged = ( m_vecOldAngRotation != GetLocalAngles() ) ? true : false;
-	bool simTimeChanged = ( m_flSimulationTime != m_flOldSimulationTime ) ? true : false;
+	bool animTimeChanged = ( m_flAnimTime != m_flOldAnimTime );
+	bool originChanged = ( m_vecOldOrigin != GetLocalOrigin() );
+	bool anglesChanged = ( m_vecOldAngRotation != GetLocalAngles() );
+	bool simTimeChanged = ( m_flSimulationTime != m_flOldSimulationTime );
 
 	// Detect simulation changes 
 	bool simulationChanged = originChanged || anglesChanged || simTimeChanged;
@@ -4099,7 +4099,7 @@ void C_BaseEntity::PreEntityPacketReceived( int commands_acknowledged )
 {				
 #if !defined( NO_ENTITY_PREDICTION )
 	// Don't need to copy intermediate data if server did ack any new commands
-	bool copyintermediate = ( commands_acknowledged > 0 ) ? true : false;
+	bool copyintermediate = ( commands_acknowledged > 0 );
 
 	Assert( GetPredictable() );
 	Assert( cl_predict.GetBool() );
@@ -4154,7 +4154,7 @@ bool C_BaseEntity::PostNetworkDataReceived( int commands_acknowledged )
 #if !defined( NO_ENTITY_PREDICTION )
 	Assert( GetPredictable() );
 
-	bool errorcheck = ( commands_acknowledged > 0 ) ? true : false;
+	bool errorcheck = ( commands_acknowledged > 0 );
 
 	// Store network data into post networking pristine state slot (slot 64) 
 	SaveData( "PostNetworkDataReceived", SLOT_ORIGINALDATA, PC_EVERYTHING );
@@ -4631,7 +4631,7 @@ bool C_BaseEntity::BecameDormantThisPacket( void ) const
 bool C_BaseEntity::IsIntermediateDataAllocated( void ) const
 {
 #if !defined( NO_ENTITY_PREDICTION )
-	return m_pOriginalData != NULL ? true : false;
+	return m_pOriginalData != NULL;
 #else
 	return false;
 #endif

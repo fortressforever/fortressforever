@@ -872,8 +872,8 @@ void CChoreoScene::ParseFlexAnimations( ISceneTokenProcessor *tokenizer, CChoreo
 				if ( !edgeinfo[ edge ].m_bActive )
 					continue;
 
-				track->SetEdgeActive( edge == 0 ? true : false, true );
-				track->SetEdgeInfo( edge == 0 ? true : false, edgeinfo[ edge ].m_CurveType, edgeinfo[ edge ].m_flZeroPos );
+				track->SetEdgeActive( edge == 0, true );
+				track->SetEdgeInfo( edge == 0, edgeinfo[ edge ].m_CurveType, edgeinfo[ edge ].m_flZeroPos );
 			}
 
 			track->Resort( 0 );
@@ -1126,7 +1126,7 @@ CChoreoEvent *CChoreoScene::ParseEvent( CChoreoActor *actor, CChoreoChannel *cha
 				percentage = (float)atof( m_pTokenizer->CurrentToken() );
 
 				m_pTokenizer->GetToken( false );
-				locked = atoi( m_pTokenizer->CurrentToken() ) ? true : false;
+				locked = atoi( m_pTokenizer->CurrentToken() );
 
 				e->AddTimingTag( tagname, percentage, locked );
 			}
@@ -1240,7 +1240,7 @@ CChoreoActor *CChoreoScene::ParseActor( void )
 		else if ( !Q_stricmp( m_pTokenizer->CurrentToken(), "active" ) )
 		{
 			m_pTokenizer->GetToken( true );
-			a->SetActive( atoi( m_pTokenizer->CurrentToken() ) ? true : false );
+			a->SetActive( atoi( m_pTokenizer->CurrentToken() ) );
 		}
 		else
 		{
@@ -1297,7 +1297,7 @@ void CChoreoScene::ParseFPS( void )
 void CChoreoScene::ParseSnap( void )
 {
 	m_pTokenizer->GetToken( true );
-	m_bUseFrameSnap = !Q_stricmp( m_pTokenizer->CurrentToken(), "on" ) ? true : false;
+	m_bUseFrameSnap = !Q_stricmp( m_pTokenizer->CurrentToken(), "on" );
 }
 
 
@@ -1342,7 +1342,7 @@ CChoreoChannel *CChoreoScene::ParseChannel( CChoreoActor *actor )
 		else if ( !Q_stricmp( m_pTokenizer->CurrentToken(), "active" ) )
 		{
 			m_pTokenizer->GetToken( true );
-			c->SetActive( atoi( m_pTokenizer->CurrentToken() ) ? true : false );
+			c->SetActive( atoi( m_pTokenizer->CurrentToken() ) );
 		}
 		else
 		{
@@ -2635,7 +2635,7 @@ void CChoreoScene::Think( float curtime )
 	float oldt = m_flCurrentTime;
 	float dt = curtime - oldt;
 
-	bool playing_forward = ( dt >= 0.0f ) ? true : false;
+	bool playing_forward = ( dt >= 0.0f );
 
 	m_nActiveEvents = 0;
 

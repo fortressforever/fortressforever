@@ -75,7 +75,7 @@ void CFFFXRailBeam::Draw(double frametime)
 //-----------------------------------------------------------------------------
 bool CFFFXRailBeam::IsActive()
 {
-	return (m_flStartTime + FIRE_TIME > gpGlobals->curtime) ? true : false;
+	return (m_flStartTime + FIRE_TIME > gpGlobals->curtime);
 }
 
 //-----------------------------------------------------------------------------

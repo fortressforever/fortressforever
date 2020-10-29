@@ -412,7 +412,7 @@ void C_BaseAnimatingOverlay::DoAnimationEvents( CStudioHdr *pStudioHdr )
 
 	BaseClass::DoAnimationEvents( pStudioHdr );
 
-	bool watch = false; // Q_strstr( hdr->name, "rifle" ) ? true : false;
+	bool watch = false; // Q_strstr( hdr->name, "rifle" );
 
 	CheckForLayerChanges( pStudioHdr, gpGlobals->curtime ); // !!!
 

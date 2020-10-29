@@ -438,7 +438,7 @@ struct Criteria
 
 	bool IsSubCriteriaType() const
 	{
-		return ( subcriteria.Count() > 0 ) ? true : false;
+		return ( subcriteria.Count() > 0 );
 	}
 
 	char						*name;
@@ -610,7 +610,7 @@ private:
 
 		m_ScriptStack[ 0 ].currenttoken = engine->ParseFile( m_ScriptStack[ 0 ].currenttoken, token, sizeof( token ) );
 		m_ScriptStack[ 0 ].tokencount++;
-		return m_ScriptStack[ 0 ].currenttoken != NULL ? true : false;
+		return m_ScriptStack[ 0 ].currenttoken != NULL;
 	}
 
 	inline void Unget()
@@ -1052,7 +1052,7 @@ bool CResponseSystem::CompareUsingMatcher( const char *setValue, Matcher& m, boo
 		return v == (float)atof( m.GetToken() );
 	}
 
-	return !Q_stricmp( setValue, m.GetToken() ) ? true : false;
+	return !Q_stricmp( setValue, m.GetToken() );
 }
 
 bool CResponseSystem::Compare( const char *setValue, Criteria *c, bool verbose /*= false*/ )
@@ -1090,7 +1090,7 @@ float CResponseSystem::RecursiveScoreSubcriteriaAgainstRule( const AI_CriteriaSe
 		score += ScoreCriteriaAgainstRuleCriteria( set, icriterion, excludesubrule, verbose );
 	}
 
-	exclude = ( parent->required && score == 0.0f ) ? true : false;
+	exclude = ( parent->required && score == 0.0f );
 
 	return score * parent->weight.GetFloat();
 }

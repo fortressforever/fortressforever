@@ -169,7 +169,7 @@ void GameStartFrame( void )
 	if ( g_fGameOver )
 		return;
 
-	gpGlobals->teamplay = teamplay.GetInt() ? true : false;
+	gpGlobals->teamplay = teamplay.GetInt();
 #ifdef _DEBUG
 	Bot_RunAll();
 #endif

@@ -2103,8 +2103,8 @@ void CBaseEntity::VPhysicsUpdatePusher( IPhysicsObject *pPhysics )
 			pList = (physicspushlist_t *)GetDataObject( PHYSICSPUSHLIST );
 			Assert(pList);
 		}
-		bool checkrot = (GetLocalAngularVelocity() != vec3_angle) ? true : false;
-		bool checkmove = (GetLocalVelocity() != vec3_origin) ? true : false;
+		bool checkrot = (GetLocalAngularVelocity() != vec3_angle);
+		bool checkmove = (GetLocalVelocity() != vec3_origin);
 
 		pushblock_t params;
 		params.pRootParent = this;
@@ -2475,7 +2475,7 @@ bool CBaseEntity::FVisible( const Vector &vecTarget, int traceMask, CBaseEntity 
 	
 	// don't look through water
 	// FIXME: only block LOS through opaque water
-	bool inWater = ( UTIL_PointContents( vecTarget ) & (CONTENTS_SLIME|CONTENTS_WATER) ) ? true : false;
+	bool inWater = ( UTIL_PointContents( vecTarget ) & (CONTENTS_SLIME|CONTENTS_WATER) );
 
 	// Don't allow it if we're straddling two areas
 	if ( ( m_nWaterLevel == 3 && !inWater ) || ( m_nWaterLevel != 3 && inWater ) )
@@ -3035,7 +3035,7 @@ void CBaseEntity::SetMoveType( MoveType_t val, MoveCollide_t moveCollide )
 	case MOVETYPE_STEP:
 		{
 			// This will probably go away once I remove the cvar that controls the test code
-			SetSimulatedEveryTick( g_bTestMoveTypeStepSimulation ? true : false );
+			SetSimulatedEveryTick( g_bTestMoveTypeStepSimulation );
 			SetAnimatedEveryTick( false );
 		}
 		break;

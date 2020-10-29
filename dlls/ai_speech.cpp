@@ -97,7 +97,7 @@ public:
 				// Write data
 				pSave->WriteAll( pHistory );
 				// Write response blob
-				bool hasresponse = pHistory->response != NULL ? true : false;
+				bool hasresponse = pHistory->response != NULL;
 				pSave->WriteBool( &hasresponse );
 				if ( hasresponse )
 				{
@@ -160,7 +160,7 @@ public:
 	virtual bool IsEmpty( const SaveRestoreFieldInfo_t &fieldInfo )
 	{
 		CUtlDict< ConceptHistory_t, int > *ch = ((CUtlDict< ConceptHistory_t, int > *)fieldInfo.pField);
-		return ch->Count() == 0 ? true : false;
+		return ch->Count() == 0;
 	}
 };
 
@@ -413,7 +413,7 @@ bool CAI_Expresser::SpeakDispatchResponse( AIConcept_t concept, AI_Response *res
 
 	case RESPONSE_SENTENCE:
 		{
-			spoke = ( -1 != SpeakRawSentence( response, delay, VOL_NORM, soundlevel ) ) ? true : false;
+			spoke = ( -1 != SpeakRawSentence( response, delay, VOL_NORM, soundlevel ) );
 		}
 		break;
 

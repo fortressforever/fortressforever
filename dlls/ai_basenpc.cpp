@@ -4235,7 +4235,7 @@ void CAI_BaseNPC::SetState( NPC_STATE State )
 
 bool CAI_BaseNPC::WokeThisTick() const
 {
-	return m_nWakeTick == gpGlobals->tickcount ? true : false;
+	return m_nWakeTick == gpGlobals->tickcount;
 }
 
 //-----------------------------------------------------------------------------

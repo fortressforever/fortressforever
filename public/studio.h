@@ -1769,7 +1769,7 @@ struct flexsetting_t
 
 	inline bool IsMarkov( void ) const
 	{ 
-		return type == FS_MARKOV ? true : false; 
+		return type == FS_MARKOV; 
 	}
 
 	// FS_NORMAL or FS_MARKOV

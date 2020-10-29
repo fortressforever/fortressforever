@@ -815,7 +815,7 @@ int	CBaseAnimatingOverlay::FindGestureLayer( Activity activity )
 //-----------------------------------------------------------------------------
 bool CBaseAnimatingOverlay::IsPlayingGesture( Activity activity )
 {
-	return FindGestureLayer( activity ) != -1 ? true : false;
+	return FindGestureLayer( activity ) != -1;
 }
 
 //-----------------------------------------------------------------------------

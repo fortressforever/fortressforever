@@ -147,7 +147,7 @@ inline bool ParseToken( void )
 
 	currenttoken = engine->ParseFile( currenttoken, token, sizeof( token ) );
 	tokencount++;
-	return currenttoken != NULL ? true : false;
+	return currenttoken != NULL;
 }
 
 inline void Unget()

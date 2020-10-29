@@ -1280,7 +1280,7 @@ void CBasePlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 		distanceFromPlayer = delta.Length();
 	}
 
-	bool ear_ringing = distanceFromPlayer < MIN_EAR_RINGING_DISTANCE ? true : false;
+	bool ear_ringing = distanceFromPlayer < MIN_EAR_RINGING_DISTANCE;
 	bool shock = lastDamage >= MIN_SHOCK_AND_CONFUSION_DAMAGE;
 
 	if ( !shock && !ear_ringing )
@@ -4407,7 +4407,7 @@ void CBasePlayer::PostThinkVPhysics( void )
 
 void CBasePlayer::UpdateVPhysicsPosition( const Vector &position, const Vector &velocity, float secondsToArrival )
 {
-	bool onground = (GetFlags() & FL_ONGROUND) ? true : false;
+	bool onground = (GetFlags() & FL_ONGROUND);
 	IPhysicsObject *pPhysGround = GetGroundVPhysics();
 	
 	// if the object is much heavier than the player, treat it as a local coordinate system
@@ -7423,7 +7423,7 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 
 	Vector newPosition;
 
-	bool physicsUpdated = m_pPhysicsController->GetShadowPosition( &newPosition, NULL ) > 0 ? true : false;
+	bool physicsUpdated = m_pPhysicsController->GetShadowPosition( &newPosition, NULL ) > 0;
 
 	// UNDONE: If the player is penetrating, but the player's game collisions are not stuck, teleport the physics shadow to the game position
 	if ( pPhysics->GetGameFlags() & FVPHYSICS_PENETRATING )

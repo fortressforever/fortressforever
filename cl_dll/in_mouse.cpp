@@ -78,7 +78,7 @@ void CInput::ActivateMouse (void)
 	{
 		if ( m_fMouseParmsValid )
 		{
-			m_fRestoreSPI = SystemParametersInfo (SPI_SETMOUSE, 0, m_rgNewMouseParms, 0) ? true : false;
+			m_fRestoreSPI = SystemParametersInfo (SPI_SETMOUSE, 0, m_rgNewMouseParms, 0);
 		}
 		m_fMouseActive = true;
 
@@ -172,7 +172,7 @@ void CInput::CheckMouseAcclerationVars()
 	if ( dirty )
 	{
 		// Update them
-		m_fRestoreSPI = SystemParametersInfo( SPI_SETMOUSE, 0, m_rgNewMouseParms, 0 ) ? true : false;
+		m_fRestoreSPI = SystemParametersInfo( SPI_SETMOUSE, 0, m_rgNewMouseParms, 0 );
 	}
 }
 
@@ -193,7 +193,7 @@ void CInput::Init_Mouse (void)
 
 	if ( CommandLine()->FindParm ("-useforcedmparms" ) ) 
 	{
-		m_fMouseParmsValid = SystemParametersInfo( SPI_GETMOUSE, 0, m_rgOrigMouseParms, 0 ) ? true : false;
+		m_fMouseParmsValid = SystemParametersInfo( SPI_GETMOUSE, 0, m_rgOrigMouseParms, 0 );
 		if ( m_fMouseParmsValid )
 		{
 			if ( CommandLine()->FindParm ("-noforcemspd" ) ) 

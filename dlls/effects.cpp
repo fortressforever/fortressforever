@@ -2323,7 +2323,7 @@ void CEnvViewPunch::Spawn( void )
 //-----------------------------------------------------------------------------
 void CEnvViewPunch::DoViewPunch()
 {
-	bool bAir = (GetSpawnFlags() & SF_PUNCH_IN_AIR) ? true : false;
+	bool bAir = (GetSpawnFlags() & SF_PUNCH_IN_AIR);
 	UTIL_ViewPunch( GetAbsOrigin(), m_angViewPunch, m_flRadius, bAir );
 }
 

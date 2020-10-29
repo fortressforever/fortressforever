@@ -442,11 +442,11 @@ void CBaseDoor::Activate( void )
 			bool error = false;
 			if ( pDoorList[i]->IsRotatingDoor() )
 			{
-				error = ( pDoorList[i]->GetLocalAngles() != GetLocalAngles() ) ? true : false;
+				error = ( pDoorList[i]->GetLocalAngles() != GetLocalAngles() );
 			}
 			else 
 			{
-				error = ( pDoorList[i]->GetLocalOrigin() != GetLocalOrigin() ) ? true : false;
+				error = ( pDoorList[i]->GetLocalOrigin() != GetLocalOrigin() );
 			}
 			if ( error )
 			{

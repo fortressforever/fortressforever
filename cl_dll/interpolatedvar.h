@@ -1015,7 +1015,7 @@ inline void	CInterpolatedVarArrayBase<Type>::SetLooping( bool looping, int iArra
 template< typename Type > 
 inline void	CInterpolatedVarArrayBase<Type>::SetMaxCount( int newmax )
 {
-	bool changed = ( newmax != m_nMaxCount ) ? true : false;
+	bool changed = ( newmax != m_nMaxCount );
 	m_nMaxCount = newmax;
 	// Wipe everything any time this changes!!!
 	if ( changed )

@@ -202,7 +202,7 @@ private:
 
 	bool	IsBeingRestored() const
 	{
-		return gpGlobals->framecount == m_nRestoreFrame ? true : false;
+		return gpGlobals->framecount == m_nRestoreFrame;
 	}
 
 	void	AddSoundScapeFile( const char *filename );
@@ -781,7 +781,7 @@ void C_SoundscapeSystem::ProcessPlayLooping( KeyValues *pAmbient, const subsound
 		}
 		else if ( !Q_strcasecmp( pKey->GetName(), "suppress_on_restore" ) )
 		{
-			suppress = Q_atoi( pKey->GetString() ) != 0 ? true : false;
+			suppress = Q_atoi( pKey->GetString() ) != 0;
 		}
 		else
 		{
@@ -984,7 +984,7 @@ void C_SoundscapeSystem::ProcessPlayRandom( KeyValues *pPlayRandom, const subsou
 		}
 		else if ( !Q_strcasecmp( pKey->GetName(), "suppress_on_restore" ) )
 		{
-			suppress = Q_atoi( pKey->GetString() ) != 0 ? true : false;
+			suppress = Q_atoi( pKey->GetString() ) != 0;
 		}
 		else
 		{

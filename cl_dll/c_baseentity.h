@@ -1658,7 +1658,7 @@ EXTERN_RECV_TABLE(DT_BaseEntity);
 
 inline bool FClassnameIs( C_BaseEntity *pEntity, const char *szClassname )
 { 
-	return !strcmp( pEntity->GetClassname(), szClassname ) ? true : false; 
+	return !strcmp( pEntity->GetClassname(), szClassname ); 
 }
 
 #define SetThink( a ) ThinkSet( static_cast <void (CBaseEntity::*)(void)> (a), 0, NULL )

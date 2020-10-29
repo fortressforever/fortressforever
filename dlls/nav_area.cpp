@@ -2577,7 +2577,7 @@ void CNavArea::ComputeHidingSpots( void )
 		extent.lo = 999999.9f;
 		extent.hi = -999999.9f;
 
-		bool isHoriz = (d == NORTH || d == SOUTH) ? true : false;
+		bool isHoriz = (d == NORTH || d == SOUTH);
 
 		FOR_EACH_LL( m_connect[d], it )
 		{

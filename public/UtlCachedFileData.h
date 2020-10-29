@@ -105,7 +105,7 @@ public:
 		ElementType_t element;
 		element.handle = filesystem->FindOrAddFileName( filename );
 		int idx = m_Elements.Find( element );
-		return idx != m_Elements.InvalidIndex() ? true : false;
+		return idx != m_Elements.InvalidIndex();
 	}
 
 	void SetElement( char const *name, long fileinfo, T* src )
@@ -892,7 +892,7 @@ public:
 		 char name1[ 512 ];
 		 filesystem->String( file0.handle, name0, sizeof( name0 ) );
 		 filesystem->String( file1.handle, name1, sizeof( name1 ) );
-		 return Q_stricmp( name0, name1 ) < 0 ? true : false;
+		 return Q_stricmp( name0, name1 ) < 0;
 	 }
 };
 
@@ -951,7 +951,7 @@ void	CUtlCachedFileData<T>::CheckDiskInfo( bool forcerebuild, long cacheFileTime
 		else if ( !bSteam )
 		{
 			long pathTime = filesystem->GetPathTime( fn, "GAME" );
-			bCheck = (pathTime > cacheFileTime) ? true : false;
+			bCheck = (pathTime > cacheFileTime);
 		}
 
 		for ( i = listStart; i < listEnd; i++ )

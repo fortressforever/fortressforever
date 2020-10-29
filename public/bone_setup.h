@@ -42,7 +42,7 @@ public:
 	}
 	inline bool IsBoneMarked(int iBone)
 	{
-		return Get(iBone) != 0 ? true : false;
+		return Get(iBone) != 0;
 	}
 };
 

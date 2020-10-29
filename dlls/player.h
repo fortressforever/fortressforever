@@ -1072,7 +1072,7 @@ inline CBaseEntity *CBasePlayer::GetVehicleEntity()
 
 inline bool CBasePlayer::IsInAVehicle( void ) const 
 { 
-	return ( NULL != m_hVehicle.Get() ) ? true : false; 
+	return ( NULL != m_hVehicle.Get() ); 
 }
 
 inline void CBasePlayer::SetTouchedPhysics( bool bTouch ) 

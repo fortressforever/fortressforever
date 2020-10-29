@@ -261,7 +261,7 @@ public:
 	// Vehicles...
 	IClientVehicle			*GetVehicle();
 
-	bool			IsInAVehicle() const	{ return ( NULL != m_hVehicle.Get() ) ? true : false; }
+	bool			IsInAVehicle() const	{ return ( NULL != m_hVehicle.Get() ); }
 	virtual void	SetVehicleRole( int nRole );
 	void					LeaveVehicle( void );
 

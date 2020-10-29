@@ -55,7 +55,7 @@ bool EffectOccluded( const Vector &pos, pixelvis_handle_t *queryHandle )
 		trace_t	tr;
 		UTIL_TraceLine( pos, MainViewOrigin(), MASK_OPAQUE, NULL, COLLISION_GROUP_NONE, &tr );
 		
-		return ( tr.fraction < 1.0f ) ? true : false;
+		return ( tr.fraction < 1.0f );
 	}
 	pixelvis_queryparams_t params;
 	params.Init(pos);
@@ -97,12 +97,12 @@ void CSimpleGlowEmitter::SimulateParticles( CParticleSimulateIterator *pIterator
 
 bool CSimpleGlowEmitter::WasTestedInView( unsigned char viewMask )
 {
-	return (m_wasTested & viewMask) ? true : false;
+	return (m_wasTested & viewMask);
 }
 
 bool CSimpleGlowEmitter::IsVisibleInView( unsigned char viewMask )
 {
-	return (m_isVisible & viewMask) ? true : false;
+	return (m_isVisible & viewMask);
 }
 
 void CSimpleGlowEmitter::SetTestedInView( unsigned char viewMask, bool bTested )

@@ -243,7 +243,7 @@ void CGlowOverlay::UpdateGlowObstruction( const Vector &vToGlow, bool bCacheFull
 		pixelvis_queryparams_t params;
 		params.Init( m_vPos, m_flProxyRadius );
 
-		bFade = PixelVisibility_FractionVisible( params, &m_queryHandle ) < 1.0f ? true : false;
+		bFade = PixelVisibility_FractionVisible( params, &m_queryHandle ) < 1.0f;
 
 	}
 

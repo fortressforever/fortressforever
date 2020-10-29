@@ -791,7 +791,7 @@ bool CBaseAnimating::BecomeRagdollOnClient( const Vector &force )
 
 bool CBaseAnimating::IsRagdoll()
 {
-	return ( m_nRenderFX == kRenderFxRagdoll ) ? true : false;
+	return ( m_nRenderFX == kRenderFxRagdoll );
 }
 
 bool CBaseAnimating::CanBecomeRagdoll( void ) 
@@ -3239,7 +3239,7 @@ void CBaseAnimating::ResetSequence(int nSequence)
 	//  the newsequenceparity bit which causes the client to call m_flCycle.Reset() which causes a very slight 
 	//  discontinuity in looping animations as they reset around to cycle 0.0.  This was causing the parentattached
 	//  helmet on barney to hitch every time barney's idle cycled back around to its start.
-	bool changed = nSequence != GetSequence() ? true : false;
+	bool changed = nSequence != GetSequence();
 
 	SetSequence( nSequence );
 	if ( changed || !SequenceLoops() )

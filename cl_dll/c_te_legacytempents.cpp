@@ -995,7 +995,7 @@ void CTempEnts::BreakModel( const Vector &pos, const QAngle &angles, const Vecto
 		return;
 
 	// See g_BreakableHelper above for notes...
-	bool isSlave = ( flags & BREAK_SLAVE ) ? true : false;
+	bool isSlave = ( flags & BREAK_SLAVE );
 
 	frameCount = modelinfo->GetModelFrameCount( pModel );
 

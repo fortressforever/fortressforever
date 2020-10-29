@@ -179,7 +179,7 @@ void CEnvShake::ApplyShake( ShakeCommand_t command )
 {
 	if ( !HasSpawnFlags( SF_SHAKE_NO_VIEW ) )
 	{
-		bool air = (GetSpawnFlags() & SF_SHAKE_INAIR) ? true : false;
+		bool air = (GetSpawnFlags() & SF_SHAKE_INAIR);
 		UTIL_ScreenShake( GetAbsOrigin(), Amplitude(), Frequency(), Duration(), Radius(), command, air );
 	}
 		

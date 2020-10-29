@@ -70,7 +70,7 @@ private:
 
 		static bool LessFunc( const CritEntry_t& lhs, const CritEntry_t& rhs )
 		{
-			return Q_stricmp( lhs.criterianame.String(), rhs.criterianame.String() ) < 0 ? true : false;
+			return Q_stricmp( lhs.criterianame.String(), rhs.criterianame.String() ) < 0;
 		}
 
 		void SetValue( char const *str )

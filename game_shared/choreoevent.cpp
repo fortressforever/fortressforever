@@ -828,7 +828,7 @@ float CFlexAnimationTrack::GetFracIntensity( float time, int type )
 	}
 	else
 	{
-		bool sameCurveType = earlypart == laterpart ? true : false;
+		bool sameCurveType = earlypart == laterpart;
 		if ( sameCurveType )
 		{
 			Interpolator_CurveInterpolate( laterpart, vPre, vStart, vEnd, vNext, f2, vOut );
@@ -1526,7 +1526,7 @@ float CChoreoEvent::GetEndTime( )
 //-----------------------------------------------------------------------------
 bool CChoreoEvent::HasEndTime( void )
 {
-	return m_flEndTime != -1.0f ? true : false;
+	return m_flEndTime != -1.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -1686,7 +1686,7 @@ float CChoreoEvent::GetRampIntensity( ICurveDataAccessor *data, float time )
 	}
 	else
 	{
-		bool sameCurveType = earlypart == laterpart ? true : false;
+		bool sameCurveType = earlypart == laterpart;
 		if ( sameCurveType )
 		{
 			Interpolator_CurveInterpolate( laterpart, vPre, vStart, vEnd, vNext, f2, vOut );
@@ -4001,10 +4001,10 @@ bool CChoreoEvent::RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene )
 	if ( !RestoreRampFromBuffer( buf ) )
 		return false;
 
-	SetResumeCondition( buf.GetChar() == 1 ? true : false );
-	SetLockBodyFacing( buf.GetChar() == 1 ? true : false );
+	SetResumeCondition( buf.GetChar() == 1 );
+	SetLockBodyFacing( buf.GetChar() == 1 );
 	SetDistanceToTarget( buf.GetFloat() );
-	SetFixedLength( buf.GetChar() == 1 ? true : false );
+	SetFixedLength( buf.GetChar() == 1 );
 
 	int numRelTags = buf.GetShort();
 	for ( int i = 0 ;i < numRelTags; ++i )
@@ -4171,8 +4171,8 @@ bool CChoreoEvent::RestoreFlexAnimationsFromBuffer( CUtlBuffer& buf )
 		buf.GetString( name, sizeof( name ) );
 
 		CFlexAnimationTrack *track = AddTrack( name );
-		track->SetTrackActive( buf.GetChar() == 1 ? true : false );
-		track->SetComboType( buf.GetChar() == 1 ? true : false );
+		track->SetTrackActive( buf.GetChar() == 1 );
+		track->SetComboType( buf.GetChar() == 1 );
 		track->SetMin( buf.GetFloat() );
 		track->SetMax( buf.GetFloat() );
 

@@ -99,7 +99,7 @@ public:
 
 	bool ShouldSimulate()
 	{
-		return (physenv && !m_bPaused) ? true : false;
+		return (physenv && !m_bPaused);
 	}
 
 	physicssound::soundlist_t m_impactSounds;
@@ -428,8 +428,8 @@ int CCollisionEvent::ShouldCollide( IPhysicsObject *pObj0, IPhysicsObject *pObj1
 	// entities with non-physical move parents or entities with MOVETYPE_PUSH
 	// are considered as "AI movers".  They are unchanged by collision; they exert
 	// physics forces on the rest of the system.
-	bool aiMove0 = (movetype0==MOVETYPE_PUSH) ? true : false;
-	bool aiMove1 = (movetype1==MOVETYPE_PUSH) ? true : false;
+	bool aiMove0 = (movetype0==MOVETYPE_PUSH);
+	bool aiMove1 = (movetype1==MOVETYPE_PUSH);
 
 	if ( pEntity0->GetMoveParent() )
 	{
@@ -508,7 +508,7 @@ bool PhysShouldCollide( IPhysicsObject *pObj0, IPhysicsObject *pObj1 )
 	void *pGameData1 = pObj1->GetGameData();
 	if ( !pGameData0 || !pGameData1 )
 		return false;
-	return g_Collisions.ShouldCollide( pObj0, pObj1, pGameData0, pGameData1 ) ? true : false;
+	return g_Collisions.ShouldCollide( pObj0, pObj1, pGameData0, pGameData1 );
 }
 
 bool PhysIsInCallback()

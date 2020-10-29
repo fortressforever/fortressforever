@@ -198,8 +198,8 @@ int CCollisionEvent::ShouldCollide( IPhysicsObject *pObj0, IPhysicsObject *pObj1
 	// entities with non-physical move parents or entities with MOVETYPE_PUSH
 	// are considered as "AI movers".  They are unchanged by collision; they exert
 	// physics forces on the rest of the system.
-	bool aiMove0 = (movetype0==MOVETYPE_PUSH) ? true : false;
-	bool aiMove1 = (movetype1==MOVETYPE_PUSH) ? true : false;
+	bool aiMove0 = (movetype0==MOVETYPE_PUSH);
+	bool aiMove1 = (movetype1==MOVETYPE_PUSH);
 
 	if ( pEntity0->GetMoveParent() )
 	{
@@ -738,7 +738,7 @@ void PhysicsSplash( IPhysicsFluidController *pFluid, IPhysicsObject *pObject, CB
 
 	int contents = enginetrace->GetPointContents( centerPoint-Vector(0,0,2) );
 
-	bool bInSlime = ( contents & CONTENTS_SLIME ) ? true : false;
+	bool bInSlime = ( contents & CONTENTS_SLIME );
 
 	Vector	color = vec3_origin;
 	float	luminosity = 1.0f;

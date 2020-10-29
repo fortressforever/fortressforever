@@ -861,7 +861,7 @@ bool CHLClient::IN_IsKeyDown( const char *name, bool& isdown )
 		return false;
 	}
 	
-	isdown = ( key->state & 1 ) ? true : false;
+	isdown = ( key->state & 1 );
 
 	// Found the key by name
 	return true;

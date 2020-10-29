@@ -2347,7 +2347,7 @@ void CPhysicsProp::Precache( void )
 bool CPhysicsProp::CreateVPhysics()
 {
 	// Create the object in the physics system
-	bool asleep = HasSpawnFlags( SF_PHYSPROP_START_ASLEEP ) ? true : false;
+	bool asleep = HasSpawnFlags( SF_PHYSPROP_START_ASLEEP );
 
 	solid_t tmpSolid;
 	PhysModelParseSolid( tmpSolid, this, GetModelIndex() );

@@ -988,7 +988,7 @@ void CSoundControllerImp::RestoreSoundPatch( CSoundPatch **ppSoundPatch, IRestor
 	pRestore->StartBlock();
 	bool bOk = ( pRestore->ReadAll( pPatch ) != 0 );
 	pRestore->EndBlock();
-	bOk = (bOk && pPatch->IsPlaying()) ? true : false;
+	bOk = (bOk && pPatch->IsPlaying());
 
 	if (bOk)
 	{

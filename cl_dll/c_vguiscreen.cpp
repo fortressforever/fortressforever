@@ -809,7 +809,7 @@ bool CVGuiScreenPanel::Init( KeyValues* pKeyValues, VGuiScreenInitData_t* pInitD
 		C_VGuiScreen *screen = dynamic_cast< C_VGuiScreen * >( pInitData->m_pEntity );
 		if ( screen )
 		{
-			bool acceptsInput = pKeyValues->GetInt( "acceptsinput", 1 ) ? true : false;
+			bool acceptsInput = pKeyValues->GetInt( "acceptsinput", 1 );
 			screen->SetAcceptsInput( acceptsInput );
 		}
 	}

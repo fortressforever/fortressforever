@@ -255,7 +255,7 @@ void CItem::FallThink ( void )
 	}
 	else
 	{
-		shouldMaterialize = (GetFlags() & FL_ONGROUND) ? true : false;
+		shouldMaterialize = (GetFlags() & FL_ONGROUND);
 	}
 
 	if ( shouldMaterialize )

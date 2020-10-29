@@ -284,7 +284,7 @@ public:
 	{
 		Assert( soundemitterbase );
 #if !defined( CLIENT_DLL )
-		m_bLogPrecache = CommandLine()->CheckParm( "-makereslists" ) ? true : false;
+		m_bLogPrecache = CommandLine()->CheckParm( "-makereslists" );
 #endif
 		g_pClosecaption = cvar->FindVar("closecaption");
 		Assert(g_pClosecaption);

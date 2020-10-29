@@ -1071,7 +1071,7 @@ void CHudCloseCaption::Paint( void )
 		float togo = m_nGoalHeight - m_nCurrentHeight;
 		float alphatogo = m_flGoalAlpha - m_flCurrentAlpha;
 
-		growingDown = togo < 0.0f ? true : false;
+		growingDown = togo < 0.0f;
 
 		float dt = m_flGoalHeightFinishTime - m_flGoalHeightStartTime;
 		float frac = ( gpGlobals->curtime - m_flGoalHeightStartTime ) / dt;
@@ -2354,7 +2354,7 @@ void CHudCloseCaption::PlayRandomCaption()
 	async->SetIsStream( false );
 	async->AddRandomToken( m_AsyncCaptions );
 	async->SetDuration( RandomFloat( 1.0f, 3.0f ) );
-	async->SetFromPlayer( RandomInt( 0, 1 ) == 0 ? true : false );
+	async->SetFromPlayer( RandomInt( 0, 1 ) == 0 );
 	async->StartRequesting( this, m_AsyncCaptions );
 	m_AsyncWork.AddToTail( async );
 }
@@ -2521,10 +2521,10 @@ void CHudCloseCaption::MsgFunc_CloseCaption(bf_read &msg)
 #endif
 	float duration = msg.ReadShort() * 0.1f;
 	byte flagbyte = msg.ReadByte();
-	bool warnonmissing = flagbyte & CLOSE_CAPTION_WARNIFMISSING ? true : false;
-	bool fromplayer = flagbyte & CLOSE_CAPTION_FROMPLAYER ? true : false;
-	bool bIsMale = flagbyte & CLOSE_CAPTION_GENDER_MALE ? true : false;
-	bool bIsFemale = flagbyte & CLOSE_CAPTION_GENDER_FEMALE ? true : false;
+	bool warnonmissing = flagbyte & CLOSE_CAPTION_WARNIFMISSING;
+	bool fromplayer = flagbyte & CLOSE_CAPTION_FROMPLAYER;
+	bool bIsMale = flagbyte & CLOSE_CAPTION_GENDER_MALE;
+	bool bIsFemale = flagbyte & CLOSE_CAPTION_GENDER_FEMALE;
 
 #if !defined( _XBOX )
 	TokenNameLookup lookup;

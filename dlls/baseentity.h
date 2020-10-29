@@ -1321,7 +1321,7 @@ public:
 	int						GetFlags( void ) const;
 	void					ClearFlags( void );
 
-	bool					IsOnFire( void ) const { return ( GetFlags() & FL_ONFIRE ) ? true : false; }
+	bool					IsOnFire( void ) const { return ( GetFlags() & FL_ONFIRE ); }
 
 	// Sets the local position from a transform
 	void					SetLocalTransform( const matrix3x4_t &localTransform );

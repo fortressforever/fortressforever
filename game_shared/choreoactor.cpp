@@ -286,7 +286,7 @@ bool CChoreoActor::RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene )
 		return false;
 	}
 
-	SetActive( buf.GetChar() == 1 ? true : false );
+	SetActive( buf.GetChar() == 1 );
 
 	return true;
 }

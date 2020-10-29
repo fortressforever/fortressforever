@@ -126,7 +126,7 @@ private:
 
 	bool DisableFiltering( void ) const
 	{
-		return ( m_nStatusPushed > 0  ) ? true : false;
+		return ( m_nStatusPushed > 0  );
 	}
 
 	IPredictionSystem	*m_pNextSystem;

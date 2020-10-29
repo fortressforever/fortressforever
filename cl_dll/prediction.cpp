@@ -384,11 +384,11 @@ bool CPrediction::ShouldDumpEntity( C_BaseEntity *ent )
 		bool dump = false;
 		if ( ent->entindex() == -1 )
 		{
-			dump = ( dump_entity == ent->entindex() ) ? true : false;
+			dump = ( dump_entity == ent->entindex() );
 		}
 		else
 		{
-			dump = ( ent->entindex() == dump_entity ) ? true : false;
+			dump = ( ent->entindex() == dump_entity );
 		}
 
 		if ( !dump )
@@ -420,7 +420,7 @@ void CPrediction::PostNetworkDataReceived( int commands_acknowledged )
 #if !defined( NO_ENTITY_PREDICTION )
 	VPROF( "CPrediction::PostNetworkDataReceived" );
 
-	bool error_check = ( commands_acknowledged > 0 ) ? true : false;
+	bool error_check = ( commands_acknowledged > 0 );
 #ifndef _XBOX
 	CPDumpPanel *dump = GetPDumpPanel();
 #endif
@@ -1166,7 +1166,7 @@ void CPrediction::RunSimulation( int current_command, float curtime, CUserCmd *c
 		if ( !entity )
 			continue;
 
-		bool islocal = ( localPlayer == entity ) ? true : false;
+		bool islocal = ( localPlayer == entity );
 
 		// Local player simulates first, if this assert fires then the predictables list isn't sorted 
 		//  correctly (or we started predicting C_World???)

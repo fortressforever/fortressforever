@@ -1075,7 +1075,7 @@ void CFire::AddHeat( float heat, bool selfHeat )
 			}
 		}
 		m_lastDamage = gpGlobals->curtime + 0.5;
-		bool start = m_flHeatLevel <= 0 ? true : false;
+		bool start = m_flHeatLevel <= 0;
 		if ( m_flHeatAbsorb > 0 )
 		{
 			float absorbDamage = heat * fire_absorbrate.GetFloat();
@@ -1127,7 +1127,7 @@ void CFire::Extinguish( float heat )
 		return;
 
 	m_lastDamage = gpGlobals->curtime + 0.5;
-	bool out = m_flHeatLevel > 0 ? true : false;
+	bool out = m_flHeatLevel > 0;
 
 	m_flHeatLevel -= heat;
 	m_flHeatAbsorb += fire_extabsorb.GetFloat() * heat;

@@ -112,7 +112,7 @@ void CFXLine::Draw( double frametime )
 //-----------------------------------------------------------------------------
 bool CFXLine::IsActive( void )
 {
-	return ( m_FXData.m_flLifeTime < m_FXData.m_flDieTime ) ? true : false;
+	return ( m_FXData.m_flLifeTime < m_FXData.m_flDieTime );
 }
 
 //-----------------------------------------------------------------------------

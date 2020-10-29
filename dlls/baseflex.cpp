@@ -528,7 +528,7 @@ bool CBaseFlex::HandleStartGestureSceneEvent( CSceneEventInfo *info, CChoreoScen
 
 			if (pkvType)
 			{
-				info->m_bIsGesture = (stricmp( pkvType->GetString(), "gesture" ) == 0) ? true : false;
+				info->m_bIsGesture = (stricmp( pkvType->GetString(), "gesture" ) == 0);
 			}
 		}
 

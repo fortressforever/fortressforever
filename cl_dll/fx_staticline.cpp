@@ -136,7 +136,7 @@ void CFXStaticLine::Draw( double frametime )
 
 bool CFXStaticLine::IsActive( void )
 {
-	return ( m_fLife > 0.0 ) ? true : false;
+	return ( m_fLife > 0.0 );
 }
 
 //==================================================

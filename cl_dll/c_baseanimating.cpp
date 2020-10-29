@@ -2701,7 +2701,7 @@ void C_BaseAnimating::DoAnimationEvents( CStudioHdr *pStudioHdr )
 	if ( !pStudioHdr )
 		return;
 
-	bool watch = false; // Q_strstr( hdr->name, "rifle" ) ? true : false;
+	bool watch = false; // Q_strstr( hdr->name, "rifle" );
 
 	//Adrian: eh? This should never happen.
 	if ( GetSequence() == -1 )
@@ -4160,7 +4160,7 @@ void C_BaseAnimating::StudioFrameAdvance()
 	if ( !hdr )
 		return;
 
-	bool watch = 0;//Q_strstr( hdr->name, "objects/human_obj_powerpack_build.mdl" ) ? true : false;
+	bool watch = 0;//Q_strstr( hdr->name, "objects/human_obj_powerpack_build.mdl" );
 
 	//if (!anim.prevanimtime)
 	//{
@@ -4296,7 +4296,7 @@ float C_BaseAnimating::FrameAdvance( float flInterval )
 	if ( !hdr )
 		return 0.0f;
 
-	bool bWatch = false; // Q_strstr( hdr->name, "commando" ) ? true : false;
+	bool bWatch = false; // Q_strstr( hdr->name, "commando" );
 
 	float curtime = gpGlobals->curtime;
 

@@ -145,7 +145,7 @@ inline int MAKE_KEY(char _1, char _2, char _3, char _4)
 #define SUCCESS(res) ((res) == Success ? 1 : 0)
 #define MAKE_KEY(res) (((_1)<<24) | ((_2)<<16) | ((_3)<<8) | (_4))
 #endif
-//#define SUCCESS(x) ((x)==Success ? true : false)
+//#define SUCCESS(x) ((x)==Success)
 
 typedef enum eFireMode
 {

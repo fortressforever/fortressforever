@@ -300,7 +300,7 @@ inline bool IsEntityWalkable( CBaseEntity *entity, unsigned int flags )
 
 	// if we hit a door, assume its walkable because it will open when we touch it
 	if (FClassnameIs( entity, "prop_door*" ) || FClassnameIs( entity, "func_door*" ))
-		return (flags & WALK_THRU_DOORS) ? true : false;
+		return (flags & WALK_THRU_DOORS);
 
 	// if we hit a clip brush, ignore it if it is not BRUSHSOLID_ALWAYS
 	if (FClassnameIs( entity, "func_brush" ))
@@ -313,16 +313,16 @@ inline bool IsEntityWalkable( CBaseEntity *entity, unsigned int flags )
 		case CFuncBrush::BRUSHSOLID_NEVER:
 			return true;
 		case CFuncBrush::BRUSHSOLID_TOGGLE:
-			return (flags & WALK_THRU_TOGGLE_BRUSHES) ? true : false;
+			return (flags & WALK_THRU_TOGGLE_BRUSHES);
 		}
 	}
 
 	// if we hit a breakable object, assume its walkable because we will shoot it when we touch it
 	if (FClassnameIs( entity, "func_breakable" ) && entity->GetHealth() && entity->m_takedamage == DAMAGE_YES)
-		return (flags & WALK_THRU_BREAKABLES) ? true : false;
+		return (flags & WALK_THRU_BREAKABLES);
 
 	if (FClassnameIs( entity, "func_breakable_surf" ) && entity->m_takedamage == DAMAGE_YES)
-		return (flags & WALK_THRU_BREAKABLES) ? true : false;
+		return (flags & WALK_THRU_BREAKABLES);
 
 	return false;
 }

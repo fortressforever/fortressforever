@@ -516,7 +516,7 @@ bool CChoreoChannel::GetSortedCombinedEventList( char const *cctoken, CUtlRBTree
 		events.Insert( e );
 	}
 
-	return ( events.Count() > 0 ) ? true : false;
+	return ( events.Count() > 0 );
 }
 
 void CChoreoChannel::SaveToBuffer( CUtlBuffer& buf, CChoreoScene *pScene )
@@ -556,7 +556,7 @@ bool CChoreoChannel::RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene, C
 		return false;
 	}
 
-	SetActive( buf.GetChar() == 1 ? true : false );
+	SetActive( buf.GetChar() == 1 );
 
 	return true;
 }

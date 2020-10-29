@@ -727,7 +727,7 @@ float CalculateObjectStress( IPhysicsObject *pObject, CBaseEntity *pInputOwnerEn
 	{
 		pOutput->exertedStress = internalForce.Length();
 		pOutput->receivedStress = externalForce.Length();
-		pOutput->hasNonStaticStress = pObjectList.Count() > 2 ? true : false;
+		pOutput->hasNonStaticStress = pObjectList.Count() > 2;
 		pOutput->hasLargeObjectContact = hasLargeObject;
 	}
 

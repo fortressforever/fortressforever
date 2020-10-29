@@ -400,7 +400,7 @@ void CBaseButton::Spawn( )
 		m_vecPosition2 = m_vecPosition1;
 	}
 
-	m_fStayPushed = (m_flWait == -1 ? TRUE : FALSE);
+	m_fStayPushed = (m_flWait == -1);
 	m_fRotating = FALSE;
 
 	if (HasSpawnFlags(SF_BUTTON_LOCKED))
@@ -890,7 +890,7 @@ void CRotButton::Spawn( void )
 	m_vecAngle2	= GetLocalAngles() + m_vecMoveAng * m_flMoveDistance;
 	ASSERTSZ(m_vecAngle1 != m_vecAngle2, "rotating button start/end positions are equal\n");
 
-	m_fStayPushed = (m_flWait == -1 ? TRUE : FALSE);
+	m_fStayPushed = (m_flWait == -1);
 	m_fRotating = TRUE;
 
 	SetUse(&CRotButton::ButtonUse);

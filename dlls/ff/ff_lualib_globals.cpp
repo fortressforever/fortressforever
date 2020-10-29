@@ -180,7 +180,7 @@ namespace FFLib
 	bool IsGrenade(CBaseEntity* pEntity)
 	{
 		// Yeah, the simple life, man
-		return ( pEntity->GetFlags() & FL_GRENADE ) ? true : false;
+		return ( pEntity->GetFlags() & FL_GRENADE );
 		/*
 		return (IsOfClass(pEntity, CLASS_GREN) ||
 				IsOfClass(pEntity, CLASS_GREN_EMP) ||

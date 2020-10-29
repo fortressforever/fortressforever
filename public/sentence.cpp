@@ -650,7 +650,7 @@ void CSentence::ParseOptions( CUtlBuffer& buf )
 
 		if ( !strcmpi( key, "voice_duck" ) )
 		{
-			SetVoiceDuck( atoi(value) ? true : false );
+			SetVoiceDuck( atoi(value) );
 		}
 		else if ( !strcmpi( key, "checksum" ) )
 		{

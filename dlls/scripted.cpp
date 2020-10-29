@@ -660,7 +660,7 @@ void CAI_ScriptedSequence::StartScript( void )
 		pTarget->SetTarget( this );
 
 		{
-			m_bTargetWasAsleep = ( pTarget->GetSleepState() != AISS_AWAKE ) ? true : false;
+			m_bTargetWasAsleep = ( pTarget->GetSleepState() != AISS_AWAKE );
 			bool justAwoke = pTarget->WokeThisTick();
 			if ( m_bTargetWasAsleep || justAwoke )
 			{

@@ -384,8 +384,8 @@ class CGameTeamSet : public CRulePointEntity
 public:
 	DECLARE_CLASS( CGameTeamSet, CRulePointEntity );
 
-	inline bool RemoveOnFire( void ) { return (m_spawnflags & SF_TEAMSET_FIREONCE) ? true : false; }
-	inline bool ShouldClearTeam( void ) { return (m_spawnflags & SF_TEAMSET_CLEARTEAM) ? true : false; }
+	inline bool RemoveOnFire( void ) { return (m_spawnflags & SF_TEAMSET_FIREONCE); }
+	inline bool ShouldClearTeam( void ) { return (m_spawnflags & SF_TEAMSET_CLEARTEAM); }
 	void InputTrigger( inputdata_t &inputdata );
 
 private:
@@ -518,7 +518,7 @@ public:
 	DECLARE_CLASS( CGamePlayerHurt, CRulePointEntity );
 
 	void		Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	inline bool RemoveOnFire( void ) { return (m_spawnflags & SF_PKILL_FIREONCE) ? true : false; }
+	inline bool RemoveOnFire( void ) { return (m_spawnflags & SF_PKILL_FIREONCE); }
 
 	DECLARE_DATADESC();
 
@@ -585,7 +585,7 @@ public:
 	void		Touch( CBaseEntity *pOther );
 	void		Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
-	inline bool	UseOnly( void ) { return (m_spawnflags & SF_PLAYEREQUIP_USEONLY) ? true : false; }
+	inline bool	UseOnly( void ) { return (m_spawnflags & SF_PLAYEREQUIP_USEONLY); }
 
 private:
 
@@ -694,9 +694,9 @@ public:
 
 private:
 
-	inline bool RemoveOnFire( void ) { return (m_spawnflags & SF_PTEAM_FIREONCE) ? true : false; }
-	inline bool ShouldKillPlayer( void ) { return (m_spawnflags & SF_PTEAM_KILL) ? true : false; }
-	inline bool ShouldGibPlayer( void ) { return (m_spawnflags & SF_PTEAM_GIB) ? true : false; }
+	inline bool RemoveOnFire( void ) { return (m_spawnflags & SF_PTEAM_FIREONCE); }
+	inline bool ShouldKillPlayer( void ) { return (m_spawnflags & SF_PTEAM_KILL); }
+	inline bool ShouldGibPlayer( void ) { return (m_spawnflags & SF_PTEAM_GIB); }
 	
 	const char *TargetTeamName( const char *pszTargetName, CBaseEntity *pActivator );
 };

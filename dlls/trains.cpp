@@ -29,7 +29,7 @@ public:
 	void Precache( void );
 
 	// This is done to fix spawn flag collisions between this class and a derived class
-	virtual bool IsTogglePlat( void ) { return (m_spawnflags & SF_PLAT_TOGGLE) ? true : false; }
+	virtual bool IsTogglePlat( void ) { return (m_spawnflags & SF_PLAT_TOGGLE); }
 
 	DECLARE_DATADESC();
 
@@ -478,7 +478,7 @@ void CFuncPlat::PlatUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	if ( IsTogglePlat() )
 	{
 		// Top is off, bottom is on
-		bool on = (m_toggle_state == TS_AT_BOTTOM) ? true : false;
+		bool on = (m_toggle_state == TS_AT_BOTTOM);
 
 		if ( !ShouldToggle( useType, on ) )
 			return;

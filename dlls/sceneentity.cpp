@@ -1240,7 +1240,7 @@ void CSceneEntity::DispatchStopPoint( CChoreoScene *scene, const char *parameter
 //-----------------------------------------------------------------------------
 bool CSceneEntity::IsInterruptable()
 {
-	return ( m_nInterruptCount > 0 ) ? true : false;
+	return ( m_nInterruptCount > 0 );
 }
 
 //-----------------------------------------------------------------------------

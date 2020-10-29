@@ -961,7 +961,7 @@ namespace Omnibot
 			int iPVSCluster = engine->GetClusterForOrigin(start);
 			int iPVSLength = engine->GetPVSForCluster(iPVSCluster, sizeof(pvs), pvs);
 
-			return engine->CheckOriginInPVS(end, pvs, iPVSLength) ? True : False;
+			return engine->CheckOriginInPVS(end, pvs, iPVSLength);
 		}
 
 		obResult TraceLine(obTraceResult &_result, const float _start[3], const float _end[3], 
@@ -1897,7 +1897,7 @@ namespace Omnibot
 					OB_GETMSG(Msg_IsAlive);
 					if(pMsg)
 					{
-						pMsg->m_IsAlive = pEnt && pEnt->IsAlive() && pEnt->GetHealth() > 0 ? True : False;
+						pMsg->m_IsAlive = pEnt && pEnt->IsAlive() && pEnt->GetHealth() > 0;
 					}
 					break;
 				}
@@ -1906,7 +1906,7 @@ namespace Omnibot
 					OB_GETMSG(Msg_Reloading);
 					if(pMsg)
 					{
-						pMsg->m_Reloading = pPlayer && pPlayer->IsPlayingGesture(ACT_GESTURE_RELOAD) ? True : False;
+						pMsg->m_Reloading = pPlayer && pPlayer->IsPlayingGesture(ACT_GESTURE_RELOAD);
 					}
 					break;
 				}
@@ -1916,7 +1916,7 @@ namespace Omnibot
 					if(pMsg)
 					{
 						CBaseCombatWeapon *pWeapon = pPlayer ? pPlayer->GetActiveWeapon() : 0;
-						pMsg->m_Ready = pWeapon && (pWeapon->m_flNextPrimaryAttack <= gpGlobals->curtime) ? True : False;
+						pMsg->m_Ready = pWeapon && (pWeapon->m_flNextPrimaryAttack <= gpGlobals->curtime);
 					}
 					break;
 				}
@@ -1928,7 +1928,7 @@ namespace Omnibot
 						CBaseEntity *pEntOther = EntityFromHandle(pMsg->m_TargetEntity);
 						if(pEnt && pEntOther)
 						{
-							pMsg->m_IsAllied = g_pGameRules->PlayerRelationship(pEnt, pEntOther) != GR_NOTTEAMMATE ? True : False;
+							pMsg->m_IsAllied = g_pGameRules->PlayerRelationship(pEnt, pEntOther) != GR_NOTTEAMMATE;
 							if(pMsg->m_IsAllied && pEntOther->Classify() == CLASS_SENTRYGUN)
 							{
 								CFFSentryGun *pSentry = static_cast<CFFSentryGun*>(pEntOther);
@@ -2239,14 +2239,14 @@ namespace Omnibot
 						{
 							CFFTeam *pTeam = GetGlobalFFTeam(t);
 							pMsg->m_Team[obUtilGetBotTeamFromGameTeam(t)] = 
-								(pTeam && (pTeam->GetTeamLimits() != -1)) ? True : False;
+								(pTeam && (pTeam->GetTeamLimits() != -1));
 
 							if(pTeam && (t == iCheckTeam))
 							{
 								for(int c = CLASS_SCOUT; c <= CLASS_CIVILIAN; ++c)
 								{
 									pMsg->m_Class[obUtilGetBotClassFromGameClass(c)] = 
-										(pTeam->GetClassLimit(c) != -1) ? True : False;
+										(pTeam->GetClassLimit(c) != -1);
 								}
 							}
 						}
@@ -3055,7 +3055,7 @@ namespace Omnibot
 		int iGameId = _player->entindex();
 		Event_SystemClientConnected d;
 		d.m_GameId = iGameId;
-		d.m_IsBot = _isbot ? True : False;
+		d.m_IsBot = _isbot;
 		d.m_DesiredTeam = _team;
 		d.m_DesiredClass = _class;
 		

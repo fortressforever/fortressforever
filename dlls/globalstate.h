@@ -37,12 +37,12 @@ inline int GlobalEntity_GetIndex( string_t globalname )
 
 inline int GlobalEntity_IsInTable( string_t globalname )
 {
-	return GlobalEntity_GetIndex( STRING(globalname) ) >= 0 ? true : false;
+	return GlobalEntity_GetIndex( STRING(globalname) ) >= 0;
 }
 
 inline int GlobalEntity_IsInTable( const char *pGlobalname )
 {
-	return GlobalEntity_GetIndex( pGlobalname ) >= 0 ? true : false;
+	return GlobalEntity_GetIndex( pGlobalname ) >= 0;
 }
 
 inline void GlobalEntity_SetState( string_t globalname, GLOBALESTATE state )

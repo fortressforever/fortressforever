@@ -260,11 +260,11 @@ CPixelVisibilityQuery::~CPixelVisibilityQuery()
 
 bool CPixelVisibilityQuery::IsValid()
 {
-	return (m_queryHandle != INVALID_OCCLUSION_QUERY_OBJECT_HANDLE) ? true : false;
+	return (m_queryHandle != INVALID_OCCLUSION_QUERY_OBJECT_HANDLE);
 }
 bool CPixelVisibilityQuery::IsForView( int viewID ) 
 { 
-	return m_viewID == viewID ? true : false; 
+	return m_viewID == viewID; 
 }
 
 bool CPixelVisibilityQuery::IsActive()
@@ -297,7 +297,7 @@ float CPixelVisibilityQuery::GetFractionVisible( float fadeTimeInv )
 
 			if ( pixels < 0 || pixelsPossible < 0 )
 			{
-				m_failed = m_frameIssued != -1 ? true : false;
+				m_failed = m_frameIssued != -1;
 				return m_brightnessTarget * m_clipFraction;
 			}
 			m_hasValidQueryResults = true;
@@ -328,7 +328,7 @@ float CPixelVisibilityQuery::GetFractionVisible( float fadeTimeInv )
 
 			if ( pixels < 0 )
 			{
-				m_failed = m_frameIssued != -1 ? true : false;
+				m_failed = m_frameIssued != -1;
 				return m_brightnessTarget * m_clipFraction;
 			}
 			m_hasValidQueryResults = true;

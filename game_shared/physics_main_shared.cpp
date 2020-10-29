@@ -157,7 +157,7 @@ static CDataObjectAccessSystem g_DataObjectAccessSystem;
 bool CBaseEntity::HasDataObjectType( int type ) const
 {
 	Assert( type >= 0 && type < NUM_DATAOBJECT_TYPES );
-	return ( m_fDataObjectTypes	& (1<<type) ) ? true : false;
+	return ( m_fDataObjectTypes	& (1<<type) );
 }
 
 void CBaseEntity::AddDataObjectType( int type )
@@ -1576,7 +1576,7 @@ void CBaseEntity::PhysicsRigidChild( void )
 	if ( VPhysicsGetObject() )
 	{
 		int solidType = GetSolid();
-		bool bAxisAligned = ( solidType == SOLID_BBOX || solidType == SOLID_NONE ) ? true : false;
+		bool bAxisAligned = ( solidType == SOLID_BBOX || solidType == SOLID_NONE );
 		VPhysicsGetObject()->UpdateShadow( GetAbsOrigin(), bAxisAligned ? vec3_angle : GetAbsAngles(), true, gpGlobals->frametime );
 	}
 #endif

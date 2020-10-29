@@ -146,7 +146,7 @@ static bool Sys_IsDebuggerPresent()
 
 	if ( pfnIsDebuggerPresent )
 	{
-		return (*pfnIsDebuggerPresent)() ? true : false;
+		return (*pfnIsDebuggerPresent)();
 	}
 #endif
 	return false;

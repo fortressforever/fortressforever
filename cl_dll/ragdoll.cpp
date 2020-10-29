@@ -763,7 +763,7 @@ void C_ServerRagdollAttached::OnDataChanged( DataUpdateType_t updateType )
 {
 	BaseClass::OnDataChanged( updateType );
 
-	bool bParentNow = GetMoveParent() ? true : false;
+	bool bParentNow = GetMoveParent();
 	if ( m_bHasParent != bParentNow )
 	{
 		if ( m_bHasParent )

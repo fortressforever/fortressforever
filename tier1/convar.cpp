@@ -460,7 +460,7 @@ void ConCommandBase::RevertFlaggedCvars( int flag )
 //-----------------------------------------------------------------------------
 bool ConCommandBase::IsBitSet( int flag ) const
 {
-	return ( flag & m_nFlags ) ? true : false;
+	return ( flag & m_nFlags );
 }
 
 //-----------------------------------------------------------------------------
@@ -603,7 +603,7 @@ void ConCommand::Create( char const *pName, FnCommandCallback callback, char con
 	m_fnCommandCallback = callback;
 
 	m_fnCompletionCallback = completionFunc ? completionFunc : DefaultCompletionFunc;
-	m_bHasCompletionCallback = completionFunc != 0 ? true : false;
+	m_bHasCompletionCallback = completionFunc != 0;
 
 	// Setup the rest
 	BaseClass::Create( pName, pHelpString, flags );
@@ -706,7 +706,7 @@ void ConVar::InstallChangeCallback( FnChangeCallback callback )
 
 bool ConVar::IsBitSet( int flag ) const
 {
-	return ( flag & m_pParent->m_nFlags ) ? true : false;
+	return ( flag & m_pParent->m_nFlags );
 }
 
 char const *ConVar::GetHelpText( void ) const

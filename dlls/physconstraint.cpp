@@ -1134,7 +1134,7 @@ IPhysicsConstraint *CRagdollConstraint::CreateConstraint( IPhysicsConstraintGrou
 	MatrixInvert( entityToWorld, worldToEntity );
 	ConcatTransforms( worldToEntity, EntityToWorldTransform(), ragdoll.constraintToAttached );
 
-	ragdoll.onlyAngularLimits = HasSpawnFlags( SF_RAGDOLL_FREEMOVEMENT ) ? true : false;
+	ragdoll.onlyAngularLimits = HasSpawnFlags( SF_RAGDOLL_FREEMOVEMENT );
 
 	// FIXME: Why are these friction numbers in different units from what the hinge uses?
 	ragdoll.axes[0].SetAxisFriction( m_xmin, m_xmax, m_xfriction );

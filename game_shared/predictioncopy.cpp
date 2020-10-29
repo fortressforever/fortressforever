@@ -165,8 +165,8 @@ void CPredictionCopy::DescribeFields( difftype_t dt, const char *fmt, ... )
 	len = Q_vsnprintf(data, sizeof( data ), fmt, argptr);
 	va_end(argptr);
 
-	bool isnetworked = ( flags & FTYPEDESC_INSENDTABLE ) ? true : false;
-	bool isnoterrorchecked = ( flags & FTYPEDESC_NOERRORCHECK ) ? true : false;
+	bool isnetworked = ( flags & FTYPEDESC_INSENDTABLE );
+	bool isnoterrorchecked = ( flags & FTYPEDESC_NOERRORCHECK );
 
 	( *m_FieldCompareFunc )( 
 		m_pCurrentClassName,
@@ -174,8 +174,8 @@ void CPredictionCopy::DescribeFields( difftype_t dt, const char *fmt, ... )
 		g_FieldTypes[ m_pCurrentField->fieldType ],
 		isnetworked,
 		isnoterrorchecked,
-		dt != IDENTICAL ? true : false,
-		dt == WITHINTOLERANCE ? true : false,
+		dt != IDENTICAL,
+		dt == WITHINTOLERANCE,
 		data 
 	);
 
@@ -1468,8 +1468,8 @@ void CPredictionDescribeData::Describe( const char *fmt, ... )
 	len = Q_vsnprintf(data, sizeof( data ), fmt, argptr);
 	va_end(argptr);
 
-	bool isprivate = ( flags & FTYPEDESC_PRIVATE ) ? true : false;
-	bool isnetworked = ( flags & FTYPEDESC_INSENDTABLE ) ? true : false;
+	bool isprivate = ( flags & FTYPEDESC_PRIVATE );
+	bool isnetworked = ( flags & FTYPEDESC_INSENDTABLE );
 
 	if ( m_FieldDescFunc )
 	{

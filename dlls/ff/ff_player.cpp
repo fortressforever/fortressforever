@@ -3119,7 +3119,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		// We're left w/ a player who's within range
 		// Add player to a list and send off to client
 
-		m_hRadioTagData->Set( pPlayer->entindex(), true, pPlayer->GetClassSlot(), pPlayer->GetTeamNumber(), ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false, vecPlayerOrigin );
+		m_hRadioTagData->Set( pPlayer->entindex(), true, pPlayer->GetClassSlot(), pPlayer->GetTeamNumber(), ( pPlayer->GetFlags() & FL_DUCKING ), vecPlayerOrigin );
 
 		Omnibot::Notify_RadioTagUpdate(this, pPlayer);	
 	}

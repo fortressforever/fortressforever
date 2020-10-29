@@ -258,7 +258,7 @@ void CPredictableId::SetAcknowledged( bool ack )
 //-----------------------------------------------------------------------------
 bool CPredictableId::GetAcknowledged( void ) const
 {
-	return m_PredictableID.ack ? true : false;
+	return m_PredictableID.ack;
 }
 
 //-----------------------------------------------------------------------------

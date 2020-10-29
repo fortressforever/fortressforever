@@ -100,7 +100,7 @@ private:
 
 inline bool CMouthInfo::IsActive( void )
 {
-	return ( GetNumVoiceSources() > 0 ) ? true : false;
+	return ( GetNumVoiceSources() > 0 );
 }
 
 inline int CMouthInfo::GetNumVoiceSources( void )

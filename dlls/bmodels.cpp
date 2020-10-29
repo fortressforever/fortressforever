@@ -1115,7 +1115,7 @@ void CFuncRotating::InputSetSpeed( inputdata_t &inputdata )
 {
 	m_bStopAtStartPos = false;
 	float flSpeed = inputdata.value.Float();
-	m_bReversed = flSpeed < 0 ? true : false;
+	m_bReversed = flSpeed < 0;
 	flSpeed = fabs(flSpeed);
 	SetTargetSpeed( clamp( flSpeed, 0, 1 ) * m_flMaxSpeed );
 }

@@ -368,7 +368,7 @@ bool CPhysicsPushedEntities::SpeculativelyCheckPush( PhysicsPushedInfo_t &info, 
 		info.m_bPusherIsGround = true;
 	}
 
-	bool bIsUnblockable = (m_bIsUnblockableByPlayer && (pBlocker->IsPlayer() || pBlocker->MyNPCPointer())) ? true : false;
+	bool bIsUnblockable = (m_bIsUnblockableByPlayer && (pBlocker->IsPlayer() || pBlocker->MyNPCPointer()));
 	if ( bIsUnblockable )
 	{
 		pBlocker->SetAbsOrigin( pushDestPosition );
@@ -896,7 +896,7 @@ CBaseEntity *CPhysicsPushedEntities::PerformRotatePush( CBaseEntity *pRoot, floa
 {
 	VPROF("CPhysicsPushedEntities::PerformRotatePush");
 
-	m_bIsUnblockableByPlayer = (pRoot->GetFlags() & FL_UNBLOCKABLE_BY_PLAYER) ? true : false;
+	m_bIsUnblockableByPlayer = (pRoot->GetFlags() & FL_UNBLOCKABLE_BY_PLAYER);
 	// Build a list of this entity + all its children because we're going to try to move them all
 	// This will also make sure each entity is linked in the appropriate place
 	// with correct absboxes
@@ -954,7 +954,7 @@ void CPhysicsPushedEntities::LinearlyMoveRootEntity( CBaseEntity *pRoot, float m
 CBaseEntity *CPhysicsPushedEntities::PerformLinearPush( CBaseEntity *pRoot, float movetime )
 {
 	VPROF("CPhysicsPushedEntities::PerformLinearPush");
-	m_bIsUnblockableByPlayer = (pRoot->GetFlags() & FL_UNBLOCKABLE_BY_PLAYER) ? true : false;
+	m_bIsUnblockableByPlayer = (pRoot->GetFlags() & FL_UNBLOCKABLE_BY_PLAYER);
 	// Build a list of this entity + all its children because we're going to try to move them all
 	// This will also make sure each entity is linked in the appropriate place
 	// with correct absboxes
@@ -1882,7 +1882,7 @@ void CBaseEntity::PhysicsStep()
 	{
 		if ( !VectorCompare( oldOrigin, GetAbsOrigin() ) )
 		{
-			VPhysicsGetObject()->UpdateShadow( GetAbsOrigin(), vec3_angle, (GetFlags() & FL_FLY) ? true : false, dt );
+			VPhysicsGetObject()->UpdateShadow( GetAbsOrigin(), vec3_angle, (GetFlags() & FL_FLY), dt );
 		}
 	}
 	PhysicsRelinkChildren();
@@ -1946,7 +1946,7 @@ void CBaseEntity::PhysicsStepRunTimestep( float timestep )
 
 	PhysicsCheckVelocity();
 
-	wasonground = ( GetFlags() & FL_ONGROUND ) ? true : false;
+	wasonground = ( GetFlags() & FL_ONGROUND );
 
 	// add gravity except:
 	//   flying monsters

@@ -493,7 +493,7 @@ void CGameMovement::CategorizeGroundSurface( void )
 
 bool CGameMovement::IsDead( void ) const
 {
-	return ( player->m_iHealth <= 0 ) ? true : false;
+	return ( player->m_iHealth <= 0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -4024,7 +4024,7 @@ void CGameMovement::Duck( void )
 //
 //	// Check to see if we are in the air.
 //	bool bInAir = ( player->GetGroundEntity() == NULL );
-//	bool bInDuck = ( player->GetFlags() & FL_DUCKING ) ? true : false;
+//	bool bInDuck = ( player->GetFlags() & FL_DUCKING );
 //	bool bDuckJump = ( player->m_Local.m_flJumpTime > 0.0f );
 //	bool bDuckJumpTime = ( player->m_Local.m_flDuckJumpTime > 0.0f );
 //

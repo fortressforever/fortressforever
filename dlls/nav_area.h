@@ -30,7 +30,7 @@ union NavConnect
 
 	bool operator==( const NavConnect &other ) const
 	{
-		return (area == other.area) ? true : false;
+		return (area == other.area);
 	}
 };
 typedef CUtlLinkedList<NavConnect, int> NavConnectList;
@@ -47,7 +47,7 @@ union NavLadderConnect
 
 	bool operator==( const NavLadderConnect &other ) const
 	{
-		return (ladder == other.ladder) ? true : false;
+		return (ladder == other.ladder);
 	}
 };
 typedef CUtlLinkedList<NavLadderConnect, int> NavLadderConnectList;
@@ -70,10 +70,10 @@ public:
 		EXPOSED				= 0x08							///< spot in the open, usually on a ledge or cliff
 	};
 
-	bool HasGoodCover( void ) const			{ return (m_flags & IN_COVER) ? true : false; }	///< return true if hiding spot in in cover
-	bool IsGoodSniperSpot( void ) const		{ return (m_flags & GOOD_SNIPER_SPOT) ? true : false; }
-	bool IsIdealSniperSpot( void ) const	{ return (m_flags & IDEAL_SNIPER_SPOT) ? true : false; }
-	bool IsExposed( void ) const			{ return (m_flags & EXPOSED) ? true : false; }	
+	bool HasGoodCover( void ) const			{ return (m_flags & IN_COVER); }	///< return true if hiding spot in in cover
+	bool IsGoodSniperSpot( void ) const		{ return (m_flags & GOOD_SNIPER_SPOT); }
+	bool IsIdealSniperSpot( void ) const	{ return (m_flags & IDEAL_SNIPER_SPOT); }
+	bool IsExposed( void ) const			{ return (m_flags & EXPOSED); }	
 
 	int GetFlags( void ) const		{ return m_flags; }
 
@@ -86,7 +86,7 @@ public:
 	const CNavArea *GetArea( void ) const		{ return m_area; }	///< return nav area this hiding spot is within
 
 	void Mark( void )							{ m_marker = m_masterMarker; }
-	bool IsMarked( void ) const					{ return (m_marker == m_masterMarker) ? true : false; }
+	bool IsMarked( void ) const					{ return (m_marker == m_masterMarker); }
 	static void ChangeMasterMarker( void )		{ ++m_masterMarker; }
 
 
@@ -271,7 +271,7 @@ public:
 	//- A* pathfinding algorithm ------------------------------------------------------------------------
 	static void MakeNewMarker( void )	{ ++m_masterMarker; if (m_masterMarker == 0) m_masterMarker = 1; }
 	void Mark( void )					{ m_marker = m_masterMarker; }
-	BOOL IsMarked( void ) const			{ return (m_marker == m_masterMarker) ? true : false; }
+	BOOL IsMarked( void ) const			{ return (m_marker == m_masterMarker); }
 	
 	void SetParent( CNavArea *parent, NavTraverseType how = NUM_TRAVERSE_TYPES )	{ m_parent = parent; m_parentHow = how; }
 	CNavArea *GetParent( void ) const	{ return m_parent; }
@@ -444,7 +444,7 @@ inline CNavArea *CNavArea::GetAdjacentArea( NavDirType dir, int i ) const
 //--------------------------------------------------------------------------------------------------------------
 inline bool CNavArea::IsOpen( void ) const
 {
-	return (m_openMarker == m_masterMarker) ? true : false;
+	return (m_openMarker == m_masterMarker);
 }
 
 //--------------------------------------------------------------------------------------------------------------

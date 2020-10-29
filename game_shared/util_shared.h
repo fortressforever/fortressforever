@@ -401,12 +401,12 @@ public:
 
 	bool IsLessThen( float duration ) const
 	{
-		return (Now() - m_timestamp < duration) ? true : false;
+		return (Now() - m_timestamp < duration);
 	}
 
 	bool IsGreaterThen( float duration ) const
 	{
-		return (Now() - m_timestamp > duration) ? true : false;
+		return (Now() - m_timestamp > duration);
 	}
 
 private:
