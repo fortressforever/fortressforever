@@ -513,7 +513,7 @@ public:
 	}
 	bool LuaIsPlayerFrozen() 
 	{
-		return ( GetFlags() & FL_FROZEN ) ? true : false;
+		return !!( GetFlags() & FL_FROZEN );
 	}
 	void LuaLockPlayerInPlace( bool _lock )
 	{
@@ -922,23 +922,23 @@ protected:
 
 public:
 	// Some luabind functions
-	bool IsInAttack1( void ) const	{ return ( m_nButtons & IN_ATTACK ) ? true : false; }
-	bool IsInAttack2( void ) const	{ return ( m_nButtons & IN_ATTACK2 ) ? true : false; }
-	bool IsInUse( void ) const		{ return ( m_nButtons & IN_USE ) ? true : false; }
-	bool IsInJump( void ) const		{ return ( m_nButtons & IN_JUMP ) ? true : false; }
-	bool IsInForward( void ) const	{ return ( m_nButtons & IN_FORWARD ) ? true : false; }
-	bool IsInBack( void ) const		{ return ( m_nButtons & IN_BACK ) ? true : false; }
-	bool IsInMoveLeft( void ) const	{ return ( m_nButtons & IN_MOVELEFT ) ? true : false; }
-	bool IsInMoveRight( void ) const	{ return ( m_nButtons & IN_MOVERIGHT ) ? true : false; }
-	bool IsInLeft( void ) const		{ return ( m_nButtons & IN_LEFT ) ? true : false; }
-	bool IsInRight( void ) const	{ return ( m_nButtons & IN_RIGHT ) ? true : false; }
-	bool IsInRun( void ) const		{ return ( m_nButtons & IN_RUN ) ? true : false; }
-	bool IsInReload( void ) const	{ return ( m_nButtons & IN_RELOAD ) ? true : false; }
-	bool IsInSpeed( void ) const	{ return ( m_nButtons & IN_SPEED ) ? true : false; }
-	bool IsInWalk( void ) const		{ return ( m_nButtons & IN_WALK ) ? true : false; }
-	bool IsInZoom( void ) const		{ return ( m_nButtons & IN_ZOOM ) ? true : false; }
-	bool IsDucking( void ) const	{ return ( GetFlags() & FL_DUCKING ) ? true : false; }
-	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
+	bool IsInAttack1( void ) const	{ return !!( m_nButtons & IN_ATTACK ); }
+	bool IsInAttack2( void ) const	{ return !!( m_nButtons & IN_ATTACK2 ); }
+	bool IsInUse( void ) const		{ return !!( m_nButtons & IN_USE ); }
+	bool IsInJump( void ) const		{ return !!( m_nButtons & IN_JUMP ); }
+	bool IsInForward( void ) const	{ return !!( m_nButtons & IN_FORWARD ); }
+	bool IsInBack( void ) const		{ return !!( m_nButtons & IN_BACK ); }
+	bool IsInMoveLeft( void ) const	{ return !!( m_nButtons & IN_MOVELEFT ); }
+	bool IsInMoveRight( void ) const	{ return !!( m_nButtons & IN_MOVERIGHT ); }
+	bool IsInLeft( void ) const		{ return !!( m_nButtons & IN_LEFT ); }
+	bool IsInRight( void ) const	{ return !!( m_nButtons & IN_RIGHT ); }
+	bool IsInRun( void ) const		{ return !!( m_nButtons & IN_RUN ); }
+	bool IsInReload( void ) const	{ return !!( m_nButtons & IN_RELOAD ); }
+	bool IsInSpeed( void ) const	{ return !!( m_nButtons & IN_SPEED ); }
+	bool IsInWalk( void ) const		{ return !!( m_nButtons & IN_WALK ); }
+	bool IsInZoom( void ) const		{ return !!( m_nButtons & IN_ZOOM ); }
+	bool IsDucking( void ) const	{ return !!( GetFlags() & FL_DUCKING ); }
+	bool IsOnGround( void ) const	{ return !!( GetFlags() & FL_ONGROUND ); }
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
 	bool IsInAir( float flUnitsAboveGround ) const;
 

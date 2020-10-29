@@ -386,7 +386,7 @@ void CFFGrenadeNail::Precache()
 				AngleVectors( vecAngles, &vecNailDir );
 				VectorNormalizeFast( vecNailDir );
 
-				ShootNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, ( i == 0 ) ? true : false );
+				ShootNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, i == 0 );
 
 				// Update next position
 				vecAngles.y += (iNailSpreadInterval + iNailOffset);

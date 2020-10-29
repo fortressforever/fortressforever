@@ -709,7 +709,7 @@ ConVar mp_friendlyfire_armorstrip( "mp_friendlyfire_armorstrip",
 			CUtlVector< int > iChangeClassValidClasses;
 
 			bool bUseTeam = ( ( iTeam >= TEAM_BLUE ) && ( iTeam <= TEAM_GREEN ) );
-			bool bUsePlayer = pFFPlayer ? true : false;
+			bool bUsePlayer = !!pFFPlayer;
 
 			// Eh? Which one do we use? 
 			if( bUseTeam && bUsePlayer )
