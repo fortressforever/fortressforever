@@ -689,7 +689,7 @@ BASEPTR	CBaseEntity::ThinkSet( BASEPTR func, float thinkTime, const char *szCont
 	{
 		int thinkTick = ( thinkTime == TICK_NEVER_THINK ) ? TICK_NEVER_THINK : TIME_TO_TICKS( thinkTime );
 		m_aThinkFunctions[ iIndex ].m_nNextThinkTick = thinkTick;
-		CheckHasThinkFunction( thinkTick == TICK_NEVER_THINK ? false : true );
+		CheckHasThinkFunction( thinkTick != TICK_NEVER_THINK );
 	}
 	return func;
 }
@@ -714,7 +714,7 @@ void CBaseEntity::SetNextThink( float thinkTime, const char *szContext )
 
 		// Old system
 		m_nNextThinkTick = thinkTick;
-		CheckHasThinkFunction( thinkTick == TICK_NEVER_THINK ? false : true );
+		CheckHasThinkFunction( thinkTick != TICK_NEVER_THINK );
 		return;
 	}
 	else
@@ -729,7 +729,7 @@ void CBaseEntity::SetNextThink( float thinkTime, const char *szContext )
 
 	// Old system
 	m_aThinkFunctions[ iIndex ].m_nNextThinkTick = thinkTick;
-	CheckHasThinkFunction( thinkTick == TICK_NEVER_THINK ? false : true );
+	CheckHasThinkFunction( thinkTick != TICK_NEVER_THINK );
 }
 
 //-----------------------------------------------------------------------------
@@ -943,7 +943,7 @@ void CBaseEntity::SetNextThink( int nContextIndex, float thinkTime )
 	{
 		m_aThinkFunctions[nContextIndex].m_nNextThinkTick = thinkTick;
 	}
-	CheckHasThinkFunction( thinkTick == TICK_NEVER_THINK ? false : true );
+	CheckHasThinkFunction( thinkTick != TICK_NEVER_THINK );
 }
 
 void CBaseEntity::SetLastThink( int nContextIndex, float thinkTime )

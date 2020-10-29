@@ -31,7 +31,7 @@ public:
 
 	// NOTE: This particle already takes the full 64-bytes.  So fade over a hardcoded 2 seconds instead of the entire lifetime
 	float		GetFadeFraction() const { return m_flLifeRemaining >= 2.0f ? 1 : (m_flLifeRemaining * 0.5f); }
-	bool		IsDead() const { return m_flLifeRemaining >= 0 ? false : true; }
+	bool		IsDead() const { return m_flLifeRemaining < 0; }
 
 	float		m_flLifeRemaining;	// How long it lives for.
 public:

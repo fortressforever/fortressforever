@@ -509,21 +509,18 @@ void CTankTrainAI::Think( void )
 
 	if ( desired != 0 )
 	{
-		int wasMoving = (pTrain->m_flSpeed == 0) ? false : true;
+		int wasMoving = pTrain->m_flSpeed != 0;
 		// chaser wants train to move, send message
 		pTrain->SetSpeed( desired );
-		int isMoving = (pTrain->m_flSpeed == 0) ? false : true;
+		int isMoving = pTrain->m_flSpeed != 0;
 
 		if ( !isMoving && wasMoving )
 		{
 			SoundEngineStop();
 		}
-		else if ( isMoving )
+		else if ( isMoving && !wasMoving )
 		{
-			if ( !wasMoving )
-			{
-				SoundEngineStart();
-			}
+			SoundEngineStart();	
 		}
 	}
 	else

@@ -668,7 +668,7 @@ namespace FFLib
 
 	bool IsPlayer( CBaseEntity *pEntity )
 	{
-		return GetPlayer( pEntity ) == NULL ? false : true;
+		return GetPlayer( pEntity ) != NULL;
 	}
 
 	CFFInfoScript* GetInfoScriptByName(const char* entityName)

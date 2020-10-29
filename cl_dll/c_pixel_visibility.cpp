@@ -198,7 +198,7 @@ void CPixelVisSet::MarkActive()
 
 bool CPixelVisSet::IsActive()
 {
-	return (gpGlobals->framecount - frameIssued) > 1 ? false : true;
+	return (gpGlobals->framecount - frameIssued) <= 1;
 }
 
 
@@ -269,7 +269,7 @@ bool CPixelVisibilityQuery::IsForView( int viewID )
 
 bool CPixelVisibilityQuery::IsActive()
 {
-	return (gpGlobals->framecount - m_frameIssued) > 1 ? false : true;
+	return (gpGlobals->framecount - m_frameIssued) <= 1;
 }
 
 float CPixelVisibilityQuery::GetFractionVisible( float fadeTimeInv )

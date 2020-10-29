@@ -305,7 +305,7 @@ public:
 		params.Defaults();
 		params.forceLimit = lbs2kg(m_forceLimit);
 		params.torqueLimit = lbs2kg(m_torqueLimit);
-		params.isActive = HasSpawnFlags( SF_CONSTRAINT_START_INACTIVE ) ? false : true;
+		params.isActive = !HasSpawnFlags( SF_CONSTRAINT_START_INACTIVE );
 		params.bodyMassScale[0] = info.massScale[0];
 		params.bodyMassScale[1] = info.massScale[1];
 	}

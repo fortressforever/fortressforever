@@ -396,7 +396,7 @@ void RecvProxy_ToolRecording( const CRecvProxyData *pData, void *pStruct, void *
 		return;
 
 	CBaseEntity *pEnt = (CBaseEntity *)pStruct;
-	pEnt->SetToolRecording( pData->m_Value.m_Int == 0 ? false : true );
+	pEnt->SetToolRecording( pData->m_Value.m_Int != 0 );
 	if ( pEnt->IsToolRecording() )
 	{
 		recordinglist->AddToList( pEnt->GetClientHandle() );

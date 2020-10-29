@@ -4990,7 +4990,7 @@ static ConCommand ent_pause("ent_pause", CC_Ent_Pause, "Toggles pausing of input
 //------------------------------------------------------------------------------
 void CC_Ent_Picker( void )
 {
-	CBaseEntity::m_bInDebugSelect = CBaseEntity::m_bInDebugSelect ? false : true;
+	CBaseEntity::m_bInDebugSelect = !CBaseEntity::m_bInDebugSelect;
 
 	// Remember the player that's making this request
 	CBaseEntity::m_nDebugPlayer = UTIL_GetCommandClientIndex();

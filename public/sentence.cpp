@@ -809,7 +809,7 @@ void CSentence::CacheRestoreFromBuffer( CUtlBuffer& buf )
 	}
 
 	// And voice duck
-	SetVoiceDuck( buf.GetChar() == 0 ? false : true );
+	SetVoiceDuck( buf.GetChar() != 0 );
 	m_bIsValid = true;
 }
 

@@ -60,7 +60,7 @@ bool EffectOccluded( const Vector &pos, pixelvis_handle_t *queryHandle )
 	pixelvis_queryparams_t params;
 	params.Init(pos);
 	
-	return PixelVisibility_FractionVisible( params, queryHandle ) > 0.0f ? false : true;
+	return PixelVisibility_FractionVisible( params, queryHandle ) <= 0.0f;
 }
 
 

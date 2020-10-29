@@ -976,7 +976,7 @@ public:
 	bool IsStandable() const;
 
 	// UNDONE: Do these three functions actually need to be virtual???
-	virtual bool	CanStandOn( CBaseEntity *pSurface ) const { return (pSurface && !pSurface->IsStandable()) ? false : true; }
+	virtual bool	CanStandOn( CBaseEntity *pSurface ) const { return !pSurface || pSurface->IsStandable(); }
 	virtual bool	CanStandOn( edict_t	*ent ) const { return CanStandOn( GetContainingEntity( ent ) ); }
 	virtual CBaseEntity		*GetEnemy( void ) { return NULL; }
 	virtual CBaseEntity		*GetEnemy( void ) const { return NULL; }

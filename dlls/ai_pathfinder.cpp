@@ -832,7 +832,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildComplexRoute( Navigation_t navType, const Ve
 	
 	unsigned int collideFlags = (buildFlags & bits_BUILD_IGNORE_NPCS) ? MASK_NPCSOLID_BRUSHONLY : MASK_NPCSOLID;
 
-	bool bCheckGround = (GetOuter()->CapabilitiesGet() & bits_CAP_SKIP_NAV_GROUND_CHECK) ? false : true;
+	bool bCheckGround = ~(GetOuter()->CapabilitiesGet() & bits_CAP_SKIP_NAV_GROUND_CHECK);
 
 	if ( flTotalDist <= maxLocalNavDistance )
 	{

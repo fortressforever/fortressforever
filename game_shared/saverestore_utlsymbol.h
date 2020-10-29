@@ -42,7 +42,7 @@ public:
 	virtual bool IsEmpty( const SaveRestoreFieldInfo_t &fieldInfo )
 	{
 		CUtlSymbol *sym = ((CUtlSymbol *)fieldInfo.pField);
-		return (*sym).IsValid() ? false : true;
+		return !(*sym).IsValid();
 	}
 
 private:
