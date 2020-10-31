@@ -253,18 +253,19 @@ const char *FF_GetDefaultWeapon( const char *classname )
 // ELMO *** 
 //I don't know if there is a function for this already.
 //I put it here from speedometer to use in crosshair info and anything else we wish to colour/color fade!
-Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor )
+Color ColorFade( int iValue, int iMin, int iMax, Color clrMin, Color clrMax )
 {
-	int clampedCurrent = clamp(currentVal, minVal, maxVal);
-	float full, f1, f2;
-	full = maxVal - minVal;
-	f1 = (maxVal - clampedCurrent) / full;
-	f2 = (clampedCurrent - minVal) / full;
+	int iClamped = clamp(iValue, iMin, iMax);
+
+	float flRange = iMax - iMin;
+	float flMinAmount = (iMax - iClamped) / flRange;
+	float flMaxAmount = (iClamped - iMin) / flRange;
+
 	return Color(
-		(int) (maxColor.r() * f2 + minColor.r() * f1),
-		(int) (maxColor.g() * f2 + minColor.g() * f1),
-		(int) (maxColor.b() * f2 + minColor.b() * f1),
-		255);
+		(int) (clrMax.r() * flMaxAmount + clrMin.r() * flMinAmount),
+		(int) (clrMax.g() * flMaxAmount + clrMin.g() * flMinAmount),
+		(int) (clrMax.b() * flMaxAmount + clrMin.b() * flMinAmount),
+		(int) (clrMax.a() * flMaxAmount + clrMin.a() * flMinAmount));
 }
 
 Color getIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen, bool invertScale )
