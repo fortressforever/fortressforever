@@ -57,12 +57,6 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	int nWide = GetWide();
 	int nTall = GetTall();
 
-	SetPos((ScreenWidth() - nWide) / 2, (ScreenHeight() - nTall) / 2);
-
-	// This should not be visible since we're only 
-	// showing it when selected in the main menu.
-	SetVisible(false);
-
 	m_pCrosshairOptions = new CFFCrosshairOptions(this, "CrosshairOptions");
 	m_pTimerOptions = new CFFTimerOptions(this, "TimerOptions");
 	m_pMiscOptions1 = new CFFMiscOptions(this, "MiscOptions", "resource/Options1.vdf");
@@ -86,8 +80,10 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pCancelButton = new Button(this, "CancelButton", "", this, "Cancel");
 	m_pApplyButton = new Button(this, "ApplyButton", "", this, "Apply");
 
+	SetPos((ScreenWidth() - nWide) / 2, (ScreenHeight() - nTall) / 2);
+	SetVisible(false);
 	SetSizeable(false);
-	
+
 	LoadControlSettings("resource/ui/FFOptions.res");
 }
 
