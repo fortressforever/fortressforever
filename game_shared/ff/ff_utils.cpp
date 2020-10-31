@@ -250,9 +250,6 @@ const char *FF_GetDefaultWeapon( const char *classname )
 	return FF_GetDefaultWeapon( Class_StringToInt( classname ) );
 }
 
-// ELMO *** 
-//I don't know if there is a function for this already.
-//I put it here from speedometer to use in crosshair info and anything else we wish to colour/color fade!
 Color ColorFade( int iValue, int iMin, int iMax, Color clrMin, Color clrMax )
 {
 	int iClamped = clamp(iValue, iMin, iMax);
@@ -308,7 +305,6 @@ Color GetIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAl
 		clrResult.b(),
 		iAlpha);
 }
-// *** ELMO
 
 void SetColorByTeam( int iTeam, Color& cColor )
 {
