@@ -24,7 +24,7 @@
 #include <vgui_controls/HTML.h>
 
 #include "ff_timeroptions.h"
-#include "ff_miscOptions.h"
+#include "ff_miscoptions.h"
 #include "ff_crosshairoptions.h"
 #include "ff_dlightoptions.h"
 
