@@ -250,76 +250,61 @@ const char *FF_GetDefaultWeapon( const char *classname )
 	return FF_GetDefaultWeapon( Class_StringToInt( classname ) );
 }
 
-// ELMO *** 
-//I don't know if there is a function for this already.
-//I put it here from speedometer to use in crosshair info and anything else we wish to colour/color fade!
-Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor )
+Color ColorFade( int iValue, int iMin, int iMax, Color clrMin, Color clrMax )
 {
-	float full, f1, f2;
-	full = maxVal - minVal;
-	f1 = (maxVal - currentVal) / full;
-	f2 = (currentVal - minVal) / full;
+	int iClamped = clamp(iValue, iMin, iMax);
+
+	float flRange = iMax - iMin;
+	float flMinAmount = (iMax - iClamped) / flRange;
+	float flMaxAmount = (iClamped - iMin) / flRange;
+
 	return Color(
-		(int) (maxColor.r() * f2 + minColor.r() * f1),
-		(int) (maxColor.g() * f2 + minColor.g() * f1),
-		(int) (maxColor.b() * f2 + minColor.b() * f1),
-		255);
+		(int) (clrMax.r() * flMaxAmount + clrMin.r() * flMinAmount),
+		(int) (clrMax.g() * flMaxAmount + clrMin.g() * flMinAmount),
+		(int) (clrMax.b() * flMaxAmount + clrMin.b() * flMinAmount),
+		(int) (clrMax.a() * flMaxAmount + clrMin.a() * flMinAmount));
 }
 
-Color getIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen, bool invertScale )
+Color GetIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen )
 {
-	Color innerCol;
-	if(!invertScale) 
-	{
-		if( iAmount <= iRed && iColorSetting > 0)
-			innerCol = INTENSITYSCALE_COLOR_RED;
-		else if(iAmount  <= iOrange && iColorSetting > 0)
-			if(iColorSetting == 2)
-				innerCol = ColorFade( iAmount, iRed, iOrange, INTENSITYSCALE_COLOR_RED, INTENSITYSCALE_COLOR_ORANGE );
-			else
-				innerCol = INTENSITYSCALE_COLOR_ORANGE;	
-		else if(iAmount  <= iYellow && iColorSetting> 0)
-			if(iColorSetting == 2)
-				innerCol = ColorFade( iAmount, iOrange, iYellow, INTENSITYSCALE_COLOR_ORANGE, INTENSITYSCALE_COLOR_YELLOW );
-			else
-				innerCol = INTENSITYSCALE_COLOR_YELLOW;
-		else if(iColorSetting > 0)
-			if(iColorSetting == 2)
-				innerCol = ColorFade( iAmount, iYellow, iGreen, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_GREEN );
-			else
-				innerCol = INTENSITYSCALE_COLOR_GREEN;
-		else
-			innerCol = INTENSITYSCALE_COLOR_DEFAULT;
+	Color clrResult;
 
-		return *new Color(innerCol.r(), innerCol.g(), innerCol.b(), iAlpha);
+	if( iAmount <= iRed && iColorSetting > 0)
+	{
+		clrResult = INTENSITYSCALE_COLOR_RED;
+	}
+	else if(iAmount  <= iOrange && iColorSetting > 0)
+	{
+		if(iColorSetting == 2)
+			clrResult = ColorFade( iAmount, iRed, iOrange, INTENSITYSCALE_COLOR_RED, INTENSITYSCALE_COLOR_ORANGE );
+		else
+			clrResult = INTENSITYSCALE_COLOR_ORANGE;	
+	}
+	else if(iAmount  <= iYellow && iColorSetting> 0)
+	{
+		if(iColorSetting == 2)
+			clrResult = ColorFade( iAmount, iOrange, iYellow, INTENSITYSCALE_COLOR_ORANGE, INTENSITYSCALE_COLOR_YELLOW );
+		else
+			clrResult = INTENSITYSCALE_COLOR_YELLOW;
+	}
+	else if(iColorSetting > 0)
+	{
+		if(iColorSetting == 2)
+			clrResult = ColorFade( iAmount, iYellow, iGreen, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_GREEN );
+		else
+			clrResult = INTENSITYSCALE_COLOR_GREEN;
 	}
 	else
 	{
-		//not working
-		if( iAmount > iRed && iColorSetting > 0)
-			innerCol = INTENSITYSCALE_COLOR_RED;
-		else if(iAmount  > iOrange && iColorSetting > 0)
-			if(iColorSetting == 2)
-				innerCol = ColorFade( iAmount, iOrange, iRed, INTENSITYSCALE_COLOR_ORANGE,INTENSITYSCALE_COLOR_RED );
-			else
-				innerCol = INTENSITYSCALE_COLOR_ORANGE;	
-		else if(iAmount  > iYellow && iColorSetting> 0)
-			if(iColorSetting == 2)
-				innerCol = ColorFade( iAmount, iYellow, iOrange, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_ORANGE );
-			else
-				innerCol = INTENSITYSCALE_COLOR_YELLOW;
-		else if(iColorSetting > 0)
-			if(iColorSetting == 2)
-				innerCol = ColorFade( iAmount, iGreen, iYellow, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_GREEN );
-			else
-				innerCol = INTENSITYSCALE_COLOR_GREEN;
-		else
-			innerCol = INTENSITYSCALE_COLOR_DEFAULT;
-
-		return *new Color(innerCol.r(), innerCol.g(), innerCol.b(), iAlpha);
+		clrResult = INTENSITYSCALE_COLOR_DEFAULT;
 	}
+
+	return Color(
+		clrResult.r(),
+		clrResult.g(),
+		clrResult.b(),
+		iAlpha);
 }
-// *** ELMO
 
 void SetColorByTeam( int iTeam, Color& cColor )
 {

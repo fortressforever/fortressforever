@@ -46,26 +46,6 @@ public:
 	// Purpose: Ask the person who made the damn function!
 	//-----------------------------------------------------------------------------
 	int GetComboBoxOption(ComboBox *cb, const char *value, const char *keyname = "value");
-private:
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Catch checkbox updating -- not needed, yet
-	//-----------------------------------------------------------------------------
-	//MESSAGE_FUNC_PARAMS(OnUpdateCheckbox, "CheckButtonChecked", data)
-	//{
-	//}
-
-	CheckButton		*m_pHints;			// The enable/disable hints check box
-	ConVar			*m_pHintsConVar;	// Pointer to the cl_hints convar
-
-	CheckButton		*m_pARCheck;		// The enable/disable autoreload check box
-	ConVar			*m_pAutoRLConVar;	// Pointer to the cl_autoreload convar
-
-	CheckButton		*m_pAutoKillCheck;	// The enable/disable classautokill check box
-	ConVar			*m_pAutoKillConVar;	// Pointer to the cl_classautokill convar
-
-	CheckButton		*m_pBlurCheck;		// The enable/disable speed blur check box
-	ConVar			*m_pBlurConVar;		// Pointer to the cl_dynamicblur convar
 };
 
 #endif

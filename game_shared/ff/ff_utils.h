@@ -90,9 +90,9 @@ const char *FF_GetDefaultWeapon( int iClassIndex );
 const char *FF_GetDefaultWeapon( const char *classname );
 
 void SetColorByTeam( int iTeam, Color& cColor );
-Color ColorFade( int currentVal, int minVal, int maxVal, Color minColor, Color maxColor );
+Color ColorFade( int iValue, int iMin, int iMax, Color clrMin, Color clrMax );
 
-Color getIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen, bool invertScale  );
+Color GetIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen );
 
 int FF_NumPlayersOnTeam( int iTeam );
 int FF_GetPlayerOnTeam( int iTeam, int iNum );

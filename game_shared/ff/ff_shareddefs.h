@@ -36,8 +36,6 @@
 
 // Leave this commented out unless you're compiling for the beta testers!
 // Mulch or Mirv should be the only ones messing with this!
-//#define FF_BETA_TEST_COMPILE
-#define FF_BASTARD_HACKERS true
 
 //extern ConVar ffdev_spy_maxcloakspeed;
 #define SPY_MAXCLOAKSPEED 220
@@ -147,13 +145,18 @@ struct SpyDisguiseWeapon
 #define DECAP_LEFT_LEG		( 1 << 3 )
 #define DECAP_RIGHT_LEG		( 1 << 4 )
 
-// ELMO *** 
+// HUD Definitions
 #define INTENSITYSCALE_COLOR_RED Color(255,0,0,255)
 #define INTENSITYSCALE_COLOR_YELLOW Color(255,255,0,255)
 #define INTENSITYSCALE_COLOR_ORANGE Color(255,128,0,255)
 #define INTENSITYSCALE_COLOR_GREEN Color(0,255,0,255)
 #define INTENSITYSCALE_COLOR_DEFAULT Color(255,255,255,255)
-// ELMO *** 
+
+#define TEAM_COLOR_SPECTATOR Color( 0, 200, 200, 255 )
+#define TEAM_COLOR_BLUE Color( 56, 100, 171, 255 )
+#define TEAM_COLOR_RED Color( 188, 0, 0, 255 )
+#define TEAM_COLOR_YELLOW Color( 202, 173, 33, 255 )
+#define TEAM_COLOR_GREEN Color( 68, 144, 65, 255 )
 
 // Some kill modifiers.
 enum KillTypes_t

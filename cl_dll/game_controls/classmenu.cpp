@@ -224,7 +224,7 @@ public:
 	{
 		m_pProgressBar->SetProgress( clamp( m_flValue / m_flMax, 0.0f, 1.0f ) );
 		m_pProgressBar->SetBgColor( Color( 0,0,0, 100 ) );
-		m_pProgressBar->SetFgColor( getIntensityColor((int)(m_flValue/m_flMax * 100), 255, 2, 100, 25, 50, 70, 90, 0) );
+		m_pProgressBar->SetFgColor( GetIntensityColor((int)(m_flValue/m_flMax * 100), 255, 2, 100, 25, 50, 70, 90) );
 
 		BaseClass::Paint();
 	}

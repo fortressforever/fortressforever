@@ -38,14 +38,7 @@ CFFTimer::CFFTimer(const CFFTimer& rhs)
 /////////////////////////////////////////////////////////////////////////////
 bool CFFTimer::Update()
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-	return true;
-#else
-
 	return false;
-#endif // FF_BETA_TEST_COMPILE
 }
 
 float CFFTimer::GetTime()
@@ -77,10 +70,6 @@ void CFFTimerManager::AddTimer(const char* szTimerName,
 						float flStartValue,
 						float flTimerIncrement)
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	CRC32_t id = ComputeChecksum(szTimerName);
 
 	// check if the timer of the specified name already exists
@@ -91,7 +80,6 @@ void CFFTimerManager::AddTimer(const char* szTimerName,
 	CFFTimer* pTimer = new CFFTimer(flStartValue, flTimerIncrement);
 
 	m_timers.Insert(id, pTimer);
-#endif // FF_BETA_TEST_COMPILE
 }
 
 

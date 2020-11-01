@@ -494,10 +494,6 @@ ConCommand cc_CreatePredictionError( "CreatePredictionError", cc_CreatePredictio
 // --------------------------------------------------------------------------------
 CFFPlayer::CFFPlayer()
 {
-#ifdef FF_BETA_TEST_COMPILE
-	CBaseEntity *p = NULL;
-	p->Activate();
-#else
 	m_PlayerAnimState = CreatePlayerAnimState( this, this, LEGANIM_9WAY, true );
 
 	UseClientSideAnimation();
@@ -613,8 +609,6 @@ CFFPlayer::CFFPlayer()
 
 	m_recentAttackers.Purge();
 	//m_iStatsID = -1;
-
-#endif // FF_BETA_TEST_COMPILE
 }
 
 CFFPlayer::~CFFPlayer()
@@ -665,13 +659,6 @@ void CFFPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitA
 
 void CFFPlayer::PreThink(void)
 {
-#ifdef FF_BETA_TEST_COMPILE
-	// Crash
-	CFFPlayer *p = NULL;
-	p->PreThink();
-#endif
-
-#ifndef FF_BETA_TEST_COMPILE
 	// reset these every frame
 	m_fBodygroupState = 0;
 
@@ -803,18 +790,10 @@ void CFFPlayer::PreThink(void)
 		m_iActiveSabotages &= ~1;
 
 	BaseClass::PreThink();
-#endif // FF_BETA_TEST_COMPILE
 }
 
 void CFFPlayer::PostThink()
 {
-#ifdef FF_BETA_TEST_COMPILE
-	// Crash
-	CFFPlayer *p = NULL;
-	p->PostThink();
-#endif
-
-#ifndef FF_BETA_TEST_COMPILE
 	BaseClass::PostThink();
 
 	if( GetTeamNumber() < TEAM_BLUE )
@@ -832,13 +811,11 @@ void CFFPlayer::PostThink()
 
 		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 	}
-#endif // FF_BETA_TEST_COMPILE
 }
 
 
 void CFFPlayer::Precache()
 {
-#ifndef FF_BETA_TEST_COMPILE
 	PrecacheModel(FF_PLAYER_MODEL);
 
 	// #0000331: impulse 81 not working (weapon_cubemap)
@@ -923,7 +900,6 @@ void CFFPlayer::Precache()
 	}
 
 	BaseClass::Precache();
-#endif // FF_BETA_TEST_COMPILE
 }
 
 extern CBaseEntity *g_pLastSpawn; // this is defined somewhere.. i'm using it :)
@@ -942,12 +918,6 @@ void CFFPlayer::SetLastSpawn( CBaseEntity *pEntity )
 
 CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 {
-#ifdef FF_BETA_TEST_COMPILE
-	// Return bogus crap
-	return NULL;
-#endif
-
-#ifndef FF_BETA_TEST_COMPILE
 	/*
 	CBaseEntity *pSpot, *pGibSpot;
 	edict_t		*player;
@@ -1254,7 +1224,6 @@ ReturnSpot:
 	g_pLastSpawn = pSpot;
 	return pSpot;
 	//*/
-#endif // FF_BETA_TEST_COMPILE
 }
 
 // --------------------------------------------------------------------------------
@@ -1337,13 +1306,6 @@ void CFFPlayer::PreForceSpawn( void )
 // --------------------------------------------------------------------------------
 void CFFPlayer::Spawn( void )
 {
-#ifdef FF_BETA_TEST_COMPILE
-	// Crash
-	CFFPlayer *p = NULL;
-	p->Spawn();
-#endif
-
-#ifndef FF_BETA_TEST_COMPILE
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//  Please don't reinitialise class specific variables in here, but SetupClassVariables instead!
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1618,15 +1580,11 @@ void CFFPlayer::Spawn( void )
 
 	// Increment the spawn counter
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
-
-#endif // FF_BETA_TEST_COMPILE
 }
 
 // Mirv: Moved all this out of spawn into here
 void CFFPlayer::SetupClassVariables()
 {
-#ifndef FF_BETA_TEST_COMPILE
-
 	//Last weapon used
 	m_pLastWeapon = NULL;
 
@@ -1711,12 +1669,10 @@ void CFFPlayer::SetupClassVariables()
 
 	// clear recent attacker (kill assist) info
 	m_recentAttackers.Purge();
-#endif // FF_BETA_TEST_COMPILE
 }
 
 void CFFPlayer::InitialSpawn( void )
 {
-#ifndef FF_BETA_TEST_COMPILE
 	// Make sure they are dead
 	m_lifeState = LIFE_DEAD;
 	pl.deadflag = true;
@@ -1751,7 +1707,6 @@ void CFFPlayer::InitialSpawn( void )
 	engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_classautokill" );
 
 	//DevMsg("CFFPlayer::InitialSpawn");
-#endif // FF_BETA_TEST_COMPILE
 }
 
 //-----------------------------------------------------------------------------
