@@ -270,39 +270,43 @@ Color ColorFade( int iValue, int iMin, int iMax, Color clrMin, Color clrMax )
 
 Color GetIntensityColor( int iAmount, int iMaxAmount, int iColorSetting, int iAlpha, int iRed, int iOrange, int iYellow, int iGreen )
 {
-	Color innerCol;
+	Color clrResult;
 
 	if( iAmount <= iRed && iColorSetting > 0)
 	{
-		innerCol = INTENSITYSCALE_COLOR_RED;
+		clrResult = INTENSITYSCALE_COLOR_RED;
 	}
 	else if(iAmount  <= iOrange && iColorSetting > 0)
 	{
 		if(iColorSetting == 2)
-			innerCol = ColorFade( iAmount, iRed, iOrange, INTENSITYSCALE_COLOR_RED, INTENSITYSCALE_COLOR_ORANGE );
+			clrResult = ColorFade( iAmount, iRed, iOrange, INTENSITYSCALE_COLOR_RED, INTENSITYSCALE_COLOR_ORANGE );
 		else
-			innerCol = INTENSITYSCALE_COLOR_ORANGE;	
+			clrResult = INTENSITYSCALE_COLOR_ORANGE;	
 	}
 	else if(iAmount  <= iYellow && iColorSetting> 0)
 	{
 		if(iColorSetting == 2)
-			innerCol = ColorFade( iAmount, iOrange, iYellow, INTENSITYSCALE_COLOR_ORANGE, INTENSITYSCALE_COLOR_YELLOW );
+			clrResult = ColorFade( iAmount, iOrange, iYellow, INTENSITYSCALE_COLOR_ORANGE, INTENSITYSCALE_COLOR_YELLOW );
 		else
-			innerCol = INTENSITYSCALE_COLOR_YELLOW;
+			clrResult = INTENSITYSCALE_COLOR_YELLOW;
 	}
 	else if(iColorSetting > 0)
 	{
 		if(iColorSetting == 2)
-			innerCol = ColorFade( iAmount, iYellow, iGreen, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_GREEN );
+			clrResult = ColorFade( iAmount, iYellow, iGreen, INTENSITYSCALE_COLOR_YELLOW, INTENSITYSCALE_COLOR_GREEN );
 		else
-			innerCol = INTENSITYSCALE_COLOR_GREEN;
+			clrResult = INTENSITYSCALE_COLOR_GREEN;
 	}
 	else
 	{
-		innerCol = INTENSITYSCALE_COLOR_DEFAULT;
+		clrResult = INTENSITYSCALE_COLOR_DEFAULT;
 	}
 
-	return *new Color(innerCol.r(), innerCol.g(), innerCol.b(), iAlpha);
+	return Color(
+		clrResult.r(),
+		clrResult.g(),
+		clrResult.b(),
+		iAlpha);
 }
 // *** ELMO
 
