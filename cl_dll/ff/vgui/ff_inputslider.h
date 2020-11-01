@@ -31,19 +31,34 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE(CFFInputSlider, Slider)
 
 	public:
-
 		//-----------------------------------------------------------------------------
-		// Purpose: Link this slider in with its input box
+		// Purpose: Link this slider in with an input box
 		//-----------------------------------------------------------------------------
-		CFFInputSlider(Panel *parent, char const *panelName, char const *inputName) : BaseClass(parent, panelName)
+		CFFInputSlider(Panel *parent, char const *panelName, char const *inputName, Panel *pActionSignalTarget=NULL) : BaseClass(parent, panelName)
 		{
 			m_pInputBox = new TextEntry(parent, inputName);
 			m_pInputBox->SetAllowNumericInputOnly(true);
-			//m_pInputBox->SetEditable(false);
 			m_pInputBox->AddActionSignalTarget(this);
-			//m_pInputBox->SendNewLine(true);
+			if(pActionSignalTarget)
+			{
+				AddActionSignalTarget(pActionSignalTarget);
+			}
+			else
+			{
+				AddActionSignalTarget(parent);
+			}
+		}
 
-			AddActionSignalTarget(parent);
+		virtual void AddActionSignalTarget(Panel *messageTarget)
+		{
+			m_pInputBox->AddActionSignalTarget(messageTarget);
+			BaseClass::AddActionSignalTarget(messageTarget);
+		}
+		
+		virtual void RemoveActionSignalTarget(Panel *oldTarget)
+		{
+			m_pInputBox->RemoveActionSignalTarget(oldTarget);
+			BaseClass::RemoveActionSignalTarget(oldTarget);
 		}
 
 		//-----------------------------------------------------------------------------
@@ -54,8 +69,10 @@ namespace vgui
 			m_pInputBox->SetText(VarArgs("%d", value));
 			BaseClass::SetValue(value, bTriggerChangeMessage);
 		}
+		
 		virtual void SetPos(int x, int y)
 		{
+			//reposition the input box depending on how wide the slider is
 			int iWide, iTall;
 			GetSize(iWide, iTall);
 			m_pInputBox->SetPos(x + iWide, y);
@@ -79,8 +96,9 @@ namespace vgui
 			m_pInputBox->SetVisible(state);
 			BaseClass::SetVisible(state);
 		}
-
+		
 	private:
+		TextEntry *m_pInputBox;
 
 		//-----------------------------------------------------------------------------
 		// Purpose: Allow the input box to change this value
@@ -125,10 +143,6 @@ namespace vgui
 		//-----------------------------------------------------------------------------
 		MESSAGE_FUNC_PARAMS(OnTextChanged, "TextChanged", data)
 		{
-			// Apparently this is a good check
-			if (!m_pInputBox->HasFocus())
-				return;
-
 			int iValue = GetInputValue();
 
 			int iMin, iMax;
@@ -153,8 +167,6 @@ namespace vgui
 
 			m_pInputBox->SetText(VarArgs("%d", iValue));
 		}
-
-		TextEntry *m_pInputBox;
 	};
 }
 #endif
