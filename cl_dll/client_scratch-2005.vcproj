@@ -5657,6 +5657,10 @@
 				</Filter>
 			</Filter>
 		</Filter>
+		<File
+			RelativePath=".\ff\vgui\ff_quantitytext.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
