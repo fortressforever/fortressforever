@@ -231,7 +231,7 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityHelper::COLOR_MODE_FADED));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
@@ -244,7 +244,7 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("Bar");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED);
+			kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_FADED);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
@@ -263,7 +263,7 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
@@ -276,7 +276,7 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("BarBorder");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+			kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
@@ -295,7 +295,7 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 0));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityHelper::COLOR_MODE_FADED));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
@@ -308,7 +308,7 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("BarBackground");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED);
+			kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_FADED);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
@@ -326,7 +326,7 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
@@ -346,7 +346,7 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("Icon");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+			kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
@@ -372,7 +372,7 @@ namespace vgui
 
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
@@ -393,7 +393,7 @@ namespace vgui
 			//create the component using these defaults
 			kvComponent = new KeyValues("Label");
 			kvComponent->SetInt("show", 1);
-			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+			kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);
@@ -421,7 +421,7 @@ namespace vgui
 			//strip as normal	
 			kvTempComponent->SetInt("show", kvComponent->GetInt("show", 1));
 			kvTempComponent->SetInt("sticky", kvComponent->GetInt("sticky", 1));
-			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM));
+			kvTempComponent->SetInt("colorMode", kvComponent->GetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM));
 			kvTempComponent->SetInt("red", kvComponent->GetInt("red", 255));
 			kvTempComponent->SetInt("green", kvComponent->GetInt("green", 255));
 			kvTempComponent->SetInt("blue", kvComponent->GetInt("blue", 255));
@@ -443,7 +443,7 @@ namespace vgui
 			kvComponent = new KeyValues("Amount");
 			kvComponent->SetInt("show", 1);
 			kvComponent->SetInt("sticky", 1);
-			kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+			kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 			kvComponent->SetInt("red", 255);
 			kvComponent->SetInt("green", 255);
 			kvComponent->SetInt("blue", 255);

@@ -18,11 +18,6 @@
 
 #include "cbase.h"
 
-/*
-#include <KeyValues.h>
-#include <vgui/ISystem.h>
-*/
-
 #include <vgui_controls/Panel.h>
 #include <vgui/IVGui.h>
 #include <vgui/ISurface.h>
@@ -303,13 +298,6 @@ namespace vgui
 
 	public:
 		FFQuantityItem( Panel *parent, const char *pElementName );
-
-		enum ColorMode {
-			ITEM_COLOR_MODE_CUSTOM=0,
-			ITEM_COLOR_MODE_STEPPED,
-			ITEM_COLOR_MODE_FADED,
-			ITEM_COLOR_MODE_TEAM
-		};
 		
 		enum Position {
 			ANCHORPOS_TOPLEFT=0,
@@ -359,7 +347,7 @@ namespace vgui
 		
 		void SetIntensityControl( int iRed, int iOrange,int iYellow, int iGreen );
 		void SetIntensityAmountScaled( bool bAmountScaled );
-		void SetIntensityValuesFixed( bool bIntensityValuesFixed ); 
+		void SetIntensityValuesFixed( bool bIntensityValuesFixed );
 		bool IsIntensityValuesFixed( );
 
 		int GetAmount( );

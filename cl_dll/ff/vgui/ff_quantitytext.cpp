@@ -36,19 +36,16 @@ namespace vgui
 		m_flScaleX = 1.0f;
 		m_flScaleY = 1.0f;
 
-		m_iPositionOffsetX = 0;
-		m_iPositionOffsetY = 0;
-
 		m_iAnchorPosition = FFQuantityHelper::ANCHORPOS_TOPRIGHT;
 		m_iAnchorWidth = 0;
 		m_iAnchorHeight = 0;
 
-		m_iAlignHoriz = FFQuantityHelper::ALIGN_RIGHT;
-		m_iAlignVert = FFQuantityHelper::ALIGN_BOTTOM;
+		m_iAlignHorizontally = FFQuantityHelper::ALIGN_RIGHT;
+		m_iAlignVertically = FFQuantityHelper::ALIGN_BOTTOM;
 
 		m_iColorMode = FFQuantityHelper::COLOR_MODE_CUSTOM;
 		m_clrCustom = Color(255, 255, 255, 255);
-		m_clrDisplay = Color(255, 255, 255, 255);
+		m_clrText = Color(255, 255, 255, 255);
 
 		m_iSize = 4;
 		m_bShow = true;
@@ -84,106 +81,40 @@ namespace vgui
 				m_wszText,
 				m_hfText,
 				m_clrText,
-				m_iOffsetX + m_iPositionX,
-				m_iOffsetY + m_iPositionY);
+				m_iPositionX,
+				m_iPositionY);
 		}
 	}
 
 	void FFQuantityText::DrawText(
 		wchar_t* wszText,
-		HFont font,
-		Color color,
-		int iXPosition,
-		int iYPosition)
+		HFont hfText,
+		Color clrText,
+		int iPositionX,
+		int iPositionY)
 	{
-		surface()->DrawSetTextFont(font);
-		surface()->DrawSetTextColor(color);
-		surface()->DrawSetTextPos(iXPosition, iYPosition);
+		surface()->DrawSetTextPos(iPositionX, iPositionY);
+		surface()->DrawSetTextColor(clrText);
+		surface()->DrawSetTextFont(hfText);
 		surface()->DrawUnicodeString(wszText);
 	}
 
-	void FFQuantityText::RecalculateHeaderIconFont()
+	void FFQuantityText::RecalculateFont()
 	{
-		HFont font
+		m_hfText 
 			= FFQuantityHelper
 				::GetFont(
 					m_hfFamily,
 					m_iSize,
-					m_bShadow);
-
-		m_hfText = font;
-	}
-
-	vgui::HFont FFQuantityText::GetFont(
-		vgui::HFont* hfFamily,
-		int iSize,
-		bool bUseModifier)
-	{
-		return ;
-	}
-
-	void FFQuantityText::CalculateAnchorPosition(
-		int &iX,
-		int &iY,
-		int iAnchorPos)
-	{
-		int iAlignHoriz, iAlignVert;
-
-		FFQuantityHelper
-			::ConvertToAlignment(
-				iAnchorPos,
-				iAlignHoriz,
-				iAlignVert);
-		
-		int iWide = m_iAnchorWidth * m_flScaleX;
-		int iTall = m_iAnchorHeight * m_flScaleY;
-
-		FFQuantityHelper
-			::CalculatePositionOffset(
-				iX, 
-				iY, 
-				iWide, 
-				iTall,
-				iAlignHoriz,
-				iAlignVert);
-	}
-
-	void FFQuantityText::CalculateAlignmentOffset(
-		int &iX,
-		int &iY,
-		int &iWide,
-		int &iTall,
-		int iAlignHoriz,
-		int iAlignVert,
-		HFont hfFont,
-		wchar_t* wszString)
-	{
-		surface()
-			->GetTextSize(
-				hfFont,
-				wszString,
-				iWide,
-				iTall);
-
-		FFQuantityHelper
-			::CalculatePositionOffset(
-				iX, 
-				iY, 
-				iWide, 
-				iTall,
-				iAlignHoriz,
-				iAlignVert);
-
-		iX = iX * -1;
-		iY = iY * -1;
+					m_bDropShadow);
 	}
 
 	bool FFQuantityText::SetTeamColor(Color clrTeam)
 	{
-		bool bHasChanged 
+		bool bHasChanged
 			= FFQuantityHelper
 				::Change(
-					m_clrTeam, 
+					m_clrTeam,
 					clrTeam);
 		
 		if (bHasChanged)
@@ -220,16 +151,16 @@ namespace vgui
 		if (!engine->IsInGame())
 			return;
 
-		C_BasePlayer *pBasePlayer 
+		C_BasePlayer *pBasePlayer
 			= CBasePlayer::GetLocalPlayer()
 
-		C_FFPlayer *pPlayer 
+		C_FFPlayer *pPlayer
 			= ToFFPlayer(pBasePlayer);
 
-		int iTeamNumber 
+		int iTeamNumber
 			= pPlayer->GetTeamNumber();
 
-		Color clrTeam 
+		Color clrTeam
 			= g_PR->GetTeamColor(iTeamNumber);
 
 		SetTeamColor(clrTeam);
@@ -242,13 +173,13 @@ namespace vgui
 				iScreenTall);
 
 		// "map" screen res to 640/480
-		float flScaleX 
+		float flScaleX
 			= iScreenWide / 640.0f;
 
-		float flScaleY 
+		float flScaleY
 			= iScreenTall / 480.0f;
 
-		if ( m_flScaleX != flScaleX 
+		if ( m_flScaleX != flScaleX
 			|| m_flScaleY != flScaleY)
 		{
 			m_flScaleX = flScaleX;
@@ -272,12 +203,12 @@ namespace vgui
 	}
 
 	void FFQuantityText::RecalculatePaintOffset(
-		fl &flX0,
-		int &flX1,
-		int &flY0,
-		int &flY1)
+		float &flX0,
+		float &flX1,
+		float &flY0,
+		float &flY1)
 	{
-		if (m_bShow) 
+		if (m_bShow)
 		{
 			return;
 		}
@@ -292,7 +223,7 @@ namespace vgui
 			flX0 = m_iPositionX;
 		}
 
-		int x1 
+		int x1
 			= m_iPositionX + m_iWidth
 
 		if ( x1 > flX1 )
@@ -300,7 +231,7 @@ namespace vgui
 			flX1 = x1;
 		}
 
-		int y1 
+		int y1
 			= m_iPositionY + m_iHeight
 
 		if ( y1 > flY1 )
@@ -311,12 +242,43 @@ namespace vgui
 
 	void FFQuantityText::RecalculatePosition( )
 	{
-		CalculateTextAnchorPosition(m_iAnchorPositionX, m_iAnchorPositionY, m_iAnchorPosition);
+		int iAnchorOffsetX, iAnchorOffsetY;
 
-		CalculateTextAlignmentOffset(m_iAlignmentOffsetX, m_iAlignmentOffsetY, m_iWidth, m_iHeight, m_iAlignHoriz, m_iAlignVert, m_hfText, m_wszText);
+		FFQuantityHelper
+			::CalculateAnchorOffset(
+				m_iAnchorPosition,
+				iAnchorOffsetX,
+				iAnchorOffsetY,
+				m_iAnchorWidth,
+				m_iAnchorHeight);
 
-		m_iPositionX = m_iAnchorPositionX + m_iAlignmentOffsetX + m_iPositionOffsetX * m_flScaleX;
-		m_iPositionY = m_iAnchorPositionY + m_iAlignmentOffsetY + m_iPositionOffsetY * m_flScaleY;
+		surface()
+			->GetTextSize(
+				m_hfText,
+				m_wszText,
+				m_iWidth,
+				m_iHeight);
+
+		int iAlignmentOffsetX, iAlignmentOffsetY;
+
+		FFQuantityHelper
+			::CalculatePositionOffset(
+				iAlignmentOffsetX,
+				iAlignmentOffsetY,
+				m_iWidth,
+				m_iHeight,
+				m_iAlignHorizontally,
+				m_iAlignVertically);
+
+		m_iPositionX 
+			= m_iPositionOffsetX * m_flScaleX
+				+ iAnchorOffsetX * m_flScaleX
+				+ iAlignmentOffsetX;
+
+		m_iPositionY 
+			= m_iPositionOffsetY * m_flScaleY
+				+ iAnchorOffsetY * m_flScaleY
+				+ iAlignmentOffsetY;
 	}
 
 	void FFQuantityText::SetText(
@@ -333,7 +295,7 @@ namespace vgui
 		}
 	}
 
-	bool FFQuantityText::SetTextSize( int iSize )
+	bool FFQuantityText::SetTextSize(int iSize)
 	{
 		bool bHasChanged = FFQuantityHelper::Change(m_iTextSize, iSize);
 
@@ -363,7 +325,7 @@ namespace vgui
 			RecalculateTextPosition();
 		}
 
-		return bOffsetXChanged 
+		return bOffsetXChanged
 			|| bOffsetYChanged;
 	}
 
@@ -371,13 +333,13 @@ namespace vgui
 		int iAlignHoriz,
 		int iAlignVert )
 	{
-		bool bHorizChanged 
+		bool bHorizChanged
 			= FFQuantityHelper
 				::Change(
-					m_iTextAlignHoriz, 
+					m_iTextAlignHoriz,
 					iAlignHoriz);
 
-		bool bVertChanged 
+		bool bVertChanged
 			= FFQuantityHelper
 				::Change(
 					m_iTextAlignVert,
@@ -388,14 +350,14 @@ namespace vgui
 			RecalculateTextPosition();
 		}
 
-		return bHorizChanged 
+		return bHorizChanged
 			|| bVertChanged;
 	}
 
 	bool FFQuantityText::SetTextAnchorPosition(
 		int iAnchorPosition)
 	{
-		bool bHasChanged 
+		bool bHasChanged
 			= FFQuantityHelper
 				::Change(
 					m_iTextAnchorPosition,
@@ -411,7 +373,7 @@ namespace vgui
 
 	bool FFQuantityText::SetTextShadow( bool bDropShadow )
 	{
-		bool bHasChanged 
+		bool bHasChanged
 			= FFQuantityHelper
 				::Change(
 					m_bDropShadow,
@@ -430,28 +392,28 @@ namespace vgui
 		KeyValues *kvStyleData,
 		bool useDefaults)
 	{
-		KeyValues* kvDefaultStyleData 
-			= useDefaults 
+		KeyValues* kvDefaultStyleData
+			= useDefaults
 				? GetDefaultStyleData()
 				: new KeyValues("styleData");
 
 		bool bRecalculatePaintOffset = false;
 
-		int iShowText = GetInt("showText", kvStyleData, kvDefaultStyleData);
-		int iTextShadow = GetInt("textShadow", kvStyleData, kvDefaultStyleData);
-		int iTextSize = GetInt("textSize", kvStyleData, kvDefaultStyleData);
-		int iTextAnchorPosition = GetInt("textAnchorPosition", kvStyleData, kvDefaultStyleData);
-		int iTextAlignHoriz = GetInt("textAlignHoriz", kvStyleData, kvDefaultStyleData);
-		int iTextAlignVert = GetInt("textAlignVert", kvStyleData, kvDefaultStyleData);
-		int iTextX = GetInt("textX", kvStyleData, kvDefaultStyleData, -9999);
-		int iTextY = GetInt("textY", kvStyleData, kvDefaultStyleData, -9999);
-		int iTextColorMode = GetInt("textColorMode", kvStyleData, kvDefaultStyleData);
-		int iTextRed = GetInt("textRed", kvStyleData, kvDefaultStyleData);
-		int iTextGreen = GetInt("textGreen", kvStyleData, kvDefaultStyleData);
-		int iTextBlue = GetInt("textBlue", kvStyleData, kvDefaultStyleData);
-		int iTextAlpha = GetInt("textAlpha", kvStyleData, kvDefaultStyleData);
+		int iShow = GetInt("show", kvStyleData, kvDefaultStyleData);
+		int iTextShadow = GetInt("dropShadow", kvStyleData, kvDefaultStyleData);
+		int iTextSize = GetInt("size", kvStyleData, kvDefaultStyleData);
+		int iTextAnchorPosition = GetInt("atextAnchorPosition", kvStyleData, kvDefaultStyleData);
+		int iTextAlignHoriz = GetInt("alignHorizontally", kvStyleData, kvDefaultStyleData);
+		int iTextAlignVert = GetInt("alignVertically", kvStyleData, kvDefaultStyleData);
+		int iTextX = GetInt("X", kvStyleData, kvDefaultStyleData, -9999);
+		int iTextY = GetInt("Y", kvStyleData, kvDefaultStyleData, -9999);
+		int iTextColorMode = GetInt("colorMode", kvStyleData, kvDefaultStyleData);
+		int iRed = GetInt("red", kvStyleData, kvDefaultStyleData);
+		int iGreen = GetInt("green", kvStyleData, kvDefaultStyleData);
+		int iBlue = GetInt("blue", kvStyleData, kvDefaultStyleData);
+		int iAlpha = GetInt("alpha", kvStyleData, kvDefaultStyleData);
 
-		if (iShowText != -1 && SetTextVisible(iShowText == 1))
+		if (iShow != -1 && SetTextVisible(iShow == 1))
 		{
 			bRecalculatePaintOffset = true;
 		}
@@ -468,32 +430,35 @@ namespace vgui
 			bRecalculatePaintOffset = true;
 		}
 
-		if (iTextAnchorPosition != -1 
+		if (iTextAnchorPosition != -1
 			&& SetTextAnchorPosition(iTextAnchorPosition))
 		{
 			bRecalculatePaintOffset = true;
 		}
 
-		if ((iTextAlignHoriz != -1 || iTextAlignVert != -1) 
+		if ((iTextAlignHoriz != -1 || iTextAlignVert != -1)
 			&& SetTextAlignment(iTextAlignHoriz, iTextAlignVert))
 		{
 			bRecalculatePaintOffset = true;
 		}
 		
-		if ((iTextX != -9999 || iTextY != -9999) 
+		if ((iTextX != -9999 || iTextY != -9999)
 			&& SetTextPositionOffset(iTextX, iTextY))
 		{
 			bRecalculatePaintOffset = true;
 		}
 
-		if (iTextColorMode != -1)
+		if (iColorMode != -1)
 		{
-			SetTextColorMode(iTextColorMode);
+			SetColorMode(iColorMode);
 		}
 
-		if (iTextRed != -1 && iTextGreen != -1 && iTextBlue != -1 && iTextAlpha != -1)
+		if (iRed != -1 && iGreen != -1 && iBlue != -1 && iAlpha != -1)
 		{
-			SetCustomTextColor(iTextRed, iTextGreen, iTextBlue, iTextAlpha);
+			Color clrCustom 
+				= Color(iRed, iGreen, iBlue, iAlpha);
+
+			SetCustomColor(clrCustom);
 		}
 
 		if (bRecalculatePaintOffset)
@@ -505,7 +470,7 @@ namespace vgui
 	bool FFQuantityText::SetColorMode(
 		int iColorMode)
 	{
-		bool bHasChanged 
+		bool bHasChanged
 			= FFQuantityHelper
 				::Change(
 					m_iColorMode,
@@ -519,9 +484,8 @@ namespace vgui
 		return bHasChanged;
 	}
 
-	bool FFQuantityText::SetCustomColor( int iRed, int iGreen, int iBlue, int iAlpha )
+	bool FFQuantityText::SetCustomColor(Color clrCustom)
 	{
-		Color clrCustom = Color(iRed, iGreen, iBlue, iAlpha);
 		bool bHasChanged = FFQuantityHelper::Change(m_clrCustom, clrCustom);
 
 		if (bHasChanged)
@@ -532,39 +496,27 @@ namespace vgui
 		return bHasChanged;
 	}
 
-	void FFQuantityText::RecalculateDisplayColor()
+	void FFQuantityText::RecalculateColor()
 	{
-		Color rgbColor 
-			= GetRgbColor(m_iColorMode, m_clrCustom);
+		Color clrRgb;
 
-		SetColor(m_clrDisplay, rgbColor, m_clrCustom);
-	}
-
-	Color FFQuantityText::GetRgbColor(
-		int iColorMode,
-		Color &clrCustom)
-	{
-		switch (iColorMode)
+		switch (m_iColorMode)
 		{
-		case COLOR_MODE_TEAM:
-			return m_clrTeam;
+		case FFQuantityHelper::COLOR_MODE_TEAM:
+			clrRgb = m_clrTeam;
+			break;
 
-		case COLOR_MODE_CUSTOM:
+		case FFQuantityHelper::COLOR_MODE_CUSTOM:
 		default:
-			return clrCustom;
+			clrRgb = m_clrCustom;
 		}
-	}
 
-	void FFQuantityText::SetColor(
-		Color &clrDestination,
-		Color clrRgb,
-		Color clrAlpha)
-	{
-		clrDestination.SetColor(
-			clrRgb.r(),
-			clrRgb.g(),
-			clrRgb.b(),
-			clrAlpha.a());
+		m_clrText
+			.SetColor(
+				clrRgb.r(),
+				clrRgb.g(),
+				clrRgb.b(),
+				m_clrCustom.a());
 	}
 
 	int FFQuantityText::GetInt(const char *keyName, KeyValues *kvStyleData, KeyValues *kvDefaultStyleData, int iDefaultValue)

@@ -26,6 +26,13 @@ namespace FFQuantityHelper
 		ALIGN_BOTTOM
 	};
 
+	enum ColorMode {
+		COLOR_MODE_CUSTOM=0,
+		COLOR_MODE_STEPPED,
+		COLOR_MODE_FADED,
+		COLOR_MODE_TEAM
+	};
+
 	template <typename T>
 	bool Change( T& existingThing, T newThing )
 	{
@@ -64,6 +71,13 @@ namespace FFQuantityHelper
 		int &iHash, 
 		int iValue);
 	
+	void CalculateAnchorOffset(
+		int iAnchorPosition,
+		int &iAnchorPositionX,
+		int &iAnchorPositionY,
+		int iAnchorWidth,
+		int iAnchorHeight);
+
 	void ConvertToAlignment(
 		int iAnchorPos,
 		int &iAlignHoriz, 

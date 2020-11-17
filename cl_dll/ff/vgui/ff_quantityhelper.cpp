@@ -55,13 +55,38 @@ namespace FFQuantityHelper
 	{
 		iHash = iHash * 23 + iValue;
 	}
+	
+	void CalculateAnchorOffset(
+		int iAnchorPosition,
+		int &iAnchorPositionX,
+		int &iAnchorPositionY,
+		int iAnchorWidth,
+		int iAnchorHeight)
+	{
+		int iAlignHorizontally, iAlignVertically;
+		
+		FFQuantityHelper
+			::ConvertToAlignment(
+				iAnchorPosition,
+				iAlignHorizontally,
+				iAlignVertically);
+		
+		FFQuantityHelper
+			::CalculatePositionOffset(
+				iAnchorPositionX,
+				iAnchorPositionY,
+				-iAnchorWidth,
+				-iAnchorHeight,
+				iAlignHorizontally,
+				iAlignVertically);
+	}
 
 	void ConvertToAlignment(
-		int iAnchorPos,
+		int iAnchorPosition,
 		int &iAlignHoriz, 
 		int &iAlignVert)
 	{
-		switch(iAnchorPos)
+		switch(iAnchorPosition)
 		{
 		case ANCHORPOS_TOPLEFT:
 			iAlignVert = ALIGN_TOP;
@@ -113,7 +138,7 @@ namespace FFQuantityHelper
 		switch(iAlignHoriz)
 		{
 		case ALIGN_CENTER:
-			iX = iWide/2;
+			iX = iWide / 2;
 			break;
 		case ALIGN_RIGHT:
 			iX = iWide;

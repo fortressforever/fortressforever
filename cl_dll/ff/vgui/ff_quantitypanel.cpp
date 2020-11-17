@@ -57,10 +57,10 @@ namespace vgui
 		m_iHeaderIconAlignVert = FFQuantityHelper::ALIGN_BOTTOM;
 		m_iTextAlignVert = FFQuantityHelper::ALIGN_TOP;
 
-		m_iPanelColorMode = COLOR_MODE_TEAM;
-		m_iHeaderTextColorMode = COLOR_MODE_CUSTOM;
-		m_iHeaderIconColorMode = COLOR_MODE_CUSTOM;
-		m_iTextColorMode = COLOR_MODE_CUSTOM;
+		m_iPanelColorMode = FFQuantityHelper::COLOR_MODE_TEAM;
+		m_iHeaderTextColorMode = FFQuantityHelper::COLOR_MODE_CUSTOM;
+		m_iHeaderIconColorMode = FFQuantityHelper::COLOR_MODE_CUSTOM;
+		m_iTextColorMode = FFQuantityHelper::COLOR_MODE_CUSTOM;
 
 		m_clrHeaderText = Color(255, 255, 255, 255);
 		m_clrHeaderIcon = Color(255, 255, 255, 255);
@@ -131,7 +131,7 @@ namespace vgui
 		kvPreset->SetInt("showPanel", 1);
 		kvPreset->SetInt("panelMargin", 5);
 		kvPreset->SetInt("panelType", FFQuantityPanel::CORNERS_ROUND);
-		kvPreset->SetInt("panelColorMode", FFQuantityPanel::COLOR_MODE_TEAM);
+		kvPreset->SetInt("panelColorMode", FFQuantityHelper::COLOR_MODE_TEAM);
 		kvPreset->SetInt("panelRed", 255);
 		kvPreset->SetInt("panelGreen", 255);
 		kvPreset->SetInt("panelBlue", 255);
@@ -145,7 +145,7 @@ namespace vgui
 		kvPreset->SetInt("headerTextAlignVert",  FFQuantityHelper::ALIGN_BOTTOM);
 		kvPreset->SetInt("headerTextX", 16);
 		kvPreset->SetInt("headerTextY", -2);
-		kvPreset->SetInt("headerTextColorMode", FFQuantityPanel::COLOR_MODE_CUSTOM);
+		kvPreset->SetInt("headerTextColorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 		kvPreset->SetInt("headerTextRed", 255);
 		kvPreset->SetInt("headerTextGreen", 255);
 		kvPreset->SetInt("headerTextBlue", 255);
@@ -159,7 +159,7 @@ namespace vgui
 		kvPreset->SetInt("headerIconAlignVert",  FFQuantityHelper::ALIGN_BOTTOM);
 		kvPreset->SetInt("headerIconX", 0);
 		kvPreset->SetInt("headerIconY", 0);
-		kvPreset->SetInt("headerIconColorMode", FFQuantityPanel::COLOR_MODE_CUSTOM);
+		kvPreset->SetInt("headerIconColorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 		kvPreset->SetInt("headerIconRed", 255);
 		kvPreset->SetInt("headerIconGreen", 255);
 		kvPreset->SetInt("headerIconBlue", 255);
@@ -173,7 +173,7 @@ namespace vgui
 		kvPreset->SetInt("textAlignVert",  FFQuantityHelper::ALIGN_TOP);
 		kvPreset->SetInt("textX", 5);
 		kvPreset->SetInt("textY", 5);
-		kvPreset->SetInt("textColorMode", FFQuantityPanel::COLOR_MODE_CUSTOM);
+		kvPreset->SetInt("textColorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 		kvPreset->SetInt("textRed", 255);
 		kvPreset->SetInt("textGreen", 255);
 		kvPreset->SetInt("textBlue", 255);
@@ -189,7 +189,7 @@ namespace vgui
 
 		KeyValues *kvComponent = new KeyValues("Bar");
 		kvComponent->SetInt("show", 1);
-		kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED);
+		kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_FADED);
 		kvComponent->SetInt("red", 255);
 		kvComponent->SetInt("green", 255);
 		kvComponent->SetInt("blue", 255);
@@ -199,7 +199,7 @@ namespace vgui
 
 		kvComponent = new KeyValues("BarBorder");
 		kvComponent->SetInt("show", 0);
-		kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+		kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 		kvComponent->SetInt("red", 255);
 		kvComponent->SetInt("green", 255);
 		kvComponent->SetInt("blue", 255);
@@ -209,7 +209,7 @@ namespace vgui
 
 		kvComponent = new KeyValues("BarBackground");
 		kvComponent->SetInt("show", 1);
-		kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_FADED);
+		kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_FADED);
 		kvComponent->SetInt("red", 255);
 		kvComponent->SetInt("green", 255);
 		kvComponent->SetInt("blue", 255);
@@ -219,7 +219,7 @@ namespace vgui
 
 		kvComponent = new KeyValues("Icon");
 		kvComponent->SetInt("show", 0);
-		kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+		kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 		kvComponent->SetInt("red", 255);
 		kvComponent->SetInt("green", 255);
 		kvComponent->SetInt("blue", 255);
@@ -236,7 +236,7 @@ namespace vgui
 
 		kvComponent = new KeyValues("Label");
 		kvComponent->SetInt("show", 1);
-		kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+		kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 		kvComponent->SetInt("red", 255);
 		kvComponent->SetInt("green", 255);
 		kvComponent->SetInt("blue", 255);
@@ -255,7 +255,7 @@ namespace vgui
 		kvComponent = new KeyValues("Amount");
 		kvComponent->SetInt("show", 1);
 		kvComponent->SetInt("sticky", 1);
-		kvComponent->SetInt("colorMode", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+		kvComponent->SetInt("colorMode", FFQuantityHelper::COLOR_MODE_CUSTOM);
 		kvComponent->SetInt("red", 255);
 		kvComponent->SetInt("green", 255);
 		kvComponent->SetInt("blue", 255);
@@ -363,8 +363,8 @@ namespace vgui
 		bool bUseModifier)
 	{
 		return FFQuantityHelper::GetFont(
-			hfFamily, 
-			iSize, 
+			hfFamily,
+			iSize,
 			bUseModifier);
 	}
 
@@ -428,9 +428,9 @@ namespace vgui
 		int iTall = m_iItemsHeight * m_flScaleY;
 
 		FFQuantityHelper::CalculatePositionOffset(
-			iX, 
-			iY, 
-			iWide, 
+			iX,
+			iY,
+			iWide,
 			iTall,
 			iAlignHoriz,
 			iAlignVert);
@@ -441,9 +441,9 @@ namespace vgui
 		surface()->GetTextSize(hfFont, wszString,  iWide, iTall);
 
 		FFQuantityHelper::CalculatePositionOffset(
-				iX, 
-				iY, 
-				iWide, 
+				iX,
+				iY,
+				iWide,
 				iTall,
 				iAlignHoriz,
 				iAlignVert);
@@ -533,7 +533,7 @@ namespace vgui
 			m_iVerticalAlign);
 
 		SetPos(
-			m_flScaleX * m_iX - panelAlignmentOffsetX,  
+			m_flScaleX * m_iX - panelAlignmentOffsetX,
 			m_flScaleY * m_iY - panelAlignmentOffsetY);
 
         int iPositionalHashCode = 17;
@@ -636,13 +636,13 @@ namespace vgui
 			}
 			
 			int iAccumulativeWidths
-				= iColumn == 0 
-					? 0 
+				= iColumn == 0
+					? 0
 					: iColumnWidths[iColumn - 1];
 
-			int iAccumulativeHeights 
-				= iRow == 0 
-					? 0 
+			int iAccumulativeHeights
+				= iRow == 0
+					? 0
 					: iRowHeights[iRow - 1];
 
 			int iAccumulativeHorizontalMargins
@@ -666,7 +666,7 @@ namespace vgui
 			iColumn++;
 		}
 		
-		int iColumns 
+		int iColumns
 			= iEnabled < m_iItemColumns
 				? iEnabled
 				: m_iItemColumns;
@@ -732,7 +732,7 @@ namespace vgui
 
 		int iOffsetX = -flX0;
 		int iOffsetY = -flY0;
-		if(m_iOffsetX != iOffsetX 
+		if(m_iOffsetX != iOffsetX
 			|| m_iOffsetY != iOffsetY)
 		{
 			m_iOffsetX = iOffsetX;
@@ -746,7 +746,7 @@ namespace vgui
 
 		int iWidth = (int)(flX1 - flX0);
 		int iHeight = (int)(flY1 - flY0);
-		if(m_iWidth != iWidth 
+		if(m_iWidth != iWidth
 			|| m_iHeight != iHeight)
 		{
 			m_iWidth = iWidth;
@@ -1044,8 +1044,8 @@ namespace vgui
 
 	void FFQuantityPanel::ApplyStyleData( KeyValues *kvStyleData, bool useDefaults )
 	{
-		KeyValues* kvDefaultStyleData 
-			= useDefaults 
+		KeyValues* kvDefaultStyleData
+			= useDefaults
 				? GetDefaultStyleData()
 				: new KeyValues("styleData");
 
@@ -1161,7 +1161,7 @@ namespace vgui
 			bRecalculatePaintOffset = true;
 		}
 
-		if((iHeaderIconX != -9999 || iHeaderIconY != -9999) 
+		if((iHeaderIconX != -9999 || iHeaderIconY != -9999)
 			&& SetHeaderIconPositionOffset(iHeaderIconX, iHeaderIconY))
 		{
 			bRecalculatePaintOffset = true;
@@ -1268,19 +1268,19 @@ namespace vgui
 			bRecalculatePaintOffset = true;
 		}
 
-		if(iTextAnchorPosition != -1 
+		if(iTextAnchorPosition != -1
 			&& SetTextAnchorPosition(iTextAnchorPosition))
 		{
 			bRecalculatePaintOffset = true;
 		}
 
-		if((iTextAlignHoriz != -1 || iTextAlignVert != -1) 
+		if((iTextAlignHoriz != -1 || iTextAlignVert != -1)
 			&& SetTextAlignment(iTextAlignHoriz, iTextAlignVert))
 		{
 			bRecalculatePaintOffset = true;
 		}
 		
-		if((iTextX != -9999 || iTextY != -9999) 
+		if((iTextX != -9999 || iTextY != -9999)
 			&& SetTextPositionOffset(iTextX, iTextY))
 		{
 			bRecalculatePaintOffset = true;
@@ -1438,10 +1438,10 @@ namespace vgui
 	{
 		switch (iColorMode)
 		{
-		case COLOR_MODE_TEAM:
+		case FFQuantityHelper::COLOR_MODE_TEAM:
 			return m_clrTeam;
 
-		case COLOR_MODE_CUSTOM:
+		case FFQuantityHelper::COLOR_MODE_CUSTOM:
 		default:
 			return clrCustom;
 		}

@@ -31,11 +31,6 @@ namespace vgui
 
 		FFQuantityPanel( Panel *parent, const char *panelName );
 
-		enum ColorMode {
-			COLOR_MODE_TEAM=3,
-			COLOR_MODE_CUSTOM=0
-		};
-
 		enum Corners {
 			CORNERS_ROUND=2,
 			CORNERS_SQUARE=0

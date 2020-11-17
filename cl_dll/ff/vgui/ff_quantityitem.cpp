@@ -111,12 +111,12 @@ namespace vgui
 		m_clrLabelCustomColor = Color(255,255,255,255);
 		m_clrAmountCustomColor = Color(255,255,255,255);
 
-		m_iBarColorMode = ITEM_COLOR_MODE_STEPPED;
-		m_iBarBorderColorMode = ITEM_COLOR_MODE_CUSTOM;
-		m_iBarBackgroundColorMode = ITEM_COLOR_MODE_STEPPED;
-		m_iIconColorMode = ITEM_COLOR_MODE_CUSTOM;
-		m_iLabelColorMode = ITEM_COLOR_MODE_CUSTOM;
-		m_iAmountColorMode = ITEM_COLOR_MODE_CUSTOM;
+		m_iBarColorMode = FFQuantityHelper::COLOR_MODE_STEPPED;
+		m_iBarBorderColorMode = FFQuantityHelper::COLOR_MODE_CUSTOM;
+		m_iBarBackgroundColorMode = FFQuantityHelper::COLOR_MODE_STEPPED;
+		m_iIconColorMode = FFQuantityHelper::COLOR_MODE_CUSTOM;
+		m_iLabelColorMode = FFQuantityHelper::COLOR_MODE_CUSTOM;
+		m_iAmountColorMode = FFQuantityHelper::COLOR_MODE_CUSTOM;
 
 		m_ColorIcon = m_clrIconCustomColor;
 		m_ColorLabel = m_clrLabelCustomColor;
@@ -160,7 +160,7 @@ namespace vgui
 
 		// Only update once every second
 		// to catch resolution changes
-		ivgui()->AddTickSignal(GetVPanel(), 1000); 
+		ivgui()->AddTickSignal(GetVPanel(), 1000);
 	}
 
 	void FFQuantityItem::ApplySchemeSettings( IScheme *pScheme )
@@ -207,7 +207,7 @@ namespace vgui
 		int iScreenWide, iScreenTall;
 		surface()->GetScreenSize( iScreenWide, iScreenTall );
 
-		if (m_iScreenWide == iScreenWide 
+		if (m_iScreenWide == iScreenWide
 			&& m_iScreenTall == iScreenTall)
 		{
 			return;
@@ -217,15 +217,15 @@ namespace vgui
 		m_iScreenTall = iScreenTall;
 
 		// "map" screen res to 640/480
-		m_flScaleX 
-			= 1 
+		m_flScaleX
+			= 1
 				/ (640.0f / iScreenWide);
 		
-		m_flScaleY 
-			= 1 
+		m_flScaleY
+			= 1
 				/ (480.0f / iScreenTall);
 
-		if (m_bHasStyleData) 
+		if (m_bHasStyleData)
 		{
 			RecalculateIconPosition();
 			RecalculateLabelPosition();
@@ -349,8 +349,8 @@ namespace vgui
 		bool bUseModifier)
 	{
 		return FFQuantityHelper::GetFont(
-			hfFamily, 
-			iSize, 
+			hfFamily,
+			iSize,
 			bUseModifier);
 	}
 
@@ -504,7 +504,7 @@ namespace vgui
 	{
 		// don't allow 0 cause that doesn't make sense
 		// plus it'll crash with divide by 0 when calculating the colour!
-		if (iAmountMax == 0) 
+		if (iAmountMax == 0)
 		{
 			return false;
 		}
@@ -571,7 +571,7 @@ namespace vgui
 	{
 		bool bHasChanged = FFQuantityHelper::Change(m_iBarWidth, iBarWidth);
 		
-		if (bHasChanged) 
+		if (bHasChanged)
 		{
 			RecalculateIconPosition();
 			RecalculateLabelPosition();
@@ -758,32 +758,32 @@ namespace vgui
 			return false;
 		}
 
-		if(m_iBarColorMode == ITEM_COLOR_MODE_TEAM)
+		if(m_iBarColorMode == FFQuantityHelper::COLOR_MODE_TEAM)
 		{
 			RecalculateColor(m_ColorBar, m_iBarColorMode, m_clrBarCustomColor);
 		}
 
-		if(m_iBarBorderColorMode == ITEM_COLOR_MODE_TEAM)
+		if(m_iBarBorderColorMode == FFQuantityHelper::COLOR_MODE_TEAM)
 		{
 			RecalculateColor(m_ColorBarBorder, m_iBarBorderColorMode, m_clrBarBorderCustomColor);
 		}
 		
-		if(m_iBarBackgroundColorMode == ITEM_COLOR_MODE_TEAM)
+		if(m_iBarBackgroundColorMode == FFQuantityHelper::COLOR_MODE_TEAM)
 		{
 			RecalculateColor(m_ColorBarBackground, m_iBarBackgroundColorMode, m_clrBarBackgroundCustomColor);
 		}
 		
-		if(m_iIconColorMode == ITEM_COLOR_MODE_TEAM)
+		if(m_iIconColorMode == FFQuantityHelper::COLOR_MODE_TEAM)
 		{
 			RecalculateColor(m_ColorIcon, m_iIconColorMode, m_clrIconCustomColor);
 		}
 		
-		if(m_iLabelColorMode == ITEM_COLOR_MODE_TEAM)
+		if(m_iLabelColorMode == FFQuantityHelper::COLOR_MODE_TEAM)
 		{
 			RecalculateColor(m_ColorLabel, m_iLabelColorMode, m_clrLabelCustomColor);
 		}
 		
-		if(m_iAmountColorMode == ITEM_COLOR_MODE_TEAM)
+		if(m_iAmountColorMode == FFQuantityHelper::COLOR_MODE_TEAM)
 		{
 			RecalculateColor(m_ColorAmount, m_iAmountColorMode, m_clrAmountCustomColor);
 		}
@@ -1547,7 +1547,7 @@ namespace vgui
 
 		int iWidth = (int)(flX1 - flX0);
 		int iHeight = (int)(flY1 - flY0);
-		if(m_iWidth != iWidth 
+		if(m_iWidth != iWidth
 			|| m_iHeight != iHeight)
 		{
 			m_iWidth = iWidth;
@@ -1681,8 +1681,8 @@ namespace vgui
 			m_iAmountPosX = m_iAmountMaxPosX + (m_iAmountMaxWidth - m_iAmountWidth);
 			m_iAmountPosY = m_iAmountMaxPosY;
 		}
-		else 
-		{	 
+		else
+		{	
 			CalculateTextPositionOffset(m_iAmountAnchorPositionX, m_iAmountAnchorPositionY, m_iAmountAnchorPosition);
 			CalculateTextAlignmentOffset(m_iAmountAlignmentOffsetX, m_iAmountAlignmentOffsetY, m_iAmountWidth, m_iAmountHeight, m_iAmountAlignHoriz, m_iAmountAlignVert, m_hfAmount, m_wszAmountDisplay);
 
@@ -1756,11 +1756,11 @@ namespace vgui
 
 	void FFQuantityItem::SetIntensityColor( Color &color, int iColorMode, Color &alphaColor )
 	{
-		if (iColorMode == ITEM_COLOR_MODE_FADED )
+		if (iColorMode == FFQuantityHelper::COLOR_MODE_FADED )
 		{
 			SetColor(color, m_ColorIntensityFaded, alphaColor);
 		}
-		else if(iColorMode == ITEM_COLOR_MODE_STEPPED )
+		else if(iColorMode == FFQuantityHelper::COLOR_MODE_STEPPED )
 		{
 			SetColor(color, m_ColorIntensityStepped, alphaColor);
 		}
@@ -1777,16 +1777,16 @@ namespace vgui
 	{
 		switch (iColorMode)
 		{
-		case ITEM_COLOR_MODE_STEPPED:
+		case FFQuantityHelper::COLOR_MODE_STEPPED:
 			return m_ColorIntensityStepped;
 
-		case ITEM_COLOR_MODE_FADED:
+		case FFQuantityHelper::COLOR_MODE_FADED:
 			return m_ColorIntensityFaded;
 
-		case ITEM_COLOR_MODE_TEAM:
+		case FFQuantityHelper::COLOR_MODE_TEAM:
 			return m_clrTeam;
 
-		case ITEM_COLOR_MODE_CUSTOM:
+		case FFQuantityHelper::COLOR_MODE_CUSTOM:
 		default:
 			return colorCustom;
 		}
@@ -1817,9 +1817,9 @@ namespace vgui
 		int iTall = m_iBarHeight * m_flScaleY;
 
 		FFQuantityHelper::CalculatePositionOffset(
-			iX, 
-			iY, 
-			iWide, 
+			iX,
+			iY,
+			iWide,
 			iTall,
 			iAlignHoriz,
 			iAlignVert);
@@ -1838,9 +1838,9 @@ namespace vgui
 		surface()->GetTextSize(hfFont, wszString, iWide, iTall);
 		
 		FFQuantityHelper::CalculatePositionOffset(
-			iX, 
-			iY, 
-			iWide, 
+			iX,
+			iY,
+			iWide,
 			iTall,
 			iAlignHoriz,
 			iAlignVert);

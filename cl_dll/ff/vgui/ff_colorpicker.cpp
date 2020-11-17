@@ -1,6 +1,6 @@
 #include "cbase.h"
 #include "ff_colorpicker.h"
-#include "ff_quantitypanel.h"
+#include "ff_quantityhelper.h"
 #include "ff_shareddefs.h"
 #include "keyvalues.h"
 
@@ -53,30 +53,30 @@ namespace vgui
 		if(bColorModeIntensity)
 		{
 			KeyValues *kv = new KeyValues("Custom");
-			kv->SetInt("Value", FFQuantityItem::ITEM_COLOR_MODE_CUSTOM);
+			kv->SetInt("Value", FFQuantityHelper::COLOR_MODE_CUSTOM);
 			m_pColorMode->AddItem("#GameUI_Custom", kv);
 			kv->deleteThis();
 			kv = new KeyValues("Stepped");
-			kv->SetInt("Value", FFQuantityItem::ITEM_COLOR_MODE_STEPPED);
+			kv->SetInt("Value", FFQuantityHelper::COLOR_MODE_STEPPED);
 			m_pColorMode->AddItem("#GameUI_Stepped", kv);
 			kv->deleteThis();
 			kv = new KeyValues("Faded");
-			kv->SetInt("Value", FFQuantityItem::ITEM_COLOR_MODE_FADED);
+			kv->SetInt("Value", FFQuantityHelper::COLOR_MODE_FADED);
 			m_pColorMode->AddItem("#GameUI_Faded", kv);
 			kv->deleteThis();
 			kv = new KeyValues("TeamColored");
-			kv->SetInt("Value", FFQuantityItem::ITEM_COLOR_MODE_TEAM);
+			kv->SetInt("Value", FFQuantityHelper::COLOR_MODE_TEAM);
 			m_pColorMode->AddItem("#GameUI_TeamColored", kv);
 			kv->deleteThis();
 		}
 		else
 		{
 			KeyValues *kv = new KeyValues("Custom");
-			kv->SetInt("Value", FFQuantityPanel::COLOR_MODE_CUSTOM);
+			kv->SetInt("Value", FFQuantityHelper::COLOR_MODE_CUSTOM);
 			m_pColorMode->AddItem("#GameUI_Custom", kv);
 			kv->deleteThis();
 			kv = new KeyValues("TeamColored");
-			kv->SetInt("Value", FFQuantityPanel::COLOR_MODE_TEAM);
+			kv->SetInt("Value", FFQuantityHelper::COLOR_MODE_TEAM);
 			m_pColorMode->AddItem("#GameUI_TeamColored", kv);
 			kv->deleteThis();
 		}
@@ -441,11 +441,11 @@ namespace vgui
 		KeyValues* colorMode = m_pColorMode->GetActiveItemUserData();
 		switch(colorMode->GetInt("Value",-1))
 		{
-			case FFQuantityPanel::COLOR_MODE_CUSTOM:
+			case FFQuantityHelper::COLOR_MODE_CUSTOM:
 				//custom
 				SetBgColor( Color( m_iRed, m_iGreen, m_iBlue, m_iAlpha ) );
 				break;
-			case FFQuantityPanel::COLOR_MODE_TEAM:
+			case FFQuantityHelper::COLOR_MODE_TEAM:
 				//teamcolored
 				Color teamColor;
 				switch(m_iTeamColorPreview)
