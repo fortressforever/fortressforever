@@ -2985,6 +2985,11 @@ namespace FFLib
 		return SpawnEntity(szEntityClassName, NULL);
 	}
 
+	const char* GetMapName()
+	{
+		return STRING(gpGlobals->mapname);
+	}
+
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -3256,6 +3261,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("AddMenuOption",			&FFLib::AddMenuOption),
 		def("RemoveMenuOption",			&FFLib::RemoveMenuOption),
 		def("SpawnEntity",				(CBaseEntity*(*)(const char *))&FFLib::SpawnEntity),
-		def("SpawnEntity",				(CBaseEntity*(*)(const char *, const char *))&FFLib::SpawnEntity)
+		def("SpawnEntity",				(CBaseEntity*(*)(const char *, const char *))&FFLib::SpawnEntity),
+		def("GetMapName",				&FFLib::GetMapName)
 	];
 }
