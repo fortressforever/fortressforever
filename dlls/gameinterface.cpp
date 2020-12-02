@@ -910,6 +910,12 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	engine->ServerExecute();
 	// <-- Mirv
 
+	// --> FF: Log the map name for convenience. Logs on dedicated servers get split into 'loading' and 'loaded',
+	//         where only the 'loading' log has the map name, but all the 'real' stuff is in the 'loaded'
+	//         log file. This will make it so the 'loaded' log file also has the map name.
+	UTIL_LogPrintf("Loaded map \"%s\"\n", pMapName);
+	// <--
+
 	return true;
 }
 
