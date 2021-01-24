@@ -1869,9 +1869,13 @@ void CFFSentryGun::MaliciouslySabotage(CFFPlayer *pSaboteur)
 	// Cancel target so it searchs for a new (friendly one)
 	SetEnemy(NULL);
 
-	m_nSkin = clamp( pSaboteur->GetTeamNumber() - TEAM_BLUE, 0, 3 );
-
 	Warning("SG maliciously sabotaged\n");
+}
+
+void CFFSentryGun::SetSaboteur(CFFPlayer *pSaboteur)
+{
+	BaseClass::SetSaboteur(pSaboteur);
+	m_nSkin = clamp( m_iSaboteurTeamNumber - TEAM_BLUE, 0, 3 );
 }
 
 //-----------------------------------------------------------------------------
