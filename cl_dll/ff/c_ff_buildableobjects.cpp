@@ -492,6 +492,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFSentryGun, DT_FFSentryGun, CFFSentryGun )
 	RecvPropInt( RECVINFO( m_iRockets ) ),
 	RecvPropInt( RECVINFO( m_iMaxShells ) ),
 	RecvPropInt( RECVINFO( m_iMaxRockets ) ),
+	RecvPropInt( RECVINFO( m_iUpgradeProgress ) ),
 END_RECV_TABLE( )
 
 //-----------------------------------------------------------------------------
@@ -526,12 +527,21 @@ void C_FFSentryGun::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool C_FFSentryGun::Upgrade()
+bool C_FFSentryGun::CanUpgrade()
 {
-	if( ( m_iLevel < 3 ) && m_bBuilt )
-		return true;
-	else
+	return IsBuilt() && GetLevel() < 3 && NeedsHealth() == 0;
+}
+
+bool C_FFSentryGun::CanBeUpgradedBy(C_FFPlayer *pPlayer) 
+{
+	if (!CanUpgrade())
 		return false;
+
+	return pPlayer->GetAmmoCount(AMMO_CELLS) >= FF_BUILDCOST_UPGRADE_SENTRYGUN;
+}
+
+void C_FFSentryGun::Upgrade()
+{
 }
 
 //-----------------------------------------------------------------------------
