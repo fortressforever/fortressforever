@@ -7,12 +7,11 @@ A Team Fortress mod on the Source Engine (Source SDK 2006)
 Fortress Forever must be compiled using Visual C++ 2005. The following instructions are an updated version of Microsoft's old [Using Visual C++ 2005 Express Edition with the Microsoft Platform SDK](https://web.archive.org/web/20070210205738/http://msdn.microsoft.com/vstudio/express/visualc/usingpsdk/) guide
 
 1. **Install Visual C++ 2005**
-  * Download and install [Visual Studio C++ 2005 Express Edition](http://download.microsoft.com/download/8/3/a/83aad8f9-38ba-4503-b3cd-ba28c360c27b/ENU/vcsetup.exe) (or the full version if you have it)
-  * Download and install the [Visual Studio 2005 Express Editions Service Pack 1](http://www.microsoft.com/en-us/download/details.aspx?id=804)
-  * Download and install the [Visual Studio 2005 Service Pack 1 Update for Windows Vista](http://www.microsoft.com/en-us/download/details.aspx?id=7524)
+  * Download and install Visual Studio C++ 2005 Express Edition [from .IMG](http://go.microsoft.com/fwlink/?linkid=54766) or [from .ISO](http://go.microsoft.com/fwlink/?linkid=57034) (or the full version if you have it)
+  * Download and install the [Visual Studio 2005 Express Editions Service Pack 1](https://www.catalog.update.microsoft.com/Search.aspx?q=Visual%20Studio%202005%20Express%20Editions%20Service%20Pack%201)
+  * Download and install the [Visual Studio 2005 Service Pack 1 Update for Windows Vista](https://www.catalog.update.microsoft.com/Search.aspx?q=Visual%20Studio%202005%20Service%20Pack%201%20Update%20for%20Windows%20Vista)
 2. **Install the Microsoft Platform SDK**
-  * Download and install the [Windows Server 2003 SP1 Platform SDK](http://www.microsoft.com/en-us/download/details.aspx?id=6510) 
-    * You'll probably want the amd64 version; only get the x86 version if you are running a 32 bit version of Windows
+  * Download and install the [Windows Server 2003 SP1 Platform SDK](https://www.microsoft.com/en-us/download/details.aspx?id=15656)
     * You only need to install *Microsoft Windows Core SDK*
 3. **Configure Visual C++ 2005**
   * Open Visual Studio C++ 2005 (it's suggested to right click -> *Run as administrator*)
