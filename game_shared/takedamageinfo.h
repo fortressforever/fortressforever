@@ -11,12 +11,12 @@
 #pragma once
 #endif
 
-
 #include "networkvar.h" // todo: change this when DECLARE_CLASS is moved into a better location.
 
 // Used to initialize m_flBaseDamage to something that we know pretty much for sure
 // hasn't been modified by a user. 
 #define BASEDAMAGE_NOT_SPECIFIED	FLT_MAX
+#define DEFAULT_FALLOFF				0.5f //Should be the same value as GREN_falloff from ff_grenade_base.h!
 
 class CBaseEntity;
 
@@ -28,7 +28,7 @@ public:
 
 					CTakeDamageInfo();
 					CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
-					CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType = 0, Vector *reportedPosition = NULL );
+					CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType = 0, Vector *reportedPosition = NULL, float flFallOff = DEFAULT_FALLOFF );
 	
 
 	// Inflictor is the weapon or rocket (or player) that is dealing the damage.
@@ -71,11 +71,14 @@ public:
 	void			SetAmmoType( int iAmmoType );
 	const char *	GetAmmoName() const;
 
-	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
-	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType = 0, Vector *reportedPosition = NULL );
+	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0, float flFallOff = DEFAULT_FALLOFF );
+	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType = 0, Vector *reportedPosition = NULL, float flFallOff = DEFAULT_FALLOFF );
 
 	void			AdjustPlayerDamageInflictedForSkillLevel();
 	void			AdjustPlayerDamageTakenForSkillLevel();
+
+	float			GetFallOff() const;
+	void			SetFallOff(float falloff);
 
 #ifdef GAME_DLL
 	int				GetAmmoTypeLua( void );
@@ -99,6 +102,8 @@ protected:
 	int				m_bitsDamageType;
 	int				m_iCustomKillType;
 	int				m_iAmmoType;			// AmmoType of the weapon used to cause this damage, if any
+
+	float			m_flFallOff;
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -295,6 +300,16 @@ inline void CTakeDamageInfo::CopyDamageToBaseDamage()
 	m_flBaseDamage = m_flDamage;
 }
 
+inline float CTakeDamageInfo::GetFallOff() const
+{
+	return m_flFallOff;
+}
+
+inline void CTakeDamageInfo::SetFallOff(float falloff)
+{
+	m_flFallOff = falloff;
+}
+
 
 // -------------------------------------------------------------------------------------------------- //
 // Inlines.
@@ -308,6 +323,5 @@ inline void CMultiDamage::SetTarget( CBaseEntity *pTarget )
 {
 	m_hTarget = pTarget;
 }
-
 
 #endif // TAKEDAMAGEINFO_H
