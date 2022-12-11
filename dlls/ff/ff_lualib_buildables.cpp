@@ -80,5 +80,8 @@ void CFFLuaLib::InitBuildables(lua_State* L)
 		
 		// Detpack
 		class_<CFFDetpack, CFFBuildableObject>("Detpack")
+			.def("GetFuseTime",			&CFFDetpack::GetFuseTime)
+			.def("GetDetonateTime",		&CFFDetpack::GetDetonateTime)
+			.def("LastFiveSeconds",		&CFFDetpack::LastFiveSeconds)
 	];
 };
