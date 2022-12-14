@@ -35,6 +35,15 @@ namespace FFLib
 	}
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// CFFBuildableObject_BuildableTypes
+// Purpose: this is a fake class to expose "FF_BUILD_" constants to lua
+/////////////////////////////////////////////////////////////////////////////
+class CFFBuildableObject_BuildableTypes
+{
+public:
+};
+
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitBuildables(lua_State* L)
 {
@@ -82,6 +91,18 @@ void CFFLuaLib::InitBuildables(lua_State* L)
 		class_<CFFDetpack, CFFBuildableObject>("Detpack")
 			.def("GetFuseTime",			&CFFDetpack::GetFuseTime)
 			.def("GetDetonateTime",		&CFFDetpack::GetDetonateTime)
-			.def("LastFiveSeconds",		&CFFDetpack::LastFiveSeconds)
+			.def("LastFiveSeconds",		&CFFDetpack::LastFiveSeconds),
+
+		class_<CFFBuildableObject_BuildableTypes>("BuildableTypes")
+			.enum_("BuildableTypes")
+			[
+				value("kNone",				FF_BUILD_NONE),
+				value("kDispenser",			FF_BUILD_DISPENSER),
+				value("kSentryGun",			FF_BUILD_SENTRYGUN),
+				value("kDetpack",			FF_BUILD_DETPACK),
+				value("kJumpPad",			FF_BUILD_MANCANNON),
+				// For consistency with other names, even though jump pad should be preferred everywhere
+				value("kManCannon",			FF_BUILD_MANCANNON)
+			]
 	];
 };

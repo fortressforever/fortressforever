@@ -32,6 +32,7 @@
 #include "ff_projectile_pipebomb.h"
 #include "ff_grenade_emp.h"
 #include "ff_lualib_constants.h"
+#include "luabind/luabind.hpp"
 
 #include "client.h"
 #include "gib.h"
@@ -3221,12 +3222,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 		// Store the player's current origin
 		m_vecBuildOrigin = GetAbsOrigin();
 
+		// Our neat buildable info container
+		CFFBuildableInfo hBuildInfo( this, m_iWantBuild );
+
 		// See if player is in a no build area first
-
 		// TODO: need to check where the SG is being built, NOT where player is? - AfterShock
-		// Status: Complete
-
-		/*if( IsInNoBuild() && ( (m_iWantBuild == FF_BUILD_DISPENSER) || (m_iWantBuild == FF_BUILD_SENTRYGUN) || (m_iWantBuild == FF_BUILD_MANCANNON) ) )
+		if( IsInNoBuild(hBuildInfo) )
 		{
 			Omnibot::Notify_Build_CantBuild(this, m_iWantBuild);
 
@@ -3239,7 +3240,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_NOBUILD" );
 
 			return;
-		}*/
+		}
 
 		/*
 		DevMsg( "[Building] Not currently building so lets try to build a: %s" );
@@ -3335,9 +3336,6 @@ void CFFPlayer::PreBuildGenericThink( void )
 			return;
 		}
 
-		// Our neat buildable info container
-		CFFBuildableInfo hBuildInfo( this, m_iWantBuild );
-
 		// Will we be able to build here?
 		if( hBuildInfo.BuildResult() == BUILD_ALLOWED )
 		{
@@ -3352,7 +3350,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
-
+					
 					// Set custom text
 					pDispenser->SetText( m_szCustomDispenserText );
 
@@ -3361,24 +3359,6 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Mirv: Store future ground location + orientation
 					pDispenser->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
 					pDispenser->SetGroundAngles( hBuildInfo.GetBuildAngles() );
-
-					// Send info to "trigger:onbuild()" lua function after setting buildable info, see if it's allowed
-					if( IsInNoBuild( pDispenser ) ) {
-						pDispenser->Cancel();
-						pDispenser->Remove(); // prevent leaving model in any case
-						pDispenser = NULL; // not sure if this is needed, added it anyway
-						// Re-initialize
-						m_iCurBuild = FF_BUILD_NONE;
-						m_iWantBuild = FF_BUILD_NONE;
-						m_bBuilding = false;
-						m_bStaticBuilding = false;
-						
-						ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_NOBUILD" );
-
-						return;
-					} else {
-						pDispenser->Spawn();
-					}
 
 					// Set network var
 					m_hDispenser = pDispenser;
@@ -3424,30 +3404,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
-
+				
 					pSentryGun->SetLocation(g_pGameRules->GetChatLocation(true, this));
 
 					// Mirv: Store future ground location + orientation
 					pSentryGun->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
 					pSentryGun->SetGroundAngles( hBuildInfo.GetBuildAngles() );
-
-					// Send info to "trigger:onbuild()" lua function after setting buildable info, see if it's allowed
-					if( IsInNoBuild( pSentryGun ) ) {
-						pSentryGun->Cancel();
-						pSentryGun->Remove(); // prevent leaving model in any case
-						pSentryGun = NULL; // not sure if this is needed, added it anyway
-						// Re-initialize
-						m_iCurBuild = FF_BUILD_NONE;
-						m_iWantBuild = FF_BUILD_NONE;
-						m_bBuilding = false;
-						m_bStaticBuilding = false;
-						
-						ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_NOBUILD" );
-
-						return;
-					} else {
-						pSentryGun->Spawn();
-					}
 
 					// Set network var
 					m_hSentryGun = pSentryGun;
@@ -3470,32 +3432,14 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDetpack *pDetpack = CFFDetpack::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
 
+					pDetpack->SetLocation(g_pGameRules->GetChatLocation(true, this));
+
 					// Set the fuse time
 					pDetpack->m_iFuseTime = m_iDetpackTime;
-
-					pDetpack->SetLocation(g_pGameRules->GetChatLocation(true, this));
 
 					// Mirv: Store future ground location + orientation
 					pDetpack->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
 					pDetpack->SetGroundAngles( hBuildInfo.GetBuildAngles() );
-
-					// Send info to "trigger:onbuild()" lua function after setting buildable info, see if it's allowed
-					if( IsInNoBuild( pDetpack ) ) {
-						pDetpack->Cancel();
-						pDetpack->Remove(); // prevent leaving model in any case
-						pDetpack = NULL; // not sure if this is needed, added it anyway
-						// Re-initialize
-						m_iCurBuild = FF_BUILD_NONE;
-						m_iWantBuild = FF_BUILD_NONE;
-						m_bBuilding = false;
-						m_bStaticBuilding = false;
-						
-						ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_NOBUILD" );
-
-						return;
-					} else {
-						pDetpack->Spawn();
-					}
 
 					// Set network var
 					m_hDetpack = pDetpack;
@@ -3514,24 +3458,6 @@ void CFFPlayer::PreBuildGenericThink( void )
 					pManCannon->SetLocation( g_pGameRules->GetChatLocation( true, this ) );
 					pManCannon->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
 					pManCannon->SetGroundAngles( hBuildInfo.GetBuildAngles() );
-
-					// Send info to "trigger:onbuild()" lua function after setting buildable info, see if it's allowed
-					if( IsInNoBuild( pManCannon ) ) {
-						pManCannon->Cancel();
-						pManCannon->Remove(); // prevent leaving model in any case
-						pManCannon = NULL; // not sure if this is needed, added it anyway
-						// Re-initialize
-						m_iCurBuild = FF_BUILD_NONE;
-						m_iWantBuild = FF_BUILD_NONE;
-						m_bBuilding = false;
-						m_bStaticBuilding = false;
-						
-						ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_NOBUILD" );
-
-						return;
-					} else {
-						pManCannon->Spawn();
-					}
 
 					m_hManCannon = pManCannon;
 					m_flBuildTime = gpGlobals->curtime + 3.5f; // 3.5 seconds to build?
@@ -6943,13 +6869,9 @@ bool CFFPlayer::HasItem(const char* itemname) const
 }
 
 //-----------------------------------------------------------------------------
-bool CFFPlayer::IsInNoBuild( CBaseEntity *pEntity )
+bool CFFPlayer::IsInNoBuild(const CFFBuildableInfo &hBuildInfo)
 {
-	Vector vecForward;
-	EyeVectors(&vecForward);
-	vecForward.z = 0;
-	VectorNormalize( vecForward );
-	Vector vecOrigin = GetAbsOrigin() + (vecForward * 88.0f);
+	Vector vecOrigin = hBuildInfo.GetBuildOrigin();
 
 #ifdef _DEBUG
 	if( !engine->IsDedicatedServer() )
@@ -6959,7 +6881,15 @@ bool CFFPlayer::IsInNoBuild( CBaseEntity *pEntity )
 	}
 #endif
 
-	return !FFScriptRunPredicates( pEntity, "onbuild", true, vecOrigin, 40.0f );
+	luabind::adl::object luatblInfo = luabind::newtable(_scriptman.GetLuaState());
+	luatblInfo["type"] = m_iWantBuild;
+	if (m_iWantBuild == FF_BUILD_DETPACK) {
+		luatblInfo["fusetime"] = m_iDetpackTime;
+	}
+	// CFFLuaSC constructor assumes all args are CBaseEntity*, so push the table separately
+	CFFLuaSC hContext = CFFLuaSC(1, (CBaseEntity*)this);
+	hContext.Push(luatblInfo);
+	return !FFScriptRunPredicates( &hContext, "onbuild", true, vecOrigin, 40.0f );
 }
 
 

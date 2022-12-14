@@ -647,9 +647,16 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 // same as above, but uses a separate sphere
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal, Vector vecOrigin, float flRadius )
 {
+	CFFLuaSC hOutput( 1, pObject );
+	return FFScriptRunPredicates(&hOutput, pszFunction, bExpectedVal, vecOrigin, flRadius);
+}
+
+// same as above, but takes a CFFLuaSC
+bool FFScriptRunPredicates( CFFLuaSC *pContext, const char *pszFunction, bool bExpectedVal, Vector vecOrigin, float flRadius )
+{
 	VPROF_BUDGET( "FFScriptRunPredicates", VPROF_BUDGETGROUP_FF_LUA );
 
-	if( pObject && pszFunction )
+	if( pContext && pszFunction )
 	{
 		CBaseEntity *pList[ 128 ];
 		int count = UTIL_EntitiesInSphere( pList, 128, vecOrigin, flRadius, 0 );
@@ -675,11 +682,8 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 					continue;
 
 				bool bEntSys = bExpectedVal;
-				//CFFLuaObjectWrapper hOutput;
-				CFFLuaSC hOutput( 1, pObject );
-				//bool bEntSys = entsys.RunPredicates_LUA( pEntity, pObject, pszFunction ) > 0;
-				if( _scriptman.RunPredicates_LUA( pEntity, &hOutput, pszFunction ) )
-					bEntSys = hOutput.GetBool();
+				if( _scriptman.RunPredicates_LUA( pEntity, pContext, pszFunction ) )
+					bEntSys = pContext->GetBool();
 
 				if( bEntSys != bExpectedVal )
 					return !bExpectedVal;

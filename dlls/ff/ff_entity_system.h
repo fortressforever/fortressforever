@@ -17,6 +17,8 @@
 #pragma once
 #endif
 
+class CFFLuaSC;
+
 /////////////////////////////////////////////////////////////////////////////
 // CFFEntitySystemHelper
 /////////////////////////////////////////////////////////////////////////////
@@ -52,6 +54,7 @@ private:
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal, Vector vecOrigin, Vector vecMins = Vector(-16,-16,-16), Vector vecMaxs = Vector(16,16,16) ); // UTIL_EntitiesInBox
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal, Vector vecOrigin, float flRadius = 16 ); // UTIL_EntitiesInSphere
+bool FFScriptRunPredicates( CFFLuaSC *pContext, const char *pszFunction, bool bExpectedVal, Vector vecOrigin, float flRadius = 16 ); // UTIL_EntitiesInSphere
 
 /////////////////////////////////////////////////////////////////////////////
 #endif // FF_ENTITY_SYSTEM_H

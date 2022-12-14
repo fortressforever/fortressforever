@@ -1773,8 +1773,7 @@ CFFSentryGun *CFFSentryGun::Create( const Vector &vecOrigin, const QAngle &vecAn
 	//pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
 
 	// Spawn the object
-	//pObject->Spawn();
-	// commented out for better nobuild functions, will be spawned ONLY IF it's allowed to, from ff_player.cpp
+	pObject->Spawn();
 
 	return pObject;
 }
