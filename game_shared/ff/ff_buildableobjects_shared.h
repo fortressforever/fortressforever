@@ -492,6 +492,22 @@ public:
 	int		m_iFuseTime;
 	float	m_flDetonateTime;
 	bool	m_bFiveSeconds;
+
+	int	GetFuseTime()
+	{
+		return m_iFuseTime;
+	}
+
+	int GetDetonateTime()
+	{
+		return m_flDetonateTime;
+	}
+
+	bool LastFiveSeconds()
+	{
+		return m_bFiveSeconds;
+	}
+
 #endif
 
 };

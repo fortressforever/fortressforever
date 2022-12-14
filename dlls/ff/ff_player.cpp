@@ -32,6 +32,7 @@
 #include "ff_projectile_pipebomb.h"
 #include "ff_grenade_emp.h"
 #include "ff_lualib_constants.h"
+#include "luabind/luabind.hpp"
 
 #include "client.h"
 #include "gib.h"
@@ -3221,9 +3222,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 		// Store the player's current origin
 		m_vecBuildOrigin = GetAbsOrigin();
 
+		// Our neat buildable info container
+		CFFBuildableInfo hBuildInfo( this, m_iWantBuild );
+
 		// See if player is in a no build area first
 		// TODO: need to check where the SG is being built, NOT where player is? - AfterShock
-		if( IsInNoBuild() && ( (m_iWantBuild == FF_BUILD_DISPENSER) || (m_iWantBuild == FF_BUILD_SENTRYGUN) || (m_iWantBuild == FF_BUILD_MANCANNON) ) )
+		if( IsInNoBuild(hBuildInfo) )
 		{
 			Omnibot::Notify_Build_CantBuild(this, m_iWantBuild);
 
@@ -3331,9 +3335,6 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 			return;
 		}
-
-		// Our neat buildable info container
-		CFFBuildableInfo hBuildInfo( this, m_iWantBuild );
 
 		// Will we be able to build here?
 		if( hBuildInfo.BuildResult() == BUILD_ALLOWED )
@@ -6868,13 +6869,9 @@ bool CFFPlayer::HasItem(const char* itemname) const
 }
 
 //-----------------------------------------------------------------------------
-bool CFFPlayer::IsInNoBuild()
+bool CFFPlayer::IsInNoBuild(const CFFBuildableInfo &hBuildInfo)
 {
-	Vector vecForward;
-	EyeVectors(&vecForward);
-	vecForward.z = 0;
-	VectorNormalize( vecForward );
-	Vector vecOrigin = GetAbsOrigin() + (vecForward * 88.0f);
+	Vector vecOrigin = hBuildInfo.GetBuildOrigin();
 
 #ifdef _DEBUG
 	if( !engine->IsDedicatedServer() )
@@ -6884,7 +6881,15 @@ bool CFFPlayer::IsInNoBuild()
 	}
 #endif
 
-	return !FFScriptRunPredicates( (CBaseEntity*)this, "onbuild", true, vecOrigin, 40.0f );
+	luabind::adl::object luatblInfo = luabind::newtable(_scriptman.GetLuaState());
+	luatblInfo["type"] = m_iWantBuild;
+	if (m_iWantBuild == FF_BUILD_DETPACK) {
+		luatblInfo["fusetime"] = m_iDetpackTime;
+	}
+	// CFFLuaSC constructor assumes all args are CBaseEntity*, so push the table separately
+	CFFLuaSC hContext = CFFLuaSC(1, (CBaseEntity*)this);
+	hContext.Push(luatblInfo);
+	return !FFScriptRunPredicates( &hContext, "onbuild", true, vecOrigin, 40.0f );
 }
 
 
