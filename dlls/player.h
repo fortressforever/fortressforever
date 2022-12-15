@@ -421,6 +421,7 @@ public:
 	
 	void					AddPoints( int score, bool bAllowNegativeScore );
 	void					AddFortPoints( int score, const char *szDescription );
+	void					SetFortPoints( int score );
 	void					AddPointsToTeam( int score, bool bAllowNegativeScore );
 	virtual bool			BumpWeapon( CBaseCombatWeapon *pWeapon );
 	bool					RemovePlayerItem( CBaseCombatWeapon *pItem );

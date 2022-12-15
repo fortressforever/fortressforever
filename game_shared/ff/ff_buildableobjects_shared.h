@@ -320,6 +320,8 @@ public:
 	virtual bool CanSabotage() const;
 	virtual bool IsSabotaged() const;
 	virtual bool IsMaliciouslySabotaged() const;
+	CFFPlayer *GetSaboteur( void ) { return m_hSaboteur; };
+	virtual void SetSaboteur( CFFPlayer *pSaboteur ) { m_hSaboteur = pSaboteur; };
 	virtual void Sabotage( CFFPlayer *pSaboteur ) {};
 	virtual void MaliciouslySabotage( CFFPlayer *pSaboteur ) { m_bMaliciouslySabotaged = true; m_flSabotageTime = gpGlobals->curtime + 8.0f; }
 	

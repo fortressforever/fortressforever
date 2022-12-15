@@ -2984,6 +2984,24 @@ void CBasePlayer::AddFortPoints( int iFortpoints, const char *szDescription )
 	MessageEnd();
 }
 
+void CBasePlayer::SetFortPoints( int iFortpoints )
+{
+	m_iFortPoints += iFortpoints;
+
+	CSingleUserRecipientFilter filter( this );
+	filter.MakeReliable();
+
+	// set latest score on user HUD
+	UserMessageBegin( filter, "SetPlayerLatestFortPoints" );
+		WRITE_SHORT( iFortpoints );
+	MessageEnd();
+
+	// set new total score on user HUD
+	UserMessageBegin( filter, "SetPlayerTotalFortPoints" );
+		WRITE_LONG( m_iFortPoints );
+	MessageEnd();
+}
+
 void CBasePlayer::AddPointsToTeam( int score, bool bAllowNegativeScore )
 {
 	if ( GetTeam() )

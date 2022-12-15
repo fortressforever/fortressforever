@@ -7,7 +7,7 @@ IF "%SteamPath%" EQU "" (
     )
 )
 IF "%SteamPath%" NEQ "" (
-	XCOPY /R /Y /V %1 "%SteamPath%\SteamApps\common\Fortress Forever\FortressForever\bin"
+	XCOPY /R /Y /V %1 "D:\Games\Steam Library\steamapps\common\Fortress Forever\FortressForever\bin"
 ) ELSE (
 	echo "Not able to determine Steam install path"
 )

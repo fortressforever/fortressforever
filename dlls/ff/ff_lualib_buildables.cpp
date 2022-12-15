@@ -55,8 +55,18 @@ void CFFLuaLib::InitBuildables(lua_State* L)
 		class_<CFFBuildableObject, CBaseEntity>("BaseBuildable")
 			.def("GetTeamId",			&CFFBuildableObject::GetTeamNumber)
 			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer)
-			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam),
+			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam)
 			//.def("GetTeamId",			&CFFBuildableObject::GetOwnerTeamId),
+			.def("IsBuilt",				&CFFBuildableObject::IsBuilt)
+			.def("Detonate",			&CFFBuildableObject::Detonate)
+			.def("RemoveQuietly",		&CFFBuildableObject::RemoveQuietly)
+			.def("IsSabotaged",			&CFFBuildableObject::IsSabotaged)
+			.def("IsMaliciouslySabotaged", &CFFBuildableObject::IsMaliciouslySabotaged)
+			.def("GetSaboteur",			&CFFBuildableObject::GetSaboteur)
+			.def("Sabotage",			&CFFBuildableObject::Sabotage)
+			.def("MaliciouslySabotage",	&CFFBuildableObject::MaliciouslySabotage)
+			.def("RemoveSaboteur",		&CFFBuildableObject::RemoveSaboteur)
+			.def("CanSabotage",			&CFFBuildableObject::CanSabotage),
 
 		// Dispenser
 		class_<CFFDispenser, CFFBuildableObject>("Dispenser"),
