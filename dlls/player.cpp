@@ -2986,7 +2986,7 @@ void CBasePlayer::AddFortPoints( int iFortpoints, const char *szDescription )
 
 void CBasePlayer::SetFortPoints( int iFortpoints )
 {
-	m_iFortPoints += iFortpoints;
+	m_iFortPoints = iFortpoints;
 
 	CSingleUserRecipientFilter filter( this );
 	filter.MakeReliable();
