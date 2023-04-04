@@ -42,10 +42,13 @@
 
 // #0001629: Request: Dev variables for HH conc strength |-- Defrag
 
-ConVar ffdev_mancannon_conc_speed_horiz( "ffdev_mancannon_conc_speed_horiz", "1024", FCVAR_FF_FFDEV_REPLICATED, "Max horizontal conc speed a player can attain after just using a jump pad." );
-#define MAX_JUMPPAD_TO_CONC_SPEED_HORIZ ffdev_mancannon_conc_speed_horiz.GetFloat()
-ConVar ffdev_mancannon_conc_speed_vert( "ffdev_mancannon_conc_speed_vert", "768", FCVAR_FF_FFDEV_REPLICATED, "Max vertical conc speed a player can attain after just using a jump pad." );
-#define MAX_JUMPPAD_TO_CONC_SPEED_VERT ffdev_mancannon_conc_speed_vert.GetFloat()
+// Primary jump pad -> conc cap
+#define MAX_JUMPPAD_TO_CONC_SPEED_HORIZ 1024
+#define MAX_JUMPPAD_TO_CONC_SPEED_VERT 768
+#define MAX_JUMPPAD_TO_CONC_SPEED_TIMEOUT 1.5f
+// Secondary jump pad -> conc cap
+#define MAX_JUMPPAD_TO_CONC_SPEED2 1700
+#define MAX_JUMPPAD_TO_CONC_SPEED2_TIMEOUT 3.0f
 //static ConVar ffdev_conc_lateral_power( "ffdev_conc_lateral_power", "2.74", FCVAR_FF_FFDEV, "Lateral movement boost value for hand-held concs", true, 0.0f, true, 2.74f );
 #define FFDEV_CONC_LATERAL_POWER 2.74f //ffdev_conc_lateral_power.GetFloat() //2.74f
 //static ConVar ffdev_conc_vertical_power( "ffdev_conc_vertical_power", "4.10", FCVAR_FF_FFDEV, "Vertical movement boost value for hand-held concs", true, 0.0f, true, 4.10f );
@@ -365,8 +368,11 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 			}
 
 			// Jiggles: players can easily get insane speeds by using a jump pad and then concing
+			// TODO: This is only server-only because m_flMancannonTime is server-only and not replicated
+			//       on the client. It would be nicer if this was shared code so that the client can predict
+			//       the capped speed (instead of potentially warping back when the server caps it unexpectedly).
 #ifdef GAME_DLL
-			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + 3.0f )
+			if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + MAX_JUMPPAD_TO_CONC_SPEED_TIMEOUT )
 			{
 				float flPreviousVelocityZ = vecResult.z;
 				vecResult.z = 0;
@@ -376,6 +382,17 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 					vecResult *= MAX_JUMPPAD_TO_CONC_SPEED_HORIZ;
 				}
 				vecResult.z = min(MAX_JUMPPAD_TO_CONC_SPEED_VERT, flPreviousVelocityZ);
+			}
+			else if ( pPlayer->m_flMancannonTime && gpGlobals->curtime < pPlayer->m_flMancannonTime + MAX_JUMPPAD_TO_CONC_SPEED2_TIMEOUT )
+			{
+				// Note: This is how the cap used to work before the separate horizontal/vertical caps were introduced (and the max
+				// speed was reduced). Having this secondary cap means it will work just like before the jump pad nerf, so that
+				// we can allow for things like tidalwave yard jump pad -> surf -> conc combo to work like it did before.
+				if ( vecResult.Length() > MAX_JUMPPAD_TO_CONC_SPEED2 )
+				{
+					vecResult.NormalizeInPlace();
+					vecResult *= MAX_JUMPPAD_TO_CONC_SPEED2;
+				}
 			}
 #endif
 			pPlayer->SetAbsVelocity(vecResult);
