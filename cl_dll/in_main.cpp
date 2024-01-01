@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: builds an intended movement command to send to the server
 //
@@ -117,8 +117,6 @@ static	kbutton_t	in_alt2;
 static	kbutton_t	in_score;
 static	kbutton_t	in_break;
 static	kbutton_t	in_zoom;
-static  kbutton_t   in_grenade1;
-static  kbutton_t   in_grenade2;
 
 /*
 ===========
@@ -473,10 +471,6 @@ void IN_GraphDown(void) {KeyDown(&in_graph);}
 void IN_GraphUp(void) {KeyUp(&in_graph);}
 void IN_ZoomDown(void) {KeyDown(&in_zoom);}
 void IN_ZoomUp(void) {KeyUp(&in_zoom);}
-void IN_Grenade1Up(void) { KeyUp( &in_grenade1 ); }
-void IN_Grenade1Down(void) { KeyDown( &in_grenade1 ); }
-void IN_Grenade2Up(void) { KeyUp( &in_grenade2 ); }
-void IN_Grenade2Down(void) { KeyDown( &in_grenade2 ); }
 
 
 void IN_AttackDown(void)
@@ -1324,8 +1318,6 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_ALT2, s_ClearInputState, &in_alt2, bResetState );
 	CalcButtonBits( bits, IN_SCORE, s_ClearInputState, &in_score, bResetState );
 	CalcButtonBits( bits, IN_ZOOM, s_ClearInputState, &in_zoom, bResetState );
-	CalcButtonBits( bits, IN_GRENADE1, s_ClearInputState, &in_grenade1, bResetState );
-	CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
 
 	// Cancel is a special flag
 	if (in_cancel)
@@ -1472,10 +1464,6 @@ static ConCommand force_centerview("force_centerview", IN_CenterView_f);
 static ConCommand joyadvancedupdate("joyadvancedupdate", IN_Joystick_Advanced_f);
 static ConCommand startzoom("+zoom", IN_ZoomDown);
 static ConCommand endzoom("-zoom", IN_ZoomUp);
-static ConCommand endgrenade1( "-grenade1", IN_Grenade1Up );
-static ConCommand startgrenade1( "+grenade1", IN_Grenade1Down );
-static ConCommand endgrenade2( "-grenade2", IN_Grenade2Up );
-static ConCommand startgrenade2( "+grenade2", IN_Grenade2Down );
 
 // BEG: Added by Mulchman for team & class changing
 static ConCommand changeteam( "changeteam", IN_ChangeTeam );
