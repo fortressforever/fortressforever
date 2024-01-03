@@ -751,14 +751,42 @@ void CFFScriptManager::LuaWarning( const char *pszFormat, ... )
 	Warning("[SCRIPT] %s", string );
 }
 
+static void LuaPrintToClient(lua_State *L, edict_t *pEdict)
+{
+	int n = lua_gettop(L);  /* number of arguments */
+	int i;
+	lua_getglobal(L, "tostring");
+	for (i=1; i<=n; i++)
+	{
+		const char *s;
+		lua_pushvalue(L, -1);  /* function to be called */
+		lua_pushvalue(L, i);   /* value to print */
+		lua_call(L, 1, 1);
+		s = lua_tostring(L, -1);  /* get result */
+		if (s == NULL)
+			return;
+		if (i>1)
+			engine->ClientPrintf(pEdict, "\t");
+		engine->ClientPrintf(pEdict, s);
+		lua_pop(L, 1);  /* pop result */
+	}
+	engine->ClientPrintf(pEdict, "\n");
+}
+
 CON_COMMAND( lua_dostring, "Run a server-side Lua string in the global environment" )
 {
+	CBasePlayer *pPlayerIssuingCommand = UTIL_GetCommandClient();
+	edict_t *pEdict = INDEXENT(pPlayerIssuingCommand->entindex());
+
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+	{
+		engine->ClientPrintf(pEdict, "You must be a server admin to use this command.\n");
 		return;
+	}
 
 	if ( engine->Cmd_Argc() == 1 )
 	{
-		Msg( "Usage: lua_dostring <string>\n" );
+		engine->ClientPrintf(pEdict, "Usage: lua_dostring <string>\n");
 		return;
 	}
 
@@ -766,6 +794,7 @@ CON_COMMAND( lua_dostring, "Run a server-side Lua string in the global environme
 	int status = luaL_dostring(L, engine->Cmd_Args());
 	if (status != 0) {
 		Warning( "%s\n", lua_tostring(L, -1) );
+		engine->ClientPrintf(pEdict, UTIL_VarArgs("%s\n", lua_tostring(L, -1)));
 		lua_pop(L, 1);
 		return;
 	}
@@ -773,9 +802,11 @@ CON_COMMAND( lua_dostring, "Run a server-side Lua string in the global environme
 		lua_getglobal(L, "print");
 		lua_insert(L, 1);
 		if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
-		Warning("%s", lua_pushfstring(L,
+			Warning("%s", lua_pushfstring(L,
 							"error calling " LUA_QL("print") " (%s)",
 							lua_tostring(L, -1)));
+
+		LuaPrintToClient(L, pEdict);
 	}
 	lua_settop(L, 0);  /* clear stack */
 }
