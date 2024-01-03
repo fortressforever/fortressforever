@@ -69,6 +69,9 @@ bool g_bMovementOptimizations = true;	// |-- Mirv: Changed to false, but not sur
 static ConVar sv_sharkingfriction("sv_sharkingfriction", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
 #define SV_SHARKINGFRICTION sv_sharkingfriction.GetFloat()
 
+static ConVar sv_stepsize_down("sv_stepsize_down", "14", FCVAR_REPLICATED | FCVAR_CHEAT);
+#define SV_STEPSIZE_DOWN sv_stepsize_down.GetFloat()
+
 //static ConVar ffdev_headcrush_damage("ffdev_headcrush_damage", "108", FCVAR_FF_FFDEV_REPLICATED, "Straight headcrush damage; not used if usefalldamage is on");
 #define HEADCRUSH_DAMAGE 108.0f
 //static ConVar ffdev_headcrush_usefalldamage("ffdev_headcrush_usefalldamage", "4.0", FCVAR_FF_FFDEV_REPLICATED, "0 = off, > 0 means take FALLDAMAGE * val damage");
@@ -1498,7 +1501,7 @@ void CGameMovement::StayOnGround( void )
 	Vector start( mv->m_vecAbsOrigin );
 	Vector end( mv->m_vecAbsOrigin );
 	start.z += 2;
-	end.z -= player->GetStepSize();
+	end.z -= SV_STEPSIZE_DOWN;
 
 	// See how far up we can go without getting stuck
 	TracePlayerBBox( mv->m_vecAbsOrigin, start, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
