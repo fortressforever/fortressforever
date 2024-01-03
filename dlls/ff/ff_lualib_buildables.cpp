@@ -33,6 +33,30 @@ namespace FFLib
 	{
 		pSentryGun->SetLevel(iLevel, false);
 	}
+
+	// helper function to get saboteur
+	CFFPlayer* GetBuildableSaboteur(CFFBuildableObject *pBuildable)
+	{
+		return pBuildable->m_hSaboteur;
+	}
+
+	// helper function to remove saboteur, defaulted to suppress notifications
+	void RemoveSaboteurQuietly(CFFBuildableObject *pBuildable)
+	{
+		pBuildable->RemoveSaboteur(true);
+	}
+
+	void SafeSabotage(CFFBuildableObject *pBuildable, CFFPlayer *pSaboteur)
+	{
+		if (pBuildable->CanSabotage())
+			pBuildable->Sabotage(pSaboteur);
+	}
+
+	void SafeMaliciouslySabotage(CFFBuildableObject *pBuildable, CFFPlayer *pSaboteur)
+	{
+		if (pSaboteur == GetBuildableSaboteur())
+			pBuildable->MaliciouslySabotage(pSaboteur);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -55,8 +79,17 @@ void CFFLuaLib::InitBuildables(lua_State* L)
 		class_<CFFBuildableObject, CBaseEntity>("BaseBuildable")
 			.def("GetTeamId",			&CFFBuildableObject::GetTeamNumber)
 			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer)
-			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam),
-			//.def("GetTeamId",			&CFFBuildableObject::GetOwnerTeamId),
+			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam)
+			.def("IsBuilt",				&CFFBuildableObject::IsBuilt)
+			.def("Detonate",			&CFFBuildableObject::Detonate)
+			.def("IsSabotaged",			&CFFBuildableObject::IsSabotaged)
+			.def("IsMaliciouslySabotaged", &CFFBuildableObject::IsMaliciouslySabotaged)
+			.def("CanSabotage",			&CFFBuildableObject::CanSabotage)
+			.def("Sabotage",			&FFLib::SafeSabotage)
+			.def("MaliciouslySabotage",	&FFLib::SafeMaliciouslySabotage)
+			.def("RemoveSaboteur",		&FFLib::RemoveSaboteurQuietly))
+			.def("RemoveQuietly",		&CFFBuildableObject::RemoveQuietly)
+			.def("GetSaboteur",			&FFLib::GetBuildableSaboteur),
 
 		// Dispenser
 		class_<CFFDispenser, CFFBuildableObject>("Dispenser"),
