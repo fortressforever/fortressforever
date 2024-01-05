@@ -39,6 +39,7 @@ public:
 
 	CFFWeaponSpanner();
 
+	virtual void Precache();
 	virtual bool CanBeSelected();
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SPANNER; }
 
@@ -75,6 +76,12 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_spanner);
 //----------------------------------------------------------------------------
 CFFWeaponSpanner::CFFWeaponSpanner() 
 {
+}
+
+void CFFWeaponSpanner::Precache() 
+{
+	PrecacheScriptSound("Sentry.PartialUpgrade");
+	BaseClass::Precache();
 }
 
 //-----------------------------------------------------------------------------
@@ -242,11 +249,15 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					return;
 
 				// Try to upgrade first
-				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= FF_BUILDCOST_UPGRADE_SENTRYGUN)) 
+				if (pSentryGun->CanBeUpgradedBy(pPlayer)) 
 				{
+					pSentryGun->DeltaUpgradeProgress( 1 );
+
 					// If we upgrade, play a special sound. Pun intended.
-					if( pSentryGun->Upgrade() )
+					if( pSentryGun->IsUpgradeProgressComplete() )
 					{
+						pSentryGun->Upgrade();
+
 						WeaponSoundLocal( SPECIAL3 );
 #ifdef GAME_DLL
 						// AfterShock - scoring system: If we upgrade teammates SG, +100 points
@@ -263,11 +274,27 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 							pEvent->SetInt( "level", pSentryGun->GetLevel() );
 							gameeventmanager->FireEvent( pEvent, true );
 						}
+
+						pPlayer->RemoveAmmo(FF_BUILDCOST_UPGRADE_SENTRYGUN, AMMO_CELLS);
 #endif
 					}
+					// play upgrade progress sound
+					else
+					{
+						CPASAttenuationFilter filter( pSentryGun, "Sentry.PartialUpgrade" );
+
+						// this UsePredictionRules call fixes the sound being played multiple times
+						// when prediction errors (I'm assuming) cause PrimaryAttack() to be called
+						// multiple times on the client for a single attack
+						filter.UsePredictionRules();
+
 #ifdef GAME_DLL
-					pPlayer->RemoveAmmo(FF_BUILDCOST_UPGRADE_SENTRYGUN, AMMO_CELLS);
+						// don't send the sound to the owner; that is handled client-side
+						filter.RemoveRecipient(pPlayer);
 #endif
+
+						EmitSound( filter, pSentryGun->entindex(), "Sentry.PartialUpgrade" );
+					}
 				}
 				else
 				{
@@ -288,12 +315,19 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					// If it needs anything, play a special sound. Pun intended.
 					if( ( cells > 0 ) || ( shells > 0 ) || ( rockets > 0 ) )
 						WeaponSoundLocal( SPECIAL3 );
-#ifdef GAME_DLL
-					// AfterShock - scoring system: Save teammate sg +.5*amount repaired (only if last damage from enemy)
-					// last enemy damage bit ignored for now.
-					if ( cells > 0 ) 
-						pPlayer->AddFortPoints(cells*0.3, "#FF_FORTPOINTS_REPAIRTEAMMATESG");
 
+					if (cells > 0)
+					{
+						// reset upgrade progress whenever health is repaired
+						pSentryGun->SetUpgradeProgress(0);
+
+#ifdef GAME_DLL
+						// AfterShock - scoring system: Save teammate sg +.5*amount repaired (only if last damage from enemy)
+						// last enemy damage bit ignored for now.
+						pPlayer->AddFortPoints(cells*0.3, "#FF_FORTPOINTS_REPAIRTEAMMATESG");
+#endif
+					}
+#ifdef GAME_DLL
 					pSentryGun->Repair(cells);
 					pPlayer->RemoveAmmo(cells, AMMO_CELLS);
 

@@ -86,6 +86,8 @@
 #define FF_SENTRYGUN_BUILD_SOUND			"Sentry.One"
 #define FF_SENTRYGUN_UNBUILD_SOUND			"Sentry.unbuild"
 #define FF_SENTRYGUN_EXPLODE_SOUND			"Sentry.Explode"
+#define FF_SENTRYGUN_UPGRADE_SWINGS			3
+#define FF_SENTRYGUN_UPGRADE_TIMEOUT		1.0f
 
 #define FF_MANCANNON_MODEL					"models/items/jumppad/jumppad.mdl"
 #define FF_MANCANNON_BUILD_SOUND			"JumpPad.Build"
@@ -671,9 +673,18 @@ public:
 	int NeedsHealth( void ) const { return GetMaxHealth() - GetHealth(); }
 
 	int GetLevel( void ) const { return m_iLevel; }
-	bool Upgrade();
+	void Upgrade();
+	bool CanUpgrade();
+	bool CanBeUpgradedBy( CFFPlayer *pPlayer );
+	bool IsUpgradeProgressComplete() { return GetUpgradeProgress() >= GetMaxUpgradeProgress(); }
+	int GetUpgradeProgress() { return m_iUpgradeProgress; }
+	int GetMaxUpgradeProgress() { return FF_SENTRYGUN_UPGRADE_SWINGS; }
+	void SetUpgradeProgress(int iUpgradeProgress) { m_iUpgradeProgress = iUpgradeProgress; SetLastUpgradeProgress(gpGlobals->curtime); }
+	void DeltaUpgradeProgress(int iDelta) { SetUpgradeProgress(GetUpgradeProgress() + iDelta); }
+	void SetLastUpgradeProgress(float flTime) { m_flLastUpgradeProgress = flTime; }
 
 #ifdef GAME_DLL
+	bool ShouldUpgradeProgressReset() { return GetUpgradeProgress() > 0 && m_flLastUpgradeProgress > 0 && gpGlobals->curtime >= m_flLastUpgradeProgress + FF_SENTRYGUN_UPGRADE_TIMEOUT; }
 	void Repair( int iCells = 0 );
 	void AddAmmo( int iShells = 0, int iRockets = 0 );
 
@@ -696,6 +707,9 @@ public:
 
 	CNetworkVar( int, m_iMaxShells );
 	CNetworkVar( int, m_iMaxRockets );
+
+	CNetworkVar( int, m_iUpgradeProgress );
+	float m_flLastUpgradeProgress;
 	// <-- shared
 
 #ifdef CLIENT_DLL 
