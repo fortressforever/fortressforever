@@ -1857,6 +1857,11 @@ bool CFFPlayer::CanJetpack()
 		return false;
 	}
 
+	if (!m_bCanUseJetpack)
+	{
+		return false;
+	}
+
 	return true;
 }
 
