@@ -575,7 +575,7 @@ public:
 	void JetpackHold( void );
 	void JetpackRechargeThink( void );
 	void SharedPreThink( void );
-	CNetworkVar( bool, m_bCanUseJetpack );
+	bool m_bCanUseJetpack;
 
 	// ----------------------------------
 	

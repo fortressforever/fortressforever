@@ -781,7 +781,7 @@ public:
 
 	CNetworkVar( float, m_flNextClassSpecificSkill );
 	CNetworkVar( int, m_iJetpackFuel );
-	CNetworkVar( bool, m_bCanUseJetpack );
+	bool m_bCanUseJetpack;
 	float m_flJetpackNextFuelRechargeTime;
 
 	CNetworkVar( float, m_flConcTime );
