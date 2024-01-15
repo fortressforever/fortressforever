@@ -463,6 +463,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iActiveSabotages ), 2, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bJetpacking ) ),
+	SendPropBool( SENDINFO( m_bCanUseJetpack ) ),
 END_SEND_TABLE( )
 
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
@@ -1617,6 +1618,7 @@ void CFFPlayer::SetupClassVariables()
 	m_flSpySabotageFinish = 0.0f;
 	m_hSabotaging = NULL;
 	m_bJetpacking = false;
+	m_bCanUseJetpack = true;
 
 	m_Locations.Purge();
 	m_iClientLocation = 0;
@@ -7991,4 +7993,13 @@ void CFFPlayer::SetJetpackFuelPercent(float newPct)
 {
 	float pctClamped = max(0.0f, min(newPct, 100.0f));
 	m_iJetpackFuel = (int)(200.0f * (pctClamped / 100.0f));
+}
+
+void CFFPlayer::SetJetpackState( bool bCanUseJetpack )
+{
+	m_bCanUseJetpack = bCanUseJetpack;
+}
+bool CFFPlayer::GetJetpackState()
+{
+	return m_bCanUseJetpack;
 }
