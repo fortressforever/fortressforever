@@ -463,10 +463,12 @@ void CBaseHudWeaponSelection::UserCmd_LastWeapon(void)
 	if ( !BaseClass::ShouldDraw() )
 		return;
 
+	/*
 	if ( IsHudMenuPreventingWeaponSelection() )	
 	{ 
 		return;
 	}
+	*/
 
 	SwitchToLastWeapon();
 }
