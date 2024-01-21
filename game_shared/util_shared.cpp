@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -1002,9 +1002,6 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 	if ( color == DONT_BLEED || amount == 0 )
 		return;
 
-	if ( g_Language.GetInt() == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
-		color = 0;
-
 	if ( g_pGameRules->IsMultiplayer() )
 	{
 		// scale up blood effect in multiplayer for better visibility
@@ -1032,14 +1029,12 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 //-----------------------------------------------------------------------------
 // Purpose: Returns low violence settings
 //-----------------------------------------------------------------------------
-static ConVar	violence_hblood( "violence_hblood","1", 0, "Draw human blood" );
-static ConVar	violence_hgibs( "violence_hgibs","1", 0, "Show human gib entities" );
-static ConVar	violence_ablood( "violence_ablood","1", 0, "Draw alien blood" );
-static ConVar	violence_agibs( "violence_agibs","1", 0, "Show alien gib entities" );
+static ConVar	violence_blood( "violence_blood","1", 0, "Draw blood" );
+static ConVar	violence_gibs( "violence_gibs","1", 0, "Show gib entities" );
 
 bool UTIL_IsLowViolence( void )
 {
-	if ( !violence_hblood.GetBool() || !violence_ablood.GetBool() || !violence_hgibs.GetBool() || !violence_agibs.GetBool() )
+	if ( !violence_blood.GetBool() || !violence_gibs.GetBool() )
 		return true;
 
 	return false;
@@ -1051,16 +1046,11 @@ bool UTIL_ShouldShowBlood( int color )
 	{
 		if ( color == BLOOD_COLOR_RED )
 		{
-			return violence_hblood.GetBool();
-		}
-		else
-		{
-			return violence_ablood.GetBool();
+			return violence_blood.GetBool();
 		}
 	}
 	return false;
 }
-
 
 //------------------------------------------------------------------------------
 // Purpose : Use trace to pass a specific decal type to the entity being decaled
