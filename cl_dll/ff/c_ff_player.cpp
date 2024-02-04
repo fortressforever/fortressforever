@@ -2548,20 +2548,30 @@ void C_FFPlayer::ClientThink( void )
 			g_pEffects->Sparks(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), iSparkMagnitude, iSparkLength, &vecDir);
 
 			EmitSound("Player.RampslideMetal");
+			m_bRampSlideSFXPlaying = true;
 		}
 		else
 		{
 			float flDustSize = cl_rampslidefx_dust_size.GetFloat();
 			float flDustSpeed = 0.0f; // controls how far apart the dust particles get spawned in vecDir's direction; not particularly useful
 			g_pEffects->Dust(GetFeetOrigin() + Vector(random->RandomFloat(-iRandomOffset, iRandomOffset), random->RandomFloat(-iRandomOffset, iRandomOffset), flVerticalOffset), vecDir, flDustSize, flDustSpeed);
-			StopSound("Player.RampslideMetal");
+
+			if(m_bRampSlideSFXPlaying)
+			{
+				StopSound("Player.RampslideMetal");
+				m_bRampSlideSFXPlaying = false;
+			}
 		}
 
 		m_flNextRampslideFX = gpGlobals->curtime + cl_rampslidefx_interval.GetFloat();
 	}
 	else if (!IsRampsliding())
 	{
-		StopSound("Player.RampslideMetal");
+		if(m_bRampSlideSFXPlaying)
+		{
+			StopSound("Player.RampslideMetal");
+			m_bRampSlideSFXPlaying = false;
+		}
 	}
 
 	// Update infection emitters
@@ -2652,6 +2662,7 @@ void C_FFPlayer::ClientThink( void )
 		
 		m_pJetpackEmitter->SetDieTime( gpGlobals->curtime + 5.0f );
 		EmitSound("Player.JetpackLoop");
+		m_bJetpackSFXPlaying = true;
 	}
 	else
 	{
@@ -2662,7 +2673,15 @@ void C_FFPlayer::ClientThink( void )
 		}
 		// TODO: Is StopSound expensive?
 		// Should this only be called if we know the sound is playing?
-		StopSound("Player.JetpackLoop");
+		// 
+		// Yeah it seems to spam the console when sv_soundemitter_trace is set to 1
+		// so we should only call it when actually needed
+
+		if (m_bJetpackSFXPlaying)
+		{
+			StopSound("Player.JetpackLoop");
+			m_bJetpackSFXPlaying = false;
+		}
 	}
 
 	_mathackman.Update();

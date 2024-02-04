@@ -247,6 +247,12 @@ private:
 	int m_iActiveSabotages;
 	int m_iSpyDisguising;
 	bool m_bJetpacking;
+
+	// is jetpack sound playing?
+	// added to avoid console spam with sv_soundemitter_trace 1
+	// so we only call StopSound() when we actually need to
+	bool m_bJetpackSFXPlaying;
+
 // Called by shared code.
 	// for HUD ammo pickup history
 	int m_iOldPrimary;
@@ -543,6 +549,11 @@ public:
 protected:
 	bool m_bIsRampsliding;
 	float m_flNextRampslideFX;
+
+	// is the ramp slide sound playing?
+	// added to avoid console spam with sv_soundemitter_trace 1
+	// so we only call StopSound() when we actually need to
+	bool m_bRampSlideSFXPlaying;
 
 	// ----------------------------------
 	// Cloak stuff
